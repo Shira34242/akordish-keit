@@ -1,0 +1,62 @@
+<div class="layout-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-card">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">סוגי טבלאות</h3>
+            </div>
+            <nav class="nav-list">
+                <button *ngFor="let table of tables" (click)="selectTable(table)"
+                    [class.active]="currentTable?.id === table.id" class="nav-btn">
+                    <span>{{ table.label }}</span>
+                    <span class="material-icons nav-icon">chevron_left</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div *ngIf="currentTable" class="h-full">
+            <div class="content-header">
+                <h2 class="page-title">{{ currentTable.label }}</h2>
+                <p class="page-subtitle">ניהול ערכים עבור {{ currentTable.label }}</p>
+            </div>
+
+            <div *ngIf="isLoading" class="loading-state">
+                <div class="spinner"></div>
+            </div>
+
+            <div *ngIf="!isLoading" class="table-with-pagination">
+                <app-generic-table
+                    [title]="currentTable.label"
+                    [items]="items"
+                    [searchTerm]="searchTerm"
+                    [extraColumns]="currentTable.extraColumns || []"
+                    (add)="onAdd($event)"
+                    (edit)="onEdit($event)"
+                    (delete)="onDelete($event)"
+                    (searchTermChange)="searchTerm = $event"
+                    (search)="onSearch()"
+                    (clearSearch)="onClearSearch()">
+                </app-generic-table>
+
+                <app-pagination
+                    [totalCount]="totalCount"
+                    [pageNumber]="pageNumber"
+                    [pageSize]="pageSize"
+                    [totalPages]="totalPages"
+                    [hasPreviousPage]="hasPreviousPage"
+                    [hasNextPage]="hasNextPage"
+                    (pageChange)="onPageChange($event)"
+                    (pageSizeChange)="onPageSizeChange($event)">
+                </app-pagination>
+            </div>
+        </div>
+
+        <div *ngIf="!currentTable" class="empty-state">
+            <span class="material-icons empty-icon">table_view</span>
+            <p class="empty-text">בחר טבלה מהתפריט בצד כדי להתחיל בניהול ערכים</p>
+        </div>
+    </div>
+</div>

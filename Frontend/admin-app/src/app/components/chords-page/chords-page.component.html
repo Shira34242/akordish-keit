@@ -1,0 +1,163 @@
+<div class="chords-page">
+    <!-- SVG Filter for Liquid Glass -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <filter id="liquidGlass">
+                <feTurbulence type="turbulence" baseFrequency="0.003" numOctaves="3" result="turbulence" />
+                <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>מאגר האקורדים הגדול בישראל</h1>
+        <p class="subtitle">מצא את האקורדים לשירים האהובים עליך</p>
+
+        <div class="search-container liquid-glass">
+            <input type="text" 
+                   placeholder="חפש שיר או אמן..." 
+                   [ngModel]="search" 
+                   (input)="onSearch($event)"
+                   class="main-search-input">
+            <span class="search-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </span>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-wrapper">
+        <div class="filters-bar liquid-glass">
+            <div class="filters-right">
+                <span class="filter-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    סינון ומיון
+                </span>
+            </div>
+
+            <div class="filters-left">
+                <!-- Artist Autocomplete -->
+                <div class="filter-autocomplete">
+                    <input type="text" 
+                           placeholder="כל האמנים"
+                           [(ngModel)]="artistSearchText"
+                           (input)="onArtistSearch($event)"
+                           (focus)="showArtistDropdown = true"
+                           class="filter-input">
+                    <span class="dropdown-arrow">▼</span>
+                    
+                    <div class="autocomplete-dropdown" *ngIf="showArtistDropdown && filteredArtists.length > 0">
+                        <div class="autocomplete-item" 
+                             (click)="selectArtist(null)">
+                            כל האמנים
+                        </div>
+                        <div class="autocomplete-item" 
+                             *ngFor="let artist of filteredArtists"
+                             (click)="selectArtist(artist)">
+                            {{ artist.name }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genre Autocomplete -->
+                <div class="filter-autocomplete">
+                    <input type="text" 
+                           placeholder="כל הסגנונות"
+                           [(ngModel)]="genreSearchText"
+                           (input)="onGenreSearch($event)"
+                           (focus)="showGenreDropdown = true"
+                           class="filter-input">
+                    <span class="dropdown-arrow">▼</span>
+                    
+                    <div class="autocomplete-dropdown" *ngIf="showGenreDropdown && filteredGenres.length > 0">
+                        <div class="autocomplete-item" 
+                             (click)="selectGenre(null)">
+                            כל הסגנונות
+                        </div>
+                        <div class="autocomplete-item" 
+                             *ngFor="let genre of filteredGenres"
+                             (click)="selectGenre(genre)">
+                            {{ genre.name }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Autocomplete -->
+                <div class="filter-autocomplete">
+                    <input type="text" 
+                           placeholder="כל הסולמות"
+                           [(ngModel)]="keySearchText"
+                           (input)="onKeySearch($event)"
+                           (focus)="showKeyDropdown = true"
+                           class="filter-input">
+                    <span class="dropdown-arrow">▼</span>
+                    
+                    <div class="autocomplete-dropdown" *ngIf="showKeyDropdown && filteredKeys.length > 0">
+                        <div class="autocomplete-item" 
+                             (click)="selectKey(null)">
+                            כל הסולמות
+                        </div>
+                        <div class="autocomplete-item" 
+                             *ngFor="let key of filteredKeys"
+                             (click)="selectKey(key)">
+                            {{ key.displayName }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Select -->
+                <div class="filter-autocomplete">
+                    <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-input filter-select">
+                        <option value="date">החדשים ביותר</option>
+                        <option value="views">הנצפים ביותר</option>
+                        <option value="name">לפי שם (א-ת)</option>
+                    </select>
+                </div>
+
+                <button class="btn-clear" (click)="clearFilters()">נקה סינונים</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-container">
+        <div class="results-header">
+            <h2>נמצאו {{ totalCount }} שירים</h2>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-spinner" *ngIf="isLoading">
+            <div class="spinner"></div>
+            <p>טוען שירים...</p>
+        </div>
+
+        <!-- Songs Grid -->
+        <div class="songs-grid" *ngIf="!isLoading && songs.length > 0">
+            <app-song-card *ngFor="let song of songs" [song]="song">
+            </app-song-card>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" *ngIf="!isLoading && songs.length === 0">
+            <p>לא נמצאו שירים התואמים את החיפוש שלך.</p>
+            <button class="btn-clear" (click)="clearFilters()">נקה סינונים ונסה שוב</button>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+            <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                הקודם
+            </button>
+            <span class="page-info">עמוד {{ currentPage }} מתוך {{ totalPages }}</span>
+            <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                הבא
+            </button>
+        </div>
+    </div>
+</div>

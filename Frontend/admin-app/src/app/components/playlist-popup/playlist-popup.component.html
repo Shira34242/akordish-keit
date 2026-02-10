@@ -1,0 +1,120 @@
+<!-- Backdrop -->
+<div class="popup-backdrop" (click)="onBackdropClick($event)">
+
+  <!-- Popup Card -->
+  <div class="popup-card" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="popup-header">
+      <button class="icon-bookmark-filled">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+          stroke="none">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+      </button>
+      <h3>הרשימות השמורות של:</h3>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+      {{ error }}
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>טוען רשימות...</p>
+    </div>
+
+    <!-- Recent Playlists -->
+    <div class="playlists-list" *ngIf="!isLoading && !isCreatingNew">
+      <div
+        class="playlist-item"
+        *ngFor="let playlist of recentPlaylists"
+        (click)="addToPlaylist(playlist.id)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+        <div class="playlist-info">
+          <span class="playlist-name">{{ playlist.name }}</span>
+          <span class="playlist-count">{{ playlist.songCount }} שירים</span>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="recentPlaylists.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+        <p>עדיין אין לך רשימות</p>
+        <p class="empty-hint">צור רשימה חדשה כדי להתחיל</p>
+      </div>
+    </div>
+
+    <!-- Create New Playlist Form -->
+    <div class="create-new-form" *ngIf="isCreatingNew">
+      <input
+        type="text"
+        class="new-playlist-input"
+        [(ngModel)]="newPlaylistName"
+        placeholder="שם הרשימה החדשה..."
+        (keyup.enter)="createNewPlaylist()"
+        autofocus>
+
+      <!-- Public/Private Toggle -->
+      <div class="privacy-toggle">
+        <label class="toggle-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="newPlaylistIsPublic"
+            class="toggle-checkbox">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
+        </label>
+        <p class="toggle-hint">{{ newPlaylistIsPublic ? 'הרשימה תופיע במאגר הקהילתי' : 'רק אתה תוכל לראות את הרשימה' }}</p>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-create" (click)="createNewPlaylist()">יצירה</button>
+        <button class="btn-cancel" (click)="toggleCreateNew()">ביטול</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="popup-actions" *ngIf="!isCreatingNew">
+      <button class="action-btn btn-new-playlist" (click)="toggleCreateNew()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" x2="12" y1="15" y2="3"></line>
+        </svg>
+        רשימה חדשה
+      </button>
+
+      <button class="action-btn btn-view-all" routerLink="/community-playlists" (click)="closePopup()">
+        למאגר קהילתי
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <button class="action-btn btn-my-playlists" routerLink="/my-playlists" (click)="closePopup()">
+        הרשימות שלי
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"></path>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,587 @@
+/* Global Page Layout */
+.song-page-container {
+    font-family: 'Heebo', 'Segoe UI', sans-serif;
+    background-color: #f3f4f6;
+    min-height: 100vh;
+    direction: rtl;
+    color: #1f2937;
+}
+/* Glassmorphism Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 0 20px rgba(255, 255, 255, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+/* 1. Header Section */
+.song-header {
+    background-color: #f3f4f6;
+    padding: 30px 0 20px 0;
+    position: relative;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    align-items: stretch; /* חשוב - מותח את שני הצדדים לאותו גובה */
+}
+
+/* Image Section */
+.header-image-section {
+    flex: 0 0 200px; /* קטן יותר */
+    position: relative;
+}
+
+.song-cover-wrapper {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
+    aspect-ratio: 1;
+}
+
+.song-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.song-cover:hover {
+    transform: scale(1.05);
+}
+
+/* YouTube & Spotify Buttons */
+.youtube-play-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: #ff0000;
+    width: 40px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, background 0.2s;
+    z-index: 10;
+}
+
+.youtube-play-btn:hover {
+    transform: scale(1.05);
+    background: #cc0000;
+}
+
+.youtube-play-btn svg {
+    fill: white;
+    width: 14px;
+    height: 14px;
+}
+
+.spotify-play-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 58px;
+    background: #1DB954;
+    width: 40px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, background 0.2s;
+    z-index: 10;
+}
+
+.spotify-play-btn:hover {
+    transform: scale(1.05);
+    background: #1ed760;
+}
+
+.spotify-play-btn svg {
+    fill: white;
+    width: 16px;
+    height: 16px;
+}
+
+/* Info Section */
+.header-info-section {
+    flex: 1;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* ממורכז אנכית */
+    padding: 0;
+    gap: 2px; /* ריווח קטן בין האלמנטים */
+}
+
+.header-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 400;
+}
+
+.main-title {
+    font-family: 'Heebo', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #000000;
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.artist-name {
+    font-size: 1.3rem;
+    color: #3b82f6;
+    font-weight: 600;
+    margin: 4px 0 8px 0;
+    cursor: pointer;
+}
+
+.artist-name:hover {
+    text-decoration: underline;
+}
+
+.credits {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 0 0 8px 0;
+}
+
+/* Meta Info */
+.header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 12px 0;
+    align-items: center;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #4b5563;
+}
+
+/* Action Buttons */
+.header-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    justify-content: flex-start;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: transform 0.2s, background-color 0.2s, color 0.2s;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #111827;
+    transform: scale(1.05);
+}
+
+.action-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2px;
+}
+/* 2. Floating Toolbar */
+.sticky-toolbar {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+    pointer-events: none;
+}
+
+.toolbar-content {
+    grid-column: 1;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 0 20px rgba(255, 255, 255, 0.5);
+    pointer-events: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    background: transparent;
+    border: none;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+.toolbar-btn:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.toolbar-btn.active {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.toolbar-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2px;
+}
+
+.btn-text {
+    width: auto;
+    padding: 0 12px;
+    font-size: 0.95rem;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background-color: #e5e7eb;
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+/* Transpose Group */
+.transpose-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.transpose-val {
+    font-weight: 700;
+    font-size: 1rem;
+    width: 30px;
+    text-align: center;
+    color: #2563eb;
+}
+
+/* 3. Main Layout */
+.main-layout {
+    max-width: 1200px;
+    margin: 0 auto 40px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+    align-items: start; /* חשוב - מיישר את הסיידבר לראש */
+}
+
+/* Lyrics Column */
+.lyrics-column {
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    position: relative;
+    min-height: 600px;
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.lyrics-column.dark-mode {
+    background: rgba(31, 41, 55, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+}
+.lyrics-content {
+    direction: rtl;
+    font-family: 'Heebo', 'Segoe UI', sans-serif;
+    color: #1f2937;
+    white-space: pre-wrap;
+    line-height: 2.8;
+    font-size: var(--lyrics-font-size, 1.1rem);
+}
+
+.lyrics-column.dark-mode .lyrics-content {
+    color: #e5e7eb;
+}
+
+/* Chords Styling */
+::ng-deep .chord-inline {
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.9em;
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    top: -1.2em;
+    margin-right: 0.2em;
+    background: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+::ng-deep .chord-inline:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+    background: transparent;
+}
+
+::ng-deep .chord-block {
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Dark Mode Chords */
+.lyrics-column.dark-mode ::ng-deep .chord-inline {
+    color: #60a5fa;
+}
+
+.lyrics-column.dark-mode ::ng-deep .chord-block {
+    color: #60a5fa;
+}
+
+/* Sidebar */
+
+.sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 20px; /* נצמד לראש כמו הטולבר */
+}
+
+.sidebar-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    text-align: right;
+}
+
+.song-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.song-list li {
+    padding: 10px 16px;
+    background: rgba(229, 231, 235, 0.6);
+    border-radius: 12px;
+    cursor: pointer;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.song-list li:hover {
+    background: rgba(209, 213, 219, 0.8);
+    color: #111827;
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Current Song - Red Highlight */
+.song-list li.current {
+    color: #dc2626;
+    font-weight: 700;
+    cursor: default;
+    pointer-events: none;
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.song-list li.current::before {
+    content: "◀ ";
+    font-size: 0.6em;
+}
+
+/* Popular Songs */
+.popular-card .song-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: right;
+    
+}
+
+.rank {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1a1a;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.loading-small {
+    text-align: center;
+    padding: 16px;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+.no-songs {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 12px;
+}
+
+/* Popular Songs with Rank */
+.popular-card .song-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rank {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1a1a;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.popular-card h3 {
+    margin-bottom: 16px;
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+/* Responsive */
+@media (max-width: 900px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+
+    .header-image-section {
+        width: 180px;
+        flex: none;
+    }
+
+    .header-info-section {
+        text-align: center;
+        align-items: center;
+    }
+
+    .header-actions {
+        justify-content: center;
+    }
+
+    .main-title {
+        font-size: 1.8rem;
+    }
+
+    .artist-name {
+        font-size: 1.1rem;
+    }
+
+    .sticky-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .song-list li {
+        text-align: center;
+    }
+}
+
+ 

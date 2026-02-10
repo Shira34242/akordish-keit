@@ -1,0 +1,168 @@
+<div class="clients-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול פרסום</h1>
+      <p class="page-subtitle">קמפיינים, מיקומים ולקוחות</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="activeTab === 'campaigns'"
+        (click)="switchTab('campaigns')">
+        קמפיינים פעילים
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'spots'"
+        (click)="switchTab('spots')">
+        שטחי פרסום
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'clients'"
+        (click)="switchTab('clients')">
+        לקוחות
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+
+
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="חיפוש..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+    </div>
+
+        <button class="btn-new-client" (click)="createNewClient()">
+      <span class="material-icons">add</span>
+      לקוח חדש
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <table *ngIf="!loading" class="clients-table">
+      <thead>
+        <tr>
+          <th>שם העסק</th>
+          <th>איש קשר</th>
+          <th>אימייל</th>
+          <th>טלפון</th>
+          <th>תקציב כולל</th>
+          <th>פעילות</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let client of filteredClients" class="client-row">
+          <!-- Business Name -->
+          <td class="business-name-cell">
+            <div class="business-info">
+              <div class="logo-container" *ngIf="client.logoUrl">
+                <img [src]="client.logoUrl" [alt]="client.businessName">
+              </div>
+              <div class="logo-placeholder" *ngIf="!client.logoUrl">
+                <span class="material-icons">business</span>
+              </div>
+              <div class="business-name">{{ client.businessName }}</div>
+            </div>
+          </td>
+
+          <!-- Contact Person -->
+          <td>
+            <div class="contact-name">{{ client.contactPerson }}</div>
+          </td>
+
+          <!-- Email -->
+          <td>
+            <a [href]="'mailto:' + client.email" class="email-link">
+              {{ client.email }}
+            </a>
+          </td>
+
+          <!-- Phone -->
+          <td>
+            <a [href]="'tel:' + client.phone" class="phone-link">
+              {{ client.phone }}
+            </a>
+          </td>
+
+          <!-- Total Budget -->
+          <td>
+            <div class="budget-cell">
+              <span class="budget-amount">{{ formatCurrency(client.totalBudget) }}</span>
+            </div>
+          </td>
+
+          <!-- Activity -->
+          <td>
+            <div class="activity-cell">
+              <div class="activity-stat">
+                <span class="stat-value">{{ client.activeCampaigns }}</span>
+                <span class="stat-label">פעילים</span>
+              </div>
+              <div class="activity-stat">
+                <span class="stat-value">{{ client.totalCampaigns }}</span>
+                <span class="stat-label">בסך הכל</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <button class="btn-action btn-edit" (click)="editClient(client)" title="ערוך">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-action btn-delete" (click)="deleteClient(client)" title="מחק">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredClients.length === 0 && !loading" class="empty-state">
+          <td colspan="7">
+            <div class="empty-message">
+              <p>לא נמצאו לקוחות</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <app-pagination
+      [totalCount]="totalCount"
+      [pageNumber]="pageNumber"
+      [pageSize]="pageSize"
+      [totalPages]="totalPages"
+      [hasPreviousPage]="hasPreviousPage"
+      [hasNextPage]="hasNextPage"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+  </div>
+</div>
+
+<!-- Client Form Modal -->
+<app-client-form
+  [show]="showClientForm"
+  [client]="selectedClient"
+  (save)="onSaveClient($event)"
+  (cancel)="onCancelClientForm()">
+</app-client-form>

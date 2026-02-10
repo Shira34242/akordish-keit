@@ -1,0 +1,31 @@
+<div class="article-card" [routerLink]="[articleRoute, article.slug]" [class.card-layout]="layout === 'card'">
+  <div class="image-container">
+    <img [src]="article.featuredImageUrl || 'assets/default-article.png'" [alt]="article.title" class="article-image" loading="lazy">
+    <div class="overlay-gradient" *ngIf="layout === 'overlay'"></div>
+
+    <!-- Info for Overlay Layout -->
+    <div class="article-info" *ngIf="layout === 'overlay'">
+      <h3 class="article-title">{{ article.title }}</h3>
+      <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+      <p class="article-meta" *ngIf="article.authorName">
+        {{ article.authorName }}
+      </p>
+    </div>
+
+    <div class="read-overlay">
+      <span class="material-icons">article</span>
+    </div>
+  </div>
+
+  <!-- Info for Card Layout -->
+  <div class="card-info" *ngIf="layout === 'card'">
+    <h3 class="article-title">{{ article.title }}</h3>
+    <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+    <div class="card-footer">
+      <span class="view-count">
+        <span class="material-icons">visibility</span> {{ article.viewCount || 0 }}
+      </span>
+      <span class="publish-date">{{ formatDate(article.publishDate) }}</span>
+    </div>
+  </div>
+</div>

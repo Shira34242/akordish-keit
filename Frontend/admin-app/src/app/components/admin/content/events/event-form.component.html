@@ -1,0 +1,280 @@
+<div class="event-form-container" dir="rtl">
+  <!-- Header -->
+  <div class="form-header">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-icons">arrow_forward</span>
+      חזרה
+    </button>
+    <h1>{{ isEditMode ? 'עריכת הופעה' : 'הופעה חדשה' }}</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>טוען הופעה...</p>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="event-form">
+
+    <!-- Basic Information -->
+    <div class="form-section">
+      <h2 class="section-title">מידע בסיסי</h2>
+
+      <div class="form-group">
+        <label class="form-label required">כותרת ההופעה</label>
+        <input
+          type="text"
+          [(ngModel)]="event.name"
+          name="name"
+          class="form-input"
+          placeholder="הופעה של ישי ריבו"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">תיאור</label>
+        <textarea
+          [(ngModel)]="event.description"
+          name="description"
+          class="form-textarea"
+          rows="4"
+          placeholder="תיאור קצר על ההופעה..."
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">שם האמן/להקה (טקסט חופשי)</label>
+          <input
+            type="text"
+            [(ngModel)]="event.artistName"
+            name="artistName"
+            class="form-input"
+            placeholder="שם האמן או הלהקה (אם לא קיים במערכת)"
+          />
+          <small class="form-hint">שדה זה מיועד לאומנים שעדיין לא קיימים במערכת</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">מיקום ההופעה</label>
+          <input
+            type="text"
+            [(ngModel)]="event.location"
+            name="location"
+            class="form-input"
+            placeholder="למשל: היכל התרבות, ירושלים"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Artist Tagging Section -->
+    <div class="form-section">
+      <h2 class="section-title">תיוג אומנים מהמערכת</h2>
+      <p class="section-description">בחר אומנים מהמערכת כדי לתייג אותם בהופעה זו</p>
+
+      <div *ngIf="loadingArtists" class="loading-small">
+        <div class="spinner-small"></div>
+        <span>טוען אומנים...</span>
+      </div>
+
+      <div *ngIf="!loadingArtists && allArtists.length > 0" class="artists-selection">
+        <div class="form-group">
+          <label class="form-label">בחר אומנים</label>
+
+          <!-- Custom Dropdown -->
+          <div class="custom-dropdown" [class.open]="dropdownOpen">
+            <!-- Dropdown Input -->
+            <div class="dropdown-input" (click)="toggleDropdown()">
+              <input
+                type="text"
+                [(ngModel)]="artistSearchTerm"
+                name="artistSearch"
+                class="dropdown-search"
+                [placeholder]="selectedArtistIds.length > 0 ? selectedArtistIds.length + ' אומנים נבחרו' : 'חפש או בחר אומנים...'"
+                (click)="$event.stopPropagation(); openDropdown()"
+                (input)="openDropdown()"
+              />
+              <span class="dropdown-arrow" (click)="toggleDropdown()">
+                {{ dropdownOpen ? '▲' : '▼' }}
+              </span>
+            </div>
+
+            <!-- Dropdown List -->
+            <div class="dropdown-list" *ngIf="dropdownOpen">
+              <div
+                *ngFor="let artist of filteredArtists"
+                class="dropdown-item"
+                [class.selected]="isArtistSelected(artist.id)"
+                (click)="toggleArtistSelection(artist.id)"
+              >
+                <input
+                  type="checkbox"
+                  [checked]="isArtistSelected(artist.id)"
+                  (click)="$event.stopPropagation()"
+                  readonly
+                />
+                <img
+                  [src]="artist.imageUrl || 'assets/default-artist.png'"
+                  [alt]="artist.name"
+                  class="artist-thumb"
+                />
+                <span class="artist-name">{{ artist.name }}</span>
+              </div>
+
+              <div *ngIf="filteredArtists.length === 0" class="no-results">
+                לא נמצאו אומנים
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Artists Tags -->
+          <div *ngIf="selectedArtistIds.length > 0" class="selected-tags">
+            <span
+              *ngFor="let artistId of selectedArtistIds"
+              class="artist-tag"
+              (click)="toggleArtistSelection(artistId)"
+            >
+              {{ getArtistName(artistId) }}
+              <span class="remove-icon">×</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!loadingArtists && allArtists.length === 0" class="no-artists">
+        אין אומנים זמינים במערכת
+      </div>
+    </div>
+
+    <!-- Date & Price -->
+    <div class="form-section">
+      <h2 class="section-title">תאריך ומחיר</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">תאריך ושעת ההופעה</label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="event.eventDate"
+            name="eventDate"
+            class="form-input"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">מחיר כרטיס (₪)</label>
+          <input
+            type="number"
+            [(ngModel)]="event.price"
+            name="price"
+            class="form-input"
+            placeholder="100"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Image & Ticket URL -->
+    <div class="form-section">
+      <h2 class="section-title">תמונה וכרטיסים</h2>
+
+      <div class="form-group">
+        <label class="form-label required">תמונת ההופעה</label>
+        <div class="image-upload-section">
+          <div *ngIf="event.imageUrl" class="image-preview">
+            <img [src]="event.imageUrl" alt="תמונת הופעה">
+          </div>
+          <div class="upload-actions">
+            <input
+              type="file"
+              #imageInput
+              (change)="onImageFileSelected($event)"
+              accept="image/*"
+              style="display: none"
+            />
+            <button
+              type="button"
+              class="btn-upload"
+              (click)="imageInput.click()"
+              [disabled]="uploadingImage"
+            >
+              <span class="material-icons">{{ uploadingImage ? 'hourglass_empty' : 'cloud_upload' }}</span>
+              {{ uploadingImage ? 'מעלה...' : 'העלה תמונה' }}
+            </button>
+            <span class="upload-hint">או הזן URL ישירות:</span>
+            <input
+              type="url"
+              [(ngModel)]="event.imageUrl"
+              name="imageUrl"
+              class="form-input"
+              placeholder="https://..."
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">קישור לרכישת כרטיסים</label>
+        <input
+          type="url"
+          [(ngModel)]="event.ticketUrl"
+          name="ticketUrl"
+          class="form-input"
+          placeholder="https://..."
+          required
+        />
+        <small class="form-hint">הקישור יפתח בטאב חדש כשמשתמשים לוחצים על ההופעה</small>
+      </div>
+    </div>
+
+    <!-- Display Settings -->
+    <div class="form-section">
+      <h2 class="section-title">הגדרות תצוגה</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">סדר תצוגה</label>
+          <input
+            type="number"
+            [(ngModel)]="event.displayOrder"
+            name="displayOrder"
+            class="form-input"
+            placeholder="0"
+            min="0"
+          />
+          <small class="form-hint">מספר נמוך יוצג ראשון</small>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="event.isActive"
+              name="isActive"
+            />
+            <span>הופעה פעילה (תוצג באתר)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">
+        ביטול
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="saving">
+        <span class="material-icons" *ngIf="!saving">save</span>
+        <span class="material-icons spinning" *ngIf="saving">hourglass_empty</span>
+        {{ saving ? 'שומר...' : (isEditMode ? 'עדכן הופעה' : 'צור הופעה') }}
+      </button>
+    </div>
+
+  </form>
+</div>

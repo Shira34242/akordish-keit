@@ -1,0 +1,121 @@
+<div class="article-view-container" *ngIf="!loading && article">
+  <!-- Hero Section with Background Image -->
+  <div class="article-hero" [style.backgroundImage]="'url(' + article.featuredImageUrl + ')'">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="category-badge">{{ getCategoryName() }}</span>
+      <h1 class="article-title">{{ article.title }}</h1>
+      <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+      <div class="article-meta">
+        <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }} • </span>
+        <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
+      </div>
+
+      <!-- Share and Favorite Icons -->
+      <div class="article-actions">
+          <span class="material-icons" (click)="shareArticle()" title="שתף">share</span>
+          <span class="material-icons" [class.active]="isFavorite" (click)="toggleFavorite()" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
+          <span class="material-icons" (click)="openReportModal()" title="דווח על טעות">report</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Container with Video and Text - WITH SIDEBARS -->
+  <div class="content-with-sidebars">
+    <!-- Left Sidebar - Related Articles -->
+    <aside class="sidebar sidebar-left" *ngIf="relatedArticles.length > 0">
+      <h3 class="sidebar-title">כתבות נוספות</h3>
+      <div class="related-articles">
+        <app-article-card
+          *ngFor="let relArticle of relatedArticles.slice(0, 6)"
+          [article]="relArticle"
+          layout="card">
+        </app-article-card>
+      </div>
+    </aside>
+
+    <!-- Main Content Box -->
+    <div class="content-container">
+      <div class="content-box">
+        <!-- Video Section -->
+        <div class="video-section" *ngIf="safeVideoUrl">
+          <div class="video-wrapper">
+            <iframe
+              [src]="safeVideoUrl"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="article-content">
+          <div [innerHTML]="article.content"></div>
+        </div>
+
+        <!-- Tagged Artists -->
+        <div class="tagged-artists-section" *ngIf="article.taggedArtists && article.taggedArtists.length > 0">
+          <h3 class="section-title">אמנים בכתבה</h3>
+          <div class="artists-list">
+            <a *ngFor="let artist of article.taggedArtists"
+               [routerLink]="['/artists', artist.artistId]"
+               class="artist-chip">
+              <img *ngIf="artist.artistImageUrl"
+                   [src]="artist.artistImageUrl"
+                   [alt]="artist.artistName"
+                   class="artist-avatar">
+              <span class="artist-name">{{ artist.artistName }}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback Section - Outside white box -->
+      <div class="feedback-section-outside">
+        <h3 class="feedback-title">האם הכתבה עניינה אותך?</h3>
+        <div class="feedback-buttons">
+          <button
+            class="feedback-btn feedback-yes"
+            [class.selected]="feedbackGiven"
+            (click)="giveFeedbackYes()"
+            [disabled]="feedbackGiven">
+            <span class="material-icons">thumb_up</span>
+            כן
+          </button>
+          <button
+            class="feedback-btn feedback-no"
+            [class.selected]="feedbackGiven"
+            (click)="giveFeedbackNo()"
+            [disabled]="feedbackGiven">
+            <span class="material-icons">thumb_down</span>
+            לא
+          </button>
+        </div>
+        <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
+      </div>
+    </div>
+
+    <!-- Right Sidebar - Advertisement -->
+    <aside class="sidebar sidebar-right">
+      <app-ad-display
+        spotTechnicalId="view-article-right">
+      </app-ad-display>
+    </aside>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>טוען כתבה...</p>
+</div>
+
+<!-- Report Modal -->
+<app-report-modal
+  [isOpen]="isReportModalOpen"
+  [contentType]="'Article'"
+  [contentId]="article?.id || 0"
+  [contentTitle]="article?.title"
+  (close)="closeReportModal()">
+</app-report-modal>

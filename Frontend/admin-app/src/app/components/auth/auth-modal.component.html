@@ -1,0 +1,141 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="close-btn" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>{{ isLogin ? 'כניסה' : 'הרשמה' }}</h2>
+      <p class="subtitle">
+        {{ isLogin ? 'ברוכים השבים לאקורדישקייט!' : 'הצטרפו לקהילה של אקורדישקייט' }}
+      </p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+      <span class="material-icons">error_outline</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Form -->
+    <form class="auth-form" (ngSubmit)="onSubmit()">
+      <!-- Email (Register only) -->
+      <div class="form-group" *ngIf="!isLogin">
+        <label for="email">אימייל</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="your@email.com"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <!-- Username -->
+      <div class="form-group">
+        <label for="username">{{ isLogin ? 'שם משתמש או אימייל' : 'שם משתמש' }}</label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          [placeholder]="isLogin ? 'שם משתמש או אימייל' : 'שם משתמש'"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">סיסמא</label>
+        <div class="password-field-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="password"
+            (ngModelChange)="onPasswordChange()"
+            name="password"
+            placeholder="••••••••"
+            required
+            [disabled]="loading"
+          />
+          <button
+            type="button"
+            class="password-toggle-btn"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading"
+            tabindex="-1"
+          >
+            <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+
+        <!-- Password Strength Indicator (Register mode only) -->
+        <div *ngIf="!isLogin && password" class="password-strength">
+          <div class="strength-bar">
+            <div
+              class="strength-fill"
+              [class.weak]="passwordStrength === 'weak'"
+              [class.medium]="passwordStrength === 'medium'"
+              [class.strong]="passwordStrength === 'strong'"
+            ></div>
+          </div>
+          <div class="strength-text">
+            <span *ngIf="passwordStrength === 'weak'" class="weak-text">חלשה</span>
+            <span *ngIf="passwordStrength === 'medium'" class="medium-text">בינונית</span>
+            <span *ngIf="passwordStrength === 'strong'" class="strong-text">חזקה</span>
+          </div>
+        </div>
+
+        <!-- Password Requirements -->
+        <div *ngIf="!isLogin && passwordErrors.length > 0" class="password-requirements">
+          <p class="requirements-title">הסיסמא חייבת לכלול:</p>
+          <ul>
+            <li *ngFor="let error of passwordErrors">{{ error }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        <span *ngIf="!loading">{{ isLogin ? 'כניסה' : 'הרשמה' }}</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+
+      <!-- Forgot Password (Login mode only) -->
+      <div *ngIf="isLogin" class="forgot-password-link">
+        <a (click)="onForgotPassword()">שכחתי סיסמא</a>
+      </div>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider">
+      <span>או</span>
+    </div>
+
+    <!-- Google Sign-In -->
+    <div class="google-signin-container">
+      <asl-google-signin-button
+        type="standard"
+        size="large"
+        text="signin_with">
+      </asl-google-signin-button>
+    </div>
+
+    <!-- Toggle Mode -->
+    <div class="toggle-mode">
+      <span *ngIf="isLogin">
+        עדיין אין לך חשבון?
+        <a (click)="toggleMode()">הירשם כעת</a>
+      </span>
+      <span *ngIf="!isLogin">
+        כבר יש לך חשבון?
+        <a (click)="toggleMode()">התחבר</a>
+      </span>
+    </div>
+  </div>
+</div>

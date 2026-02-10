@@ -1,0 +1,629 @@
+.teachers-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  direction: rtl;
+  font-family: 'Heebo', Arial, sans-serif;
+}
+
+/* ============= Header Section ============= */
+.page-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.header-image {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============= Search Section ============= */
+.search-section {
+  margin-bottom: 25px;
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Become Teacher Button */
+.become-teacher-btn {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(255, 165, 0, 0.3);
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.become-teacher-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 165, 0, 0.4);
+  background: linear-gradient(135deg, #FFA500, #FFD700);
+}
+
+.become-teacher-btn:active {
+  transform: translateY(-1px);
+}
+
+.become-teacher-btn .material-icons {
+  font-size: 20px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 2;
+  min-width: 280px;
+  max-width: 450px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 45px 10px 20px;
+  font-size: 15px;
+  border: 2px solid #ddd;
+  border-radius: 50px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #FFD700;
+  box-shadow: 0 3px 10px rgba(255, 215, 0, 0.2);
+}
+
+.search-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  font-size: 14px;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 140px;
+  max-width: 180px;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.filter-select:hover {
+  border-color: #FFD700;
+}
+
+.filter-select:focus {
+  border-color: #FFD700;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+/* Clear Filters Button */
+.clear-filters-wrapper {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  background-color: white;
+  border: 2px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-filters-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+  color: #333;
+}
+
+.clear-filters-btn .material-icons {
+  font-size: 18px;
+}
+
+/* ============= Quick Search Buttons ============= */
+.quick-search-section {
+  margin-bottom: 40px;
+}
+
+.quick-search-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.quick-search-btn {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.quick-search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, #FFC700 0%, #FFB700 100%);
+}
+
+.quick-search-btn:active {
+  transform: translateY(0);
+}
+
+/* ============= Loading ============= */
+.loading-container {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #FFD700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============= Filtered Results ============= */
+.filtered-section {
+  margin-top: 40px;
+}
+
+.filtered-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #FFD700;
+  text-align: center;
+}
+
+/* ============= Teacher Banners ============= */
+.banners-section {
+  margin-top: 40px;
+}
+
+.teacher-banner {
+  margin-bottom: 50px;
+}
+
+.banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #FFD700;
+}
+
+.banner-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.view-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  background-color: transparent;
+  border: 2px solid #FFD700;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.view-more-btn:hover {
+  background-color: #FFD700;
+  color: white;
+}
+
+.view-more-btn .material-icons {
+  font-size: 20px;
+}
+
+/* ============= Teachers Grid ============= */
+.teachers-grid {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Hide scrollbar by default */
+.teachers-grid::-webkit-scrollbar {
+  height: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show scrollbar on hover */
+.teachers-grid:hover::-webkit-scrollbar {
+  opacity: 1;
+}
+
+.teachers-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.teachers-grid::-webkit-scrollbar-thumb {
+  background: #FFD700;
+  border-radius: 10px;
+}
+
+.teachers-grid::-webkit-scrollbar-thumb:hover {
+  background: #FFC700;
+}
+
+/* Filtered results grid - normal wrapping layout */
+.filtered-section .teachers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  overflow-x: visible;
+  scrollbar-width: auto;
+}
+
+.teacher-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 220px;
+  max-width: 220px;
+  flex-shrink: 0;
+}
+
+/* Remove fixed width for filtered results */
+.filtered-section .teacher-card {
+  min-width: auto;
+  max-width: none;
+  flex-shrink: 1;
+}
+
+.teacher-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.teacher-image {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.teacher-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featured-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+}
+
+.featured-badge .material-icons {
+  font-size: 18px;
+}
+
+.teacher-info {
+  padding: 15px;
+}
+
+.teacher-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
+.teacher-instrument,
+.teacher-location,
+.teacher-experience {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.teacher-location .material-icons,
+.teacher-experience .material-icons {
+  font-size: 16px;
+  color: #999;
+}
+
+/* ============= Additional Teachers Section ============= */
+.additional-teachers-section {
+  margin-top: 60px;
+}
+
+.section-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #FFD700;
+}
+
+.teachers-table {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.teacher-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.teacher-row:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
+}
+
+.row-image {
+  flex-shrink: 0;
+}
+
+.row-image img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f5f5f5;
+}
+
+.row-info {
+  width: 100%;
+}
+
+.row-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.row-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.detail-item .material-icons {
+  font-size: 16px;
+  color: #999;
+}
+
+.row-action {
+  flex-shrink: 0;
+}
+
+.row-action .material-icons {
+  font-size: 28px;
+  color: #FFD700;
+}
+
+/* ============= Empty State ============= */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  color: #666;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #999;
+}
+
+/* ============= Responsive Design ============= */
+@media (max-width: 1024px) {
+  .search-filters {
+    flex-wrap: wrap;
+  }
+
+  .search-input-wrapper {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .filter-select {
+    flex: 1 1 calc(50% - 5px);
+    min-width: calc(50% - 5px);
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .teachers-page {
+    padding: 15px;
+  }
+
+  .banner-title {
+    font-size: 22px;
+  }
+
+  .section-title,
+  .filtered-title {
+    font-size: 24px;
+  }
+
+  .search-filters {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .search-input-wrapper {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .teacher-card {
+    font-size: 14px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .filtered-section .teachers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .teacher-name {
+    font-size: 16px;
+  }
+
+  .quick-search-btn {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  .teachers-table {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .row-details {
+    justify-content: center;
+  }
+
+  .row-action {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .teacher-card {
+    min-width: 160px;
+    max-width: 160px;
+  }
+
+  .filtered-section .teachers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-table {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-search-container {
+    flex-direction: column;
+  }
+
+  .quick-search-btn {
+    width: 100%;
+  }
+}

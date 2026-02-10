@@ -1,0 +1,135 @@
+<div class="featured-content-container" dir="rtl">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>ניהול תוכן מרכזי</h1>
+    <p class="subtitle">בחר עד 4 כתבות שיוצגו בראש דף חדשות המוזיקה</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>טוען תוכן מרכזי...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="content-grid">
+
+    <!-- Left Side: Selected Articles (4 Positions) -->
+    <div class="selected-section">
+      <h2 class="section-title">
+        <span class="material-icons">star</span>
+        כתבות נבחרות
+      </h2>
+
+      <div class="selected-list">
+        <div *ngFor="let article of selectedArticles; let i = index" class="selected-item">
+          <div class="position-indicator">{{ i + 1 }}</div>
+
+          <div *ngIf="article" class="article-selected">
+            <img [src]="article.featuredImageUrl" [alt]="article.title" class="article-thumb">
+            <div class="article-details">
+              <h3 class="article-title">{{ article.title }}</h3>
+              <p class="article-category">{{ article.categoryNames.join(', ') }}</p>
+            </div>
+            <div class="article-actions">
+              <button
+                class="btn-icon"
+                (click)="moveUp(i)"
+                [disabled]="i === 0"
+                title="הזז למעלה"
+              >
+                <span class="material-icons">arrow_upward</span>
+              </button>
+              <button
+                class="btn-icon"
+                (click)="moveDown(i)"
+                [disabled]="i === 3"
+                title="הזז למטה"
+              >
+                <span class="material-icons">arrow_downward</span>
+              </button>
+              <button
+                class="btn-icon btn-remove"
+                (click)="removeArticle(i)"
+                title="הסר"
+              >
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="!article" class="article-empty">
+            <span class="material-icons">add_circle_outline</span>
+            <p>מיקום {{ getPositionLabel(i) }}</p>
+            <small>בחר כתבה מהרשימה</small>
+          </div>
+        </div>
+      </div>
+
+      <button
+        class="btn-save"
+        (click)="saveFeaturedContent()"
+        [disabled]="saving"
+      >
+        <span class="material-icons" *ngIf="!saving">save</span>
+        <span class="material-icons spinning" *ngIf="saving">hourglass_empty</span>
+        {{ saving ? 'שומר...' : 'שמור שינויים' }}
+      </button>
+    </div>
+
+    <!-- Right Side: Available Articles -->
+    <div class="available-section">
+      <h2 class="section-title">
+        <span class="material-icons">article</span>
+        כתבות זמינות
+      </h2>
+
+      <!-- Search -->
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchArticles()"
+          placeholder="חפש כתבה..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Loading Articles -->
+      <div *ngIf="loadingArticles" class="loading-articles">
+        <div class="spinner-small"></div>
+        <p>טוען כתבות...</p>
+      </div>
+
+      <!-- Articles List -->
+      <div *ngIf="!loadingArticles" class="articles-list">
+        <div
+          *ngFor="let article of filteredArticles"
+          class="article-item"
+          (click)="selectArticle(article, getFirstEmptyPosition())"
+          [class.disabled]="!hasEmptyPosition()"
+        >
+          <img [src]="article.featuredImageUrl" [alt]="article.title" class="article-thumb">
+          <div class="article-info">
+            <h4 class="article-title">{{ article.title }}</h4>
+            <p class="article-meta">
+              <span class="category-badge">{{ article.categoryNames.join(', ') }}</span>
+              <span class="views">
+                <span class="material-icons">visibility</span>
+                {{ article.viewCount }}
+              </span>
+            </p>
+          </div>
+          <span class="material-icons add-icon">add_circle</span>
+        </div>
+
+        <div *ngIf="filteredArticles.length === 0" class="no-results">
+          <span class="material-icons">search_off</span>
+          <p>לא נמצאו כתבות</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

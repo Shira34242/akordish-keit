@@ -1,0 +1,79 @@
+<div class="blog-post-container" *ngIf="!loading && article">
+  <!-- Content with Sidebars -->
+  <div class="content-with-sidebars">
+    <!-- Left Sidebar - Advertisement -->
+    <aside class="sidebar sidebar-left">
+      <app-ad-display
+        spotTechnicalId="blog-post-left">
+      </app-ad-display>
+    </aside>
+
+    <!-- Main Content Box -->
+    <div class="content-wrapper">
+      <div class="content-box">
+        <!-- Featured Image with Title Overlay -->
+        <div class="featured-image-section">
+          <img [src]="article.featuredImageUrl" [alt]="article.title" class="featured-image">
+          <div class="image-overlay"></div>
+          <div class="image-content">
+            <span class="category-badge">{{ getCategoryName() }}</span>
+            <h1 class="article-title">{{ article.title }}</h1>
+            <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+          </div>
+        </div>
+
+        <!-- Article Actions and Meta -->
+        <div class="article-header">
+          <div class="article-meta">
+            <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }}</span>
+            <span class="meta-separator" *ngIf="article.authorName">•</span>
+            <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
+            <span class="meta-separator">•</span>
+            <span class="meta-item">{{ article.viewCount }} צפיות</span>
+          </div>
+          <div class="article-actions">
+            <span class="material-icons action-icon" (click)="toggleFavorite()" [class.active]="isFavorite" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">
+              {{ isFavorite ? 'favorite' : 'favorite_border' }}
+            </span>
+            <span class="material-icons action-icon" (click)="shareArticle()" title="שיתוף">
+              share
+            </span>
+            <span class="material-icons action-icon" (click)="reportError()" title="דיווח על טעות">
+              flag
+            </span>
+          </div>
+        </div>
+
+      <!-- Video Section (if exists) -->
+      <div class="video-section" *ngIf="safeVideoUrl">
+        <div class="video-wrapper">
+          <iframe
+            [src]="safeVideoUrl"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+
+        <!-- Article Content -->
+        <div class="article-content">
+          <div [innerHTML]="article.content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar - Advertisement -->
+    <aside class="sidebar sidebar-right">
+      <app-ad-display
+        spotTechnicalId="blog-post-right">
+      </app-ad-display>
+    </aside>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>טוען תוכן...</p>
+</div>

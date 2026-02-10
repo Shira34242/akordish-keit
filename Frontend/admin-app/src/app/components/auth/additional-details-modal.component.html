@@ -1,0 +1,100 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="close-btn" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <span class="welcome-icon material-icons">celebration</span>
+      <h2>עוד כמה פרטים עליך</h2>
+      <p class="subtitle">נשמח להכיר אותך טוב יותר</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+      <span class="material-icons">error_outline</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Form -->
+    <div class="details-form">
+      <!-- Preferred Instrument -->
+      <div class="form-group">
+        <label for="instrument">
+          <span class="material-icons">music_note</span>
+          כלי נגינה מועדף
+        </label>
+        <select
+          id="instrument"
+          [(ngModel)]="preferredInstrumentId"
+          [disabled]="loadingInstruments || loading"
+          class="select-input"
+        >
+          <option [ngValue]="null">בחר כלי נגינה...</option>
+          <option *ngFor="let instrument of instruments" [ngValue]="instrument.id">
+            {{ instrument.name }}
+          </option>
+        </select>
+        <p class="field-hint" *ngIf="loadingInstruments">טוען רשימת כלים...</p>
+      </div>
+
+      <!-- Phone (optional) -->
+      <div class="form-group">
+        <label for="phone">
+          <span class="material-icons">phone</span>
+          מספר טלפון (אופציונלי)
+        </label>
+        <input
+          type="tel"
+          id="phone"
+          [(ngModel)]="phone"
+          placeholder="050-1234567"
+          [disabled]="loading"
+          class="text-input"
+        />
+        <p class="field-hint">ליצירת קשר ועדכונים</p>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button
+        class="btn btn-primary"
+        (click)="onContinue(UserType.Regular)"
+        [disabled]="loading"
+      >
+        <span *ngIf="!loading">המשך כמשתמש רגיל</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="onContinue(UserType.Teacher)"
+        [disabled]="loading"
+      >
+        הצטרף כמורה
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="onContinue(UserType.ServiceProvider)"
+        [disabled]="loading"
+      >
+        הצטרף כבעל מקצוע
+      </button>
+        <button
+        class="btn btn-secondary"
+        (click)="onContinue(UserType.Artist)"
+        [disabled]="loading"
+      >
+       הצטרף כאומן
+      </button>
+    </div>
+
+    <p class="skip-text">
+      ניתן לדלג על שלב זה ולהשלים מאוחר יותר
+    </p>
+  </div>
+</div>

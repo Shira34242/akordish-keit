@@ -1,0 +1,272 @@
+<div class="modal-overlay" *ngIf="show" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'עריכת קמפיין' : 'יצירת קמפיין חדש' }}</h2>
+      <button class="btn-close" (click)="onCancel()" type="button">&times;</button>
+    </div>
+
+    <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+        <!-- Campaign Name -->
+        <div class="form-group">
+          <label for="name">שם הקמפיין <span class="required">*</span></label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-control"
+            [class.error]="f['name'].invalid && f['name'].touched"
+            placeholder="הזן שם קמפיין"
+          />
+          <div class="error-message" *ngIf="f['name'].invalid && f['name'].touched">
+            <span *ngIf="f['name'].errors?.['required']">שדה חובה</span>
+            <span *ngIf="f['name'].errors?.['maxlength']">מקסימום 200 תווים</span>
+          </div>
+        </div>
+
+        <!-- Client & Ad Spot -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="clientId">לקוח <span class="required">*</span></label>
+            <select
+              id="clientId"
+              formControlName="clientId"
+              class="form-control"
+              [class.error]="f['clientId'].invalid && f['clientId'].touched">
+              <option [value]="null">בחר לקוח</option>
+              <option *ngFor="let client of clients" [value]="client.id">
+                {{ client.businessName }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="f['clientId'].invalid && f['clientId'].touched">
+              <span *ngIf="f['clientId'].errors?.['required']">שדה חובה</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adSpotId">שטח פרסום <span class="required">*</span></label>
+            <select
+              id="adSpotId"
+              formControlName="adSpotId"
+              class="form-control"
+              [class.error]="f['adSpotId'].invalid && f['adSpotId'].touched">
+              <option [value]="null">בחר שטח פרסום</option>
+              <option *ngFor="let spot of adSpots" [value]="spot.id">
+                {{ spot.name }} ({{ spot.technicalId }})
+              </option>
+            </select>
+            <div class="error-message" *ngIf="f['adSpotId'].invalid && f['adSpotId'].touched">
+              <span *ngIf="f['adSpotId'].errors?.['required']">שדה חובה</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Media Upload -->
+        <div class="form-group">
+          <label for="mediaFile">מדיה לדסקטופ (תמונה/וידאו/GIF)</label>
+          <div class="file-upload-section">
+            <input
+              type="file"
+              id="mediaFile"
+              (change)="onMediaFileSelected($event, false)"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+              class="file-input"
+              #mediaFileInput
+            />
+            <button type="button" class="btn-upload" (click)="mediaFileInput.click()">
+              בחר קובץ
+            </button>
+            <span class="file-info" *ngIf="mediaFile">{{ mediaFile.name }} ({{ (mediaFile.size / 1024 / 1024).toFixed(2) }}MB)</span>
+            <span class="upload-hint" *ngIf="!mediaFile && !mediaPreviewUrl">JPG, PNG, GIF, WEBP, MP4, WEBM - עד 10MB</span>
+          </div>
+
+          <!-- Preview -->
+          <div class="media-preview" *ngIf="mediaPreviewUrl">
+            <button type="button" class="btn-remove-preview" (click)="removeMedia(false)">&times;</button>
+            <img *ngIf="getMediaType(mediaPreviewUrl) === 'image'" [src]="mediaPreviewUrl" alt="Preview" />
+            <video *ngIf="getMediaType(mediaPreviewUrl) === 'video'" [src]="mediaPreviewUrl" controls></video>
+          </div>
+
+          <!-- Alternative: Manual URL input -->
+          <div *ngIf="!mediaFile && !mediaPreviewUrl" style="margin-top: 1rem;">
+            <label for="mediaUrl">כתובת URL ידנית  </label> 
+            
+            <input
+              type="url"
+              id="mediaUrl"
+              formControlName="mediaUrl"
+              class="form-control"
+              placeholder="https://example.com/banner.jpg"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="mobileMediaFile">מדיה למובייל (תמונה/וידאו/GIF)</label>
+          <div class="file-upload-section">
+            <input
+              type="file"
+              id="mobileMediaFile"
+              (change)="onMediaFileSelected($event, true)"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+              class="file-input"
+              #mobileMediaFileInput
+            />
+            <button type="button" class="btn-upload" (click)="mobileMediaFileInput.click()">
+              בחר קובץ
+            </button>
+            <span class="file-info" *ngIf="mobileMediaFile">{{ mobileMediaFile.name }} ({{ (mobileMediaFile.size / 1024 / 1024).toFixed(2) }}MB)</span>
+            <span class="upload-hint" *ngIf="!mobileMediaFile && !mobileMediaPreviewUrl">JPG, PNG, GIF, WEBP, MP4, WEBM - עד 10MB</span>
+          </div>
+
+          <!-- Preview -->
+          <div class="media-preview" *ngIf="mobileMediaPreviewUrl">
+            <button type="button" class="btn-remove-preview" (click)="removeMedia(true)">&times;</button>
+            <img *ngIf="getMediaType(mobileMediaPreviewUrl) === 'image'" [src]="mobileMediaPreviewUrl" alt="Mobile Preview" />
+            <video *ngIf="getMediaType(mobileMediaPreviewUrl) === 'video'" [src]="mobileMediaPreviewUrl" controls></video>
+          </div>
+
+          <!-- Alternative: Manual URL input -->
+          <div *ngIf="!mobileMediaFile && !mobileMediaPreviewUrl" style="margin-top: 1rem;">
+            <label for="mobileMediaUrl">כתובת URL ידנית  </label>
+            <input
+              type="url"
+              id="mobileMediaUrl"
+              formControlName="mobileMediaUrl"
+              class="form-control"
+              placeholder="https://example.com/mobile-banner.jpg"
+            />
+          </div>
+        </div>
+
+        <!-- Target URL -->
+        <div class="form-group">
+          <label for="knownUrl">כתובת יעד (לינק)</label>
+          <input
+            type="url"
+            id="knownUrl"
+            formControlName="knownUrl"
+            class="form-control"
+            placeholder="https://example.com"
+          />
+        </div>
+
+        <!-- Priority & Status -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="priority">עדיפות (1-5) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="priority"
+              formControlName="priority"
+              class="form-control"
+              [class.error]="f['priority'].invalid && f['priority'].touched"
+              min="1"
+              max="5"
+            />
+            <div class="hint-text" *ngIf="takenPriorities.length > 0" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">
+              עדיפויות תפוסות: {{ takenPriorities.join(', ') }} | עדיפויות פנויות: {{ availablePriorities.join(', ') || 'אין' }}
+            </div>
+            <div class="error-message" *ngIf="f['priority'].invalid && f['priority'].touched">
+              <span *ngIf="f['priority'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['priority'].errors?.['min']">עדיפות חייבת להיות לפחות 1</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="status">סטטוס <span class="required">*</span></label>
+            <select
+              id="status"
+              formControlName="status"
+              class="form-control"
+              [class.error]="f['status'].invalid && f['status'].touched">
+              <option value="Draft">טיוטה</option>
+              <option value="Active">פעיל</option>
+              <option value="Paused">מושהה</option>
+              <option value="Completed">הושלם</option>
+              <option value="Archived">ארכיון</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">תאריך התחלה <span class="required">*</span></label>
+            <input
+              type="date"
+              id="startDate"
+              formControlName="startDate"
+              class="form-control"
+              [class.error]="f['startDate'].invalid && f['startDate'].touched"
+            />
+            <div class="error-message" *ngIf="f['startDate'].invalid && f['startDate'].touched">
+              <span *ngIf="f['startDate'].errors?.['required']">שדה חובה</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="endDate">תאריך סיום <span class="required">*</span></label>
+            <input
+              type="date"
+              id="endDate"
+              formControlName="endDate"
+              class="form-control"
+              [class.error]="f['endDate'].invalid && f['endDate'].touched"
+            />
+            <div class="error-message" *ngIf="f['endDate'].invalid && f['endDate'].touched">
+              <span *ngIf="f['endDate'].errors?.['required']">שדה חובה</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Availability Check -->
+        <div class="availability-section" *ngIf="f['adSpotId'].value && f['startDate'].value && f['endDate'].value && f['priority'].value">
+          <div class="checking-availability" *ngIf="checkingAvailability">
+            <span class="spinner"></span>
+            <span>בודק זמינות שטח פרסום...</span>
+          </div>
+          <div class="availability-error" *ngIf="availabilityError && !checkingAvailability">
+            <span class="error-icon">⚠️</span>
+            <span>{{ availabilityError }}</span>
+          </div>
+          <div class="availability-info" *ngIf="availabilityMessage && !availabilityError && !checkingAvailability" style="padding: 0.75rem; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.2rem;">ℹ️</span>
+            <span>{{ availabilityMessage }}</span>
+          </div>
+          <div class="availability-success" *ngIf="!availabilityError && !availabilityMessage && !checkingAvailability && (f['adSpotId'].value && f['startDate'].value && f['endDate'].value && f['priority'].value)">
+            <span class="success-icon">✓</span>
+            <span>שטח הפרסום זמין עבור עדיפות זו</span>
+          </div>
+        </div>
+
+        <!-- Budget -->
+        <div class="form-group">
+          <label for="budget">תקציב <span class="required">*</span></label>
+          <input
+            type="number"
+            id="budget"
+            formControlName="budget"
+            class="form-control"
+            [class.error]="f['budget'].invalid && f['budget'].touched"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+          />
+          <div class="error-message" *ngIf="f['budget'].invalid && f['budget'].touched">
+            <span *ngIf="f['budget'].errors?.['required']">שדה חובה</span>
+            <span *ngIf="f['budget'].errors?.['min']">התקציב חייב להיות חיובי</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()">ביטול</button>
+        <button type="submit" class="btn btn-save" [disabled]="campaignForm.invalid || uploadingMedia || uploadingMobileMedia || availabilityError || checkingAvailability">
+          <span *ngIf="!uploadingMedia && !uploadingMobileMedia">{{ isEditMode ? 'שמור שינויים' : 'צור קמפיין' }}</span>
+          <span *ngIf="uploadingMedia || uploadingMobileMedia">מעלה קבצים...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

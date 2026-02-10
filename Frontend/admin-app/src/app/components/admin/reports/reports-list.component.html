@@ -1,0 +1,216 @@
+<div class="reports-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול דיווחים</h1>
+      <p class="page-subtitle">טיפול בדיווחים על תוכן</p>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <!-- Filters -->
+    <div class="filters">
+      <!-- Status Filter -->
+      <select [(ngModel)]="selectedStatus" (change)="onStatusFilter(selectedStatus)" class="filter-select">
+        <option [ngValue]="undefined">כל הסטטוסים</option>
+        <option value="Pending">ממתין</option>
+        <option value="Resolved">טופל</option>
+        <option value="Dismissed">נדחה</option>
+      </select>
+
+      <!-- Content Type Filter -->
+      <select [(ngModel)]="selectedContentType" (change)="onContentTypeFilter(selectedContentType)"
+        class="filter-select">
+        <option [ngValue]="undefined">כל סוגי התוכן</option>
+        <option value="Song">אקורדים</option>
+        <option value="Article">כתבה</option>
+        <option value="BlogPost">בלוג</option>
+        <option value="General">הודעה כללית</option>
+      </select>
+
+      <!-- Report Type Filter -->
+      <select [(ngModel)]="selectedReportType" (change)="onReportTypeFilter(selectedReportType)"
+        class="filter-select">
+        <option [ngValue]="undefined">כל סוגי הדיווח</option>
+        <option value="ContentError">טעות בתוכן</option>
+        <option value="InappropriateContent">תוכן לא ראוי</option>
+        <option value="Other">אחר</option>
+      </select>
+
+      <!-- Reset Filters -->
+      <button class="filter-btn btn-reset" (click)="resetFilters()">
+        <span class="material-icons">restart_alt</span> איפוס סינון
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <span class="stat-item">סה"כ: {{ totalItems }}</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען דיווחים...</p>
+    </div>
+
+    <div *ngIf="!loading && reports.length === 0" class="empty-state">
+      <span class="material-icons">inbox</span>
+      <p>אין דיווחים להצגה</p>
+    </div>
+
+    <table *ngIf="!loading && reports.length > 0" class="reports-table">
+      <thead>
+        <tr>
+          <th>תאריך</th>
+          <th>סוג תוכן</th>
+          <th>כותרת</th>
+          <th>סוג דיווח</th>
+          <th>מדווח</th>
+          <th>סטטוס</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let report of reports">
+          <!-- Main Row -->
+          <tr class="report-row" [class.expanded]="expandedReportId === report.id">
+            <!-- Date -->
+            <td class="date-cell">
+              {{ report.reportedAt | date:'d/M/yy HH:mm' }}
+            </td>
+
+            <!-- Content Type -->
+            <td>
+              <span class="content-type-badge">
+                {{ contentTypeLabels[report.contentType] }}
+              </span>
+            </td>
+
+            <!-- Title -->
+            <td class="title-cell">
+              <div class="content-title">{{ report.contentTitle }}</div>
+            </td>
+
+            <!-- Report Type -->
+            <td>
+              <span class="report-type-badge">
+                {{ reportTypeLabels[report.reportType] }}
+              </span>
+            </td>
+
+            <!-- Reporter -->
+            <td>
+              {{ report.reporterUsername || 'אורח' }}
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+                {{ statusLabels[report.status] }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="actions-cell">
+              <button class="action-btn btn-expand" (click)="toggleExpand(report.id)" title="הצג פרטים">
+                <span class="material-icons">{{ expandedReportId === report.id ? 'expand_less' : 'expand_more' }}</span>
+              </button>
+              <button class="action-btn btn-link" (click)="goToContent(report)" title="עבור לתוכן">
+                <span class="material-icons">open_in_new</span>
+              </button>
+              <button class="action-btn btn-edit" (click)="openStatusModal(report)" title="עדכן סטטוס"
+                *ngIf="report.status === 'Pending'">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="action-btn btn-delete" (click)="deleteReport(report.id)" title="מחק">
+                <span class="material-icons">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Expanded Details Row -->
+          <tr *ngIf="expandedReportId === report.id" class="details-row">
+            <td colspan="7">
+              <div class="report-details">
+                <div class="detail-section">
+                  <h4>תיאור הבעיה:</h4>
+                  <p class="description">{{ report.description }}</p>
+                </div>
+
+                <div class="detail-section" *ngIf="report.status !== 'Pending'">
+                  <h4>פרטי טיפול:</h4>
+                  <div class="treatment-info">
+                    <p><strong>טופל על ידי:</strong> {{ report.resolvedByUsername || 'לא ידוע' }}</p>
+                    <p><strong>תאריך טיפול:</strong> {{ report.resolvedAt | date:'d/M/yyyy HH:mm' }}</p>
+                    <p *ngIf="report.adminNotes"><strong>הערות מנהל:</strong> {{ report.adminNotes }}</p>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="!loading && totalPages > 1">
+    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+      <span class="material-icons">chevron_right</span>
+    </button>
+
+    <button *ngFor="let page of pages" class="page-btn" [class.active]="page === currentPage"
+      (click)="goToPage(page)">
+      {{ page }}
+    </button>
+
+    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+      <span class="material-icons">chevron_left</span>
+    </button>
+  </div>
+</div>
+
+<!-- Status Update Modal -->
+<div *ngIf="editingReportId !== null" class="modal-backdrop" (click)="closeStatusModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">עדכון סטטוס דיווח</h2>
+      <button class="close-btn" (click)="closeStatusModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Status Selection -->
+      <div class="form-group">
+        <label class="form-label">סטטוס</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="status" value="Resolved" [(ngModel)]="editingStatus" />
+            <span class="radio-label">טופל</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="status" value="Dismissed" [(ngModel)]="editingStatus" />
+            <span class="radio-label">נדחה</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Admin Notes -->
+      <div class="form-group">
+        <label class="form-label">הערות מנהל (אופציונלי)</label>
+        <textarea class="form-textarea" [(ngModel)]="adminNotes" rows="4"
+          placeholder="הוסף הערות לגבי הטיפול בדיווח..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeStatusModal()">ביטול</button>
+      <button class="btn btn-primary" (click)="updateStatus()">עדכן סטטוס</button>
+    </div>
+  </div>
+</div>

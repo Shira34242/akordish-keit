@@ -1,0 +1,268 @@
+<div class="service-provider-create-container" (click)="closeDropdowns($event)">
+  <div class="service-provider-create-card">
+    <h1 class="page-title">צור פרופיל בעל מקצוע</h1>
+
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>טוען...</p>
+    </div>
+
+    <div *ngIf="!loading" class="form-container">
+      <div *ngIf="error" class="error-message">{{ error }}</div>
+
+      <div *ngIf="subscription" class="subscription-badge">
+        <span>מנוי {{ subscription.planName }}</span>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #providerForm="ngForm">
+        <!-- Basic Info Section -->
+        <section class="form-section">
+          <h2>מידע בסיסי</h2>
+
+          <div class="form-group">
+            <label for="displayName">שם תצוגה *</label>
+            <input
+              type="text"
+              id="displayName"
+              [(ngModel)]="displayName"
+              name="displayName"
+              required
+              placeholder="שם העסק / בעל המקצוע"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">אימייל *</label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="email"
+              name="email"
+              required
+              placeholder="your@email.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">טלפון *</label>
+            <input
+              type="tel"
+              id="phoneNumber"
+              [(ngModel)]="phoneNumber"
+              name="phoneNumber"
+              required
+              placeholder="050-1234567"
+            />
+          </div>
+
+          <!-- WhatsApp - רק למנוי רגיל ומעלה -->
+          <div class="form-group" *ngIf="subscription || isPremium">
+            <label for="whatsAppNumber">WhatsApp</label>
+            <input
+              type="tel"
+              id="whatsAppNumber"
+              [(ngModel)]="whatsAppNumber"
+              name="whatsAppNumber"
+              placeholder="050-1234567"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>עיר</label>
+            <div class="custom-dropdown">
+              <div class="dropdown-trigger" (click)="toggleCityDropdown()">
+                {{ getSelectedCityName() }}
+              </div>
+              <div *ngIf="cityDropdownOpen" class="dropdown-menu">
+                <input
+                  type="text"
+                  class="dropdown-search"
+                  [(ngModel)]="citySearchText"
+                  (ngModelChange)="onCitySearchChange()"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="חפש עיר..."
+                />
+                <div class="dropdown-options">
+                  <div
+                    *ngFor="let city of filteredCities"
+                    class="dropdown-option"
+                    (click)="selectCity(city.id)"
+                  >
+                    {{ city.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="location">כתובת / אזור פעילות</label>
+            <input
+              type="text"
+              id="location"
+              [(ngModel)]="location"
+              name="location"
+              placeholder="רח' הרצל 123, תל אביב"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>קטגוריה *</label>
+            <div class="custom-dropdown">
+              <div class="dropdown-trigger" (click)="toggleCategoriesDropdown()">
+                {{ getSelectedCategoryText() }}
+              </div>
+              <div *ngIf="categoriesDropdownOpen" class="dropdown-menu">
+                <input
+                  type="text"
+                  class="dropdown-search"
+                  [(ngModel)]="categorySearchText"
+                  (ngModelChange)="onCategorySearchChange()"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="חפש קטגוריה..."
+                />
+                <div class="dropdown-options">
+                  <div
+                    *ngFor="let category of filteredCategories"
+                    class="dropdown-option"
+                    (click)="selectCategory(category.id)"
+                  >
+                    {{ category.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="shortBio">תיאור קצר</label>
+            <textarea
+              id="shortBio"
+              [(ngModel)]="shortBio"
+              name="shortBio"
+              rows="2"
+              placeholder="תיאור קצר של העסק / בעל המקצוע (2-3 שורות)"
+            ></textarea>
+          </div>
+
+          <!-- תיאור מורחב - רק למנוי רגיל ומעלה -->
+          <div class="form-group" *ngIf="subscription || isPremium">
+            <label for="fullDescription">תיאור מורחב</label>
+            <textarea
+              id="fullDescription"
+              [(ngModel)]="fullDescription"
+              name="fullDescription"
+              rows="5"
+              placeholder="תיאור מפורט על השירותים, הניסיון, וכו'"
+            ></textarea>
+          </div>
+        </section>
+
+        <!-- Professional Details Section -->
+        <section class="form-section">
+          <h2>פרטים מקצועיים</h2>
+
+          <div class="form-group">
+            <label for="yearsOfExperience">שנות ניסיון</label>
+            <input
+              type="number"
+              id="yearsOfExperience"
+              [(ngModel)]="yearsOfExperience"
+              name="yearsOfExperience"
+              min="0"
+              placeholder="0"
+            />
+          </div>
+
+          <!-- שעות פעילות - רק למנוי רגיל ומעלה -->
+          <div class="form-group" *ngIf="subscription || isPremium">
+            <label for="workingHours">שעות פעילות</label>
+            <input
+              type="text"
+              id="workingHours"
+              [(ngModel)]="workingHours"
+              name="workingHours"
+              placeholder="א'-ה' 10:00-19:00, ו' 9:00-13:00"
+            />
+          </div>
+        </section>
+
+        <!-- Media Section - רק למנוי רגיל ומעלה -->
+        <section class="form-section" *ngIf="subscription || isPremium">
+          <h2>מדיה ותמונות</h2>
+
+          <div class="form-group">
+            <label for="profileImageUrl">תמונת פרופיל (URL)</label>
+            <input
+              type="url"
+              id="profileImageUrl"
+              [(ngModel)]="profileImageUrl"
+              name="profileImageUrl"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="videoUrl">וידאו (YouTube/Vimeo URL)</label>
+            <input
+              type="url"
+              id="videoUrl"
+              [(ngModel)]="videoUrl"
+              name="videoUrl"
+              placeholder="https://youtube.com/watch?v=..."
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="websiteUrl">אתר אינטרנט</label>
+            <input
+              type="url"
+              id="websiteUrl"
+              [(ngModel)]="websiteUrl"
+              name="websiteUrl"
+              placeholder="https://yourwebsite.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>גלריית תמונות</label>
+            <div class="gallery-manager">
+              <div class="gallery-add">
+                <input
+                  type="url"
+                  [(ngModel)]="newGalleryImage.imageUrl"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="URL של תמונה"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="newGalleryImage.caption"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="כיתוב (אופציונלי)"
+                />
+                <button type="button" (click)="addGalleryImage()">הוסף</button>
+              </div>
+              <div *ngIf="galleryImages.length > 0" class="gallery-list">
+                <div *ngFor="let img of galleryImages; let i = index" class="gallery-item">
+                  <img [src]="img.imageUrl" alt="Gallery image" />
+                  <span>{{ img.caption || 'ללא כיתוב' }}</span>
+                  <button type="button" (click)="removeGalleryImage(i)">מחק</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Submit Section -->
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="saving">
+            {{ saving ? 'שולח...' : 'שלח לאישור' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="router.navigate(['/professionals'])" [disabled]="saving">
+            ביטול
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

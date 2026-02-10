@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דוגמה - הצגת פרסומות</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+
+    .content {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .ad-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #fff9e6;
+      border: 2px dashed #c99039;
+      border-radius: 8px;
+    }
+
+    .ad-section h3 {
+      margin-top: 0;
+      color: #c99039;
+    }
+
+    #header-ad {
+      max-width: 728px;
+      margin: 0 auto;
+    }
+
+    #sidebar-ad {
+      max-width: 300px;
+    }
+
+    .info {
+      background: #e3f2fd;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-right: 4px solid #2196f3;
+    }
+
+    .info h4 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>דוגמה להצגת פרסומות באתר</h1>
+    <p>דף זה מדגים כיצד להשתמש בווידג'ט הפרסומות בכל אתר</p>
+  </header>
+
+  <!-- פרסומת באנר עליון -->
+  <div class="ad-section">
+    <h3>📢 פרסומת באנר עליון (728x90)</h3>
+    <div id="header-ad"></div>
+  </div>
+
+  <!-- תוכן דף -->
+  <div class="content">
+    <h2>ברוכים הבאים לאתר שלנו</h2>
+    <p>
+      זהו דף דוגמה שמראה כיצד לשלב פרסומות באתר רגיל (HTML/JavaScript).
+      הפרסומות טוענות אוטומטית מהשרת ומתחלפות כל 45 שניות.
+    </p>
+
+    <div class="info">
+      <h4>🔧 איך זה עובד?</h4>
+      <ul>
+        <li>הווידג'ט קורא ל-API ומקבל את כל הפרסומות הפעילות לשטח מסוים</li>
+        <li>הפרסומות ממוינות לפי עדיפות (1 = הכי גבוה)</li>
+        <li>כל 45 שניות (ניתן לשינוי) הפרסומת מתחלפת אוטומטית</li>
+        <li>מעקב אוטומטי אחר צפיות וקליקים</li>
+        <li>תמיכה מלאה במובייל</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- פרסומת סייד-בר -->
+  <div class="ad-section">
+    <h3>📢 פרסומת סייד-בר (300x250)</h3>
+    <div id="sidebar-ad"></div>
+  </div>
+
+  <!-- הוראות שימוש -->
+  <div class="content">
+    <h2>📖 איך להשתמש בווידג'ט בקוד שלך?</h2>
+
+    <h3>שלב 1: הוסף את הקוד JavaScript</h3>
+    <pre><code>&lt;script src="ad-widget.js"&gt;&lt;/script&gt;</code></pre>
+
+    <h3>שלב 2: צור div להצגת הפרסומת</h3>
+    <pre><code>&lt;div id="my-ad-container"&gt;&lt;/div&gt;</code></pre>
+
+    <h3>שלב 3: אתחל את הווידג'ט</h3>
+    <pre><code>&lt;script&gt;
+  window.adWidgetInstance = new AdWidget({
+    containerId: 'my-ad-container',
+    spotTechnicalId: 'header-banner',
+    apiUrl: 'https://localhost:44395/api/AdCampaigns',
+    rotationInterval: 45000, // 45 שניות
+    isMobile: false // או true למובייל
+  });
+&lt;/script&gt;</code></pre>
+
+    <div class="info">
+      <h4>⚙️ פרמטרים זמינים:</h4>
+      <ul>
+        <li><code>containerId</code> - ID של ה-div להצגת הפרסומת (חובה)</li>
+        <li><code>spotTechnicalId</code> - המזהה הטכני של שטח הפרסום (חובה)</li>
+        <li><code>apiUrl</code> - כתובת ה-API (אופציונלי, ברירת מחדל: localhost:44395)</li>
+        <li><code>rotationInterval</code> - זמן בין החלפות במילישניות (אופציונלי, ברירת מחדל: 45000)</li>
+        <li><code>isMobile</code> - האם להציג גרסת מובייל (אופציונלי, מזוהה אוטומטית)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- טעינת הווידג'ט -->
+  <script src="ad-widget.js"></script>
+  <script>
+    // יצירת ווידג'ט לבאנר העליון
+    window.headerAdWidget = new AdWidget({
+      containerId: 'header-ad',
+      spotTechnicalId: 'header-banner',
+      apiUrl: 'https://localhost:44395/api/AdCampaigns',
+      rotationInterval: 45000,
+      isMobile: false
+    });
+
+    // יצירת ווידג'ט לסייד-בר
+    // (בדוגמה זו נשתמש באותו TechnicalId, אבל בפועל זה יהיה שטח אחר)
+    window.sidebarAdWidget = new AdWidget({
+      containerId: 'sidebar-ad',
+      spotTechnicalId: 'sidebar-banner',
+      apiUrl: 'https://localhost:44395/api/AdCampaigns',
+      rotationInterval: 60000, // דקה
+      isMobile: false
+    });
+
+    // ניקוי כשסוגרים את הדף
+    window.addEventListener('beforeunload', function() {
+      if (window.headerAdWidget) window.headerAdWidget.destroy();
+      if (window.sidebarAdWidget) window.sidebarAdWidget.destroy();
+    });
+  </script>
+
+  <footer class="content" style="margin-top: 40px; text-align: center; color: #666;">
+    <p>🎯 מערכת ניהול פרסומות - נוצרה עם ASP.NET Core + Angular</p>
+  </footer>
+</body>
+</html>

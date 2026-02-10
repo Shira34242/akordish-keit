@@ -1,0 +1,76 @@
+<div *ngIf="isOpen" class="modal-backdrop" (click)="handleBackdropClick($event)">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 class="modal-title">דיווח על בעיה</h2>
+            <button class="close-btn" (click)="closeModal()" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Success Message -->
+            <div *ngIf="showSuccess" class="success-message">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3>הדיווח נשלח בהצלחה!</h3>
+                <p>תודה רבה, נטפל בכך בהקדם</p>
+            </div>
+
+            <!-- Form -->
+            <form *ngIf="!showSuccess" (ngSubmit)="submitReport()">
+                <!-- Content Info -->
+                <div *ngIf="contentTitle" class="content-info">
+                    <p class="content-label">מדווח על:</p>
+                    <p class="content-name">{{ contentTitle }}</p>
+                </div>
+
+                <!-- Report Type -->
+                <div class="form-group">
+                    <label class="form-label">סוג הדיווח</label>
+                    <div class="radio-group">
+                        <label *ngFor="let type of reportTypes" class="radio-option">
+                            <input type="radio" name="reportType" [value]="type.value"
+                                [(ngModel)]="selectedReportType" />
+                            <span class="radio-label">{{ type.label }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label class="form-label">תיאור הבעיה <span class="required">*</span></label>
+                    <textarea class="form-textarea" [(ngModel)]="description" name="description" rows="5"
+                        placeholder="נא לתאר בפירוט את הבעיה או הטעות שמצאת..." [disabled]="isSubmitting"
+                        maxlength="1000"></textarea>
+                    <div class="char-count">
+                        {{ description.length }} / 1000
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="errorMessage" class="error-message">
+                    {{ errorMessage }}
+                </div>
+
+                <!-- Buttons -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()"
+                        [disabled]="isSubmitting">
+                        ביטול
+                    </button>
+                    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || description.length < 10">
+                        <span *ngIf="!isSubmitting">שליחת דיווח</span>
+                        <span *ngIf="isSubmitting">שולח...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

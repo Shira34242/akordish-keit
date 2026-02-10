@@ -1,0 +1,55 @@
+.artist-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 130px;
+    flex-shrink: 0;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.artist-circle:hover {
+    transform: translateY(-5px);
+}
+
+.image-wrapper {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 4px solid #ffc107;
+    /* Thick yellow border */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s;
+}
+
+.artist-circle:hover .image-wrapper {
+    box-shadow: 0 6px 15px rgba(255, 193, 7, 0.4);
+}
+
+.artist-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.artist-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    padding: 0 5px;
+}
+
+.song-count {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}

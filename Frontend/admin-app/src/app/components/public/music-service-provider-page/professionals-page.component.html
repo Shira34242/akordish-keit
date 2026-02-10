@@ -1,0 +1,337 @@
+<div class="professionals-page">
+  <!-- Header Section with Image -->
+  <div class="page-header">
+    <img src="logo.png" alt="בעלי מקצוע - מוזיקה חרדית" class="header-image">
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <!-- Become Professional Button (Only for logged in users) -->
+      <button
+        *ngIf="authService.isLoggedIn"
+        class="become-professional-btn"
+        (click)="openBecomeProfessionalForm()">
+        <span class="material-icons">business</span>
+        השתדרג לבעל מקצוע
+      </button>
+
+      <!-- Search and Filters Row -->
+      <div class="search-filters">
+        <!-- Main Search Input -->
+        <div class="search-input-wrapper">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="חיפוש לפי שם..."
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()">
+        </div>
+
+        <!-- City Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedCityId"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל הערים</option>
+          <option *ngFor="let city of cities" [ngValue]="city.id">
+            {{ city.name }}
+          </option>
+        </select>
+
+        <!-- Category Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedCategoryId"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל הקטגוריות</option>
+          <option *ngFor="let category of categories" [ngValue]="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="clear-filters-wrapper" *ngIf="isFiltered">
+        <button class="clear-filters-btn" (click)="clearFilters()">
+          <span class="material-icons">clear</span>
+          נקה סינונים
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Search Buttons -->
+  <div class="quick-search-section">
+    <div class="quick-search-container">
+      <button
+        *ngFor="let category of quickSearchCategories"
+        class="quick-search-btn"
+        (click)="onQuickSearch(category.name)">
+        {{ category.hebrewName }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>טוען בעלי מקצוע...</p>
+  </div>
+
+  <!-- Filtered Results -->
+  <div *ngIf="!loading && isFiltered" class="filtered-section">
+    <h2 class="filtered-title">תוצאות חיפוש ({{ filteredProfessionals.length }} בעלי מקצוע)</h2>
+
+    <div *ngIf="filteredProfessionals.length > 0" class="professionals-grid">
+      <div
+        *ngFor="let professional of filteredProfessionals"
+        class="professional-card"
+        (click)="viewProfessional(professional.id)">
+        <div class="professional-image">
+          <img
+            [src]="professional.profileImageUrl || 'logo.png'"
+            [alt]="professional.displayName"
+            onerror="this.onerror=null; this.src='logo.png'">
+          <span *ngIf="professional.isFeatured" class="featured-badge">
+            <span class="material-icons">star</span>
+          </span>
+        </div>
+        <div class="professional-info">
+          <h3 class="professional-name">{{ professional.displayName }}</h3>
+          <p class="professional-category" *ngIf="professional.categoryName">
+            <span class="material-icons">category</span>
+            {{ professional.categoryName }}
+          </p>
+          <p class="professional-location" *ngIf="professional.cityId">
+            <span class="material-icons">location_on</span>
+            {{ getCityName(professional.cityId) }}
+          </p>
+          <p class="professional-experience" *ngIf="professional.yearsOfExperience">
+            {{ professional.yearsOfExperience }} שנות ניסיון
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredProfessionals.length === 0" class="empty-state">
+      <span class="material-icons empty-icon">search_off</span>
+      <h3>לא נמצאו בעלי מקצוע התואמים לחיפוש</h3>
+      <p>נסה לשנות את הסינון</p>
+      <button class="clear-filters-btn" (click)="clearFilters()">
+        <span class="material-icons">clear</span>
+        נקה סינונים
+      </button>
+    </div>
+  </div>
+
+  <!-- Professionals Banners (Default View) -->
+  <div *ngIf="!loading && !isFiltered" class="banners-section">
+
+    <!-- Featured Professionals Banner -->
+    <div class="professional-banner" *ngIf="featuredProfessionals.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">מומלצים</h2>
+        <button class="view-more-btn" (click)="onViewMore('featured')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="professionals-grid">
+        <div
+          *ngFor="let professional of featuredProfessionals"
+          class="professional-card"
+          (click)="viewProfessional(professional.id)">
+          <div class="professional-image">
+            <img
+              [src]="professional.profileImageUrl || 'logo.png'"
+              [alt]="professional.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+            <span class="featured-badge">
+              <span class="material-icons">star</span>
+            </span>
+          </div>
+          <div class="professional-info">
+            <h3 class="professional-name">{{ professional.displayName }}</h3>
+               <p class="professional-category" *ngIf="professional.categoryName">
+            <span class="material-icons">category</span>
+            {{ professional.categoryName }}
+          </p>
+            <p class="professional-location" *ngIf="professional.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(professional.cityId) }}
+            </p>
+            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
+              {{ professional.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Music Stores Banner -->
+    <div class="professional-banner" *ngIf="musicStores.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">חנויות מוזיקה</h2>
+        <button class="view-more-btn" (click)="onViewMore('musicStores')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="professionals-grid">
+        <div
+          *ngFor="let professional of musicStores"
+          class="professional-card"
+          (click)="viewProfessional(professional.id)">
+          <div class="professional-image">
+            <img
+              [src]="professional.profileImageUrl || 'logo.png'"
+              [alt]="professional.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="professional-info">
+            <h3 class="professional-name">{{ professional.displayName }}</h3>
+            <p class="professional-location" *ngIf="professional.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(professional.cityId) }}
+            </p>
+            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
+              {{ professional.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recording Studios Banner -->
+    <div class="professional-banner" *ngIf="recordingStudios.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">אולפני הקלטות</h2>
+        <button class="view-more-btn" (click)="onViewMore('recordingStudios')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="professionals-grid">
+        <div
+          *ngFor="let professional of recordingStudios"
+          class="professional-card"
+          (click)="viewProfessional(professional.id)">
+          <div class="professional-image">
+            <img
+              [src]="professional.profileImageUrl || 'logo.png'"
+              [alt]="professional.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="professional-info">
+            <h3 class="professional-name">{{ professional.displayName }}</h3>
+            <p class="professional-location" *ngIf="professional.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(professional.cityId) }}
+            </p>
+            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
+              {{ professional.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Amplification Banner -->
+    <div class="professional-banner" *ngIf="amplification.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">הגברה</h2>
+        <button class="view-more-btn" (click)="onViewMore('amplification')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="professionals-grid">
+        <div
+          *ngFor="let professional of amplification"
+          class="professional-card"
+          (click)="viewProfessional(professional.id)">
+          <div class="professional-image">
+            <img
+              [src]="professional.profileImageUrl || 'logo.png'"
+              [alt]="professional.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="professional-info">
+            <h3 class="professional-name">{{ professional.displayName }}</h3>
+            <p class="professional-location" *ngIf="professional.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(professional.cityId) }}
+            </p>
+            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
+              {{ professional.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Professionals Section -->
+    <div class="additional-professionals-section" *ngIf="additionalProfessionals.length > 0">
+      <h2 class="section-title">בעלי מקצוע נוספים</h2>
+
+      <div class="professionals-table">
+        <div
+          *ngFor="let professional of additionalProfessionals"
+          class="professional-row"
+          (click)="viewProfessional(professional.id)">
+          <div class="row-image">
+            <img
+              [src]="professional.profileImageUrl || 'logo.png'"
+              [alt]="professional.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="row-info">
+            <h3 class="row-name">{{ professional.displayName }}</h3>
+            <div class="row-details">
+              <span *ngIf="professional.cityId" class="detail-item">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(professional.cityId) }}
+              </span>
+              <span *ngIf="professional.yearsOfExperience" class="detail-item">
+                <span class="material-icons">work</span>
+                {{ professional.yearsOfExperience }} שנות ניסיון
+              </span>
+            </div>
+          </div>
+          <div class="row-action">
+            <span class="material-icons">arrow_back</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && featuredProfessionals.length === 0 && additionalProfessionals.length === 0" class="empty-state">
+    <span class="material-icons empty-icon">business</span>
+    <h3>אין בעלי מקצוע זמינים כרגע</h3>
+    <p>נסה שוב מאוחר יותר</p>
+  </div>
+
+  <!-- Professional Profile Modal -->
+  <app-professional-profile-modal
+    *ngIf="selectedProfessionalId"
+    [professionalId]="selectedProfessionalId"
+    (close)="closeProfessionalProfile()"
+  ></app-professional-profile-modal>
+
+  <!-- Become Professional Form -->
+  <app-become-professional-form
+    *ngIf="showBecomeProfessionalForm"
+    (close)="closeBecomeProfessionalForm()"
+    (success)="loadProfessionals()"
+  ></app-become-professional-form>
+
+</div>

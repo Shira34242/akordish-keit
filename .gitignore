@@ -1,0 +1,85 @@
+# ================================
+# BACKEND (.NET / C#)
+# ================================
+
+# Build outputs
+Backend/**/bin/
+Backend/**/obj/
+Backend/**/out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.rsuser
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# NuGet
+*.nupkg
+**/packages/
+!**/packages/build/
+**/NuGet.Config
+
+# Environment / Secrets
+appsettings.Development.json
+**/secrets.json
+**/.env
+
+# Logs
+*.log
+logs/
+
+# Published output
+**/publish/
+**/PublishOutput/
+
+# Backup and temp files
+*.backup
+*.bak
+*.tmp
+*.additions
+NUL
+
+# ================================
+# FRONTEND (Angular / Node)
+# ================================
+
+# Node modules
+Frontend/**/node_modules/
+
+# Angular build output
+Frontend/**/dist/
+Frontend/**/.angular/cache/
+
+# Compiled output
+Frontend/**/tmp/
+Frontend/**/out-tsc/
+
+# Environment files with secrets
+# Frontend/**/src/environments/environment.prod.ts
+
+# Miscellaneous
+Frontend/**/.sass-cache/
+Frontend/**/coverage/
+Frontend/**/__screenshots__/
+
+# System files
+.DS_Store
+Thumbs.db
+nul
+
+# Claude Code
+.claude/
+
+# ================================
+# GENERAL
+# ================================
+*.orig

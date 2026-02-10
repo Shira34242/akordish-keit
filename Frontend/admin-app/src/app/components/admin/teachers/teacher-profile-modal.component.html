@@ -1,0 +1,216 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)" *ngIf="teacherId">
+  <div class="modal-container" dir="rtl">
+    <!-- Close Button -->
+    <button class="close-button" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען פרטי מורה...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+      <span class="material-icons">error</span>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="loadTeacher()">נסה שוב</button>
+    </div>
+
+    <!-- Teacher Profile -->
+    <div *ngIf="teacher && !loading" class="profile-content">
+      <!-- Header Section -->
+      <div class="profile-header">
+        <div class="header-decoration"></div>
+        <div class="profile-image-wrapper">
+          <img
+            [src]="teacher.profileImageUrl || '/logo.png'"
+            alt="{{ teacher.displayName }}"
+            class="profile-image"
+            onerror="this.onerror=null; this.src='/logo.png'"
+          />
+          <span *ngIf="teacher.isFeatured" class="featured-star">
+            <span class="material-icons">star</span>
+          </span>
+        </div>
+        <h1 class="profile-name">{{ teacher.displayName }}</h1>
+        <p *ngIf="teacher.shortBio" class="profile-bio">{{ teacher.shortBio }}</p>
+
+        <!-- Instruments Tags -->
+        <div class="instruments-tags" *ngIf="teacher.instruments && teacher.instruments.length > 0">
+          <span
+            *ngFor="let instrument of teacher.instruments"
+            class="instrument-tag"
+            [class.primary]="instrument.isPrimary">
+            {{ instrument.instrumentName }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Contact Buttons -->
+      <div class="contact-buttons">
+        <a *ngIf="teacher.whatsAppNumber"
+           [href]="'https://wa.me/' + teacher.whatsAppNumber"
+           target="_blank"
+           class="contact-btn whatsapp-btn">
+          <span class="material-icons">chat</span>
+          WhatsApp
+        </a>
+        <a *ngIf="teacher.phoneNumber"
+           [href]="'tel:' + teacher.phoneNumber"
+           class="contact-btn phone-btn">
+          <span class="material-icons">phone</span>
+          {{ teacher.phoneNumber }}
+        </a>
+        <a *ngIf="teacher.email"
+           [href]="'mailto:' + teacher.email"
+           class="contact-btn email-btn">
+          <span class="material-icons">email</span>
+          שלח מייל
+        </a>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="info-grid">
+        <!-- About -->
+        <div class="info-section full-width" *ngIf="teacher.fullDescription">
+          <h3 class="section-title">
+            <span class="material-icons">description</span>
+            אודות
+          </h3>
+          <p class="description-text">{{ teacher.fullDescription }}</p>
+        </div>
+
+        <!-- Details Column 1 -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <span class="material-icons">info</span>
+            פרטים כלליים
+          </h3>
+          <div class="info-list">
+            <div class="info-item" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              <div>
+                <span class="info-label">עיר</span>
+                <span class="info-value">{{ getCityName(teacher.cityId) }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.location">
+              <span class="material-icons">home</span>
+              <div>
+                <span class="info-label">כתובת</span>
+                <span class="info-value">{{ teacher.location }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.yearsOfExperience">
+              <span class="material-icons">work_history</span>
+              <div>
+                <span class="info-label">ניסיון</span>
+                <span class="info-value">{{ teacher.yearsOfExperience }} שנים</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.education">
+              <span class="material-icons">school</span>
+              <div>
+                <span class="info-label">השכלה</span>
+                <span class="info-value">{{ teacher.education }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Column 2 -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <span class="material-icons">menu_book</span>
+            פרטי הוראה
+          </h3>
+          <div class="info-list">
+            <div class="info-item" *ngIf="teacher.languages">
+              <span class="material-icons">language</span>
+              <div>
+                <span class="info-label">שפות הוראה</span>
+                <span class="info-value">{{ getLanguagesDisplay(teacher.languages) }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.targetAudience">
+              <span class="material-icons">groups</span>
+              <div>
+                <span class="info-label">קהל יעד</span>
+                <span class="info-value">{{ getTargetAudienceDisplay(teacher.targetAudience) }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.lessonTypes">
+              <span class="material-icons">event</span>
+              <div>
+                <span class="info-label">סוגי שיעורים</span>
+                <span class="info-value">{{ teacher.lessonTypes }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.priceList">
+              <span class="material-icons">payments</span>
+              <div>
+                <span class="info-label">מחירון</span>
+                <span class="info-value">{{ teacher.priceList }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Availability -->
+        <div class="info-section full-width" *ngIf="teacher.availability || teacher.workingHours">
+          <h3 class="section-title">
+            <span class="material-icons">schedule</span>
+            זמינות ושעות פעילות
+          </h3>
+          <div class="info-list">
+            <div class="info-item" *ngIf="teacher.availability">
+              <span class="material-icons">event_available</span>
+              <div>
+                <span class="info-label">זמינות</span>
+                <span class="info-value">{{ teacher.availability }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="teacher.workingHours">
+              <span class="material-icons">access_time</span>
+              <div>
+                <span class="info-label">שעות פעילות</span>
+                <span class="info-value">{{ teacher.workingHours }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gallery -->
+        <div class="info-section full-width" *ngIf="teacher.galleryImages && teacher.galleryImages.length > 0">
+          <h3 class="section-title">
+            <span class="material-icons">photo_library</span>
+            גלריה
+          </h3>
+          <div class="gallery-grid">
+            <div *ngFor="let image of teacher.galleryImages" class="gallery-item">
+              <img [src]="image.imageUrl" [alt]="image.caption || 'תמונה'" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <div class="info-section full-width" *ngIf="teacher.videoUrl">
+          <h3 class="section-title">
+            <span class="material-icons">play_circle</span>
+            וידאו
+          </h3>
+          <div class="video-wrapper">
+            <iframe
+              [src]="teacher.videoUrl"
+              frameborder="0"
+              allowfullscreen
+              class="video-iframe"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

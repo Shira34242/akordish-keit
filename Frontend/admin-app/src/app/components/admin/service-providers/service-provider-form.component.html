@@ -1,0 +1,333 @@
+<div class="provider-form-container" dir="rtl">
+  <!-- Header -->
+  <div class="form-header">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-icons">arrow_forward</span>
+      חזרה
+    </button>
+    <h1>{{ isEditMode ? 'עריכת בעל מקצוע' : 'בעל מקצוע חדש' }}</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>טוען בעל מקצוע...</p>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="provider-form">
+
+    <!-- Basic Information -->
+    <div class="form-section">
+      <h2 class="section-title">מידע בסיסי</h2>
+
+      <div class="form-group" *ngIf="!isEditMode">
+        <label class="form-label">קשר למשתמש קיים (אופציונלי)</label>
+        <select
+          [(ngModel)]="userId"
+          name="userId"
+          class="form-input"
+          [disabled]="loadingUsers"
+        >
+          <option [ngValue]="undefined">אין קישור למשתמש - פרופיל צף</option>
+          <option *ngFor="let user of availableUsers" [ngValue]="user.id">
+            {{ user.username }} ({{ user.email }})
+          </option>
+        </select>
+        <small class="form-hint">ניתן לקשר את הפרופיל למשתמש קיים. אותו משתמש יכול להיות מקושר למספר עסקים.</small>
+      </div>
+
+      <div class="form-group" *ngIf="isEditMode">
+        <label class="form-label">משתמש מקושר</label>
+        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+          <span *ngIf="userName" style="color: #2d7a3e; font-weight: 500;">
+            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person</span>
+            {{ userName }}
+            <span *ngIf="userEmail" style="color: #666; font-size: 0.9em;">({{ userEmail }})</span>
+          </span>
+          <span *ngIf="!userName" style="color: #666;">
+            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person_off</span>
+            לא מקושר למשתמש - פרופיל צף
+          </span>
+        </div>
+        <small class="form-hint">להוספה/הסרה של קישור למשתמש, השתמש בכפתורים בטבלה הראשית</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">שם תצוגה</label>
+        <input
+          type="text"
+          [(ngModel)]="displayName"
+          name="displayName"
+          class="form-input"
+          placeholder="השם שיוצג באתר"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">תיאור קצר</label>
+        <textarea
+          [(ngModel)]="shortBio"
+          name="shortBio"
+          class="form-textarea"
+          rows="3"
+          placeholder="תיאור קצר על השירותים..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">תיאור מלא</label>
+        <textarea
+          [(ngModel)]="fullDescription"
+          name="fullDescription"
+          class="form-textarea"
+          rows="5"
+          placeholder="ספר בפירוט על השירותים שאתה מספק, הניסיון שלך..."
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">אימייל</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            class="form-input"
+            placeholder="email@example.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">טלפון</label>
+          <input
+            type="tel"
+            [(ngModel)]="phoneNumber"
+            name="phoneNumber"
+            class="form-input"
+            placeholder="050-1234567"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <input
+            type="tel"
+            [(ngModel)]="whatsAppNumber"
+            name="whatsAppNumber"
+            class="form-input"
+            placeholder="050-1234567"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">עיר</label>
+          <div class="custom-dropdown" [class.open]="cityDropdownOpen">
+            <div class="dropdown-trigger" (click)="toggleCityDropdown()">
+              <span class="dropdown-value">
+                {{ getSelectedCityName() || 'בחר עיר...' }}
+              </span>
+              <span class="material-icons dropdown-arrow">
+                {{ cityDropdownOpen ? 'expand_less' : 'expand_more' }}
+              </span>
+            </div>
+            <div class="dropdown-menu" *ngIf="cityDropdownOpen">
+              <div class="dropdown-search">
+                <span class="material-icons">search</span>
+                <input
+                  type="text"
+                  [(ngModel)]="citySearchText"
+                  (ngModelChange)="onCitySearchChange()"
+                  name="citySearch"
+                  placeholder="חפש עיר..."
+                  class="dropdown-search-input"
+                  (click)="$event.stopPropagation()"
+                />
+              </div>
+              <div class="dropdown-options">
+                <div
+                  class="dropdown-option"
+                  (click)="selectCity(undefined)"
+                  [class.selected]="!cityId"
+                >
+                  <span>ללא עיר</span>
+                </div>
+                <div
+                  *ngFor="let city of filteredCities"
+                  class="dropdown-option"
+                  (click)="selectCity(city.id)"
+                  [class.selected]="cityId === city.id"
+                >
+                  <span>{{ city.name }}</span>
+                  <small *ngIf="city.district">{{ city.district }}</small>
+                </div>
+                <div *ngIf="filteredCities.length === 0" class="dropdown-no-results">
+                  לא נמצאו תוצאות
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">כתובת/אזור (פירוט נוסף)</label>
+          <input
+            type="text"
+            [(ngModel)]="location"
+            name="location"
+            class="form-input"
+            placeholder="רחוב, שכונה, הערות נוספות..."
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">אתר אינטרנט</label>
+        <input
+          type="url"
+          [(ngModel)]="websiteUrl"
+          name="websiteUrl"
+          class="form-input"
+          placeholder="https://..."
+        />
+      </div>
+    </div>
+
+    <!-- Professional Information -->
+    <div class="form-section">
+      <h2 class="section-title">מידע מקצועי</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">שנות ניסיון</label>
+          <input
+            type="number"
+            [(ngModel)]="yearsOfExperience"
+            name="yearsOfExperience"
+            class="form-input"
+            placeholder="0"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">שעות עבודה</label>
+          <input
+            type="text"
+            [(ngModel)]="workingHours"
+            name="workingHours"
+            class="form-input"
+            placeholder="ראשון-חמישי 9:00-18:00"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">קטגוריית שירות</label>
+        <div class="custom-dropdown" [class.open]="categoryDropdownOpen">
+          <div class="dropdown-trigger" (click)="toggleCategoryDropdown()">
+            <span class="dropdown-value">
+              {{ getSelectedCategoryText() }}
+            </span>
+            <span class="material-icons dropdown-arrow">
+              {{ categoryDropdownOpen ? 'expand_less' : 'expand_more' }}
+            </span>
+          </div>
+          <div class="dropdown-menu" *ngIf="categoryDropdownOpen">
+            <div class="dropdown-search">
+              <span class="material-icons">search</span>
+              <input
+                type="text"
+                [(ngModel)]="categorySearchText"
+                (ngModelChange)="onCategorySearchChange()"
+                name="categorySearch"
+                placeholder="חפש קטגוריה..."
+                class="dropdown-search-input"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+            <div class="dropdown-options">
+              <div
+                *ngFor="let category of filteredCategories"
+                class="dropdown-option"
+                (click)="selectCategory(category.id)"
+                [class.selected]="selectedCategoryId === category.id"
+              >
+                <span>{{ category.name }}</span>
+              </div>
+              <div *ngIf="filteredCategories.length === 0" class="dropdown-no-results">
+                לא נמצאו תוצאות
+              </div>
+            </div>
+          </div>
+        </div>
+        <small class="form-hint">בחר קטגוריה אחת - לכל עסק נוסף צור בעל מקצוע נפרד</small>
+      </div>
+    </div>
+
+    <!-- Media -->
+    <div class="form-section">
+      <h2 class="section-title">מדיה</h2>
+
+      <div class="form-group">
+        <label class="form-label">תמונת פרופיל (URL)</label>
+        <input
+          type="url"
+          [(ngModel)]="profileImageUrl"
+          name="profileImageUrl"
+          class="form-input"
+          placeholder="https://..."
+        />
+        <small class="form-hint">קישור לתמונת הפרופיל</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">סרטון היכרות (URL)</label>
+        <input
+          type="url"
+          [(ngModel)]="videoUrl"
+          name="videoUrl"
+          class="form-input"
+          placeholder="https://youtube.com/..."
+        />
+        <small class="form-hint">קישור לסרטון YouTube או Vimeo</small>
+      </div>
+    </div>
+
+    <!-- Display Settings -->
+    <div class="form-section">
+      <h2 class="section-title">הגדרות תצוגה</h2>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="isFeatured"
+            name="isFeatured"
+          />
+          <span>בעל מקצוע מומלץ (יוצג בראש הדף)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">
+        ביטול
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="saving">
+        <span class="material-icons" *ngIf="!saving">save</span>
+        <span class="material-icons spinning" *ngIf="saving">hourglass_empty</span>
+        {{ saving ? 'שומר...' : (isEditMode ? 'עדכן בעל מקצוע' : 'צור בעל מקצוע') }}
+      </button>
+    </div>
+
+  </form>
+</div>

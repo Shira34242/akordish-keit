@@ -1,0 +1,198 @@
+<div class="articles-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול תוכן</h1>
+      <p class="page-subtitle">חדשות, פוסטים...</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'news'" (click)="switchTab('news')">
+        חדשות
+      </button>
+      <button class="tab" [class.active]="activeTab === 'blog'" (click)="switchTab('blog')">
+        בלוג
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <!-- Search -->
+    <div class="search-box">
+      <input type="text" placeholder="חיפוש לפי כותרת, תקציר או slug..." [(ngModel)]="searchTerm" (input)="onSearch()"
+        class="search-input">
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <!-- Category Filter -->
+      <select [(ngModel)]="selectedCategory" (change)="onCategoryFilter(selectedCategory)" class="filter-select">
+        <option [ngValue]="undefined">כל הקטגוריות</option>
+        <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+      </select>
+
+      <!-- Status Filter -->
+      <select [(ngModel)]="selectedStatus" (change)="onStatusFilter(selectedStatus)" class="filter-select">
+        <option [ngValue]="undefined">כל הסטטוסים</option>
+        <option [ngValue]="ArticleStatus.Draft">טיוטה</option>
+        <option [ngValue]="ArticleStatus.Published">מפורסם</option>
+        <option [ngValue]="ArticleStatus.Scheduled">מתוזמן</option>
+        <option [ngValue]="ArticleStatus.Archived">ארכיון</option>
+      </select>
+
+      <!-- Featured Filter -->
+      <button class="filter-btn" [class.active]="showFeaturedOnly" (click)="toggleFeaturedFilter()">
+        <span class="material-icons">star</span> מומלצים בלבד
+      </button>
+
+      <!-- Reset Filters -->
+      <button class="filter-btn btn-reset" (click)="resetFilters()">
+        <span class="material-icons">restart_alt</span> איפוס סינון
+      </button>
+    </div>
+
+    <!-- New Button -->
+    <button class="btn-new" (click)="createNew()">
+      <span class="material-icons">add</span>
+      {{ activeTab === 'news' ? 'כתבה חדשה' : 'פוסט חדש' }}
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <table *ngIf="!loading && articles.length > 0" class="articles-table">
+      <thead>
+        <tr>
+          <th>תמונה</th>
+          <th>כותרת</th>
+          <th>קטגוריה</th>
+          <th>סטטוס</th>
+          <th>תאריך פרסום</th>
+          <th>צפיות</th>
+          <th>לייקים</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let article of articles" class="article-row">
+          <!-- Image -->
+          <td class="image-cell">
+            <div class="image-preview" *ngIf="article.featuredImageUrl">
+              <img [src]="article.featuredImageUrl" [alt]="article.title">
+            </div>
+            <div class="image-placeholder" *ngIf="!article.featuredImageUrl">
+              <span class="material-icons">article</span>
+            </div>
+          </td>
+
+          <!-- Title -->
+          <td class="title-cell">
+            <div class="article-info">
+              <div class="article-title">
+                {{ article.title }}
+                <span *ngIf="article.isFeatured" class="featured-badge"><span class="material-icons">star</span></span>
+                <span *ngIf="article.isPremium" class="premium-badge"><span
+                    class="material-icons">workspace_premium</span></span>
+              </div>
+              <div class="article-subtitle" *ngIf="article.subtitle">
+                {{ article.subtitle }}
+              </div>
+              <div class="article-meta">
+                <span *ngIf="article.authorName">{{ article.authorName }} • </span>
+                <span class="article-slug">{{ article.slug }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Category -->
+          <td>
+            <span class="category-badge" *ngIf="article.categoryNames && article.categoryNames.length > 0">
+              {{ article.categoryNames.join(', ') }}
+            </span>
+            <span class="category-badge empty" *ngIf="!article.categoryNames || article.categoryNames.length === 0">
+              אין קטגוריה
+            </span>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(article.status)">
+              {{ getStatusName(article.status) }}
+            </span>
+          </td>
+
+          <!-- Publish Date -->
+          <td class="date-cell">
+            <div>{{ formatDate(article.publishDate) }}</div>
+            <div class="date-secondary" *ngIf="article.scheduledDate">
+              מתוזמן: {{ formatDate(article.scheduledDate) }}
+            </div>
+          </td>
+
+          <!-- Views -->
+          <td class="stat-cell">
+            <div class="stat-value">{{ article.viewCount }}</div>
+          </td>
+
+          <!-- Likes -->
+          <td class="stat-cell">
+            <div class="stat-value">{{ article.likeCount }}</div>
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <button class="btn-action btn-view" (click)="viewArticle(article)" title="צפייה">
+              <span class="material-icons">visibility</span>
+            </button>
+            <button class="btn-action btn-edit" (click)="editArticle(article.id)" title="עריכה">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-action btn-delete" (click)="deleteArticle(article)" title="מחיקה">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && articles.length === 0" class="empty-state">
+      <div class="empty-icon"><span class="material-icons">article</span></div>
+      <h3>אין כתבות להצגה</h3>
+      <p>התחל על ידי יצירת כתבה חדשה</p>
+      <button class="btn-new" (click)="createNew()">
+        <span class="material-icons">add</span>
+        {{ activeTab === 'news' ? 'כתבה חדשה' : 'פוסט חדש' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalPages > 1" class="pagination">
+    <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
+      ←
+    </button>
+
+    <button *ngFor="let page of pages" class="page-btn" [class.active]="page === currentPage"
+      (click)="onPageChange(page)">
+      {{ page }}
+    </button>
+
+    <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
+      →
+    </button>
+
+    <div class="pagination-info">
+      {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalItems) }} מתוך {{ totalItems }}
+    </div>
+  </div>
+</div>

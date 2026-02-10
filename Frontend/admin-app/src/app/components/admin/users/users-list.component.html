@@ -1,0 +1,174 @@
+<div class="users-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>לקוחות (משתמשים רגילים)</h1>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="חיפוש לפי שם משתמש או אימייל..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <select
+          class="form-control"
+          [(ngModel)]="filterRole"
+          (change)="onFilterChange()"
+        >
+          <option *ngFor="let option of roleOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select
+          class="form-control"
+          [(ngModel)]="filterIsActive"
+          (change)="onFilterChange()"
+        >
+          <option [ngValue]="null">כל הסטטוסים</option>
+          <option [ngValue]="true">פעיל</option>
+          <option [ngValue]="false">לא פעיל</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" (click)="onSearch()">חפש</button>
+      <button class="btn btn-light" (click)="clearFilters()">נקה</button>
+    </div>
+  </div>
+
+  <!-- Results Info -->
+  <div class="results-info" *ngIf="!loading && !error">
+    נמצאו {{ totalCount }} משתמשים
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>טוען משתמשים...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="alert alert-danger" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Table -->
+  <div class="table-container" *ngIf="!loading && !error">
+    <table class="users-table" *ngIf="users.length > 0">
+      <thead>
+        <tr>
+          <th>שם משתמש</th>
+          <th>אימייל</th>
+          <th>טלפון</th>
+          <th>תפקיד</th>
+          <th>סטטוס</th>
+          <th>תאריך יצירה</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.phone || '-' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
+              {{ getRoleLabel(user.role) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">
+              {{ user.isActive ? 'פעיל' : 'לא פעיל' }}
+            </span>
+          </td>
+          <td>{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button
+                class="btn-action btn-view"
+                (click)="viewUser(user.id)"
+                title="צפייה"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
+              <button
+                class="btn-action btn-edit"
+                (click)="editUser(user.id)"
+                title="עריכה"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button
+                class="btn-action btn-upgrade"
+                (click)="upgradeToTeacher(user.id)"
+                title="שדרג למורה"
+              >
+                <span class="material-icons">school</span>
+              </button>
+              <button
+                class="btn-action btn-upgrade-service"
+                (click)="upgradeToServiceProvider(user.id)"
+                title="שדרג לבעל מקצוע"
+              >
+                <span class="material-icons">music_note</span>
+              </button>
+              <button
+                class="btn-action btn-delete"
+                (click)="deleteUser(user.id)"
+                title="מחיקה"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="no-data" *ngIf="users.length === 0">
+      לא נמצאו משתמשים
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
+    <button
+      class="btn-pagination"
+      [disabled]="currentPage === 1"
+      (click)="goToPage(currentPage - 1)"
+    >
+      קודם
+    </button>
+
+    <button
+      *ngFor="let page of getPaginationRange()"
+      class="btn-pagination"
+      [class.active]="page === currentPage"
+      (click)="goToPage(page)"
+    >
+      {{ page }}
+    </button>
+
+    <button
+      class="btn-pagination"
+      [disabled]="currentPage === totalPages"
+      (click)="goToPage(currentPage + 1)"
+    >
+      הבא
+    </button>
+
+    <span class="pagination-info">
+      עמוד {{ currentPage }} מתוך {{ totalPages }}
+    </span>
+  </div>
+</div>

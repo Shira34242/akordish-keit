@@ -1,0 +1,405 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    <!-- Form Header -->
+    <div class="form-header">
+      <h1>{{ isEditMode ? 'עריכת אומן' : 'אומן חדש' }}</h1>
+      <button class="close-btn" (click)="onClose()" type="button">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <!-- Form -->
+    <form *ngIf="!loading" (ngSubmit)="onSave()" class="modal-body">
+
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h2 class="section-title">מידע בסיסי</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">שם האומן</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.name"
+              name="name"
+              class="form-input"
+              placeholder="שם האומן בעברית"
+              [readonly]="isEditMode"
+              [class.readonly]="isEditMode"
+              required
+            />
+            <small class="form-hint" *ngIf="isEditMode">לא ניתן לשנות את שם האומן</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">שם באנגלית</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.englishName"
+              name="englishName"
+              class="form-input"
+              placeholder="Artist Name in English"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">תיאור קצר (1-3 שורות)</label>
+          <textarea
+            [(ngModel)]="editForm.shortBio"
+            name="shortBio"
+            class="form-textarea"
+            rows="3"
+            maxlength="300"
+            placeholder="תיאור קצר על האומן..."
+          ></textarea>
+          <span class="char-counter" [class.warning]="getCharCount(editForm.shortBio) > 250" [class.danger]="getCharCount(editForm.shortBio) > 290">
+            {{ getCharCount(editForm.shortBio) }}/300
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ביוגרפיה מלאה</label>
+          <textarea
+            [(ngModel)]="editForm.biography"
+            name="biography"
+            class="form-textarea"
+            rows="6"
+            maxlength="2000"
+            placeholder="ביוגרפיה מפורטת על האומן, קריירה, השפעות..."
+          ></textarea>
+          <span class="char-counter" [class.warning]="getCharCount(editForm.biography) > 1800" [class.danger]="getCharCount(editForm.biography) > 1950">
+            {{ getCharCount(editForm.biography) }}/2000
+          </span>
+        </div>
+      </div>
+
+      <!-- Media -->
+      <div class="form-section">
+        <h2 class="section-title">תמונות וקישורים</h2>
+
+        <div class="form-group">
+          <label class="form-label">תמונת פרופיל (URL)</label>
+          <input
+            type="url"
+            [(ngModel)]="editForm.imageUrl"
+            name="imageUrl"
+            class="form-input"
+            placeholder="https://example.com/image.jpg"
+          />
+          <small class="form-hint">קישור לתמונת הפרופיל של האומן</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">תמונת באנר (URL)</label>
+          <input
+            type="url"
+            [(ngModel)]="editForm.bannerImageUrl"
+            name="bannerImageUrl"
+            class="form-input"
+            placeholder="https://example.com/banner.jpg"
+          />
+          <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">באנר GIF/וידאו</label>
+          <input
+            type="url"
+            [(ngModel)]="editForm.bannerGifUrl"
+            name="bannerGifUrl"
+            class="form-input"
+            placeholder="https://example.com/banner.gif"
+          />
+          <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">אתר אישי</label>
+          <input
+            type="url"
+            [(ngModel)]="editForm.websiteUrl"
+            name="websiteUrl"
+            class="form-input"
+            placeholder="https://example.com"
+          />
+          <small class="form-hint">קישור לאתר האישי של האומן</small>
+        </div>
+      </div>
+
+      <!-- Social Links -->
+      <div class="form-section">
+        <h2 class="section-title">קישורי רשתות חברתיות</h2>
+
+        <div *ngFor="let link of editForm.socialLinks; let i = index" class="social-link-item">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">פלטפורמה</label>
+              <select
+                [(ngModel)]="link.platform"
+                [name]="'platform_' + i"
+                class="form-select"
+              >
+                <option [value]="1">Facebook</option>
+                <option [value]="2">Instagram</option>
+                <option [value]="3">YouTube</option>
+                <option [value]="4">Twitter</option>
+                <option [value]="5">TikTok</option>
+                <option [value]="6">Spotify</option>
+                <option [value]="7">אתר אינטרנט</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">קישור</label>
+              <div style="display: flex; gap: 10px;">
+                <input
+                  type="url"
+                  [(ngModel)]="link.url"
+                  [name]="'url_' + i"
+                  class="form-input"
+                  placeholder="https://..."
+                  style="flex: 1;"
+                />
+                <button type="button" class="btn-remove" (click)="removeSocialLink(i)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-add" (click)="addSocialLink()">
+          <span class="material-icons">add</span>
+          הוסף קישור חברתי
+        </button>
+      </div>
+
+      <!-- Gallery Images -->
+      <div class="form-section">
+        <h2 class="section-title">גלריית תמונות</h2>
+
+        <div *ngFor="let image of editForm.galleryImages; let i = index" class="gallery-item">
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">קישור לתמונה</label>
+                <input
+                  type="url"
+                  [(ngModel)]="image.imageUrl"
+                  [name]="'gallery_url_' + i"
+                  class="form-input"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">כיתוב (אופציונלי)</label>
+                <input
+                  type="text"
+                  [(ngModel)]="image.caption"
+                  [name]="'gallery_caption_' + i"
+                  class="form-input"
+                  placeholder="תיאור התמונה..."
+                />
+              </div>
+
+              <div class="form-group" style="flex: 0.5;">
+                <label class="form-label">סדר</label>
+                <div style="display: flex; gap: 10px;">
+                  <input
+                    type="number"
+                    [(ngModel)]="image.displayOrder"
+                    [name]="'gallery_order_' + i"
+                    class="form-input"
+                    min="0"
+                    style="flex: 1;"
+                  />
+                  <button type="button" class="btn-remove" (click)="removeGalleryImage(i)">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <button type="button" class="btn-add" (click)="addGalleryImage()">
+          <span class="material-icons">add</span>
+          הוסף תמונה לגלריה
+        </button>
+      </div>
+
+      <!-- Videos -->
+      <div class="form-section">
+        <h2 class="section-title">סרטונים</h2>
+
+        <div *ngFor="let video of editForm.videos; let i = index" class="video-item">
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">קישור לסרטון</label>
+                <input
+                  type="url"
+                  [(ngModel)]="video.videoUrl"
+                  [name]="'video_url_' + i"
+                  class="form-input"
+                  placeholder="https://youtube.com/..."
+                />
+              </div>
+
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">כותרת (אופציונלי)</label>
+                <input
+                  type="text"
+                  [(ngModel)]="video.title"
+                  [name]="'video_title_' + i"
+                  class="form-input"
+                  placeholder="שם הסרטון..."
+                />
+              </div>
+
+              <div class="form-group" style="flex: 0.5;">
+                <label class="form-label">סדר</label>
+                <div style="display: flex; gap: 10px;">
+                  <input
+                    type="number"
+                    [(ngModel)]="video.displayOrder"
+                    [name]="'video_order_' + i"
+                    class="form-input"
+                    min="0"
+                    style="flex: 1;"
+                  />
+                  <button type="button" class="btn-remove" (click)="removeVideo(i)">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <button type="button" class="btn-add" (click)="addVideo()">
+          <span class="material-icons">add</span>
+          הוסף סרטון
+        </button>
+      </div>
+
+      <!-- Status & Settings -->
+      <div class="form-section">
+        <h2 class="section-title">סטטוס והגדרות</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">סטטוס</label>
+            <select
+              [(ngModel)]="editForm.status"
+              name="status"
+              class="form-select"
+            >
+              <option [value]="0">ממתין לאישור</option>
+              <option [value]="1">פעיל</option>
+              <option [value]="2">מוסתר</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">תגיות מיוחדות</label>
+            <div class="quick-info-bar">
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(editForm.status)">
+                {{ getStatusLabel(editForm.status) }}
+              </span>
+              <span *ngIf="editForm.isPremium" class="status-badge premium">
+                <span class="material-icons">workspace_premium</span>
+                Premium
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <div class="checkbox-wrapper" [class.checked]="editForm.isPremium">
+              <input
+                type="checkbox"
+                [(ngModel)]="editForm.isPremium"
+                name="isPremium"
+                id="isPremium"
+              />
+              <span>אומן Premium (גישה לגלריה, סרטונים, באנר GIF)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics (Read Only - Edit Mode Only) -->
+      <div class="form-section" *ngIf="isEditMode && artist">
+        <h2 class="section-title">סטטיסטיקות</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">שירים</label>
+            <input
+              type="text"
+              [value]="artist.songCount"
+              class="form-input readonly"
+              readonly
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">כתבות</label>
+            <input
+              type="text"
+              [value]="artist.articleCount"
+              class="form-input readonly"
+              readonly
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">הופעות קרובות</label>
+            <input
+              type="text"
+              [value]="artist.upcomingEventCount"
+              class="form-input readonly"
+              readonly
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">נוצר בתאריך</label>
+            <input
+              type="text"
+              [value]="artist.createdAt | date: 'dd/MM/yyyy HH:mm'"
+              class="form-input readonly"
+              readonly
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="onClose()" [disabled]="saving">
+          ביטול
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="saving" [class.saving]="saving">
+          <span class="material-icons" *ngIf="!saving">save</span>
+          <span class="material-icons" *ngIf="saving">hourglass_empty</span>
+          {{ saving ? 'שומר...' : (isEditMode ? 'עדכן אומן' : 'צור אומן') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

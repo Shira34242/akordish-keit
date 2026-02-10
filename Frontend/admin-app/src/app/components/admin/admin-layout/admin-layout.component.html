@@ -1,0 +1,101 @@
+<div class="admin-container">
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="header-inner">
+            <div class="header-right">
+                <div class="logo-area">
+                    <span class="material-symbols-outlined logo-icon">music_note</span>
+                    <span class="logo-text">אקורדישקייט  - ניהול</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <nav class="admin-nav">
+                    <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        <span>מרכז בקרה</span>
+                    </a>
+                    <div class="nav-item-with-dropdown" [class.open]="usersMenuOpen">
+                        <a class="nav-item" (click)="toggleUsersMenu()">
+                            <span class="material-symbols-outlined">group</span>
+                            <span>משתמשים</span>
+                            <span class="material-symbols-outlined dropdown-arrow">{{ usersMenuOpen ? 'expand_less' : 'expand_more' }}</span>
+                        </a>
+                        <div class="dropdown-menu" *ngIf="usersMenuOpen">
+                            <a routerLink="/admin/users" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">person</span>
+                                <span>לקוחות</span>
+                            </a>
+                            <a routerLink="/admin/teachers" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">school</span>
+                                <span>מורים</span>
+                            </a>
+                            <a routerLink="/admin/service-providers" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">business_center</span>
+                                <span>בעלי מקצוע</span>
+                            </a>
+                            <a routerLink="/admin/artists" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">mic</span>
+                                <span>אומנים</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="nav-item-with-dropdown" [class.open]="contentMenuOpen">
+                        <a class="nav-item" (click)="toggleContentMenu()">
+                            <span class="material-symbols-outlined">menu_book</span>
+                            <span>תוכן</span>
+                            <span class="material-symbols-outlined dropdown-arrow">{{ contentMenuOpen ? 'expand_less' : 'expand_more' }}</span>
+                        </a>
+                        <div class="dropdown-menu" *ngIf="contentMenuOpen">
+                            <a routerLink="/admin/content/articles" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">article</span>
+                                <span>חדשות ובלוג</span>
+                            </a>
+                            <a routerLink="/admin/content/featured" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">star</span>
+                                <span>תוכן מרכזי</span>
+                            </a>
+                            <a routerLink="/admin/content/events" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">event</span>
+                                <span>הופעות</span>
+                            </a>
+                        </div>
+                    </div>
+                    <a routerLink="/admin/content/songs" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">music_note</span>
+                        <span>אקורדים</span>
+                    </a>
+                    <a routerLink="/admin/advertising" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">campaign</span>
+                        <span>פרסום</span>
+                    </a>
+                    <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">report</span>
+                        <span>דיווחים</span>
+                    </a>
+                    <a routerLink="/admin/system" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span>מערכת</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="header-left">
+                <button class="btn-back-site" (click)="goBackToSite()">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                    <span>חזרה לאתר</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <router-outlet></router-outlet>
+    </main>
+
+    <!-- Admin Footer -->
+    <footer class="admin-footer">
+        <p>© 2025 אקורדישקייט - מערכת ניהול מתקדמת</p>
+    </footer>
+</div>

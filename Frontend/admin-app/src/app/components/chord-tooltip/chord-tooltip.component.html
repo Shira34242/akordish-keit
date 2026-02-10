@@ -1,0 +1,72 @@
+<div class="tooltip-container">
+    <div class="chord-name">
+        {{ chordName }}
+        <span class="simplified-note" *ngIf="displayChordName && displayChordName !== chordName">
+            (מוצג כ-{{ displayChordName }})
+        </span>
+    </div>
+
+    <!-- Guitar Diagram -->
+    <div *ngIf="guitarChord" class="diagram guitar">
+        <svg viewBox="0 0 70 80" width="100" height="120">
+            <!-- Nut (Top Line) -->
+            <line x1="10" y1="10" x2="60" y2="10" stroke="black" stroke-width="2" />
+
+            <!-- Frets -->
+            <line *ngFor="let i of [1,2,3,4,5]" [attr.x1]="10" [attr.y1]="10 + i*12" [attr.x2]="60"
+                [attr.y2]="10 + i*12" stroke="#999" stroke-width="1" />
+
+            <!-- Strings -->
+            <line *ngFor="let i of [0,1,2,3,4,5]" [attr.x1]="10 + i*10" y1="10" [attr.x2]="10 + i*10" y2="70"
+                stroke="black" stroke-width="1" />
+
+            <!-- Mute/Open Indicators & Finger Positions -->
+            <ng-container *ngFor="let fret of guitarChord.frets; let i = index">
+                <!-- Mute (x) -->
+                <text *ngIf="fret === -1" [attr.x]="10 + i*10" y="6" text-anchor="middle" font-size="8"
+                    font-family="Arial">x</text>
+
+                <!-- Open (o) -->
+                <circle *ngIf="fret === 0" [attr.cx]="10 + i*10" cy="5" r="2" fill="none" stroke="black"
+                    stroke-width="1" />
+
+                <!-- Finger (filled circle) -->
+                <circle *ngIf="fret > 0" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5" fill="#1a1a1a" />
+            </ng-container>
+
+            <!-- Barres -->
+            <ng-container *ngIf="guitarChord.barres">
+                <rect *ngFor="let barre of guitarChord.barres" [attr.x]="getBarreX(barre)"
+                    [attr.y]="10 + barre.fret*12 - 9" [attr.width]="getBarreWidth(barre)" height="6" rx="3"
+                    fill="#1a1a1a" opacity="0.2" />
+            </ng-container>
+
+        </svg>
+    </div>
+
+    <!-- Piano Diagram -->
+    <div *ngIf="pianoKeys" class="diagram piano">
+        <svg viewBox="0 0 140 60" width="140" height="60">
+            <!-- White Keys -->
+            <rect *ngFor="let note of [0,2,4,5,7,9,11]; let i = index" [attr.x]="i*20" y="0" width="20" height="60"
+                fill="white" stroke="black" stroke-width="1" [attr.fill]="isKeyActive(note) ? '#4ade80' : 'white'" />
+
+            <!-- Black Keys -->
+            <!-- C# (1) -->
+            <rect x="14" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(1) ? '#4ade80' : 'black'" />
+            <!-- D# (3) -->
+            <rect x="34" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(3) ? '#4ade80' : 'black'" />
+            <!-- F# (6) -->
+            <rect x="74" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(6) ? '#4ade80' : 'black'" />
+            <!-- G# (8) -->
+            <rect x="94" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(8) ? '#4ade80' : 'black'" />
+            <!-- A# (10) -->
+            <rect x="114" y="0" width="12" height="35" fill="black"
+                [attr.fill]="isKeyActive(10) ? '#4ade80' : 'black'" />
+        </svg>
+    </div>
+
+    <div *ngIf="!guitarChord && !pianoKeys" class="no-data">
+        אין תרשים זמין עבור {{ chordName }}
+    </div>
+</div>

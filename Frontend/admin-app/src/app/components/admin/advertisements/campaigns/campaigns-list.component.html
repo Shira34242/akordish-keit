@@ -1,0 +1,173 @@
+<div class="campaigns-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול פרסום</h1>
+      <p class="page-subtitle">קמפיינים, מיקומים ולקוחות</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="activeTab === 'campaigns'"
+        (click)="switchTab('campaigns')">
+        קמפיינים פעילים
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'spots'"
+        (click)="switchTab('spots')">
+        שטחי פרסום
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'clients'"
+        (click)="switchTab('clients')">
+        לקוחות
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+
+
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="חיפוש..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+    </div>
+        <button class="btn-new-campaign" (click)="createNewCampaign()">
+      <span class="material-icons">add</span>
+      קמפיין חדש
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <table *ngIf="!loading" class="campaigns-table">
+      <thead>
+        <tr>
+          <th>מדיה</th>
+          <th>שם הקמפיין</th>
+          <th>מיקום</th>
+          <th>סטטוס</th>
+          <th>זמן באוויר</th>
+          <th>ביצועים</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let campaign of filteredCampaigns" class="campaign-row">
+          <!-- Media -->
+          <td class="media-cell">
+            <div class="media-preview" *ngIf="campaign.mediaUrl">
+              <img [src]="campaign.mediaUrl" [alt]="campaign.name">
+            </div>
+            <div class="media-placeholder" *ngIf="!campaign.mediaUrl">
+              <span class="material-icons">image</span>
+            </div>
+          </td>
+
+          <!-- Campaign Name -->
+          <td class="campaign-name-cell">
+            <div class="campaign-info">
+              <div class="campaign-name">{{ campaign.name }}</div>
+              <div class="campaign-client">{{ campaign.clientName }}</div>
+            </div>
+          </td>
+
+          <!-- Spot -->
+          <td>
+            <div class="spot-info">
+              <div class="spot-name">{{ campaign.adSpotName }}</div>
+              <div class="spot-technical">{{ campaign.adSpotId }}</div>
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(campaign.status)">
+              {{ getStatusText(campaign.status) }}
+            </span>
+          </td>
+
+          <!-- Time Range -->
+          <td>
+            <div class="time-range">
+              <div class="date-row">{{ formatDate(campaign.startDate) }}</div>
+              <div class="date-row">{{ formatDate(campaign.endDate) }}</div>
+              <div class="days-remaining" *ngIf="campaign.daysRemaining > 0">
+                {{ campaign.daysRemaining }} ימים נותרו
+              </div>
+            </div>
+          </td>
+
+          <!-- Performance -->
+          <td>
+            <div class="performance">
+              <div class="perf-row">
+                <span class="material-icons perf-icon">visibility</span>
+                <span class="perf-value">{{ campaign.viewCount.toLocaleString() }} צפיות</span>
+              </div>
+              <div class="perf-row">
+                <span class="material-icons perf-icon">touch_app</span>
+                <span class="perf-value">{{ campaign.clickCount.toLocaleString() }} קליקים</span>
+              </div>
+              <div class="perf-ctr">CTR: {{ campaign.clickThroughRate.toFixed(2) }}%</div>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <button class="btn-action btn-edit" (click)="editCampaign(campaign)" title="ערוך">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-action btn-delete" (click)="deleteCampaign(campaign)" title="מחק">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredCampaigns.length === 0 && !loading" class="empty-state">
+          <td colspan="7">
+            <div class="empty-message">
+              <p>לא נמצאו קמפיינים</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <app-pagination
+      [totalCount]="totalCount"
+      [pageNumber]="pageNumber"
+      [pageSize]="pageSize"
+      [totalPages]="totalPages"
+      [hasPreviousPage]="hasPreviousPage"
+      [hasNextPage]="hasNextPage"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+  </div>
+</div>
+
+<!-- Campaign Form Modal -->
+<app-campaign-form
+  [show]="showCampaignForm"
+  [campaign]="selectedCampaign"
+  (save)="onSaveCampaign($event)"
+  (cancel)="onCancelCampaignForm()">
+</app-campaign-form>

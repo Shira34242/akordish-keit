@@ -1,0 +1,356 @@
+<div class="playlists-page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>הספרייה שלי</h1>
+        <p>{{ getTotalCount() }} פריטים</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div class="filter-section" *ngIf="!isLoading && !error">
+    <div class="filter-buttons">
+      <button
+        class="filter-btn"
+        [class.active]="activeFilter === 'all'"
+        (click)="setFilter('all')">
+        <span class="filter-label">הכל</span>
+        <span class="filter-count">{{ getTotalCount() }}</span>
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="activeFilter === 'liked'"
+        (click)="setFilter('liked')"
+        *ngIf="likedContent.length > 0">
+        <span class="filter-label">תוכן שאהבתי</span>
+        <span class="filter-count">{{ getLikedContentCount() }}</span>
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="activeFilter === 'my-playlists'"
+        (click)="setFilter('my-playlists')"
+        *ngIf="myPlaylists.length > 0">
+        <span class="filter-label">רשימות אקורדים שלי</span>
+        <span class="filter-count">{{ getMyPlaylistsCount() }}</span>
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="activeFilter === 'adopted'"
+        (click)="setFilter('adopted')"
+        *ngIf="adoptedPlaylists.length > 0">
+        <span class="filter-label">רשימות שאמצתי</span>
+        <span class="filter-count">{{ getAdoptedPlaylistsCount() }}</span>
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="activeFilter === 'community'"
+        (click)="navigateToCommunity()">
+        <span class="filter-label">מאגר קהילתי</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>טוען רשימות...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-container" *ngIf="error">
+    <p>{{ error }}</p>
+    <button (click)="loadPlaylists()">נסה שוב</button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && !error && getTotalCount() === 0">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+      </svg>
+    </div>
+    <h2>עדיין אין לך תוכן</h2>
+    <p>התחל ליצור רשימות השמעה ולארגן את התוכן האהוב עליך</p>
+    <button class="btn-create-first" routerLink="/">
+      חפש שירים
+    </button>
+  </div>
+
+  <!-- Content Sections -->
+  <div class="content-sections" *ngIf="!isLoading && !error && getTotalCount() > 0">
+
+    <!-- Liked Content Banner (All mode) -->
+    <div class="category-section" *ngIf="shouldShowBanner() && likedContent.length > 0">
+      <div class="category-header">
+        <h2>תוכן שאהבתי</h2>
+        <button class="btn-more" (click)="setFilter('liked')" *ngIf="likedContent.length > 10">
+          עוד
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="horizontal-scroll">
+        <div class="liked-content-card" *ngFor="let content of getLikedContentBanner()" (click)="viewLikedContent(content)">
+          <div class="content-image" [class.no-image]="!content.imageUrl">
+            <img *ngIf="content.imageUrl" [src]="content.imageUrl" [alt]="content.title || 'תוכן'">
+            <div class="default-image-content" *ngIf="!content.imageUrl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="content-info-wrapper">
+            <div class="content-type-badge" [class.article]="content.contentType === 'Article'" [class.blog]="content.contentType === 'BlogPost'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              {{ content.contentType === 'Article' ? 'מאמר' : 'פוסט בלוג' }}
+            </div>
+            <h3 class="content-title">{{ content.title || 'כותרת לא זמינה' }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liked Content Grid (Filtered mode) -->
+    <div class="category-section" *ngIf="shouldShowGridForCategory('liked') && likedContent.length > 0">
+      <div class="category-header">
+        <h2>תוכן שאהבתי</h2>
+        <span class="count-badge">{{ likedContent.length }} פריטים</span>
+      </div>
+      <div class="liked-content-grid">
+        <div class="liked-content-card" *ngFor="let content of likedContent" (click)="viewLikedContent(content)">
+          <div class="content-image" [class.no-image]="!content.imageUrl">
+            <img *ngIf="content.imageUrl" [src]="content.imageUrl" [alt]="content.title || 'תוכן'">
+            <div class="default-image-content" *ngIf="!content.imageUrl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="content-info-wrapper">
+            <div class="content-type-badge" [class.article]="content.contentType === 'Article'" [class.blog]="content.contentType === 'BlogPost'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              {{ content.contentType === 'Article' ? 'מאמר' : 'פוסט בלוג' }}
+            </div>
+            <h3 class="content-title">{{ content.title || 'כותרת לא זמינה' }}</h3>
+            <p class="content-subtitle" *ngIf="content.subtitle">{{ content.subtitle }}</p>
+            <p class="liked-date">נוסף ב-{{ content.likedAt | date:'d.M.yyyy' }}</p>
+          </div>
+          <button class="btn-remove-liked" (click)="removeLikedContent(content, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span class="remove-text">הסר מהמועדפים</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Playlists Banner (All mode) -->
+    <div class="category-section" *ngIf="shouldShowBanner() && myPlaylists.length > 0">
+      <div class="category-header">
+        <h2>רשימות אקורדים שלי</h2>
+        <button class="btn-more" (click)="setFilter('my-playlists')" *ngIf="myPlaylists.length > 10">
+          עוד
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="horizontal-scroll">
+        <div class="playlist-card" *ngFor="let playlist of getMyPlaylistsBanner()" (click)="viewPlaylist(playlist.id)">
+          <div class="playlist-image" [class.no-image]="!getPlaylistImage(playlist)">
+            <img *ngIf="getPlaylistImage(playlist)" [src]="getPlaylistImage(playlist)!" [alt]="playlist.name">
+            <div class="default-image-content" *ngIf="!getPlaylistImage(playlist)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+              </svg>
+            </div>
+            <div class="play-overlay">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          <div class="playlist-info">
+            <h3>{{ playlist.name }}</h3>
+            <p class="playlist-meta">{{ playlist.songCount }} שירים</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Playlists Grid (Filtered mode) -->
+    <div class="category-section" *ngIf="shouldShowGridForCategory('my-playlists') && myPlaylists.length > 0">
+      <div class="category-header">
+        <h2>רשימות אקורדים שלי</h2>
+        <span class="count-badge">{{ myPlaylists.length }} רשימות</span>
+      </div>
+      <div class="playlists-grid">
+        <div class="playlist-card" *ngFor="let playlist of myPlaylists" (click)="viewPlaylist(playlist.id)">
+          <div class="playlist-image" [class.no-image]="!getPlaylistImage(playlist)">
+            <img *ngIf="getPlaylistImage(playlist)" [src]="getPlaylistImage(playlist)!" [alt]="playlist.name">
+            <div class="default-image-content" *ngIf="!getPlaylistImage(playlist)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+              </svg>
+            </div>
+            <div class="play-overlay">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          <div class="playlist-info">
+            <h3>{{ playlist.name }}</h3>
+            <p class="playlist-description" *ngIf="playlist.description">{{ playlist.description }}</p>
+            <div class="playlist-meta">
+              <span class="song-count">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                {{ playlist.songCount }} שירים
+              </span>
+              <span class="created-date">{{ playlist.createdAt | date:'d.M.yyyy' }}</span>
+            </div>
+          </div>
+          <button class="btn-duplicate" (click)="duplicatePlaylist(playlist.id, $event)" title="שכפל רשימה">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          <button class="btn-delete" (click)="deletePlaylist(playlist.id, $event)" title="מחק רשימה">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adopted Playlists Banner (All mode) -->
+    <div class="category-section" *ngIf="shouldShowBanner() && adoptedPlaylists.length > 0">
+      <div class="category-header">
+        <h2>רשימות שאמצתי</h2>
+        <button class="btn-more" (click)="setFilter('adopted')" *ngIf="adoptedPlaylists.length > 10">
+          עוד
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="horizontal-scroll">
+        <div class="playlist-card" *ngFor="let playlist of getAdoptedPlaylistsBanner()" (click)="viewPlaylist(playlist.id)">
+          <div class="playlist-image" [class.no-image]="!getPlaylistImage(playlist)">
+            <img *ngIf="getPlaylistImage(playlist)" [src]="getPlaylistImage(playlist)!" [alt]="playlist.name">
+            <div class="default-image-content" *ngIf="!getPlaylistImage(playlist)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+              </svg>
+            </div>
+            <div class="play-overlay">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          <div class="playlist-info">
+            <h3>{{ playlist.name }}</h3>
+            <p class="playlist-meta">{{ playlist.songCount }} שירים</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adopted Playlists Grid (Filtered mode) -->
+    <div class="category-section" *ngIf="shouldShowGridForCategory('adopted') && adoptedPlaylists.length > 0">
+      <div class="category-header">
+        <h2>רשימות שאמצתי</h2>
+        <span class="count-badge">{{ adoptedPlaylists.length }} רשימות</span>
+      </div>
+      <div class="playlists-grid">
+        <div class="playlist-card" *ngFor="let playlist of adoptedPlaylists" (click)="viewPlaylist(playlist.id)">
+          <div class="playlist-image" [class.no-image]="!getPlaylistImage(playlist)">
+            <img *ngIf="getPlaylistImage(playlist)" [src]="getPlaylistImage(playlist)!" [alt]="playlist.name">
+            <div class="default-image-content" *ngIf="!getPlaylistImage(playlist)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+              </svg>
+            </div>
+            <div class="play-overlay">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          <div class="playlist-info">
+            <h3>{{ playlist.name }}</h3>
+            <p class="playlist-description" *ngIf="playlist.description">{{ playlist.description }}</p>
+            <div class="playlist-meta">
+              <span class="song-count">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                {{ playlist.songCount }} שירים
+              </span>
+              <span class="created-date">{{ playlist.createdAt | date:'d.M.yyyy' }}</span>
+            </div>
+          </div>
+          <button class="btn-duplicate" (click)="duplicatePlaylist(playlist.id, $event)" title="שכפל רשימה">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          <button class="btn-delete" (click)="deletePlaylist(playlist.id, $event)" title="מחק רשימה">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

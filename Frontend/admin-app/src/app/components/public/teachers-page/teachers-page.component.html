@@ -1,0 +1,361 @@
+<div class="teachers-page">
+  <!-- Header Section with Image -->
+  <div class="page-header">
+    <img src="teachertitle.png" alt="מורים למוזיקה חרדית" class="header-image">
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <!-- Become Teacher Button (Only for logged in users) -->
+      <button
+        *ngIf="authService.isLoggedIn"
+        class="become-teacher-btn"
+        (click)="openBecomeTeacherForm()">
+        <span class="material-icons">school</span>
+        השתדרג למורה
+      </button>
+
+      <!-- Search and Filters Row -->
+      <div class="search-filters">
+        <!-- Main Search Input -->
+        <div class="search-input-wrapper">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="חיפוש לפי שם מורה או כלי נגינה..."
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()">
+        </div>
+
+        <!-- City Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedCityId"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל הערים</option>
+          <option *ngFor="let city of cities" [ngValue]="city.id">
+            {{ city.name }}
+          </option>
+        </select>
+
+        <!-- Instrument Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedInstrumentId"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל כלי הנגינה</option>
+          <option *ngFor="let instrument of instruments" [ngValue]="instrument.id">
+            {{ instrument.name }}
+          </option>
+        </select>
+
+        <!-- Target Audience Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedTargetAudience"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל קהלי היעד</option>
+          <option *ngFor="let option of targetAudienceOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+
+        <!-- Teaching Language Dropdown -->
+        <select
+          class="filter-select"
+          [(ngModel)]="selectedLanguage"
+          (change)="onSearch()">
+          <option [ngValue]="null">כל שפות ההוראה</option>
+          <option *ngFor="let option of languageOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="clear-filters-wrapper" *ngIf="isFiltered">
+        <button class="clear-filters-btn" (click)="clearFilters()">
+          <span class="material-icons">clear</span>
+          נקה סינונים
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Search Buttons -->
+  <div class="quick-search-section">
+    <div class="quick-search-container">
+      <button
+        *ngFor="let instrument of quickSearchInstruments"
+        class="quick-search-btn"
+        (click)="onQuickSearch(instrument.name)">
+        מורים ל{{ instrument.hebrewName }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>טוען מורים...</p>
+  </div>
+
+  <!-- Filtered Results -->
+  <div *ngIf="!loading && isFiltered" class="filtered-section">
+    <h2 class="filtered-title">תוצאות חיפוש ({{ filteredTeachers.length }} מורים)</h2>
+
+    <div *ngIf="filteredTeachers.length > 0" class="teachers-grid">
+      <div
+        *ngFor="let teacher of filteredTeachers"
+        class="teacher-card"
+        (click)="viewTeacher(teacher.id)">
+        <div class="teacher-image">
+          <img
+            [src]="teacher.profileImageUrl || 'logo.png'"
+            [alt]="teacher.displayName"
+            onerror="this.onerror=null; this.src='logo.png'">
+          <span *ngIf="teacher.isFeatured" class="featured-badge">
+            <span class="material-icons">star</span>
+          </span>
+        </div>
+        <div class="teacher-info">
+          <h3 class="teacher-name">{{ teacher.displayName }}</h3>
+          <p class="teacher-instrument" *ngIf="teacher.primaryInstrument">
+            {{ teacher.primaryInstrument }}
+          </p>
+          <p class="teacher-location" *ngIf="teacher.cityId">
+            <span class="material-icons">location_on</span>
+            {{ getCityName(teacher.cityId) }}
+          </p>
+          <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
+            {{ teacher.yearsOfExperience }} שנות ניסיון
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredTeachers.length === 0" class="empty-state">
+      <span class="material-icons empty-icon">search_off</span>
+      <h3>לא נמצאו מורים התואמים לחיפוש</h3>
+      <p>נסה לשנות את הסינון</p>
+      <button class="clear-filters-btn" (click)="clearFilters()">
+        <span class="material-icons">clear</span>
+        נקה סינונים
+      </button>
+    </div>
+  </div>
+
+  <!-- Teachers Banners (Default View) -->
+  <div *ngIf="!loading && !isFiltered" class="banners-section">
+
+    <!-- Featured Teachers Banner -->
+    <div class="teacher-banner" *ngIf="featuredTeachers.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">מורים מומלצים</h2>
+        <button class="view-more-btn" (click)="onViewMore('featured')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="teachers-grid">
+        <div
+          *ngFor="let teacher of featuredTeachers"
+          class="teacher-card"
+          (click)="viewTeacher(teacher.id)">
+          <div class="teacher-image">
+            <img
+              [src]="teacher.profileImageUrl || 'logo.png'"
+              [alt]="teacher.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+            <span class="featured-badge">
+              <span class="material-icons">star</span>
+            </span>
+          </div>
+          <div class="teacher-info">
+            <h3 class="teacher-name">{{ teacher.displayName }}</h3>
+            <p class="teacher-instrument" *ngIf="getTeacherInstruments(teacher)">
+              {{ getTeacherInstruments(teacher) }}
+            </p>
+            <p class="teacher-location" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(teacher.cityId) }}
+            </p>
+            <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
+              {{ teacher.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Organ Teachers Banner -->
+    <div class="teacher-banner" *ngIf="organTeachers.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">מורים לאורגן</h2>
+        <button class="view-more-btn" (click)="onViewMore('organ')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="teachers-grid">
+        <div
+          *ngFor="let teacher of organTeachers"
+          class="teacher-card"
+          (click)="viewTeacher(teacher.id)">
+          <div class="teacher-image">
+            <img
+              [src]="teacher.profileImageUrl || 'logo.png'"
+              [alt]="teacher.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="teacher-info">
+            <h3 class="teacher-name">{{ teacher.displayName }}</h3>
+            <p class="teacher-location" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(teacher.cityId) }}
+            </p>
+            <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
+              {{ teacher.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sound Teachers Banner -->
+    <div class="teacher-banner" *ngIf="soundTeachers.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">מורים לסאונד</h2>
+        <button class="view-more-btn" (click)="onViewMore('sound')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="teachers-grid">
+        <div
+          *ngFor="let teacher of soundTeachers"
+          class="teacher-card"
+          (click)="viewTeacher(teacher.id)">
+          <div class="teacher-image">
+            <img
+              [src]="teacher.profileImageUrl || 'logo.png'"
+              [alt]="teacher.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="teacher-info">
+            <h3 class="teacher-name">{{ teacher.displayName }}</h3>
+            <p class="teacher-location" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(teacher.cityId) }}
+            </p>
+            <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
+              {{ teacher.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vocal Development Teachers Banner -->
+    <div class="teacher-banner" *ngIf="vocalTeachers.length > 0">
+      <div class="banner-header">
+        <h2 class="banner-title">מורים לפיתוח קול</h2>
+        <button class="view-more-btn" (click)="onViewMore('vocal')">
+          עוד
+          <span class="material-icons">arrow_back</span>
+        </button>
+      </div>
+
+      <div class="teachers-grid">
+        <div
+          *ngFor="let teacher of vocalTeachers"
+          class="teacher-card"
+          (click)="viewTeacher(teacher.id)">
+          <div class="teacher-image">
+            <img
+              [src]="teacher.profileImageUrl || 'logo.png'"
+              [alt]="teacher.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="teacher-info">
+            <h3 class="teacher-name">{{ teacher.displayName }}</h3>
+            <p class="teacher-location" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(teacher.cityId) }}
+            </p>
+            <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
+              {{ teacher.yearsOfExperience }} שנות ניסיון
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Teachers Section -->
+    <div class="additional-teachers-section" *ngIf="additionalTeachers.length > 0">
+      <h2 class="section-title">מורים נוספים</h2>
+
+      <div class="teachers-table">
+        <div
+          *ngFor="let teacher of additionalTeachers"
+          class="teacher-row"
+          (click)="viewTeacher(teacher.id)">
+          <div class="row-image">
+            <img
+              [src]="teacher.profileImageUrl || 'logo.png'"
+              [alt]="teacher.displayName"
+              onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="row-info">
+            <h3 class="row-name">{{ teacher.displayName }}</h3>
+            <div class="row-details">
+              <span *ngIf="getTeacherInstruments(teacher)" class="detail-item">
+                <span class="material-icons">music_note</span>
+                {{ getTeacherInstruments(teacher) }}
+              </span>
+              <span *ngIf="teacher.cityId" class="detail-item">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(teacher.cityId) }}
+              </span>
+              <span *ngIf="teacher.yearsOfExperience" class="detail-item">
+                <span class="material-icons">work</span>
+                {{ teacher.yearsOfExperience }} שנות ניסיון
+              </span>
+            </div>
+          </div>
+          <div class="row-action">
+            <span class="material-icons">arrow_back</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && featuredTeachers.length === 0 && additionalTeachers.length === 0" class="empty-state">
+    <span class="material-icons empty-icon">school</span>
+    <h3>אין מורים זמינים כרגע</h3>
+    <p>נסה שוב מאוחר יותר</p>
+  </div>
+
+  <!-- Teacher Profile Modal -->
+  <app-teacher-profile-modal
+    *ngIf="selectedTeacherId"
+    [teacherId]="selectedTeacherId"
+    (close)="closeTeacherProfile()"
+  ></app-teacher-profile-modal>
+
+  <!-- Become Teacher Form -->
+  <app-become-teacher-form
+    *ngIf="showBecomeTeacherForm"
+    (close)="closeBecomeTeacherForm()"
+    (success)="loadTeachers()"
+  ></app-become-teacher-form>
+
+</div>

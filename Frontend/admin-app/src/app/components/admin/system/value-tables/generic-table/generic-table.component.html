@@ -1,0 +1,112 @@
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">{{ title }}</h3>
+        <div class="header-actions">
+            <!-- Search Box -->
+            <div class="search-box">
+                <input
+                    type="text"
+                    [value]="searchTerm"
+                    (input)="onSearchTermChange($any($event.target).value)"
+                    (keyup.enter)="onSearch()"
+                    placeholder="חיפוש לפי שם..."
+                    class="search-input">
+                <button
+                    *ngIf="searchTerm"
+                    (click)="onClearSearch()"
+                    class="clear-btn"
+                    title="נקה חיפוש">
+                    <span class="material-icons">close</span>
+                </button>
+                <button
+                    (click)="onSearch()"
+                    class="search-btn"
+                    title="חפש">
+                    <span class="material-icons">search</span>
+                </button>
+            </div>
+            <button (click)="openAddModal()" class="btn-primary">
+                <span class="material-icons" style="font-size: 1.25rem;">add</span>
+                הוסף חדש
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <!-- Removed ID column -->
+                    <th>שם</th>
+                    <ng-container *ngFor="let col of extraColumns">
+                        <th>{{ col.label }}</th>
+                    </ng-container>
+                    <th style="width: 120px; text-align: center;">פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of items">
+                    <!-- Removed ID cell -->
+                    <td>{{ item.name }}</td>
+                    <ng-container *ngFor="let col of extraColumns">
+                        <td>
+                            <ng-container [ngSwitch]="col.type">
+                                <span *ngSwitchCase="'boolean'">{{ item[col.key] ? 'כן' : 'לא' }}</span>
+                                <span *ngSwitchDefault>{{ item[col.key] }}</span>
+                            </ng-container>
+                        </td>
+                    </ng-container>
+                    <td>
+                        <div class="actions-cell">
+                            <button (click)="openEditModal(item)" class="btn-icon edit" title="ערוך">
+                                <span class="material-icons" style="font-size: 1.25rem;">edit</span>
+                            </button>
+                            <button (click)="onDelete(item)" class="btn-icon delete" title="מחק">
+                                <span class="material-icons" style="font-size: 1.25rem;">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr *ngIf="items.length === 0">
+                    <td [attr.colspan]="2 + extraColumns.length + 1">
+                        <div class="empty-state">אין נתונים להצגה</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="isModalOpen" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">{{ isEditing ? 'עריכת פריט' : 'הוספת פריט חדש' }}</h3>
+
+        <div class="form-group">
+            <label class="label">שם</label>
+            <input type="text" [(ngModel)]="currentItem.name" class="input" placeholder="הכנס שם...">
+        </div>
+
+        <ng-container *ngFor="let col of extraColumns">
+            <div class="form-group">
+                <label class="label">{{ col.label }}</label>
+                <ng-container [ngSwitch]="col.type">
+                    <input *ngSwitchCase="'number'" type="number" [(ngModel)]="currentItem[col.key]" class="input">
+                    <div *ngSwitchCase="'boolean'" class="checkbox-wrapper">
+                        <input type="checkbox" [(ngModel)]="currentItem[col.key]" [id]="'cb_' + col.key">
+                        <label [for]="'cb_' + col.key">{{ col.label }}</label>
+                    </div>
+                    <textarea *ngSwitchCase="'textarea'" [(ngModel)]="currentItem[col.key]" class="input" rows="3"></textarea>
+                    <input *ngSwitchDefault type="text" [(ngModel)]="currentItem[col.key]" class="input">
+                </ng-container>
+            </div>
+        </ng-container>
+
+        <div class="modal-actions">
+            <button (click)="closeModal()" class="btn-secondary">ביטול</button>
+            <button (click)="save()" [disabled]="!currentItem.name" class="btn-primary">
+                {{ isEditing ? 'שמור שינויים' : 'צור פריט' }}
+            </button>
+        </div>
+    </div>
+</div>

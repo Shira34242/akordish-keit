@@ -1,0 +1,167 @@
+<div class="subscription-status">
+  <div class="status-header">
+    <h2>פרטי המנוי שלי</h2>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="error && !loading">
+    {{ error }}
+  </div>
+
+  <!-- No Subscription -->
+  <div class="no-subscription" *ngIf="!currentSubscription && !loading && !error">
+    <div class="empty-state">
+      <div class="icon">📦</div>
+      <h3>אין לך מנוי פעיל</h3>
+      <p>התחל עכשיו ותהנה מתכונות מתקדמות ונראות מקסימלית</p>
+      <button class="primary-btn" (click)="upgradeSubscription()">
+        בחר תוכנית
+      </button>
+    </div>
+  </div>
+
+  <!-- Subscription Details -->
+  <div class="subscription-details" *ngIf="currentSubscription && !loading">
+    <!-- Current Plan Card -->
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-info">
+          <h3>{{ getPlanName() }}</h3>
+          <span class="status-badge" [ngClass]="getStatusClass()">
+            {{ getStatusText() }}
+          </span>
+        </div>
+        <div class="plan-price">
+          <span class="amount">{{ getPlanPrice() }}</span>
+          <span class="currency">₪</span>
+          <span class="period">/{{ getBillingCycleText() }}</span>
+        </div>
+      </div>
+
+      <!-- Trial Banner -->
+      <div class="trial-banner" *ngIf="currentSubscription.isTrial">
+        🎁 תקופת ניסיון חינמית - {{ getDaysRemaining() }} ימים נותרו
+      </div>
+
+      <!-- Subscription Stats -->
+      <div class="subscription-stats">
+        <div class="stat-item">
+          <div class="stat-label">חיוב הבא</div>
+          <div class="stat-value">{{ getNextBillingDate() }}</div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">פרופילים בשימוש</div>
+          <div class="stat-value">
+            {{ getTotalProfilesUsed() }} / {{ getIncludedProfiles() }}
+            <span class="included-hint">(כלולים במנוי)</span>
+          </div>
+        </div>
+
+        <div class="stat-item" *ngIf="getAdditionalProfilesCost() > 0">
+          <div class="stat-label">פרופילים נוספים</div>
+          <div class="stat-value">
+            +{{ getAdditionalProfilesCost() }}₪ לחודש
+          </div>
+        </div>
+
+        <div class="stat-item" *ngIf="currentSubscription.isAutoRenew">
+          <div class="stat-label">חידוש אוטומטי</div>
+          <div class="stat-value">
+            <span class="auto-renew-badge">✓ פעיל</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button
+          class="upgrade-btn"
+          *ngIf="canUpgrade()"
+          (click)="upgradeSubscription()">
+          שדרג תוכנית
+        </button>
+
+        <button
+          class="cancel-btn"
+          *ngIf="canCancel()"
+          (click)="showCancelDialog()">
+          בטל מנוי
+        </button>
+
+        <button
+          class="renew-btn"
+          *ngIf="currentSubscription.status === SubscriptionStatus.Cancelled"
+          (click)="renewSubscription()">
+          חדש מנוי
+        </button>
+      </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="info-section">
+      <h4>💡 טיפים</h4>
+      <ul>
+        <li *ngIf="currentSubscription.billingCycle === 'Monthly'">
+          עבור למנוי שנתי וחסוך 2 חודשי תשלום!
+        </li>
+        <li *ngIf="getTotalProfilesUsed() === getIncludedProfiles()">
+          צריך יותר פרופילים? כל פרופיל נוסף רק 30₪ לחודש
+        </li>
+        <li>ניתן לשדרג או לבטל את המנוי בכל עת</li>
+        <li *ngIf="currentSubscription.status === SubscriptionStatus.Cancelled">
+          תוכל להמשיך להשתמש בתכונות עד {{ getNextBillingDate() }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Billing History Link -->
+    <div class="billing-link">
+      <a href="/subscription/history">צפה בהיסטוריית תשלומים →</a>
+    </div>
+  </div>
+
+  <!-- Cancel Confirmation Dialog -->
+  <div class="modal-overlay" *ngIf="showCancelConfirmation" (click)="hideCancelDialog()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>⚠️ האם אתה בטוח?</h3>
+      </div>
+
+      <div class="modal-body">
+        <p>ביטול המנוי יגרום ל:</p>
+        <ul>
+          <li>הפרופילים שלך יעברו לרמה חינמית</li>
+          <li>תאבד גישה לתכונות מתקדמות</li>
+          <li>הנראות בחיפוש תפחת משמעותית</li>
+          <li>תג "מומלץ" יוסר</li>
+        </ul>
+        <p class="note">
+          תוכל להמשיך להשתמש בתכונות עד {{ getNextBillingDate() }}
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="secondary-btn"
+          (click)="hideCancelDialog()"
+          [disabled]="cancelLoading">
+          חזור
+        </button>
+        <button
+          class="danger-btn"
+          (click)="confirmCancel()"
+          [disabled]="cancelLoading">
+          <span *ngIf="!cancelLoading">כן, בטל מנוי</span>
+          <span *ngIf="cancelLoading">מבטל...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

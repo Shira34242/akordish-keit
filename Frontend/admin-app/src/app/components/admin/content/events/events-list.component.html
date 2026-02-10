@@ -1,0 +1,154 @@
+<div class="events-container" dir="rtl">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>ניהול הופעות</h1>
+    <p class="subtitle">ניהול הופעות קרובות, תאריכים, וכרטיסים</p>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <div class="search-filters">
+      <!-- Search -->
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          placeholder="חיפוש לפי כותרת, אמן או מיקום..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Active Filter -->
+      <div class="filter-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="showActiveOnly"
+            (change)="onActiveFilterChange()"
+          />
+          <span>הצג רק הופעות פעילות</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-new" (click)="createNewEvent()">
+      <span class="material-icons">add</span>
+      הופעה חדשה
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>טוען הופעות...</p>
+  </div>
+
+  <!-- Events Table -->
+  <div *ngIf="!loading" class="table-container">
+    <table class="events-table">
+      <thead>
+        <tr>
+          <th>פעולות</th>
+          <th>סטטוס</th>
+          <th>תאריך</th>
+          <th>מיקום</th>
+          <th>אמן</th>
+          <th>כותרת</th>
+          <th>תמונה</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let event of events" [class.inactive]="!event.isActive">
+          <!-- Thumbnail -->
+          <td>
+            <div class="event-thumbnail" [style.background-image]="'url(' + event.imageUrl + ')'"></div>
+          </td>
+
+          <!-- Name -->
+          <td>
+            <div class="event-name">
+              {{ event.name }}
+            </div>
+          </td>
+
+          <!-- Artist -->
+          <td>
+            <span class="event-artist">{{ event.artistName || '-' }}</span>
+          </td>
+
+          <!-- Location -->
+          <td>
+            <span class="event-location">{{ event.location || '-' }}</span>
+          </td>
+
+          <!-- Date -->
+          <td>
+            <div class="event-date">
+              {{ formatDate(event.eventDate) }}
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="getEventStatusClass(event)">
+              {{ event.eventStatus }}
+            </span>
+            <span *ngIf="!event.isActive" class="inactive-badge">לא פעיל</span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="action-buttons">
+              <button
+                class="btn-action btn-edit"
+                (click)="editEvent(event)"
+                title="עריכה"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button
+                class="btn-action btn-delete"
+                (click)="deleteEvent(event)"
+                title="מחיקה"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="events.length === 0">
+          <td colspan="7" class="no-results">
+            <span class="material-icons">event_busy</span>
+            <p>לא נמצאו הופעות</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalPages > 1" class="pagination">
+    <button
+      class="pagination-btn"
+      [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)"
+    >
+      <span class="material-icons">chevron_right</span>
+    </button>
+
+    <span class="pagination-info">
+      עמוד {{ currentPage }} מתוך {{ totalPages }} ({{ totalItems }} הופעות)
+    </span>
+
+    <button
+      class="pagination-btn"
+      [disabled]="currentPage === totalPages"
+      (click)="onPageChange(currentPage + 1)"
+    >
+      <span class="material-icons">chevron_left</span>
+    </button>
+  </div>
+</div>

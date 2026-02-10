@@ -1,0 +1,66 @@
+<div class="pagination-container" *ngIf="totalCount > 0">
+  <div class="pagination-info">
+    <span class="info-text">
+      מציג {{ startItem }}-{{ endItem }} מתוך {{ totalCount }}
+    </span>
+
+    <div class="page-size-selector">
+      <label for="pageSize">שורות בעמוד:</label>
+      <select
+        id="pageSize"
+        [value]="pageSize"
+        (change)="onPageSizeChange($event)"
+        class="page-size-select">
+        <option *ngFor="let size of pageSizeOptions" [value]="size" [selected]="size === pageSize">
+          {{ size }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="pagination-controls">
+    <button
+      class="pagination-btn"
+      [disabled]="!hasPreviousPage"
+      (click)="onFirstPage()"
+      title="עמוד ראשון">
+      ⟪
+    </button>
+
+    <button
+      class="pagination-btn"
+      [disabled]="!hasPreviousPage"
+      (click)="onPreviousPage()"
+      title="עמוד קודם">
+      ‹
+    </button>
+
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of visiblePages"
+        class="page-btn"
+        [class.active]="page === pageNumber"
+        [class.ellipsis]="page === -1"
+        [disabled]="page === -1"
+        (click)="onPageChange(page)">
+        {{ page === -1 ? '...' : page }}
+      </button>
+    </div>
+
+    <button
+      class="pagination-btn"
+      [disabled]="!hasNextPage"
+      (click)="onNextPage()"
+      title="עמוד הבא">
+      ›
+    </button>
+
+    <button
+      class="pagination-btn"
+      [disabled]="!hasNextPage"
+      (click)="onLastPage()"
+      title="עמוד אחרון">
+      ⟫
+    </button>
+  </div>
+</div>

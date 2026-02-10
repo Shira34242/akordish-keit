@@ -1,0 +1,211 @@
+<div class="providers-container" dir="rtl">
+  <div class="page-header">
+    <h1>ניהול בעלי מקצוע</h1>
+    <button class="btn btn-primary" (click)="addNewProvider()">
+      <span class="material-icons">add</span>
+      הוסף בעל מקצוע חדש
+    </button>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="חיפוש לפי שם, משתמש או אימייל..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterCityId" (change)="onFilterChange()">
+          <option [ngValue]="null">כל הערים</option>
+          <option *ngFor="let city of cities" [ngValue]="city.id">
+            {{ city.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+          <option *ngFor="let opt of statusOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterFeatured" (change)="onFilterChange()">
+          <option [ngValue]="null">הכל</option>
+          <option [ngValue]="true">מומלצים בלבד</option>
+          <option [ngValue]="false">לא מומלצים</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterIsTeacher" (change)="onFilterChange()">
+          <option [ngValue]="null">כל הסוגים</option>
+          <option [ngValue]="true">מורים בלבד</option>
+          <option [ngValue]="false">לא מורים</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" (click)="onSearch()">חפש</button>
+      <button class="btn btn-light" (click)="clearFilters()">נקה</button>
+    </div>
+  </div>
+
+  <!-- Results Info -->
+  <div class="results-info" *ngIf="!loading && !error">
+    נמצאו {{ totalCount }} בעלי מקצוע
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div class="table-container" *ngIf="!loading && !error">
+    <table class="providers-table">
+      <thead>
+        <tr>
+          <th>תמונה</th>
+          <th>שם תצוגה</th>
+          <th>משתמש מקושר</th>
+          <th>מיקום</th>
+          <th>ניסיון</th>
+          <th>קטגוריה</th>
+          <th>מורה</th>
+          <th>סטטוס</th>
+          <th>מומלץ</th>
+          <th>תאריך</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let provider of providers">
+          <td>
+            <img
+              [src]="provider.profileImageUrl || '/logo.png'"
+              alt="{{ provider.displayName }}"
+              class="provider-avatar"
+              onerror="this.onerror=null; this.src='/logo.png'"
+            />
+          </td>
+          <td>{{ provider.displayName }}</td>
+          <td>
+            <span *ngIf="provider.userName" class="badge badge-success">{{ provider.userName }}</span>
+            <span *ngIf="!provider.userName" class="badge badge-secondary">לא מחובר</span>
+          </td>
+          <td>{{ getLocationDisplay(provider) }}</td>
+          <td>{{ provider.yearsOfExperience ? provider.yearsOfExperience + ' שנים' : '-' }}</td>
+          <td>{{ provider.categoryName || '-' }}</td>
+          <td>
+            <span *ngIf="provider.isTeacher" class="badge badge-info">
+              <span class="material-icons" style="font-size: 14px; vertical-align: middle;">school</span>
+              מורה
+            </span>
+            <span *ngIf="!provider.isTeacher">-</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusBadgeClass(provider.status)">
+              {{ provider.statusName }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="provider.isFeatured" class="badge badge-star">
+              <span class="material-icons" style="font-size: 14px; vertical-align: middle;">star</span>
+              מומלץ
+            </span>
+            <span *ngIf="!provider.isFeatured">-</span>
+          </td>
+          <td>{{ provider.createdAt | date: 'dd/MM/yyyy' }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button class="btn-action btn-view" (click)="viewProvider(provider.id)" title="צפה">
+                <span class="material-icons">visibility</span>
+              </button>
+              <button class="btn-action btn-edit" (click)="editProvider(provider.id)" title="ערוך">
+                <span class="material-icons">edit</span>
+              </button>
+              <button
+                *ngIf="!provider.userId"
+                class="btn-action btn-link"
+                (click)="linkToUser(provider.id)"
+                title="קשר למשתמש"
+              >
+                <span class="material-icons">link</span>
+              </button>
+              <button
+                *ngIf="provider.userId"
+                class="btn-action btn-unlink"
+                (click)="unlinkFromUser(provider.id)"
+                title="נתק ממשתמש"
+              >
+                <span class="material-icons">link_off</span>
+              </button>
+              <button
+                *ngIf="provider.status === 0"
+                class="btn-action btn-approve"
+                (click)="approveProvider(provider.id)"
+                title="אשר"
+              >
+                <span class="material-icons">check_circle</span>
+              </button>
+              <button
+                *ngIf="provider.status === 1"
+                class="btn-action btn-reject"
+                (click)="rejectProvider(provider.id)"
+                title="השעה"
+              >
+                <span class="material-icons">block</span>
+              </button>
+              <button class="btn-action btn-delete" (click)="deleteProvider(provider.id)" title="מחק">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="providers.length === 0">
+          <td colspan="11" class="no-data">לא נמצאו בעלי מקצוע</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
+    <button class="btn btn-pagination" [disabled]="currentPage === 1" (click)="goToPage(1)">
+      ראשון
+    </button>
+    <button class="btn btn-pagination" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+      הקודם
+    </button>
+
+    <button
+      *ngFor="let page of getPaginationRange()"
+      class="btn btn-pagination"
+      [class.active]="page === currentPage"
+      (click)="goToPage(page)"
+    >
+      {{ page }}
+    </button>
+
+    <button class="btn btn-pagination" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+      הבא
+    </button>
+    <button class="btn btn-pagination" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
+      אחרון
+    </button>
+
+    <span class="pagination-info">
+      עמוד {{ currentPage }} מתוך {{ totalPages }}
+    </span>
+  </div>
+</div>

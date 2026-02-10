@@ -1,0 +1,12 @@
+<div class="app-container">
+  <router-outlet></router-outlet>
+
+  <!-- Add Song Modal (Global) -->
+  <app-add-song-modal
+    *ngIf="isAddSongModalOpen"
+    [editMode]="editMode"
+    [songToEdit]="songToEdit"
+    (close)="closeAddSongModal()"
+    (songAdded)="onSongAdded()">
+  </app-add-song-modal>
+</div>

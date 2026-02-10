@@ -1,0 +1,104 @@
+<div class="modal-overlay" *ngIf="show" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'עריכת שטח פרסום' : 'הוספת שטח פרסום חדש' }}</h2>
+      <button class="btn-close" (click)="onCancel()" type="button">&times;</button>
+    </div>
+
+    <form [formGroup]="adSpotForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">שם המיקום <span class="required">*</span></label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              class="form-control"
+              [class.error]="f['name'].invalid && f['name'].touched"
+              placeholder="למשל: באנר ראשי"
+            />
+            <div class="error-message" *ngIf="f['name'].invalid && f['name'].touched">
+              <span *ngIf="f['name'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['name'].errors?.['maxlength']">מקסימום 200 תווים</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="technicalId">מזהה טכני <span class="required">*</span></label>
+            <input
+              type="text"
+              id="technicalId"
+              formControlName="technicalId"
+              class="form-control"
+              [class.error]="f['technicalId'].invalid && f['technicalId'].touched"
+              placeholder="למשל: BANNER_TOP_1"
+            />
+            <div class="error-message" *ngIf="f['technicalId'].invalid && f['technicalId'].touched">
+              <span *ngIf="f['technicalId'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['technicalId'].errors?.['maxlength']">מקסימום 100 תווים</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dimensions">מידות</label>
+            <input
+              type="text"
+              id="dimensions"
+              formControlName="dimensions"
+              class="form-control"
+              placeholder="למשל: 728x90"
+            />
+            <small class="help-text">שטח זה תומך בכל סוגי המדיה: תמונות, וידאו וגיפים</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rotationIntervalMs">זמן רוטציה (מילישניות) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="rotationIntervalMs"
+              formControlName="rotationIntervalMs"
+              class="form-control"
+              [class.error]="f['rotationIntervalMs'].invalid && f['rotationIntervalMs'].touched"
+              placeholder="למשל: 30000 (30 שניות)"
+              min="1000"
+            />
+            <div class="error-message" *ngIf="f['rotationIntervalMs'].invalid && f['rotationIntervalMs'].touched">
+              <span *ngIf="f['rotationIntervalMs'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['rotationIntervalMs'].errors?.['min']">מינימום 1000 מילישניות (שנייה אחת)</span>
+            </div>
+            <small class="help-text">זמן במילישניות בין רוטציה של פרסומות (30000 = 30 שניות)</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">תיאור</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            class="form-control textarea"
+            rows="4"
+            placeholder="תיאור מפורט של שטח הפרסום..."></textarea>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="isActive" />
+            <span>שטח פרסום פעיל</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()">ביטול</button>
+        <button type="submit" class="btn btn-save" [disabled]="adSpotForm.invalid">
+          {{ isEditMode ? 'שמור שינויים' : 'הוסף שטח פרסום' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

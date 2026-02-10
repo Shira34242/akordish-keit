@@ -1,0 +1,119 @@
+<div class="artists-page-container">
+  <!-- כותרת -->
+  <div class="page-header">
+    <h1 class="page-title">אומנים</h1>
+    <p class="page-subtitle">גלה את האומנים המובילים במוזיקה חרדית</p>
+  </div>
+
+  <!-- אומנים מומלצים -->
+  <section class="featured-section">
+    <h2 class="section-title">אומנים מומלצים 🌟</h2>
+
+    <div class="loading-state" *ngIf="loadingFeatured">
+      <div class="spinner"></div>
+      <p>טוען אומנים מומלצים...</p>
+    </div>
+
+    <div class="artists-grid featured-grid" *ngIf="!loadingFeatured && featuredArtists.length > 0">
+      <div *ngFor="let artist of featuredArtists"
+           class="artist-card featured-card"
+           (click)="navigateToArtist(artist.id)">
+        <div class="artist-image-wrapper">
+          <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+               [alt]="artist.name"
+               class="artist-image">
+          <span class="verified-badge" *ngIf="artist.isVerified">✓</span>
+          <span class="premium-badge" *ngIf="artist.isPremium">👑</span>
+        </div>
+        <div class="artist-info">
+          <h3 class="artist-name">{{ artist.name }}</h3>
+          <p class="artist-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
+          <div class="artist-stats">
+            <span class="stat-item">
+              <strong>{{ artist.songCount }}</strong> שירים
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="no-artists" *ngIf="!loadingFeatured && featuredArtists.length === 0">
+      אין אומנים מומלצים כרגע
+    </p>
+  </section>
+
+  <!-- כל האומנים -->
+  <section class="all-artists-section">
+    <div class="section-header">
+      <div class="header-left">
+        <h2 class="section-title">כל האומנים ({{ totalCount }})</h2>
+        <button class="become-artist-btn" (click)="becomeArtist()">
+          <span class="material-icons">star</span>
+          הפוך לאומן
+        </button>
+      </div>
+
+      <!-- פילטרים -->
+      <div class="filters">
+        <select [(ngModel)]="sortBy" (change)="onSortChange()" class="filter-select">
+          <option value="name">מיון: א-ב</option>
+          <option value="songcount">מיון: לפי מספר שירים</option>
+          <option value="created">מיון: חדשים ביותר</option>
+        </select>
+
+        <select [(ngModel)]="filterPremium" (change)="onFilterChange()" class="filter-select">
+          <option [ngValue]="undefined">הכל</option>
+          <option [ngValue]="true">משלמים בלבד</option>
+          <option [ngValue]="false">חינמיים בלבד</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingAll">
+      <div class="spinner"></div>
+      <p>טוען אומנים...</p>
+    </div>
+
+    <div class="artists-grid" *ngIf="!loadingAll && allArtists.length > 0">
+      <div *ngFor="let artist of allArtists"
+           class="artist-card"
+           (click)="navigateToArtist(artist.id)">
+        <div class="artist-image-wrapper">
+          <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+               [alt]="artist.name"
+               class="artist-image">
+          <span class="verified-badge" *ngIf="artist.isVerified">✓</span>
+          <span class="premium-badge" *ngIf="artist.isPremium">👑</span>
+        </div>
+        <div class="artist-info">
+          <h3 class="artist-name">{{ artist.name }}</h3>
+          <p class="artist-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
+          <div class="artist-stats">
+            <span class="stat-item">
+              <strong>{{ artist.songCount }}</strong> שירים
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="no-artists" *ngIf="!loadingAll && allArtists.length === 0">
+      לא נמצאו אומנים
+    </p>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1 && !loadingAll">
+      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+        ← הקודם
+      </button>
+
+      <span class="page-info">
+        עמוד {{ currentPage }} מתוך {{ totalPages }}
+      </span>
+
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        הבא →
+      </button>
+    </div>
+  </section>
+</div>

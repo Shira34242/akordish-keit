@@ -1,0 +1,31 @@
+<div class="song-card" [routerLink]="['/song', song.id]" [class.card-layout]="layout === 'card'">
+    <div class="image-container">
+        <img [src]="song.imageUrl || 'assets/default-song.png'" [alt]="song.title" class="song-image">
+        <div class="overlay-gradient" *ngIf="layout === 'overlay'"></div>
+
+        <!-- Info for Overlay Layout -->
+        <div class="song-info" *ngIf="layout === 'overlay'">
+            <h3 class="song-title">{{ song.title }}</h3>
+            <p class="artist-name">
+                {{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}
+            </p>
+        </div>
+
+        <div class="play-overlay">
+            <i class="play-icon">▶</i>
+        </div>
+    </div>
+
+    <!-- Info for Card Layout -->
+    <div class="card-info" *ngIf="layout === 'card'">
+        <h3 class="song-title">{{ song.title }}</h3>
+        <p class="artist-name">
+            {{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}
+        </p>
+        <div class="card-footer">
+            <span class="view-count">
+                <i class="icon-eye">👁</i> {{ song.viewCount || 0 }}
+            </span>
+        </div>
+    </div>
+</div>

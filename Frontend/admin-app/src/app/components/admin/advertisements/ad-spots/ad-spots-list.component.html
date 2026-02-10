@@ -1,0 +1,164 @@
+<div class="ad-spots-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול פרסום</h1>
+      <p class="page-subtitle">קמפיינים, מיקומים ולקוחות</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="activeTab === 'campaigns'"
+        (click)="switchTab('campaigns')">
+        קמפיינים פעילים
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'spots'"
+        (click)="switchTab('spots')">
+        שטחי פרסום 
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'clients'"
+        (click)="switchTab('clients')">
+        לקוחות
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+ 
+
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="חיפוש..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+    </div>
+       <button class="btn-new-spot" (click)="createNewSpot()">
+      <span class="material-icons">add</span>
+    הוספת שטח פרסום
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <table *ngIf="!loading" class="ad-spots-table">
+      <thead>
+        <tr>
+          <th>שם המיקום</th>
+          <th>מזהה טכני</th>
+          <th>סטטוס</th>
+          <th>זמינות</th>
+          <th>פני החל מ-</th>
+          <th>מידות</th>
+          <th>תקציב כולל</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let spot of filteredAdSpots" class="spot-row">
+          <!-- Spot Name -->
+          <td class="spot-name-cell">
+            <div class="spot-name">{{ spot.name }}</div>
+            <div class="spot-desc" *ngIf="spot.description">{{ spot.description }}</div>
+          </td>
+
+          <!-- Technical ID -->
+          <td>
+            <code class="technical-id">{{ spot.technicalId }}</code>
+          </td>
+
+          <!-- Status (IsActive) -->
+          <td>
+            <span class="status-badge" [ngClass]="spot.isActive ? 'active' : 'inactive'">
+              {{ spot.isActive ? 'פעיל' : 'לא פעיל' }}
+            </span>
+          </td>
+
+          <!-- Availability -->
+          <td>
+            <span class="availability-badge" [ngClass]="getAvailabilityClass(spot.availability)">
+              {{ getAvailabilityText(spot.availability) }}
+            </span>
+          </td>
+
+          <!-- Next Available Date -->
+          <td>
+            <div class="next-available">
+              {{ formatDate(spot.nextAvailableDate) }}
+            </div>
+          </td>
+
+          <!-- Dimensions -->
+          <td>
+            <span class="dimensions">{{ spot.dimensions }}</span>
+          </td>
+
+          <!-- Total Revenue -->
+          <td>
+            <div class="revenue-cell">
+              <span class="revenue-amount">{{ formatCurrency(spot.totalRevenue) }}</span>
+              <div class="campaign-stats">
+                <span class="stat">{{ spot.activeCampaigns }} פעילים</span>
+                <span class="stat-sep">|</span>
+                <span class="stat">{{ spot.totalCampaigns }} קמפיינים</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <button class="btn-action btn-edit" (click)="editSpot(spot)" title="ערוך">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-action btn-delete" (click)="deleteSpot(spot)" title="מחק">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredAdSpots.length === 0 && !loading" class="empty-state">
+          <td colspan="8">
+            <div class="empty-message">
+              <p>לא נמצאו מיקומי פרסום</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <app-pagination
+      [totalCount]="totalCount"
+      [pageNumber]="pageNumber"
+      [pageSize]="pageSize"
+      [totalPages]="totalPages"
+      [hasPreviousPage]="hasPreviousPage"
+      [hasNextPage]="hasNextPage"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+  </div>
+</div>
+
+<!-- Ad Spot Form Modal -->
+<app-ad-spot-form
+  [show]="showAdSpotForm"
+  [adSpot]="selectedAdSpot"
+  (save)="onSaveAdSpot($event)"
+  (cancel)="onCancelAdSpotForm()">
+</app-ad-spot-form>

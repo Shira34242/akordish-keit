@@ -1,0 +1,216 @@
+<div class="artists-container" dir="rtl">
+  <div class="page-header">
+    <h1>ניהול אומנים</h1>
+    <button class="btn btn-primary" (click)="addNewArtist()">
+      <span class="material-icons">add</span>
+      הוסף אומן חדש
+    </button>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="חיפוש לפי שם אומן..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onFilterChange()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+          <option *ngFor="let opt of statusOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="filterPremium" (change)="onFilterChange()">
+          <option *ngFor="let opt of premiumOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select class="form-control" [(ngModel)]="sortBy" (change)="onFilterChange()">
+          <option *ngFor="let opt of sortOptions" [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <button class="btn btn-light" (click)="clearFilters()">נקה</button>
+    </div>
+  </div>
+
+  <!-- Results Info -->
+  <div class="results-info" *ngIf="!loading && !error">
+    נמצאו {{ totalCount }} אומנים
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- Artists Table -->
+  <div class="table-container" *ngIf="!loading && !error">
+    <table class="artists-table">
+      <thead>
+        <tr>
+          <th>תמונה</th>
+          <th>שם</th>
+          <th>תיאור קצר</th>
+          <th>מספר שירים</th>
+          <th>סטטוס</th>
+          <th>Premium</th>
+          <th>תאריך יצירה</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let artist of artists">
+          <td>
+            <img
+              [src]="artist.imageUrl || '/logo.png'"
+              [alt]="artist.name"
+              class="artist-avatar"
+              onerror="this.onerror=null; this.src='/logo.png'"
+            />
+          </td>
+          <td>
+            <strong>{{ artist.name }}</strong>
+          </td>
+          <td>
+            <span class="short-bio">{{ artist.shortBio || '-' }}</span>
+          </td>
+          <td>
+            <span class="badge badge-info">{{ artist.songCount }}</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusBadgeClass(artist.status)">
+              {{ getStatusLabel(artist.status) }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="artist.isPremium" class="badge badge-premium">
+              <span class="material-icons" style="font-size: 14px; vertical-align: middle;">workspace_premium</span>
+              Premium
+            </span>
+            <span *ngIf="!artist.isPremium" class="badge badge-secondary">חינם</span>
+          </td>
+          <td>{{ artist.createdAt | date: 'dd/MM/yyyy' }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button
+                class="btn-action btn-view"
+                (click)="viewArtist(artist.id)"
+                title="צפה בדף אומן"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
+              <button
+                class="btn-action btn-edit"
+                (click)="editArtist(artist.id)"
+                title="ערוך"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button
+                *ngIf="artist.status === ArtistStatus.Pending"
+                class="btn-action btn-approve"
+                (click)="approveArtist(artist.id)"
+                title="אשר והפוך לפעיל"
+              >
+                <span class="material-icons">check_circle</span>
+              </button>
+              <button
+                *ngIf="artist.status === ArtistStatus.Active"
+                class="btn-action btn-hide"
+                (click)="hideArtist(artist.id)"
+                title="הסתר אומן"
+              >
+                <span class="material-icons">visibility_off</span>
+              </button>
+              <button
+                class="btn-action btn-delete"
+                (click)="deleteArtist(artist.id)"
+                title="מחק"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="artists.length === 0">
+          <td colspan="9" class="no-data">לא נמצאו אומנים</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === 1"
+      (click)="goToPage(1)"
+    >
+      ראשון
+    </button>
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === 1"
+      (click)="goToPage(currentPage - 1)"
+    >
+      הקודם
+    </button>
+
+    <button
+      *ngFor="let page of getPaginationRange()"
+      class="btn btn-pagination"
+      [class.active]="page === currentPage"
+      (click)="goToPage(page)"
+    >
+      {{ page }}
+    </button>
+
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === totalPages"
+      (click)="goToPage(currentPage + 1)"
+    >
+      הבא
+    </button>
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === totalPages"
+      (click)="goToPage(totalPages)"
+    >
+      אחרון
+    </button>
+
+    <span class="pagination-info">
+      עמוד {{ currentPage }} מתוך {{ totalPages }}
+    </span>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<app-artist-edit-modal
+  *ngIf="showEditModal"
+  [artistId]="selectedArtistId"
+  (close)="closeEditModal()"
+  (saved)="onArtistSaved()">
+</app-artist-edit-modal>

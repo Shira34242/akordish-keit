@@ -1,0 +1,143 @@
+<div class="community-playlists-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>מאגר רשימות קהילתי</h1>
+        <p>{{ playlists.length }} רשימות ציבוריות</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Box -->
+  <div class="search-container" *ngIf="!isLoading && !error">
+    <div class="search-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="filterPlaylists()"
+        placeholder="חפש רשימות לפי שם...">
+      <button class="clear-search" *ngIf="searchTerm" (click)="searchTerm = ''; filterPlaylists()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>טוען רשימות מהקהילה...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-container" *ngIf="error">
+    <p>{{ error }}</p>
+    <button (click)="loadPublicPlaylists()">נסה שוב</button>
+  </div>
+
+  <!-- Playlists Grid -->
+  <div class="playlists-grid" *ngIf="!isLoading && !error">
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredPlaylists.length === 0 && !searchTerm">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+      </div>
+      <h2>אין עדיין רשימות ציבוריות</h2>
+      <p>כשמשתמשים יצרו רשימות ציבוריות, הן יופיעו כאן</p>
+    </div>
+
+    <!-- No Search Results -->
+    <div class="empty-state" *ngIf="filteredPlaylists.length === 0 && searchTerm">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </div>
+      <h2>לא נמצאו תוצאות</h2>
+      <p>נסה לחפש במילות חיפוש אחרות</p>
+    </div>
+
+    <!-- Playlist Cards -->
+    <div
+      class="playlist-card"
+      *ngFor="let playlist of filteredPlaylists"
+      (click)="viewPlaylist(playlist.id)">
+
+      <div class="playlist-image" [class.no-image]="!getPlaylistImage(playlist)">
+        <img *ngIf="getPlaylistImage(playlist)" [src]="getPlaylistImage(playlist)!" [alt]="playlist.name">
+        <div class="default-image-content" *ngIf="!getPlaylistImage(playlist)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="none">
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+          </svg>
+        </div>
+        <div class="play-overlay">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+        <div class="public-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+            <path d="M2 12h20"></path>
+          </svg>
+        </div>
+      </div>
+
+      <div class="playlist-info">
+        <h3>{{ playlist.name }}</h3>
+        <p class="playlist-description" *ngIf="playlist.description">{{ playlist.description }}</p>
+        <div class="playlist-meta">
+          <span class="song-count">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            {{ playlist.songCount }} שירים
+          </span>
+          <span class="created-date">{{ playlist.createdAt | date:'d.M.yyyy' }}</span>
+        </div>
+      </div>
+
+      <button class="btn-adopt" (click)="adoptPlaylist(playlist.id, $event)" title="אמץ רשימה">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        אמץ רשימה
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

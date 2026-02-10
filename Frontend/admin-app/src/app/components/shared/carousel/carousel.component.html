@@ -1,0 +1,16 @@
+<div class="carousel-section">
+    <div class="carousel-header">
+        <h2 class="carousel-title">{{ title }}</h2>
+        <a [routerLink]="linkUrl" class="more-link">{{ linkText }} &lt;</a>
+    </div>
+
+    <div class="carousel-container">
+        <button class="nav-btn prev" (click)="scroll('right')">&#10095;</button> <!-- Right arrow for RTL prev -->
+
+        <div class="scroll-content" #scrollContainer>
+            <ng-content></ng-content>
+        </div>
+
+        <button class="nav-btn next" (click)="scroll('left')">&#10094;</button> <!-- Left arrow for RTL next -->
+    </div>
+</div>

@@ -1,0 +1,37 @@
+.tooltip-container {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    min-width: 120px;
+    pointer-events: none;
+    /* So it doesn't flicker */
+}
+
+.chord-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.simplified-note {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.diagram {
+    display: flex;
+    justify-content: center;
+}
+
+.no-data {
+    font-size: 0.9rem;
+    color: #6b7280;
+    padding: 8px;
+}

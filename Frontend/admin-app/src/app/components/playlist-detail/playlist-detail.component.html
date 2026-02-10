@@ -1,0 +1,153 @@
+<div class="playlist-detail-container" *ngIf="playlist; else loadingOrError">
+
+  <!-- Header -->
+  <div class="playlist-header">
+    <div class="header-content">
+
+      <!-- Back Button -->
+      <button class="btn-back" routerLink="/my-playlists">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18 6-6-6-6"></path>
+        </svg>
+        חזרה לרשימות
+      </button>
+
+      <!-- Playlist Info -->
+      <div class="playlist-info-section" *ngIf="!isEditing">
+        <div class="icon-bookmark">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>{{ playlist.name }}</h1>
+          <p class="description" *ngIf="playlist.description">{{ playlist.description }}</p>
+          <div class="meta">
+            <span>{{ playlist.songs.length }} שירים</span>
+            <span>•</span>
+            <span>נוצרה ב-{{ playlist.createdAt | date:'d.M.yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Form -->
+      <div class="edit-form" *ngIf="isEditing">
+        <input
+          type="text"
+          class="edit-name-input"
+          [(ngModel)]="editedName"
+          placeholder="שם הרשימה">
+        <textarea
+          class="edit-description-input"
+          [(ngModel)]="editedDescription"
+          placeholder="תיאור (אופציונלי)"
+          rows="2"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="header-actions">
+        <button class="btn-edit" *ngIf="!isEditing && isOwner()" (click)="toggleEdit()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+          </svg>
+          ערוך
+        </button>
+
+        <button class="btn-save" *ngIf="isEditing && isOwner()" (click)="saveEdit()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          שמור
+        </button>
+
+        <button class="btn-cancel" *ngIf="isEditing && isOwner()" (click)="toggleEdit()">
+          ביטול
+        </button>
+
+        <button class="btn-delete" *ngIf="isOwner()" (click)="deletePlaylist()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          מחק רשימה
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Songs List -->
+  <div class="songs-container">
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="playlist.songs.length === 0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
+      <h3>הרשימה ריקה</h3>
+      <p>התחל להוסיף שירים לרשימה זו</p>
+    </div>
+
+    <!-- Songs Table -->
+    <div class="songs-table" *ngIf="playlist.songs.length > 0">
+      <div class="table-header">
+        <span class="col-number">#</span>
+        <span class="col-song">שיר</span>
+        <span class="col-artist">אמן</span>
+        <span class="col-added">נוסף</span>
+        <span class="col-actions"></span>
+      </div>
+
+      <div
+        class="song-row"
+        *ngFor="let song of playlist.songs; let i = index"
+        (click)="goToSong(song.songId)">
+
+        <span class="col-number">{{ i + 1 }}</span>
+
+        <div class="col-song">
+          <img [src]="song.songImageUrl" [alt]="song.songTitle" (error)="$event.target.src=getDefaultImage()">
+          <span>{{ song.songTitle }}</span>
+        </div>
+
+        <span class="col-artist">{{ song.artistName }}</span>
+
+        <span class="col-added">{{ song.addedAt | date:'d.M.yyyy' }}</span>
+
+        <div class="col-actions">
+          <button class="btn-remove" *ngIf="isOwner()" (click)="removeSong(song.songId); $event.stopPropagation()" title="הסר מהרשימה">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<ng-template #loadingOrError>
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>טוען רשימה...</p>
+  </div>
+  <div class="error-container" *ngIf="error">
+    <p>{{ error }}</p>
+    <button (click)="loadPlaylist()">נסה שוב</button>
+  </div>
+</ng-template>

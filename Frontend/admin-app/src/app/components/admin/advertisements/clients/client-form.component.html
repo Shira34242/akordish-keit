@@ -1,0 +1,103 @@
+<div class="modal-overlay" *ngIf="show" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'עריכת לקוח' : 'הוספת לקוח חדש' }}</h2>
+      <button class="btn-close" (click)="onCancel()" type="button">&times;</button>
+    </div>
+
+    <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="businessName">שם העסק <span class="required">*</span></label>
+            <input
+              type="text"
+              id="businessName"
+              formControlName="businessName"
+              class="form-control"
+              [class.error]="f['businessName'].invalid && f['businessName'].touched"
+              placeholder="הזן שם עסק"
+            />
+            <div class="error-message" *ngIf="f['businessName'].invalid && f['businessName'].touched">
+              <span *ngIf="f['businessName'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['businessName'].errors?.['maxlength']">מקסימום 200 תווים</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="contactPerson">איש קשר <span class="required">*</span></label>
+            <input
+              type="text"
+              id="contactPerson"
+              formControlName="contactPerson"
+              class="form-control"
+              [class.error]="f['contactPerson'].invalid && f['contactPerson'].touched"
+              placeholder="הזן שם איש קשר"
+            />
+            <div class="error-message" *ngIf="f['contactPerson'].invalid && f['contactPerson'].touched">
+              <span *ngIf="f['contactPerson'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['contactPerson'].errors?.['maxlength']">מקסימום 150 תווים</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">אימייל <span class="required">*</span></label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              [class.error]="f['email'].invalid && f['email'].touched"
+              placeholder="example@domain.com"
+            />
+            <div class="error-message" *ngIf="f['email'].invalid && f['email'].touched">
+              <span *ngIf="f['email'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['email'].errors?.['email']">כתובת אימייל לא תקינה</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">טלפון <span class="required">*</span></label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-control"
+              [class.error]="f['phone'].invalid && f['phone'].touched"
+            />
+            <div class="error-message" *ngIf="f['phone'].invalid && f['phone'].touched">
+              <span *ngIf="f['phone'].errors?.['required']">שדה חובה</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="logoUrl">כתובת לוגו</label>
+          <input
+            type="url"
+            id="logoUrl"
+            formControlName="logoUrl"
+            class="form-control"
+            placeholder="https://example.com/logo.png"
+          />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="isActive" />
+            <span>לקוח פעיל</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()">ביטול</button>
+        <button type="submit" class="btn btn-save" [disabled]="clientForm.invalid">
+          {{ isEditMode ? 'שמור שינויים' : 'הוסף לקוח' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

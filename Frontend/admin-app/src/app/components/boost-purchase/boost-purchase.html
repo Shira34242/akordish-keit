@@ -1,0 +1,37 @@
+<div class="boost-purchase">
+  <div class="boost-card">
+    <div class="boost-icon">{{ getBoostIcon() }}</div>
+
+    <h3 class="boost-title">{{ getBoostName() }}</h3>
+
+    <p class="boost-description">
+      {{ getBoostDescription() }}
+    </p>
+
+    <div class="boost-price">
+      <span class="amount">{{ getBoostPrice() }}</span>
+      <span class="currency">₪</span>
+      <span class="one-time">תשלום חד-פעמי</span>
+    </div>
+
+    <button
+      class="purchase-btn"
+      [disabled]="loading"
+      (click)="purchaseBoost()">
+      <span *ngIf="!loading">
+        קנה עכשיו
+      </span>
+      <span *ngIf="loading">
+        מעבד תשלום...
+      </span>
+    </button>
+
+    <div class="error-message" *ngIf="error">
+      {{ error }}
+    </div>
+
+    <div class="boost-info">
+      <small>💡 הבוסט פעיל עד שמישהו אחר רוכש בוסט מאותו סוג</small>
+    </div>
+  </div>
+</div>

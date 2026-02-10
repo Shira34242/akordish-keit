@@ -1,0 +1,288 @@
+<div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+      <div class="modal-header">
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+        <h2>{{ editMode ? 'עריכת שיר' : 'הוספת שיר חדש' }}</h2>
+        <div class="header-spacer"></div>
+      </div>
+
+
+        <!-- Stepper -->
+        <div class="stepper">
+            <div class="step" [class.active]="currentStep >= 3">
+                <div class="step-circle">3</div>
+            </div>
+            <div class="line" [class.active]="currentStep >= 2"></div>
+            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+                <div class="step-circle">2</div>
+            </div>
+            <div class="line" [class.active]="currentStep >= 1"></div>
+            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+                <div class="step-circle">1</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="modal-content" [formGroup]="songForm">
+
+            <!-- STEP 1: Basic Info -->
+            <div *ngIf="currentStep === 1" class="step-content">
+              <div class="step-header">
+                <p class="step-subtitle">פרטי השיר:</p>
+            </div>
+
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label>שם השיר *</label>
+                    <input type="text" formControlName="title" placeholder="הכנס שם השיר"
+                        [class.invalid]="songForm.get('title')?.invalid && songForm.get('title')?.touched">
+
+                    <!-- Duplicate Warning - Only for new songs -->
+                    <div *ngIf="!editMode && similarSongs.length > 0" class="duplicate-warning">
+                        <p>⚠️ נמצאו שירים דומים:</p>
+                        <ul>
+                            <li *ngFor="let song of similarSongs">{{ song.title }} - {{ song.artistNames }}</li>
+                        </ul>
+                    </div>
+
+                    <div class="error" *ngIf="songForm.get('title')?.invalid && songForm.get('title')?.touched">
+                        שם השיר הוא שדה חובה (2-120 תווים)
+                    </div>
+                </div>
+
+                <!-- Artists -->
+                <div class="form-group">
+                    <label>אמנים (עד 5) *</label>
+                    <div class="input-with-chips" [class.disabled]="artistsArray.length >= 5">
+                        <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index">
+                            {{ artist.value.name }}
+                            <span class="remove-chip" (click)="removeArtist(i)">&times;</span>
+                        </div>
+                        <input type="text" formControlName="artistInput" (input)="onArtistInput($event)"
+                            placeholder="הוסף אמן..." [disabled]="artistsArray.length >= 5">
+                    </div>
+
+                    <!-- Autocomplete Dropdown -->
+                    <div class="autocomplete-dropdown" *ngIf="artistSuggestions.length > 0">
+                        <div class="suggestion" *ngFor="let artist of artistSuggestions" (click)="selectArtist(artist)">
+                            <img [src]="artist.imageUrl || 'assets/default-artist.png'" class="artist-thumb">
+                            <div class="artist-info">
+                                <span class="main-text">{{ artist.displayText }}</span>
+                                <span class="sub-text" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="error" *ngIf="artistsArray.length === 0 && songForm.get('artistInput')?.touched">
+                        חובה להוסיף לפחות אמן אחד
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>מלחין *</label>
+                    <div class="input-with-chips" [class.has-selection]="songForm.get('composerId')?.value">
+                        <div class="chip" *ngIf="selectedComposer">
+                            {{ selectedComposer.name }}
+                            <span class="remove-chip" (click)="removeComposer()">&times;</span>
+                        </div>
+                        <input type="text" formControlName="composerInput" (input)="onComposerInput($event)"
+                            placeholder="הוסף מלחין..." [disabled]="songForm.get('composerId')?.value"
+                            [class.invalid]="!songForm.get('composerId')?.value && songForm.get('composerInput')?.touched">
+                    </div>
+
+                    <!-- Autocomplete Dropdown -->
+                    <div class="autocomplete-dropdown" *ngIf="composerSuggestions.length > 0">
+                        <div class="suggestion" *ngFor="let composer of composerSuggestions"
+                            (click)="selectComposer(composer)">
+                            <div class="artist-info">
+                                <span class="main-text">{{ composer.displayText }}</span>
+                                <span class="sub-text" *ngIf="composer.secondaryText">{{ composer.secondaryText
+                                    }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="error"
+                        *ngIf="!songForm.get('composerId')?.value && songForm.get('composerInput')?.touched">
+                        חובה לבחור מלחין
+                    </div>
+                </div>
+
+                <!-- Links Row -->
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>קישור YouTube *</label>
+                        <input type="text" formControlName="youtubeUrl" (blur)="onYoutubeUrlBlur()"
+                            placeholder="...=https://youtube.com/watch?v">
+                        <div class="error"
+                            *ngIf="songForm.get('youtubeUrl')?.invalid && songForm.get('youtubeUrl')?.touched">
+                            קישור YouTube לא תקין
+                        </div>
+                    </div>
+
+                    <div class="form-group half">
+                        <label>קישור Spotify</label>
+                        <input type="text" formControlName="spotifyUrl"
+                            placeholder=".../https://open.spotify.com/track">
+                    </div>
+                </div>
+
+                <!-- Image -->
+                <div class="form-group">
+                    <label>תמונה</label>
+                    <div class="image-input-wrapper">
+                        <input type="text" formControlName="imageUrl" placeholder="הדבק קישור לתמונה">
+                        <img *ngIf="songForm.get('imageUrl')?.value" [src]="songForm.get('imageUrl')?.value"
+                            class="preview-thumb">
+                    </div>
+                </div>
+
+                <!-- Tags & Genres Row -->
+                <div class="form-row">
+                    <!-- Tags -->
+                    <div class="form-group half">
+                        <label>תגיות</label>
+                        <div class="input-with-chips">
+                            <div class="chip" *ngFor="let tag of tagsArray.controls; let i = index">
+                                {{ tag.value.name }}
+                                <span class="remove-chip" (click)="removeTag(i)">&times;</span>
+                            </div>
+                            <input type="text" formControlName="tagInput" (input)="onTagInput($event)"
+                                placeholder="הוסף תגית...">
+                        </div>
+
+                        <div class="autocomplete-dropdown" *ngIf="tagSuggestions.length > 0">
+                            <div class="suggestion" *ngFor="let tag of tagSuggestions" (click)="selectTag(tag)">
+                                {{ tag.displayText }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Genres -->
+                    <div class="form-group half">
+                        <label>ז'אנרים</label>
+                        <div class="input-with-chips">
+                            <div class="chip" *ngFor="let genre of genresArray.controls; let i = index">
+                                {{ genre.value.name }}
+                                <span class="remove-chip" (click)="removeGenre(i)">&times;</span>
+                            </div>
+                            <input type="text" formControlName="genreInput" (input)="onGenreInput($event)"
+                                placeholder="הוסף ז'אנר...">
+                        </div>
+
+                        <div class="autocomplete-dropdown" *ngIf="genreSuggestions.length > 0">
+                            <div class="suggestion" *ngFor="let genre of genreSuggestions" (click)="selectGenre(genre)">
+                                {{ genre.displayText }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- STEP 2: Content -->
+            <div *ngIf="currentStep === 2" class="step-content">
+                <div class="step-header">
+                    <h2>{{ editMode ? 'עריכת שיר' : 'הוספת שיר' }}</h2>
+                    <p class="step-subtitle">מילים ואקורדים</p>
+                </div>
+                <!-- Lyrics -->
+                <div class="form-group">
+                    <label>סולם מקורי *</label>
+                    <div class="select-with-button">
+                        <select formControlName="originalKeyId">
+                            <option [ngValue]="null">בחר סולם</option>
+                            <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.displayName }}</option>
+                        </select>
+                        <button type="button" class="add-key-btn">+</button>
+                    </div>
+                    <div class="error"
+                        *ngIf="songForm.get('originalKeyId')?.invalid && songForm.get('originalKeyId')?.touched">
+                        יש לבחור סולם מקורי
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>סולם קל למנגינה</label>
+                    <select formControlName="easyKeyId">
+                        <option [ngValue]="null">בחר סולם קל...</option>
+                        <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.displayName }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <textarea formControlName="lyricsWithChords" rows="10"
+                        placeholder="כתוב כאן את המילים והאקורדים..."></textarea>
+                    <div class="error"
+                        *ngIf="songForm.get('lyricsWithChords')?.invalid && songForm.get('lyricsWithChords')?.touched">
+                        שדה חובה (מינימום 10 תווים)
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- STEP 3: Preview & Submit -->
+            <div *ngIf="currentStep === 3" class="step-content preview-step">
+           <div class="preview-header">
+                <h2>{{ editMode ? 'עריכת שיר' : 'הוספת שיר' }}</h2>
+                <p class="preview-subtitle">תצוגה מקדימה</p>
+                <p class="preview-description">{{ editMode ? 'בדקו את השינויים לפני השמירה' : 'בדקו את הפרטים לפני שנעלה' }}</p>
+            </div>
+
+                <div class="preview-card">
+                    <div class="preview-card-header">
+                        <div class="song-info">
+                            <h3 class="song-title">{{ songForm.get('title')?.value }}</h3>
+                            <p class="song-artist">
+                                <span *ngFor="let a of artistsArray.value; let last = last">{{ a.name }}{{ !last ? ', '
+                                    : '' }}</span>
+                            </p>
+                            <p class="song-composer" *ngIf="selectedComposer">
+                                הלב שיר לכן שיר כבר
+                            </p>
+                        </div>
+                        <div class="song-image">
+                            <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" alt="תמונת שיר">
+                        </div>
+                    </div>
+
+                    <div class="preview-lyrics-box">
+                        <div class="lyrics-content" [innerHTML]="formattedLyrics"></div>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" formControlName="isApproved">
+                        מאושר לפרסום (מנהל בלבד)
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <div class="left-buttons">
+                <button class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()">חזור</button>
+                <button class="btn-secondary" *ngIf="currentStep === 1" (click)="closeModal()">ביטול</button>
+            </div>
+
+            <div class="right-buttons">
+                <button class="btn-primary btn-large" *ngIf="currentStep === 2" (click)="nextStep()">מעבר לתצוגה מקדימה
+                    ואישור</button>
+                <button class="btn-primary" *ngIf="currentStep === 1" (click)="nextStep()">המשך</button>
+              <button class="btn-primary btn-submit" *ngIf="currentStep === 3" (click)="submit()" [disabled]="isSubmitting">
+                    <span *ngIf="isSubmitting">שומר...</span>
+                    <span *ngIf="!isSubmitting && editMode">שמור שינויים</span>
+                    <span *ngIf="!isSubmitting && !editMode && !songForm.get('isApproved')?.value">שלח לאישור</span>
+                    <span *ngIf="!isSubmitting && !editMode && songForm.get('isApproved')?.value">פרסם שיר</span>
+              </button>
+            </div>
+        </div>
+
+    </div>
+</div>

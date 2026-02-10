@@ -1,0 +1,197 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)" *ngIf="professionalId">
+  <div class="modal-container" dir="rtl">
+    <!-- Close Button -->
+    <button class="close-button" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען פרטי בעל מקצוע...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+      <span class="material-icons">error</span>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="loadProfessional()">נסה שוב</button>
+    </div>
+
+    <!-- Professional Profile -->
+    <div *ngIf="professional && !loading" class="profile-content">
+      <!-- Header Section -->
+      <div class="profile-header">
+        <div class="header-decoration"></div>
+        <div class="profile-image-wrapper">
+          <img
+            [src]="professional.profileImageUrl || '/logo.png'"
+            alt="{{ professional.displayName }}"
+            class="profile-image"
+            onerror="this.onerror=null; this.src='/logo.png'"
+          />
+          <span *ngIf="professional.isFeatured" class="featured-star">
+            <span class="material-icons">star</span>
+          </span>
+        </div>
+        <h1 class="profile-name">{{ professional.displayName }}</h1>
+        <p *ngIf="professional.shortBio" class="profile-bio">{{ professional.shortBio }}</p>
+
+        <!-- Categories Tags -->
+        <div class="categories-tags" *ngIf="professional.categories && professional.categories.length > 0">
+          <span
+            *ngFor="let category of professional.categories"
+            class="category-tag">
+            {{ category.categoryName }}
+            <span *ngIf="category.subCategory" class="sub-category"> - {{ category.subCategory }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Contact Buttons -->
+      <div class="contact-buttons">
+        <button *ngIf="professional.whatsAppNumber"
+           (click)="openWhatsApp()"
+           class="contact-btn whatsapp-btn">
+          <span class="material-icons">chat</span>
+          WhatsApp
+        </button>
+        <button *ngIf="professional.phoneNumber"
+           (click)="callPhone()"
+           class="contact-btn phone-btn">
+          <span class="material-icons">phone</span>
+          {{ professional.phoneNumber }}
+        </button>
+        <button *ngIf="professional.email"
+           (click)="sendEmail()"
+           class="contact-btn email-btn">
+          <span class="material-icons">email</span>
+          שלח מייל
+        </button>
+        <button *ngIf="professional.websiteUrl"
+           (click)="visitWebsite()"
+           class="contact-btn website-btn">
+          <span class="material-icons">language</span>
+          אתר אינטרנט
+        </button>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="info-grid">
+        <!-- About -->
+        <div class="info-section full-width" *ngIf="professional.fullDescription">
+          <h3 class="section-title">
+            <span class="material-icons">description</span>
+            אודות
+          </h3>
+          <p class="description-text">{{ professional.fullDescription }}</p>
+        </div>
+
+        <!-- Details Column 1 -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <span class="material-icons">info</span>
+            פרטים כלליים
+          </h3>
+          <div class="info-list">
+            <div class="info-item" *ngIf="professional.cityId">
+              <span class="material-icons">location_on</span>
+              <div>
+                <span class="info-label">עיר</span>
+                <span class="info-value">{{ getCityName(professional.cityId) }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="professional.location">
+              <span class="material-icons">home</span>
+              <div>
+                <span class="info-label">כתובת</span>
+                <span class="info-value">{{ professional.location }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="professional.yearsOfExperience">
+              <span class="material-icons">work_history</span>
+              <div>
+                <span class="info-label">ניסיון</span>
+                <span class="info-value">{{ professional.yearsOfExperience }} שנים</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="getCategoriesDisplay() !== '-'">
+              <span class="material-icons">category</span>
+              <div>
+                <span class="info-label">קטגוריות</span>
+                <span class="info-value">{{ getCategoriesDisplay() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Column 2 -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <span class="material-icons">schedule</span>
+            זמינות ושעות
+          </h3>
+          <div class="info-list">
+            <div class="info-item" *ngIf="professional.workingHours">
+              <span class="material-icons">access_time</span>
+              <div>
+                <span class="info-label">שעות פעילות</span>
+                <span class="info-value">{{ professional.workingHours }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="professional.phoneNumber">
+              <span class="material-icons">phone</span>
+              <div>
+                <span class="info-label">טלפון</span>
+                <span class="info-value">{{ professional.phoneNumber }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="professional.whatsAppNumber">
+              <span class="material-icons">chat</span>
+              <div>
+                <span class="info-label">WhatsApp</span>
+                <span class="info-value">{{ professional.whatsAppNumber }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="professional.email">
+              <span class="material-icons">email</span>
+              <div>
+                <span class="info-label">אימייל</span>
+                <span class="info-value">{{ professional.email }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gallery -->
+        <div class="info-section full-width" *ngIf="professional.galleryImages && professional.galleryImages.length > 0">
+          <h3 class="section-title">
+            <span class="material-icons">photo_library</span>
+            גלריה
+          </h3>
+          <div class="gallery-grid">
+            <div *ngFor="let image of professional.galleryImages" class="gallery-item">
+              <img [src]="image.imageUrl" [alt]="image.caption || 'תמונה'" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <div class="info-section full-width" *ngIf="professional.videoUrl">
+          <h3 class="section-title">
+            <span class="material-icons">play_circle</span>
+            וידאו
+          </h3>
+          <div class="video-wrapper">
+            <iframe
+              [src]="professional.videoUrl"
+              frameborder="0"
+              allowfullscreen
+              class="video-iframe"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

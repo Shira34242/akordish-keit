@@ -1,0 +1,712 @@
+/* ============================================
+   MAIN HEADER
+============================================ */
+.main-header {
+    background: #fff;
+    height: 80px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-inner {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Right Side: Logo */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    font-family: 'Heebo', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #000;
+    cursor: pointer;
+    letter-spacing: -1px;
+    text-decoration: none;
+}
+
+.footer-logo-img {
+    height: 55px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.footer-logo-img:hover {
+    opacity: 0.8;
+}
+
+/* Mobile Hamburger Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: #000;
+}
+
+.hamburger-icon {
+    font-size: 24px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* Mobile Navigation Dropdown */
+.mobile-nav-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.mobile-nav-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    max-width: 80vw;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobile-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-nav-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+.mobile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+}
+
+.mobile-nav-link {
+    display: block;
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-nav-link:hover {
+    background-color: #f8f9fa;
+}
+
+/* Center: Navigation */
+.header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.main-nav {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #4b5563;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 8px 0;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: #000;
+}
+
+.nav-link.active {
+    color: #000;
+    font-weight: 700;
+}
+
+/* Left Side: Actions */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-random-song {
+    background-color: #FFF9C4;
+    color: #5D4037;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.btn-random-song:hover {
+    background-color: #FFF59D;
+    transform: translateY(-1px);
+}
+
+.sparkle-icon {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+}
+
+/* User Profile & Login */
+.user-profile-wrapper {
+    position: relative;
+}
+
+.user-profile-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #f0f0f0;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.user-profile-container:hover {
+    border-color: #1a73e8;
+    transform: scale(1.05);
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* User Dropdown Menu */
+.user-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    z-index: 1000;
+    overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-menu-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-menu-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+}
+
+.user-menu-info {
+    flex: 1;
+    color: white;
+}
+
+.user-menu-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.user-menu-email {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.user-menu-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 8px 0;
+}
+
+.user-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.95rem;
+}
+
+.user-menu-item:not(.disabled):hover {
+    background-color: #f3f4f6;
+}
+
+.user-menu-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.user-menu-item.logout {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.user-menu-item.logout:hover {
+    background-color: #fee2e2;
+}
+
+.menu-icon {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-login {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-login .material-icons {
+    font-size: 18px;
+}
+
+.btn-login:hover {
+    background-color: #1557b0;
+    transform: translateY(-1px);
+}
+
+.google-signin-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.google-signin-wrapper ::ng-deep iframe {
+    border-radius: 4px !important;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 80px - 200px);
+}
+
+/* ============================================
+   FOOTER
+============================================ */
+.main-footer {
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    padding: 40px 0;
+    margin-top: auto;
+}
+
+.footer-inner {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    direction: rtl;
+}
+
+/* Right Side: Logo & Button */
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.footer-btn {
+    border: 1px solid #ffc107;
+    background: transparent;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    border-radius: 50px;
+}
+
+.footer-btn:hover {
+    background: #fff9c4;
+}
+
+/* Left Side: Links */
+.footer-left {
+    display: flex;
+    align-items: flex-start;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.footer-links li a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.footer-links li a:hover {
+    color: #000;
+}
+
+.footer-contact-link {
+    cursor: pointer;
+    color: #1a73e8 !important;
+    font-weight: 600;
+}
+
+.footer-contact-link:hover {
+    color: #1557b0 !important;
+    text-decoration: underline;
+}
+
+/* FAB Button */
+.fab-add-song {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #ffc107;
+    color: #000;
+    font-size: 32px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 1000;
+}
+
+.fab-add-song:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   📱 MOBILE RESPONSIVE
+============================================ */
+
+@media (max-width: 1024px) {
+    .header-inner {
+        padding: 0 20px;
+    }
+
+    .main-nav {
+        gap: 24px;
+    }
+
+    .nav-link {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Header */
+    .main-header {
+        height: 70px;
+    }
+
+    .header-inner {
+        padding: 0 16px;
+    }
+
+    /* Hide desktop navigation */
+    .header-center {
+        display: none;
+    }
+
+    /* Show hamburger menu */
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    /* Logo */
+    .footer-logo-img {
+        height: 40px;
+    }
+
+    /* Random Song Button */
+    .btn-random-song {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        gap: 6px;
+    }
+
+    .sparkle-icon {
+        font-size: 1rem;
+    }
+
+    /* User Profile */
+    .user-profile-container {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* User Menu */
+    .user-menu {
+        left: auto;
+        right: 0;
+        min-width: 260px;
+        max-width: calc(100vw - 32px);
+    }
+
+    /* Google Sign-In */
+    .google-signin-wrapper ::ng-deep iframe {
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+
+    /* ============================================
+       FOOTER - MOBILE (נשאר כמו בדסקטופ)
+    ============================================ */
+    .main-footer {
+        padding: 32px 0;
+    }
+
+      .footer-inner {
+        padding: 0 16px;
+        overflow: hidden; 
+    }
+    
+    .footer-left {
+        max-width: 100%;
+    }
+    
+    .footer-links {
+        max-width: 80%; 
+    }
+    
+    /* FAB Button - מיקום טוב יותר */
+    .fab-add-song {
+        bottom: 20px;
+        left: 20px;
+        width: 55px;
+        height: 55px;
+        font-size: 28px;
+        z-index: 999; 
+    }
+
+}
+
+@media (max-width: 480px) {
+    /* Header */
+    .main-header {
+        height: 60px;
+    }
+
+    .header-inner {
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    /* Logo */
+    .footer-logo-img {
+        height: 35px;
+    }
+
+    /* Random Song Button */
+    .btn-random-song {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
+    .header-left {
+        gap: 8px;
+    }
+
+    /* User Profile */
+    .user-profile-container {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* User Menu */
+    .user-menu {
+        min-width: 240px;
+    }
+
+    .user-menu-header {
+        padding: 16px;
+    }
+
+    .user-menu-avatar {
+        width: 45px;
+        height: 45px;
+    }
+
+    .user-menu-name {
+        font-size: 1rem;
+    }
+
+    .user-menu-item {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* ============================================
+       FOOTER - VERY SMALL MOBILE
+    ============================================ */
+    .main-footer {
+        padding: 24px 0;
+    }
+
+    .footer-inner {
+        padding: 0 12px;
+    }
+
+    /* Logo */
+    .footer-right .footer-logo-img {
+        height: 40px;
+    }
+
+    /* כפתור */
+    .footer-btn {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+    }
+
+    /* Links */
+    .footer-links li a {
+        font-size: 12px;
+    }
+
+    /* FAB Button */
+    .fab-add-song {
+        bottom: 16px;
+        left: 16px;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    /* Google Sign-In */
+    .google-signin-wrapper ::ng-deep iframe {
+        transform: scale(0.85);
+    }
+}

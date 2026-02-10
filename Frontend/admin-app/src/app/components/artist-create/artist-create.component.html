@@ -1,0 +1,316 @@
+<div class="artist-create">
+  <div class="header">
+    <h1>צור פרופיל אומן</h1>
+    <p class="subtitle">מלא את הפרטים כדי להציג את הפרופיל שלך באתר</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="error && !loading">
+    {{ error }}
+  </div>
+
+  <!-- Subscription Badge -->
+  <div class="subscription-badge" *ngIf="subscription && !loading">
+    <span class="material-icons">{{ isPremium ? 'workspace_premium' : 'card_membership' }}</span>
+    <span>{{ isPremium ? 'מנוי Premium' : 'מנוי Regular' }}</span>
+    <span class="hint" *ngIf="!isPremium">שדרג ל-Premium לגלריה וסרטונים</span>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="artist-form">
+    <!-- Basic Information -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <span class="material-icons">person</span>
+        מידע בסיסי
+      </h2>
+
+      <div class="form-group">
+        <label class="form-label required">שם האומן</label>
+        <input
+          type="text"
+          [(ngModel)]="artistForm.name"
+          name="name"
+          class="form-input"
+          placeholder="שם האומן בעברית"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">שם באנגלית</label>
+        <input
+          type="text"
+          [(ngModel)]="artistForm.englishName"
+          name="englishName"
+          class="form-input"
+          placeholder="Artist Name in English"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">תיאור קצר</label>
+        <textarea
+          [(ngModel)]="artistForm.shortBio"
+          name="shortBio"
+          class="form-textarea"
+          rows="3"
+          maxlength="300"
+          placeholder="תיאור קצר על האומן (1-3 שורות)..."
+        ></textarea>
+        <span class="char-counter" [class.warning]="getCharCount(artistForm.shortBio) > 250">
+          {{ getCharCount(artistForm.shortBio) }}/300
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ביוגרפיה מלאה</label>
+        <textarea
+          [(ngModel)]="artistForm.biography"
+          name="biography"
+          class="form-textarea"
+          rows="6"
+          maxlength="2000"
+          placeholder="ביוגרפיה מפורטת על האומן, קריירה, השפעות..."
+        ></textarea>
+        <span class="char-counter" [class.warning]="getCharCount(artistForm.biography) > 1800">
+          {{ getCharCount(artistForm.biography) }}/2000
+        </span>
+      </div>
+    </div>
+
+    <!-- Media -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <span class="material-icons">image</span>
+        תמונות וקישורים
+      </h2>
+
+      <div class="form-group">
+        <label class="form-label">תמונת פרופיל</label>
+        <input
+          type="url"
+          [(ngModel)]="artistForm.imageUrl"
+          name="imageUrl"
+          class="form-input"
+          placeholder="https://example.com/image.jpg"
+        />
+        <small class="form-hint">קישור לתמונת הפרופיל שלך</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">אתר אישי</label>
+        <input
+          type="url"
+          [(ngModel)]="artistForm.websiteUrl"
+          name="websiteUrl"
+          class="form-input"
+          placeholder="https://example.com"
+        />
+        <small class="form-hint">קישור לאתר האישי שלך</small>
+      </div>
+    </div>
+
+    <!-- Premium: Banner -->
+    <div class="form-section" *ngIf="isPremium">
+      <h2 class="section-title">
+        <span class="material-icons">workspace_premium</span>
+        באנר (Premium)
+      </h2>
+
+      <div class="form-group">
+        <label class="form-label">תמונת באנר</label>
+        <input
+          type="url"
+          [(ngModel)]="artistForm.bannerImageUrl"
+          name="bannerImageUrl"
+          class="form-input"
+          placeholder="https://example.com/banner.jpg"
+        />
+        <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">באנר GIF/אנימציה</label>
+        <input
+          type="url"
+          [(ngModel)]="artistForm.bannerGifUrl"
+          name="bannerGifUrl"
+          class="form-input"
+          placeholder="https://example.com/banner.gif"
+        />
+        <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
+      </div>
+    </div>
+
+    <!-- Social Links -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <span class="material-icons">share</span>
+        קישורי רשתות חברתיות
+      </h2>
+
+      <div *ngFor="let link of artistForm.socialLinks; let i = index" class="social-link-item">
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">פלטפורמה</label>
+            <select
+              [(ngModel)]="link.platform"
+              [name]="'platform_' + i"
+              class="form-select"
+            >
+              <option [value]="1">Facebook</option>
+              <option [value]="2">Instagram</option>
+              <option [value]="3">YouTube</option>
+              <option [value]="4">Twitter</option>
+              <option [value]="5">TikTok</option>
+              <option [value]="6">Spotify</option>
+              <option [value]="7">אתר אינטרנט</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">קישור</label>
+            <div class="input-with-button">
+              <input
+                type="url"
+                [(ngModel)]="link.url"
+                [name]="'url_' + i"
+                class="form-input"
+                placeholder="https://..."
+              />
+              <button type="button" class="btn-remove" (click)="removeSocialLink(i)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add" (click)="addSocialLink()">
+        <span class="material-icons">add</span>
+        הוסף קישור חברתי
+      </button>
+    </div>
+
+    <!-- Premium: Gallery -->
+    <div class="form-section" *ngIf="isPremium">
+      <h2 class="section-title">
+        <span class="material-icons">photo_library</span>
+        גלריית תמונות (Premium)
+      </h2>
+
+      <div *ngFor="let image of artistForm.galleryImages; let i = index" class="gallery-item">
+        <div class="form-row">
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">קישור לתמונה</label>
+            <input
+              type="url"
+              [(ngModel)]="image.imageUrl"
+              [name]="'gallery_url_' + i"
+              class="form-input"
+              placeholder="https://..."
+            />
+          </div>
+
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">כיתוב</label>
+            <div class="input-with-button">
+              <input
+                type="text"
+                [(ngModel)]="image.caption"
+                [name]="'gallery_caption_' + i"
+                class="form-input"
+                placeholder="תיאור התמונה..."
+              />
+              <button type="button" class="btn-remove" (click)="removeGalleryImage(i)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add" (click)="addGalleryImage()">
+        <span class="material-icons">add</span>
+        הוסף תמונה לגלריה
+      </button>
+    </div>
+
+    <!-- Premium: Videos -->
+    <div class="form-section" *ngIf="isPremium">
+      <h2 class="section-title">
+        <span class="material-icons">videocam</span>
+        סרטונים (Premium)
+      </h2>
+
+      <div *ngFor="let video of artistForm.videos; let i = index" class="video-item">
+        <div class="form-row">
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">קישור לסרטון</label>
+            <input
+              type="url"
+              [(ngModel)]="video.videoUrl"
+              [name]="'video_url_' + i"
+              class="form-input"
+              placeholder="https://youtube.com/..."
+            />
+          </div>
+
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">כותרת</label>
+            <div class="input-with-button">
+              <input
+                type="text"
+                [(ngModel)]="video.title"
+                [name]="'video_title_' + i"
+                class="form-input"
+                placeholder="שם הסרטון..."
+              />
+              <button type="button" class="btn-remove" (click)="removeVideo(i)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add" (click)="addVideo()">
+        <span class="material-icons">add</span>
+        הוסף סרטון
+      </button>
+    </div>
+
+    <!-- Upgrade Notice for Non-Premium -->
+    <div class="upgrade-notice" *ngIf="!isPremium">
+      <div class="notice-content">
+        <span class="material-icons">workspace_premium</span>
+        <div>
+          <h3>רוצה יותר?</h3>
+          <p>שדרג למנוי Premium ותקבל גישה לגלריית תמונות, סרטונים, באנר אנימציה ועוד!</p>
+        </div>
+        <button type="button" class="btn-upgrade" (click)="selectSubscription()">
+          שדרג עכשיו
+        </button>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
+        ביטול
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="saving">
+        <span class="material-icons" *ngIf="!saving">save</span>
+        <span *ngIf="saving">שומר...</span>
+        <span *ngIf="!saving">צור פרופיל</span>
+      </button>
+    </div>
+  </form>
+</div>

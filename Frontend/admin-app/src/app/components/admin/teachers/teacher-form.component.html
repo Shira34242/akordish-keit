@@ -1,0 +1,597 @@
+<div class="teacher-form-container" dir="rtl">
+  <!-- Header -->
+  <div class="form-header">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-icons">arrow_forward</span>
+      חזרה
+    </button>
+    <h1>{{ isEditMode ? 'עריכת מורה' : 'מורה חדש' }}</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>טוען מורה...</p>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="teacher-form">
+
+    <!-- Basic Information -->
+    <div class="form-section">
+      <h2 class="section-title">מידע בסיסי</h2>
+
+      <div class="form-group" *ngIf="!isEditMode">
+        <label class="form-label">קשר למשתמש קיים (אופציונלי)</label>
+        <div class="user-selection-box" *ngIf="!userId">
+          <button
+            type="button"
+            class="btn-select-user"
+            (click)="openUserSelectionModal()"
+            [disabled]="loadingUsers"
+          >
+            <span class="material-icons">person_add</span>
+            <span>בחר משתמש מהרשימה</span>
+          </button>
+          <small class="form-hint">לחץ לבחירת משתמש קיים או השאר ריק ליצירת פרופיל צף</small>
+        </div>
+        <div class="selected-user-box" *ngIf="userId">
+          <div class="user-info-display">
+            <span class="material-icons user-icon">person</span>
+            <div class="user-details">
+              <div class="user-name">{{ userName }}</div>
+              <div class="user-email">{{ userEmail }}</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn-disconnect-user"
+            (click)="disconnectUser()"
+            title="נתק משתמש"
+          >
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group" *ngIf="isEditMode">
+        <label class="form-label">משתמש מקושר</label>
+        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+          <span *ngIf="userName" style="color: #2d7a3e; font-weight: 500;">
+            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person</span>
+            {{ userName }}
+            <span *ngIf="userEmail" style="color: #666; font-size: 0.9em;">({{ userEmail }})</span>
+          </span>
+          <span *ngIf="!userName" style="color: #666;">
+            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person_off</span>
+            לא מקושר למשתמש - פרופיל צף
+          </span>
+        </div>
+        <small class="form-hint">להוספה/הסרה של קישור למשתמש, השתמש בכפתורים בטבלה הראשית</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">שם תצוגה</label>
+        <input
+          type="text"
+          [(ngModel)]="displayName"
+          name="displayName"
+          class="form-input"
+          placeholder="השם שיוצג באתר"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">תיאור קצר</label>
+        <textarea
+          [(ngModel)]="shortBio"
+          name="shortBio"
+          class="form-textarea"
+          rows="3"
+          placeholder="תיאור קצר על המורה..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ביוגרפיה מלאה</label>
+        <textarea
+          [(ngModel)]="fullDescription"
+          name="fullDescription"
+          class="form-textarea"
+          rows="5"
+          placeholder="ספר קצת על עצמך, הניסיון שלך, סגנון ההוראה..."
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">אימייל</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            class="form-input"
+            placeholder="email@example.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">טלפון</label>
+          <input
+            type="tel"
+            [(ngModel)]="phoneNumber"
+            name="phoneNumber"
+            class="form-input"
+            placeholder="050-1234567"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <input
+            type="tel"
+            [(ngModel)]="whatsAppNumber"
+            name="whatsAppNumber"
+            class="form-input"
+            placeholder="050-1234567"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">עיר</label>
+          <div class="custom-dropdown" [class.open]="cityDropdownOpen">
+            <div class="dropdown-trigger" (click)="toggleCityDropdown()">
+              <span class="dropdown-value">
+                {{ getSelectedCityName() || 'בחר עיר...' }}
+              </span>
+              <span class="material-icons dropdown-arrow">
+                {{ cityDropdownOpen ? 'expand_less' : 'expand_more' }}
+              </span>
+            </div>
+            <div class="dropdown-menu" *ngIf="cityDropdownOpen">
+              <div class="dropdown-search">
+                <span class="material-icons">search</span>
+                <input
+                  type="text"
+                  [(ngModel)]="citySearchText"
+                  (ngModelChange)="onCitySearchChange()"
+                  name="citySearch"
+                  placeholder="חפש עיר..."
+                  class="dropdown-search-input"
+                  (click)="$event.stopPropagation()"
+                />
+              </div>
+              <div class="dropdown-options">
+                <div
+                  class="dropdown-option"
+                  (click)="selectCity(undefined)"
+                  [class.selected]="!cityId"
+                >
+                  <span>ללא עיר</span>
+                </div>
+                <div
+                  *ngFor="let city of filteredCities"
+                  class="dropdown-option"
+                  (click)="selectCity(city.id)"
+                  [class.selected]="cityId === city.id"
+                >
+                  <span>{{ city.name }}</span>
+                  <small *ngIf="city.district">{{ city.district }}</small>
+                </div>
+                <div *ngIf="filteredCities.length === 0" class="dropdown-no-results">
+                  לא נמצאו תוצאות
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">כתובת/אזור (פירוט נוסף)</label>
+          <input
+            type="text"
+            [(ngModel)]="location"
+            name="location"
+            class="form-input"
+            placeholder="רחוב, שכונה, הערות נוספות..."
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">אתר אינטרנט</label>
+        <input
+          type="url"
+          [(ngModel)]="websiteUrl"
+          name="websiteUrl"
+          class="form-input"
+          placeholder="https://..."
+        />
+      </div>
+    </div>
+
+    <!-- Professional Information -->
+    <div class="form-section">
+      <h2 class="section-title">מידע מקצועי</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">שנות ניסיון</label>
+          <input
+            type="number"
+            [(ngModel)]="yearsOfExperience"
+            name="yearsOfExperience"
+            class="form-input"
+            placeholder="0"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">שעות עבודה</label>
+          <input
+            type="text"
+            [(ngModel)]="workingHours"
+            name="workingHours"
+            class="form-input"
+            placeholder="ראשון-חמישי 16:00-21:00"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">השכלה</label>
+        <textarea
+          [(ngModel)]="education"
+          name="education"
+          class="form-textarea"
+          rows="3"
+          placeholder="תואר במוזיקה, קורסים, הסמכות..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">התמחויות</label>
+        <input
+          type="text"
+          [(ngModel)]="specializations"
+          name="specializations"
+          class="form-input"
+          placeholder="ג'אז, קלאסי, רוק..."
+        />
+      </div>
+    </div>
+
+    <!-- Teaching Information -->
+    <div class="form-section">
+      <h2 class="section-title">פרטי הוראה</h2>
+
+      <div class="form-group">
+        <label class="form-label">כלי נגינה</label>
+        <div class="custom-dropdown" [class.open]="instrumentsDropdownOpen">
+          <div class="dropdown-trigger" (click)="toggleInstrumentsDropdown()">
+            <span class="dropdown-value">
+              {{ getSelectedInstrumentsText() }}
+            </span>
+            <span class="material-icons dropdown-arrow">
+              {{ instrumentsDropdownOpen ? 'expand_less' : 'expand_more' }}
+            </span>
+          </div>
+          <div class="dropdown-menu" *ngIf="instrumentsDropdownOpen">
+            <div class="dropdown-search">
+              <span class="material-icons">search</span>
+              <input
+                type="text"
+                [(ngModel)]="instrumentSearchText"
+                (ngModelChange)="onInstrumentSearchChange()"
+                name="instrumentSearch"
+                placeholder="חפש כלי נגינה..."
+                class="dropdown-search-input"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+            <div class="dropdown-options checkbox-options">
+              <label
+                *ngFor="let instrument of filteredInstruments"
+                class="dropdown-checkbox-option"
+                (click)="$event.stopPropagation()"
+              >
+                <input
+                  type="checkbox"
+                  [checked]="isInstrumentSelected(instrument.id)"
+                  (change)="toggleInstrument(instrument.id)"
+                />
+                <span>{{ instrument.name }}</span>
+              </label>
+              <div *ngIf="filteredInstruments.length === 0" class="dropdown-no-results">
+                לא נמצאו תוצאות
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">מחירון</label>
+        <textarea
+          [(ngModel)]="priceList"
+          name="priceList"
+          class="form-textarea"
+          rows="4"
+          placeholder="שיעור פרטי: 200₪/שעה&#10;שיעור קבוצתי: 120₪/שעה&#10;חבילת 10 שיעורים: 1800₪"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">שפות הוראה</label>
+          <div class="custom-dropdown" [class.open]="languageDropdownOpen">
+            <div class="dropdown-trigger" (click)="toggleLanguageDropdown()">
+              <span class="dropdown-value">
+                {{ getSelectedLanguagesText() }}
+              </span>
+              <span class="material-icons dropdown-arrow">
+                {{ languageDropdownOpen ? 'expand_less' : 'expand_more' }}
+              </span>
+            </div>
+            <div class="dropdown-menu" *ngIf="languageDropdownOpen">
+              <div class="dropdown-search">
+                <span class="material-icons">search</span>
+                <input
+                  type="text"
+                  [(ngModel)]="languageSearchText"
+                  (ngModelChange)="onLanguageSearchChange()"
+                  name="languageSearch"
+                  placeholder="חפש שפה..."
+                  class="dropdown-search-input"
+                  (click)="$event.stopPropagation()"
+                />
+              </div>
+              <div class="dropdown-options checkbox-options">
+                <label
+                  *ngFor="let lang of filteredLanguageOptions"
+                  class="dropdown-checkbox-option"
+                  (click)="$event.stopPropagation()"
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="isLanguageChecked(lang.value)"
+                    (change)="toggleLanguage(lang.value)"
+                  />
+                  <span>{{ lang.label }}</span>
+                </label>
+                <div *ngIf="filteredLanguageOptions.length === 0" class="dropdown-no-results">
+                  לא נמצאו תוצאות
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">קהל יעד</label>
+          <div class="custom-dropdown" [class.open]="audienceDropdownOpen">
+            <div class="dropdown-trigger" (click)="toggleAudienceDropdown()">
+              <span class="dropdown-value">
+                {{ getSelectedAudiencesText() }}
+              </span>
+              <span class="material-icons dropdown-arrow">
+                {{ audienceDropdownOpen ? 'expand_less' : 'expand_more' }}
+              </span>
+            </div>
+            <div class="dropdown-menu" *ngIf="audienceDropdownOpen">
+              <div class="dropdown-search">
+                <span class="material-icons">search</span>
+                <input
+                  type="text"
+                  [(ngModel)]="audienceSearchText"
+                  (ngModelChange)="onAudienceSearchChange()"
+                  name="audienceSearch"
+                  placeholder="חפש קהל יעד..."
+                  class="dropdown-search-input"
+                  (click)="$event.stopPropagation()"
+                />
+              </div>
+              <div class="dropdown-options checkbox-options">
+                <label
+                  *ngFor="let aud of filteredAudienceOptions"
+                  class="dropdown-checkbox-option"
+                  (click)="$event.stopPropagation()"
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="isAudienceChecked(aud.value)"
+                    (change)="toggleAudience(aud.value)"
+                  />
+                  <span>{{ aud.label }}</span>
+                </label>
+                <div *ngIf="filteredAudienceOptions.length === 0" class="dropdown-no-results">
+                  לא נמצאו תוצאות
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">סוגי שיעורים</label>
+        <input
+          type="text"
+          [(ngModel)]="lessonTypes"
+          name="lessonTypes"
+          class="form-input"
+          placeholder="פרטי, קבוצתי, אונליין..."
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">זמינות</label>
+        <input
+          type="text"
+          [(ngModel)]="availability"
+          name="availability"
+          class="form-input"
+          placeholder="זמינות מיידית, רשימת המתנה..."
+        />
+      </div>
+    </div>
+
+    <!-- Media -->
+    <div class="form-section">
+      <h2 class="section-title">מדיה</h2>
+
+      <div class="form-group">
+        <label class="form-label">תמונת פרופיל (URL)</label>
+        <input
+          type="url"
+          [(ngModel)]="profileImageUrl"
+          name="profileImageUrl"
+          class="form-input"
+          placeholder="https://..."
+        />
+        <small class="form-hint">קישור לתמונת הפרופיל של המורה</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">סרטון היכרות (URL)</label>
+        <input
+          type="url"
+          [(ngModel)]="videoUrl"
+          name="videoUrl"
+          class="form-input"
+          placeholder="https://youtube.com/..."
+        />
+        <small class="form-hint">קישור לסרטון YouTube או Vimeo</small>
+      </div>
+    </div>
+
+    <!-- Gallery Section -->
+    <div class="form-section">
+      <h2 class="section-title">גלריית תמונות</h2>
+
+      <!-- Add New Gallery Image -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">קישור לתמונה</label>
+          <input
+            type="url"
+            class="form-input"
+            [(ngModel)]="newGalleryImage.imageUrl"
+            name="newGalleryImageUrl"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">כיתוב (אופציונלי)</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newGalleryImage.caption"
+            name="newGalleryCaption"
+            placeholder="כיתוב לתמונה..."
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <button type="button" class="btn-add-gallery" (click)="addGalleryImage()">
+          <span class="material-icons">add_photo_alternate</span>
+          הוסף לגלריה
+        </button>
+      </div>
+
+      <!-- Gallery Images List -->
+      <div *ngIf="galleryImages && galleryImages.length > 0" class="gallery-list">
+        <div *ngFor="let image of galleryImages; let i = index" class="gallery-item">
+          <div class="gallery-item-preview">
+            <img [src]="image.imageUrl" [alt]="image.caption || 'תמונה בגלריה'">
+          </div>
+
+          <div class="gallery-item-info">
+            <div class="gallery-item-caption">{{ image.caption || 'ללא כיתוב' }}</div>
+            <div class="gallery-item-url">{{ image.imageUrl }}</div>
+          </div>
+
+          <div class="gallery-item-actions">
+            <button
+              type="button"
+              class="btn-gallery-action"
+              (click)="moveGalleryImageUp(i)"
+              [disabled]="i === 0"
+              title="הזז למעלה"
+            >
+              <span class="material-icons">arrow_upward</span>
+            </button>
+            <button
+              type="button"
+              class="btn-gallery-action"
+              (click)="moveGalleryImageDown(i)"
+              [disabled]="i === galleryImages.length - 1"
+              title="הזז למטה"
+            >
+              <span class="material-icons">arrow_downward</span>
+            </button>
+            <button
+              type="button"
+              class="btn-gallery-action btn-delete"
+              (click)="removeGalleryImage(i)"
+              title="מחק"
+            >
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!galleryImages || galleryImages.length === 0" class="gallery-empty">
+        <span class="material-icons">photo_library</span>
+        <p>הגלריה ריקה. הוסף תמונות למורה.</p>
+      </div>
+    </div>
+
+    <!-- Display Settings -->
+    <div class="form-section">
+      <h2 class="section-title">הגדרות תצוגה</h2>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="isFeatured"
+            name="isFeatured"
+          />
+          <span>מורה מומלץ (יוצג בראש הדף)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">
+        ביטול
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="saving">
+        <span class="material-icons" *ngIf="!saving">save</span>
+        <span class="material-icons spinning" *ngIf="saving">hourglass_empty</span>
+        {{ saving ? 'שומר...' : (isEditMode ? 'עדכן מורה' : 'צור מורה') }}
+      </button>
+    </div>
+
+  </form>
+
+  <!-- User Selection Modal -->
+  <app-user-selection-modal
+    *ngIf="showUserSelectionModal"
+    [users]="availableUsers"
+    [loading]="loadingUsers"
+    (userSelected)="onUserSelected($event)"
+    (closeModal)="closeUserSelectionModal()"
+  ></app-user-selection-modal>
+</div>

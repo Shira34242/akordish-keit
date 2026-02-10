@@ -1,0 +1,24 @@
+<div class="system-layout-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>הגדרות מערכת</h1>
+        <p class="subtitle">ניהול טבלאות, קונפיגורציה ופרמטרים</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+        <a routerLink="tables" routerLinkActive="active" class="tab-link">
+            <span class="material-icons">table_chart</span>
+            <span>טבלאות ערכים</span>
+        </a>
+        <a routerLink="settings" routerLinkActive="active" class="tab-link">
+            <span class="material-icons">settings</span>
+            <span>הגדרות כלליות</span>
+        </a>
+    </nav>
+
+    <!-- Content -->
+    <div class="layout-content">
+        <router-outlet></router-outlet>
+    </div>
+</div>

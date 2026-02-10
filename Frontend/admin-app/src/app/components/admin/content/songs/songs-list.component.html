@@ -1,0 +1,191 @@
+<div class="songs-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">ניהול אקורדים</h1>
+      <p class="page-subtitle">כל השירים והאקורדים באתר</p>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <!-- Search -->
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="חיפוש לפי שם שיר או אמן..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+    </div>
+
+    <!-- Sort -->
+    <div class="filters">
+      <select
+        [(ngModel)]="sortBy"
+        (change)="onSortChange()"
+        class="filter-select">
+        <option value="date">תאריך העלאה</option>
+        <option value="views">צפיות</option>
+        <option value="name">שם השיר (א-ב)</option>
+      </select>
+    </div>
+
+    <!-- New Button -->
+    <button class="btn-new" (click)="createNew()">
+      <span class="material-icons">add</span>
+      שיר חדש
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>טוען נתונים...</p>
+    </div>
+
+    <table *ngIf="!loading && songs.length > 0" class="songs-table">
+      <thead>
+        <tr>
+          <th>תמונה</th>
+          <th>שם השיר</th>
+          <th>אמנים</th>
+          <th>סגנון</th>
+          <th>צפיות</th>
+          <th>תאריך העלאה</th>
+          <th>סטטוס</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let song of songs" class="song-row">
+          <!-- Image -->
+          <td class="image-cell">
+            <div class="image-preview" *ngIf="song.imageUrl">
+              <img [src]="song.imageUrl" [alt]="song.title">
+            </div>
+            <div class="image-placeholder" *ngIf="!song.imageUrl">
+              <span class="material-icons">music_note</span>
+            </div>
+          </td>
+
+          <!-- Title -->
+          <td class="title-cell">
+            <div class="song-info">
+              <div class="song-title">
+                {{ song.title }}
+              </div>
+              <div class="song-meta" *ngIf="song.originalKeyName">
+                מקור: {{ song.originalKeyName }}
+                <span *ngIf="song.easyKeyName"> • קל: {{ song.easyKeyName }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Artists -->
+          <td>
+            <div class="artists-list">
+              {{ formatArtists(song) }}
+            </div>
+          </td>
+
+          <!-- Genres -->
+          <td>
+            <div class="genres-list">
+              {{ formatGenres(song) || '-' }}
+            </div>
+          </td>
+
+          <!-- Views -->
+          <td class="stat-cell">
+            <div class="stat-value">{{ song.viewCount || 0 }}</div>
+          </td>
+
+          <!-- Date -->
+          <td class="date-cell">
+            <div>{{ formatDate(song.createdAt) }}</div>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="song.isApproved ? 'status-approved' : 'status-pending'">
+              {{ song.isApproved ? 'מאושר' : 'ממתין' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <button
+              class="btn-action btn-toggle"
+              (click)="toggleApproval(song)"
+              [title]="song.isApproved ? 'ביטול אישור' : 'אישור'">
+              <span class="material-icons">{{ song.isApproved ? 'check_circle' : 'schedule' }}</span>
+            </button>
+            <button
+              class="btn-action btn-edit"
+              (click)="editSong(song.id)"
+              title="עריכה">
+              <span class="material-icons">edit</span>
+            </button>
+            <button
+              class="btn-action btn-delete"
+              (click)="deleteSong(song)"
+              title="מחיקה">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+ <app-pagination
+      [totalCount]="totalCount"
+      [pageNumber]="pageNumber"
+      [pageSize]="pageSize"
+      [totalPages]="totalPages"
+      [hasPreviousPage]="hasPreviousPage"
+      [hasNextPage]="hasNextPage"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+    <!-- Empty State -->
+    <div *ngIf="!loading && songs.length === 0" class="empty-state">
+      <div class="empty-icon"><span class="material-icons">music_note</span></div>
+      <h3>אין שירים להצגה</h3>
+      <p>התחל על ידי הוספת שיר חדש</p>
+      <button class="btn-new" (click)="createNew()">
+        <span class="material-icons">add</span>
+        שיר חדש
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalPages > 1" class="pagination">
+    <button
+      class="page-btn"
+      [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)">
+      ←
+    </button>
+
+    <button
+      *ngFor="let page of pages"
+      class="page-btn"
+      [class.active]="page === currentPage"
+      (click)="onPageChange(page)">
+      {{ page }}
+    </button>
+
+    <button
+      class="page-btn"
+      [disabled]="currentPage === totalPages"
+      (click)="onPageChange(currentPage + 1)">
+      →
+    </button>
+
+    <div class="pagination-info">
+      {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalItems) }} מתוך {{ totalItems }}
+    </div>
+  </div>
+</div>

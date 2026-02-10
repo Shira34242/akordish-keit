@@ -1,0 +1,190 @@
+<!-- Global Header / Navbar -->
+<header class="main-header">
+    <div class="header-inner">
+
+        <!-- Right Side: Logo + Mobile Menu -->
+        <div class="header-right">
+            <img src="logo2.png" alt="אקורדישקייט" class="footer-logo-img" (click)="handleLogoClick()">
+
+            <!-- Mobile Hamburger Menu Button (visible only on mobile) -->
+            <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+                <span class="material-icons hamburger-icon">menu</span>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation Menu (dropdown) -->
+        <div class="mobile-nav-menu" *ngIf="showMobileMenu" (click)="closeMobileMenu()">
+            <div class="mobile-nav-content" (click)="$event.stopPropagation()">
+                <div class="mobile-nav-header">
+                    <h3>תפריט</h3>
+                    <button class="close-btn" (click)="closeMobileMenu()"><span class="material-icons">close</span></button>
+                </div>
+                <ul class="mobile-nav-list">
+                    <li><a class="mobile-nav-link" routerLink="/music-news" (click)="closeMobileMenu()">חדשות המוזיקה</a></li>
+                    <li><a class="mobile-nav-link" routerLink="/chords" (click)="closeMobileMenu()">אקורדים</a></li>
+                    <li><a class="mobile-nav-link" routerLink="/teachers" (click)="closeMobileMenu()">מורים</a></li>
+                    <li><a class="mobile-nav-link" routerLink="/professionals" (click)="closeMobileMenu()">בעלי מקצוע</a></li>
+                    <li *ngIf="loggedIn"><a class="mobile-nav-link" routerLink="/subscription/status" (click)="closeMobileMenu()">המנוי שלי</a></li>
+                    <li *ngIf="loggedIn"><a class="mobile-nav-link" (click)="upgradeSubscription()">שדרוג מנוי</a></li>
+                </ul>
+            </div>
+        </div>
+        <!-- Center: Navigation -->
+        <div class="header-center">
+            <nav>
+                <ul class="main-nav">
+                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
+                    <li><a class="nav-link" routerLink="/artists" routerLinkActive="active">אומנים</a></li>
+                    <li><a class="nav-link" routerLink="/teachers" routerLinkActive="active">מורים</a></li>
+                    <li><a class="nav-link" routerLink="/professionals" routerLinkActive="active">בעלי מקצוע</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Left Side: Actions -->
+        <div class="header-left">
+            <button class="btn-random-song" (click)="handleRandomSongClick()">
+                <span class="material-icons sparkle-icon">shuffle</span>
+                שיר בהפתעה
+            </button>
+
+            <!-- Login / Logout Buttons -->
+            <ng-container *ngIf="loggedIn && user; else loginBtn">
+                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
+                    <div class="user-profile-container" title="תפריט משתמש">
+                        <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
+                               onerror="this.onerror=null; this.src='/logo.png'">
+                    </div>
+
+                    <!-- User Dropdown Menu -->
+                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                        <div class="user-menu-header">
+                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
+                                onerror="this.onerror=null; this.src='/logo.png'">
+                            <div class="user-menu-info">
+                                <div class="user-menu-name">{{ user.username }}</div>
+                                <div class="user-menu-email">{{ user.email }}</div>
+                            </div>
+                        </div>
+
+                        <div class="user-menu-divider"></div>
+
+                        <ul class="user-menu-list">
+                            <li class="user-menu-item" *ngIf="user.role === 'Admin'" (click)="goToAdmin()">
+                                <span class="material-icons menu-icon">admin_panel_settings</span>
+                                <span>ניהול</span>
+                            </li>
+                            <li class="user-menu-item disabled">
+                                <span class="material-icons menu-icon">person</span>
+                                <span>הפרופיל שלי</span>
+                            </li>
+
+                            <li class="user-menu-item disabled">
+                                <span class="material-icons menu-icon">upload_file</span>
+                                <span>תכנים שהעליתי</span>
+                            </li>
+                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">bookmark</span>
+                                <span>הרשימות שלי</span>
+                            </li>
+
+                            <div class="user-menu-divider"></div>
+
+                            <li class="user-menu-item" routerLink="/subscription/status" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">card_membership</span>
+                                <span>המנוי שלי</span>
+                            </li>
+                            <li class="user-menu-item" (click)="upgradeSubscription()">
+                                <span class="material-icons menu-icon">workspace_premium</span>
+                                <span>שדרוג מנוי</span>
+                            </li>
+
+                            <div class="user-menu-divider"></div>
+
+                            <li class="user-menu-item logout" (click)="signOut()">
+                                <span class="material-icons menu-icon">logout</span>
+                                <span>התנתקות</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </ng-container>
+
+            <ng-template #loginBtn>
+                <button class="btn-login" (click)="openAuthModal()">
+                    <span class="material-icons">login</span>
+                    כניסה
+                </button>
+            </ng-template>
+        </div>
+
+    </div>
+</header>
+
+<main class="main-content">
+    <router-outlet></router-outlet>
+</main>
+<button class="fab-add-song" (click)="goToAddSong()">
+    <span class="material-icons">add</span>
+</button>
+
+<!-- Footer -->
+<footer class="main-footer">
+    <div class="footer-inner">
+        <!-- Right Side: Logo & Random Song -->
+        <div class="footer-right">
+            <img src="logo.png" alt="אקורדישקייט" class="footer-logo-img" (click)="handleLogoClick()">
+            <button class="btn-random-song footer-btn" (click)="handleRandomSongClick()">
+                <span class="material-icons sparkle-icon">shuffle</span>
+                שיר בהפתעה
+            </button>
+        </div>
+
+        <!-- Left Side: Links -->
+        <div class="footer-left">
+            <ul class="footer-links">
+                <li><a routerLink="/">בית</a></li>
+                <li><a routerLink="/news">חדשות המוזיקה</a></li>
+                <li><a routerLink="/chords">אקורדים</a></li>
+                <li><a routerLink="/artists">אומנים</a></li>
+                <li><a routerLink="/teachers">מורים</a></li>
+                <li><a class="footer-contact-link" (click)="openReportModal()">צור קשר</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>
+
+<app-add-song-modal *ngIf="showAddSongModal" (close)="closeAddSongModal()" (songAdded)="onSongAdded()">
+</app-add-song-modal>
+
+<!-- Auth Modal -->
+<app-auth-modal
+    *ngIf="showAuthModal"
+    (close)="closeAuthModal()"
+    (authSuccess)="onAuthSuccess($event)"
+    (forgotPassword)="onForgotPassword()">
+</app-auth-modal>
+
+<!-- Additional Details Modal -->
+<app-additional-details-modal
+    *ngIf="showAdditionalDetailsModal"
+    (close)="closeAdditionalDetailsModal()"
+    (complete)="onProfileComplete($event)">
+</app-additional-details-modal>
+
+<!-- Forgot Password Modal -->
+<app-forgot-password-modal
+    *ngIf="showForgotPasswordModal"
+    (close)="closeForgotPasswordModal()"
+    (success)="onPasswordResetSuccess()">
+</app-forgot-password-modal>
+
+<!-- Report Modal -->
+<app-report-modal
+    [isOpen]="showReportModal"
+    [contentType]="'General'"
+    [contentId]="0"
+    contentTitle="הודעה כללית למערכת"
+    (close)="closeReportModal()">
+</app-report-modal>
