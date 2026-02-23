@@ -61,7 +61,7 @@ export class AddSongModalComponent implements OnInit {
             title: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
             artists: this.fb.array([], [Validators.required]),
             artistInput: [''],
-            composerId: [null, [Validators.required]],
+            composerId: [null],
             composerInput: [''],
             youtubeUrl: ['', [Validators.required, Validators.pattern(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)]],
             spotifyUrl: ['', [Validators.pattern(/^(https?:\/\/)?(open\.spotify\.com)\/.+$/)]],

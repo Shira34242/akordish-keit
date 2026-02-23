@@ -82,15 +82,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label>מלחין *</label>
+                    <label>מלחין</label>
                     <div class="input-with-chips" [class.has-selection]="songForm.get('composerId')?.value">
                         <div class="chip" *ngIf="selectedComposer">
                             {{ selectedComposer.name }}
                             <span class="remove-chip" (click)="removeComposer()">&times;</span>
                         </div>
                         <input type="text" formControlName="composerInput" (input)="onComposerInput($event)"
-                            placeholder="הוסף מלחין..." [disabled]="songForm.get('composerId')?.value"
-                            [class.invalid]="!songForm.get('composerId')?.value && songForm.get('composerInput')?.touched">
+                            placeholder="הוסף מלחין (אופציונלי)..." [disabled]="songForm.get('composerId')?.value">
                     </div>
 
                     <!-- Autocomplete Dropdown -->
@@ -103,11 +102,6 @@
                                     }}</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="error"
-                        *ngIf="!songForm.get('composerId')?.value && songForm.get('composerInput')?.touched">
-                        חובה לבחור מלחין
                     </div>
                 </div>
 

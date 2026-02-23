@@ -6,7 +6,7 @@ public class Song
 {
     public int Id { get; set; }
     public string Title { get; set; }
-    public int ComposerId { get; set; }
+    public int? ComposerId { get; set; }
     public int? LyricistId { get; set; }
     public int? ArrangerId { get; set; }
     public string YouTubeUrl { get; set; }
@@ -27,8 +27,8 @@ public class Song
 
 
     // Navigation Properties
-    public virtual Person Composer { get; set; }
-    public virtual Person Lyricist { get; set; }
+    public virtual Person? Composer { get; set; }
+    public virtual Person? Lyricist { get; set; }
     public virtual Person? Arranger { get; set; }
     public virtual MusicalKey OriginalKey { get; set; }
     public virtual MusicalKey? EasyKey { get; set; }

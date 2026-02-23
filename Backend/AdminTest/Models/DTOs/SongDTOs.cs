@@ -53,7 +53,7 @@ public class AddSongRequestDto
 
     // ===== שלב 3: קרדיטים (אופציונלי) =====
 
-    public int ComposerId { get; set; }
+    public int? ComposerId { get; set; }
     public int? LyricistId { get; set; }
     public int? ArrangerId { get; set; }
     public List<int>? GenreIds { get; set; }
@@ -93,7 +93,7 @@ public class UpdateSongRequestDto
 
     public int? EasyKeyId { get; set; }
 
-    public int ComposerId { get; set; }
+    public int? ComposerId { get; set; }
     public int? LyricistId { get; set; }
     public int? ArrangerId { get; set; }
 }
