@@ -233,7 +233,7 @@
                     <div class="select-with-button">
                         <select formControlName="originalKeyId">
                             <option [ngValue]="null">בחר סולם</option>
-                            <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.displayName }}</option>
+                            <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
                         </select>
                         <button type="button" class="add-key-btn">+</button>
                     </div>
@@ -244,10 +244,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>סולם קל למנגינה</label>
+                    <label>סולם קל לנגינה</label>
                     <select formControlName="easyKeyId">
                         <option [ngValue]="null">בחר סולם קל...</option>
-                        <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.displayName }}</option>
+                        <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
                     </select>
                 </div>
 

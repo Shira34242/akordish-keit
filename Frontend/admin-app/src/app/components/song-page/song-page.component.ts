@@ -38,7 +38,7 @@ export class SongPageComponent implements OnInit, OnDestroy {
     isAutoScroll: boolean = false;
     scrollSpeed: number = 1;
     showChords: boolean = true;
-    selectedInstrument: 'guitar' | 'piano' = 'guitar';
+    selectedInstrument: 'guitar' | 'piano' | 'lyrics' = 'guitar';
     isDarkMode: boolean = false;
     isToolbarSticky: boolean = false;
     preferFlat: boolean = false;
@@ -176,8 +176,9 @@ export class SongPageComponent implements OnInit, OnDestroy {
     }
 
 
-    toggleChords() {
-        this.showChords = !this.showChords;
+    selectInstrument(instrument: 'guitar' | 'piano' | 'lyrics') {
+        this.selectedInstrument = instrument;
+        this.showChords = instrument !== 'lyrics';
     }
 
     toggleTheme() {
