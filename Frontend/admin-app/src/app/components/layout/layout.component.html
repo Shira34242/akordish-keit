@@ -71,7 +71,7 @@
                         <div class="user-menu-divider"></div>
 
                         <ul class="user-menu-list">
-                            <li class="user-menu-item" *ngIf="user.role === 'Admin'" (click)="goToAdmin()">
+                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>ניהול</span>
                             </li>

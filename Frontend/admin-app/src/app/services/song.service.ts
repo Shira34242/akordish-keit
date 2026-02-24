@@ -92,28 +92,34 @@ export class SongService {
         return this.http.get<any>(`${this.apiUrl}/random`);
     }
     canEditSong(songId: number): Observable<boolean> {
-        const token = localStorage.getItem('token');
+        const csrfToken = localStorage.getItem('csrf-token');
 
-        if (!token) {
+        if (!csrfToken) {
             return of(false);
         }
 
         const headers = new HttpHeaders({
-            'Authorization': `Bearer ${token}`
+            'X-CSRF-Token': csrfToken
         });
 
-        return this.http.get<boolean>(`${this.apiUrl}/${songId}/can-edit`, { headers }).pipe(
+        return this.http.get<boolean>(`${this.apiUrl}/${songId}/can-edit`, {
+            headers,
+            withCredentials: true  // שליחת httpOnly cookie
+        }).pipe(
             catchError(() => of(false))
         );
     }
 
     updateSong(songId: number, request: AddSongRequest): Observable<any> {
-        const token = localStorage.getItem('token');
+        const csrfToken = localStorage.getItem('csrf-token');
         const headers = new HttpHeaders({
-            'Authorization': `Bearer ${token}`
+            'X-CSRF-Token': csrfToken || ''
         });
 
-        return this.http.put(`${this.apiUrl}/${songId}`, request, { headers });
+        return this.http.put(`${this.apiUrl}/${songId}`, request, {
+            headers,
+            withCredentials: true
+        });
     }
     getSongsByArtist(artistId: number, limit: number = 6): Observable<any[]> {
         return this.http.get<any>(`${this.apiUrl}?artistId=${artistId}&pageSize=${limit}`).pipe(

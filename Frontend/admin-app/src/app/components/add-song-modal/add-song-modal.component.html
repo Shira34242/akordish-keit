@@ -57,8 +57,10 @@
                 <div class="form-group">
                     <label>אמנים (עד 5) *</label>
                     <div class="input-with-chips" [class.disabled]="artistsArray.length >= 5">
-                        <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index">
+                        <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index"
+                             [class.temporary]="!artist.value.id">
                             {{ artist.value.name }}
+                            <span class="temp-badge" *ngIf="!artist.value.id">חדש</span>
                             <span class="remove-chip" (click)="removeArtist(i)">&times;</span>
                         </div>
                         <input type="text" formControlName="artistInput" (input)="onArtistInput($event)"
@@ -66,12 +68,24 @@
                     </div>
 
                     <!-- Autocomplete Dropdown -->
-                    <div class="autocomplete-dropdown" *ngIf="artistSuggestions.length > 0">
+                    <div class="autocomplete-dropdown" *ngIf="artistSuggestions.length > 0 || artistInputValue.length >= 2">
+                        <!-- תוצאות אמנים קיימים -->
                         <div class="suggestion" *ngFor="let artist of artistSuggestions" (click)="selectArtist(artist)">
                             <img [src]="artist.imageUrl || 'assets/default-artist.png'" class="artist-thumb">
                             <div class="artist-info">
                                 <span class="main-text">{{ artist.displayText }}</span>
                                 <span class="sub-text" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
+                            </div>
+                        </div>
+
+                        <!-- אופציה להוספת אמן חדש -->
+                        <div class="suggestion new-artist-option"
+                             *ngIf="artistInputValue.length >= 2"
+                             (click)="addNewArtist(artistInputValue)">
+                            <span class="icon">➕</span>
+                            <div class="artist-info">
+                                <span class="main-text">הוסף אמן חדש: "{{ artistInputValue }}"</span>
+                                <span class="sub-text warning">⚠️ יישלח לאישור מנהל</span>
                             </div>
                         </div>
                     </div>
@@ -140,17 +154,32 @@
                     <div class="form-group half">
                         <label>תגיות</label>
                         <div class="input-with-chips">
-                            <div class="chip" *ngFor="let tag of tagsArray.controls; let i = index">
+                            <div class="chip" *ngFor="let tag of tagsArray.controls; let i = index"
+                                 [class.temporary]="!tag.value.id">
                                 {{ tag.value.name }}
+                                <span class="temp-badge" *ngIf="!tag.value.id">חדש</span>
                                 <span class="remove-chip" (click)="removeTag(i)">&times;</span>
                             </div>
                             <input type="text" formControlName="tagInput" (input)="onTagInput($event)"
                                 placeholder="הוסף תגית...">
                         </div>
 
-                        <div class="autocomplete-dropdown" *ngIf="tagSuggestions.length > 0">
+                        <div class="autocomplete-dropdown"
+                             *ngIf="tagSuggestions.length > 0 || songForm.get('tagInput')?.value?.length >= 2">
+                            <!-- תוצאות קיימות -->
                             <div class="suggestion" *ngFor="let tag of tagSuggestions" (click)="selectTag(tag)">
                                 {{ tag.displayText }}
+                            </div>
+
+                            <!-- אופציה להוספת תגית חדשה -->
+                            <div class="suggestion new-artist-option"
+                                 *ngIf="songForm.get('tagInput')?.value?.length >= 2"
+                                 (click)="addNewTag(songForm.get('tagInput')?.value)">
+                                <span class="icon">➕</span>
+                                <div class="artist-info">
+                                    <span class="main-text">הוסף תגית חדשה: "{{ songForm.get('tagInput')?.value }}"</span>
+                                    <span class="sub-text warning">⚠️ יישלח לבדיקת מנהל</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -159,17 +188,32 @@
                     <div class="form-group half">
                         <label>ז'אנרים</label>
                         <div class="input-with-chips">
-                            <div class="chip" *ngFor="let genre of genresArray.controls; let i = index">
+                            <div class="chip" *ngFor="let genre of genresArray.controls; let i = index"
+                                 [class.temporary]="!genre.value.id">
                                 {{ genre.value.name }}
+                                <span class="temp-badge" *ngIf="!genre.value.id">חדש</span>
                                 <span class="remove-chip" (click)="removeGenre(i)">&times;</span>
                             </div>
                             <input type="text" formControlName="genreInput" (input)="onGenreInput($event)"
                                 placeholder="הוסף ז'אנר...">
                         </div>
 
-                        <div class="autocomplete-dropdown" *ngIf="genreSuggestions.length > 0">
+                        <div class="autocomplete-dropdown"
+                             *ngIf="genreSuggestions.length > 0 || songForm.get('genreInput')?.value?.length >= 2">
+                            <!-- תוצאות קיימות -->
                             <div class="suggestion" *ngFor="let genre of genreSuggestions" (click)="selectGenre(genre)">
                                 {{ genre.displayText }}
+                            </div>
+
+                            <!-- אופציה להוספת ז'אנר חדש -->
+                            <div class="suggestion new-artist-option"
+                                 *ngIf="songForm.get('genreInput')?.value?.length >= 2"
+                                 (click)="addNewGenre(songForm.get('genreInput')?.value)">
+                                <span class="icon">➕</span>
+                                <div class="artist-info">
+                                    <span class="main-text">הוסף ז'אנר חדש: "{{ songForm.get('genreInput')?.value }}"</span>
+                                    <span class="sub-text warning">⚠️ יישלח לבדיקת מנהל</span>
+                                </div>
                             </div>
                         </div>
                     </div>

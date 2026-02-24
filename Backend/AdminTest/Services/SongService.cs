@@ -28,18 +28,19 @@ public class SongService : ISongService
 
         try
         {
-            // 1. Validate all artists exist
-            foreach (var artistId in dto.ArtistIds)
+            // 1. Validate existing artists (only those with ID)
+            var existingArtists = dto.Artists.Where(a => a.Id.HasValue).ToList();
+            foreach (var artist in existingArtists)
             {
                 var artistExists = await _context.Artists
-                    .AnyAsync(a => a.Id == artistId && !a.IsDeleted);
+                    .AnyAsync(a => a.Id == artist.Id!.Value && !a.IsDeleted);
 
                 if (!artistExists)
                 {
                     return new AddSongResponseDto
                     {
                         Success = false,
-                        Message = $"אמן עם ID {artistId} לא קיים במערכת"
+                        Message = $"אמן עם ID {artist.Id} לא קיים במערכת"
                     };
                 }
             }
@@ -83,22 +84,98 @@ public class SongService : ISongService
             _context.Songs.Add(song);
             await _context.SaveChangesAsync();
 
-            // 4. Add artists with order
-            for (int i = 0; i < dto.ArtistIds.Count; i++)
+            // 4. Add artists with order (support both existing and new artists)
+            for (int i = 0; i < dto.Artists.Count; i++)
             {
-                _context.SongArtists.Add(new SongArtist
+                var artist = dto.Artists[i];
+
+                if (artist.Id.HasValue)
                 {
-                    SongId = song.Id,
-                    ArtistId = dto.ArtistIds[i],
-                    Order = i + 1
-                });
+                    // Existing artist
+                    _context.SongArtists.Add(new SongArtist
+                    {
+                        SongId = song.Id,
+                        ArtistId = artist.Id.Value,
+                        Order = i + 1,
+                        IsTemporary = false
+                    });
+                }
+                else
+                {
+                    // New artist - save as temporary
+                    _context.SongArtists.Add(new SongArtist
+                    {
+                        SongId = song.Id,
+                        ArtistId = null,
+                        TempArtistName = artist.Name.Trim(),
+                        Order = i + 1,
+                        IsTemporary = true
+                    });
+
+                    // Create a report for admin review
+                    _context.ContentReports.Add(new ContentReport
+                    {
+                        UserId = userId,
+                        ContentType = "Song",
+                        ContentId = song.Id,
+                        ReportType = "NewArtist",
+                        Description = $"נוסף שיר עם אמן שלא קיים במערכת: '{artist.Name}' בשיר '{song.Title}'",
+                        ReportedAt = DateTime.UtcNow,
+                        Status = "Pending"
+                    });
+                }
             }
 
-            // 5. Add genres if provided
-            if (dto.GenreIds != null && dto.GenreIds.Any())
+            // 5. Add genres - support new and existing
+            if (dto.Genres != null && dto.Genres.Any())
             {
-                foreach (var genreId in dto.GenreIds)
+                foreach (var genreInput in dto.Genres)
                 {
+                    int genreId;
+
+                    if (genreInput.Id.HasValue)
+                    {
+                        // Existing genre - validate it exists
+                        genreId = genreInput.Id.Value;
+                        if (!await _context.Genres.AnyAsync(g => g.Id == genreId))
+                        {
+                            continue; // Skip invalid genre
+                        }
+                    }
+                    else
+                    {
+                        // New genre - check for duplicate (case-insensitive)
+                        var normalizedName = genreInput.Name.Trim();
+                        var existingGenre = await _context.Genres
+                            .FirstOrDefaultAsync(g => g.Name.ToLower() == normalizedName.ToLower());
+
+                        if (existingGenre != null)
+                        {
+                            // Already exists - use existing
+                            genreId = existingGenre.Id;
+                        }
+                        else
+                        {
+                            // Create new genre
+                            var newGenre = new Genre { Name = normalizedName };
+                            _context.Genres.Add(newGenre);
+                            await _context.SaveChangesAsync();
+                            genreId = newGenre.Id;
+
+                            // Create report for admin review
+                            _context.ContentReports.Add(new ContentReport
+                            {
+                                UserId = userId,
+                                ContentType = "Genre",
+                                ContentId = genreId,
+                                ReportType = "NewGenre",
+                                Description = $"נוצר ז'אנר חדש: '{newGenre.Name}' בשיר '{song.Title}'",
+                                ReportedAt = DateTime.UtcNow,
+                                Status = "Pending"
+                            });
+                        }
+                    }
+
                     _context.SongGenres.Add(new SongGenre
                     {
                         SongId = song.Id,
@@ -107,11 +184,56 @@ public class SongService : ISongService
                 }
             }
 
-            // 6. Add tags if provided
-            if (dto.TagIds != null && dto.TagIds.Any())
+            // 6. Add tags - support new and existing
+            if (dto.Tags != null && dto.Tags.Any())
             {
-                foreach (var tagId in dto.TagIds)
+                foreach (var tagInput in dto.Tags)
                 {
+                    int tagId;
+
+                    if (tagInput.Id.HasValue)
+                    {
+                        // Existing tag - validate it exists
+                        tagId = tagInput.Id.Value;
+                        if (!await _context.Tags.AnyAsync(t => t.Id == tagId))
+                        {
+                            continue; // Skip invalid tag
+                        }
+                    }
+                    else
+                    {
+                        // New tag - check for duplicate (case-insensitive)
+                        var normalizedName = tagInput.Name.Trim();
+                        var existingTag = await _context.Tags
+                            .FirstOrDefaultAsync(t => t.Name.ToLower() == normalizedName.ToLower());
+
+                        if (existingTag != null)
+                        {
+                            // Already exists - use existing
+                            tagId = existingTag.Id;
+                        }
+                        else
+                        {
+                            // Create new tag
+                            var newTag = new Tag { Name = normalizedName };
+                            _context.Tags.Add(newTag);
+                            await _context.SaveChangesAsync();
+                            tagId = newTag.Id;
+
+                            // Create report for admin review
+                            _context.ContentReports.Add(new ContentReport
+                            {
+                                UserId = userId,
+                                ContentType = "Tag",
+                                ContentId = tagId,
+                                ReportType = "NewTag",
+                                Description = $"נוצרה תגית חדשה: '{newTag.Name}' בשיר '{song.Title}'",
+                                ReportedAt = DateTime.UtcNow,
+                                Status = "Pending"
+                            });
+                        }
+                    }
+
                     _context.SongTags.Add(new SongTag
                     {
                         SongId = song.Id,
@@ -218,24 +340,100 @@ public class SongService : ISongService
             song.ArrangerId = dto.ArrangerId;
             song.UpdatedAt = DateTime.UtcNow;
 
-            // 4. Update artists - remove and re-add
+            // 4. Update artists - remove and re-add (support both existing and new artists)
             _context.SongArtists.RemoveRange(song.SongArtists);
-            for (int i = 0; i < dto.ArtistIds.Count; i++)
+            for (int i = 0; i < dto.Artists.Count; i++)
             {
-                _context.SongArtists.Add(new SongArtist
+                var artist = dto.Artists[i];
+
+                if (artist.Id.HasValue)
                 {
-                    SongId = song.Id,
-                    ArtistId = dto.ArtistIds[i],
-                    Order = i + 1
-                });
+                    // Existing artist
+                    _context.SongArtists.Add(new SongArtist
+                    {
+                        SongId = song.Id,
+                        ArtistId = artist.Id.Value,
+                        Order = i + 1,
+                        IsTemporary = false
+                    });
+                }
+                else
+                {
+                    // New artist - save as temporary
+                    _context.SongArtists.Add(new SongArtist
+                    {
+                        SongId = song.Id,
+                        ArtistId = null,
+                        TempArtistName = artist.Name.Trim(),
+                        Order = i + 1,
+                        IsTemporary = true
+                    });
+
+                    // Create a report for admin review
+                    _context.ContentReports.Add(new ContentReport
+                    {
+                        UserId = userId,
+                        ContentType = "Song",
+                        ContentId = song.Id,
+                        ReportType = "NewArtist",
+                        Description = $"עודכן שיר עם אמן שלא קיים במערכת: '{artist.Name}' בשיר '{song.Title}'",
+                        ReportedAt = DateTime.UtcNow,
+                        Status = "Pending"
+                    });
+                }
             }
 
-            // 5. Update genres - remove and re-add
+            // 5. Update genres - remove and re-add, support new genres
             _context.SongGenres.RemoveRange(song.SongGenres);
-            if (dto.GenreIds != null && dto.GenreIds.Any())
+            if (dto.Genres != null && dto.Genres.Any())
             {
-                foreach (var genreId in dto.GenreIds)
+                foreach (var genreInput in dto.Genres)
                 {
+                    int genreId;
+
+                    if (genreInput.Id.HasValue)
+                    {
+                        // Existing genre - validate it exists
+                        genreId = genreInput.Id.Value;
+                        if (!await _context.Genres.AnyAsync(g => g.Id == genreId))
+                        {
+                            continue; // Skip invalid genre
+                        }
+                    }
+                    else
+                    {
+                        // New genre - check for duplicate (case-insensitive)
+                        var normalizedName = genreInput.Name.Trim();
+                        var existingGenre = await _context.Genres
+                            .FirstOrDefaultAsync(g => g.Name.ToLower() == normalizedName.ToLower());
+
+                        if (existingGenre != null)
+                        {
+                            // Already exists - use existing
+                            genreId = existingGenre.Id;
+                        }
+                        else
+                        {
+                            // Create new genre
+                            var newGenre = new Genre { Name = normalizedName };
+                            _context.Genres.Add(newGenre);
+                            await _context.SaveChangesAsync();
+                            genreId = newGenre.Id;
+
+                            // Create report for admin review
+                            _context.ContentReports.Add(new ContentReport
+                            {
+                                UserId = userId,
+                                ContentType = "Genre",
+                                ContentId = genreId,
+                                ReportType = "NewGenre",
+                                Description = $"נוצר ז'אנר חדש: '{newGenre.Name}' בעדכון שיר '{song.Title}'",
+                                ReportedAt = DateTime.UtcNow,
+                                Status = "Pending"
+                            });
+                        }
+                    }
+
                     _context.SongGenres.Add(new SongGenre
                     {
                         SongId = song.Id,
@@ -244,12 +442,57 @@ public class SongService : ISongService
                 }
             }
 
-            // 6. Update tags - remove and re-add
+            // 6. Update tags - remove and re-add, support new tags
             _context.SongTags.RemoveRange(song.SongTags);
-            if (dto.TagIds != null && dto.TagIds.Any())
+            if (dto.Tags != null && dto.Tags.Any())
             {
-                foreach (var tagId in dto.TagIds)
+                foreach (var tagInput in dto.Tags)
                 {
+                    int tagId;
+
+                    if (tagInput.Id.HasValue)
+                    {
+                        // Existing tag - validate it exists
+                        tagId = tagInput.Id.Value;
+                        if (!await _context.Tags.AnyAsync(t => t.Id == tagId))
+                        {
+                            continue; // Skip invalid tag
+                        }
+                    }
+                    else
+                    {
+                        // New tag - check for duplicate (case-insensitive)
+                        var normalizedName = tagInput.Name.Trim();
+                        var existingTag = await _context.Tags
+                            .FirstOrDefaultAsync(t => t.Name.ToLower() == normalizedName.ToLower());
+
+                        if (existingTag != null)
+                        {
+                            // Already exists - use existing
+                            tagId = existingTag.Id;
+                        }
+                        else
+                        {
+                            // Create new tag
+                            var newTag = new Tag { Name = normalizedName };
+                            _context.Tags.Add(newTag);
+                            await _context.SaveChangesAsync();
+                            tagId = newTag.Id;
+
+                            // Create report for admin review
+                            _context.ContentReports.Add(new ContentReport
+                            {
+                                UserId = userId,
+                                ContentType = "Tag",
+                                ContentId = tagId,
+                                ReportType = "NewTag",
+                                Description = $"נוצרה תגית חדשה: '{newTag.Name}' בעדכון שיר '{song.Title}'",
+                                ReportedAt = DateTime.UtcNow,
+                                Status = "Pending"
+                            });
+                        }
+                    }
+
                     _context.SongTags.Add(new SongTag
                     {
                         SongId = song.Id,
@@ -333,7 +576,10 @@ public class SongService : ISongService
             {
                 query = query.Where(s =>
                     s.Title.Contains(search) ||
-                    s.SongArtists.Any(sa => sa.Artist.Name.Contains(search))
+                    s.SongArtists.Any(sa =>
+                        (sa.Artist != null && sa.Artist.Name.Contains(search)) ||
+                        (sa.TempArtistName != null && sa.TempArtistName.Contains(search))
+                    )
                 );
             }
 
@@ -359,10 +605,10 @@ public class SongService : ISongService
                         .OrderBy(sa => sa.Order)
                         .Select(sa => new ArtistBasicDto
                         {
-                            Id = sa.Artist.Id,
-                            Name = sa.Artist.Name,
-                            EnglishName = sa.Artist.EnglishName,
-                            ImageUrl = sa.Artist.ImageUrl
+                            Id = sa.Artist != null ? sa.Artist.Id : 0,  // 0 for temporary artists
+                            Name = sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown",
+                            EnglishName = sa.Artist != null ? sa.Artist.EnglishName : null,
+                            ImageUrl = sa.Artist != null ? sa.Artist.ImageUrl : null
                         })
                         .ToList(),
 
@@ -471,10 +717,10 @@ public class SongService : ISongService
                     .OrderBy(sa => sa.Order)
                     .Select(sa => new ArtistBasicDto
                     {
-                        Id = sa.Artist.Id,
-                        Name = sa.Artist.Name,
-                        EnglishName = sa.Artist.EnglishName,
-                        ImageUrl = sa.Artist.ImageUrl
+                        Id = sa.Artist != null ? sa.Artist.Id : 0,
+                        Name = sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown",
+                        EnglishName = sa.Artist?.EnglishName,
+                        ImageUrl = sa.Artist?.ImageUrl
                     })
                     .ToList(),
 
@@ -575,10 +821,10 @@ public class SongService : ISongService
                     .OrderBy(sa => sa.Order)
                     .Select(sa => new ArtistBasicDto
                     {
-                        Id = sa.Artist.Id,
-                        Name = sa.Artist.Name,
-                        EnglishName = sa.Artist.EnglishName,
-                        ImageUrl = sa.Artist.ImageUrl
+                        Id = sa.Artist != null ? sa.Artist.Id : 0,
+                        Name = sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown",
+                        EnglishName = sa.Artist?.EnglishName,
+                        ImageUrl = sa.Artist?.ImageUrl
                     })
                     .ToList(),
 
@@ -709,7 +955,7 @@ public class SongService : ISongService
                     Title = s.Title,
                     ArtistNames = string.Join(", ", s.SongArtists
                         .OrderBy(sa => sa.Order)
-                        .Select(sa => sa.Artist.Name)),
+                        .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown")),
                     ImageUrl = s.ImageUrl,
                     ViewCount = s.ViewCount
                 })
@@ -774,7 +1020,7 @@ public class SongService : ISongService
                     Title = s.Title,
                     ArtistNames = string.Join(", ", s.SongArtists
                         .OrderBy(sa => sa.Order)
-                        .Select(sa => sa.Artist.Name)),
+                        .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown")),
                     ImageUrl = s.ImageUrl,
                     ViewCount = s.ViewCount
                 })

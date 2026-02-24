@@ -19,11 +19,18 @@ public class SongArtistConfiguration : IEntityTypeConfiguration<SongArtist>
                .IsRequired();
 
         builder.Property(sa => sa.ArtistId)
-               .IsRequired();
+               .IsRequired(false); // nullable - לתמיכה באמנים זמניים
 
         builder.Property(sa => sa.Order)
                .IsRequired()
                .HasDefaultValue(1);
+
+        builder.Property(sa => sa.TempArtistName)
+               .HasMaxLength(200);
+
+        builder.Property(sa => sa.IsTemporary)
+               .IsRequired()
+               .HasDefaultValue(false);
 
         // Indexes
         builder.HasIndex(sa => sa.SongId)
@@ -32,10 +39,9 @@ public class SongArtistConfiguration : IEntityTypeConfiguration<SongArtist>
         builder.HasIndex(sa => sa.ArtistId)
                .HasDatabaseName("IX_SongArtists_ArtistId");
 
-        // Unique constraint: אותו אמן לא יכול להופיע פעמיים באותו שיר
-        builder.HasIndex(sa => new { sa.SongId, sa.ArtistId })
-               .IsUnique()
-               .HasDatabaseName("IX_SongArtists_SongId_ArtistId");
+        // Index על אמנים זמניים
+        builder.HasIndex(sa => sa.IsTemporary)
+               .HasDatabaseName("IX_SongArtists_IsTemporary");
 
         // Relationships - Song
         builder.HasOne(sa => sa.Song)

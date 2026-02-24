@@ -168,7 +168,9 @@ public class ReportService : IReportService
 
                 if (song != null)
                 {
-                    var artistNames = string.Join(", ", song.SongArtists.Select(sa => sa.Artist.Name));
+                    var artistNames = string.Join(", ", song.SongArtists.Select(sa =>
+                        sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown"
+                    ));
                     return ($"{song.Title} - {artistNames}", $"/song/{song.Id}");
                 }
                 break;
@@ -187,6 +189,26 @@ public class ReportService : IReportService
 
             case "General":
                 return ("הודעה כללית למערכת", "/");
+
+            case "Genre":
+                var genre = await _context.Genres
+                    .FirstOrDefaultAsync(g => g.Id == contentId);
+
+                if (genre != null)
+                {
+                    return (genre.Name, $"/admin/genres");
+                }
+                break;
+
+            case "Tag":
+                var tag = await _context.Tags
+                    .FirstOrDefaultAsync(t => t.Id == contentId);
+
+                if (tag != null)
+                {
+                    return (tag.Name, $"/admin/tags");
+                }
+                break;
         }
 
         return ("תוכן לא נמצא", "#");

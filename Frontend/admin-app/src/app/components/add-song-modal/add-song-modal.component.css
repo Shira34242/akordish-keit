@@ -355,6 +355,23 @@ textarea.invalid {
     color: #dc3545;
 }
 
+/* Temporary Artist Chip */
+.chip.temporary {
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px dashed rgba(255, 193, 7, 0.5);
+    position: relative;
+}
+
+.chip .temp-badge {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Autocomplete */
 .autocomplete-dropdown {
     position: absolute;
@@ -387,6 +404,35 @@ textarea.invalid {
 
 .suggestion:hover {
     background: rgba(255, 215, 0, 0.1);
+}
+
+/* New Artist Option */
+.suggestion.new-artist-option {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.1) 100%);
+    border-top: 1px solid rgba(33, 150, 243, 0.2);
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.suggestion.new-artist-option:hover {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%);
+}
+
+.suggestion.new-artist-option .icon {
+    font-size: 20px;
+    min-width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(33, 150, 243, 0.1);
+    border-radius: 8px;
+}
+
+.suggestion.new-artist-option .warning {
+    color: #f57c00;
+    font-size: 12px;
+    font-weight: 400;
 }
 
 .artist-thumb {

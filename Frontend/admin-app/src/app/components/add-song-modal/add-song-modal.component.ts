@@ -166,6 +166,10 @@ export class AddSongModalComponent implements OnInit {
         return this.songForm.get('genres') as FormArray;
     }
 
+    get artistInputValue(): string {
+        return this.songForm.get('artistInput')?.value || '';
+    }
+
     loadMusicalKeys() {
         this.isLoadingKeys = true;
         this.songService.getMusicalKeys().subscribe({
@@ -291,6 +295,70 @@ export class AddSongModalComponent implements OnInit {
         this.artistsArray.removeAt(index);
     }
 
+    addNewArtist(name: string) {
+        if (!name || name.trim().length < 2) return;
+
+        const trimmedName = name.trim();
+
+        // בדיקה שלא קיים כבר (לפי שם)
+        const exists = this.artistsArray.controls.some(
+            ctrl => ctrl.value.name.toLowerCase() === trimmedName.toLowerCase()
+        );
+
+        if (!exists && this.artistsArray.length < 5) {
+            // הוספת אמן חדש (ללא ID)
+            this.artistsArray.push(this.fb.control({
+                id: undefined,  // ללא ID = אמן חדש
+                name: trimmedName
+            }));
+
+            this.songForm.get('artistInput')?.setValue('');
+            this.artistSuggestions = [];
+        }
+    }
+
+    addNewTag(name: string) {
+        if (!name || name.trim().length < 2) return;
+
+        const trimmedName = name.trim();
+
+        // בדיקת כפילות מקומית
+        const exists = this.tagsArray.controls.some(
+            ctrl => ctrl.value.name.toLowerCase() === trimmedName.toLowerCase()
+        );
+
+        if (!exists) {
+            this.tagsArray.push(this.fb.control({
+                id: undefined,  // ללא ID = tag חדש
+                name: trimmedName
+            }));
+
+            this.songForm.get('tagInput')?.setValue('');
+            this.tagSuggestions = [];
+        }
+    }
+
+    addNewGenre(name: string) {
+        if (!name || name.trim().length < 2) return;
+
+        const trimmedName = name.trim();
+
+        // בדיקת כפילות מקומית
+        const exists = this.genresArray.controls.some(
+            ctrl => ctrl.value.name.toLowerCase() === trimmedName.toLowerCase()
+        );
+
+        if (!exists) {
+            this.genresArray.push(this.fb.control({
+                id: undefined,  // ללא ID = genre חדש
+                name: trimmedName
+            }));
+
+            this.songForm.get('genreInput')?.setValue('');
+            this.genreSuggestions = [];
+        }
+    }
+
     selectTag(tag: AutocompleteResult) {
         const exists = this.tagsArray.controls.some(ctrl => ctrl.value.id === tag.id);
         if (!exists) {
@@ -375,12 +443,21 @@ export class AddSongModalComponent implements OnInit {
 
             const request: AddSongRequest = {
                 title: formValue.title,
-                artistIds: formValue.artists.map((a: any) => a.id),
+                artists: formValue.artists.map((a: any) => ({
+                    id: a.id || undefined,  // undefined = אמן חדש
+                    name: a.name
+                })),
                 youtubeUrl: formValue.youtubeUrl,
                 spotifyUrl: formValue.spotifyUrl?.trim() || undefined,
                 imageUrl: formValue.imageUrl,
-                tagIds: formValue.tags.map((t: any) => t.id),
-                genreIds: formValue.genres.map((g: any) => g.id),
+                tags: formValue.tags.map((t: any) => ({
+                    id: t.id || undefined,
+                    name: t.name
+                })),
+                genres: formValue.genres.map((g: any) => ({
+                    id: g.id || undefined,
+                    name: g.name
+                })),
                 lyricsWithChords: formValue.lyricsWithChords,
                 originalKeyId: formValue.originalKeyId,
                 easyKeyId: formValue.easyKeyId,

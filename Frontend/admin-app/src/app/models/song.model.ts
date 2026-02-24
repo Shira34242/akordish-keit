@@ -1,17 +1,32 @@
+export interface ArtistInput {
+    id?: number;  // undefined/null = אמן חדש
+    name: string;
+}
+
+export interface GenreInput {
+    id?: number;  // undefined/null = ז'אנר חדש
+    name: string;
+}
+
+export interface TagInput {
+    id?: number;  // undefined/null = תגית חדשה
+    name: string;
+}
+
 export interface AddSongRequest {
     title: string;
-    artistIds: number[];
+    artists: ArtistInput[];  // שונה מ-artistIds
     youtubeUrl: string;
     spotifyUrl?: string;
     imageUrl?: string;
-    tagIds?: number[];
+    tags?: TagInput[];  // שונה מ-tagIds
     lyricsWithChords: string;
     originalKeyId: number;
     easyKeyId?: number;
     composerId?: number;
     lyricistId?: number;
     arrangerId?: number;
-    genreIds?: number[];
+    genres?: GenreInput[];  // שונה מ-genreIds
 }
 
 export interface SongDto {

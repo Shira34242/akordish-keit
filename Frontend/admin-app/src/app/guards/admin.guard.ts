@@ -29,7 +29,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
   // המשתמש מחובר - עכשיו בודקים אם הוא Admin
   const user = authService.currentUserValue;
 
-  if (user && user.role === 'Admin') {
+  if (user && (user.role === 'Admin' || user.role === 4)) {
     // המשתמש הוא Admin - מאפשרים גישה ✅
     return true;
   }

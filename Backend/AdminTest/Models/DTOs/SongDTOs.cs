@@ -9,6 +9,60 @@ namespace AkordishKeit.Models.DTOs;
 // ============================================
 
 /// <summary>
+/// DTO לאמן - תומך גם באמנים קיימים וגם באמנים חדשים
+/// </summary>
+public class ArtistInputDto
+{
+    /// <summary>
+    /// ID של אמן קיים (null = אמן חדש)
+    /// </summary>
+    public int? Id { get; set; }
+
+    /// <summary>
+    /// שם האמן (חובה)
+    /// </summary>
+    [Required(ErrorMessage = "שם האמן הוא חובה")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "שם האמן חייב להיות בין 2 ל-100 תווים")]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO לז'אנר - תומך גם בז'אנרים קיימים וגם בז'אנרים חדשים
+/// </summary>
+public class GenreInputDto
+{
+    /// <summary>
+    /// ID של ז'אנר קיים (null = ז'אנר חדש)
+    /// </summary>
+    public int? Id { get; set; }
+
+    /// <summary>
+    /// שם הז'אנר (חובה)
+    /// </summary>
+    [Required(ErrorMessage = "שם הז'אנר הוא חובה")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "שם הז'אנר חייב להיות בין 2 ל-50 תווים")]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO לתגית - תומך גם בתגיות קיימות וגם בתגיות חדשות
+/// </summary>
+public class TagInputDto
+{
+    /// <summary>
+    /// ID של תגית קיימת (null = תגית חדשה)
+    /// </summary>
+    public int? Id { get; set; }
+
+    /// <summary>
+    /// שם התגית (חובה)
+    /// </summary>
+    [Required(ErrorMessage = "שם התגית הוא חובה")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "שם התגית חייב להיות בין 2 ל-50 תווים")]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// DTO להוספת שיר חדש - כל 3 השלבים ביחד!
 /// </summary>
 public class AddSongRequestDto
@@ -22,7 +76,7 @@ public class AddSongRequestDto
     [Required(ErrorMessage = "חייב להזין לפחות אמן אחד")]
     [MinLength(1, ErrorMessage = "חייב להזין לפחות אמן אחד")]
     [MaxLength(5, ErrorMessage = "ניתן להוסיף עד 5 אמנים בלבד")]
-    public List<int> ArtistIds { get; set; } = new();
+    public List<ArtistInputDto> Artists { get; set; } = new();
 
     [Required(ErrorMessage = "קישור YouTube הוא שדה חובה")]
     [Url(ErrorMessage = "כתובת YouTube לא תקינה")]
@@ -37,7 +91,7 @@ public class AddSongRequestDto
 
     public string? ImageUrl { get; set; }
 
-    public List<int>? TagIds { get; set; }
+    public List<TagInputDto>? Tags { get; set; }
 
     // ===== שלב 2: אקורדים וסולמות =====
 
@@ -56,7 +110,7 @@ public class AddSongRequestDto
     public int? ComposerId { get; set; }
     public int? LyricistId { get; set; }
     public int? ArrangerId { get; set; }
-    public List<int>? GenreIds { get; set; }
+    public List<GenreInputDto>? Genres { get; set; }
 }
 /// <summary>
 /// DTO לעריכת שיר קיים
@@ -70,7 +124,7 @@ public class UpdateSongRequestDto
     [Required]
     [MinLength(1)]
     [MaxLength(5)]
-    public List<int> ArtistIds { get; set; } = new();
+    public List<ArtistInputDto> Artists { get; set; } = new();
 
     [Required]
     [Url]
@@ -81,8 +135,8 @@ public class UpdateSongRequestDto
 
     public string? ImageUrl { get; set; }
 
-    public List<int>? TagIds { get; set; }
-    public List<int>? GenreIds { get; set; }
+    public List<TagInputDto>? Tags { get; set; }
+    public List<GenreInputDto>? Genres { get; set; }
 
     [Required]
     [MinLength(10)]

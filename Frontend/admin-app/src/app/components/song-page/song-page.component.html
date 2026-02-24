@@ -7,7 +7,11 @@
             <!-- Image Section -->
             <div class="header-image-section">
                 <div class="song-cover-wrapper">
-                    <img [src]="song.imageUrl || 'assets/default-song.png'" alt="Cover" class="song-cover"
+                    <a [href]="song.youtubeUrl" target="_blank" *ngIf="song.youtubeUrl" class="song-cover-link">
+                        <img [src]="song.imageUrl || 'assets/default-song.png'" alt="Cover" class="song-cover"
+                            (error)="handleImageError($event)">
+                    </a>
+                    <img *ngIf="!song.youtubeUrl" [src]="song.imageUrl || 'assets/default-song.png'" alt="Cover" class="song-cover"
                         (error)="handleImageError($event)">
                     <a [href]="song.youtubeUrl" target="_blank" class="youtube-play-btn" *ngIf="song.youtubeUrl">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
