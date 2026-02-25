@@ -372,8 +372,9 @@
     vertical-align: top;
     top: -1.2em;
     margin-right: 0.2em;
-    background: transparent;
-    padding: 0;
+    background: #dbeafe;
+    padding: 2px 6px;
+    border-radius: 4px;
     border: none;
     box-shadow: none;
     cursor: pointer;
@@ -383,13 +384,16 @@
 ::ng-deep .chord-inline:hover {
     color: #1d4ed8;
     text-decoration: underline;
-    background: transparent;
+    background: #bfdbfe;
 }
 
 ::ng-deep .chord-block {
     color: #2563eb;
     font-weight: 700;
     font-size: 1em;
+    background: #dbeafe;
+    padding: 2px 6px;
+    border-radius: 4px;
     cursor: pointer;
     user-select: none;
 }
@@ -397,10 +401,12 @@
 /* Dark Mode Chords */
 .lyrics-column.dark-mode ::ng-deep .chord-inline {
     color: #60a5fa;
+    background: rgba(37, 99, 235, 0.2);
 }
 
 .lyrics-column.dark-mode ::ng-deep .chord-block {
     color: #60a5fa;
+    background: rgba(37, 99, 235, 0.2);
 }
 
 /* Sidebar */

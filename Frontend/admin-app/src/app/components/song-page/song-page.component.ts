@@ -504,6 +504,12 @@ private getKeyIndex(keyName: string): number {
         this.router.navigate(['/song', id]);
     }
 
+    navigateToArtist(id: number | undefined): void {
+        if (id) {
+            this.router.navigate(['/artist', id]);
+        }
+    }
+
     togglePlaylistPopup(): void {
         this.isPlaylistPopupOpen = !this.isPlaylistPopupOpen;
     }

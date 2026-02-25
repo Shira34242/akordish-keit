@@ -30,7 +30,7 @@
             <div class="header-info-section">
                 <p class="header-subtitle">אקורדים לשיר</p>
                 <h1 class="main-title">{{ song.title }}</h1>
-                <h2 class="artist-name">{{ song.artists[0]?.name }}</h2>
+                <h2 class="artist-name" (click)="navigateToArtist(song.artists[0]?.id)">{{ song.artists[0]?.name }}</h2>
 
                 <div class="credits" *ngIf="song.composer || song.lyricist">
                     <span *ngIf="song.lyricist">מילים: {{ song.lyricist.name }}</span>
