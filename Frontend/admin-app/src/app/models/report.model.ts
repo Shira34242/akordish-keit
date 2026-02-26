@@ -32,7 +32,8 @@ export const ReportTypeLabels: Record<string, string> = {
     'Other': 'אחר',
     'NewArtist': 'אמן חדש',
     'NewGenre': 'ז\'אנרים שירים',
-    'NewTag': 'תגיות שירים'
+    'NewTag': 'תגיות שירים',
+    'NewPerson': 'מלחין חדש'
 };
 
 export const ContentTypeLabels: Record<string, string> = {
@@ -41,7 +42,9 @@ export const ContentTypeLabels: Record<string, string> = {
     'BlogPost': 'בלוג',
     'General': 'הודעה כללית',
     'Genre': 'הוספת מידע חדש למערכת',
-    'Tag': 'הוספת מידע חדש למערכת'
+    'Tag': 'הוספת מידע חדש למערכת',
+    'Person': 'הוספת מידע חדש למערכת',
+    'NewContent': 'הוספת מידע חדש למערכת'
 };
 
 export const StatusLabels: Record<string, string> = {

@@ -59,7 +59,12 @@ public class SongService : ISongService
                 durationSeconds = youtubeMetadata.DurationSeconds;
             }
 
-            // 3. Create the song entity
+            // 3. Handle composer/lyricist/arranger - create new if doesn't exist
+            int? composerId = await GetOrCreatePersonAsync(dto.Composer, userId);
+            int? lyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
+            int? arrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
+
+            // 4. Create the song entity
             var song = new Song
             {
                 Title = dto.Title.Trim(),
@@ -69,9 +74,9 @@ public class SongService : ISongService
                 YouTubeUrl = dto.YoutubeUrl.Trim(),
                 SpotifyUrl = dto.SpotifyUrl?.Trim(),
                 ImageUrl = imageUrl ?? "default-song-image.jpg",
-                ComposerId = dto.ComposerId,
-                LyricistId = dto.LyricistId,
-                ArrangerId = dto.ArrangerId,
+                ComposerId = composerId,
+                LyricistId = lyricistId,
+                ArrangerId = arrangerId,
                 DurationSeconds = durationSeconds,
                 UploadedByUserId = userId,
                 IsApproved = false, // Not approved by default
@@ -335,9 +340,9 @@ public class SongService : ISongService
             song.YouTubeUrl = dto.YoutubeUrl.Trim();
             song.SpotifyUrl = dto.SpotifyUrl?.Trim();
             song.ImageUrl = dto.ImageUrl ?? song.ImageUrl;
-            song.ComposerId = dto.ComposerId;
-            song.LyricistId = dto.LyricistId;
-            song.ArrangerId = dto.ArrangerId;
+            song.ComposerId = await GetOrCreatePersonAsync(dto.Composer, userId);
+            song.LyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
+            song.ArrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
             song.UpdatedAt = DateTime.UtcNow;
 
             // 4. Update artists - remove and re-add (support both existing and new artists)
@@ -1246,5 +1251,50 @@ public class SongService : ISongService
                 Type = "tag"
             })
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Get or create a person (composer/lyricist/arranger)
+    /// </summary>
+    private async Task<int?> GetOrCreatePersonAsync(PersonInputDto? personDto, int userId)
+    {
+        if (personDto == null)
+            return null;
+
+        // If ID provided, use existing person
+        if (personDto.Id.HasValue)
+        {
+            var exists = await _context.People.AnyAsync(p => p.Id == personDto.Id.Value && !p.IsDeleted);
+            if (!exists)
+                throw new Exception($"Person with ID {personDto.Id} not found");
+
+            return personDto.Id.Value;
+        }
+
+        // Create new person
+        var newPerson = new Person
+        {
+            Name = personDto.Name.Trim(),
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = false
+        };
+
+        _context.People.Add(newPerson);
+        await _context.SaveChangesAsync();
+
+        // Create a report for admin review
+        _context.ContentReports.Add(new ContentReport
+        {
+            UserId = userId,
+            ContentType = "Person",
+            ContentId = newPerson.Id,
+            ReportType = "NewPerson",
+            Description = $"נוסף אדם חדש למערכת: '{newPerson.Name}' (מלחין/משורר/מעבד)",
+            ReportedAt = DateTime.UtcNow,
+            Status = "Pending"
+        });
+        await _context.SaveChangesAsync();
+
+        return newPerson.Id;
     }
 }

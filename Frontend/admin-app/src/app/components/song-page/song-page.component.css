@@ -319,6 +319,54 @@
     color: #2563eb;
 }
 
+.toolbar-btn-reset {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.toolbar-btn-reset:hover {
+    background: #fecaca;
+}
+
+/* Auto Scroll Controls */
+.autoscroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toolbar-btn-sm {
+    min-width: 32px;
+    height: 32px;
+}
+
+.scroll-speed-display {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2563eb;
+    min-width: 28px;
+    text-align: center;
+}
+
+.btn-stop {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-stop:hover {
+    background: #fecaca;
+}
+
+.btn-scroll {
+    white-space: nowrap;
+}
+
+.btn-easy {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
 /* 3. Main Layout */
 .main-layout {
     max-width: 1200px;
@@ -338,9 +386,11 @@
     min-height: 600px;
     padding: 40px;
     border-radius: 24px;
-    box-shadow: 
+    box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.08),
         inset 0 0 20px rgba(255, 255, 255, 0.5);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .lyrics-column.dark-mode {
@@ -586,15 +636,166 @@
 
     .sticky-toolbar {
         grid-template-columns: 1fr;
+        padding: 0 12px;
+        top: 80px;
+    }
+
+    .toolbar-content {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* Hide some dividers on mobile for cleaner look */
+    .toolbar-divider {
+        display: none;
+    }
+
+    .toolbar-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+    }
+
+    .toolbar-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Make text buttons more compact */
+    .btn-text {
+        padding: 0 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Easy mode button - shorter text on mobile */
+    .btn-easy {
+        font-size: 0.75rem;
+    }
+
+    .btn-easy svg {
+        width: 14px;
+        height: 14px;
+        margin-left: 2px;
+    }
+
+    /* Transpose group - make it more compact */
+    .transpose-group {
+        gap: 2px;
+    }
+
+    .transpose-val {
+        font-size: 0.85rem;
+        width: 24px;
+    }
+
+    /* Auto scroll controls */
+    .autoscroll-controls {
+        display: flex;
+        gap: 4px;
+    }
+
+    .toolbar-btn-sm {
+        min-width: 28px;
+        height: 28px;
+    }
+
+    .scroll-speed-display {
+        font-size: 0.8rem;
     }
 
     .main-layout {
         grid-template-columns: 1fr;
+        padding: 0 12px;
     }
 
     .song-list li {
         text-align: center;
     }
+
+    .lyrics-column {
+        padding: 20px;
+    }
 }
 
- 
+/* Extra small screens (phones) */
+@media (max-width: 600px) {
+    .sticky-toolbar {
+        padding: 0 8px;
+        top: 70px;
+    }
+
+    .toolbar-content {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .toolbar-btn {
+        min-width: 30px;
+        height: 30px;
+    }
+
+    /* Hide text in "Auto Scroll" button on very small screens */
+    .btn-scroll {
+        font-size: 0.7rem;
+    }
+
+    /* Make the easy mode button icon-only on very small screens */
+    .btn-easy {
+        padding: 0 6px;
+        font-size: 0.7rem;
+    }
+
+    .main-layout {
+        padding: 0 8px;
+    }
+
+    .lyrics-column {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .copy-notification {
+        top: 90px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Copy Notification Toast */
+.copy-notification {
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(16, 185, 129, 0.95);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 16px 28px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10000;
+}
+
+.copy-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.copy-notification svg {
+    width: 20px;
+    height: 20px;
+    stroke: white;
+    stroke-width: 3;
+    flex-shrink: 0;
+}
+

@@ -63,6 +63,24 @@ public class TagInputDto
 }
 
 /// <summary>
+/// DTO לאדם (מלחין/משורר/מעבד) - תומך גם באנשים קיימים וגם חדשים
+/// </summary>
+public class PersonInputDto
+{
+    /// <summary>
+    /// ID של אדם קיים (null = אדם חדש)
+    /// </summary>
+    public int? Id { get; set; }
+
+    /// <summary>
+    /// שם האדם (חובה)
+    /// </summary>
+    [Required(ErrorMessage = "שם האדם הוא חובה")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "שם האדם חייב להיות בין 2 ל-100 תווים")]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// DTO להוספת שיר חדש - כל 3 השלבים ביחד!
 /// </summary>
 public class AddSongRequestDto
@@ -107,9 +125,9 @@ public class AddSongRequestDto
 
     // ===== שלב 3: קרדיטים (אופציונלי) =====
 
-    public int? ComposerId { get; set; }
-    public int? LyricistId { get; set; }
-    public int? ArrangerId { get; set; }
+    public PersonInputDto? Composer { get; set; }
+    public PersonInputDto? Lyricist { get; set; }
+    public PersonInputDto? Arranger { get; set; }
     public List<GenreInputDto>? Genres { get; set; }
 }
 /// <summary>
@@ -147,9 +165,9 @@ public class UpdateSongRequestDto
 
     public int? EasyKeyId { get; set; }
 
-    public int? ComposerId { get; set; }
-    public int? LyricistId { get; set; }
-    public int? ArrangerId { get; set; }
+    public PersonInputDto? Composer { get; set; }
+    public PersonInputDto? Lyricist { get; set; }
+    public PersonInputDto? Arranger { get; set; }
 }
 // ============================================
 // RESPONSE DTOs - מה שחוזר ל-Angular

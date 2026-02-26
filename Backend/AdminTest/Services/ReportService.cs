@@ -57,7 +57,20 @@ public class ReportService : IReportService
 
         if (!string.IsNullOrEmpty(contentType))
         {
-            query = query.Where(r => r.ContentType == contentType);
+            // Special handling for "NewContent" - includes all new content types
+            if (contentType == "NewContent")
+            {
+                query = query.Where(r =>
+                    r.ContentType == "Genre" ||
+                    r.ContentType == "Tag" ||
+                    r.ContentType == "Person" ||
+                    r.ReportType == "NewArtist" // Special case: NewArtist uses ContentType="Song"
+                );
+            }
+            else
+            {
+                query = query.Where(r => r.ContentType == contentType);
+            }
         }
 
         if (!string.IsNullOrEmpty(reportType))
@@ -207,6 +220,16 @@ public class ReportService : IReportService
                 if (tag != null)
                 {
                     return (tag.Name, $"/admin/tags");
+                }
+                break;
+
+            case "Person":
+                var person = await _context.People
+                    .FirstOrDefaultAsync(p => p.Id == contentId);
+
+                if (person != null)
+                {
+                    return (person.Name, $"/admin/people");
                 }
                 break;
         }

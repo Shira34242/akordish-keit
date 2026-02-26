@@ -44,25 +44,20 @@
         </svg>
     </div>
 
-    <!-- Piano Diagram -->
+    <!-- Piano Diagram (compact display) -->
     <div *ngIf="pianoKeys" class="diagram piano">
-        <svg viewBox="0 0 140 60" width="140" height="60">
+        <svg [attr.viewBox]="'0 0 ' + pianoDisplayWidth + ' 60'" [attr.width]="pianoDisplayWidth" height="60">
             <!-- White Keys -->
-            <rect *ngFor="let note of [0,2,4,5,7,9,11]; let i = index" [attr.x]="i*20" y="0" width="20" height="60"
-                fill="white" stroke="black" stroke-width="1" [attr.fill]="isKeyActive(note) ? '#4ade80' : 'white'" />
+            <rect *ngFor="let key of pianoWhiteKeys; let i = index"
+                [attr.x]="i * 20" y="0" width="20" height="60"
+                stroke="black" stroke-width="1"
+                [attr.fill]="isKeyActiveAbsolute(key.note) ? '#4ade80' : 'white'" />
 
             <!-- Black Keys -->
-            <!-- C# (1) -->
-            <rect x="14" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(1) ? '#4ade80' : 'black'" />
-            <!-- D# (3) -->
-            <rect x="34" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(3) ? '#4ade80' : 'black'" />
-            <!-- F# (6) -->
-            <rect x="74" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(6) ? '#4ade80' : 'black'" />
-            <!-- G# (8) -->
-            <rect x="94" y="0" width="12" height="35" fill="black" [attr.fill]="isKeyActive(8) ? '#4ade80' : 'black'" />
-            <!-- A# (10) -->
-            <rect x="114" y="0" width="12" height="35" fill="black"
-                [attr.fill]="isKeyActive(10) ? '#4ade80' : 'black'" />
+            <ng-container *ngFor="let key of pianoBlackKeys">
+                <rect [attr.x]="key.x" y="0" width="12" height="35"
+                    [attr.fill]="isKeyActiveAbsolute(key.note) ? '#4ade80' : 'black'" />
+            </ng-container>
         </svg>
     </div>
 

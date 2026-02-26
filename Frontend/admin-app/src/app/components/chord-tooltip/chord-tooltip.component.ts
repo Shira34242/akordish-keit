@@ -18,6 +18,29 @@ export class ChordTooltipComponent implements OnChanges {
     pianoKeys: number[] | null = null;
     displayChordName: string = ''; // The chord name we're actually displaying
 
+    // Piano: absolute note positions (computed from pianoKeys)
+    activeAbsoluteNotes: Set<number> = new Set();
+
+    // Dynamic piano display keys (computed per chord)
+    pianoWhiteKeys: { note: number }[] = [];
+    pianoBlackKeys: { x: number; note: number }[] = [];
+    pianoDisplayWidth: number = 200;
+
+    // White note indices within an octave (C=0, D=2, E=4, F=5, G=7, A=9, B=11)
+    private whiteNotesInOctave = [0, 2, 4, 5, 7, 9, 11];
+
+    // Black note indices within an octave
+    private blackNotesInOctave = [1, 3, 6, 8, 10];
+
+    // X offset of each black key relative to its octave start (in white-key units)
+    private blackKeyOffsets: { [note: number]: number } = {
+        1: 14,   // C#
+        3: 34,   // D#
+        6: 74,   // F#
+        8: 94,   // G#
+        10: 114, // A#
+    };
+
     // Guitar SVG config
     numFrets = 5;
     numStrings = 6;
@@ -36,6 +59,9 @@ export class ChordTooltipComponent implements OnChanges {
 
         if (this.instrument === 'guitar') {
             this.pianoKeys = null;
+            this.activeAbsoluteNotes = new Set();
+            this.pianoWhiteKeys = [];
+            this.pianoBlackKeys = [];
             // Try each variation until we find a match
             for (const variation of chordVariations) {
                 if (GUITAR_CHORDS[variation]) {
@@ -54,13 +80,91 @@ export class ChordTooltipComponent implements OnChanges {
                 if (PIANO_CHORDS[variation]) {
                     this.pianoKeys = PIANO_CHORDS[variation];
                     this.displayChordName = variation;
+                    this.computeAbsoluteNotes();
                     return;
                 }
             }
             // No match found
             this.pianoKeys = null;
+            this.activeAbsoluteNotes = new Set();
+            this.pianoWhiteKeys = [];
+            this.pianoBlackKeys = [];
             this.displayChordName = this.chordName;
         }
+    }
+
+    /**
+     * Compute absolute note positions and build display keys.
+     * Shows a compact keyboard starting from C, spanning just enough
+     * to display all chord tones (typically ~1.2 octaves).
+     */
+    private computeAbsoluteNotes(): void {
+        if (!this.pianoKeys || this.pianoKeys.length === 0) {
+            this.activeAbsoluteNotes = new Set();
+            this.pianoWhiteKeys = [];
+            this.pianoBlackKeys = [];
+            return;
+        }
+
+        const notes = this.pianoKeys.map(n => ((n % 12) + 12) % 12);
+        const root = notes[0];
+
+        // Compute absolute positions (root position voicing)
+        const absoluteNotes: number[] = [];
+        for (const note of notes) {
+            let absolute = note;
+            if (absolute < root) {
+                absolute += 12;
+            }
+            absoluteNotes.push(absolute);
+        }
+        this.activeAbsoluteNotes = new Set(absoluteNotes);
+
+        // Determine display range: start from 0 (C), end just past the highest note
+        const maxNote = Math.max(...absoluteNotes);
+        // Find the next white note after maxNote to end cleanly
+        const endNote = this.getNextWhiteNoteAfter(maxNote);
+
+        // Build white keys from 0 to endNote
+        this.pianoWhiteKeys = [];
+        let whiteKeyIndex = 0;
+        for (let n = 0; n <= endNote; n++) {
+            if (this.whiteNotesInOctave.includes(n % 12)) {
+                this.pianoWhiteKeys.push({ note: n });
+                whiteKeyIndex++;
+            }
+        }
+
+        // Build black keys
+        this.pianoBlackKeys = [];
+        // For each white key position, check if there's a black key after it
+        for (let i = 0; i < this.pianoWhiteKeys.length; i++) {
+            const whiteNote = this.pianoWhiteKeys[i].note;
+            const blackNote = whiteNote + 1;
+            if (blackNote <= endNote && this.blackNotesInOctave.includes(blackNote % 12)) {
+                const octaveStart = Math.floor(blackNote / 12);
+                const noteInOctave = blackNote % 12;
+                const octaveXOffset = octaveStart * 140; // 7 white keys * 20px
+                this.pianoBlackKeys.push({
+                    x: octaveXOffset + this.blackKeyOffsets[noteInOctave],
+                    note: blackNote
+                });
+            }
+        }
+
+        // Set display width based on number of white keys
+        this.pianoDisplayWidth = this.pianoWhiteKeys.length * 20;
+    }
+
+    /**
+     * Find the next white note at or after the given note number.
+     */
+    private getNextWhiteNoteAfter(note: number): number {
+        let n = note + 1;
+        while (!this.whiteNotesInOctave.includes(n % 12)) {
+            n++;
+        }
+        return n;
     }
 
     /**
@@ -195,10 +299,9 @@ export class ChordTooltipComponent implements OnChanges {
         return this.getFretY(fret) - 6;
     }
 
-    // Helpers for Piano SVG
-    isKeyActive(noteIndex: number): boolean {
-        if (!this.pianoKeys) return false;
-        return this.pianoKeys.some(k => k % 12 === noteIndex);
+    // Helper for Piano SVG
+    isKeyActiveAbsolute(note: number): boolean {
+        return this.activeAbsoluteNotes.has(note);
     }
 
     // Helpers for Barre

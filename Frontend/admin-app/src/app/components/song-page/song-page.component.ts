@@ -31,6 +31,7 @@ export class SongPageComponent implements OnInit, OnDestroy {
     error: string | null = null;
     isPlaylistPopupOpen: boolean = false;
     isReportModalOpen: boolean = false;
+    showCopyNotification: boolean = false;
 
     // Toolbar State
     transposeStep: number = 0;
@@ -330,6 +331,20 @@ export class SongPageComponent implements OnInit, OnDestroy {
         this.hoveredChord = null;
     }
 
+    // Check if user is on mobile device
+    isMobileDevice(): boolean {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (window.innerWidth <= 768);
+    }
+
+    // Show copy notification
+    showCopyToast(): void {
+        this.showCopyNotification = true;
+        setTimeout(() => {
+            this.showCopyNotification = false;
+        }, 3000);
+    }
+
     handleShare() {
         if (!this.song) return;
 
@@ -343,20 +358,22 @@ export class SongPageComponent implements OnInit, OnDestroy {
             url: window.location.href,
         };
 
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        // If mobile - use native share dialog
+        if (this.isMobileDevice() && navigator.share) {
             navigator.share(shareData).catch((err) => console.error('Share failed:', err));
         } else {
+            // If desktop - copy link and show notification
             navigator.clipboard.writeText(window.location.href).then(() => {
-                alert("הקישור הועתק ללוח!");
+                this.showCopyToast();
             }).catch(() => {
-                // Fallback
+                // Fallback for older browsers
                 const textarea = document.createElement('textarea');
                 textarea.value = window.location.href;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                alert("הקישור הועתק ללוח!");
+                this.showCopyToast();
             });
         }
     }

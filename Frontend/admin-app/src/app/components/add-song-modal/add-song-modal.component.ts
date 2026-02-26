@@ -43,7 +43,7 @@ export class AddSongModalComponent implements OnInit {
 
     // Metadata
     youtubeMetadata: YouTubeMetadata | null = null;
-    selectedComposer: { id: number; name: string } | null = null; 
+    selectedComposer: { id?: number; name: string } | null = null; 
 
     // Search subjects
     private artistSearch$ = new Subject<string>();
@@ -170,6 +170,10 @@ export class AddSongModalComponent implements OnInit {
         return this.songForm.get('artistInput')?.value || '';
     }
 
+    get composerInputValue(): string {
+        return this.songForm.get('composerInput')?.value || '';
+    }
+
     loadMusicalKeys() {
         this.isLoadingKeys = true;
         this.songService.getMusicalKeys().subscribe({
@@ -240,10 +244,24 @@ export class AddSongModalComponent implements OnInit {
 
     removeComposer() {
         this.selectedComposer = null;
-        this.songForm.patchValue({ 
+        this.songForm.patchValue({
             composerId: null,
-            composerInput: '' 
+            composerInput: ''
         });
+    }
+
+    addNewComposer(name: string) {
+        if (!name || name.trim().length < 2) return;
+
+        const trimmedName = name.trim();
+
+        // Set as new composer (without ID = will be created on server)
+        this.selectedComposer = { name: trimmedName };
+        this.songForm.patchValue({
+            composerId: null,  // null = new composer
+            composerInput: ''
+        });
+        this.composerSuggestions = [];
     }
 
     setupDuplicateCheck() {
@@ -461,9 +479,12 @@ export class AddSongModalComponent implements OnInit {
                 lyricsWithChords: formValue.lyricsWithChords,
                 originalKeyId: formValue.originalKeyId,
                 easyKeyId: formValue.easyKeyId,
-                composerId: formValue.composerId,
-                lyricistId: formValue.lyricistId,
-                arrangerId: formValue.arrangerId
+                composer: this.selectedComposer ? {
+                    id: this.selectedComposer.id || undefined,
+                    name: this.selectedComposer.name
+                } : undefined,
+                lyricist: undefined,  // נשאיר כרגע - נעדכן אחר כך
+                arranger: undefined   // נשאיר כרגע - נעדכן אחר כך
             };
 
             // Choose add or update based on mode

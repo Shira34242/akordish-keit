@@ -97,23 +97,36 @@
 
                 <div class="form-group">
                     <label>מלחין</label>
-                    <div class="input-with-chips" [class.has-selection]="songForm.get('composerId')?.value">
-                        <div class="chip" *ngIf="selectedComposer">
+                    <div class="input-with-chips" [class.has-selection]="selectedComposer">
+                        <div class="chip" *ngIf="selectedComposer"
+                             [class.temporary]="!selectedComposer.id">
                             {{ selectedComposer.name }}
+                            <span class="temp-badge" *ngIf="!selectedComposer.id">חדש</span>
                             <span class="remove-chip" (click)="removeComposer()">&times;</span>
                         </div>
                         <input type="text" formControlName="composerInput" (input)="onComposerInput($event)"
-                            placeholder="הוסף מלחין (אופציונלי)..." [disabled]="songForm.get('composerId')?.value">
+                            placeholder="הוסף מלחין (אופציונלי)..." [disabled]="!!selectedComposer">
                     </div>
 
                     <!-- Autocomplete Dropdown -->
-                    <div class="autocomplete-dropdown" *ngIf="composerSuggestions.length > 0">
+                    <div class="autocomplete-dropdown" *ngIf="composerSuggestions.length > 0 || composerInputValue.length >= 2">
+                        <!-- תוצאות מלחינים קיימים -->
                         <div class="suggestion" *ngFor="let composer of composerSuggestions"
                             (click)="selectComposer(composer)">
                             <div class="artist-info">
                                 <span class="main-text">{{ composer.displayText }}</span>
-                                <span class="sub-text" *ngIf="composer.secondaryText">{{ composer.secondaryText
-                                    }}</span>
+                                <span class="sub-text" *ngIf="composer.secondaryText">{{ composer.secondaryText }}</span>
+                            </div>
+                        </div>
+
+                        <!-- אופציה להוספת מלחין חדש -->
+                        <div class="suggestion new-artist-option"
+                             *ngIf="composerInputValue.length >= 2"
+                             (click)="addNewComposer(composerInputValue)">
+                            <span class="icon">➕</span>
+                            <div class="artist-info">
+                                <span class="main-text">הוסף מלחין חדש: "{{ composerInputValue }}"</span>
+                                <span class="sub-text warning">⚠️ יישלח לאישור מנהל</span>
                             </div>
                         </div>
                     </div>

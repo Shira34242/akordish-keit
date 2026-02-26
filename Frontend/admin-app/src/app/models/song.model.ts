@@ -13,6 +13,11 @@ export interface TagInput {
     name: string;
 }
 
+export interface PersonInput {
+    id?: number;  // undefined/null = אדם חדש
+    name: string;
+}
+
 export interface AddSongRequest {
     title: string;
     artists: ArtistInput[];  // שונה מ-artistIds
@@ -23,9 +28,9 @@ export interface AddSongRequest {
     lyricsWithChords: string;
     originalKeyId: number;
     easyKeyId?: number;
-    composerId?: number;
-    lyricistId?: number;
-    arrangerId?: number;
+    composer?: PersonInput;  // שונה מ-composerId
+    lyricist?: PersonInput;  // שונה מ-lyricistId
+    arranger?: PersonInput;  // שונה מ-arrangerId
     genres?: GenreInput[];  // שונה מ-genreIds
 }
 
