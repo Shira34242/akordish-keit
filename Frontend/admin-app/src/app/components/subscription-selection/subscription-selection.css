@@ -1,331 +1,375 @@
-/* Subscription Selection - Song Page Style */
+/* Subscription Selection */
 .subscription-selection {
   font-family: 'Heebo', 'Segoe UI', sans-serif;
-  background-color: #f3f4f6;
+  background-color: #f7f7f7;
   min-height: 100vh;
   direction: rtl;
-  color: #1f2937;
-  padding: 40px 24px;
+  color: #1a1a1a;
+  padding: 48px 24px;
 }
 
-/* Header */
-.header {
-  max-width: 1200px;
+/* ─── Step Indicator ─────────────────────────────── */
+.step-indicator {
+  max-width: 400px;
   margin: 0 auto 40px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  direction: rtl;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+.step.completed .step-number {
+  background: #22c55e;
+  color: white;
+}
+
+.step.active .step-number {
+  background: #1a1a1a;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.step.active .step-label {
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.step.completed .step-label {
+  color: #22c55e;
+}
+
+.step-divider {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  min-width: 60px;
+  margin-bottom: 24px;
+}
+
+/* ─── Header ──────────────────────────────────────── */
+.header {
+  max-width: 860px;
+  margin: 0 auto 28px auto;
   text-align: center;
 }
 
 .header h1 {
   font-family: 'Heebo', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 2.6rem;
+  font-weight: 900;
   color: #000000;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
+  line-height: 1.2;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 1.1rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* Billing Toggle */
-.billing-toggle {
-  max-width: 400px;
-  margin: 0 auto 40px auto;
-  display: flex;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  padding: 8px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-.billing-toggle button {
-  flex: 1;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: #6b7280;
-  font-family: inherit;
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
+  color: #6b7280;
+  margin: 0 0 4px 0;
 }
 
-.billing-toggle button.active {
-  background: #ffffff;
-  color: #2563eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.profile-type-label {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin: 6px 0 0 0;
+  font-weight: 500;
 }
 
-.billing-toggle button:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.5);
-  color: #111827;
+.header-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 0 4px;
 }
 
+.free-note {
+  font-size: 0.78rem;
+  color: #b0b0b0;
+  margin: 0;
+  text-align: right;
+}
+
+/* ─── Savings Badge ───────────────────────────────── */
 .savings-badge {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: #1a1a1a;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-size: 0.7rem;
+  display: inline-block;
+  background: #22c55e;
+  color: #ffffff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-/* Plans Grid */
+/* ─── Billing Toggle ──────────────────────────────── */
+.billing-toggle {
+  display: flex;
+  max-width: 220px;
+  margin: 0 auto 36px auto;
+  background: #ececec;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.billing-toggle button {
+  flex: 1;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #6b7280;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.billing-toggle button.active {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.billing-toggle button:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.07);
+  color: #1a1a1a;
+}
+
+/* ─── Plans Grid ──────────────────────────────────── */
 .plans-grid {
-  max-width: 1200px;
+  max-width: 860px;
   margin: 0 auto 40px auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
+/* ─── Plan Card ───────────────────────────────────── */
 .plan-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: #ffffff;
+  border: 1.5px solid #e8e8e8;
   border-radius: 20px;
-  padding: 32px 24px;
-  cursor: pointer;
-  transition: all 0.3s;
+  padding: 28px 22px 24px 22px;
   position: relative;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
-.plan-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.12),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
-  border-color: rgba(37, 99, 235, 0.3);
+/* PLUS+ — dark featured card */
+.plan-card.plan-plus {
+  background: #1c1c1e;
+  border-color: #1c1c1e;
+  color: #ffffff;
+  padding-top: 40px;
 }
 
-.plan-card.selected {
-  border-color: #2563eb;
-  background: rgba(239, 246, 255, 0.8);
-  box-shadow:
-    0 12px 40px rgba(37, 99, 235, 0.2),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-.plan-card.recommended {
-  border-color: #10b981;
-}
-
+/* ─── Recommended Badge ───────────────────────────── */
 .recommended-badge {
   position: absolute;
-  top: -12px;
-  right: 24px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 6px 16px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  top: -13px;
+  right: 50%;
+  transform: translateX(50%);
+  background: #f5e642;
+  color: #1a1a1a;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
 }
 
-/* Plan Header */
-.plan-header {
-  text-align: center;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+/* ─── Plan Name ───────────────────────────────────── */
+.plan-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #9ca3af;
+  margin: 0 0 14px 0;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
-.plan-header h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 16px 0;
+.plan-card.plan-plus .plan-name {
+  color: #d1d1d1;
+}
+
+/* ─── Price Area ──────────────────────────────────── */
+.price-area {
+  margin-bottom: 18px;
 }
 
 .price {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.price .amount {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #2563eb;
+  align-items: flex-start;
+  gap: 1px;
   line-height: 1;
 }
 
-.price .currency {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2563eb;
+.amount {
+  font-size: 3.4rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1;
 }
 
-.price .period {
+.plan-card.plan-plus .amount {
+  color: #ffffff;
+}
+
+.currency {
   font-size: 1rem;
-  color: #6b7280;
-  font-weight: 500;
+  font-weight: 700;
+  color: #1a1a1a;
+  align-self: flex-start;
+  padding-top: 7px;
+  line-height: 1;
 }
 
-.profiles-included {
-  font-size: 0.9rem;
-  color: #10b981;
-  font-weight: 600;
+.plan-card.plan-plus .currency {
+  color: #ffffff;
 }
 
-/* Features List */
+.price-period {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin: 4px 0 0 0;
+}
+
+/* Free plan price */
+.free-price {
+  align-items: center;
+}
+
+.free-label {
+  font-size: 3.4rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+/* ─── Select Button ───────────────────────────────── */
+.select-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  background: #ededed;
+  color: #374151;
+  margin-bottom: 20px;
+}
+
+.select-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.select-btn:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+/* PLUS+ card — lime-green button */
+.plan-card.plan-plus .select-btn {
+  background: #c8ff57;
+  color: #1a1a1a;
+}
+
+.plan-card.plan-plus .select-btn:hover:not(:disabled) {
+  background: #d4ff70;
+}
+
+/* ─── Card Separator ──────────────────────────────── */
+.card-separator {
+  height: 1px;
+  background: #ebebeb;
+  margin-bottom: 18px;
+}
+
+.plan-card.plan-plus .card-separator {
+  background: #38383a;
+}
+
+/* ─── Features List ───────────────────────────────── */
 .features-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
 }
 
 .features-list li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.95rem;
-  color: #374151;
+  gap: 9px;
+  font-size: 0.85rem;
+  color: #4b5563;
   text-align: right;
+}
+
+.plan-card.plan-plus .features-list li {
+  color: #d1d1d1;
 }
 
 .features-list li svg {
   flex-shrink: 0;
-  color: #10b981;
-  width: 20px;
-  height: 20px;
+  color: #22c55e;
+  width: 16px;
+  height: 16px;
 }
 
-.current-badge {
-  margin-top: 20px;
-  padding: 10px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
-  text-align: center;
-  color: #059669;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-/* Purchase Section */
-.purchase-section {
-  max-width: 500px;
-  margin: 0 auto 32px auto;
-  text-align: center;
-}
-
-.purchase-btn {
-  width: 100%;
-  padding: 16px 32px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
-}
-
-.purchase-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.4);
-}
-
-.purchase-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.trial-notice {
-  margin: 16px 0 0 0;
-  font-size: 1rem;
-  color: #10b981;
-  font-weight: 600;
-}
-
-/* Error Message */
+/* ─── Error Message ───────────────────────────────── */
 .error-message {
   max-width: 600px;
   margin: 0 auto 24px auto;
-  padding: 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 14px 18px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 12px;
   color: #dc2626;
   text-align: center;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-/* Additional Info */
-.additional-info {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  text-align: center;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-.additional-info h4 {
-  margin: 0 0 12px 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.additional-info p {
-  margin: 0 0 8px 0;
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.additional-info p:last-child {
-  font-weight: 600;
-  color: #2563eb;
-  font-size: 1.05rem;
-  margin-bottom: 0;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
+/* ─── Responsive ──────────────────────────────────── */
+@media (max-width: 860px) {
   .header h1 {
     font-size: 2rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
   }
 
   .plans-grid {
@@ -333,7 +377,22 @@
     max-width: 400px;
   }
 
-  .price .amount {
-    font-size: 2.5rem;
+  .plan-card.plan-plus {
+    order: -1;
+  }
+
+  .amount,
+  .free-label {
+    font-size: 2.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .subscription-selection {
+    padding: 32px 16px;
+  }
+
+  .header h1 {
+    font-size: 1.7rem;
   }
 }

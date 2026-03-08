@@ -1,7 +1,34 @@
 <div class="subscription-selection">
+
+  <!-- Step Indicator (only during registration) -->
+  <div class="step-indicator" *ngIf="fromProfileComplete">
+    <div class="step completed">
+      <span class="step-number">✓</span>
+      <span class="step-label">יצירת פרופיל</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step active">
+      <span class="step-number">2</span>
+      <span class="step-label">בחירת חבילה</span>
+    </div>
+  </div>
+
+  <!-- Header -->
   <div class="header">
     <h1>בחר את התוכנית המתאימה לך</h1>
-    <p class="subtitle">שדרג את הפרופיל שלך ותהנה מנראות מקסימלית</p>
+    <p class="subtitle" *ngIf="fromProfileComplete">
+      הפרופיל שלך נשמר! עכשיו בחר באיזו חבילה לפרסמו
+    </p>
+    <p class="subtitle" *ngIf="!fromProfileComplete">
+      שדרג את הפרופיל שלך ותהנה מנראות מקסימלית
+    </p>
+    <p class="profile-type-label" *ngIf="profileType">
+      עבור פרופיל {{ getProfileTypeLabel() }}
+    </p>
+    <div class="header-bottom">
+      <p class="free-note">ניתן לשדרג בכל עת דרך הפרופיל שלך</p>
+      <span class="savings-badge" *ngIf="billingCycle === 'Yearly'">{{ getSavingsText() }}</span>
+    </div>
   </div>
 
   <!-- Billing Cycle Toggle -->
@@ -15,7 +42,6 @@
       [class.active]="billingCycle === 'Yearly'"
       (click)="billingCycle = 'Yearly'">
       שנתי
-      <span class="savings-badge" *ngIf="billingCycle === 'Yearly'">{{ getSavingsText() }}</span>
     </button>
   </div>
 
@@ -24,61 +50,60 @@
     <div
       *ngFor="let option of planOptions"
       class="plan-card"
-      [class.selected]="selectedPlan === option.plan"
-      [class.recommended]="option.recommended"
-      (click)="selectPlan(option.plan)">
+      [class.plan-basic]="option.plan === 0"
+      [class.plan-plus]="option.plan === 1"
+      [class.plan-pro]="option.plan === 2">
 
       <!-- Recommended Badge -->
       <div class="recommended-badge" *ngIf="option.recommended">
         מומלץ ביותר
       </div>
 
-      <!-- Plan Header -->
-      <div class="plan-header">
-        <h3>{{ option.name }}</h3>
-        <div class="price">
-          <span class="amount">{{ getPlanPrice(option.plan) }}</span>
-          <span class="currency">₪</span>
-          <span class="period" *ngIf="option.plan !== 0">/{{ billingCycle === 'Monthly' ? 'חודש' : 'שנה' }}</span>
-        </div>
-        <div class="profiles-included" *ngIf="option.includedProfiles > 0">
-          {{ option.includedProfiles }} {{ option.includedProfiles === 1 ? 'פרופיל כלול' : 'פרופילים כלולים' }}
+      <!-- Plan Name -->
+      <h3 class="plan-name">{{ option.name }}</h3>
+
+      <!-- Price -->
+      <div class="price-area">
+        <ng-container *ngIf="option.plan !== 0">
+          <div class="price">
+            <span class="amount">{{ getPlanPrice(option.plan) }}</span>
+            <span class="currency">₪</span>
+          </div>
+          <p class="price-period">/{{ billingCycle === 'Monthly' ? 'חודש' : 'שנה' }}</p>
+        </ng-container>
+        <div class="price free-price" *ngIf="option.plan === 0">
+          <span class="free-label">חינם</span>
         </div>
       </div>
+
+      <!-- Select Button -->
+      <button
+        class="select-btn"
+        [disabled]="loading || (currentSubscription && currentSubscription.plan === option.plan)"
+        (click)="selectPlan(option.plan); purchaseSubscription()">
+        <ng-container *ngIf="currentSubscription && currentSubscription.plan === option.plan; else selectLabel">
+          התוכנית הנוכחית שלך
+        </ng-container>
+        <ng-template #selectLabel>
+          <ng-container *ngIf="loading && selectedPlan === option.plan">טוען...</ng-container>
+          <ng-container *ngIf="!(loading && selectedPlan === option.plan)">בחר</ng-container>
+        </ng-template>
+      </button>
+
+      <!-- Separator -->
+      <div class="card-separator"></div>
 
       <!-- Features List -->
       <ul class="features-list">
         <li *ngFor="let feature of option.features">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
             <path d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           {{ feature }}
         </li>
       </ul>
-
-      <!-- Current Plan Badge -->
-      <div class="current-badge" *ngIf="currentSubscription && currentSubscription.plan === option.plan">
-        התוכנית הנוכחית שלך
-      </div>
     </div>
-  </div>
-
-  <!-- Purchase Button -->
-  <div class="purchase-section" *ngIf="selectedPlan !== 0">
-    <button
-      class="purchase-btn"
-      [disabled]="loading || (currentSubscription && currentSubscription.plan === selectedPlan)"
-      (click)="purchaseSubscription()">
-      <span *ngIf="!loading">
-        {{ currentSubscription ? 'שדרג עכשיו' : 'התחל עכשיו' }}
-      </span>
-      <span *ngIf="loading">טוען...</span>
-    </button>
-
-    <p class="trial-notice" *ngIf="!currentSubscription">
-      🎁 קבל 2 חודשי ניסיון חינם!
-    </p>
   </div>
 
   <!-- Error Message -->
@@ -86,10 +111,4 @@
     {{ error }}
   </div>
 
-  <!-- Additional Info -->
-  <div class="additional-info">
-    <h4>פרופילים נוספים</h4>
-    <p>רוצה יותר מ-{{ getSelectedPlanIncludedProfiles() }} פרופיל?</p>
-    <p>כל פרופיל נוסף - רק 30₪ לחודש</p>
-  </div>
 </div>

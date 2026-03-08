@@ -289,8 +289,11 @@ export class ServiceProviderCreateComponent implements OnInit {
         localStorage.removeItem('selectedBillingCycle');
         localStorage.removeItem('pendingProfessionalType');
 
-        alert('פרופיל בעל המקצוע נשלח לאישור! נבדוק את פרטייך ונעדכן אותך בקרוב.');
-        this.router.navigate(['/professionals', provider.id]);
+        // סימון המשתמש כבעל פרופיל מקצועי (מונע הצגת הפופאפ "עוד פרטים" בהתחברות הבאה)
+        this.authService.markAsProfessional();
+
+        // מעבר לבחירת חבילה (שלב 2 בתהליך ההרשמה)
+        this.router.navigate(['/subscription/select'], { queryParams: { from: 'profile-complete', type: 'service-provider' } });
       },
       error: (err) => {
         console.error('Error creating service provider profile:', err);

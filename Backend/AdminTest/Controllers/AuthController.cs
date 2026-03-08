@@ -52,8 +52,10 @@ namespace AkordishKeit.Controllers
                 return Unauthorized("Invalid Google Token");
             }
 
-            // 2. Check if user exists
+            // 2. Check if user exists (including professional profiles for onboarding check)
             var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
                 .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
 
             if (user == null)
@@ -93,7 +95,8 @@ namespace AkordishKeit.Controllers
             }
 
             // 4. 🔐 שימוש באימות מאובטח עם Cookies
-            return Ok(HandleSecureAuthentication(user));
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile));
         }
 
         private async Task<GoogleTokenInfo?> VerifyGoogleToken(string idToken)
@@ -150,7 +153,7 @@ namespace AkordishKeit.Controllers
         /// 3. יוצר CSRF token (להגנה מ-CSRF attacks)
         /// 4. מחזיר את CSRF token בגוף התגובה (כדי שה-Frontend יוכל לשלוח אותו בכל בקשה)
         /// </summary>
-        private AuthResponse HandleSecureAuthentication(User user)
+        private AuthResponse HandleSecureAuthentication(User user, bool hasProfessionalProfile = false)
         {
             // 1. יצירת JWT Token
             var jwtToken = GenerateJwtToken(user);
@@ -181,6 +184,8 @@ namespace AkordishKeit.Controllers
             });
 
             // 5. החזרת תגובה עם CSRF token (לא JWT!)
+            // RequiresProfileCompletion = true רק למשתמשים חדשים שעוד לא עברו את תהליך ה-onboarding
+            // משתמשים שכבר יצרו פרופיל מקצועי לא צריכים לעבור את זה שוב
             return new AuthResponse
             {
                 CsrfToken = csrfToken,  // מחזירים CSRF, לא JWT
@@ -193,9 +198,10 @@ namespace AkordishKeit.Controllers
                     Role = user.Role.ToString(),
                     Level = user.Level,
                     Points = user.Points,
-                    PreferredInstrumentId = user.PreferredInstrumentId
+                    PreferredInstrumentId = user.PreferredInstrumentId,
+                    HasProfessionalProfile = hasProfessionalProfile
                 },
-                RequiresProfileCompletion = user.PreferredInstrumentId == null
+                RequiresProfileCompletion = user.PreferredInstrumentId == null && !hasProfessionalProfile
             };
         }
 
@@ -252,8 +258,10 @@ namespace AkordishKeit.Controllers
                 return BadRequest(ModelState);
             }
 
-            // 1. Find user by username or email
+            // 1. Find user by username or email (including professional profiles for onboarding check)
             var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
                 .FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
             if (user == null)
@@ -284,7 +292,8 @@ namespace AkordishKeit.Controllers
             await _context.SaveChangesAsync();
 
             // 6. 🔐 שימוש באימות מאובטח עם Cookies
-            return Ok(HandleSecureAuthentication(user));
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile));
         }
 
         [HttpPut("complete-profile")]

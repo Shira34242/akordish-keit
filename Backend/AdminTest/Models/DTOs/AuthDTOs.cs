@@ -120,5 +120,8 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("preferredInstrumentId")]
         public int? PreferredInstrumentId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasProfessionalProfile")]
+        public bool HasProfessionalProfile { get; set; }
     }
 }

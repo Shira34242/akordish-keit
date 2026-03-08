@@ -1,100 +1,116 @@
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
-    <!-- Close Button -->
-    <button class="close-btn" (click)="onClose()">
-      <span class="material-icons">close</span>
-    </button>
 
-    <!-- Modal Header -->
-    <div class="modal-header">
-      <span class="welcome-icon material-icons">celebration</span>
-      <h2>עוד כמה פרטים עליך</h2>
-      <p class="subtitle">נשמח להכיר אותך טוב יותר</p>
-    </div>
+    <!-- Close Button -->
+    <button class="close-btn" (click)="onClose()">✕</button>
 
     <!-- Error Message -->
-    <div class="error-message" *ngIf="errorMessage">
-      <span class="material-icons">error_outline</span>
-      <span>{{ errorMessage }}</span>
-    </div>
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-    <!-- Form -->
-    <div class="details-form">
-      <!-- Preferred Instrument -->
-      <div class="form-group">
-        <label for="instrument">
-          <span class="material-icons">music_note</span>
-          כלי נגינה מועדף
-        </label>
-        <select
-          id="instrument"
-          [(ngModel)]="preferredInstrumentId"
-          [disabled]="loadingInstruments || loading"
-          class="select-input"
+    <!-- ======== STEP 1: Instrument & Level ======== -->
+    <ng-container *ngIf="currentStep === 'instrument'">
+      <div class="modal-header">
+        <h2>כמה פרטים קטנים להשלמת החוויה</h2>
+        <p class="subtitle">מנגנ/ת על משהו?</p>
+      </div>
+
+      <div class="instrument-cards">
+        <div
+          class="instrument-card has-image piano"
+          [class.selected]="selectedInstrument === 'piano'"
+          (click)="selectedInstrument = 'piano'"
         >
-          <option [ngValue]="null">בחר כלי נגינה...</option>
-          <option *ngFor="let instrument of instruments" [ngValue]="instrument.id">
-            {{ instrument.name }}
-          </option>
-        </select>
-        <p class="field-hint" *ngIf="loadingInstruments">טוען רשימת כלים...</p>
+          <span class="card-label">קלידים</span>
+        </div>
+        <div
+          class="instrument-card has-image guitar"
+          [class.selected]="selectedInstrument === 'guitar'"
+          (click)="selectedInstrument = 'guitar'"
+        >
+          <span class="card-label">גיטרה</span>
+        </div>
+        <div
+          class="instrument-card"
+          [class.selected]="selectedInstrument === 'other'"
+          (click)="selectedInstrument = 'other'"
+        >
+          <span class="card-label">אחר</span>
+        </div>
       </div>
 
-      <!-- Phone (optional) -->
-      <div class="form-group">
-        <label for="phone">
-          <span class="material-icons">phone</span>
-          מספר טלפון (אופציונלי)
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          [(ngModel)]="phone"
-          placeholder="050-1234567"
-          [disabled]="loading"
-          class="text-input"
-        />
-        <p class="field-hint">ליצירת קשר ועדכונים</p>
-      </div>
-    </div>
+      <p class="no-instrument" (click)="selectedInstrument = null">לא מנגנ/ת</p>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <button
-        class="btn btn-primary"
-        (click)="onContinue(UserType.Regular)"
-        [disabled]="loading"
-      >
-        <span *ngIf="!loading">המשך כמשתמש רגיל</span>
+      <div class="level-pills">
+        <button class="level-pill" [class.selected]="selectedLevel === 'מתחיל/ה'" (click)="selectedLevel = 'מתחיל/ה'">מתחיל/ה</button>
+        <button class="level-pill" [class.selected]="selectedLevel === 'מתקדם/ת'" (click)="selectedLevel = 'מתקדם/ת'">מתקדם/ת</button>
+        <button class="level-pill" [class.selected]="selectedLevel === 'מקצועי/ת'" (click)="selectedLevel = 'מקצועי/ת'">מקצועי/ת</button>
+      </div>
+
+      <button class="continue-btn" (click)="onContinue()">המשך &lt;</button>
+
+      <div class="dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+
+      <a class="skip-link" (click)="onClose()">דלג לאתר</a>
+    </ng-container>
+
+    <!-- ======== STEP 2: User Type ======== -->
+    <ng-container *ngIf="currentStep === 'userType'">
+      <div class="modal-header">
+        <h2>איך תרצה/י להשתמש באקורדישקייט?</h2>
+        <p class="subtitle">ניתן לשנות גם אחר כך</p>
+      </div>
+
+      <div class="user-type-cards">
+        <!-- HTML reversed so LTR flex shows RTL order: אמן(right) → מורה → בעל מקצוע → משתמש(left) -->
+        <div
+          class="user-type-card"
+          [class.selected]="selectedUserType === UserType.Regular"
+          (click)="selectedUserType = UserType.Regular"
+        >
+          <span class="type-title">משתמש רגיל</span>
+          <span class="type-desc">לגלות מוזיקה, לנגן, ללמוד ולהנות</span>
+        </div>
+        <div
+          class="user-type-card"
+          [class.selected]="selectedUserType === UserType.ServiceProvider"
+          (click)="selectedUserType = UserType.ServiceProvider"
+        >
+          <span class="type-title">בעל מקצוע</span>
+          <span class="type-desc">להציע שירותים מוזיקליים ולהופיע באינדקס</span>
+        </div>
+        <div
+          class="user-type-card"
+          [class.selected]="selectedUserType === UserType.Teacher"
+          (click)="selectedUserType = UserType.Teacher"
+        >
+          <span class="type-title">מורה</span>
+          <span class="type-desc">להציע שיעורים ולהופיע באינדקס המורים</span>
+        </div>
+        <div
+          class="user-type-card"
+          [class.selected]="selectedUserType === UserType.Artist"
+          (click)="selectedUserType = UserType.Artist"
+        >
+          <span class="type-title">אמן</span>
+          <span class="type-desc">לשתף תוכן ולנהל דף אמן משלך</span>
+        </div>
+      </div>
+
+      <button class="continue-btn" (click)="onFinish()" [disabled]="loading">
+        <span *ngIf="!loading">המשך &lt;</span>
         <span *ngIf="loading" class="spinner"></span>
       </button>
 
-      <button
-        class="btn btn-secondary"
-        (click)="onContinue(UserType.Teacher)"
-        [disabled]="loading"
-      >
-        הצטרף כמורה
-      </button>
+      <div class="dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+    </ng-container>
 
-      <button
-        class="btn btn-secondary"
-        (click)="onContinue(UserType.ServiceProvider)"
-        [disabled]="loading"
-      >
-        הצטרף כבעל מקצוע
-      </button>
-        <button
-        class="btn btn-secondary"
-        (click)="onContinue(UserType.Artist)"
-        [disabled]="loading"
-      >
-       הצטרף כאומן
-      </button>
-    </div>
-
-    <p class="skip-text">
-      ניתן לדלג על שלב זה ולהשלים מאוחר יותר
-    </p>
   </div>
 </div>

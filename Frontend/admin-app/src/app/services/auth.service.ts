@@ -11,6 +11,7 @@ export interface User {
     level: number;
     points: number;
     preferredInstrumentId?: number | null;
+    hasProfessionalProfile?: boolean;
 }
 
 export interface AuthResponse {
@@ -160,5 +161,18 @@ export class AuthService {
      */
     clearLoginRequest() {
         this.loginRequestSubject.next(false);
+    }
+
+    /**
+     * מעדכן את סטטוס הפרופיל המקצועי של המשתמש לאחר יצירת פרופיל
+     * נקרא כאשר המשתמש יוצר בהצלחה פרופיל מורה/אמן/בעל מקצוע
+     */
+    markAsProfessional() {
+        const user = this.currentUserSubject.value;
+        if (user) {
+            const updated = { ...user, hasProfessionalProfile: true };
+            localStorage.setItem('currentUser', JSON.stringify(updated));
+            this.currentUserSubject.next(updated);
+        }
     }
 }

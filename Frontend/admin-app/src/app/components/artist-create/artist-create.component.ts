@@ -130,10 +130,6 @@ export class ArtistCreateComponent implements OnInit {
   }
 
   addGalleryImage() {
-    if (!this.isPremium) {
-      alert('גלריית תמונות זמינה רק למנויי Premium');
-      return;
-    }
     if (!this.artistForm.galleryImages) {
       this.artistForm.galleryImages = [];
     }
@@ -149,10 +145,6 @@ export class ArtistCreateComponent implements OnInit {
   }
 
   addVideo() {
-    if (!this.isPremium) {
-      alert('סרטונים זמינים רק למנויי Premium');
-      return;
-    }
     if (!this.artistForm.videos) {
       this.artistForm.videos = [];
     }
@@ -194,7 +186,7 @@ export class ArtistCreateComponent implements OnInit {
     this.saving = true;
     this.error = '';
 
-    // הכנת ה-DTO לשליחה
+    // הכנת ה-DTO לשליחה - כל השדות נשמרים תמיד (המנוי קובע מה יוצג בציבור)
     const dto: UpdateArtistDto = {
       name: this.artistForm.name,
       englishName: this.artistForm.englishName || undefined,
@@ -207,44 +199,41 @@ export class ArtistCreateComponent implements OnInit {
             platform: sl.platform,
             url: sl.url
           }))
+        : undefined,
+      // שדות פרמיום - נשמרים תמיד בבסיס הנתונים
+      bannerImageUrl: this.artistForm.bannerImageUrl || undefined,
+      bannerGifUrl: this.artistForm.bannerGifUrl || undefined,
+      galleryImages: this.artistForm.galleryImages && this.artistForm.galleryImages.length > 0
+        ? this.artistForm.galleryImages.map(gi => ({
+            imageUrl: gi.imageUrl,
+            caption: gi.caption || undefined,
+            displayOrder: gi.displayOrder
+          }))
+        : undefined,
+      videos: this.artistForm.videos && this.artistForm.videos.length > 0
+        ? this.artistForm.videos.map(v => ({
+            videoUrl: v.videoUrl,
+            title: v.title || undefined,
+            displayOrder: v.displayOrder
+          }))
         : undefined
     };
 
-    // Premium fields
-    if (this.isPremium) {
-      dto.bannerImageUrl = this.artistForm.bannerImageUrl || undefined;
-      dto.bannerGifUrl = this.artistForm.bannerGifUrl || undefined;
-
-      if (this.artistForm.galleryImages && this.artistForm.galleryImages.length > 0) {
-        dto.galleryImages = this.artistForm.galleryImages.map(gi => ({
-          imageUrl: gi.imageUrl,
-          caption: gi.caption || undefined,
-          displayOrder: gi.displayOrder
-        }));
-      }
-
-      if (this.artistForm.videos && this.artistForm.videos.length > 0) {
-        dto.videos = this.artistForm.videos.map(v => ({
-          videoUrl: v.videoUrl,
-          title: v.title || undefined,
-          displayOrder: v.displayOrder
-        }));
-      }
-    }
-
     // שליחה לAPI
     this.artistService.createArtistProfile(dto).subscribe({
-      next: (artist) => {
+      next: () => {
         this.saving = false;
 
-        // ניקוי localStorage לאחר יצירה מוצלחת
+        // ניקוי localStorage
         localStorage.removeItem('selectedSubscriptionPlan');
         localStorage.removeItem('selectedBillingCycle');
         localStorage.removeItem('pendingProfessionalType');
 
-        alert('פרופיל האומן נוצר בהצלחה! ממתין לאישור המערכת.');
-        // ניווט לדף האומן שנוצר או לדף האומנים
-        this.router.navigate(['/artist', artist.id]);
+        // סימון המשתמש כבעל פרופיל מקצועי (מונע הצגת הפופאפ "עוד פרטים" בהתחברות הבאה)
+        this.authService.markAsProfessional();
+
+        // מעבר לבחירת חבילה (שלב 2 בתהליך ההרשמה)
+        this.router.navigate(['/subscription/select'], { queryParams: { from: 'profile-complete', type: 'artist' } });
       },
       error: (err) => {
         this.saving = false;

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SubscriptionService } from '../../services/subscription.service';
 import { AuthService } from '../../services/auth.service';
 import {
@@ -9,6 +9,105 @@ import {
   SubscriptionDto
 } from '../../models/subscription.model';
 
+type ProfileType = 'artist' | 'teacher' | 'service-provider' | null;
+
+interface PlanFeatures {
+  basic: string[];
+  plus: string[];
+  pro: string[];
+}
+
+const PROFILE_PLAN_FEATURES: Record<string, PlanFeatures> = {
+  teacher: {
+    basic: [
+      'תמונת פרופיל',
+      'שם',
+      'תיאור',
+      'מיקום',
+      'טלפון',
+      'מייל'
+    ],
+    plus: [
+      'קידום בתוצאות החיפוש',
+      'קידום חד פעמי בדף הבית',
+      'לחצן ישיר לוואצפ',
+      'סימון "מומלץ"',
+      'תמונת באנר מותאמת',
+      'לחצני רשתות חברתיות',
+      'גלרית תמונות (3)',
+      'המלצות תלמידים (2)'
+    ],
+    pro: [
+      'קידום קבוע בדף הבית - רשימת מומלצים',
+      'קידום קבוע בדף חיפוש - רשימת מומלצים',
+      'וידאו מוטמע בגלריה',
+      'גלרית תמונות / וידאו (7)',
+      'המלצות תלמידים (4)'
+    ]
+  },
+  'service-provider': {
+    basic: [
+      'תמונת פרופיל',
+      'שם',
+      'תיאור',
+      'מיקום',
+      'טלפון',
+      'מייל',
+      'קישור לאתר',
+      'שעות פעילות'
+    ],
+    plus: [
+      'קידום בתוצאות החיפוש',
+      'קידום חד פעמי בדף הבית',
+      'לחצן ישיר לוואצפ',
+      'לחצן ניווט מהיר',
+      'סימון "מומלץ"',
+      'תמונת באנר מותאמת',
+      'לחצני רשתות חברתיות',
+      'גלריה תמונות (3)',
+      'המלצות (2)'
+    ],
+    pro: [
+      'קידום קבוע בדף הבית - רשימת מומלצים',
+      'קידום קבוע בדף חיפוש - רשימת מומלצים',
+      'וידאו מוטמע בגלריה',
+      'גלרית תמונות / וידאו (7)',
+      'המלצות (4)'
+    ]
+  },
+  artist: {
+    basic: [
+      'תמונת פרופיל',
+      'שם',
+      'ביוגרפיה ארוכה',
+      'באנר תמונה רגיל',
+      'כתבות / תוכן / הופעות שתויגו'
+    ],
+    plus: [
+      'קידום חד פעמי בדף הבית',
+      'GIF / וידאו בבאנר',
+      'גלרית תמונות (12)',
+      'לחצני רשתות חברתיות',
+      'הפניה לאפליקציות מוזיקה',
+      'קישור לאתר'
+    ],
+    pro: [
+      'קידום קבוע בדף הבית - רשימת מומלצים',
+      'גלרית תמונות (12)',
+      'סימון אמן "מוביל"',
+      'וידאו מוטמע בגלריה',
+      'קידום הופעות בדף הבית',
+      'קידום הופעה קרובה + הזמנת כרטיסים'
+    ]
+  }
+};
+
+const DEFAULT_FEATURES: PlanFeatures = {
+  basic: ['תמונת פרופיל', 'שם', 'תיאור', 'מיקום', 'טלפון', 'מייל'],
+  plus: ['קידום בחיפוש', 'קידום בדף הבית', 'לחצן לוואצפ', 'סימון "מומלץ"', 'תמונת באנר', 'גלריה'],
+  pro: ['קידום קבוע בדף הבית', 'קידום קבוע בחיפוש', 'וידאו בגלריה', 'גלריה מורחבת', 'המלצות']
+};
+
 interface PlanOption {
   plan: SubscriptionPlan;
   name: string;
@@ -16,7 +115,6 @@ interface PlanOption {
   yearlyPrice: number;
   features: string[];
   recommended?: boolean;
-  includedProfiles: number;
 }
 
 @Component({
@@ -32,63 +130,57 @@ export class SubscriptionSelectionComponent implements OnInit {
   billingCycle: 'Monthly' | 'Yearly' = 'Monthly';
   loading = false;
   error = '';
-
-  planOptions: PlanOption[] = [
-    {
-      plan: SubscriptionPlan.Free,
-      name: 'חינמי',
-      monthlyPrice: 0,
-      yearlyPrice: 0,
-      includedProfiles: 0,
-      features: [
-        'שם, תמונה, תיאור קצר',
-        'מיקום וטלפון',
-        'הופעה בחיפוש בסיסי',
-        'ללא קדימות'
-      ]
-    },
-    {
-      plan: SubscriptionPlan.Regular,
-      name: 'רגיל',
-      monthlyPrice: 49,
-      yearlyPrice: 490,
-      includedProfiles: 1,
-      recommended: true,
-      features: [
-        '1 פרופיל מקצועי מלא',
-        'תג "מומלץ"',
-        'קדימות בחיפוש',
-        'הצגה בדף הבית',
-        'גלריית תמונות',
-        'וידאו מוטמע',
-        'כפתור WhatsApp',
-        'שעות פעילות'
-      ]
-    },
-    {
-      plan: SubscriptionPlan.Premium,
-      name: 'פרימיום',
-      monthlyPrice: 99,
-      yearlyPrice: 990,
-      includedProfiles: 1,
-      features: [
-        '1 פרופיל מקצועי מלא',
-        'כל התכונות של "רגיל"',
-        'יותר שטח נראות',
-        'יותר הדגשה עיצובית',
-        'תמיכה מועדפת'
-      ]
-    }
-  ];
+  fromProfileComplete = false;
+  profileType: ProfileType = null;
+  planOptions: PlanOption[] = [];
 
   constructor(
     private subscriptionService: SubscriptionService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      this.fromProfileComplete = params['from'] === 'profile-complete';
+      this.profileType = (params['type'] as ProfileType) || null;
+      this.buildPlanOptions();
+    });
+
     this.loadCurrentSubscription();
+  }
+
+  buildPlanOptions() {
+    const features =
+      this.profileType && PROFILE_PLAN_FEATURES[this.profileType]
+        ? PROFILE_PLAN_FEATURES[this.profileType]
+        : DEFAULT_FEATURES;
+
+    this.planOptions = [
+      {
+        plan: SubscriptionPlan.Free,
+        name: 'BASIC',
+        monthlyPrice: 0,
+        yearlyPrice: 0,
+        features: features.basic
+      },
+      {
+        plan: SubscriptionPlan.Regular,
+        name: 'PLUS+',
+        monthlyPrice: 49,
+        yearlyPrice: 490,
+        recommended: true,
+        features: features.plus
+      },
+      {
+        plan: SubscriptionPlan.Premium,
+        name: 'PRO',
+        monthlyPrice: 99,
+        yearlyPrice: 990,
+        features: features.pro
+      }
+    ];
   }
 
   loadCurrentSubscription() {
@@ -102,18 +194,13 @@ export class SubscriptionSelectionComponent implements OnInit {
         if (subscription) {
           this.currentSubscription = subscription;
           this.selectedPlan = subscription.plan;
-
-          // אם יש מנוי פעיל - נקה את ה-localStorage מבחירה קודמת
           localStorage.removeItem('selectedSubscriptionPlan');
           localStorage.removeItem('selectedBillingCycle');
           localStorage.removeItem('pendingProfessionalType');
-
-          console.log('User already has active subscription:', subscription.plan);
         }
       },
-      error: (err) => {
+      error: () => {
         this.loading = false;
-        console.error('Error loading subscription:', err);
       }
     });
   }
@@ -122,106 +209,62 @@ export class SubscriptionSelectionComponent implements OnInit {
     this.selectedPlan = plan;
   }
 
-  toggleBillingCycle() {
-    this.billingCycle = this.billingCycle === 'Monthly' ? 'Yearly' : 'Monthly';
+  continueWithFree() {
+    localStorage.removeItem('selectedSubscriptionPlan');
+    localStorage.removeItem('selectedBillingCycle');
+    localStorage.removeItem('pendingProfessionalType');
+    this.router.navigate(['/']);
+  }
+
+  purchaseSubscription() {
+    if (this.selectedPlan === SubscriptionPlan.Free) {
+      this.continueWithFree();
+      return;
+    }
+
+    const user = this.authService.currentUserValue;
+    if (!user) {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    if (this.currentSubscription && this.currentSubscription.plan === this.selectedPlan) {
+      return;
+    }
+
+    if (this.currentSubscription) {
+      const confirmChange = confirm(
+        `יש לך כבר מנוי ${SubscriptionPlanHelper.getName(this.currentSubscription.plan)}.\n` +
+        'האם אתה בטוח שברצונך לשנות את המנוי?'
+      );
+      if (!confirmChange) return;
+    }
+
+    localStorage.setItem('selectedSubscriptionPlan', this.selectedPlan.toString());
+    localStorage.setItem('selectedBillingCycle', this.billingCycle);
+    localStorage.removeItem('pendingProfessionalType');
+
+    if (this.fromProfileComplete) {
+      this.router.navigate(['/']);
+    } else {
+      this.router.navigate(['/subscription/status']);
+    }
   }
 
   getPlanPrice(plan: SubscriptionPlan): number {
     return SubscriptionPlanHelper.getPrice(plan, this.billingCycle);
   }
 
-  purchaseSubscription() {
-    if (this.selectedPlan === SubscriptionPlan.Free) {
-      return; // לא צריך לרכוש מנוי חינמי
-    }
-
-    const user = this.authService.currentUserValue;
-    if (!user) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    // אם כבר יש מנוי פעיל - הצג הודעה למשתמש
-    if (this.currentSubscription) {
-      const confirmChange = confirm(
-        `יש לך כבר מנוי ${SubscriptionPlanHelper.getName(this.currentSubscription.plan)}.\n` +
-        'האם אתה בטוח שברצונך לשנות את המנוי?'
-      );
-
-      if (!confirmChange) {
-        return;
-      }
-    }
-
-    // כרגע לא מבצעים תשלום בפועל - רק שומרים את הבחירה
-    // בעתיד כאן יתווסף תהליך התשלום המלא
-
-    // שמירת הבחירה ב-localStorage
-    localStorage.setItem('selectedSubscriptionPlan', this.selectedPlan.toString());
-    localStorage.setItem('selectedBillingCycle', this.billingCycle);
-
-    // בדיקה אם זה משתמש מקצועי חדש שהגיע מהרשמה
-    const pendingType = localStorage.getItem('pendingProfessionalType');
-
-    if (pendingType) {
-      // לא מנקים את pendingProfessionalType - נצטרך אותו בעמוד יצירת הפרופיל
-
-      // ניווט לפי סוג המשתמש
-      switch (pendingType) {
-        case 'artist':
-          this.router.navigate(['/artist/create']);
-          break;
-        case 'teacher':
-          this.router.navigate(['/teacher/create']);
-          break;
-        case 'service-provider':
-          this.router.navigate(['/service-provider/create']);
-          break;
-        default:
-          this.router.navigate(['/subscription/status']);
-      }
-    } else {
-      // משתמש קיים ששידרג מנוי - שאל אותו מה הוא רוצה לעשות
-      const choice = prompt(
-        'מה ברצונך לעשות?\n\n' +
-        '1 - יצירת פרופיל מורה חדש\n' +
-        '2 - יצירת פרופיל אומן חדש\n' +
-        '3 - יצירת פרופיל בעל מקצוע חדש\n' +
-        '4 - רק שדרוג מנוי קיים\n\n' +
-        'הקלד מספר (1-4):'
-      );
-
-      switch (choice?.trim()) {
-        case '1':
-          localStorage.setItem('pendingProfessionalType', 'teacher');
-          this.router.navigate(['/teacher/create']);
-          break;
-        case '2':
-          localStorage.setItem('pendingProfessionalType', 'artist');
-          this.router.navigate(['/artist/create']);
-          break;
-        case '3':
-          localStorage.setItem('pendingProfessionalType', 'service-provider');
-          this.router.navigate(['/service-provider/create']);
-          break;
-        case '4':
-        default:
-          alert('בחירת המנוי נשמרה. תשלום יתווסף בהמשך.');
-          this.router.navigate(['/subscription/status']);
-          break;
-      }
-    }
-  }
-
   getSavingsText(): string {
-    if (this.billingCycle === 'Yearly') {
-      return 'חסוך 2 חודשים!';
-    }
-    return '';
+    return 'חסוך 2 חודשים!';
   }
 
-  getSelectedPlanIncludedProfiles(): number {
-    const plan = this.planOptions.find(p => p.plan === this.selectedPlan);
-    return plan?.includedProfiles || 0;
+  getProfileTypeLabel(): string {
+    switch (this.profileType) {
+      case 'teacher': return 'מורה';
+      case 'artist': return 'אמן';
+      case 'service-provider': return 'בעל מקצוע';
+      default: return '';
+    }
   }
 }

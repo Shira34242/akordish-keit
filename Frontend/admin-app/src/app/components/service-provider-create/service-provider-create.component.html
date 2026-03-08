@@ -55,9 +55,12 @@
             />
           </div>
 
-          <!-- WhatsApp - רק למנוי רגיל ומעלה -->
-          <div class="form-group" *ngIf="subscription || isPremium">
-            <label for="whatsAppNumber">WhatsApp</label>
+          <!-- WhatsApp - Soft Lock -->
+          <div class="form-group">
+            <label for="whatsAppNumber">
+              WhatsApp
+              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+            </label>
             <input
               type="tel"
               id="whatsAppNumber"
@@ -145,9 +148,12 @@
             ></textarea>
           </div>
 
-          <!-- תיאור מורחב - רק למנוי רגיל ומעלה -->
-          <div class="form-group" *ngIf="subscription || isPremium">
-            <label for="fullDescription">תיאור מורחב</label>
+          <!-- תיאור מורחב - Soft Lock -->
+          <div class="form-group">
+            <label for="fullDescription">
+              תיאור מורחב
+              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+            </label>
             <textarea
               id="fullDescription"
               [(ngModel)]="fullDescription"
@@ -174,9 +180,12 @@
             />
           </div>
 
-          <!-- שעות פעילות - רק למנוי רגיל ומעלה -->
-          <div class="form-group" *ngIf="subscription || isPremium">
-            <label for="workingHours">שעות פעילות</label>
+          <!-- שעות פעילות - Soft Lock -->
+          <div class="form-group">
+            <label for="workingHours">
+              שעות פעילות
+              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+            </label>
             <input
               type="text"
               id="workingHours"
@@ -187,9 +196,12 @@
           </div>
         </section>
 
-        <!-- Media Section - רק למנוי רגיל ומעלה -->
-        <section class="form-section" *ngIf="subscription || isPremium">
-          <h2>מדיה ותמונות</h2>
+        <!-- Media Section - Soft Lock -->
+        <section class="form-section premium-section">
+          <h2>
+            מדיה ותמונות
+            <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+          </h2>
 
           <div class="form-group">
             <label for="profileImageUrl">תמונת פרופיל (URL)</label>

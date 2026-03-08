@@ -235,6 +235,55 @@
   background: #c82333;
 }
 
+/* Premium Soft-Lock Badge */
+.premium-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  cursor: help;
+  position: relative;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.premium-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fbbf24;
+  text-align: center;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  position: absolute;
+  top: -34px;
+  right: 0;
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.premium-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  border: 5px solid transparent;
+  border-top-color: rgba(20, 20, 20, 0.92);
+}
+
+.premium-lock-badge:hover .premium-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.premium-section {
+  border-right: 3px solid #fbbf24;
+}
+
 .form-actions {
   display: flex;
   gap: 1rem;

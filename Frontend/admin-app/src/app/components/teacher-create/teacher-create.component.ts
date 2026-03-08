@@ -376,8 +376,11 @@ export class TeacherCreateComponent implements OnInit {
         localStorage.removeItem('selectedBillingCycle');
         localStorage.removeItem('pendingProfessionalType');
 
-        alert('פרופיל המורה נשלח לאישור! נבדוק את פרטייך ונעדכן אותך בקרוב.');
-        this.router.navigate(['/teachers', teacher.id]);
+        // סימון המשתמש כבעל פרופיל מקצועי (מונע הצגת הפופאפ "עוד פרטים" בהתחברות הבאה)
+        this.authService.markAsProfessional();
+
+        // מעבר לבחירת חבילה (שלב 2 בתהליך ההרשמה)
+        this.router.navigate(['/subscription/select'], { queryParams: { from: 'profile-complete', type: 'teacher' } });
       },
       error: (err) => {
         console.error('Error creating teacher profile:', err);
