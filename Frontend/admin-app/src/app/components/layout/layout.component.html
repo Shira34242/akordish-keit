@@ -2,60 +2,21 @@
 <header class="main-header">
     <div class="header-inner">
 
-        <!-- Right Side: Logo + Mobile Menu -->
+        <!-- Right Side: Bell + Profile -->
         <div class="header-right">
-            <img src="logo2.png" alt="אקורדישקייט" class="footer-logo-img" (click)="handleLogoClick()">
-
-            <!-- Mobile Hamburger Menu Button (visible only on mobile) -->
+            <!-- Mobile Hamburger -->
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
-                <span class="material-icons hamburger-icon">menu</span>
+                <span class="material-icons">menu</span>
             </button>
-        </div>
-
-        <!-- Mobile Navigation Menu (dropdown) -->
-        <div class="mobile-nav-menu" *ngIf="showMobileMenu" (click)="closeMobileMenu()">
-            <div class="mobile-nav-content" (click)="$event.stopPropagation()">
-                <div class="mobile-nav-header">
-                    <h3>תפריט</h3>
-                    <button class="close-btn" (click)="closeMobileMenu()"><span class="material-icons">close</span></button>
-                </div>
-                <ul class="mobile-nav-list">
-                    <li><a class="mobile-nav-link" routerLink="/music-news" (click)="closeMobileMenu()">חדשות המוזיקה</a></li>
-                    <li><a class="mobile-nav-link" routerLink="/chords" (click)="closeMobileMenu()">אקורדים</a></li>
-                    <li><a class="mobile-nav-link" routerLink="/teachers" (click)="closeMobileMenu()">מורים</a></li>
-                    <li><a class="mobile-nav-link" routerLink="/professionals" (click)="closeMobileMenu()">בעלי מקצוע</a></li>
-                    <li *ngIf="loggedIn"><a class="mobile-nav-link" routerLink="/subscription/status" (click)="closeMobileMenu()">המנוי שלי</a></li>
-                    <li *ngIf="loggedIn"><a class="mobile-nav-link" (click)="upgradeSubscription()">שדרוג מנוי</a></li>
-                </ul>
-            </div>
-        </div>
-        <!-- Center: Navigation -->
-        <div class="header-center">
-            <nav>
-                <ul class="main-nav">
-                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
-                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
-                    <li><a class="nav-link" routerLink="/artists" routerLinkActive="active">אומנים</a></li>
-                    <li><a class="nav-link" routerLink="/teachers" routerLinkActive="active">מורים</a></li>
-                    <li><a class="nav-link" routerLink="/professionals" routerLinkActive="active">בעלי מקצוע</a></li>
-                </ul>
-            </nav>
-        </div>
-
-        <!-- Left Side: Actions -->
-        <div class="header-left">
-            <button class="btn-random-song" (click)="handleRandomSongClick()">
-                <span class="material-icons sparkle-icon">shuffle</span>
-                שיר בהפתעה
+            <button class="btn-bell">
+                <span class="material-icons">notifications</span>
             </button>
 
-            <!-- Login / Logout Buttons -->
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
-                    <div class="user-profile-container" title="תפריט משתמש">
-                        <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                               onerror="this.onerror=null; this.src='/logo.png'">
-                    </div>
+                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
+                         onerror="this.onerror=null; this.src='/logo.png'">
+                    <span class="material-icons chevron-icon">expand_more</span>
 
                     <!-- User Dropdown Menu -->
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
@@ -75,8 +36,6 @@
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>ניהול</span>
                             </li>
-               
-
                             <li class="user-menu-item disabled">
                                 <span class="material-icons menu-icon">upload_file</span>
                                 <span>תכנים שהעליתי</span>
@@ -88,11 +47,10 @@
 
                             <div class="user-menu-divider"></div>
 
-                            <li class="user-menu-item" routerLink="/subscription/status" (click)="closeUserMenu()">
+                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">card_membership</span>
-                                <span>המנוי שלי\הפרופיל שלי</span>
+                                <span>המנוי שלי / הפרופיל שלי</span>
                             </li>
-   
 
                             <div class="user-menu-divider"></div>
 
@@ -106,19 +64,50 @@
             </ng-container>
 
             <ng-template #loginBtn>
-                <button class="btn-login" (click)="openAuthModal()">
-                    <span class="material-icons">login</span>
-                    כניסה
-                </button>
+                <button class="btn-login" (click)="openAuthModal()">כניסה</button>
             </ng-template>
+        </div>
+
+        <!-- Left Group: Music Index + Nav Links -->
+        <div class="header-left-group">
+             <nav class="desktop-nav">
+                <ul class="main-nav">
+                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
+                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
+                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                </ul>
+            </nav>
+            <a class="btn-music-index" routerLink="/professionals">
+                <span class="material-icons index-search-icon">search</span>
+                אינדקס עולם המוזיקה
+            </a>
+           
         </div>
 
     </div>
 </header>
 
+<!-- Mobile Navigation Menu -->
+<div class="mobile-nav-menu" *ngIf="showMobileMenu" (click)="closeMobileMenu()">
+    <div class="mobile-nav-content" (click)="$event.stopPropagation()">
+        <div class="mobile-nav-header">
+            <h3>תפריט</h3>
+            <button class="close-btn" (click)="closeMobileMenu()"><span class="material-icons">close</span></button>
+        </div>
+        <ul class="mobile-nav-list">
+            <li><a class="mobile-nav-link" routerLink="/" (click)="closeMobileMenu()">בית</a></li>
+            <li><a class="mobile-nav-link" routerLink="/music-news" (click)="closeMobileMenu()">חדשות המוזיקה</a></li>
+            <li><a class="mobile-nav-link" routerLink="/chords" (click)="closeMobileMenu()">אקורדים</a></li>
+            <li><a class="mobile-nav-link mobile-nav-link--accent" routerLink="/professionals" (click)="closeMobileMenu()">אינדקס עולם המוזיקה</a></li>
+            <li *ngIf="loggedIn && user?.hasProfessionalProfile"><a class="mobile-nav-link" routerLink="/subscription/status" (click)="closeMobileMenu()">המנוי שלי</a></li>
+        </ul>
+    </div>
+</div>
+
 <main class="main-content">
     <router-outlet></router-outlet>
 </main>
+
 <button class="fab-add-song" (click)="goToAddSong()">
     <span class="material-icons">add</span>
 </button>
@@ -126,23 +115,15 @@
 <!-- Footer -->
 <footer class="main-footer">
     <div class="footer-inner">
-        <!-- Right Side: Logo & Random Song -->
         <div class="footer-right">
             <img src="logo.png" alt="אקורדישקייט" class="footer-logo-img" (click)="handleLogoClick()">
-            <button class="btn-random-song footer-btn" (click)="handleRandomSongClick()">
-                <span class="material-icons sparkle-icon">shuffle</span>
-                שיר בהפתעה
-            </button>
         </div>
-
-        <!-- Left Side: Links -->
         <div class="footer-left">
             <ul class="footer-links">
                 <li><a routerLink="/">בית</a></li>
-                <li><a routerLink="/news">חדשות המוזיקה</a></li>
+                <li><a routerLink="/music-news">חדשות המוזיקה</a></li>
                 <li><a routerLink="/chords">אקורדים</a></li>
-                <li><a routerLink="/artists">אומנים</a></li>
-                <li><a routerLink="/teachers">מורים</a></li>
+                <li><a routerLink="/professionals">אינדקס עולם המוזיקה</a></li>
                 <li><a class="footer-contact-link" (click)="openReportModal()">צור קשר</a></li>
             </ul>
         </div>

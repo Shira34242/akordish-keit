@@ -1,61 +1,79 @@
 <div class="home-view">
-  <div class="hero-section">
-    <h1>המאגר הגדול לאקורדים ומילים</h1>
 
-    <!-- Search Bar Container -->
-    <div class="search-container">
-      <div class="search-input-wrapper">
-        <i class="search-icon">🔍</i>
-        <input type="text" [(ngModel)]="searchQuery" (input)="onSearchInput(searchQuery)" (blur)="onSearchBlur()"
-          placeholder="חפשו שירים, אקורדים, מילים, מורים, או כל דבר מהאתר" class="search-input">
-        <span class="search-hint">חיפוש חכם</span>
-      </div>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
 
-      <!-- Search Results Dropdown -->
-      <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults.length > 0">
-        <div class="search-result-item" *ngFor="let song of searchResults" (click)="selectSong(song)">
-          <img [src]="song.imageUrl || 'assets/default-song.png'" class="result-thumb">
-          <div class="result-info">
-            <span class="result-title">{{ song.title }}</span>
-            <span class="result-artist">{{ song.artists[0]?.name }}</span>
+      <p class="hero-subtitle">הבית של המוזיקה היהודית.</p>
+      <h1 class="hero-title">אקורדישקייט</h1>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <span class="material-icons search-icon-mat">search</span>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput(searchQuery)"
+            (blur)="onSearchBlur()"
+            placeholder="חפשו שירים, אקורדים, מילים, מורים, או כל דבר מהאתר"
+            class="search-input">
+        </div>
+
+        <!-- Search Results Dropdown -->
+        <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults.length > 0">
+          <div class="search-result-item" *ngFor="let song of searchResults" (click)="selectSong(song)">
+            <img [src]="song.imageUrl || 'assets/default-song.png'" class="result-thumb">
+            <div class="result-info">
+              <span class="result-title">{{ song.title }}</span>
+              <span class="result-artist">{{ song.artists[0]?.name }}</span>
+            </div>
           </div>
+        </div>
+
+        <div class="no-results" *ngIf="showSearchResults && searchResults.length === 0 && searchQuery.length >= 2">
+          לא נמצאו תוצאות
         </div>
       </div>
 
-      <div class="no-results" *ngIf="showSearchResults && searchResults.length === 0 && searchQuery.length >= 2">
-        לא נמצאו תוצאות
+      <!-- Quick Links -->
+      <div class="hero-quick-links">
+        <a routerLink="/songs" class="quick-link">למאגר רשימות מנגנים &lt;</a>
+        <a routerLink="/chords" class="quick-link">לכל הקטגוריות באקורדים &lt;</a>
+        <a routerLink="/artists" class="quick-link">לרשימות האמנים &lt;</a>
       </div>
+
     </div>
+  </section>
+
+  <!-- Content Sections -->
+  <div class="content-section">
+
+    <!-- Recent Songs -->
+    <app-carousel title="אקורדים שהועלו לאחרונה" linkUrl="/songs" linkText="עוד">
+      <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
+    </app-carousel>
+
+    <!-- Popular Songs -->
+    <app-carousel title="אקורדים פופולריים" linkUrl="/songs" linkText="עוד">
+      <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
+    </app-carousel>
+
+    <!-- Featured Artists (Premium + Boosted) -->
+    <app-carousel title="אומנים מומלצים 🌟" linkUrl="/artists" linkText="כל האמנים" *ngIf="featuredArtists.length > 0">
+      <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
+    </app-carousel>
+
+    <!-- Advertisement Banner -->
+    <div class="ad-banner-section">
+      <app-ad-display spotTechnicalId="home-banner"></app-ad-display>
+    </div>
+
+    <!-- Top Artists -->
+    <app-carousel title="אמנים מובילים" linkUrl="/artists" linkText="כל האמנים">
+      <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
+    </app-carousel>
+
   </div>
-</div>
-
-<div class="content-section">
-
-  <!-- Recent Songs -->
-  <app-carousel title="אקורדים שהועלו לאחרונה" linkUrl="/songs" linkText="עוד">
-    <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
-  </app-carousel>
-
-  <!-- Popular Songs -->
-  <app-carousel title="אקורדים פופולריים" linkUrl="/songs" linkText="עוד">
-    <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
-  </app-carousel>
-
-  <!-- Featured Artists (Premium + Boosted) -->
-  <app-carousel title="אומנים מומלצים 🌟" linkUrl="/artists" linkText="כל האמנים" *ngIf="featuredArtists.length > 0">
-    <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
-  </app-carousel>
-
-  <!-- Advertisement Banner -->
-  <div class="ad-banner-section">
-    <app-ad-display
-      spotTechnicalId="home-banner">
-    </app-ad-display>
-  </div>
-
-  <!-- Top Artists -->
-  <app-carousel title="אמנים מובילים" linkUrl="/artists" linkText="כל האמנים">
-    <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
-  </app-carousel>
-
 </div>

@@ -161,16 +161,25 @@ export class LayoutComponent implements OnInit {
 
     // Handle different user types
     if (userType === UserType.Regular) {
-      // משתמש רגיל - אין צורך במנוי, רק רענון
+      // משתמש רגיל - מופנה ישירות לאתר
       window.location.reload();
     } else {
-      // משתמש מקצועי (Teacher/ServiceProvider/Artist) - שמירת הבחירה ומעבר לבחירת מנוי
+      // משתמש מקצועי - קודם ממלא פרופיל, אחר כך בוחר חבילה
       localStorage.setItem('pendingProfessionalType', userType);
 
-      // ניווט לדף בחירת מנוי (לא תשלום בפועל, רק בחירה)
-      this.router.navigate(['/subscription/select'], {
-        queryParams: { from: 'registration', type: userType }
-      });
+      switch (userType) {
+        case UserType.Artist:
+          this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
+          break;
+        case UserType.Teacher:
+          this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
+          break;
+        case UserType.ServiceProvider:
+          this.router.navigate(['/service-provider/create'], { queryParams: { from: 'registration' } });
+          break;
+        default:
+          this.router.navigate(['/subscription/select'], { queryParams: { from: 'registration' } });
+      }
     }
   }
 

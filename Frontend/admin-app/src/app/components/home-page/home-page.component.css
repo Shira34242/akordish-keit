@@ -1,81 +1,128 @@
-
-
+/* ============================================
+   HERO SECTION
+============================================ */
 .hero-section {
-  background: white;
-  padding: 60px 20px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 40px;
-}
-
-h1 {
-  font-size: 32px;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.search-container {
-  max-width: 600px;
-  margin: 0 auto;
   position: relative;
-}
-
-.search-input-wrapper {
-  position: relative;
+  background-color: #ddff53;
+  margin-top: -72px; /* extend behind transparent sticky header */
+  padding-top: calc(72px + 120px);
+  padding-bottom: 120px;
+  padding-left: 20px;
+  padding-right: 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 300px);
+  overflow: hidden;
+  text-align: center;
+  border-radius: 0 0 28px 28px;
 }
 
-.search-input {
-  width: 100%;
-  padding: 12px 40px 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 24px;
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input:focus {
-  border-color: #ffc107;
-  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
-}
-
-.search-icon {
+/* Concert overlay image */
+.hero-overlay {
   position: absolute;
-  right: 12px;
-  color: #888;
-  font-style: normal;
-}
-
-.search-hint {
-  position: absolute;
-  left: 16px;
-  color: #4285f4;
-  font-size: 12px;
+  inset: 0;
+  background-image: url('/concert-overlay.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   pointer-events: none;
 }
 
+/* Hero content sits above overlay */
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  width: 100%;
+  direction: rtl;
+}
+
+.hero-subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  color: #111;
+  margin: 0 0 2px;
+  letter-spacing: 0.01em;
+}
+
+.hero-title {
+  font-family: 'Karantina', cursive;
+  font-size: 7rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 36px;
+  line-height: 0.9;
+  letter-spacing: -2px;
+}
+
+/* ============================================
+   SEARCH BAR
+============================================ */
+.search-container {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 50px;
+  padding: 6px 8px 6px 14px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+  direction: ltr;
+}
+
+.search-icon-mat {
+  color: #666;
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1rem;
+  background: transparent;
+  direction: rtl;
+  text-align: right;
+  color: #111;
+}
+
+.search-input::placeholder {
+  color: #aaa;
+  font-size: 0.92rem;
+}
+
+/* Search Results Dropdown */
 .search-results-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-top: 8px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
   max-height: 300px;
   overflow-y: auto;
+  direction: rtl;
 }
 
 .search-result-item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  gap: 12px;
 }
 
 .search-result-item:hover {
@@ -85,48 +132,78 @@ h1 {
 .result-thumb {
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: 6px;
   object-fit: cover;
-  margin-left: 12px;
+  flex-shrink: 0;
 }
 
 .result-info {
   display: flex;
   flex-direction: column;
+  text-align: right;
 }
 
 .result-title {
+  font-family: 'Heebo', sans-serif;
   font-weight: 600;
-  color: #333;
+  color: #111;
+  font-size: 0.95rem;
 }
 
 .result-artist {
-  font-size: 12px;
-  color: #666;
+  font-size: 0.8rem;
+  color: #777;
 }
 
 .no-results {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: white;
-  padding: 12px;
+  background: #fff;
+  padding: 14px;
   text-align: center;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-top: 8px;
-  color: #666;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
+  font-family: 'Heebo', sans-serif;
+  color: #666;
 }
 
+/* ============================================
+   QUICK LINKS
+============================================ */
+.hero-quick-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  direction: rtl;
+}
+
+.quick-link {
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.quick-link:hover {
+  opacity: 0.6;
+}
+
+/* ============================================
+   CONTENT SECTION (below hero)
+============================================ */
 .content-section {
   max-width: 70%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 40px 20px 0;
 }
 
-/* Advertisement Banner Section */
+/* Advertisement Banner */
 .ad-banner-section {
   margin: 40px 0;
   padding: 20px 0;
@@ -141,14 +218,56 @@ h1 {
   display: block;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE
+============================================ */
 @media (max-width: 768px) {
-  .ad-banner-section {
-    margin: 30px -20px;
-    padding: 15px 10px;
+  .hero-section {
+    margin-top: -64px;
+    padding-top: calc(64px + 90px);
+    padding-bottom: 90px;
+    min-height: 80vh;
   }
 
-  .ad-banner-section app-ad-display {
+  .hero-title {
+    font-size: 4.5rem;
+    letter-spacing: -1px;
+  }
+
+  .hero-quick-links {
+    gap: 12px;
+  }
+
+  .content-section {
     max-width: 100%;
+    padding: 30px 16px 0;
+  }
+
+  .ad-banner-section {
+    margin: 30px -16px;
+    padding: 15px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    margin-top: -58px;
+    padding-top: calc(58px + 70px);
+    padding-bottom: 70px;
+    min-height: 75vh;
+  }
+
+  .hero-title {
+    font-size: 3.5rem;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .quick-link {
+    font-size: 0.82rem;
   }
 }
