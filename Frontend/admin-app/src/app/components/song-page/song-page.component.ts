@@ -204,7 +204,7 @@ export class SongPageComponent implements OnInit, OnDestroy {
         this.stopAutoScroll();
         this.scrollInterval = setInterval(() => {
             window.scrollBy(0, this.scrollSpeed);
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight) {
                 this.stopAutoScroll();
             }
         }, 50);
@@ -214,6 +214,7 @@ export class SongPageComponent implements OnInit, OnDestroy {
         if (this.scrollInterval) {
             clearInterval(this.scrollInterval);
             this.scrollInterval = null;
+            this.isAutoScroll = false;
         }
     }
 

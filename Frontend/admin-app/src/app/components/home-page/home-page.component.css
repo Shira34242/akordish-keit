@@ -198,9 +198,8 @@
    CONTENT SECTION (below hero)
 ============================================ */
 .content-section {
-  max-width: 70%;
-  margin: 0 auto;
-  padding: 40px 20px 0;
+  width: 100%;
+  padding: 40px 0 0;
 }
 
 /* Advertisement Banner */
@@ -239,7 +238,6 @@
   }
 
   .content-section {
-    max-width: 100%;
     padding: 30px 16px 0;
   }
 

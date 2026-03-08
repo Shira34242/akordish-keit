@@ -1,11 +1,12 @@
 /* Global Page Layout */
 .song-page-container {
     font-family: 'Heebo', 'Segoe UI', sans-serif;
-    background-color: #f3f4f6;
+    background-color: #ffffff;
     min-height: 100vh;
     direction: rtl;
     color: #1f2937;
 }
+
 /* Glassmorphism Effect */
 .glass-effect {
     background: rgba(255, 255, 255, 0.7);
@@ -19,9 +20,14 @@
 }
 /* 1. Header Section */
 .song-header {
-    background-color: #f3f4f6;
-    padding: 30px 0 20px 0;
+    background-color: #ddff53;
+    padding: calc(56px + 30px) 0 20px 0; /* 56px = header(72) - top-gap(16) */
+    margin-top: -63px; /* 16px white gap at top */
+    margin-left: 16px;
+    margin-right: 16px;
+    margin-bottom: 24px;
     position: relative;
+    border-radius: 20px; /* rounded on all 4 sides */
 }
 
 .header-content {
@@ -129,14 +135,14 @@
     text-align: right;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* ממורכז אנכית */
+    justify-content: flex-start;
     padding: 0;
-    gap: 2px; /* ריווח קטן בין האלמנטים */
+    gap: 4px;
 }
 
 .header-subtitle {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: rgba(0, 0, 0, 0.6);
     margin: 0;
     font-weight: 400;
 }
@@ -153,7 +159,7 @@
 
 .artist-name {
     font-size: 1.3rem;
-    color: #3b82f6;
+    color: #000;
     font-weight: 600;
     margin: 4px 0 8px 0;
     cursor: pointer;
@@ -161,11 +167,12 @@
 
 .artist-name:hover {
     text-decoration: underline;
+    color: rgba(0, 0, 0, 0.7);
 }
 
 .credits {
     font-size: 0.85rem;
-    color: #6b7280;
+    color: rgba(0, 0, 0, 0.55);
     margin: 0 0 8px 0;
 }
 
@@ -175,7 +182,7 @@
     flex-wrap: wrap;
     gap: 12px;
     font-size: 0.8rem;
-    color: #6b7280;
+    color: rgba(0, 0, 0, 0.55);
     margin: 0 0 12px 0;
     align-items: center;
 }
@@ -188,15 +195,15 @@
 
 .meta-label {
     font-weight: 600;
-    color: #4b5563;
+    color: rgba(0, 0, 0, 0.7);
 }
 
 /* Action Buttons */
 .header-actions {
     display: flex;
     gap: 8px;
-    margin-top: 4px;
-    justify-content: flex-start;
+    margin-top: auto;
+    justify-content: flex-end;
 }
 
 .action-btn {
@@ -204,7 +211,7 @@
     border: none;
     padding: 6px;
     cursor: pointer;
-    color: #6b7280;
+    color: rgba(0, 0, 0, 0.6);
     transition: transform 0.2s, background-color 0.2s, color 0.2s;
     border-radius: 6px;
     display: flex;
@@ -213,8 +220,8 @@
 }
 
 .action-btn:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #111827;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #000;
     transform: scale(1.05);
 }
 
@@ -606,6 +613,15 @@
 /* Responsive */
 /* Responsive */
 @media (max-width: 900px) {
+    .song-header {
+        margin-top: -48px; /* 64px header - 16px gap */
+        padding-top: calc(48px + 20px);
+        margin-left: 8px;
+        margin-right: 8px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+    }
+
     .header-content {
         flex-direction: column;
         text-align: center;
@@ -624,6 +640,7 @@
 
     .header-actions {
         justify-content: center;
+        margin-top: 12px;
     }
 
     .main-title {
@@ -721,6 +738,14 @@
 
 /* Extra small screens (phones) */
 @media (max-width: 600px) {
+    .song-header {
+        margin-top: -42px; /* 58px header - 16px gap */
+        padding-top: calc(42px + 16px);
+        margin-left: 8px;
+        margin-right: 8px;
+        border-radius: 16px;
+    }
+
     .sticky-toolbar {
         padding: 0 8px;
         top: 70px;

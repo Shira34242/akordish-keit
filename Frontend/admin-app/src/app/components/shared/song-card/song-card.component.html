@@ -1,31 +1,18 @@
-<div class="song-card" [routerLink]="['/song', song.id]" [class.card-layout]="layout === 'card'">
-    <div class="image-container">
-        <img [src]="song.imageUrl || 'assets/default-song.png'" [alt]="song.title" class="song-image">
-        <div class="overlay-gradient" *ngIf="layout === 'overlay'"></div>
+<div class="song-card" [routerLink]="['/song', song.id]">
+    <!-- Background image -->
+    <img [src]="song.imageUrl || 'assets/default-song.png'" [alt]="song.title" class="song-image">
 
-        <!-- Info for Overlay Layout -->
-        <div class="song-info" *ngIf="layout === 'overlay'">
-            <h3 class="song-title">{{ song.title }}</h3>
-            <p class="artist-name">
-                {{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}
-            </p>
-        </div>
+    <!-- Lime gradient overlay from right -->
+    <div class="card-overlay"></div>
 
-        <div class="play-overlay">
-            <i class="play-icon">▶</i>
-        </div>
-    </div>
-
-    <!-- Info for Card Layout -->
-    <div class="card-info" *ngIf="layout === 'card'">
-        <h3 class="song-title">{{ song.title }}</h3>
-        <p class="artist-name">
-            {{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}
-        </p>
-        <div class="card-footer">
-            <span class="view-count">
-                <i class="icon-eye">👁</i> {{ song.viewCount || 0 }}
-            </span>
+    <!-- Content -->
+    <div class="card-content">
+        <span class="card-label">אקורדים לשיר</span>
+        <h3 class="card-title">{{ song.title }}</h3>
+        <p class="card-artist">{{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}</p>
+        <div class="card-arrow">
+            <span class="material-icons">arrow_back</span>
         </div>
     </div>
+
 </div>

@@ -1,5 +1,5 @@
 .carousel-section {
-    margin-bottom: 40px;
+    margin-bottom: 48px;
     direction: rtl;
 }
 
@@ -7,26 +7,33 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding: 0 16px;
+    margin-bottom: 18px;
+    padding: 0 40px;
 }
 
 .carousel-title {
-    font-size: 24px;
+    font-family: 'Karantina', cursive;
+    font-size: 2rem;
     font-weight: 700;
-    color: #222;
+    color: #111;
     margin: 0;
+    letter-spacing: -0.5px;
 }
 
 .more-link {
-    color: #666;
+    font-family: 'Heebo', sans-serif;
+    color: #444;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 1rem;
+    font-weight: 500;
     transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .more-link:hover {
-    color: #ffc107;
+    color: #000;
 }
 
 .carousel-container {
@@ -37,53 +44,58 @@
 
 .scroll-content {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding: 10px 16px;
+    padding: 8px 40px 14px;
     scrollbar-width: none;
-    /* Firefox */
     -ms-overflow-style: none;
-    /* IE 10+ */
     width: 100%;
 }
 
 .scroll-content::-webkit-scrollbar {
     display: none;
-    /* Chrome/Safari */
 }
 
 .nav-btn {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #eee;
+    background: #fff;
+    border: 1px solid #e5e5e5;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 2;
     position: absolute;
     transition: all 0.2s;
+    font-size: 14px;
+    color: #333;
+    flex-shrink: 0;
 }
 
 .nav-btn:hover {
-    background: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: #ddff53;
+    border-color: #ddff53;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .nav-btn.prev {
-    right: -20px;
+    right: -19px;
 }
 
 .nav-btn.next {
-    left: -20px;
+    left: -19px;
 }
 
 @media (max-width: 768px) {
     .nav-btn {
         display: none;
+    }
+
+    .carousel-title {
+        font-size: 1.15rem;
     }
 }

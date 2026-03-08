@@ -61,7 +61,7 @@
     </app-carousel>
 
     <!-- Featured Artists (Premium + Boosted) -->
-    <app-carousel title="אומנים מומלצים 🌟" linkUrl="/artists" linkText="כל האמנים" *ngIf="featuredArtists.length > 0">
+    <app-carousel title="אומנים מומלצים" linkUrl="/artists" linkText="כל האמנים" *ngIf="featuredArtists.length > 0">
       <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
     </app-carousel>
 
