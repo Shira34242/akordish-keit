@@ -74,6 +74,23 @@ namespace AkordishKeit.Controllers
         }
 
         /// <summary>
+        /// הגשת הופעה על-ידי משתמש רשום (ממתינה לאישור מנהל)
+        /// </summary>
+        [HttpPost("submit")]
+        [Authorize]
+        public async Task<ActionResult<EventDto>> SubmitEvent([FromBody] CreateEventDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            dto.IsActive = false;
+            dto.DisplayOrder = 0;
+
+            var eventDto = await _eventService.CreateEventAsync(dto);
+            return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
+        }
+
+        /// <summary>
         /// עדכון הופעה (רק מנהל)
         /// </summary>
         [HttpPut("{id}")]

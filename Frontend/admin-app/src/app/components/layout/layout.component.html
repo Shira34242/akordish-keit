@@ -108,8 +108,67 @@
     <router-outlet></router-outlet>
 </main>
 
-<button class="fab-add-song" (click)="goToAddSong()">
-    <span class="material-icons">add</span>
+<!-- FAB Menu -->
+<div class="fab-menu-backdrop" *ngIf="showFabMenu" (click)="closeFabMenu()"></div>
+
+<div class="fab-menu" *ngIf="showFabMenu" (click)="$event.stopPropagation()">
+    <!-- חדשות -->
+    <div class="fab-menu-item" (click)="fabAddNews()">
+        <span class="material-icons fab-menu-icon">feed</span>
+        <span class="fab-menu-label">חדשות</span>
+    </div>
+
+    <!-- תוכן -->
+    <div class="fab-menu-item" (click)="fabAddContent()">
+        <span class="material-icons fab-menu-icon">article</span>
+        <span class="fab-menu-label">תוכן</span>
+    </div>
+
+    <!-- אקורדים -->
+    <div class="fab-menu-item" (click)="fabAddChords()">
+        <span class="material-icons fab-menu-icon">music_note</span>
+        <span class="fab-menu-label">אקורדים</span>
+    </div>
+
+    <!-- הופעות -->
+    <div class="fab-menu-item" (click)="fabAddEvent()">
+        <span class="material-icons fab-menu-icon">event</span>
+        <span class="fab-menu-label">הופעות</span>
+    </div>
+
+    <!-- מורה -->
+    <div class="fab-menu-item" (click)="fabUpgradeToTeacher()">
+        <span class="material-icons fab-menu-icon">school</span>
+        <span class="fab-menu-label">מורה</span>
+    </div>
+
+    <!-- אמן -->
+    <div class="fab-menu-item fab-menu-item--expandable" (click)="toggleArtistSubMenu($event)">
+        <span class="material-icons fab-menu-icon">mic</span>
+        <span class="fab-menu-label">אמן</span>
+        <span class="material-icons fab-menu-expand-icon" [class.rotated]="showArtistSubMenu">expand_more</span>
+    </div>
+    <div class="fab-sub-menu" *ngIf="showArtistSubMenu">
+        <div class="fab-menu-item fab-menu-item--sub" (click)="fabAddArtist()">
+            <span class="material-icons fab-menu-icon">person_add</span>
+            <span class="fab-menu-label">הוספת אמן ללא בעלות על הדף</span>
+        </div>
+        <div class="fab-menu-item fab-menu-item--sub" (click)="fabUpgradeToArtist()">
+            <span class="material-icons fab-menu-icon">verified_user</span>
+            <span class="fab-menu-label">שדרוג לחשבון אמן</span>
+        </div>
+    </div>
+
+    <!-- יצירת רשימת שירים -->
+    <div class="fab-menu-item" (click)="fabCreatePlaylist()">
+        <span class="material-icons fab-menu-icon">playlist_add</span>
+        <span class="fab-menu-label">יצירת רשימת שירים</span>
+    </div>
+</div>
+
+<!-- FAB Button -->
+<button class="fab-add-song" [class.fab-active]="showFabMenu" (click)="toggleFabMenu($event)">
+    <span class="material-icons fab-add-icon" [class.rotated]="showFabMenu">add</span>
 </button>
 
 <!-- Footer -->

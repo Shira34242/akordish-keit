@@ -36,6 +36,8 @@ export class LayoutComponent implements OnInit {
   showUserMenu: boolean = false;
   showAddSongModal: boolean = false;
   showMobileMenu: boolean = false;
+  showFabMenu: boolean = false;
+  showArtistSubMenu: boolean = false;
 
   // New modals
   showAuthModal: boolean = false;
@@ -117,6 +119,8 @@ export class LayoutComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     this.showUserMenu = false;
+    this.showFabMenu = false;
+    this.showArtistSubMenu = false;
   }
 
   signOut(): void {
@@ -198,6 +202,72 @@ export class LayoutComponent implements OnInit {
     this.openAuthModal();
   }
 
+  toggleFabMenu(event: Event): void {
+    event.stopPropagation();
+    this.showFabMenu = !this.showFabMenu;
+    if (!this.showFabMenu) {
+      this.showArtistSubMenu = false;
+    }
+  }
+
+  closeFabMenu(): void {
+    this.showFabMenu = false;
+    this.showArtistSubMenu = false;
+  }
+
+  toggleArtistSubMenu(event: Event): void {
+    event.stopPropagation();
+    this.showArtistSubMenu = !this.showArtistSubMenu;
+  }
+
+  fabAddChords(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.modalService.openAddSongModal();
+  }
+
+  fabAddNews(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/submit/article'], { queryParams: { type: 'news' } });
+  }
+
+  fabAddContent(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/submit/article'], { queryParams: { type: 'content' } });
+  }
+
+  fabAddEvent(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/submit/event']);
+  }
+
+  fabCreatePlaylist(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/my-playlists']);
+  }
+
+  fabAddArtist(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/artist/create'], { queryParams: { mode: 'community' } });
+  }
+
+  fabUpgradeToArtist(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'artist' } });
+  }
+
+  fabUpgradeToTeacher(): void {
+    this.closeFabMenu();
+    if (!this.loggedIn) { this.openAuthModal(); return; }
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
+  }
+
   goToAddSong() {
     this.modalService.openAddSongModal();
   }
@@ -208,7 +278,6 @@ export class LayoutComponent implements OnInit {
 
   onSongAdded() {
     this.modalService.closeModal();
-    // Optionally refresh song list or navigate
   }
 
   // Report Modal Functions

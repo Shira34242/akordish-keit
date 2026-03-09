@@ -1,5 +1,7 @@
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -93,6 +95,33 @@ public class ArticlesController : ControllerBase
         {
             var article = await _articleService.CreateArticleAsync(dto);
 
+            return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST: api/Articles/submit - הגשת כתבה על-ידי משתמש רשום (ממתינה לאישור מנהל)
+    [HttpPost("submit")]
+    [Authorize]
+    public async Task<ActionResult<ArticleDto>> SubmitArticle([FromBody] CreateArticleDto dto)
+    {
+        try
+        {
+            dto.Status = (int)ArticleStatus.Draft;
+            dto.IsFeatured = false;
+            dto.IsPremium = false;
+            dto.DisplayOrder = 0;
+
+            if (string.IsNullOrWhiteSpace(dto.Slug))
+                dto.Slug = $"article-{DateTime.UtcNow.Ticks}";
+
+            if (dto.CategoryIds == null || dto.CategoryIds.Count == 0)
+                dto.CategoryIds = new List<int> { 1 };
+
+            var article = await _articleService.CreateArticleAsync(dto);
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
         catch (InvalidOperationException ex)

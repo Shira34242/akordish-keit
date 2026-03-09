@@ -112,6 +112,18 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/subscription-status/subscription-status').then(m => m.SubscriptionStatusComponent),
                 canActivate: [authGuard],
                 title: 'המנוי שלי - אקורדישקייט'
+            },
+            {
+                path: 'submit/article',
+                loadComponent: () => import('./components/public/submit-article/submit-article.component').then(m => m.SubmitArticleComponent),
+                canActivate: [authGuard],
+                title: 'הגשת כתבה - אקורדישקייט'
+            },
+            {
+                path: 'submit/event',
+                loadComponent: () => import('./components/public/submit-event/submit-event.component').then(m => m.SubmitEventComponent),
+                canActivate: [authGuard],
+                title: 'הגשת הופעה - אקורדישקייט'
             }
         ]
     },

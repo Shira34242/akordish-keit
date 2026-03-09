@@ -125,6 +125,13 @@ export class ArticleService {
   }
 
   /**
+   * Submit article for approval (public user submission)
+   */
+  submitArticle(article: CreateArticleDto): Observable<Article> {
+    return this.http.post<Article>(`${this.apiUrl}/submit`, article);
+  }
+
+  /**
    * Update existing article
    */
   updateArticle(id: number, article: CreateArticleDto): Observable<Article> {

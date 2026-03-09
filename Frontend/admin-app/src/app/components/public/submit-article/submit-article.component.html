@@ -1,0 +1,280 @@
+<div class="submit-page">
+
+  <!-- Success State -->
+  <div *ngIf="submitted" class="success-screen">
+    <div class="success-icon">
+      <span class="material-icons">check_circle</span>
+    </div>
+    <h1 class="success-title">הכתבה נשלחה בהצלחה!</h1>
+    <p class="success-text">הכתבה שלך התקבלה ותפורסם לאחר אישור מנהל האתר. תודה על תרומתך לקהילה!</p>
+    <button class="btn-home" (click)="goBack()">
+      <span class="material-icons">home</span>
+      חזרה לדף הבית
+    </button>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!submitted" class="form-wrapper">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <button class="btn-back" (click)="goBack()">
+        <span class="material-icons">arrow_forward</span>
+        חזרה
+      </button>
+      <div class="page-header-text">
+        <h1 class="page-title">
+          {{ article.contentType === ArticleContentType.News ? 'הגשת חדשה' : 'הגשת תוכן' }}
+        </h1>
+        <p class="page-subtitle">התוכן יפורסם לאחר אישור מנהל האתר</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="article-form">
+
+      <!-- Basic Info -->
+      <div class="form-section">
+        <h2 class="section-title">
+          <span class="material-icons section-icon">edit_note</span>
+          מידע בסיסי
+        </h2>
+
+        <div class="form-group">
+          <label class="form-label required">כותרת</label>
+          <input type="text" class="form-input" [(ngModel)]="article.title" name="title"
+            (input)="onTitleChange()" placeholder="כותרת הכתבה..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">כותרת משנה</label>
+          <input type="text" class="form-input" [(ngModel)]="article.subtitle" name="subtitle"
+            placeholder="כותרת משנה (אופציונלי)...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">תוכן הכתבה</label>
+          <textarea class="form-textarea" [(ngModel)]="article.content" name="content"
+            (input)="calculateReadTime()" rows="14"
+            placeholder="כתוב כאן את תוכן הכתבה..." required></textarea>
+          <span class="field-hint" *ngIf="article.readTimeMinutes">
+            זמן קריאה משוער: {{ article.readTimeMinutes }} דקות
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">תקציר קצר</label>
+          <textarea class="form-textarea" [(ngModel)]="article.shortDescription" name="shortDescription"
+            rows="3" placeholder="תיאור קצר שיוצג ברשימות..." maxlength="1000"></textarea>
+          <span class="field-hint">{{ article.shortDescription?.length || 0 }}/1000 תווים</span>
+        </div>
+      </div>
+
+      <!-- Classification -->
+      <div class="form-section">
+        <h2 class="section-title">
+          <span class="material-icons section-icon">label</span>
+          סיווג
+        </h2>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label required">סוג תוכן</label>
+            <select class="form-select" [(ngModel)]="article.contentType" name="contentType" required>
+              <option [ngValue]="ArticleContentType.News">חדשות</option>
+              <option [ngValue]="ArticleContentType.Blog">בלוג / תוכן</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">שם הכותב</label>
+            <input type="text" class="form-input" [(ngModel)]="article.authorName" name="authorName"
+              placeholder="שמך או כינויך...">
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="form-group">
+          <label class="form-label">
+            קטגוריות
+            <span class="badge-count" *ngIf="article.categoryIds.length > 0">{{ article.categoryIds.length }}</span>
+          </label>
+          <div class="tags-grid" [class.collapsed]="!categoriesExpanded">
+            <label *ngFor="let cat of getVisibleCategories()" class="tag-chip"
+              [class.selected]="isCategorySelected(cat.id)">
+              <input type="checkbox" [checked]="isCategorySelected(cat.id)"
+                (change)="toggleCategory(cat.id)" [name]="'cat-' + cat.id" hidden>
+              <span class="material-icons chip-check">{{ isCategorySelected(cat.id) ? 'check' : 'add' }}</span>
+              {{ cat.name }}
+            </label>
+          </div>
+          <button *ngIf="hasMoreCategories" type="button" class="btn-expand"
+            (click)="toggleCategoriesExpanded()">
+            <span class="material-icons">{{ categoriesExpanded ? 'expand_less' : 'expand_more' }}</span>
+            {{ categoriesExpanded ? 'הצג פחות' : 'הצג עוד (' + categories.length + ')' }}
+          </button>
+        </div>
+
+        <!-- Tagged Artists -->
+        <div class="form-group">
+          <label class="form-label">
+            אמנים מתוייגים
+            <span class="badge-count" *ngIf="article.artistIds && article.artistIds.length > 0">{{ article.artistIds.length }}</span>
+          </label>
+          <div class="tags-grid" [class.collapsed]="!artistsExpanded">
+            <label *ngFor="let artist of getVisibleArtists()" class="tag-chip"
+              [class.selected]="isArtistSelected(artist.id)">
+              <input type="checkbox" [checked]="isArtistSelected(artist.id)"
+                (change)="toggleArtist(artist.id)" [name]="'artist-' + artist.id" hidden>
+              <span class="material-icons chip-check">{{ isArtistSelected(artist.id) ? 'check' : 'add' }}</span>
+              {{ artist.name }}
+            </label>
+          </div>
+          <button *ngIf="hasMoreArtists" type="button" class="btn-expand"
+            (click)="toggleArtistsExpanded()">
+            <span class="material-icons">{{ artistsExpanded ? 'expand_less' : 'expand_more' }}</span>
+            {{ artistsExpanded ? 'הצג פחות' : 'הצג עוד (' + artists.length + ')' }}
+          </button>
+          <span class="field-hint">תייג אמנים הקשורים לכתבה — הכתבה תופיע גם בדף האמן</span>
+        </div>
+      </div>
+
+      <!-- Media -->
+      <div class="form-section">
+        <h2 class="section-title">
+          <span class="material-icons section-icon">perm_media</span>
+          מדיה
+        </h2>
+
+        <div class="form-group">
+          <label class="form-label">תמונת קאבר (URL)</label>
+          <input type="url" class="form-input" [(ngModel)]="article.featuredImageUrl" name="featuredImageUrl"
+            placeholder="https://...">
+          <div class="image-preview" *ngIf="article.featuredImageUrl">
+            <img [src]="article.featuredImageUrl" alt="תצוגה מקדימה">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">קרדיט צילום</label>
+            <input type="text" class="form-input" [(ngModel)]="article.imageCredit" name="imageCredit"
+              placeholder="צלם / מקור...">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">וידאו (Embed URL)</label>
+            <div class="input-with-btn">
+              <input type="url" class="form-input" [(ngModel)]="article.videoEmbedUrl" name="videoEmbedUrl"
+                (blur)="onVideoUrlChange()" placeholder="https://youtube.com/embed/...">
+              <button type="button" class="btn-yt" (click)="fetchYouTubeThumbnail()"
+                [disabled]="!article.videoEmbedUrl || fetchingYouTube" title="שלוף תמונה מיוטיוב">
+                <span *ngIf="!fetchingYouTube" class="material-icons">image</span>
+                <span *ngIf="fetchingYouTube" class="spinner-small"></span>
+              </button>
+            </div>
+            <span class="field-hint" *ngIf="youtubeMessage">{{ youtubeMessage }}</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">אודיו (Embed URL)</label>
+            <input type="url" class="form-input" [(ngModel)]="article.audioEmbedUrl" name="audioEmbedUrl"
+              placeholder="https://spotify.com/embed/...">
+          </div>
+        </div>
+
+        <!-- Gallery -->
+        <div class="gallery-section">
+          <h3 class="gallery-title">גלריית תמונות</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">קישור לתמונה</label>
+              <input type="url" class="form-input" [(ngModel)]="newGalleryImage.imageUrl" name="newGalleryImageUrl"
+                placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">כיתוב (אופציונלי)</label>
+              <input type="text" class="form-input" [(ngModel)]="newGalleryImage.caption" name="newGalleryCaption"
+                placeholder="תיאור לתמונה...">
+            </div>
+          </div>
+          <button type="button" class="btn-add-gallery" (click)="addGalleryImage()">
+            <span class="material-icons">add_photo_alternate</span>
+            הוסף לגלריה
+          </button>
+
+          <div *ngIf="article.galleryImages && article.galleryImages.length > 0" class="gallery-list">
+            <div *ngFor="let image of article.galleryImages; let i = index" class="gallery-item">
+              <div class="gallery-thumb">
+                <img [src]="image.imageUrl" [alt]="image.caption || 'תמונה'">
+              </div>
+              <div class="gallery-info">
+                <div class="gallery-caption">{{ image.caption || 'ללא כיתוב' }}</div>
+                <div class="gallery-url">{{ image.imageUrl }}</div>
+              </div>
+              <div class="gallery-actions">
+                <button type="button" class="btn-gallery-action" (click)="moveGalleryImageUp(i)"
+                  [disabled]="i === 0" title="הזז למעלה">
+                  <span class="material-icons">arrow_upward</span>
+                </button>
+                <button type="button" class="btn-gallery-action" (click)="moveGalleryImageDown(i)"
+                  [disabled]="i === article.galleryImages!.length - 1" title="הזז למטה">
+                  <span class="material-icons">arrow_downward</span>
+                </button>
+                <button type="button" class="btn-gallery-action btn-del" (click)="removeGalleryImage(i)"
+                  title="מחק">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!article.galleryImages || article.galleryImages.length === 0" class="gallery-empty">
+            <span class="material-icons">photo_library</span>
+            <p>הגלריה ריקה</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEO (optional) -->
+      <div class="form-section">
+        <h2 class="section-title">
+          <span class="material-icons section-icon">travel_explore</span>
+          SEO (אופציונלי)
+        </h2>
+
+        <div class="form-group">
+          <label class="form-label">Meta Title</label>
+          <input type="text" class="form-input" [(ngModel)]="article.metaTitle" name="metaTitle"
+            placeholder="כותרת לגוגל..." maxlength="250">
+          <span class="field-hint">{{ article.metaTitle?.length || 0 }}/250 תווים</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Meta Description</label>
+          <textarea class="form-textarea" [(ngModel)]="article.metaDescription" name="metaDescription"
+            rows="3" placeholder="תיאור לתוצאות גוגל..." maxlength="500"></textarea>
+          <span class="field-hint">{{ article.metaDescription?.length || 0 }}/500 תווים</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <div class="pending-note">
+          <span class="material-icons">info</span>
+          הכתבה תישמר ותפורסם לאחר אישור מנהל האתר
+        </div>
+        <div class="action-buttons">
+          <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">ביטול</button>
+          <button type="submit" class="btn-submit" [disabled]="saving">
+            <span class="material-icons" *ngIf="!saving">send</span>
+            <span class="spinner-btn" *ngIf="saving"></span>
+            {{ saving ? 'שולח...' : 'שלח לאישור' }}
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -65,6 +65,13 @@ export class EventService {
   }
 
   /**
+   * הגשת הופעה חדשה על-ידי משתמש (ממתינה לאישור מנהל)
+   */
+  submitEvent(event: CreateEventDto): Observable<Event> {
+    return this.http.post<Event>(`${this.apiUrl}/submit`, event);
+  }
+
+  /**
    * עדכון הופעה
    */
   updateEvent(id: number, event: UpdateEventDto): Observable<Event> {
