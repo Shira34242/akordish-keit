@@ -1,7 +1,7 @@
 /* Container */
 .playlists-page-container {
-  font-family: 'Heebo', sans-serif;
-  background-color: #f3f4f6;
+  font-family: 'Open Sans', sans-serif;
+  background-color: #F2F2F2;
   min-height: 100vh;
   direction: rtl;
   padding: 30px 24px;
@@ -17,11 +17,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000000;
   border-radius: 20px;
   padding: 24px 28px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .header-icon {
@@ -62,7 +60,7 @@
 }
 
 .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.08);
+  border: 4px solid #e0e0e0;
   border-top-color: #ddff53;
   border-radius: 50%;
   width: 50px;
@@ -83,7 +81,7 @@
   border: none;
   border-radius: 10px;
   font-weight: 700;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -107,22 +105,22 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 80px 20px;
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
   border-radius: 20px;
 }
 
 .empty-icon {
   margin-bottom: 24px;
-  color: #ddff53;
-  opacity: 0.3;
+  color: #404040;
+  opacity: 0.25;
 }
 
 .empty-state h2 {
   font-family: 'Karantina', sans-serif;
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0 0 12px 0;
 }
 
@@ -140,7 +138,7 @@
   border-radius: 12px;
   font-weight: 700;
   font-size: 1rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 16px rgba(221, 255, 83, 0.3);
@@ -154,8 +152,8 @@
 
 /* Playlist Card */
 .playlist-card {
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
@@ -165,8 +163,8 @@
 
 .playlist-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(221, 255, 83, 0.4);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(221, 255, 83, 0.15);
+  border-color: #ddff53;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Playlist Image */
@@ -175,11 +173,11 @@
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background: #565656;
+  background: #e8e8e8;
 }
 
 .playlist-image.no-image {
-  background: linear-gradient(135deg, #3a3a3a 0%, #474747 100%);
+  background: linear-gradient(135deg, #000000 0%, #404040 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +190,7 @@
   width: 100%;
   height: 100%;
   color: #ddff53;
-  opacity: 0.35;
+  opacity: 0.5;
 }
 
 .playlist-image img {
@@ -212,7 +210,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,7 +236,7 @@
   font-family: 'Karantina', sans-serif;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0 0 6px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -259,7 +257,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: #666;
+  color: #888;
 }
 
 .song-count {
@@ -267,11 +265,11 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #ddff53;
+  color: #404040;
 }
 
 .created-date {
-  color: #555;
+  color: #aaa;
   font-size: 0.78rem;
 }
 
@@ -280,9 +278,9 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.75);
   color: #ddff53;
-  border: 1px solid rgba(221, 255, 83, 0.4);
+  border: 1px solid rgba(221, 255, 83, 0.5);
   border-radius: 8px;
   width: 34px;
   height: 34px;
@@ -309,7 +307,7 @@
   position: absolute;
   top: 10px;
   left: 52px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.75);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.4);
   border-radius: 8px;
@@ -364,7 +362,7 @@
   font-family: 'Karantina', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0;
   flex: 1;
 }
@@ -390,8 +388,8 @@
 
 /* Liked Content Card */
 .liked-content-card {
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
@@ -401,8 +399,8 @@
 
 .liked-content-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(221, 255, 83, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  border-color: #ddff53;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Content Image */
@@ -411,11 +409,11 @@
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background: #565656;
+  background: #e8e8e8;
 }
 
 .content-image.no-image {
-  background: linear-gradient(135deg, #3a3a3a 0%, #474747 100%);
+  background: linear-gradient(135deg, #000000 0%, #404040 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -450,22 +448,22 @@
 }
 
 .content-type-badge.article {
-  background: rgba(221, 255, 83, 0.12);
-  color: #ddff53;
-  border: 1px solid rgba(221, 255, 83, 0.22);
+  background: rgba(221, 255, 83, 0.2);
+  color: #5a7000;
+  border: 1px solid rgba(221, 255, 83, 0.5);
 }
 
 .content-type-badge.blog {
-  background: rgba(255, 255, 255, 0.06);
-  color: #aaa;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #F2F2F2;
+  color: #666;
+  border: 1px solid #e0e0e0;
 }
 
 /* Content Details */
 .content-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0 0 6px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -487,7 +485,7 @@
 
 .liked-date {
   font-size: 0.72rem;
-  color: #555;
+  color: #aaa;
   margin: 0;
 }
 
@@ -553,7 +551,7 @@
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.9rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -584,8 +582,8 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
   border-radius: 16px;
   padding: 14px 18px;
 }
@@ -595,21 +593,21 @@
   align-items: center;
   gap: 8px;
   padding: 9px 16px;
-  background: #565656;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #F2F2F2;
+  border: 1px solid #e0e0e0;
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.88rem;
-  color: #aaa;
+  color: #404040;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .filter-btn:hover {
-  background: #4c4c4c;
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #e8e8e8;
+  color: #000;
+  border-color: #ccc;
 }
 
 .filter-btn.active {
@@ -624,7 +622,7 @@
 }
 
 .filter-count {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.08);
   padding: 2px 7px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -632,7 +630,7 @@
 }
 
 .filter-btn.active .filter-count {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .filter-btn svg {
@@ -661,14 +659,14 @@
   font-family: 'Karantina', sans-serif;
   font-size: 1.6rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0;
 }
 
 .count-badge {
-  background: #565656;
+  background: #ffffff;
   color: #888;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid #e0e0e0;
   padding: 5px 12px;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -686,7 +684,7 @@
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.85rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(221, 255, 83, 0.25);
@@ -705,7 +703,7 @@
   padding: 6px 4px 14px 4px;
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(221, 255, 83, 0.3) transparent;
+  scrollbar-color: #d0d0d0 transparent;
 }
 
 .horizontal-scroll::-webkit-scrollbar {
@@ -717,12 +715,12 @@
 }
 
 .horizontal-scroll::-webkit-scrollbar-thumb {
-  background: rgba(221, 255, 83, 0.3);
+  background: #d0d0d0;
   border-radius: 3px;
 }
 
 .horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(221, 255, 83, 0.5);
+  background: #bbb;
 }
 
 .horizontal-scroll .playlist-card,

@@ -38,6 +38,12 @@ export class LayoutComponent implements OnInit {
   showMobileMenu: boolean = false;
   showFabMenu: boolean = false;
   showArtistSubMenu: boolean = false;
+  isScrolled: boolean = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.isScrolled = window.scrollY > 80;
+  }
 
   // New modals
   showAuthModal: boolean = false;

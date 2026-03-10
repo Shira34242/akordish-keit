@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SongService } from '../../services/song.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -23,7 +23,13 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
-export class SongPageComponent implements OnInit, OnDestroy {
+export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
+
+    @ViewChild('songHeaderBg') songHeaderBg?: ElementRef<HTMLDivElement>;
+    @ViewChild('songHeaderContent') songHeaderContent?: ElementRef<HTMLDivElement>;
+    private headerLayoutDone = false;
+    private fullHeaderHeight = 0;
+    private rafPending = false;
 
     songId: number | null = null;
     song: any = null;
@@ -156,9 +162,49 @@ export class SongPageComponent implements OnInit, OnDestroy {
         }
     }
 
+    ngAfterViewChecked() {
+        if (!this.headerLayoutDone && this.songHeaderBg && this.songHeaderContent) {
+            this.headerLayoutDone = true;
+            setTimeout(() => this.updateHeaderLayout(), 0);
+        }
+    }
+
+    @HostListener('window:resize')
+    onResize() {
+        this.headerLayoutDone = false;
+    }
+
     @HostListener('window:scroll')
     onWindowScroll() {
         this.isToolbarSticky = window.scrollY > 300;
+        if (!this.rafPending) {
+            this.rafPending = true;
+            requestAnimationFrame(() => {
+                this.shrinkHeader();
+                this.rafPending = false;
+            });
+        }
+    }
+
+    private updateHeaderLayout() {
+        const bg = this.songHeaderBg?.nativeElement;
+        const content = this.songHeaderContent?.nativeElement;
+        if (!bg || !content) return;
+        const contentRect = content.getBoundingClientRect();
+        const boxTop = window.innerHeight * 0.02; // matches CSS top: 2vh
+        const h = Math.round(contentRect.bottom - boxTop + window.scrollY);
+        this.fullHeaderHeight = h;
+        bg.style.height = h + 'px';
+        this.shrinkHeader();
+    }
+
+    private shrinkHeader() {
+        const bg = this.songHeaderBg?.nativeElement;
+        if (!bg || this.fullHeaderHeight === 0) return;
+        // מינימום = גובה הכותרת העליונה (נשאר כרקע לניווט)
+        const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+        const newHeight = Math.max(minHeight, this.fullHeaderHeight - window.scrollY);
+        bg.style.height = newHeight + 'px';
     }
 
     transpose(direction: number) {

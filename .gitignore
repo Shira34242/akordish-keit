@@ -79,6 +79,9 @@ nul
 # Claude Code
 .claude/
 
+# Local personal instructions (not for git)
+CLAUDE.local.md
+
 # ================================
 # GENERAL
 # ================================

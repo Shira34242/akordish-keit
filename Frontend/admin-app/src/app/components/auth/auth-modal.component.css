@@ -144,46 +144,54 @@
   justify-content: center;
 }
 
-.google-btn-wrapper ::ng-deep .abcRioButton {
-  width: 50% !important;
+.google-btn-stack {
+  position: relative;
+  width: 50%;
+}
+
+.btn-google {
+  width: 100%;
+  padding: 15px 24px;
+  background: white;
+  color: #000;
+  border: none;
+  border-radius: 25px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.2s;
+}
+
+.btn-google:hover {
+  background: #f0f0f0;
+}
+
+.btn-google:disabled {
+  opacity: 0.6;
+}
+
+/* Transparent Google iframe overlay on top of our custom button */
+.google-signin-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  border-radius: 25px;
+}
+
+.google-signin-overlay ::ng-deep div,
+.google-signin-overlay ::ng-deep iframe {
+  width: 100% !important;
+  height: 100% !important;
   border-radius: 25px !important;
-  box-shadow: none !important;
-  background: white !important;
-  border: none !important;
-  padding: 13px 24px !important;
-  height: auto !important;
-  min-height: auto !important;
-  transition: box-shadow 0.2s !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButton:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButtonContents {
-  font-family: inherit !important;
-  font-size: 0.92rem !important;
-  font-weight: 400 !important;
-  line-height: normal !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButtonIcon {
-  padding: 8px !important;
-  margin: 0 8px 0 0 !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButtonSvg {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButtonBlue {
-  background: white !important;
-  color: #000 !important;
-}
-
-.google-btn-wrapper ::ng-deep .abcRioButtonBlue .abcRioButtonContents {
-  color: #000 !important;
 }
 
 /* Submit Button */
@@ -194,8 +202,9 @@
   color: white;
   border: none;
   border-radius: 25px;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
@@ -308,12 +317,4 @@
     font-size: 0.95rem;
   }
 
-  .google-btn-wrapper ::ng-deep .abcRioButton {
-    width: 65% !important;
-    padding: 11px 20px !important;
-  }
-
-  .google-btn-wrapper ::ng-deep .abcRioButtonContents {
-    font-size: 0.88rem !important;
-  }
 }

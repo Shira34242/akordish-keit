@@ -71,17 +71,19 @@
         <!-- Left Group: Music Index + Nav Links -->
         <div class="header-left-group">
              <nav class="desktop-nav">
-                <ul class="main-nav">
-                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
-                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
-                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
-                </ul>
+                <div class="nav-pills">
+                    <ul class="main-nav">
+                        <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
+                        <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
+                        <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                    </ul>
+                </div>
             </nav>
-            <a class="btn-music-index" routerLink="/professionals">
+            <a class="btn-music-index" [class.btn-music-index--collapsed]="isScrolled" routerLink="/professionals">
                 <span class="material-icons index-search-icon">search</span>
-                אינדקס עולם המוזיקה
+                <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
             </a>
-           
+
         </div>
 
     </div>

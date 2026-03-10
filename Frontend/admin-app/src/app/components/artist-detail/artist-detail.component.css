@@ -1,670 +1,753 @@
-/* בסיס הדף - זהה ל-song-page */
+/* ========================================
+   Page Base
+======================================== */
 .artist-page-container {
-    font-family: 'Heebo', 'Segoe UI', sans-serif;
-    background-color: #f3f4f6;
+    font-family: 'Open Sans', 'Heebo', sans-serif;
+    background-color: #ffffff;
     min-height: 100vh;
     direction: rtl;
     color: #1f2937;
 }
 
-/* Glassmorphism Effect */
-.glass-effect {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.08),
-        inset 0 0 20px rgba(255, 255, 255, 0.5),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.8);
-}
-
 /* ========================================
-   Banner Section
+   Banner (כל האמנים - תמונה/GIF)
 ======================================== */
 .artist-banner {
     width: 100%;
-    height: 400px;
+    height: 360px;
     overflow: hidden;
     position: relative;
 }
 
-.banner-image {
+.banner-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 /* ========================================
-   Header Section
+   Header Background (lime card)
+   - ללא באנר: עולה מתחת ל-layout header
+   - עם באנר:  מחפף את תחתית הבאנר
 ======================================== */
-.artist-header {
-    position: relative;
-    background-color: #f3f4f6;
-    padding-bottom: 20px;
+.artist-header-bg {
+    background-color: #ddff53;
+    margin-top: -63px;
+    margin-left: 16px;
+    margin-right: 16px;
+    border-radius: 20px;
+    position: sticky;
+    height: 300px;
+    top: -215px;
+    z-index: 895;
+    pointer-events: none;
 }
 
+.has-banner .artist-header-bg {
+    margin-top: -110px;
+    height: 280px;
+    top: -200px;
+}
+
+/* ========================================
+   Header Content (overlaid on lime bg)
+======================================== */
 .header-content {
-    position: relative;
     max-width: 1200px;
-    margin: -300px auto 0 auto;
-    padding: 0 24px;
+    margin: 0 auto;
+    margin-top: -300px;
+    margin-bottom: 8px;
+    padding: calc(56px + 30px) 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    z-index: 896;
+}
+
+.has-banner .header-content {
+    margin-top: -280px;
+}
+
+.header-top-row {
     display: flex;
     flex-direction: row;
-    gap: 32px;
-    align-items: flex-start;
-    z-index: 10;
+    gap: 24px;
+    align-items: stretch;
 }
 
-/* תמונת פרופיל */
+/* ========================================
+   Artist Cover Image (ריבועי כמו כריכת שיר)
+======================================== */
 .header-image-section {
-    flex: 0 0 220px;
+    flex: 0 0 200px;
     position: relative;
 }
 
-.artist-image-wrapper {
+.artist-cover-wrapper {
     position: relative;
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+    border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2);
 }
 
-.artist-image {
+.artist-cover {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
 }
 
-.artist-image:hover {
+.artist-cover:hover {
     transform: scale(1.05);
 }
 
-/* תגיות */
-.verified-badge {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: #3b82f6;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-}
-
-.premium-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
-}
-
-/* מידע על האומן */
+/* ========================================
+   Artist Info
+======================================== */
 .header-info-section {
     flex: 1;
     text-align: right;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+/* תגים: מומלץ / מאומת */
+.header-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.badge-premium {
+    background: #000;
+    color: #ddff53;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.badge-verified {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.65);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 .artist-name {
-    font-family: 'Heebo', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 800;
+    font-family: 'Karantina', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
     color: #000000;
-    line-height: 1.1;
+    line-height: 1;
     margin: 0;
-    letter-spacing: -0.5px;
+    letter-spacing: 0.5px;
 }
 
 .artist-english-name {
-    font-size: 1.2rem;
-    color: #6b7280;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.55);
     margin: 0;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .short-bio {
-    font-size: 1.05rem;
-    color: #4b5563;
-    margin: 8px 0;
-    line-height: 1.6;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
+    color: rgba(0, 0, 0, 0.7);
+    margin: 4px 0 0;
+    line-height: 1.5;
+    max-width: 520px;
 }
 
-/* סטטיסטיקות */
+/* ========================================
+   Stats
+======================================== */
 .artist-stats {
     display: flex;
-    gap: 32px;
-    margin: 16px 0;
+    gap: 24px;
+    margin: 4px 0;
 }
 
 .stat-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 1px;
 }
 
 .stat-number {
-    font-size: 1.8rem;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.6rem;
     font-weight: 700;
-    color: #3b82f6;
+    color: #000;
+    line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    color: #6b7280;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.7rem;
+    color: rgba(0, 0, 0, 0.55);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* רשתות חברתיות */
+/* ========================================
+   Social Links
+======================================== */
 .social-links {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
-    margin: 8px 0;
+    margin: 4px 0;
 }
 
 .social-link {
-    padding: 8px 16px;
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
+    padding: 5px 14px;
+    background: transparent;
+    border: 1.5px solid rgba(0, 0, 0, 0.4);
+    color: #000;
     border-radius: 20px;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: all 0.2s;
 }
 
 .social-link:hover {
-    background: #3b82f6;
-    color: white;
-    transform: translateY(-2px);
+    background: #000;
+    color: #ddff53;
+    border-color: #000;
 }
 
-/* כפתורי פעולה */
-.action-buttons {
+/* ========================================
+   Action Buttons
+======================================== */
+.header-actions {
     display: flex;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 8px;
+    align-self: flex-end;
 }
 
-.btn-upgrade, .btn-boost {
-    padding: 12px 24px;
+.btn-upgrade {
+    padding: 8px 20px;
+    background: #000;
+    color: #ddff53;
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-upgrade:hover {
+    opacity: 0.82;
+}
+
+.btn-boost {
+    padding: 8px 20px;
+    background: transparent;
+    color: #000;
+    border: 1.5px solid rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.btn-upgrade {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-}
-
-.btn-upgrade:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-}
-
-.btn-boost {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #1a1a1a;
-}
-
 .btn-boost:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(251, 191, 36, 0.3);
+    background: rgba(0, 0, 0, 0.07);
 }
 
 /* ========================================
-   Biography Section
+   Content Wrapper
 ======================================== */
-.biography-section {
-    background-color: #f3f4f6;
-    padding: 40px 0;
-}
-
-.biography-section .content-wrapper {
+.content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 16px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.biography-section h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: #111827;
+/* ========================================
+   Bio Card
+======================================== */
+.bio-card {
+    background: #F2F2F2;
+    border-radius: 20px;
+    padding: 28px 32px;
+}
+
+.bio-card h3 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 12px 0;
+    text-align: right;
 }
 
 .biography-text {
-    font-size: 1.05rem;
-    line-height: 1.8;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.85;
     color: #374151;
     white-space: pre-wrap;
+    margin: 0;
+    text-align: right;
 }
 
 /* ========================================
-   Gallery Section
+   Gallery Card (משלם בלבד)
 ======================================== */
-.gallery-section {
-    background-color: #ffffff;
-    padding: 60px 0;
+.gallery-card {
+    background: #F2F2F2;
+    border-radius: 20px;
+    padding: 28px 32px;
 }
 
-.gallery-section .content-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-}
-
-.gallery-section h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 24px;
-    color: #111827;
+.gallery-card h3 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 16px 0;
     text-align: right;
 }
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
 }
 
 .gallery-item {
-    position: relative;
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-}
-
-.gallery-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background: #fff;
 }
 
 .gallery-image {
     width: 100%;
-    height: 280px;
+    height: 190px;
     object-fit: cover;
+    display: block;
 }
 
 .image-caption {
-    padding: 12px;
-    background: white;
-    font-size: 0.9rem;
-    color: #4b5563;
+    padding: 9px 12px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
+    color: #666;
     text-align: right;
     margin: 0;
 }
 
 /* ========================================
-   Video Section
+   Videos Card (משלם בלבד)
 ======================================== */
-.video-section {
-    background-color: #f3f4f6;
-    padding: 60px 0;
+.videos-card {
+    background: #F2F2F2;
+    border-radius: 20px;
+    padding: 28px 32px;
 }
 
-.video-section .content-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-}
-
-.video-section h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 24px;
-    color: #111827;
+.videos-card h3 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 16px 0;
     text-align: right;
 }
 
 .video-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 14px;
 }
 
 .video-item {
-    background: white;
+    background: #fff;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .video-iframe {
     width: 100%;
-    height: 280px;
+    height: 230px;
+    display: block;
+    border: none;
 }
 
 .video-title {
-    padding: 16px;
-    font-size: 1rem;
+    padding: 12px 16px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
     font-weight: 600;
-    color: #111827;
+    color: #111;
     text-align: right;
     margin: 0;
 }
 
 /* ========================================
-   Main Layout
+   Main Layout (2 columns)
 ======================================== */
 .main-layout {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 24px;
     display: grid;
     grid-template-columns: 1fr 280px;
-    gap: 32px;
+    gap: 16px;
     align-items: start;
 }
 
-/* Content Column */
+/* ========================================
+   Content Column
+======================================== */
 .content-column {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 16px;
 }
 
-.content-section {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+.content-card {
+    background: #F2F2F2;
     border-radius: 20px;
-    padding: 32px;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.08),
-        inset 0 0 20px rgba(255, 255, 255, 0.5);
+    padding: 24px;
 }
 
-.section-header {
+.card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
 }
 
-.section-header h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
+.card-header h3 {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
     margin: 0;
 }
 
 .see-all-link {
-    color: #3b82f6;
-    text-decoration: none;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
     font-weight: 600;
-    font-size: 1rem;
-    transition: color 0.2s;
+    color: #000;
+    text-decoration: none;
+    opacity: 0.45;
+    transition: opacity 0.15s;
 }
 
 .see-all-link:hover {
-    color: #2563eb;
-    text-decoration: underline;
+    opacity: 1;
 }
 
-/* Songs Grid */
-.songs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.song-card {
-    background: rgba(243, 244, 246, 0.6);
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.song-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.song-thumbnail {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.song-info {
-    padding: 12px;
-}
-
-.song-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 4px 0;
-}
-
-.song-views {
-    font-size: 0.85rem;
-    color: #6b7280;
+/* ---- Song List ---- */
+.song-list {
+    list-style: none;
+    padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-/* Articles Grid */
-.articles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-}
-
-.article-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
+.song-list li {
+    padding: 10px 14px;
+    background: #ffffff;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #222;
+    text-align: right;
+    transition: background-color 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.article-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+.song-list li:hover {
+    background: #e8e8e8;
+    color: #000;
 }
 
-.article-thumbnail {
-    width: 100%;
-    height: 180px;
+.song-title-text {
+    flex: 1;
+}
+
+.song-views-text {
+    font-size: 0.75rem;
+    color: #aaa;
+    font-weight: 400;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+/* ---- Articles List ---- */
+.articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.article-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.article-item:hover {
+    background: #e8e8e8;
+}
+
+.article-thumb {
+    width: 60px;
+    height: 60px;
     object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
 }
 
 .article-info {
-    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: right;
 }
 
-.article-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0 0 8px 0;
+.article-title-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111;
+    line-height: 1.3;
+}
+
+.article-subtitle-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
+    color: #777;
     line-height: 1.4;
 }
 
-.article-subtitle {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin: 0 0 8px 0;
-    line-height: 1.5;
+.article-date-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    color: #bbb;
 }
 
-.article-date {
-    font-size: 0.8rem;
-    color: #9ca3af;
+/* ---- Events List ---- */
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-/* Events Grid */
-.events-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border-radius: 12px;
 }
 
-.event-card {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s;
+.event-date-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ddff53;
+    border-radius: 10px;
+    width: 48px;
+    height: 52px;
+    flex-shrink: 0;
 }
 
-.event-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+.event-day {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #000;
+    line-height: 1;
 }
 
-.event-thumbnail {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
+.event-month {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.55);
+    text-transform: uppercase;
+    line-height: 1.3;
 }
 
 .event-info {
-    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: right;
 }
 
-.event-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0 0 8px 0;
-}
-
-.event-date {
-    font-size: 0.95rem;
-    color: #3b82f6;
-    font-weight: 600;
-    margin: 0 0 4px 0;
-}
-
-.event-location {
+.event-title-text {
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.9rem;
-    color: #6b7280;
-    margin: 0 0 16px 0;
+    font-weight: 600;
+    color: #111;
+}
+
+.event-location-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.78rem;
+    color: #999;
 }
 
 .btn-tickets {
-    display: inline-block;
-    padding: 10px 20px;
-    background: #3b82f6;
-    color: white;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: #000;
+    color: #ddff53;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
     font-weight: 600;
-    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
 }
 
 .btn-tickets:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
+    opacity: 0.82;
 }
 
-/* Sidebar */
+/* ========================================
+   Sidebar
+======================================== */
 .sidebar-column {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
     position: sticky;
-    top: 20px;
+    top: calc(2vh + 80px);
 }
 
 .sidebar-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: #F2F2F2;
     border-radius: 20px;
     padding: 20px;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.08),
-        inset 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
 .sidebar-card h3 {
-    margin: 0 0 16px 0;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #111827;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 12px 0;
     text-align: right;
 }
 
 .info-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .info-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    text-align: right;
 }
 
 .info-label {
-    font-size: 0.85rem;
-    color: #6b7280;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.7rem;
+    color: #aaa;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .info-value {
-    font-size: 0.9rem;
-    color: #111827;
-    word-break: break-word;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.88rem;
+    color: #222;
 }
 
-.info-value a {
-    color: #3b82f6;
-    text-decoration: none;
-}
-
-.info-value a:hover {
+.info-value-link {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #000;
     text-decoration: underline;
+    word-break: break-word;
+    opacity: 0.6;
+    transition: opacity 0.15s;
 }
 
-/* Loading & Empty States */
+.info-value-link:hover {
+    opacity: 1;
+}
+
+/* ========================================
+   States
+======================================== */
 .loading-small {
     text-align: center;
-    padding: 20px;
-    color: #6b7280;
-    font-size: 0.9rem;
+    padding: 16px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #bbb;
 }
 
 .no-content {
     text-align: center;
-    color: #9ca3af;
+    color: #ccc;
+    font-family: 'Open Sans', sans-serif;
     font-style: italic;
-    padding: 32px;
-    font-size: 1rem;
+    padding: 20px;
+    font-size: 0.88rem;
 }
 
 .loading-container {
@@ -674,15 +757,17 @@
     justify-content: center;
     min-height: 60vh;
     gap: 16px;
+    font-family: 'Open Sans', sans-serif;
+    color: #999;
 }
 
 .spinner {
-    border: 4px solid #f3f4f6;
-    border-top: 4px solid #3b82f6;
+    border: 3px solid #f0f0f0;
+    border-top: 3px solid #000;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
+    width: 36px;
+    height: 36px;
+    animation: spin 0.85s linear infinite;
 }
 
 @keyframes spin {
@@ -694,10 +779,38 @@
    Responsive
 ======================================== */
 @media (max-width: 900px) {
+    .artist-banner {
+        height: 240px;
+    }
+
+    .artist-header-bg {
+        margin-top: -48px;
+        margin-left: 8px;
+        margin-right: 8px;
+        border-radius: 16px;
+        height: 280px;
+        top: -200px;
+    }
+
+    .has-banner .artist-header-bg {
+        margin-top: -80px;
+        height: 260px;
+        top: -185px;
+    }
+
     .header-content {
+        margin-top: -280px;
+        padding: calc(48px + 20px) 16px 16px;
+        align-items: center;
+    }
+
+    .has-banner .header-content {
+        margin-top: -260px;
+    }
+
+    .header-top-row {
         flex-direction: column;
         align-items: center;
-        text-align: center;
     }
 
     .header-image-section {
@@ -705,12 +818,16 @@
     }
 
     .header-info-section {
-        text-align: center;
         align-items: center;
+        text-align: center;
     }
 
-    .artist-name {
-        font-size: 2rem;
+    .short-bio {
+        text-align: center;
+    }
+
+    .header-badges {
+        justify-content: center;
     }
 
     .artist-stats {
@@ -721,8 +838,12 @@
         justify-content: center;
     }
 
-    .action-buttons {
-        justify-content: center;
+    .header-actions {
+        align-self: center;
+    }
+
+    .content-wrapper {
+        padding: 12px 12px 40px;
     }
 
     .main-layout {
@@ -736,5 +857,31 @@
 
     .video-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .artist-banner {
+        height: 180px;
+    }
+
+    .artist-name {
+        font-size: 2.2rem;
+    }
+
+    .artist-cover-wrapper {
+        width: 160px;
+        height: 160px;
+    }
+
+    .header-image-section {
+        flex: none;
+    }
+
+    .bio-card,
+    .gallery-card,
+    .videos-card,
+    .content-card {
+        padding: 18px 14px;
     }
 }

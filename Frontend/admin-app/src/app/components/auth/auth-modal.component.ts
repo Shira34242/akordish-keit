@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
+import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -179,6 +179,10 @@ export class AuthModalComponent {
         this.errorMessage = error.error?.message || 'שגיאה בכניסה עם Google';
       }
     });
+  }
+
+  triggerGoogleSignIn() {
+    this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
   }
 
   onBackdropClick(event: MouseEvent) {

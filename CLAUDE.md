@@ -16,13 +16,13 @@
 Two fonts are used across the project. Import from Google Fonts:
 
 ```html
-<link href="https://fonts.googleapis.com/css2?family=Karantina:wght@300;400;700&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Karantina:wght@300;400;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ```
 
 | Role          | Font       | Notes                         |
 |---------------|------------|-------------------------------|
 | Display/Title | Karantina  | Headings, hero text, branding |
-| Body/UI       | Heebo      | Body text, labels, buttons    |
+| Body/UI       | Open Sans  | Body text, labels, buttons    |
 
 ### Design Principles
 - The project is **RTL** (Hebrew) - always use `direction: rtl` and `text-align: right` by default
