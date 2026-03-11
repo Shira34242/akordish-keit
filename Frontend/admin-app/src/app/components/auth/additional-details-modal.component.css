@@ -54,7 +54,7 @@
   position: absolute;
   bottom: 36px;
   left: 48px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   color: #666;
   cursor: pointer;
@@ -68,7 +68,7 @@
 }
 
 .modal-header h2 {
-  font-family: 'Karantina', 'Heebo', sans-serif;
+  font-family: 'Karantina', sans-serif;
   font-size: 2rem;
   font-weight: 400;
   color: #000;
@@ -76,7 +76,7 @@
 }
 
 .subtitle {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   color: #000;
   margin: 0;
@@ -88,7 +88,7 @@
   border-radius: 8px;
   padding: 10px 16px;
   margin-bottom: 16px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.9rem;
   color: #c00;
   text-align: center;
@@ -154,7 +154,7 @@
 .card-label {
   position: relative;
   z-index: 1;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   color: #000;
@@ -167,7 +167,7 @@
 /* No instrument */
 .no-instrument {
   text-align: center;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.95rem;
   color: #000;
   cursor: pointer;
@@ -188,7 +188,7 @@
   border-radius: 999px;
   border: 2px solid #000;
   background: transparent;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.95rem;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -209,7 +209,7 @@
   color: #fff;
   border: none;
   border-radius: 999px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -272,7 +272,7 @@
 }
 
 .type-title {
-  font-family: 'Karantina', 'Heebo', sans-serif;
+  font-family: 'Karantina', sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: #000;
@@ -280,7 +280,7 @@
 }
 
 .type-desc {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.78rem;
   color: #333;
   line-height: 1.4;

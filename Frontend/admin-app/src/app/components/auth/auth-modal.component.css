@@ -80,7 +80,7 @@
 }
 
 .modal-header h2 {
-  font-family: 'Karantina', 'Heebo', sans-serif;
+  font-family: 'Karantina', sans-serif;
   font-size: 2rem;
   font-weight: 400;
   margin: 0;
@@ -241,7 +241,6 @@
 /* Password Hint */
 .password-hint {
   text-align: center;
-  font-family: 'Heebo', sans-serif;
   font-size: 0.75rem;
   color: #444;
   margin: -10px 0 16px 0;
@@ -254,7 +253,6 @@
   gap: 8px;
   width: 50%;
   margin: 0 auto 18px auto;
-  font-family: 'Heebo', sans-serif;
   font-size: 0.8rem;
   color: #000;
   line-height: 1.4;

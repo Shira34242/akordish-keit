@@ -1,6 +1,8 @@
 /* Container */
 .playlist-detail-container {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   background-color: #f3f4f6;
   min-height: 100vh;
   direction: rtl;
@@ -30,7 +32,7 @@
   color: #aaa;
   font-weight: 600;
   font-size: 0.9rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 24px;
@@ -97,7 +99,7 @@
   border: 2px solid rgba(221, 255, 83, 0.25);
   border-radius: 12px;
   font-size: 1rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   background: #4c4c4c;
   color: #fff;
   margin-bottom: 12px;
@@ -138,7 +140,7 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .btn-edit {
@@ -351,7 +353,7 @@
   border: none;
   border-radius: 10px;
   font-weight: 700;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }

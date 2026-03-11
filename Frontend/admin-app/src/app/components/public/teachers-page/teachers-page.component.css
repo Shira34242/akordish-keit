@@ -3,7 +3,9 @@
   margin: 0 auto;
   padding: 20px;
   direction: rtl;
-  font-family: 'Heebo', Arial, sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
 }
 
 /* ============= Header Section ============= */

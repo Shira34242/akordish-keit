@@ -111,7 +111,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 700;
     font-size: 1rem;
     transition: all 0.3s ease;
@@ -186,7 +186,7 @@
 }
 
 .step-subtitle {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.95rem;
     color: rgba(0, 0, 0, 0.55);
     margin: 0;
@@ -212,7 +212,7 @@
 label {
     display: block;
     margin-bottom: 8px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 700;
     color: #000;
     font-size: 0.9rem;
@@ -225,7 +225,7 @@ select {
     padding: 13px 16px;
     border: none;
     border-radius: 14px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.95rem;
     background: #fff;
     color: #000;
@@ -259,7 +259,7 @@ select option {
 
 .error {
     color: #c00;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.82rem;
     margin-top: 5px;
     font-weight: 500;
@@ -329,7 +329,7 @@ select option {
     outline: none;
     background: transparent;
     margin: 0;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.95rem;
     color: #000;
 }
@@ -343,7 +343,7 @@ select option {
     background: #000;
     padding: 5px 12px;
     border-radius: 999px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.85rem;
     display: flex;
     align-items: center;
@@ -402,7 +402,7 @@ select option {
     gap: 12px;
     border-bottom: 1px solid #f0f0f0;
     transition: background 0.15s;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .suggestion:last-child {
@@ -486,7 +486,7 @@ select option {
     padding: 12px 16px;
     border-radius: 12px;
     margin-top: 10px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.88rem;
 }
 
@@ -523,7 +523,7 @@ select option {
 .btn-secondary {
     padding: 12px 28px;
     border-radius: 999px;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
@@ -612,7 +612,7 @@ select option {
 }
 
 .preview-subtitle {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 1.05rem;
     color: #000;
     margin: 0 0 4px 0;
@@ -620,7 +620,7 @@ select option {
 }
 
 .preview-description {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.88rem;
     color: rgba(0, 0, 0, 0.5);
     margin: 0;
@@ -658,7 +658,7 @@ select option {
 }
 
 .song-artist {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 1rem;
     color: #333;
     margin: 0 0 4px 0;
@@ -666,7 +666,7 @@ select option {
 }
 
 .song-composer {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 0.88rem;
     color: #888;
     margin: 0;
@@ -699,7 +699,7 @@ select option {
 }
 
 .lyrics-content {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     color: #222;
 }
 

@@ -10,7 +10,10 @@ html, body {
   margin: 0;
   padding: 0;
   background: #fff;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-variation-settings: "wdth" 100;
 }
 
 app-root {

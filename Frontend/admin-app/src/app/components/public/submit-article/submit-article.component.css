@@ -6,7 +6,9 @@
   background: #f3f4f6;
   direction: rtl;
   padding: 40px 16px 100px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
 }
 
 /* ============================================
@@ -53,7 +55,7 @@
   border: none;
   padding: 14px 32px;
   border-radius: 50px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -92,7 +94,7 @@
   color: #555;
   padding: 10px 18px;
   border-radius: 50px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.9rem;
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
@@ -212,7 +214,7 @@
   border: 1.5px solid #e0e0e0;
   border-radius: 10px;
   color: #111;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.95rem;
   padding: 12px 16px;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -277,7 +279,7 @@
   background: #f5f5f5;
   border: 1.5px solid #e8e8e8;
   border-radius: 50px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.85rem;
   color: #555;
   cursor: pointer;
@@ -314,7 +316,7 @@
   height: 20px;
   border-radius: 50%;
   margin-right: 6px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .btn-expand {
@@ -326,7 +328,7 @@
   color: #777;
   padding: 6px 14px;
   border-radius: 8px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -417,7 +419,7 @@
   color: #ddff53;
   padding: 10px 20px;
   border-radius: 10px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -594,7 +596,7 @@
   color: #666;
   padding: 12px 28px;
   border-radius: 50px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -613,7 +615,7 @@
   border: none;
   padding: 12px 32px;
   border-radius: 50px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;

@@ -1,6 +1,8 @@
 /* Container */
 .community-playlists-container {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   background-color: #f3f4f6;
   min-height: 100vh;
   direction: rtl;
@@ -85,7 +87,7 @@
   background: transparent;
   padding: 14px 8px;
   font-size: 0.95rem;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: #fff;
   outline: none;
 }
@@ -147,7 +149,7 @@
   border: none;
   border-radius: 10px;
   font-weight: 700;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -349,7 +351,7 @@
   gap: 8px;
   font-size: 0.88rem;
   font-weight: 700;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   opacity: 0;
   transition: all 0.3s;

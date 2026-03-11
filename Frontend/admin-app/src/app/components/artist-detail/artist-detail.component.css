@@ -2,7 +2,9 @@
    Page Base
 ======================================== */
 .artist-page-container {
-    font-family: 'Open Sans', 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
     background-color: #ffffff;
     min-height: 100vh;
     direction: rtl;

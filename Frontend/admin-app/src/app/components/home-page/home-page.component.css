@@ -42,7 +42,7 @@
 }
 
 .hero-subtitle {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   font-weight: 300;
   color: #111;
@@ -91,7 +91,7 @@
   border: none;
   outline: none;
   padding: 8px 12px;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 1rem;
   background: transparent;
   direction: rtl;
@@ -147,7 +147,7 @@
 }
 
 .result-title {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 600;
   color: #111;
   font-size: 0.95rem;
@@ -169,7 +169,7 @@
   border-radius: 16px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: #666;
 }
 
@@ -185,7 +185,7 @@
 }
 
 .quick-link {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
   color: #111;

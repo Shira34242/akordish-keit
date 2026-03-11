@@ -60,7 +60,7 @@
 }
 
 .card-label {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 1rem;
     font-weight: 550;
     color: rgba(0, 0, 0, 0.6);
@@ -85,7 +85,7 @@
 }
 
 .card-artist {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
     color: rgba(0, 0, 0, 0.7);

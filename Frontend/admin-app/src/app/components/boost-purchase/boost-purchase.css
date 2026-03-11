@@ -1,6 +1,8 @@
 /* Boost Purchase - Song Page Style */
 .boost-purchase {
-  font-family: 'Heebo', 'Segoe UI', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   background-color: transparent;
   direction: rtl;
   color: #1f2937;

@@ -1,6 +1,8 @@
 .chords-page {
     direction: rtl;
-    font-family: 'Heebo', 'Segoe UI', sans-serif;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
     min-height: 100vh;
     background-color: #f3f4f6;
 }

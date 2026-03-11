@@ -12,7 +12,9 @@
 
 /* Global Page Layout */
 .song-page-container {
-    font-family: 'Heebo', 'Segoe UI', sans-serif;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
     background-color: #ffffff;
     min-height: 100vh;
     direction: rtl;
@@ -162,7 +164,6 @@
 }
 
 .main-title {
-    font-family: 'Heebo', sans-serif;
     font-size: 2.2rem;
     font-weight: 800;
     color: #000000;
@@ -475,7 +476,6 @@
 }
 .lyrics-content {
     direction: rtl;
-    font-family: 'Heebo', 'Segoe UI', sans-serif;
     color: #1f2937;
     white-space: pre-wrap;
     line-height: 2.2;

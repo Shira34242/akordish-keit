@@ -1,6 +1,8 @@
 /* Subscription Selection */
 .subscription-selection {
-  font-family: 'Heebo', 'Segoe UI', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   background-color: #f7f7f7;
   min-height: 100vh;
   direction: rtl;
@@ -81,7 +83,6 @@
 }
 
 .header h1 {
-  font-family: 'Heebo', sans-serif;
   font-size: 2.6rem;
   font-weight: 900;
   color: #000000;
