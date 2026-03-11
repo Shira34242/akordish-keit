@@ -484,7 +484,8 @@ export class AddSongModalComponent implements OnInit {
                     name: this.selectedComposer.name
                 } : undefined,
                 lyricist: undefined,  // נשאיר כרגע - נעדכן אחר כך
-                arranger: undefined   // נשאיר כרגע - נעדכן אחר כך
+                arranger: undefined,  // נשאיר כרגע - נעדכן אחר כך
+                isApproved: formValue.isApproved ?? false
             };
 
             // Choose add or update based on mode

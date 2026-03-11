@@ -129,6 +129,7 @@ public class AddSongRequestDto
     public PersonInputDto? Lyricist { get; set; }
     public PersonInputDto? Arranger { get; set; }
     public List<GenreInputDto>? Genres { get; set; }
+    public bool IsApproved { get; set; } = false;
 }
 /// <summary>
 /// DTO לעריכת שיר קיים

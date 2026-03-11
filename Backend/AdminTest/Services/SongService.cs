@@ -79,7 +79,7 @@ public class SongService : ISongService
                 ArrangerId = arrangerId,
                 DurationSeconds = durationSeconds,
                 UploadedByUserId = userId,
-                IsApproved = false, // Not approved by default
+                IsApproved = dto.IsApproved,
                 ViewCount = 0,
                 PlayCount = 0,
                 CreatedAt = DateTime.UtcNow,
@@ -563,7 +563,7 @@ public class SongService : ISongService
             // Apply filters
             if (artistId.HasValue)
             {
-                query = query.Where(s => s.SongArtists.Any(sa => sa.ArtistId == artistId.Value));
+                query = query.Where(s => s.SongArtists.Any(sa => sa.ArtistId == artistId.Value && sa.Order == 1));
             }
 
             if (genreId.HasValue)

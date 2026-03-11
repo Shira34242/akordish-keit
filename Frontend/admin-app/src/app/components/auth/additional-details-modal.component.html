@@ -36,9 +36,14 @@
         >
           <span class="card-label">אחר</span>
         </div>
+        <div
+          class="instrument-card"
+          [class.selected]="selectedInstrument === 'none'"
+          (click)="selectedInstrument = 'none'"
+        >
+          <span class="card-label">לא מנגנ/ת</span>
+        </div>
       </div>
-
-      <p class="no-instrument" (click)="selectedInstrument = null">לא מנגנ/ת</p>
 
       <div class="level-pills">
         <button class="level-pill" [class.selected]="selectedLevel === 'מתחיל/ה'" (click)="selectedLevel = 'מתחיל/ה'">מתחיל/ה</button>

@@ -58,6 +58,8 @@ namespace AkordishKeit.Controllers
                 .Include(u => u.ManagedArtist)
                 .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
 
+            bool isNewGoogleUser = user == null;
+
             if (user == null)
             {
                 // 3. Create new user
@@ -95,8 +97,9 @@ namespace AkordishKeit.Controllers
             }
 
             // 4. 🔐 שימוש באימות מאובטח עם Cookies
+            // הרשמה חדשה = הצג שאלות onboarding; כניסה חוזרת = אל תציג
             var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
-            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile));
+            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile, isNewRegistration: isNewGoogleUser));
         }
 
         private async Task<GoogleTokenInfo?> VerifyGoogleToken(string idToken)
@@ -153,7 +156,7 @@ namespace AkordishKeit.Controllers
         /// 3. יוצר CSRF token (להגנה מ-CSRF attacks)
         /// 4. מחזיר את CSRF token בגוף התגובה (כדי שה-Frontend יוכל לשלוח אותו בכל בקשה)
         /// </summary>
-        private AuthResponse HandleSecureAuthentication(User user, bool hasProfessionalProfile = false)
+        private AuthResponse HandleSecureAuthentication(User user, bool hasProfessionalProfile = false, bool isNewRegistration = false)
         {
             // 1. יצירת JWT Token
             var jwtToken = GenerateJwtToken(user);
@@ -184,8 +187,7 @@ namespace AkordishKeit.Controllers
             });
 
             // 5. החזרת תגובה עם CSRF token (לא JWT!)
-            // RequiresProfileCompletion = true רק למשתמשים חדשים שעוד לא עברו את תהליך ה-onboarding
-            // משתמשים שכבר יצרו פרופיל מקצועי לא צריכים לעבור את זה שוב
+            // RequiresProfileCompletion = true רק בהרשמה חדשה, לא בכניסה חוזרת
             return new AuthResponse
             {
                 CsrfToken = csrfToken,  // מחזירים CSRF, לא JWT
@@ -201,7 +203,7 @@ namespace AkordishKeit.Controllers
                     PreferredInstrumentId = user.PreferredInstrumentId,
                     HasProfessionalProfile = hasProfessionalProfile
                 },
-                RequiresProfileCompletion = user.PreferredInstrumentId == null && !hasProfessionalProfile
+                RequiresProfileCompletion = isNewRegistration
             };
         }
 
@@ -246,8 +248,8 @@ namespace AkordishKeit.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // 5. 🔐 שימוש באימות מאובטח עם Cookies
-            return Ok(HandleSecureAuthentication(user));
+            // 5. 🔐 שימוש באימות מאובטח עם Cookies - הרשמה חדשה, הצג שאלות onboarding
+            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile: false, isNewRegistration: true));
         }
 
         [HttpPost("login")]
@@ -291,9 +293,9 @@ namespace AkordishKeit.Controllers
             user.LastLoginAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // 6. 🔐 שימוש באימות מאובטח עם Cookies
+            // 6. 🔐 שימוש באימות מאובטח עם Cookies - כניסה חוזרת, אל תציג שאלות onboarding
             var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
-            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile));
+            return Ok(HandleSecureAuthentication(user, hasProfessionalProfile, isNewRegistration: false));
         }
 
         [HttpPut("complete-profile")]

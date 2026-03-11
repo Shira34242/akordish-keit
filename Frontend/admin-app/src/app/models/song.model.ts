@@ -32,6 +32,7 @@ export interface AddSongRequest {
     lyricist?: PersonInput;  // שונה מ-lyricistId
     arranger?: PersonInput;  // שונה מ-arrangerId
     genres?: GenreInput[];  // שונה מ-genreIds
+    isApproved?: boolean;
 }
 
 export interface SongDto {
