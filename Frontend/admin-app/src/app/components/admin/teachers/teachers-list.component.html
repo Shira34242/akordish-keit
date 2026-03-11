@@ -161,6 +161,13 @@
                 <span class="material-icons">block</span>
               </button>
               <button
+                class="btn-action btn-duplicate"
+                (click)="duplicateTeacher(teacher.id, teacher.displayName)"
+                title="שכפל"
+              >
+                <span class="material-icons">content_copy</span>
+              </button>
+              <button
                 class="btn-action btn-delete"
                 (click)="deleteTeacher(teacher.id)"
                 title="מחק"

@@ -155,6 +155,12 @@ export class AuthModalComponent {
       return;
     }
 
+    if (this.passwordErrors.length > 0) {
+      this.errorMessage = 'הסיסמא חייבת לכלול: ' + this.passwordErrors.join(', ');
+      this.loading = false;
+      return;
+    }
+
     this.authService.register(this.username, this.email, this.password).subscribe({
       next: (response) => {
         this.loading = false;

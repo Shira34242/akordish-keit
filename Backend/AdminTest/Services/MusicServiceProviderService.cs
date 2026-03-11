@@ -365,6 +365,69 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<MusicServiceProviderDto> DuplicateServiceProviderAsync(int id)
+    {
+        var original = await _context.ServiceProviders
+            .Include(sp => sp.Categories)
+            .Include(sp => sp.GalleryImages)
+            .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
+
+        if (original == null)
+            throw new InvalidOperationException("בעל המקצוע לא נמצא");
+
+        var newProvider = new MusicServiceProvider
+        {
+            UserId = null,
+            DisplayName = original.DisplayName + " - עותק",
+            ProfileImageUrl = original.ProfileImageUrl,
+            ShortBio = original.ShortBio,
+            FullDescription = original.FullDescription,
+            IsTeacher = original.IsTeacher,
+            CityId = original.CityId,
+            Location = original.Location,
+            YearsOfExperience = original.YearsOfExperience,
+            WorkingHours = original.WorkingHours,
+            WhatsAppNumber = original.WhatsAppNumber,
+            PhoneNumber = original.PhoneNumber,
+            Email = original.Email,
+            WebsiteUrl = original.WebsiteUrl,
+            VideoUrl = original.VideoUrl,
+            IsFeatured = false,
+            Status = ProfileStatus.Pending,
+            Tier = ProfileTier.Free,
+            IsPrimaryProfile = false,
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = false
+        };
+
+        // Copy categories
+        foreach (var cat in original.Categories)
+        {
+            newProvider.Categories.Add(new MusicServiceProviderCategoryMapping
+            {
+                CategoryId = cat.CategoryId,
+                SubCategory = cat.SubCategory
+            });
+        }
+
+        // Copy gallery images
+        foreach (var img in original.GalleryImages)
+        {
+            newProvider.GalleryImages.Add(new MusicServiceProviderGalleryImage
+            {
+                ImageUrl = img.ImageUrl,
+                Caption = img.Caption,
+                Order = img.Order,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        _context.ServiceProviders.Add(newProvider);
+        await _context.SaveChangesAsync();
+
+        return (await GetServiceProviderByIdAsync(newProvider.Id))!;
+    }
+
     // ═══════════════════════════════════════════════════════════
     //                    Mapping Methods
     // ═══════════════════════════════════════════════════════════

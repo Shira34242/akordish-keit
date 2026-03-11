@@ -314,4 +314,19 @@ public class TeachersController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    // POST: api/Teachers/5/duplicate
+    [HttpPost("{id}/duplicate")]
+    public async Task<ActionResult<TeacherDto>> DuplicateTeacher(int id)
+    {
+        try
+        {
+            var duplicate = await _service.DuplicateTeacherAsync(id);
+            return Ok(duplicate);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

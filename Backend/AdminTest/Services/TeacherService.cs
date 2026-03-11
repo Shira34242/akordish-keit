@@ -410,6 +410,98 @@ public class TeacherService : ITeacherService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<TeacherDto> DuplicateTeacherAsync(int id)
+    {
+        var original = await _context.Teachers
+            .Include(t => t.ServiceProvider)
+                .ThenInclude(sp => sp.Categories)
+            .Include(t => t.ServiceProvider.GalleryImages)
+            .Include(t => t.Instruments)
+            .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
+
+        if (original == null)
+            throw new InvalidOperationException("המורה לא נמצא");
+
+        // Create a new MusicServiceProvider (base)
+        var newServiceProvider = new MusicServiceProvider
+        {
+            UserId = null,
+            DisplayName = original.ServiceProvider.DisplayName + " - עותק",
+            ProfileImageUrl = original.ServiceProvider.ProfileImageUrl,
+            ShortBio = original.ServiceProvider.ShortBio,
+            FullDescription = original.ServiceProvider.FullDescription,
+            IsTeacher = true,
+            CityId = original.ServiceProvider.CityId,
+            Location = original.ServiceProvider.Location,
+            YearsOfExperience = original.ServiceProvider.YearsOfExperience,
+            WorkingHours = original.ServiceProvider.WorkingHours,
+            WhatsAppNumber = original.ServiceProvider.WhatsAppNumber,
+            PhoneNumber = original.ServiceProvider.PhoneNumber,
+            Email = original.ServiceProvider.Email,
+            WebsiteUrl = original.ServiceProvider.WebsiteUrl,
+            VideoUrl = original.ServiceProvider.VideoUrl,
+            IsFeatured = false,
+            Status = ProfileStatus.Pending,
+            Tier = ProfileTier.Free,
+            IsPrimaryProfile = false,
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = false
+        };
+
+        // Copy categories
+        foreach (var cat in original.ServiceProvider.Categories)
+        {
+            newServiceProvider.Categories.Add(new MusicServiceProviderCategoryMapping
+            {
+                CategoryId = cat.CategoryId,
+                SubCategory = cat.SubCategory
+            });
+        }
+
+        // Copy gallery images
+        foreach (var img in original.ServiceProvider.GalleryImages)
+        {
+            newServiceProvider.GalleryImages.Add(new MusicServiceProviderGalleryImage
+            {
+                ImageUrl = img.ImageUrl,
+                Caption = img.Caption,
+                Order = img.Order,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        _context.ServiceProviders.Add(newServiceProvider);
+        await _context.SaveChangesAsync();
+
+        // Create Teacher (extension)
+        var newTeacher = new Teacher
+        {
+            Id = newServiceProvider.Id,
+            PriceList = original.PriceList,
+            Languages = original.Languages,
+            TargetAudience = original.TargetAudience,
+            Availability = original.Availability,
+            Education = original.Education,
+            LessonTypes = original.LessonTypes,
+            Specializations = original.Specializations
+        };
+
+        // Copy instruments
+        foreach (var instrument in original.Instruments)
+        {
+            newTeacher.Instruments.Add(new TeacherInstrument
+            {
+                InstrumentId = instrument.InstrumentId,
+                IsPrimary = instrument.IsPrimary
+            });
+        }
+
+        _context.Teachers.Add(newTeacher);
+        await _context.SaveChangesAsync();
+
+        return (await GetTeacherByIdAsync(newTeacher.Id))!;
+    }
+
     // ═══════════════════════════════════════════════════════════
     //                    Mapping Methods
     // ═══════════════════════════════════════════════════════════

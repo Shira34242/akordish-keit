@@ -144,6 +144,13 @@
                 <span class="material-icons">visibility_off</span>
               </button>
               <button
+                class="btn-action btn-duplicate"
+                (click)="duplicateArtist(artist.id, artist.name)"
+                title="שכפל"
+              >
+                <span class="material-icons">content_copy</span>
+              </button>
+              <button
                 class="btn-action btn-delete"
                 (click)="deleteArtist(artist.id)"
                 title="מחק"

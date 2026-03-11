@@ -30,4 +30,6 @@ public interface ITeacherService
     Task LinkToUserAsync(int teacherId, int userId);
 
     Task UnlinkFromUserAsync(int teacherId);
+
+    Task<TeacherDto> DuplicateTeacherAsync(int id);
 }

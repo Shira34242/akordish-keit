@@ -21,7 +21,6 @@ public class CreateArticleDto
     public string? AuthorName { get; set; }
 
     [Required]
-    [MinLength(1)]
     public List<int> CategoryIds { get; set; }
 
     [Required]

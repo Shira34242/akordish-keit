@@ -33,4 +33,6 @@ public interface IMusicServiceProviderService
     Task LinkToUserAsync(int providerId, int userId);
 
     Task UnlinkFromUserAsync(int providerId);
+
+    Task<MusicServiceProviderDto> DuplicateServiceProviderAsync(int id);
 }

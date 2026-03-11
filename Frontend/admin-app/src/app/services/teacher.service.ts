@@ -86,4 +86,8 @@ export class TeacherService {
   unlinkFromUser(teacherId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${teacherId}/unlink-user`, {});
   }
+
+  duplicateTeacher(id: number): Observable<TeacherDto> {
+    return this.http.post<TeacherDto>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
 }

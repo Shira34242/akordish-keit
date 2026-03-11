@@ -105,12 +105,13 @@ export class SubmitArticleComponent implements OnInit {
   }
 
   generateSlug(text: string): string {
-    return text
+    const cleaned = text
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
+    return cleaned || `article-${Date.now()}`;
   }
 
   calculateReadTime(): void {

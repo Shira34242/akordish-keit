@@ -172,6 +172,21 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
+  duplicateArtist(id: number, name: string): void {
+    if (confirm(`האם לשכפל את האומן "${name}"?`)) {
+      this.artistService.duplicateArtist(id).subscribe({
+        next: (duplicate) => {
+          alert(`האומן "${duplicate.name}" שוכפל בהצלחה!`);
+          this.loadArtists();
+        },
+        error: (err) => {
+          console.error('שגיאה בשכפול אומן:', err);
+          alert('שגיאה בשכפול האומן');
+        }
+      });
+    }
+  }
+
   addNewArtist(): void {
     this.selectedArtistId = null;
     this.showEditModal = true;

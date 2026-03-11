@@ -97,4 +97,8 @@ export class MusicServiceProviderService {
   unlinkFromUser(providerId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${providerId}/unlink-user`, {});
   }
+
+  duplicateServiceProvider(id: number): Observable<MusicServiceProviderDto> {
+    return this.http.post<MusicServiceProviderDto>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
 }

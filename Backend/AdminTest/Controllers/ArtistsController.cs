@@ -1049,6 +1049,142 @@ public class ArtistsController : ControllerBase
     }
 
     /// <summary>
+    /// שכפול אומן (Admin בלבד)
+    /// </summary>
+    [HttpPost("{id}/duplicate")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArtistDetailDto>> DuplicateArtist(int id)
+    {
+        try
+        {
+            var original = await _context.Artists
+                .Include(a => a.GalleryImages)
+                .Include(a => a.Videos)
+                .Include(a => a.SocialLinks)
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (original == null)
+                return NotFound("אומן לא נמצא");
+
+            var newArtist = new Artist
+            {
+                UserId = null,
+                Name = original.Name + " - עותק",
+                EnglishName = original.EnglishName,
+                ShortBio = original.ShortBio,
+                Biography = original.Biography,
+                ImageUrl = original.ImageUrl,
+                BannerImageUrl = original.BannerImageUrl,
+                BannerGifUrl = original.BannerGifUrl,
+                WebsiteUrl = original.WebsiteUrl,
+                Status = ArtistStatus.Pending,
+                IsPremium = false,
+                IsVerified = false,
+                IsPrimaryProfile = false,
+                Tier = ProfileTier.Free,
+                DisplayOrder = 999,
+                CreatedAt = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            _context.Artists.Add(newArtist);
+            await _context.SaveChangesAsync();
+
+            // Copy social links
+            foreach (var link in original.SocialLinks)
+            {
+                _context.ArtistSocialLinks.Add(new ArtistSocialLink
+                {
+                    ArtistId = newArtist.Id,
+                    Platform = link.Platform,
+                    Url = link.Url
+                });
+            }
+
+            // Copy gallery images
+            foreach (var img in original.GalleryImages)
+            {
+                _context.ArtistGalleryImages.Add(new ArtistGalleryImage
+                {
+                    ArtistId = newArtist.Id,
+                    ImageUrl = img.ImageUrl,
+                    Caption = img.Caption,
+                    DisplayOrder = img.DisplayOrder,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // Copy videos
+            foreach (var video in original.Videos)
+            {
+                _context.ArtistVideos.Add(new ArtistVideo
+                {
+                    ArtistId = newArtist.Id,
+                    VideoUrl = video.VideoUrl,
+                    Title = video.Title,
+                    DisplayOrder = video.DisplayOrder,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            var result = await _context.Artists
+                .Include(a => a.GalleryImages.OrderBy(gi => gi.DisplayOrder))
+                .Include(a => a.Videos.OrderBy(v => v.DisplayOrder))
+                .Include(a => a.SocialLinks)
+                .Where(a => a.Id == newArtist.Id)
+                .Select(a => new ArtistDetailDto
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    EnglishName = a.EnglishName,
+                    ShortBio = a.ShortBio,
+                    Biography = a.Biography,
+                    ImageUrl = a.ImageUrl,
+                    BannerImageUrl = a.BannerImageUrl,
+                    BannerGifUrl = a.BannerGifUrl,
+                    WebsiteUrl = a.WebsiteUrl,
+                    IsVerified = a.IsVerified,
+                    IsPremium = a.IsPremium,
+                    Status = a.Status,
+                    UserId = a.UserId,
+                    GalleryImages = a.GalleryImages.Select(gi => new ArtistGalleryImageDto
+                    {
+                        Id = gi.Id,
+                        ImageUrl = gi.ImageUrl,
+                        Caption = gi.Caption,
+                        DisplayOrder = gi.DisplayOrder
+                    }).ToList(),
+                    Videos = a.Videos.Select(v => new ArtistVideoDto
+                    {
+                        Id = v.Id,
+                        VideoUrl = v.VideoUrl,
+                        Title = v.Title,
+                        DisplayOrder = v.DisplayOrder
+                    }).ToList(),
+                    SocialLinks = a.SocialLinks.Select(sl => new SocialLinkDto
+                    {
+                        Id = sl.Id,
+                        Platform = sl.Platform,
+                        Url = sl.Url
+                    }).ToList(),
+                    SongCount = 0,
+                    ArticleCount = 0,
+                    UpcomingEventCount = 0,
+                    CreatedAt = a.CreatedAt
+                })
+                .FirstOrDefaultAsync();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"שגיאה בשכפול אומן: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// שינוי סטטוס אומן (Admin בלבד)
     /// </summary>
     [HttpPut("{id}/status")]

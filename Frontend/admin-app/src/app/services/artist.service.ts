@@ -246,4 +246,11 @@ export class ArtistService {
     updateArtistStatus(id: number, status: ArtistStatus): Observable<void> {
         return this.http.put<void>(`${this.apiUrl}/${id}/status`, status);
     }
+
+    /**
+     * שכפול אומן (Admin בלבד)
+     */
+    duplicateArtist(id: number): Observable<Artist> {
+        return this.http.post<Artist>(`${this.apiUrl}/${id}/duplicate`, {});
+    }
 }

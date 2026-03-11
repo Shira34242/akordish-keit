@@ -196,6 +196,21 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
+  duplicateTeacher(id: number, name: string): void {
+    if (confirm(`האם לשכפל את המורה "${name}"?`)) {
+      this.teacherService.duplicateTeacher(id).subscribe({
+        next: (duplicate) => {
+          alert(`המורה "${duplicate.displayName}" שוכפל בהצלחה!`);
+          this.loadTeachers();
+        },
+        error: (err) => {
+          console.error('שגיאה בשכפול מורה:', err);
+          alert('שגיאה בשכפול המורה');
+        }
+      });
+    }
+  }
+
   addNewTeacher(): void {
     this.router.navigate(['/admin/teachers/new']);
   }

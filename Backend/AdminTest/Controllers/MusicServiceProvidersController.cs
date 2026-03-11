@@ -313,4 +313,19 @@ public class MusicServiceProvidersController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    // POST: api/MusicServiceProviders/5/duplicate
+    [HttpPost("{id}/duplicate")]
+    public async Task<ActionResult<MusicServiceProviderDto>> DuplicateServiceProvider(int id)
+    {
+        try
+        {
+            var duplicate = await _service.DuplicateServiceProviderAsync(id);
+            return Ok(duplicate);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

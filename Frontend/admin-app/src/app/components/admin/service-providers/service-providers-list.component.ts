@@ -199,6 +199,21 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
+  duplicateProvider(id: number, name: string): void {
+    if (confirm(`האם לשכפל את "${name}"?`)) {
+      this.providerService.duplicateServiceProvider(id).subscribe({
+        next: (duplicate) => {
+          alert(`"${duplicate.displayName}" שוכפל בהצלחה!`);
+          this.loadProviders();
+        },
+        error: (err) => {
+          console.error('שגיאה בשכפול בעל מקצוע:', err);
+          alert('שגיאה בשכפול בעל המקצוע');
+        }
+      });
+    }
+  }
+
   addNewProvider(): void {
     this.router.navigate(['/admin/service-providers/new']);
   }
