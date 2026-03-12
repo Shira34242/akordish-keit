@@ -100,6 +100,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/artist-detail/artist-detail.component').then(m => m.ArtistDetailComponent),
                 title: 'אקורדישקייט'
             },
+            {
+                path: 'teacher/:id',
+                loadComponent: () => import('./components/public/teacher-detail/teacher-detail.component').then(m => m.TeacherDetailComponent),
+                title: 'מורה - אקורדישקייט'
+            },
             // ===== מנויים ותשלומים =====
             {
                 path: 'subscription/select',

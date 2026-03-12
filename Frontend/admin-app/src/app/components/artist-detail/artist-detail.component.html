@@ -1,204 +1,170 @@
-<div class="artist-page-container"
-     [class.has-banner]="artist?.bannerImageUrl || (artist?.isPremium && artist?.bannerGifUrl)"
-     *ngIf="!loading && artist">
+<!-- ==============================
+     ARTIST PAGE
+============================== -->
 
-  <!-- באנר (לכולם - GIF למשלם, תמונה רגילה לחינמי) -->
-  <div class="artist-banner" *ngIf="artist.bannerImageUrl || (artist.isPremium && artist.bannerGifUrl)">
-    <img [src]="(artist.isPremium && artist.bannerGifUrl) ? artist.bannerGifUrl : artist.bannerImageUrl"
+<div class="artist-page-container" *ngIf="!loading && artist">
+
+  <!-- מסכה לבנה מעל ה-hero -->
+  <div class="top-scroll-mask"></div>
+
+  <!-- Hero Background (fixed, מתכווץ בגלילה) -->
+  <div class="artist-hero-bg" #artistHeroBg>
+    <img *ngIf="heroBannerSrc"
+         [src]="heroBannerSrc"
          [alt]="artist.name"
-         class="banner-img">
+         class="hero-banner-img">
+    <div class="hero-overlay-right" *ngIf="heroBannerSrc"></div>
   </div>
 
-  <!-- Header Background (lime card) -->
-  <div class="artist-header-bg"></div>
+  <!-- Hero Content Area (מעל ה-bg, בתזרים רגיל) -->
+  <div class="hero-content-area">
+    <div class="hero-inner">
 
-  <!-- Header Content -->
-  <div class="header-content">
-    <div class="header-top-row">
-
-      <!-- תמונת פרופיל -->
-      <div class="header-image-section">
-        <div class="artist-cover-wrapper">
+      <!-- ימין: תמונת פרופיל + מידע -->
+      <div class="hero-info-side">
+        <div class="hero-avatar-wrap">
           <img [src]="artist.imageUrl || 'assets/default-artist.png'"
                [alt]="artist.name"
-               class="artist-cover">
+               class="hero-avatar">
         </div>
-      </div>
-
-      <!-- מידע על האמן -->
-      <div class="header-info-section">
-
-        <!-- תגים -->
-        <div class="header-badges">
-          <span class="badge-premium" *ngIf="artist.isPremium">מומלץ</span>
-          <span class="badge-verified" *ngIf="artist.isVerified">מאומת ✓</span>
-        </div>
-
-        <h1 class="artist-name">{{ artist.name }}</h1>
-        <p class="artist-english-name" *ngIf="artist.englishName">{{ artist.englishName }}</p>
-        <p class="short-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
-
-        <!-- סטטיסטיקות -->
-        <div class="artist-stats">
-          <div class="stat-item">
-            <span class="stat-number">{{ artist.songCount }}</span>
-            <span class="stat-label">שירים</span>
+        <div class="hero-text">
+          <div class="hero-badges">
+            <span class="badge-featured" *ngIf="artist.isPremium">אומן מוביל</span>
+            <span class="badge-verified" *ngIf="artist.isVerified">✓ מאומת</span>
           </div>
-          <div class="stat-item" *ngIf="artist.articleCount > 0">
-            <span class="stat-number">{{ artist.articleCount }}</span>
-            <span class="stat-label">כתבות</span>
+          <h1 class="hero-name">{{ artist.name }}</h1>
+          <p class="hero-english" *ngIf="artist.englishName">{{ artist.englishName }}</p>
+          <p class="hero-short-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="stat-num">{{ artist.songCount }}</span>
+              <span class="stat-lbl">אקורדים</span>
+            </div>
+            <div class="hero-stat" *ngIf="artist.articleCount > 0">
+              <span class="stat-num">{{ artist.articleCount }}</span>
+              <span class="stat-lbl">כתבות</span>
+            </div>
+            <div class="hero-stat" *ngIf="artist.upcomingEventCount > 0">
+              <span class="stat-num">{{ artist.upcomingEventCount }}</span>
+              <span class="stat-lbl">הופעות</span>
+            </div>
           </div>
-          <div class="stat-item" *ngIf="artist.upcomingEventCount > 0">
-            <span class="stat-number">{{ artist.upcomingEventCount }}</span>
-            <span class="stat-label">הופעות</span>
-          </div>
-        </div>
-
-        <!-- רשתות חברתיות -->
-        <div class="social-links" *ngIf="artist.socialLinks && artist.socialLinks.length > 0">
-          <a *ngFor="let link of artist.socialLinks"
-             [href]="link.url"
+          <a *ngIf="artist.websiteUrl"
+             [href]="artist.websiteUrl"
              target="_blank"
-             class="social-link"
-             [title]="getSocialPlatformName(link.platform)">
-            {{ getSocialPlatformName(link.platform) }}
+             class="hero-website-link">
+            <span class="hero-website-icon" [innerHTML]="getSocialIconSvg(7)"></span>
+            {{ getShortUrl(artist.websiteUrl) }}
           </a>
         </div>
-
       </div>
+
     </div>
 
-    <!-- כפתורי פעולה -->
-    <div class="header-actions">
-      <button class="btn-upgrade" *ngIf="!artist.isPremium" (click)="onUpgrade()">
-        שדרג חשבון אמן
-      </button>
-      <button class="btn-boost" (click)="onBoost()">
-        Boost
-      </button>
+    <!-- שמאל תחתון: כפתורי רשתות חברתיות -->
+    <div class="hero-social" *ngIf="artist.socialLinks && artist.socialLinks.length > 0">
+      <a *ngFor="let link of artist.socialLinks"
+         [href]="link.url"
+         target="_blank"
+         class="social-icon-btn"
+         [title]="getSocialPlatformName(link.platform)"
+         [innerHTML]="getSocialIconSvg(link.platform)">
+      </a>
     </div>
   </div>
+  <!-- /hero-content-area -->
 
-  <!-- Content Wrapper -->
-  <div class="content-wrapper">
+  <!-- ==============================
+       תוכן הדף (מתחת ל-hero)
+  ============================== -->
+  <div class="page-content">
 
-    <!-- ביוגרפיה -->
-    <div class="bio-card" *ngIf="artist.biography">
-      <h3>אודות</h3>
-      <p class="biography-text">{{ artist.biography }}</p>
-    </div>
+    <!-- ביוגרפיה + גלריה + וידאו — תיבה צהובה -->
+    <div class="bio-gallery-card"
+         *ngIf="artist.biography || (artist.isPremium && ((artist.galleryImages && artist.galleryImages.length > 0) || (artist.videos && artist.videos.length > 0)))">
 
-    <!-- גלריה (משלם בלבד) -->
-    <div class="gallery-card" *ngIf="artist.isPremium && artist.galleryImages && artist.galleryImages.length > 0">
-      <h3>גלריה</h3>
-      <div class="gallery-grid">
-        <div *ngFor="let image of artist.galleryImages" class="gallery-item">
-          <img [src]="image.imageUrl" [alt]="image.caption || artist.name" class="gallery-image">
-          <p class="image-caption" *ngIf="image.caption">{{ image.caption }}</p>
+      <div class="bio-section" *ngIf="artist.biography">
+        <h2 class="card-section-label">אודות</h2>
+        <p class="biography-text">{{ artist.biography }}</p>
+      </div>
+
+      <div class="media-section"
+           *ngIf="artist.isPremium && ((artist.galleryImages && artist.galleryImages.length > 0) || (artist.videos && artist.videos.length > 0))">
+        <h2 class="card-section-label" *ngIf="artist.biography">גלריה</h2>
+        <div class="media-grid">
+          <div *ngFor="let image of artist.galleryImages" class="media-item">
+            <img [src]="image.imageUrl" [alt]="image.caption || artist.name" class="media-img">
+            <p class="media-caption" *ngIf="image.caption">{{ image.caption }}</p>
+          </div>
+          <div *ngFor="let video of artist.videos" class="media-item media-item-video">
+            <iframe [src]="getYouTubeEmbedUrl(video.videoUrl)"
+                    frameborder="0"
+                    allowfullscreen
+                    class="media-iframe"></iframe>
+            <p class="media-caption" *ngIf="video.title">{{ video.title }}</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- וידאו (משלם בלבד) -->
-    <div class="videos-card" *ngIf="artist.isPremium && artist.videos && artist.videos.length > 0">
-      <h3>וידאו</h3>
-      <div class="video-grid">
-        <div *ngFor="let video of artist.videos" class="video-item">
-          <iframe [src]="getYouTubeEmbedUrl(video.videoUrl)"
-                  frameborder="0"
-                  allowfullscreen
-                  class="video-iframe"></iframe>
-          <p class="video-title" *ngIf="video.title">{{ video.title }}</p>
+    <!-- אקורדים ושירים -->
+    <div class="songs-section" *ngIf="totalSongs > 0 || loadingSongs">
+      <div class="section-header">
+        <h2 class="section-title">אקורדים <span class="section-count">({{ totalSongs }})</span></h2>
+        <a [routerLink]="['/chords']" [queryParams]="{artist: artist.id}" class="see-all-link">כל האקורדים ←</a>
+      </div>
+      <div class="loading-small" *ngIf="loadingSongs">טוען שירים...</div>
+      <div class="songs-grid" *ngIf="!loadingSongs && songs.length > 0">
+        <div *ngFor="let song of songs" class="song-card" (click)="navigateToSong(song.id)">
+          <span class="song-card-title">{{ song.title }}</span>
+          <span class="song-card-views">{{ song.viewCount }} צפיות</span>
+        </div>
+      </div>
+      <p class="no-content" *ngIf="!loadingSongs && songs.length === 0">אין שירים זמינים</p>
+    </div>
+
+    <!-- כתבות ותכנים -->
+    <div class="articles-section" *ngIf="totalArticles > 0">
+      <div class="section-header">
+        <h2 class="section-title">כתבות ותכנים <span class="section-count">({{ totalArticles }})</span></h2>
+        <a [routerLink]="['/articles']" [queryParams]="{artist: artist.id}" class="see-all-link">כל הכתבות ←</a>
+      </div>
+      <div class="loading-small" *ngIf="loadingArticles">טוען כתבות...</div>
+      <div class="articles-grid" *ngIf="!loadingArticles && articles.length > 0">
+        <div *ngFor="let article of articles" class="article-card" (click)="navigateToArticle(article.slug)">
+          <img [src]="article.featuredImageUrl" [alt]="article.title" class="article-card-img">
+          <div class="article-card-body">
+            <span class="article-card-title">{{ article.title }}</span>
+            <span class="article-card-sub" *ngIf="article.subtitle">{{ article.subtitle }}</span>
+            <span class="article-card-date">{{ article.publishDate | date: 'dd/MM/yyyy' }}</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Main Layout -->
-    <div class="main-layout">
-
-      <!-- עמודת תוכן -->
-      <div class="content-column">
-
-        <!-- שירים ואקורדים -->
-        <div class="content-card">
-          <div class="card-header">
-            <h3>שירים ואקורדים ({{ totalSongs }})</h3>
-            <a [routerLink]="['/chords']" [queryParams]="{artist: artist.id}" class="see-all-link">הכל →</a>
-          </div>
-          <div class="loading-small" *ngIf="loadingSongs">טוען שירים...</div>
-          <ul class="song-list" *ngIf="!loadingSongs && songs.length > 0">
-            <li *ngFor="let song of songs" (click)="navigateToSong(song.id)">
-              <span class="song-title-text">{{ song.title }}</span>
-              <span class="song-views-text">{{ song.viewCount }} צפיות</span>
-            </li>
-          </ul>
-          <p class="no-content" *ngIf="!loadingSongs && songs.length === 0">אין שירים זמינים</p>
-        </div>
-
-        <!-- כתבות ותכנים -->
-        <div class="content-card" *ngIf="totalArticles > 0">
-          <div class="card-header">
-            <h3>כתבות ותכנים ({{ totalArticles }})</h3>
-            <a [routerLink]="['/articles']" [queryParams]="{artist: artist.id}" class="see-all-link">הכל →</a>
-          </div>
-          <div class="loading-small" *ngIf="loadingArticles">טוען כתבות...</div>
-          <div class="articles-list" *ngIf="!loadingArticles && articles.length > 0">
-            <div *ngFor="let article of articles" class="article-item" (click)="navigateToArticle(article.slug)">
-              <img [src]="article.featuredImageUrl" [alt]="article.title" class="article-thumb">
-              <div class="article-info">
-                <span class="article-title-text">{{ article.title }}</span>
-                <span class="article-subtitle-text" *ngIf="article.subtitle">{{ article.subtitle }}</span>
-                <span class="article-date-text">{{ article.publishDate | date: 'dd/MM/yyyy' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- הופעות קרובות -->
-        <div class="content-card" *ngIf="events.length > 0">
-          <div class="card-header">
-            <h3>הופעות קרובות ({{ events.length }})</h3>
-          </div>
-          <div class="loading-small" *ngIf="loadingEvents">טוען הופעות...</div>
-          <div class="events-list" *ngIf="!loadingEvents">
-            <div *ngFor="let event of events" class="event-item">
-              <div class="event-date-badge">
-                <span class="event-day">{{ event.eventDate | date: 'dd' }}</span>
-                <span class="event-month">{{ event.eventDate | date: 'MMM' }}</span>
-              </div>
-              <div class="event-info">
-                <span class="event-title-text">{{ event.name }}</span>
-                <span class="event-location-text" *ngIf="event.location">{{ event.location }}</span>
-              </div>
-              <a [href]="event.ticketUrl" target="_blank" class="btn-tickets">כרטיסים</a>
-            </div>
-          </div>
-        </div>
-
+    <!-- הופעות קרובות -->
+    <div class="events-section" *ngIf="events.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">הופעות קרובות</h2>
       </div>
-
-      <!-- Sidebar -->
-      <div class="sidebar-column">
-
-        <!-- מידע -->
-        <div class="sidebar-card">
-          <h3>מידע</h3>
-          <div class="info-list">
-            <div class="info-item" *ngIf="artist.websiteUrl">
-              <span class="info-label">אתר</span>
-              <a [href]="artist.websiteUrl" target="_blank" class="info-value-link">{{ artist.websiteUrl }}</a>
-            </div>
-            <div class="info-item">
-              <span class="info-label">באתר מאז</span>
-              <span class="info-value">{{ artist.createdAt | date: 'MM/yyyy' }}</span>
-            </div>
+      <div class="events-grid">
+        <div *ngFor="let event of events" class="event-card">
+          <div class="event-date-badge">
+            <span class="event-day">{{ event.eventDate | date: 'dd' }}</span>
+            <span class="event-month">{{ event.eventDate | date: 'MMM' }}</span>
           </div>
+          <div class="event-info">
+            <span class="event-title">{{ event.name }}</span>
+            <span class="event-loc" *ngIf="event.location">{{ event.location }}</span>
+          </div>
+          <a [href]="event.ticketUrl" target="_blank" class="btn-tickets">כרטיסים</a>
         </div>
-
       </div>
     </div>
 
   </div>
+  <!-- /page-content -->
+
 </div>
 
 <!-- Loading -->

@@ -1,0 +1,595 @@
+/* ════════════════════════════════════════════════════
+   PAGE BASE
+════════════════════════════════════════════════════ */
+.teacher-page {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  background: #ffffff;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+/* ════════════════════════════════════════════════════
+   HERO WRAPPER
+════════════════════════════════════════════════════ */
+.hero-wrapper {
+  position: relative;
+  margin: 16px;
+  margin-bottom: 0;
+}
+
+/* ════════════════════════════════════════════════════
+   HERO CARD — split: right=black, left=banner
+════════════════════════════════════════════════════ */
+.hero-card {
+  display: flex;
+  flex-direction: row;
+  height: 300px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* RIGHT side (first child in RTL flex = rightmost) */
+.hero-info {
+  flex: 0 0 42%;
+  background: #000000;
+  padding: 32px 32px 32px 24px;
+  display: flex;
+  align-items: flex-end;
+  /* push text to bottom so profile image has space below */
+  padding-bottom: 88px;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.badge-featured {
+  display: inline-block;
+  background: #ddff53;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 3px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  width: fit-content;
+}
+
+.teacher-name {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.instruments-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.instrument-chip {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+.instrument-chip.primary {
+  background: #ddff53;
+  color: #000000;
+  font-weight: 800;
+}
+
+.city-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.city-row .material-icons {
+  font-size: 16px;
+}
+
+/* LEFT side — banner area (placeholder: lime until bannerImageUrl) */
+.hero-banner {
+  flex: 1;
+  background-color: #ddff53;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Dim the profile image when used as banner bg to keep it subtle */
+.hero-banner[style*="url"] {
+  filter: brightness(0.75) saturate(0.6);
+}
+
+/* ════════════════════════════════════════════════════
+   PROFILE BUBBLE — protrudes below hero
+════════════════════════════════════════════════════ */
+.profile-bubble {
+  position: absolute;
+  bottom: -60px;
+  right: 32px;
+  width: 120px;
+  height: 120px;
+  z-index: 10;
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ddff53;
+  display: block;
+}
+
+.star-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: #ddff53;
+  color: #000000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-badge .material-icons {
+  font-size: 16px;
+}
+
+/* ════════════════════════════════════════════════════
+   PAGE BODY — sidebar (right) + main (left)
+════════════════════════════════════════════════════ */
+.page-body {
+  display: grid;
+  /* RTL grid: first column = RIGHT side */
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  margin: 0 16px;
+  padding-top: 80px; /* space for protruding profile image (60px) + 20px gap */
+  padding-bottom: 60px;
+  align-items: start;
+}
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════════════════════ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: calc(2vh + 72px);
+}
+
+/* Contact card */
+.contact-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.btn-contact {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: right;
+  transition: background 0.15s;
+}
+
+.btn-contact:hover {
+  background: #404040;
+}
+
+.btn-contact .material-icons {
+  font-size: 20px;
+}
+
+/* Contact details (revealed on click) */
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: #000000;
+  background: transparent;
+  text-decoration: none;
+}
+
+.contact-item .material-icons {
+  font-size: 18px;
+  color: #000;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.contact-item.link {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.contact-item.link:hover {
+  background: #ddff53;
+}
+
+/* WhatsApp button */
+.btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: #ddff53;
+  color: #000000;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: opacity 0.15s;
+}
+
+.btn-whatsapp:hover {
+  opacity: 0.82;
+}
+
+.btn-whatsapp .material-icons {
+  font-size: 20px;
+}
+
+/* ════════════════════════════════════════════════════
+   MAIN CONTENT
+════════════════════════════════════════════════════ */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Short bio */
+.short-bio-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 24px 28px;
+}
+
+.short-bio-text {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #000000;
+  margin: 0;
+  line-height: 1.6;
+  text-align: right;
+}
+
+/* Full description */
+.description-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 24px 28px;
+}
+
+.full-desc-text {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: #000000;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  margin: 0;
+  text-align: right;
+}
+
+/* Card label (section heading) */
+.card-label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 14px 0;
+  text-align: right;
+}
+
+/* Info chips card */
+.info-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 90px;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+.chips-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 14px;
+  background: #ffffff;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: #000000;
+}
+
+/* Divider */
+.divider {
+  height: 2px;
+  background: #F2F2F2;
+  border-radius: 999px;
+  margin: 4px 0;
+}
+
+/* Gallery — horizontal scroll */
+.gallery-section {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 20px 24px;
+}
+
+.gallery-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  /* smooth scrolling + hide scrollbar visually */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #ddff53 transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.gallery-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar-thumb {
+  background: #ddff53;
+  border-radius: 999px;
+}
+
+.gallery-item {
+  flex-shrink: 0;
+  width: 220px;
+  height: 180px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+/* Video */
+.video-section {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 20px 24px;
+}
+
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.video-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 14px;
+}
+
+/* ════════════════════════════════════════════════════
+   LOADING STATE
+════════════════════════════════════════════════════ */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  color: #999;
+}
+
+.spinner {
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #000000;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .hero-card {
+    height: 260px;
+  }
+
+  .hero-info {
+    flex: 0 0 50%;
+    padding-bottom: 80px;
+  }
+
+  .teacher-name {
+    font-size: 1.5rem;
+  }
+
+  .page-body {
+    grid-template-columns: 1fr;
+    padding-top: 72px;
+  }
+
+  .sidebar {
+    position: relative;
+    top: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-wrapper {
+    margin: 8px;
+  }
+
+  .hero-card {
+    height: 220px;
+    flex-direction: column;
+    border-radius: 16px;
+  }
+
+  .hero-info {
+    flex: 0 0 60%;
+    padding: 20px 16px 70px;
+  }
+
+  .hero-banner {
+    flex: 1;
+  }
+
+  .profile-bubble {
+    bottom: -50px;
+    right: 16px;
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .page-body {
+    margin: 0 8px;
+    padding-top: 64px;
+    padding-bottom: 40px;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-name {
+    font-size: 1.3rem;
+  }
+
+  .short-bio-card,
+  .description-card,
+  .info-card,
+  .gallery-section,
+  .video-section {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .gallery-item {
+    width: 160px;
+    height: 130px;
+  }
+}

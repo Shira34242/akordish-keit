@@ -337,7 +337,7 @@ export class TeachersPageComponent implements OnInit {
   }
 
   viewTeacher(teacherId: number): void {
-    this.selectedTeacherId = teacherId;
+    this.router.navigate(['/teacher', teacherId]);
   }
 
   closeTeacherProfile(): void {
