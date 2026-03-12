@@ -7,218 +7,207 @@
 <!-- Teacher Page -->
 <div class="teacher-page" *ngIf="!loading && teacher" dir="rtl">
 
-  <!-- ═══════════════════════════════════════════════════
-       HERO SECTION
-  ═══════════════════════════════════════════════════ -->
-  <div class="hero-wrapper">
-    <div class="hero-card">
+  <!-- מסכה לבנה מעל ה-hero -->
+  <div class="top-scroll-mask"></div>
 
-      <!-- RIGHT SIDE: black info section -->
-      <div class="hero-info">
-        <div class="hero-text">
+  <!-- Hero Background — fixed, מתכווץ בגלילה -->
+  <div class="teacher-hero-bg" #teacherHeroBg>
+    <div class="hero-overlay"></div>
+  </div>
+
+  <!-- Hero Content Area — בתזרים רגיל, מעל ה-bg -->
+  <div class="hero-content-area">
+
+    <!-- תיבת מידע — 30% רוחב, צמוד לתחתית, צד ימין -->
+    <div class="teacher-info-card">
+      <div class="hero-text">
+        <div class="hero-badges">
           <span *ngIf="teacher.isFeatured" class="badge-featured">מומלץ</span>
-          <h1 class="teacher-name">{{ teacher.displayName }}</h1>
-
-          <!-- Instruments -->
-          <div class="instruments-row" *ngIf="teacher.instruments?.length">
-            <span
-              *ngFor="let inst of teacher.instruments"
-              class="instrument-chip"
-              [class.primary]="inst.isPrimary">
-              {{ inst.instrumentName }}
-            </span>
-          </div>
-
-          <!-- City -->
-          <p class="city-row" *ngIf="teacher.cityId">
-            <span class="material-icons">location_on</span>
-            {{ getCityName(teacher.cityId) }}
-          </p>
         </div>
+        <h1 class="teacher-name">{{ teacher.displayName }}</h1>
+
+        <!-- כלי נגינה -->
+        <div class="instruments-row" *ngIf="teacher.instruments?.length">
+          <span
+            *ngFor="let inst of teacher.instruments"
+            class="instrument-chip"
+            [class.primary]="inst.isPrimary">
+            {{ inst.instrumentName }}
+          </span>
+        </div>
+
+        <!-- עיר -->
+        <p class="city-row" *ngIf="teacher.cityId">
+          <span class="material-icons">location_on</span>
+          {{ getCityName(teacher.cityId) }}
+        </p>
       </div>
 
-      <!-- LEFT SIDE: banner (placeholder until bannerImageUrl available) -->
-      <div class="hero-banner"
-           [style.backgroundImage]="teacher.profileImageUrl ? 'url(' + teacher.profileImageUrl + ')' : 'none'">
-        <!-- Social links — pending backend approval -->
+      <!-- תמונת פרופיל — בולטת מחוץ לתיבה -->
+      <div class="profile-bubble">
+        <img
+          [src]="teacher.profileImageUrl || '/logo.png'"
+          alt="{{ teacher.displayName }}"
+          class="profile-img"
+          onerror="this.onerror=null; this.src='/logo.png'" />
+        <span *ngIf="teacher.isFeatured" class="star-badge">
+          <span class="material-icons">star</span>
+        </span>
       </div>
-
     </div>
 
-    <!-- Profile image — protrudes below the hero card -->
-    <div class="profile-bubble">
-      <img
-        [src]="teacher.profileImageUrl || '/logo.png'"
-        alt="{{ teacher.displayName }}"
-        class="profile-img"
-        onerror="this.onerror=null; this.src='/logo.png'" />
-      <span *ngIf="teacher.isFeatured" class="star-badge">
-        <span class="material-icons">star</span>
-      </span>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       תוכן הדף (מתחת ל-hero)
+  ═══════════════════════════════════════ -->
+  <div class="page-content">
+    <div class="main-layout">
+
+      <!-- ── SIDEBAR (ימין ב-RTL) ── -->
+      <div class="sidebar">
+
+        <!-- כפתור פרטי יצירת קשר -->
+        <div class="contact-card">
+          <button class="btn-contact" (click)="toggleContact()">
+            <span class="material-icons">{{ showContact ? 'expand_less' : 'contact_phone' }}</span>
+            פרטי יצירת קשר
+          </button>
+          <div class="contact-details" *ngIf="showContact">
+            <div class="contact-item">
+              <span class="material-icons">person</span>
+              <span>{{ teacher.displayName }}</span>
+            </div>
+            <a class="contact-item link" *ngIf="teacher.phoneNumber"
+               [href]="'tel:' + teacher.phoneNumber">
+              <span class="material-icons">phone</span>
+              <span>{{ teacher.phoneNumber }}</span>
+            </a>
+            <a class="contact-item link" *ngIf="teacher.email"
+               [href]="'mailto:' + teacher.email">
+              <span class="material-icons">email</span>
+              <span>{{ teacher.email }}</span>
+            </a>
+            <div class="contact-item" *ngIf="teacher.cityId">
+              <span class="material-icons">location_on</span>
+              <span>{{ getCityName(teacher.cityId) }}</span>
+            </div>
+            <div class="contact-item" *ngIf="teacher.location">
+              <span class="material-icons">home</span>
+              <span>{{ teacher.location }}</span>
+            </div>
+            <a class="contact-item link" *ngIf="teacher.websiteUrl"
+               [href]="teacher.websiteUrl" target="_blank">
+              <span class="material-icons">language</span>
+              <span>אתר אינטרנט</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- וואטסאפ — מנויים בלבד -->
+        <a *ngIf="teacher.tier === 1 && teacher.whatsAppNumber"
+           [href]="'https://wa.me/' + teacher.whatsAppNumber"
+           target="_blank"
+           class="btn-whatsapp">
+          <span class="material-icons">chat</span>
+          שלח הודעה בוואטסאפ
+        </a>
+
+      </div>
+
+      <!-- ── תוכן ראשי ── -->
+      <div class="content-column">
+
+        <!-- ביו קצר -->
+        <div class="short-bio-card" *ngIf="teacher.shortBio">
+          <p class="short-bio-text">{{ teacher.shortBio }}</p>
+        </div>
+
+        <!-- תיאור מלא -->
+        <div class="description-card" *ngIf="teacher.fullDescription">
+          <h2 class="card-label">אודות</h2>
+          <p class="full-desc-text">{{ teacher.fullDescription }}</p>
+        </div>
+
+        <!-- מידע נוסף -->
+        <div class="info-card"
+             *ngIf="teacher.yearsOfExperience || teacher.education || teacher.languages ||
+                    teacher.targetAudience || teacher.lessonTypes || teacher.specializations ||
+                    teacher.priceList || teacher.availability || teacher.workingHours">
+
+          <div class="info-row" *ngIf="teacher.yearsOfExperience">
+            <span class="info-label">ניסיון</span>
+            <span class="chip">{{ teacher.yearsOfExperience }} שנים</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.education">
+            <span class="info-label">השכלה</span>
+            <span class="chip">{{ teacher.education }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.languages">
+            <span class="info-label">שפות הוראה</span>
+            <span class="chip">{{ getLanguagesDisplay(teacher.languages) }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.targetAudience">
+            <span class="info-label">קהל יעד</span>
+            <div class="chips-group">
+              <span class="chip" *ngFor="let a of getTargetAudienceList(teacher.targetAudience)">{{ a }}</span>
+            </div>
+          </div>
+          <div class="info-row" *ngIf="teacher.lessonTypes">
+            <span class="info-label">סוגי שיעורים</span>
+            <span class="chip">{{ teacher.lessonTypes }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.specializations">
+            <span class="info-label">התמחות</span>
+            <span class="chip">{{ teacher.specializations }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.priceList">
+            <span class="info-label">מחירון</span>
+            <span class="chip">{{ teacher.priceList }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.availability">
+            <span class="info-label">זמינות</span>
+            <span class="chip">{{ teacher.availability }}</span>
+          </div>
+          <div class="info-row" *ngIf="teacher.workingHours">
+            <span class="info-label">שעות פעילות</span>
+            <span class="chip">{{ teacher.workingHours }}</span>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider"
+             *ngIf="(teacher.galleryImages?.length || teacher.videoUrl)"></div>
+
+        <!-- גלריה — שורה נגללת -->
+        <div class="gallery-section" *ngIf="teacher.galleryImages?.length">
+          <h2 class="card-label">גלריה</h2>
+          <div class="gallery-scroll">
+            <div *ngFor="let img of teacher.galleryImages" class="gallery-item">
+              <img [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"
+                   onerror="this.onerror=null; this.src='/logo.png'" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider לפני וידאו -->
+        <div class="divider" *ngIf="teacher.videoUrl && teacher.galleryImages?.length"></div>
+
+        <!-- וידאו -->
+        <div class="video-section" *ngIf="teacher.videoUrl">
+          <h2 class="card-label">וידאו</h2>
+          <div class="video-wrapper">
+            <iframe
+              [src]="getSafeVideoUrl(teacher.videoUrl)"
+              frameborder="0"
+              allowfullscreen
+              class="video-iframe">
+            </iframe>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════
-       PAGE BODY
-  ═══════════════════════════════════════════════════ -->
-  <div class="page-body">
-
-    <!-- ── SIDEBAR (right in RTL) ── -->
-    <div class="sidebar">
-
-      <!-- Contact card -->
-      <div class="contact-card">
-        <button class="btn-contact" (click)="toggleContact()">
-          <span class="material-icons">{{ showContact ? 'expand_less' : 'contact_phone' }}</span>
-          פרטי יצירת קשר
-        </button>
-
-        <div class="contact-details" *ngIf="showContact">
-          <div class="contact-item">
-            <span class="material-icons">person</span>
-            <span>{{ teacher.displayName }}</span>
-          </div>
-          <a class="contact-item link" *ngIf="teacher.phoneNumber"
-             [href]="'tel:' + teacher.phoneNumber">
-            <span class="material-icons">phone</span>
-            <span>{{ teacher.phoneNumber }}</span>
-          </a>
-          <a class="contact-item link" *ngIf="teacher.email"
-             [href]="'mailto:' + teacher.email">
-            <span class="material-icons">email</span>
-            <span>{{ teacher.email }}</span>
-          </a>
-          <div class="contact-item" *ngIf="teacher.cityId">
-            <span class="material-icons">location_on</span>
-            <span>{{ getCityName(teacher.cityId) }}</span>
-          </div>
-          <div class="contact-item" *ngIf="teacher.location">
-            <span class="material-icons">home</span>
-            <span>{{ teacher.location }}</span>
-          </div>
-          <a class="contact-item link" *ngIf="teacher.websiteUrl"
-             [href]="teacher.websiteUrl" target="_blank">
-            <span class="material-icons">language</span>
-            <span>אתר אינטרנט</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- WhatsApp quick access — paying subscribers only -->
-      <a *ngIf="teacher.tier === 1 && teacher.whatsAppNumber"
-         [href]="'https://wa.me/' + teacher.whatsAppNumber"
-         target="_blank"
-         class="btn-whatsapp">
-        <span class="material-icons">chat</span>
-        שלח הודעה בוואטסאפ
-      </a>
-
-    </div>
-
-    <!-- ── MAIN CONTENT ── -->
-    <div class="main-content">
-
-      <!-- Short bio -->
-      <div class="short-bio-card" *ngIf="teacher.shortBio">
-        <p class="short-bio-text">{{ teacher.shortBio }}</p>
-      </div>
-
-      <!-- Full description -->
-      <div class="description-card" *ngIf="teacher.fullDescription">
-        <h3 class="card-label">אודות</h3>
-        <p class="full-desc-text">{{ teacher.fullDescription }}</p>
-      </div>
-
-      <!-- Info chips: education, languages, audience, specializations, etc. -->
-      <div class="info-card"
-           *ngIf="teacher.yearsOfExperience || teacher.education || teacher.languages ||
-                  teacher.targetAudience || teacher.lessonTypes || teacher.specializations ||
-                  teacher.priceList || teacher.availability || teacher.workingHours">
-
-        <div class="info-row" *ngIf="teacher.yearsOfExperience">
-          <span class="info-label">ניסיון</span>
-          <span class="chip">{{ teacher.yearsOfExperience }} שנים</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.education">
-          <span class="info-label">השכלה</span>
-          <span class="chip">{{ teacher.education }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.languages">
-          <span class="info-label">שפות הוראה</span>
-          <span class="chip">{{ getLanguagesDisplay(teacher.languages) }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.targetAudience">
-          <span class="info-label">קהל יעד</span>
-          <div class="chips-group">
-            <span class="chip" *ngFor="let a of getTargetAudienceList(teacher.targetAudience)">{{ a }}</span>
-          </div>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.lessonTypes">
-          <span class="info-label">סוגי שיעורים</span>
-          <span class="chip">{{ teacher.lessonTypes }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.specializations">
-          <span class="info-label">התמחות</span>
-          <span class="chip">{{ teacher.specializations }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.priceList">
-          <span class="info-label">מחירון</span>
-          <span class="chip">{{ teacher.priceList }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.availability">
-          <span class="info-label">זמינות</span>
-          <span class="chip">{{ teacher.availability }}</span>
-        </div>
-
-        <div class="info-row" *ngIf="teacher.workingHours">
-          <span class="info-label">שעות פעילות</span>
-          <span class="chip">{{ teacher.workingHours }}</span>
-        </div>
-
-      </div>
-
-      <!-- Divider -->
-      <div class="divider"
-           *ngIf="(teacher.galleryImages?.length || teacher.videoUrl) &&
-                  (teacher.shortBio || teacher.fullDescription || teacher.yearsOfExperience)">
-      </div>
-
-      <!-- Gallery — horizontal scroll -->
-      <div class="gallery-section" *ngIf="teacher.galleryImages?.length">
-        <h3 class="card-label">גלריה</h3>
-        <div class="gallery-scroll">
-          <div *ngFor="let img of teacher.galleryImages" class="gallery-item">
-            <img [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"
-                 onerror="this.onerror=null; this.src='/logo.png'" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Divider before video -->
-      <div class="divider"
-           *ngIf="teacher.videoUrl && teacher.galleryImages?.length">
-      </div>
-
-      <!-- Video -->
-      <div class="video-section" *ngIf="teacher.videoUrl">
-        <h3 class="card-label">וידאו</h3>
-        <div class="video-wrapper">
-          <iframe
-            [src]="getSafeVideoUrl(teacher.videoUrl)"
-            frameborder="0"
-            allowfullscreen
-            class="video-iframe">
-          </iframe>
-        </div>
-      </div>
-
-    </div>
-  </div>
 </div>

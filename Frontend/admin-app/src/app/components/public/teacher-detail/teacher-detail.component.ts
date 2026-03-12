@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -15,11 +15,17 @@ import { TargetAudience } from '../../../models/target-audience.enum';
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })
-export class TeacherDetailComponent implements OnInit {
+export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  @ViewChild('teacherHeroBg') teacherHeroBg?: ElementRef<HTMLDivElement>;
+
   teacher: TeacherDto | null = null;
   cities: City[] = [];
   loading = true;
   showContact = false;
+
+  private fullHeroHeight = 0;
+  private rafPending = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -40,18 +46,63 @@ export class TeacherDetailComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {}
+
+  ngOnDestroy(): void {}
+
   loadTeacher(id: number): void {
     this.loading = true;
     this.teacherService.getTeacherById(id).subscribe({
       next: teacher => {
         this.teacher = teacher;
         this.loading = false;
+        setTimeout(() => this.initHeroHeight(), 0);
       },
       error: () => {
         this.loading = false;
         this.router.navigate(['/teachers']);
       }
     });
+  }
+
+  private initHeroHeight(): void {
+    const bg = this.teacherHeroBg?.nativeElement;
+    if (!bg) return;
+    if (this.heroBannerSrc) {
+      bg.style.backgroundImage = `url('${this.heroBannerSrc}')`;
+    }
+    const top = window.innerHeight * 0.02;
+    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    bg.style.height = this.fullHeroHeight + 'px';
+    this.shrinkHero();
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.rafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.initHeroHeight();
+  }
+
+  private shrinkHero(): void {
+    const bg = this.teacherHeroBg?.nativeElement;
+    if (!bg || this.fullHeroHeight === 0) return;
+    const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    bg.style.height = newHeight + 'px';
+  }
+
+  get heroBannerSrc(): string {
+    // placeholder — bannerImageUrl יתווסף לאחר אישור המתכנת
+    return '';
   }
 
   getCityName(cityId?: number | null): string {
@@ -93,9 +144,5 @@ export class TeacherDetailComponent implements OnInit {
 
   toggleContact(): void {
     this.showContact = !this.showContact;
-  }
-
-  goBack(): void {
-    this.router.navigate(['/teachers']);
   }
 }

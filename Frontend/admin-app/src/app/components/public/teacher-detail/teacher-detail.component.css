@@ -5,84 +5,127 @@
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
-  background: #ffffff;
+  font-weight: 300;
+  background-color: #ffffff;
   min-height: 100vh;
   direction: rtl;
+  color: #000000;
 }
 
 /* ════════════════════════════════════════════════════
-   HERO WRAPPER
+   TOP SCROLL MASK — מסכה לבנה מעל ה-hero
 ════════════════════════════════════════════════════ */
-.hero-wrapper {
-  position: relative;
-  margin: 16px;
-  margin-bottom: 0;
+.top-scroll-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2vh;
+  background: #ffffff;
+  z-index: 897;
+  pointer-events: none;
 }
 
 /* ════════════════════════════════════════════════════
-   HERO CARD — split: right=black, left=banner
+   HERO BACKGROUND — fixed, מתכווץ בגלילה
 ════════════════════════════════════════════════════ */
-.hero-card {
-  display: flex;
-  flex-direction: row;
-  height: 300px;
-  border-radius: 20px;
+.teacher-hero-bg {
+  position: fixed;
+  top: 2vh;
+  left: 16px;
+  right: 16px;
+  border-radius: 24px;
+  height: calc(98vh - 16px); /* JS מחליף */
+  z-index: 895;
+  background-color: #404040; /* fallback כשאין באנר */
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
+  will-change: height;
 }
 
-/* RIGHT side (first child in RTL flex = rightmost) */
-.hero-info {
-  flex: 0 0 42%;
+/* שכבת כהות קלה — רקע אחיד גם כשאין תמונה */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════
+   HERO CONTENT AREA — בתזרים רגיל, מעל ה-bg
+════════════════════════════════════════════════════ */
+.hero-content-area {
+  position: relative;
+  z-index: 896;
+  height: calc(98vh - 16px); /* זהה לגובה hero-bg הראשוני */
+}
+
+/* ════════════════════════════════════════════════════
+   TEACHER INFO CARD — 30% רוחב, ימין-תחתון, שחור
+════════════════════════════════════════════════════ */
+.teacher-info-card {
+  position: absolute;
+  bottom: 0;
+  right: 48px;
+  width: 30%;
+  min-width: 280px;
+  max-width: 400px;
   background: #000000;
-  padding: 32px 32px 32px 24px;
-  display: flex;
-  align-items: flex-end;
-  /* push text to bottom so profile image has space below */
-  padding-bottom: 88px;
-}
-
-.hero-text {
+  border-radius: 20px 20px 0 0;
+  padding: 36px 32px 100px; /* תחתית גדולה — מקום לתמונת הפרופיל */
+  overflow: visible; /* תמונת פרופיל בולטת מחוץ */
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+/* ── טקסט בתוך הכרטיס ── */
+.hero-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 0;
 }
 
 .badge-featured {
-  display: inline-block;
   background: #ddff53;
   color: #000000;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 800;
-  font-size: 0.72rem;
-  padding: 3px 12px;
+  padding: 4px 14px;
   border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.3px;
-  width: fit-content;
+  display: inline-block;
 }
 
 .teacher-name {
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   font-weight: 800;
   font-size: 2rem;
   color: #ffffff;
-  margin: 0;
   line-height: 1.1;
+  margin: 0;
 }
 
 .instruments-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 2px;
 }
 
 .instrument-chip {
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 300;
 }
 
@@ -96,7 +139,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
   font-family: 'Open Sans', sans-serif;
   font-size: 0.85rem;
   font-weight: 300;
@@ -107,26 +150,12 @@
   font-size: 16px;
 }
 
-/* LEFT side — banner area (placeholder: lime until bannerImageUrl) */
-.hero-banner {
-  flex: 1;
-  background-color: #ddff53;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-}
-
-/* Dim the profile image when used as banner bg to keep it subtle */
-.hero-banner[style*="url"] {
-  filter: brightness(0.75) saturate(0.6);
-}
-
 /* ════════════════════════════════════════════════════
-   PROFILE BUBBLE — protrudes below hero
+   PROFILE BUBBLE — בולטת מחוץ לתיבה (למטה)
 ════════════════════════════════════════════════════ */
 .profile-bubble {
   position: absolute;
-  bottom: -60px;
+  bottom: -60px; /* חצי מחוץ לתיבה למטה */
   right: 32px;
   width: 120px;
   height: 120px;
@@ -157,20 +186,25 @@
 }
 
 .star-badge .material-icons {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* ════════════════════════════════════════════════════
-   PAGE BODY — sidebar (right) + main (left)
+   PAGE CONTENT (מתחת ל-hero)
 ════════════════════════════════════════════════════ */
-.page-body {
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 16px 80px; /* 80px למעלה — מקום לתמונת הפרופיל הבולטת */
+}
+
+/* ════════════════════════════════════════════════════
+   MAIN LAYOUT — גריד: sidebar (ימין) + תוכן (שמאל)
+════════════════════════════════════════════════════ */
+.main-layout {
   display: grid;
-  /* RTL grid: first column = RIGHT side */
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 280px 1fr; /* RTL: 280px = ימין, 1fr = שמאל */
   gap: 16px;
-  margin: 0 16px;
-  padding-top: 80px; /* space for protruding profile image (60px) + 20px gap */
-  padding-bottom: 60px;
   align-items: start;
 }
 
@@ -182,10 +216,9 @@
   flex-direction: column;
   gap: 10px;
   position: sticky;
-  top: calc(2vh + 72px);
+  top: calc(2vh + 80px);
 }
 
-/* Contact card */
 .contact-card {
   background: #F2F2F2;
   border-radius: 20px;
@@ -203,6 +236,8 @@
   border: none;
   border-radius: 20px;
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   font-weight: 800;
   font-size: 0.9rem;
   cursor: pointer;
@@ -218,7 +253,6 @@
   font-size: 20px;
 }
 
-/* Contact details (revealed on click) */
 .contact-details {
   display: flex;
   flex-direction: column;
@@ -236,14 +270,13 @@
   font-size: 0.88rem;
   font-weight: 300;
   color: #000000;
-  background: transparent;
   text-decoration: none;
 }
 
 .contact-item .material-icons {
   font-size: 18px;
   color: #000;
-  opacity: 0.5;
+  opacity: 0.45;
   flex-shrink: 0;
 }
 
@@ -256,7 +289,6 @@
   background: #ddff53;
 }
 
-/* WhatsApp button */
 .btn-whatsapp {
   display: flex;
   align-items: center;
@@ -268,6 +300,8 @@
   border-radius: 999px;
   text-decoration: none;
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   font-weight: 800;
   font-size: 0.9rem;
   transition: opacity 0.15s;
@@ -282,66 +316,71 @@
 }
 
 /* ════════════════════════════════════════════════════
-   MAIN CONTENT
+   CONTENT COLUMN
 ════════════════════════════════════════════════════ */
-.main-content {
+.content-column {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* Short bio */
+/* ── ביו קצר ── */
 .short-bio-card {
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: 24px 28px;
+  background: #ddff53;
+  border-radius: 24px;
+  padding: 32px 36px;
 }
 
 .short-bio-text {
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   font-weight: 800;
   font-size: 1.05rem;
   color: #000000;
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.65;
   text-align: right;
 }
 
-/* Full description */
+/* ── תיאור מלא ── */
 .description-card {
   background: #F2F2F2;
-  border-radius: 20px;
-  padding: 24px 28px;
+  border-radius: 24px;
+  padding: 32px 36px;
+}
+
+.card-label {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 14px 0;
+  text-align: right;
 }
 
 .full-desc-text {
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   font-weight: 300;
   font-size: 0.95rem;
   color: #000000;
-  line-height: 1.85;
+  line-height: 1.9;
   white-space: pre-wrap;
   margin: 0;
   text-align: right;
 }
 
-/* Card label (section heading) */
-.card-label {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin: 0 0 14px 0;
-  text-align: right;
-}
-
-/* Info chips card */
+/* ── כרטיס מידע ── */
 .info-card {
   background: #F2F2F2;
-  border-radius: 20px;
-  padding: 20px 24px;
+  border-radius: 24px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -356,14 +395,15 @@
 
 .info-label {
   font-family: 'Open Sans', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #888;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.38);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  min-width: 90px;
+  min-width: 88px;
   padding-top: 4px;
   flex-shrink: 0;
+  text-align: right;
 }
 
 .chips-group {
@@ -383,7 +423,7 @@
   color: #000000;
 }
 
-/* Divider */
+/* ── Divider ── */
 .divider {
   height: 2px;
   background: #F2F2F2;
@@ -391,38 +431,27 @@
   margin: 4px 0;
 }
 
-/* Gallery — horizontal scroll */
+/* ── גלריה נגללת ── */
 .gallery-section {
   background: #F2F2F2;
-  border-radius: 20px;
-  padding: 20px 24px;
+  border-radius: 24px;
+  padding: 24px 32px;
 }
 
 .gallery-scroll {
   display: flex;
-  flex-direction: row;
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 6px;
-  /* smooth scrolling + hide scrollbar visually */
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #ddff53 transparent;
 }
 
-.gallery-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.gallery-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.gallery-scroll::-webkit-scrollbar-thumb {
-  background: #ddff53;
-  border-radius: 999px;
-}
+.gallery-scroll::-webkit-scrollbar { height: 4px; }
+.gallery-scroll::-webkit-scrollbar-track { background: transparent; }
+.gallery-scroll::-webkit-scrollbar-thumb { background: #ddff53; border-radius: 999px; }
 
 .gallery-item {
   flex-shrink: 0;
@@ -444,11 +473,11 @@
   transform: scale(1.04);
 }
 
-/* Video */
+/* ── וידאו ── */
 .video-section {
   background: #F2F2F2;
-  border-radius: 20px;
-  padding: 20px 24px;
+  border-radius: 24px;
+  padding: 24px 32px;
 }
 
 .video-wrapper {
@@ -456,17 +485,15 @@
   padding-bottom: 56.25%;
   height: 0;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .video-iframe {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 /* ════════════════════════════════════════════════════
@@ -481,7 +508,7 @@
   gap: 16px;
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
-  color: #999;
+  color: rgba(0, 0, 0, 0.3);
 }
 
 .spinner {
@@ -494,7 +521,7 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
@@ -502,22 +529,18 @@
    RESPONSIVE
 ════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .hero-card {
-    height: 260px;
-  }
-
-  .hero-info {
-    flex: 0 0 50%;
-    padding-bottom: 80px;
+  .teacher-info-card {
+    right: 24px;
+    width: 42%;
+    padding: 28px 24px 90px;
   }
 
   .teacher-name {
     font-size: 1.5rem;
   }
 
-  .page-body {
+  .main-layout {
     grid-template-columns: 1fr;
-    padding-top: 72px;
   }
 
   .sidebar {
@@ -534,30 +557,31 @@
 }
 
 @media (max-width: 600px) {
-  .hero-wrapper {
-    margin: 8px;
+  .teacher-hero-bg {
+    left: 8px;
+    right: 8px;
+    border-radius: 20px;
   }
 
-  .hero-card {
-    height: 220px;
-    flex-direction: column;
-    border-radius: 16px;
+  .teacher-info-card {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    min-width: unset;
+    max-width: unset;
+    padding: 24px 20px 90px;
+    border-radius: 16px 16px 0 0;
   }
 
-  .hero-info {
-    flex: 0 0 60%;
-    padding: 20px 16px 70px;
-  }
-
-  .hero-banner {
-    flex: 1;
+  .teacher-name {
+    font-size: 1.4rem;
   }
 
   .profile-bubble {
-    bottom: -50px;
-    right: 16px;
+    right: 20px;
     width: 100px;
     height: 100px;
+    bottom: -50px;
   }
 
   .profile-img {
@@ -565,18 +589,14 @@
     height: 100px;
   }
 
-  .page-body {
-    margin: 0 8px;
-    padding-top: 64px;
-    padding-bottom: 40px;
+  .page-content {
+    padding-top: 70px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
   .sidebar {
     grid-template-columns: 1fr;
-  }
-
-  .teacher-name {
-    font-size: 1.3rem;
   }
 
   .short-bio-card,
@@ -584,7 +604,7 @@
   .info-card,
   .gallery-section,
   .video-section {
-    padding: 16px;
+    padding: 20px 18px;
     border-radius: 16px;
   }
 
