@@ -98,13 +98,13 @@ export enum ArtistStatus {
  * פלטפורמות רשתות חברתיות
  */
 export enum SocialPlatform {
-  Facebook = 1,
-  Instagram = 2,
+  Instagram = 1,
+  Facebook = 2,
   YouTube = 3,
-  Twitter = 4,
-  TikTok = 5,
-  Spotify = 6,
-  Website = 7
+  TikTok = 4,
+  Website = 5,
+  Twitter = 6,
+  Spotify = 7
 }
 
 // ========================================

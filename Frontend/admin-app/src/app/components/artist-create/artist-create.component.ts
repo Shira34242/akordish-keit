@@ -122,7 +122,7 @@ export class ArtistCreateComponent implements OnInit {
   }
 
   addSocialLink() {
-    this.artistForm.socialLinks.push({ platform: 1, url: '' });
+    this.artistForm.socialLinks.push({ platform: 2, url: '' });
   }
 
   removeSocialLink(index: number) {
@@ -161,13 +161,13 @@ export class ArtistCreateComponent implements OnInit {
 
   getPlatformName(platform: number): string {
     const platforms: Record<number, string> = {
-      1: 'Facebook',
-      2: 'Instagram',
+      1: 'Instagram',
+      2: 'Facebook',
       3: 'YouTube',
-      4: 'Twitter',
-      5: 'TikTok',
-      6: 'Spotify',
-      7: 'אתר אינטרנט'
+      4: 'TikTok',
+      5: 'אתר אינטרנט',
+      6: 'Twitter',
+      7: 'Spotify'
     };
     return platforms[platform] || 'אחר';
   }
@@ -196,7 +196,7 @@ export class ArtistCreateComponent implements OnInit {
       websiteUrl: this.artistForm.websiteUrl || undefined,
       socialLinks: this.artistForm.socialLinks.length > 0
         ? this.artistForm.socialLinks.map(sl => ({
-            platform: sl.platform,
+            platform: Number(sl.platform),
             url: sl.url
           }))
         : undefined,

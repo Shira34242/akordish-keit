@@ -8,6 +8,8 @@ namespace AkordishKeit.Models.Enum
         Facebook = 2,
         YouTube = 3,
         TikTok = 4,
-        Website = 5
+        Website = 5,
+        Twitter = 6,
+        Spotify = 7
     }
 }
