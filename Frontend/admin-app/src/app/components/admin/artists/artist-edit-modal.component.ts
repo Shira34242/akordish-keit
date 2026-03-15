@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import { Artist, ArtistStatus, UpdateArtistDto } from '../../../models/artist.model';
 
 interface SocialLinkForm {
@@ -27,7 +28,7 @@ interface VideoForm {
 @Component({
   selector: 'app-artist-edit-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './artist-edit-modal.component.html',
   styleUrls: ['./artist-edit-modal.component.css']
 })

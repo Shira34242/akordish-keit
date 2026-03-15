@@ -6,6 +6,7 @@ import { SystemTablesService, SystemItem } from '../../../services/system-tables
 import { CitiesService, City } from '../../../services/cities.service';
 import { CreateMusicServiceProviderDto, ProfileStatus, CreateGalleryImageDto, CreateServiceProviderCategoryDto } from '../../../models/music-service-provider.model';
 import { AuthService } from '../../../services/auth.service';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 
 interface Category {
   id: number;
@@ -15,7 +16,7 @@ interface Category {
 @Component({
   selector: 'app-become-professional-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './become-professional-form.component.html',
   styleUrls: ['./become-professional-form.component.css']
 })

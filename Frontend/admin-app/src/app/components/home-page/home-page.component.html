@@ -47,6 +47,51 @@
     </div>
   </section>
 
+  <!-- News Banners -->
+  <div class="home-news-wrapper" *ngIf="newsArticles.length > 0 || blogArticles.length > 0">
+
+    <!-- חדשות -->
+    <section class="home-news-section" *ngIf="newsArticles.length > 0">
+      <div class="home-news-header">
+        <a routerLink="/music-news" class="home-news-section-title">חדשות המוזיקה ←</a>
+      </div>
+      <div class="home-news-scroll-wrapper">
+        <div class="home-news-scroll">
+          <div *ngFor="let article of newsArticles" class="home-news-banner" (click)="navigateToArticle(article)">
+            <div class="home-news-banner-bg" [style.background-image]="'url(' + article.featuredImageUrl + ')'">
+              <div class="home-news-banner-overlay">
+                <h3 class="home-news-banner-title">{{ article.title }}</h3>
+                <p class="home-news-banner-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+              </div>
+              <button class="home-news-arrow-btn" (click)="$event.stopPropagation(); navigateToArticle(article)">←</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- בלוג -->
+    <section class="home-news-section" *ngIf="blogArticles.length > 0">
+      <div class="home-news-header">
+        <a routerLink="/articles" [queryParams]="{contentType: 1}" class="home-news-section-title">בלוג ←</a>
+      </div>
+      <div class="home-news-scroll-wrapper">
+        <div class="home-news-scroll">
+          <div *ngFor="let article of blogArticles" class="home-news-banner" (click)="navigateToArticle(article)">
+            <div class="home-news-banner-bg" [style.background-image]="'url(' + article.featuredImageUrl + ')'">
+              <div class="home-news-banner-overlay">
+                <h3 class="home-news-banner-title">{{ article.title }}</h3>
+                <p class="home-news-banner-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+              </div>
+              <button class="home-news-arrow-btn" (click)="$event.stopPropagation(); navigateToArticle(article)">←</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
   <!-- Content Sections -->
   <div class="content-section">
 
@@ -74,6 +119,33 @@
     <app-carousel title="אמנים מובילים" linkUrl="/artists" linkText="כל האמנים">
       <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
     </app-carousel>
+
+    <!-- Upcoming Events -->
+    <section class="home-events-section" *ngIf="upcomingEvents.length > 0">
+      <div class="home-news-header">
+        <a routerLink="/music-news" class="home-news-section-title">הופעות קרובות ←</a>
+      </div>
+      <div class="home-news-scroll-wrapper">
+        <div class="home-news-scroll">
+          <div *ngFor="let event of upcomingEvents" class="home-event-banner" (click)="openEventTicket(event)">
+            <div class="home-event-banner-bg" [style.background-image]="'url(' + event.imageUrl + ')'">
+              <div class="home-event-status-badge" [class.is-today]="event.eventStatus === 'היום'">
+                {{ event.eventStatus }}
+              </div>
+              <div class="home-event-banner-overlay">
+                <h3 class="home-event-banner-name">{{ event.name }}</h3>
+                <p class="home-event-banner-artist" *ngIf="event.artistName || event.taggedArtistNames.length > 0">
+                  {{ event.artistName || event.taggedArtistNames[0] }}
+                </p>
+                <p class="home-event-banner-location" *ngIf="event.location">
+                  {{ event.location }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   </div>
 </div>

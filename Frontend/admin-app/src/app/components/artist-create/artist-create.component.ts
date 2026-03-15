@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ArtistService } from '../../services/artist.service';
+import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
 import { UpdateArtistDto } from '../../models/artist.model';
 
@@ -27,7 +28,7 @@ interface ArtistFormData {
 @Component({
   selector: 'app-artist-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './artist-create.component.html',
   styleUrls: ['./artist-create.component.css']
 })

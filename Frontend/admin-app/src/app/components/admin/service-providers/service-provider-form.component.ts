@@ -2,6 +2,7 @@ import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { UserService } from '../../../services/user.service';
@@ -12,7 +13,7 @@ import { UserListDto } from '../../../models/user.model';
 @Component({
   selector: 'app-service-provider-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './service-provider-form.component.html',
   styleUrls: ['./service-provider-form.component.css']
 })

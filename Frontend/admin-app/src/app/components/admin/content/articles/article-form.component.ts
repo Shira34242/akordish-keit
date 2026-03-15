@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { ArtistService } from '../../../../services/artist.service';
@@ -17,7 +18,7 @@ import {
 @Component({
   selector: 'app-article-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './article-form.component.html',
   styleUrls: ['./article-form.component.css']
 })

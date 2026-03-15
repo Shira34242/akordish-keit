@@ -11,14 +11,14 @@ import {
 } from '../../../../models/admin/advertisement.model';
 import { ClientService } from '../../../../services/admin/client.service';
 import { AdSpotService } from '../../../../services/admin/ad-spot.service';
-import { MediaService } from '../../../../services/admin/media.service';
 import { AdCampaignService } from '../../../../services/admin/ad-campaign.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-campaign-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FileUploadInputComponent],
   templateUrl: './campaign-form.component.html',
   styleUrls: ['./campaign-form.component.css']
 })
@@ -30,7 +30,6 @@ export class CampaignFormComponent implements OnInit, OnChanges {
 
   private readonly clientService = inject(ClientService);
   private readonly adSpotService = inject(AdSpotService);
-  private readonly mediaService = inject(MediaService);
   private readonly campaignService = inject(AdCampaignService);
 
   campaignForm!: FormGroup;
@@ -38,14 +37,6 @@ export class CampaignFormComponent implements OnInit, OnChanges {
   clients: Client[] = [];
   adSpots: AdSpot[] = [];
   statuses = Object.values(AdCampaignStatus);
-
-  // File upload properties
-  mediaFile: File | null = null;
-  mobileMediaFile: File | null = null;
-  mediaPreviewUrl: string | null = null;
-  mobileMediaPreviewUrl: string | null = null;
-  uploadingMedia = false;
-  uploadingMobileMedia = false;
 
   // Availability check properties
   checkingAvailability = false;
@@ -107,14 +98,6 @@ export class CampaignFormComponent implements OnInit, OnChanges {
       endDate: [this.campaign?.endDate ? this.formatDateForInput(this.campaign.endDate) : '', Validators.required],
       budget: [this.campaign?.budget || 0, [Validators.required, Validators.min(0)]]
     });
-
-    // Set preview URLs if editing existing campaign
-    if (this.campaign?.mediaUrl) {
-      this.mediaPreviewUrl = this.campaign.mediaUrl;
-    }
-    if (this.campaign?.mobileMediaUrl) {
-      this.mobileMediaPreviewUrl = this.campaign.mobileMediaUrl;
-    }
 
     // Watch for changes in adSpotId, startDate, endDate, or priority to check availability
     this.campaignForm.valueChanges
@@ -200,133 +183,19 @@ export class CampaignFormComponent implements OnInit, OnChanges {
     return d.toISOString().split('T')[0];
   }
 
-  onMediaFileSelected(event: Event, isMobile: boolean = false) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('סוג קובץ לא נתמך. יש להעלות תמונה (JPG, PNG, GIF, WEBP) או וידאו (MP4, WEBM)');
-        input.value = '';
-        return;
-      }
-
-      // Validate file size (10MB)
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        alert('גודל הקובץ חורג מ-10MB');
-        input.value = '';
-        return;
-      }
-
-      if (isMobile) {
-        this.mobileMediaFile = file;
-        this.createPreviewUrl(file, true);
-      } else {
-        this.mediaFile = file;
-        this.createPreviewUrl(file, false);
-      }
-    }
-  }
-
-  createPreviewUrl(file: File, isMobile: boolean) {
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      if (isMobile) {
-        this.mobileMediaPreviewUrl = e.target.result;
-      } else {
-        this.mediaPreviewUrl = e.target.result;
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  removeMedia(isMobile: boolean = false) {
-    if (isMobile) {
-      this.mobileMediaFile = null;
-      this.mobileMediaPreviewUrl = null;
-      this.campaignForm.patchValue({ mobileMediaUrl: '' });
-    } else {
-      this.mediaFile = null;
-      this.mediaPreviewUrl = null;
-      this.campaignForm.patchValue({ mediaUrl: '' });
-    }
-  }
-
-  getMediaType(url: string | null): 'image' | 'video' | null {
-    if (!url) return null;
-    const videoExtensions = ['.mp4', '.webm'];
-    const isVideo = videoExtensions.some(ext => url.toLowerCase().includes(ext));
-    return isVideo ? 'video' : 'image';
-  }
-
-  async uploadFiles(): Promise<{ mediaUrl?: string, mobileMediaUrl?: string }> {
-    const urls: { mediaUrl?: string, mobileMediaUrl?: string } = {};
-
-    if (this.mediaFile) {
-      this.uploadingMedia = true;
-      try {
-        const response = await this.mediaService.uploadMedia(this.mediaFile).toPromise();
-        if (response?.url) {
-          urls.mediaUrl = response.url;
-        }
-      } catch (error) {
-        console.error('Error uploading media:', error);
-        alert('שגיאה בהעלאת קובץ מדיה');
-        throw error;
-      } finally {
-        this.uploadingMedia = false;
-      }
-    }
-
-    if (this.mobileMediaFile) {
-      this.uploadingMobileMedia = true;
-      try {
-        const response = await this.mediaService.uploadMedia(this.mobileMediaFile).toPromise();
-        if (response?.url) {
-          urls.mobileMediaUrl = response.url;
-        }
-      } catch (error) {
-        console.error('Error uploading mobile media:', error);
-        alert('שגיאה בהעלאת קובץ מדיה למובייל');
-        throw error;
-      } finally {
-        this.uploadingMobileMedia = false;
-      }
-    }
-
-    return urls;
-  }
-
-  async onSubmit() {
+  onSubmit() {
     if (this.campaignForm.valid) {
-      try {
-        // Upload files first if any
-        const uploadedUrls = await this.uploadFiles();
-
-        const formValue = this.campaignForm.value;
-
-        // Use uploaded URLs or existing URLs from form
-        const mediaUrl = uploadedUrls.mediaUrl || formValue.mediaUrl || '';
-        const mobileMediaUrl = uploadedUrls.mobileMediaUrl || formValue.mobileMediaUrl || '';
-
-        // Convert string dates to Date objects and ensure IDs are numbers
-        const campaignData = {
-          ...formValue,
-          adSpotId: Number(formValue.adSpotId),
-          clientId: Number(formValue.clientId),
-          startDate: new Date(formValue.startDate),
-          endDate: new Date(formValue.endDate),
-          mediaUrl,
-          mobileMediaUrl
-        };
-
-        this.save.emit(campaignData);
-      } catch (error) {
-        console.error('Error in form submission:', error);
-      }
+      const formValue = this.campaignForm.value;
+      const campaignData = {
+        ...formValue,
+        adSpotId: Number(formValue.adSpotId),
+        clientId: Number(formValue.clientId),
+        startDate: new Date(formValue.startDate),
+        endDate: new Date(formValue.endDate),
+        mediaUrl: formValue.mediaUrl || '',
+        mobileMediaUrl: formValue.mobileMediaUrl || ''
+      };
+      this.save.emit(campaignData);
     }
   }
 

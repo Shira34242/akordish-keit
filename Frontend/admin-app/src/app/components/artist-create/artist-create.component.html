@@ -87,14 +87,11 @@
 
       <div class="form-group">
         <label class="form-label">תמונת פרופיל</label>
-        <input
-          type="url"
-          [(ngModel)]="artistForm.imageUrl"
-          name="imageUrl"
-          class="form-input"
+        <app-file-upload-input
+          [(url)]="artistForm.imageUrl"
           placeholder="https://example.com/image.jpg"
         />
-        <small class="form-hint">קישור לתמונת הפרופיל שלך</small>
+        <small class="form-hint">העלה קובץ או הזן קישור</small>
       </div>
 
       <div class="form-group">
@@ -123,11 +120,8 @@
           תמונת באנר
           <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
         </label>
-        <input
-          type="url"
-          [(ngModel)]="artistForm.bannerImageUrl"
-          name="bannerImageUrl"
-          class="form-input"
+        <app-file-upload-input
+          [(url)]="artistForm.bannerImageUrl"
           placeholder="https://example.com/banner.jpg"
         />
         <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
@@ -138,12 +132,11 @@
           באנר GIF/אנימציה
           <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
         </label>
-        <input
-          type="url"
-          [(ngModel)]="artistForm.bannerGifUrl"
-          name="bannerGifUrl"
-          class="form-input"
+        <app-file-upload-input
+          [(url)]="artistForm.bannerGifUrl"
+          accept="image/*,video/mp4,video/webm"
           placeholder="https://example.com/banner.gif"
+          [showPreview]="false"
         />
         <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
       </div>
@@ -211,12 +204,10 @@
         <div class="form-row">
           <div class="form-group" style="flex: 2;">
             <label class="form-label">קישור לתמונה</label>
-            <input
-              type="url"
-              [(ngModel)]="image.imageUrl"
-              [name]="'gallery_url_' + i"
-              class="form-input"
+            <app-file-upload-input
+              [(url)]="image.imageUrl"
               placeholder="https://..."
+              [showPreview]="false"
             />
           </div>
 

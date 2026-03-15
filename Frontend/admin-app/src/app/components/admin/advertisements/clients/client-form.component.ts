@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../../../../models/admin/advertisement.model';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FileUploadInputComponent],
   templateUrl: './client-form.component.html',
   styleUrls: ['./client-form.component.css']
 })

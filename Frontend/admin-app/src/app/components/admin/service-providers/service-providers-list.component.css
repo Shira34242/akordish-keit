@@ -35,6 +35,8 @@
 .badge-secondary { background: #F2F2F2; color: #000000; }
 .badge-info { background: #F2F2F2; color: #000000; }
 
+.provider-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; display: block; }
+
 .actions-cell { white-space: nowrap; }
 .action-buttons { display: flex; gap: 6px; }
 

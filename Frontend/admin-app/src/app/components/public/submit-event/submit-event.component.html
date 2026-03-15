@@ -147,13 +147,12 @@
         </h2>
 
         <div class="form-group">
-          <label class="form-label">תמונת ההופעה (URL)</label>
-          <input type="url" class="form-input" [(ngModel)]="event.imageUrl" name="imageUrl"
-            placeholder="https://...">
-          <span class="field-hint">קישור לתמונה פרסומית של ההופעה</span>
-          <div class="image-preview" *ngIf="event.imageUrl">
-            <img [src]="event.imageUrl" alt="תצוגה מקדימה">
-          </div>
+          <label class="form-label">תמונת ההופעה</label>
+          <app-file-upload-input
+            [(url)]="event.imageUrl"
+            placeholder="https://..."
+          />
+          <span class="field-hint">העלה קובץ או הזן קישור</span>
         </div>
 
         <div class="form-group">

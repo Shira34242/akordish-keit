@@ -277,15 +277,12 @@
       <h2 class="section-title">מדיה</h2>
 
       <div class="form-group">
-        <label class="form-label">תמונת פרופיל (URL)</label>
-        <input
-          type="url"
-          [(ngModel)]="profileImageUrl"
-          name="profileImageUrl"
-          class="form-input"
+        <label class="form-label">תמונת פרופיל</label>
+        <app-file-upload-input
+          [(url)]="profileImageUrl"
           placeholder="https://..."
         />
-        <small class="form-hint">קישור לתמונת הפרופיל</small>
+        <small class="form-hint">העלה קובץ או הזן קישור</small>
       </div>
 
       <div class="form-group">

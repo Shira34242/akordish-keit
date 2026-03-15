@@ -6,6 +6,7 @@ import { ArticleService } from '../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { ArtistService } from '../../../services/artist.service';
 import { ArtistListDto } from '../../../models/artist.model';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import {
   CreateArticleDto,
   ArticleContentType,
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'app-submit-article',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './submit-article.component.html',
   styleUrls: ['./submit-article.component.css']
 })

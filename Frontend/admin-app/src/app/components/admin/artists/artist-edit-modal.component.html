@@ -90,24 +90,18 @@
         <h2 class="section-title">תמונות וקישורים</h2>
 
         <div class="form-group">
-          <label class="form-label">תמונת פרופיל (URL)</label>
-          <input
-            type="url"
-            [(ngModel)]="editForm.imageUrl"
-            name="imageUrl"
-            class="form-input"
+          <label class="form-label">תמונת פרופיל</label>
+          <app-file-upload-input
+            [(url)]="editForm.imageUrl"
             placeholder="https://example.com/image.jpg"
           />
-          <small class="form-hint">קישור לתמונת הפרופיל של האומן</small>
+          <small class="form-hint">העלה קובץ או הזן קישור</small>
         </div>
 
         <div class="form-group">
-          <label class="form-label">תמונת באנר (URL)</label>
-          <input
-            type="url"
-            [(ngModel)]="editForm.bannerImageUrl"
-            name="bannerImageUrl"
-            class="form-input"
+          <label class="form-label">תמונת באנר</label>
+          <app-file-upload-input
+            [(url)]="editForm.bannerImageUrl"
             placeholder="https://example.com/banner.jpg"
           />
           <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
@@ -115,12 +109,11 @@
 
         <div class="form-group">
           <label class="form-label">באנר GIF/וידאו</label>
-          <input
-            type="url"
-            [(ngModel)]="editForm.bannerGifUrl"
-            name="bannerGifUrl"
-            class="form-input"
+          <app-file-upload-input
+            [(url)]="editForm.bannerGifUrl"
+            accept="image/*,video/mp4,video/webm"
             placeholder="https://example.com/banner.gif"
+            [showPreview]="false"
           />
           <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
         </div>
@@ -194,12 +187,10 @@
             <div class="form-row">
               <div class="form-group" style="flex: 2;">
                 <label class="form-label">קישור לתמונה</label>
-                <input
-                  type="url"
-                  [(ngModel)]="image.imageUrl"
-                  [name]="'gallery_url_' + i"
-                  class="form-input"
+                <app-file-upload-input
+                  [(url)]="image.imageUrl"
                   placeholder="https://..."
+                  [showPreview]="false"
                 />
               </div>
 
