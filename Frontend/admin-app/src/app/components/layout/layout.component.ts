@@ -41,6 +41,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showArtistSubMenu: boolean = false;
   isScrolled: boolean = false;
   fabOnYellow: boolean = false;
+  adminEditTarget: { label: string; url: string } | null = null;
   private lastScrollY: number = 0;
 
   @HostListener('window:scroll')
@@ -109,12 +110,16 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     // ⏱️ הפעלת Session Timeout - ניתוק אוטומטי אחרי 30 דקות של חוסר פעילות
     this.sessionTimeoutService.startWatching();
 
-    // זיהוי צבע FAB אחרי כל ניווט בין דפים
+    // זיהוי צבע FAB + עדכון כפתור עריכה למנהל אחרי כל ניווט
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         setTimeout(() => this.checkFabBackground(), 100);
+        this.updateAdminEditTarget(event.urlAfterRedirects);
       }
     });
+
+    // עדכון כפתור עריכה גם בטעינה הראשונית
+    this.updateAdminEditTarget(this.router.url);
   }
 
   ngAfterViewInit(): void {
@@ -136,6 +141,32 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       },
       error: (err) => console.error('Failed to get random song', err)
     });
+  }
+
+  get isAdmin(): boolean {
+    return !!(this.user && (this.user.role === 'Admin' || this.user.role === 4));
+  }
+
+  private updateAdminEditTarget(url: string): void {
+    const cleanUrl = url.split('?')[0];
+    const artistMatch = cleanUrl.match(/^\/artist\/(\w+)/);
+    const teacherMatch = cleanUrl.match(/^\/teacher\/(\w+)/);
+
+    if (artistMatch) {
+      this.adminEditTarget = { label: 'עריכת דף אמן', url: '/admin/artists' };
+    } else if (teacherMatch) {
+      this.adminEditTarget = { label: 'עריכת דף מורה', url: `/admin/teachers/edit/${teacherMatch[1]}` };
+    } else if (cleanUrl === '/professionals') {
+      this.adminEditTarget = { label: 'ניהול בעלי מקצוע', url: '/admin/service-providers' };
+    } else {
+      this.adminEditTarget = null;
+    }
+  }
+
+  fabAdminEdit(): void {
+    if (!this.adminEditTarget) return;
+    this.closeFabMenu();
+    this.router.navigate([this.adminEditTarget.url]);
   }
 
   goToAdmin() {

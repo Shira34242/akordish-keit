@@ -18,6 +18,7 @@ import { UpcomingEventDto } from '../../models/event.model';
 export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('artistHeroBg') artistHeroBg?: ElementRef<HTMLDivElement>;
+  @ViewChild('galleryCarousel') galleryCarousel?: ElementRef<HTMLDivElement>;
 
   artist: Artist | null = null;
   songs: SongDto[] = [];
@@ -37,9 +38,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   SocialPlatform = SocialPlatform;
 
   expandedGalleryIndex = -1;
+  activeVideoIndex = -1;
+  carouselPaused = false;
 
   private fullHeroHeight = 0;
   private rafPending = false;
+  private carouselRafId = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -60,7 +64,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    if (this.carouselRafId) cancelAnimationFrame(this.carouselRafId);
+  }
 
   loadArtist(id: number): void {
     this.loading = true;
@@ -71,7 +77,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadSongs(id);
         this.loadArticles(id);
         this.loadEvents(id);
-        setTimeout(() => this.initHeroHeight(), 0);
+        setTimeout(() => {
+          this.initHeroHeight();
+          this.startCarousel();
+        }, 0);
       },
       error: () => {
         this.loading = false;
@@ -112,6 +121,56 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const minHeight = Math.round(window.innerHeight * 0.02 + 72);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
+
+    // fade out all inner content in the first 160px of scroll
+    const progress = Math.min(1, window.scrollY / 160);
+    const opacity = String(Math.max(0, 1 - progress));
+    const infoSide = bg.querySelector('.hero-info-side') as HTMLElement | null;
+    const socialSide = bg.querySelector('.hero-social') as HTMLElement | null;
+    const overlay = bg.querySelector('.hero-overlay-right') as HTMLElement | null;
+    if (infoSide) infoSide.style.opacity = opacity;
+    if (socialSide) socialSide.style.opacity = opacity;
+    if (overlay) overlay.style.opacity = opacity;
+  }
+
+  private carouselDir = 1; // כיוון גלילה: 1 קדימה, -1 אחורה
+
+  private startCarousel(): void {
+    const carousel = this.galleryCarousel?.nativeElement;
+    if (!carousel || this.galleryItems.length === 0) return;
+    if (this.carouselRafId) cancelAnimationFrame(this.carouselRafId);
+
+    const scroll = () => {
+      if (!this.carouselPaused) {
+        carousel.scrollLeft += 0.7 * this.carouselDir;
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        if (carousel.scrollLeft >= maxScroll - 1) this.carouselDir = -1;
+        else if (carousel.scrollLeft <= 0) this.carouselDir = 1;
+      }
+      this.carouselRafId = requestAnimationFrame(scroll);
+    };
+    this.carouselRafId = requestAnimationFrame(scroll);
+  }
+
+  pauseCarousel(): void {
+    this.carouselPaused = true;
+  }
+
+  resumeCarousel(): void {
+    this.expandedGalleryIndex = -1;
+    if (this.activeVideoIndex === -1) {
+      this.carouselPaused = false;
+    }
+  }
+
+  toggleVideo(index: number): void {
+    if (this.activeVideoIndex === index) {
+      this.activeVideoIndex = -1;
+      this.carouselPaused = false;
+    } else {
+      this.activeVideoIndex = index;
+      this.carouselPaused = true;
+    }
   }
 
   loadSongs(artistId: number, page: number = 1): void {
@@ -200,6 +259,16 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setExpandedGallery(index: number): void {
     this.expandedGalleryIndex = index;
+  }
+
+  get galleryDisplayItems(): Array<{ type: 'image' | 'video' | 'placeholder'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
+    const items = this.galleryItems as Array<{ type: 'image' | 'video' | 'placeholder'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }>;
+    const result = [...items];
+    const MIN_ITEMS = 10;
+    while (result.length < MIN_ITEMS) {
+      result.push({ type: 'placeholder' });
+    }
+    return result;
   }
 
   get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {

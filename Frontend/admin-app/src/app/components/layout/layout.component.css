@@ -664,6 +664,31 @@
     font-size: 19px;
 }
 
+.fab-menu-item--admin {
+    background-color: #ddff53;
+    color: #000;
+    font-weight: 800;
+}
+
+.fab-menu-item--admin .fab-menu-icon {
+    color: #000;
+}
+
+.fab-menu-item--admin:hover {
+    background-color: #000;
+    color: #ddff53;
+}
+
+.fab-menu-item--admin:hover .fab-menu-icon {
+    color: #ddff53;
+}
+
+.fab-admin-divider {
+    height: 1px;
+    background-color: #F2F2F2;
+    width: 100%;
+}
+
 @media (max-width: 768px) {
     .fab-menu {
         bottom: 84px;
