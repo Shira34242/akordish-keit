@@ -2,888 +2,856 @@
    Page Base
 ======================================== */
 .artist-page-container {
-    font-family: 'Open Sans', sans-serif;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
-    background-color: #ffffff;
-    min-height: 100vh;
-    direction: rtl;
-    color: #1f2937;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  background-color: #ffffff;
+  min-height: 100vh;
+  direction: rtl;
+  color: #000000;
 }
 
 /* ========================================
-   Banner (כל האמנים - תמונה/GIF)
+   Top Scroll Mask
 ======================================== */
-.artist-banner {
-    width: 100%;
-    height: 360px;
-    overflow: hidden;
-    position: relative;
-}
-
-.banner-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+.top-scroll-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2vh;
+  background: #ffffff;
+  z-index: 897;
+  pointer-events: none;
 }
 
 /* ========================================
-   Header Background (lime card)
-   - ללא באנר: עולה מתחת ל-layout header
-   - עם באנר:  מחפף את תחתית הבאנר
+   Hero Background — fixed, מתכווץ בגלילה
+   ללא באנר: צהוב. עם באנר: background-image ב-JS
 ======================================== */
-.artist-header-bg {
-    background-color: #ddff53;
-    margin-top: -63px;
-    margin-left: 16px;
-    margin-right: 16px;
-    border-radius: 20px;
-    position: sticky;
-    height: 300px;
-    top: -215px;
-    z-index: 895;
-    pointer-events: none;
+.artist-hero-bg {
+  position: fixed;
+  top: 2vh;
+  left: 16px;
+  right: 16px;
+  border-radius: 24px;
+  height: calc(98vh - 16px); /* JS מחליף לפי viewport */
+  z-index: 895;
+  background-color: #ddff53;  /* fallback צהוב כשאין באנר */
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  will-change: height;
 }
 
-.has-banner .artist-header-bg {
-    margin-top: -110px;
-    height: 280px;
-    top: -200px;
+/* overlay כהה — רק כשיש באנר, לנראות טקסט לבן */
+.hero-overlay-right {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.50) 30%,
+    rgba(0, 0, 0, 0.12) 65%,
+    rgba(0, 0, 0, 0.00) 100%
+  );
+  pointer-events: none;
 }
 
 /* ========================================
-   Header Content (overlaid on lime bg)
+   Hero Scroll Spacer — בתזרים, מגדיר גובה hero
 ======================================== */
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    margin-top: -300px;
-    margin-bottom: 8px;
-    padding: calc(56px + 30px) 24px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative;
-    z-index: 896;
+.hero-scroll-spacer {
+  margin-top: 2vh;
+  height: calc(98vh - 16px);
+  pointer-events: none;
 }
 
-.has-banner .header-content {
-    margin-top: -280px;
+/* ---- ימין-תחתון: פרופיל + מידע ---- */
+.hero-info-side {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  max-width: 540px;
 }
 
-.header-top-row {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    align-items: stretch;
+.hero-avatar-wrap {
+  flex-shrink: 0;
 }
 
-/* ========================================
-   Artist Cover Image (ריבועי כמו כריכת שיר)
-======================================== */
-.header-image-section {
-    flex: 0 0 200px;
-    position: relative;
+.hero-avatar {
+  width: 222px;
+  height: 222px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 3px solid rgba(255, 255, 255, 0.3);
 }
 
-.artist-cover-wrapper {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    border-radius: 24px;
-    overflow: hidden;
+/* ללא באנר: גבול שחור על רקע צהוב */
+.artist-page-container:not(.has-banner) .hero-avatar {
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
-.artist-cover {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
 }
 
-.artist-cover:hover {
-    transform: scale(1.05);
+/* תגים */
+.hero-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-/* ========================================
-   Artist Info
-======================================== */
-.header-info-section {
-    flex: 1;
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 4px;
-}
-
-/* תגים: מומלץ / מאומת */
-.header-badges {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 2px;
-}
-
-.badge-premium {
-    background: #000;
-    color: #ddff53;
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
+.badge-featured {
+  background: #000000;
+  color: #ddff53;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .badge-verified {
-    background: rgba(0, 0, 0, 0.08);
-    color: rgba(0, 0, 0, 0.65);
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.72rem;
+  font-weight: 300;
+  /* עם באנר */
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
-.artist-name {
-    font-family: 'Karantina', sans-serif;
-    font-size: 3rem;
-    font-weight: 700;
-    color: #000000;
-    line-height: 1;
-    margin: 0;
-    letter-spacing: 0.5px;
+.artist-page-container:not(.has-banner) .badge-verified {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
 }
 
-.artist-english-name {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 1rem;
-    color: rgba(0, 0, 0, 0.55);
-    margin: 0;
-    font-weight: 400;
+/* ---- טקסטים — לבן עם באנר, שחור ללא ---- */
+.hero-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 3.6rem;
+  line-height: 1.05;
+  margin: 0;
+  color: #ffffff;
+}
+.artist-page-container:not(.has-banner) .hero-name { color: #000000; }
+
+.hero-english {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 1.1rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+.artist-page-container:not(.has-banner) .hero-english { color: rgba(0, 0, 0, 0.5); }
+
+.hero-short-bio {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.88rem;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 340px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.artist-page-container:not(.has-banner) .hero-short-bio { color: rgba(0, 0, 0, 0.6); }
+
+/* סטטיסטיקות */
+.hero-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 2px;
 }
 
-.short-bio {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    color: rgba(0, 0, 0, 0.7);
-    margin: 4px 0 0;
-    line-height: 1.5;
-    max-width: 520px;
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: #ffffff;
+}
+.artist-page-container:not(.has-banner) .stat-num { color: #000000; }
+
+.stat-lbl {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.artist-page-container:not(.has-banner) .stat-lbl { color: rgba(0, 0, 0, 0.45); }
+
+/* כתובת אתר */
+.hero-website-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.85rem;
+  transition: opacity 0.15s;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.artist-page-container:not(.has-banner) .hero-website-link { color: rgba(0, 0, 0, 0.55); }
+.hero-website-link:hover { opacity: 0.85; }
+
+.hero-website-link span {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.hero-website-link svg { width: 16px; height: 16px; }
+
+/* ========================================
+   רשתות חברתיות — שמאל-תחתון
+   left: 80px → מרוחק מכפתור ה-plus בקצה
+======================================== */
+.hero-social {
+  position: absolute;
+  bottom: 32px;
+  left: 80px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  max-width: calc(100% - 420px);
+}
+
+.social-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;   /* זהה לגודל כפתור ה-plus */
+  height: 48px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  /* עם באנר */
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.artist-page-container:not(.has-banner) .social-icon-btn {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
+.social-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.artist-page-container:not(.has-banner) .social-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.social-icon-btn svg { width: 22px; height: 22px; }
+
+/* ========================================
+   Page Content
+======================================== */
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* ========================================
-   Stats
+   Bio + Gallery — תיבה צהובה אחת
 ======================================== */
-.artist-stats {
-    display: flex;
-    gap: 24px;
-    margin: 4px 0;
+.bio-gallery-card {
+  background: #ddff53;
+  border-radius: 24px;
+  padding: 36px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-}
-
-.stat-number {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #000;
-    line-height: 1;
-}
-
-.stat-label {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.7rem;
-    color: rgba(0, 0, 0, 0.55);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* ========================================
-   Social Links
-======================================== */
-.social-links {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin: 4px 0;
-}
-
-.social-link {
-    padding: 5px 14px;
-    background: transparent;
-    border: 1.5px solid rgba(0, 0, 0, 0.4);
-    color: #000;
-    border-radius: 20px;
-    text-decoration: none;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.social-link:hover {
-    background: #000;
-    color: #ddff53;
-    border-color: #000;
-}
-
-/* ========================================
-   Action Buttons
-======================================== */
-.header-actions {
-    display: flex;
-    gap: 8px;
-    align-self: flex-end;
-}
-
-.btn-upgrade {
-    padding: 8px 20px;
-    background: #000;
-    color: #ddff53;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.btn-upgrade:hover {
-    opacity: 0.82;
-}
-
-.btn-boost {
-    padding: 8px 20px;
-    background: transparent;
-    color: #000;
-    border: 1.5px solid rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-boost:hover {
-    background: rgba(0, 0, 0, 0.07);
-}
-
-/* ========================================
-   Content Wrapper
-======================================== */
-.content-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 16px 24px 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* ========================================
-   Bio Card
-======================================== */
-.bio-card {
-    background: #F2F2F2;
-    border-radius: 20px;
-    padding: 28px 32px;
-}
-
-.bio-card h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 0 0 12px 0;
-    text-align: right;
+.card-section-label {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.65rem;
+  color: rgba(0, 0, 0, 0.38);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin: 0 0 14px 0;
+  text-align: right;
 }
 
 .biography-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.85;
-    color: #374151;
-    white-space: pre-wrap;
-    margin: 0;
-    text-align: right;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: #000000;
+  white-space: pre-wrap;
+  margin: 0;
+  text-align: right;
 }
 
 /* ========================================
-   Gallery Card (משלם בלבד)
+   Gallery Strip — accordion hover
 ======================================== */
-.gallery-card {
-    background: #F2F2F2;
-    border-radius: 20px;
-    padding: 28px 32px;
+.gallery-strip {
+  display: flex;
+  gap: 6px;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
-.gallery-card h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 0 0 16px 0;
-    text-align: right;
+.strip-item {
+  flex: 0 0 56px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    flex 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: rgba(0, 0, 0, 0.18);
 }
 
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
+/* overlay כהה על פריטים סגורים */
+.strip-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.46);
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.gallery-item {
-    border-radius: 14px;
-    overflow: hidden;
-    background: #fff;
+.strip-item.is-expanded {
+  flex: 1;
 }
 
-.gallery-image {
-    width: 100%;
-    height: 190px;
-    object-fit: cover;
-    display: block;
+/* הפריט הפתוח — הסרת overlay */
+.strip-item.is-expanded::after {
+  opacity: 0;
 }
 
-.image-caption {
-    padding: 9px 12px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    color: #666;
-    text-align: right;
-    margin: 0;
+.strip-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* zoom קל על תמונה פתוחה */
+.strip-item.is-expanded .strip-img {
+  transform: scale(1.05);
+}
+
+/* כיתוב על פריט פתוח */
+.strip-caption-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 20px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, transparent 100%);
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.86rem;
+  text-align: right;
+  z-index: 2;
+  animation: captionFadeIn 0.3s ease;
+}
+
+@keyframes captionFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* וידאו מכווץ */
+.strip-video-collapsed {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+}
+
+.strip-play-icon {
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 2;
+  position: relative;
+}
+
+/* וידאו פתוח */
+.strip-video-iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+  z-index: 2;
+  position: relative;
 }
 
 /* ========================================
-   Videos Card (משלם בלבד)
+   Section Header
 ======================================== */
-.videos-card {
-    background: #F2F2F2;
-    border-radius: 20px;
-    padding: 28px 32px;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
 }
 
-.videos-card h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 0 0 16px 0;
-    text-align: right;
+.section-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #000000;
+  margin: 0;
 }
 
-.video-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 14px;
-}
-
-.video-item {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.video-iframe {
-    width: 100%;
-    height: 230px;
-    display: block;
-    border: none;
-}
-
-.video-title {
-    padding: 12px 16px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #111;
-    text-align: right;
-    margin: 0;
-}
-
-/* ========================================
-   Main Layout (2 columns)
-======================================== */
-.main-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-    align-items: start;
-}
-
-/* ========================================
-   Content Column
-======================================== */
-.content-column {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.content-card {
-    background: #F2F2F2;
-    border-radius: 20px;
-    padding: 24px;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.card-header h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 0;
+.section-count {
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.32);
 }
 
 .see-all-link {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #000;
-    text-decoration: none;
-    opacity: 0.45;
-    transition: opacity 0.15s;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.82rem;
+  color: #000000;
+  text-decoration: none;
+  opacity: 0.36;
+  transition: opacity 0.15s;
+}
+.see-all-link:hover { opacity: 1; }
+
+/* ========================================
+   Songs Grid — כרטיסים עם תמונה, כמו דף הבית
+======================================== */
+.songs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
 }
 
-.see-all-link:hover {
-    opacity: 1;
+.song-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-/* ---- Song List ---- */
-.song-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.song-card:hover {
+  background: #e5e5e5;
 }
 
-.song-list li {
-    padding: 10px 14px;
-    background: #ffffff;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: #222;
-    text-align: right;
-    transition: background-color 0.15s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.song-card-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+  background: #ddff53;
 }
 
-.song-list li:hover {
-    background: #e8e8e8;
-    color: #000;
+.song-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
 }
 
-.song-title-text {
-    flex: 1;
+.song-card:hover .song-cover-img {
+  transform: scale(1.06);
 }
 
-.song-views-text {
-    font-size: 0.75rem;
-    color: #aaa;
-    font-weight: 400;
-    flex-shrink: 0;
-    margin-right: 8px;
+.song-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ---- Articles List ---- */
-.articles-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.song-cover-initial {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 3rem;
+  color: rgba(0, 0, 0, 0.28);
 }
 
-.article-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px;
-    background: #fff;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background-color 0.15s;
+.song-card-info {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
 }
 
-.article-item:hover {
-    background: #e8e8e8;
+.song-card-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #000000;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.article-thumb {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 10px;
-    flex-shrink: 0;
+.song-card-artist {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.48);
 }
 
-.article-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    text-align: right;
-}
-
-.article-title-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #111;
-    line-height: 1.3;
-}
-
-.article-subtitle-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    color: #777;
-    line-height: 1.4;
-}
-
-.article-date-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    color: #bbb;
-}
-
-/* ---- Events List ---- */
-.events-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.event-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    background: #fff;
-    border-radius: 12px;
-}
-
-.event-date-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #ddff53;
-    border-radius: 10px;
-    width: 48px;
-    height: 52px;
-    flex-shrink: 0;
-}
-
-.event-day {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #000;
-    line-height: 1;
-}
-
-.event-month {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.55);
-    text-transform: uppercase;
-    line-height: 1.3;
-}
-
-.event-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    text-align: right;
-}
-
-.event-title-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #111;
-}
-
-.event-location-text {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.78rem;
-    color: #999;
-}
-
-.btn-tickets {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    background: #000;
-    color: #ddff53;
-    text-decoration: none;
-    border-radius: 10px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-}
-
-.btn-tickets:hover {
-    opacity: 0.82;
+.song-card-views {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.65rem;
+  color: rgba(0, 0, 0, 0.28);
+  margin-top: 2px;
 }
 
 /* ========================================
-   Sidebar
+   Articles Grid — טקסט מעל תמונה
 ======================================== */
-.sidebar-column {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: sticky;
-    top: calc(2vh + 80px);
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
 }
 
-.sidebar-card {
-    background: #F2F2F2;
-    border-radius: 20px;
-    padding: 20px;
+.article-card {
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  height: 220px;
+  transition: transform 0.2s ease;
+  background: #F2F2F2;
 }
 
-.sidebar-card h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 0 0 12px 0;
-    text-align: right;
+.article-card:hover {
+  transform: scale(1.02);
 }
 
-.info-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.article-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
 }
 
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    text-align: right;
+.article-card:hover .article-card-img {
+  transform: scale(1.06);
 }
 
-.info-label {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.7rem;
-    color: #aaa;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* שכבת עימום + טקסט */
+.article-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0.00) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px 18px;
+  text-align: right;
 }
 
-.info-value {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.88rem;
-    color: #222;
+.article-card-date {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
 }
 
-.info-value-link {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.85rem;
-    color: #000;
-    text-decoration: underline;
-    word-break: break-word;
-    opacity: 0.6;
-    transition: opacity 0.15s;
+.article-card-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  line-height: 1.3;
 }
 
-.info-value-link:hover {
-    opacity: 1;
+.article-card-sub {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 5px;
+  line-height: 1.4;
 }
+
+/* ========================================
+   Events
+======================================== */
+.events-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.event-date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ddff53;
+  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.event-day {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #000000;
+  line-height: 1;
+}
+
+.event-month {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.6rem;
+  color: rgba(0, 0, 0, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.event-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
+}
+
+.event-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+.event-loc {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.btn-tickets {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  background: #000000;
+  color: #ddff53;
+  text-decoration: none;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.btn-tickets:hover { opacity: 0.82; }
 
 /* ========================================
    States
 ======================================== */
 .loading-small {
-    text-align: center;
-    padding: 16px;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.85rem;
-    color: #bbb;
+  text-align: center;
+  padding: 24px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.28);
 }
 
 .no-content {
-    text-align: center;
-    color: #ccc;
-    font-family: 'Open Sans', sans-serif;
-    font-style: italic;
-    padding: 20px;
-    font-size: 0.88rem;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.22);
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  padding: 24px;
+  font-size: 0.88rem;
 }
 
 .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 16px;
-    font-family: 'Open Sans', sans-serif;
-    color: #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.28);
 }
 
 .spinner {
-    border: 3px solid #f0f0f0;
-    border-top: 3px solid #000;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    animation: spin 0.85s linear infinite;
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #000000;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 0.85s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ========================================
    Responsive
 ======================================== */
 @media (max-width: 900px) {
-    .artist-banner {
-        height: 240px;
-    }
+  .hero-info-side {
+    bottom: 24px;
+    right: 20px;
+    max-width: 55%;
+  }
 
-    .artist-header-bg {
-        margin-top: -48px;
-        margin-left: 8px;
-        margin-right: 8px;
-        border-radius: 16px;
-        height: 280px;
-        top: -200px;
-    }
+  .hero-social {
+    bottom: 24px;
+    left: 64px;
+    max-width: calc(100% - 280px);
+  }
 
-    .has-banner .artist-header-bg {
-        margin-top: -80px;
-        height: 260px;
-        top: -185px;
-    }
+  .hero-avatar { width: 165px; height: 165px; }
+  .hero-name { font-size: 2.6rem; }
 
-    .header-content {
-        margin-top: -280px;
-        padding: calc(48px + 20px) 16px 16px;
-        align-items: center;
-    }
-
-    .has-banner .header-content {
-        margin-top: -260px;
-    }
-
-    .header-top-row {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .header-image-section {
-        flex: none;
-    }
-
-    .header-info-section {
-        align-items: center;
-        text-align: center;
-    }
-
-    .short-bio {
-        text-align: center;
-    }
-
-    .header-badges {
-        justify-content: center;
-    }
-
-    .artist-stats {
-        justify-content: center;
-    }
-
-    .social-links {
-        justify-content: center;
-    }
-
-    .header-actions {
-        align-self: center;
-    }
-
-    .content-wrapper {
-        padding: 12px 12px 40px;
-    }
-
-    .main-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar-column {
-        position: relative;
-        top: 0;
-    }
-
-    .video-grid {
-        grid-template-columns: 1fr;
-    }
+  .bio-gallery-card { padding: 28px 24px; }
+  .page-content { padding: 10px 12px 60px; }
 }
 
 @media (max-width: 600px) {
-    .artist-banner {
-        height: 180px;
-    }
+  .artist-hero-bg {
+    left: 8px;
+    right: 8px;
+    border-radius: 20px;
+  }
 
-    .artist-name {
-        font-size: 2.2rem;
-    }
+  .hero-info-side {
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+    max-width: 100%;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+  }
 
-    .artist-cover-wrapper {
-        width: 160px;
-        height: 160px;
-    }
+  .hero-avatar { width: 129px; height: 129px; }
+  .hero-name { font-size: 2rem; }
+  .hero-stats { gap: 18px; }
+  .hero-social { display: none; }
 
-    .header-image-section {
-        flex: none;
-    }
-
-    .bio-card,
-    .gallery-card,
-    .videos-card,
-    .content-card {
-        padding: 18px 14px;
-    }
+  .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .articles-grid { grid-template-columns: 1fr; }
+  .gallery-strip { height: 240px; }
 }

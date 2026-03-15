@@ -1,0 +1,615 @@
+/* ════════════════════════════════════════════════════
+   PAGE BASE
+════════════════════════════════════════════════════ */
+.teacher-page {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  background-color: #ffffff;
+  min-height: 100vh;
+  direction: rtl;
+  color: #000000;
+}
+
+/* ════════════════════════════════════════════════════
+   TOP SCROLL MASK — מסכה לבנה מעל ה-hero
+════════════════════════════════════════════════════ */
+.top-scroll-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2vh;
+  background: #ffffff;
+  z-index: 897;
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════
+   HERO BACKGROUND — fixed, מתכווץ בגלילה
+════════════════════════════════════════════════════ */
+.teacher-hero-bg {
+  position: fixed;
+  top: 2vh;
+  left: 16px;
+  right: 16px;
+  border-radius: 24px;
+  height: calc(98vh - 16px); /* JS מחליף */
+  z-index: 895;
+  background-color: #404040; /* fallback כשאין באנר */
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  will-change: height;
+}
+
+/* שכבת כהות קלה — רקע אחיד גם כשאין תמונה */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════
+   HERO CONTENT AREA — בתזרים רגיל, מעל ה-bg
+════════════════════════════════════════════════════ */
+.hero-content-area {
+  position: relative;
+  z-index: 896;
+  height: calc(98vh - 16px); /* זהה לגובה hero-bg הראשוני */
+}
+
+/* ════════════════════════════════════════════════════
+   TEACHER INFO CARD — 30% רוחב, ימין-תחתון, שחור
+════════════════════════════════════════════════════ */
+.teacher-info-card {
+  position: absolute;
+  bottom: 0;
+  right: 48px;
+  width: 30%;
+  min-width: 280px;
+  max-width: 400px;
+  background: #000000;
+  border-radius: 20px 20px 0 0;
+  padding: 36px 32px 100px; /* תחתית גדולה — מקום לתמונת הפרופיל */
+  overflow: visible; /* תמונת פרופיל בולטת מחוץ */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── טקסט בתוך הכרטיס ── */
+.hero-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 0;
+}
+
+.badge-featured {
+  background: #ddff53;
+  color: #000000;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  display: inline-block;
+}
+
+.teacher-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 2rem;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.instruments-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.instrument-chip {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+}
+
+.instrument-chip.primary {
+  background: #ddff53;
+  color: #000000;
+  font-weight: 800;
+}
+
+.city-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.city-row .material-icons {
+  font-size: 16px;
+}
+
+/* ════════════════════════════════════════════════════
+   PROFILE BUBBLE — בולטת מחוץ לתיבה (למטה)
+════════════════════════════════════════════════════ */
+.profile-bubble {
+  position: absolute;
+  bottom: -60px; /* חצי מחוץ לתיבה למטה */
+  right: 32px;
+  width: 120px;
+  height: 120px;
+  z-index: 10;
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ddff53;
+  display: block;
+}
+
+.star-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: #ddff53;
+  color: #000000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-badge .material-icons {
+  font-size: 15px;
+}
+
+/* ════════════════════════════════════════════════════
+   PAGE CONTENT (מתחת ל-hero)
+════════════════════════════════════════════════════ */
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 16px 80px; /* 80px למעלה — מקום לתמונת הפרופיל הבולטת */
+}
+
+/* ════════════════════════════════════════════════════
+   MAIN LAYOUT — גריד: sidebar (ימין) + תוכן (שמאל)
+════════════════════════════════════════════════════ */
+.main-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr; /* RTL: 280px = ימין, 1fr = שמאל */
+  gap: 16px;
+  align-items: start;
+}
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════════════════════ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: calc(2vh + 80px);
+}
+
+.contact-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.btn-contact {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: right;
+  transition: background 0.15s;
+}
+
+.btn-contact:hover {
+  background: #404040;
+}
+
+.btn-contact .material-icons {
+  font-size: 20px;
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: #000000;
+  text-decoration: none;
+}
+
+.contact-item .material-icons {
+  font-size: 18px;
+  color: #000;
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+.contact-item.link {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.contact-item.link:hover {
+  background: #ddff53;
+}
+
+.btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: #ddff53;
+  color: #000000;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: opacity 0.15s;
+}
+
+.btn-whatsapp:hover {
+  opacity: 0.82;
+}
+
+.btn-whatsapp .material-icons {
+  font-size: 20px;
+}
+
+/* ════════════════════════════════════════════════════
+   CONTENT COLUMN
+════════════════════════════════════════════════════ */
+.content-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── ביו קצר ── */
+.short-bio-card {
+  background: #ddff53;
+  border-radius: 24px;
+  padding: 32px 36px;
+}
+
+.short-bio-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #000000;
+  margin: 0;
+  line-height: 1.65;
+  text-align: right;
+}
+
+/* ── תיאור מלא ── */
+.description-card {
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: 32px 36px;
+}
+
+.card-label {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 14px 0;
+  text-align: right;
+}
+
+.full-desc-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: #000000;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  margin: 0;
+  text-align: right;
+}
+
+/* ── כרטיס מידע ── */
+.info-card {
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.38);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 88px;
+  padding-top: 4px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.chips-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 14px;
+  background: #ffffff;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: #000000;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 2px;
+  background: #F2F2F2;
+  border-radius: 999px;
+  margin: 4px 0;
+}
+
+/* ── גלריה נגללת ── */
+.gallery-section {
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: 24px 32px;
+}
+
+.gallery-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #ddff53 transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar { height: 4px; }
+.gallery-scroll::-webkit-scrollbar-track { background: transparent; }
+.gallery-scroll::-webkit-scrollbar-thumb { background: #ddff53; border-radius: 999px; }
+
+.gallery-item {
+  flex-shrink: 0;
+  width: 220px;
+  height: 180px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+/* ── וידאו ── */
+.video-section {
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: 24px 32px;
+}
+
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.video-iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+  border-radius: 16px;
+}
+
+/* ════════════════════════════════════════════════════
+   LOADING STATE
+════════════════════════════════════════════════════ */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.spinner {
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #000000;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .teacher-info-card {
+    right: 24px;
+    width: 42%;
+    padding: 28px 24px 90px;
+  }
+
+  .teacher-name {
+    font-size: 1.5rem;
+  }
+
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: relative;
+    top: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .teacher-hero-bg {
+    left: 8px;
+    right: 8px;
+    border-radius: 20px;
+  }
+
+  .teacher-info-card {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    min-width: unset;
+    max-width: unset;
+    padding: 24px 20px 90px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .teacher-name {
+    font-size: 1.4rem;
+  }
+
+  .profile-bubble {
+    right: 20px;
+    width: 100px;
+    height: 100px;
+    bottom: -50px;
+  }
+
+  .profile-img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .page-content {
+    padding-top: 70px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .short-bio-card,
+  .description-card,
+  .info-card,
+  .gallery-section,
+  .video-section {
+    padding: 20px 18px;
+    border-radius: 16px;
+  }
+
+  .gallery-item {
+    width: 160px;
+    height: 130px;
+  }
+}
