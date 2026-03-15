@@ -518,12 +518,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s;
+    transition: transform 0.35s ease, opacity 0.35s ease;
     z-index: 1000;
 }
 
 .fab-add-song:hover {
     transform: scale(1.1);
+}
+
+.fab-add-song.fab-hidden {
+    transform: translateX(-100px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fab-add-song.fab-on-yellow {
+    background-color: #000;
+    color: #ddff53;
 }
 
 .fab-add-song.fab-active {

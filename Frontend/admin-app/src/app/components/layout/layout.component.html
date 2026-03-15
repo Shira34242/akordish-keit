@@ -169,7 +169,7 @@
 </div>
 
 <!-- FAB Button -->
-<button class="fab-add-song" [class.fab-active]="showFabMenu" (click)="toggleFabMenu($event)">
+<button class="fab-add-song" [class.fab-active]="showFabMenu" [class.fab-hidden]="isScrolled && !showFabMenu" [class.fab-on-yellow]="fabOnYellow && !showFabMenu" (click)="toggleFabMenu($event)">
     <span class="material-icons fab-add-icon" [class.rotated]="showFabMenu">add</span>
 </button>
 

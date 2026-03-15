@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +25,10 @@ import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
 })
-export class HomePageComponent implements OnInit {
+export class HomePageComponent implements OnInit, AfterViewInit {
+
+  @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
+
   searchQuery = '';
   searchResults: any[] = [];
   showSearchResults = false;
@@ -35,6 +38,9 @@ export class HomePageComponent implements OnInit {
   popularSongs: any[] = [];
   topArtists: any[] = [];
   featuredArtists: any[] = [];
+
+  private fullHeroHeight = 0;
+  private rafPending = false;
 
   constructor(
     private router: Router,
@@ -58,6 +64,49 @@ export class HomePageComponent implements OnInit {
 
   ngOnInit() {
     this.loadContent();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initHeroHeight(), 0);
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.rafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.initHeroHeight();
+  }
+
+  private initHeroHeight(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg) return;
+    const top = window.innerHeight * 0.02;
+    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    bg.style.height = this.fullHeroHeight + 'px';
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg || this.fullHeroHeight === 0) return;
+    const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    bg.style.height = newHeight + 'px';
+
+    const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
+    if (overlay) {
+      const fadeEnd = this.fullHeroHeight * 0.45;
+      const progress = Math.min(1, window.scrollY / fadeEnd);
+      overlay.style.opacity = String(1 - progress);
+    }
   }
 
   loadContent() {

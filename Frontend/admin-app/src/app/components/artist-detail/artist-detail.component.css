@@ -14,7 +14,6 @@
 
 /* ========================================
    Top Scroll Mask
-   מכסה את השוליים הלבנים מעל ה-hero
 ======================================== */
 .top-scroll-mask {
   position: fixed;
@@ -28,7 +27,8 @@
 }
 
 /* ========================================
-   Hero Background (fixed, מתכווץ בגלילה)
+   Hero Background — fixed, מתכווץ בגלילה
+   ללא באנר: צהוב. עם באנר: background-image ב-JS
 ======================================== */
 .artist-hero-bg {
   position: fixed;
@@ -36,60 +36,47 @@
   left: 16px;
   right: 16px;
   border-radius: 24px;
-  height: calc(100svh - 2vh - 16px); /* fallback — JS מחליף */
+  height: calc(98vh - 16px); /* JS מחליף לפי viewport */
   z-index: 895;
+  background-color: #ddff53;  /* fallback צהוב כשאין באנר */
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
-  background-color: #404040; /* fallback כשאין באנר */
   will-change: height;
 }
 
-.hero-banner-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* שכבת כהות מצד ימין — נותנת קריאות לטקסט */
+/* overlay כהה — רק כשיש באנר, לנראות טקסט לבן */
 .hero-overlay-right {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to left,
-    rgba(0, 0, 0, 0.72) 0%,
-    rgba(0, 0, 0, 0.45) 35%,
-    rgba(0, 0, 0, 0.0) 65%
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.50) 30%,
+    rgba(0, 0, 0, 0.12) 65%,
+    rgba(0, 0, 0, 0.00) 100%
   );
   pointer-events: none;
 }
 
 /* ========================================
-   Hero Content Area
-   בתזרים רגיל, מכסה את שטח ה-hero
+   Hero Scroll Spacer — בתזרים, מגדיר גובה hero
 ======================================== */
-.hero-content-area {
-  position: relative;
-  z-index: 896;
-  min-height: calc(100svh - 2vh - 16px); /* fallback */
-  padding: calc(2vh + 32px) 48px 32px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.hero-scroll-spacer {
+  margin-top: 2vh;
+  height: calc(98vh - 16px);
   pointer-events: none;
 }
 
-.hero-inner {
-  display: flex;
-  justify-content: flex-start; /* RTL start = ימין */
-}
-
-/* ---- פרופיל + מידע (צד ימין) ---- */
+/* ---- ימין-תחתון: פרופיל + מידע ---- */
 .hero-info-side {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
   display: flex;
-  gap: 24px;
+  gap: 20px;
   align-items: flex-start;
-  max-width: 560px;
-  pointer-events: all;
+  max-width: 540px;
 }
 
 .hero-avatar-wrap {
@@ -97,11 +84,17 @@
 }
 
 .hero-avatar {
-  width: 120px;
-  height: 120px;
+  width: 222px;
+  height: 222px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.25);
+  display: block;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ללא באנר: גבול שחור על רקע צהוב */
+.artist-page-container:not(.has-banner) .hero-avatar {
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .hero-text {
@@ -121,67 +114,75 @@
 .badge-featured {
   background: #000000;
   color: #ddff53;
-  padding: 3px 14px;
+  padding: 4px 14px;
   border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 800;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
-  letter-spacing: 0.3px;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .badge-verified {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  padding: 3px 14px;
+  padding: 4px 14px;
   border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 300;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
+  font-size: 0.72rem;
+  font-weight: 300;
+  /* עם באנר */
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
-/* שם האומן */
+.artist-page-container:not(.has-banner) .badge-verified {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
+/* ---- טקסטים — לבן עם באנר, שחור ללא ---- */
 .hero-name {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 3rem;
-  color: #ffffff;
+  font-weight: 800;
+  font-size: 3.6rem;
   line-height: 1.05;
   margin: 0;
+  color: #ffffff;
 }
+.artist-page-container:not(.has-banner) .hero-name { color: #000000; }
 
 .hero-english {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.65);
+  font-weight: 300;
+  font-size: 1.1rem;
   margin: 0;
+  color: rgba(255, 255, 255, 0.6);
 }
+.artist-page-container:not(.has-banner) .hero-english { color: rgba(0, 0, 0, 0.5); }
 
 .hero-short-bio {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
+  font-weight: 300;
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.75);
   margin: 0;
   line-height: 1.6;
-  max-width: 380px;
+  max-width: 340px;
+  color: rgba(255, 255, 255, 0.72);
 }
+.artist-page-container:not(.has-banner) .hero-short-bio { color: rgba(0, 0, 0, 0.6); }
 
 /* סטטיסטיקות */
 .hero-stats {
   display: flex;
-  gap: 28px;
-  margin-top: 4px;
+  gap: 24px;
+  margin-top: 2px;
 }
 
 .hero-stat {
@@ -192,132 +193,140 @@
 }
 
 .stat-num {
-  font-family: 'Open Sons', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 1.8rem;
-  color: #ffffff;
+  font-weight: 800;
+  font-size: 2rem;
   line-height: 1;
+  color: #ffffff;
 }
+.artist-page-container:not(.has-banner) .stat-num { color: #000000; }
 
 .stat-lbl {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.55);
 }
+.artist-page-container:not(.has-banner) .stat-lbl { color: rgba(0, 0, 0, 0.45); }
 
 /* כתובת אתר */
 .hero-website-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
+  font-weight: 300;
   font-size: 0.85rem;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
   margin-top: 2px;
+  color: rgba(255, 255, 255, 0.7);
 }
+.artist-page-container:not(.has-banner) .hero-website-link { color: rgba(0, 0, 0, 0.55); }
+.hero-website-link:hover { opacity: 0.85; }
 
-.hero-website-link:hover {
-  color: #ffffff;
-}
-
-.hero-website-icon {
+.hero-website-link span {
   display: inline-flex;
   align-items: center;
-  opacity: 0.7;
   flex-shrink: 0;
 }
+.hero-website-link svg { width: 16px; height: 16px; }
 
-.hero-website-icon svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ---- רשתות חברתיות — שמאל תחתון ---- */
+/* ========================================
+   רשתות חברתיות — שמאל-תחתון
+   left: 80px → מרוחק מכפתור ה-plus בקצה
+======================================== */
 .hero-social {
+  position: absolute;
+  bottom: 32px;
+  left: 80px;
   display: flex;
   gap: 10px;
-  justify-content: flex-end; /* RTL flex-end = שמאל פיזי */
-  flex-wrap: wrap;
-  pointer-events: all;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  max-width: calc(100% - 420px);
 }
 
 .social-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;   /* זהה לגודל כפתור ה-plus */
+  height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
   text-decoration: none;
   transition: background 0.2s;
-  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+  /* עם באנר */
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.artist-page-container:not(.has-banner) .social-icon-btn {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
 }
 
 .social-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
 }
 
-.social-icon-btn svg {
-  width: 20px;
-  height: 20px;
+.artist-page-container:not(.has-banner) .social-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.18);
 }
+
+.social-icon-btn svg { width: 22px; height: 22px; }
 
 /* ========================================
-   Page Content (מתחת ל-hero)
+   Page Content
 ======================================== */
 .page-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 80px;
+  padding: 0 16px 80px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* ========================================
-   Bio + Gallery + Video — תיבה צהובה
+   Bio + Gallery — תיבה צהובה אחת
 ======================================== */
 .bio-gallery-card {
   background: #ddff53;
   border-radius: 24px;
-  padding: 40px 48px;
+  padding: 36px 44px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .card-section-label {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 0.68rem;
-  color: rgba(0, 0, 0, 0.45);
+  font-weight: 800;
+  font-size: 0.65rem;
+  color: rgba(0, 0, 0, 0.38);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0 0 12px 0;
+  letter-spacing: 1.2px;
+  margin: 0 0 14px 0;
   text-align: right;
 }
 
 .biography-text {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
+  font-weight: 300;
   font-size: 1rem;
   line-height: 1.9;
   color: #000000;
@@ -326,207 +335,335 @@
   text-align: right;
 }
 
-/* ---- מדיה גריד (תמונות + וידאו) ---- */
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+/* ========================================
+   Gallery Strip — accordion hover
+======================================== */
+.gallery-strip {
+  display: flex;
+  gap: 6px;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
-.media-item {
+.strip-item {
+  flex: 0 0 56px;
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition:
+    flex 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: rgba(0, 0, 0, 0.18);
 }
 
-.media-img {
+/* overlay כהה על פריטים סגורים */
+.strip-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.46);
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.strip-item.is-expanded {
+  flex: 1;
+}
+
+/* הפריט הפתוח — הסרת overlay */
+.strip-item.is-expanded::after {
+  opacity: 0;
+}
+
+.strip-img {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
   display: block;
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.media-item-video {
-  grid-column: span 2;
+/* zoom קל על תמונה פתוחה */
+.strip-item.is-expanded .strip-img {
+  transform: scale(1.05);
 }
 
-.media-iframe {
-  width: 100%;
-  height: 240px;
-  display: block;
-  border: none;
-}
-
-.media-caption {
-  padding: 10px 14px;
+/* כיתוב על פריט פתוח */
+.strip-caption-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 20px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, transparent 100%);
+  color: #ffffff;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.8rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-weight: 300;
+  font-size: 0.86rem;
   text-align: right;
-  margin: 0;
+  z-index: 2;
+  animation: captionFadeIn 0.3s ease;
+}
+
+@keyframes captionFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* וידאו מכווץ */
+.strip-video-collapsed {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+}
+
+.strip-play-icon {
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 2;
+  position: relative;
+}
+
+/* וידאו פתוח */
+.strip-video-iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+  z-index: 2;
+  position: relative;
 }
 
 /* ========================================
-   Section Header (שירים, כתבות, הופעות)
+   Section Header
 ======================================== */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .section-title {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 1.3rem;
+  font-weight: 800;
+  font-size: 1.2rem;
   color: #000000;
   margin: 0;
 }
 
 .section-count {
   font-weight: 300;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.4);
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.32);
 }
 
 .see-all-link {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.85rem;
+  font-weight: 300;
+  font-size: 0.82rem;
   color: #000000;
   text-decoration: none;
-  opacity: 0.4;
+  opacity: 0.36;
   transition: opacity 0.15s;
-  white-space: nowrap;
 }
-
-.see-all-link:hover {
-  opacity: 1;
-}
+.see-all-link:hover { opacity: 1; }
 
 /* ========================================
-   Songs Grid — bento כרטיסים
+   Songs Grid — כרטיסים עם תמונה, כמו דף הבית
 ======================================== */
 .songs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 10px;
 }
 
 .song-card {
   background: #F2F2F2;
   border-radius: 20px;
-  padding: 20px 20px 16px;
+  overflow: hidden;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: right;
   transition: background 0.15s;
 }
 
 .song-card:hover {
-  background: #e6e6e6;
+  background: #e5e5e5;
+}
+
+.song-card-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+  background: #ddff53;
+}
+
+.song-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.song-card:hover .song-cover-img {
+  transform: scale(1.06);
+}
+
+.song-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.song-cover-initial {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 3rem;
+  color: rgba(0, 0, 0, 0.28);
+}
+
+.song-card-info {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
 }
 
 .song-card-title {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 0.95rem;
+  font-weight: 800;
+  font-size: 0.88rem;
   color: #000000;
   line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.song-card-artist {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.48);
 }
 
 .song-card-views {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.72rem;
-  color: rgba(0, 0, 0, 0.4);
+  font-weight: 300;
+  font-size: 0.65rem;
+  color: rgba(0, 0, 0, 0.28);
+  margin-top: 2px;
 }
 
 /* ========================================
-   Articles Grid
+   Articles Grid — טקסט מעל תמונה
 ======================================== */
 .articles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 10px;
 }
 
 .article-card {
-  background: #F2F2F2;
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  transition: background 0.15s;
+  position: relative;
+  height: 220px;
+  transition: transform 0.2s ease;
+  background: #F2F2F2;
 }
 
 .article-card:hover {
-  background: #e6e6e6;
+  transform: scale(1.02);
 }
 
 .article-card-img {
   width: 100%;
-  height: 160px;
+  height: 100%;
   object-fit: cover;
   display: block;
-  flex-shrink: 0;
+  transition: transform 0.4s ease;
 }
 
-.article-card-body {
-  padding: 16px 18px 18px;
+.article-card:hover .article-card-img {
+  transform: scale(1.06);
+}
+
+/* שכבת עימום + טקסט */
+.article-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0.00) 100%
+  );
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: flex-end;
+  padding: 16px 18px;
   text-align: right;
-}
-
-.article-card-title {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: 0.92rem;
-  color: #000000;
-  line-height: 1.35;
-}
-
-.article-card-sub {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 300;
-  font-variation-settings: "wdth" 100;
-  font-size: 0.8rem;
-  color: rgba(0, 0, 0, 0.55);
-  line-height: 1.4;
 }
 
 .article-card-date {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.68rem;
-  color: rgba(0, 0, 0, 0.3);
-  margin-top: 4px;
+  font-weight: 300;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.article-card-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.article-card-sub {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 5px;
+  line-height: 1.4;
 }
 
 /* ========================================
-   Events Grid
+   Events
 ======================================== */
 .events-grid {
   display: flex;
@@ -558,9 +695,9 @@
 .event-day {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 1.3rem;
+  font-weight: 800;
+  font-size: 1.25rem;
   color: #000000;
   line-height: 1;
 }
@@ -568,10 +705,10 @@
 .event-month {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
+  font-weight: 300;
   font-size: 0.6rem;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -587,19 +724,19 @@
 .event-title {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 0.92rem;
+  font-weight: 800;
+  font-size: 0.9rem;
   color: #000000;
 }
 
 .event-loc {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 300;
   font-variation-settings: "wdth" 100;
+  font-weight: 300;
   font-size: 0.78rem;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .btn-tickets {
@@ -612,17 +749,14 @@
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
-  font-weight: 800;
   font-variation-settings: "wdth" 100;
+  font-weight: 800;
   font-size: 0.8rem;
   white-space: nowrap;
   flex-shrink: 0;
   transition: opacity 0.2s;
 }
-
-.btn-tickets:hover {
-  opacity: 0.82;
-}
+.btn-tickets:hover { opacity: 0.82; }
 
 /* ========================================
    States
@@ -633,12 +767,12 @@
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
   font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(0, 0, 0, 0.28);
 }
 
 .no-content {
   text-align: center;
-  color: rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.22);
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
   font-style: italic;
@@ -655,7 +789,7 @@
   gap: 16px;
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(0, 0, 0, 0.28);
 }
 
 .spinner {
@@ -676,30 +810,23 @@
    Responsive
 ======================================== */
 @media (max-width: 900px) {
-  .hero-content-area {
-    padding: calc(2vh + 24px) 24px 24px;
+  .hero-info-side {
+    bottom: 24px;
+    right: 20px;
+    max-width: 55%;
   }
 
-  .hero-avatar {
-    width: 96px;
-    height: 96px;
+  .hero-social {
+    bottom: 24px;
+    left: 64px;
+    max-width: calc(100% - 280px);
   }
 
-  .hero-name {
-    font-size: 2.2rem;
-  }
+  .hero-avatar { width: 165px; height: 165px; }
+  .hero-name { font-size: 2.6rem; }
 
-  .bio-gallery-card {
-    padding: 28px 24px;
-  }
-
-  .media-item-video {
-    grid-column: span 1;
-  }
-
-  .page-content {
-    padding: 16px 12px 60px;
-  }
+  .bio-gallery-card { padding: 28px 24px; }
+  .page-content { padding: 10px 12px 60px; }
 }
 
 @media (max-width: 600px) {
@@ -709,39 +836,22 @@
     border-radius: 20px;
   }
 
-  .hero-content-area {
-    padding: calc(2vh + 16px) 16px 20px;
-  }
-
   .hero-info-side {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
     max-width: 100%;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
   }
 
-  .hero-avatar {
-    width: 80px;
-    height: 80px;
-  }
+  .hero-avatar { width: 129px; height: 129px; }
+  .hero-name { font-size: 2rem; }
+  .hero-stats { gap: 18px; }
+  .hero-social { display: none; }
 
-  .hero-name {
-    font-size: 1.8rem;
-  }
-
-  .hero-stats {
-    gap: 20px;
-  }
-
-  .songs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  .articles-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bio-gallery-card {
-    padding: 24px 18px;
-  }
+  .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .articles-grid { grid-template-columns: 1fr; }
+  .gallery-strip { height: 240px; }
 }

@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener } from '@angular/core';
+import { NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
@@ -29,7 +30,7 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.css']
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent implements OnInit, AfterViewInit {
   user: User | null = null;
   socialUser: SocialUser | null = null;
   loggedIn: boolean = false;
@@ -39,10 +40,35 @@ export class LayoutComponent implements OnInit {
   showFabMenu: boolean = false;
   showArtistSubMenu: boolean = false;
   isScrolled: boolean = false;
+  fabOnYellow: boolean = false;
+  private lastScrollY: number = 0;
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.isScrolled = window.scrollY > 80;
+    const current = window.scrollY;
+    if (current > this.lastScrollY && current > 80) {
+      this.isScrolled = true;
+    } else if (current < this.lastScrollY) {
+      this.isScrolled = false;
+    }
+    this.lastScrollY = current;
+    this.checkFabBackground();
+  }
+
+  private checkFabBackground(): void {
+    const fab = document.querySelector('.fab-add-song') as HTMLElement;
+    if (!fab) return;
+    const rect = fab.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const elements = document.elementsFromPoint(cx, cy);
+    for (const el of elements) {
+      if (fab === el || fab.contains(el as Node)) continue;
+      const bg = getComputedStyle(el as Element).backgroundColor;
+      if (bg === 'rgb(221, 255, 83)') { this.fabOnYellow = true; return; }
+      if (bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') { this.fabOnYellow = false; return; }
+    }
+    this.fabOnYellow = false;
   }
 
   // New modals
@@ -82,6 +108,17 @@ export class LayoutComponent implements OnInit {
 
     // ⏱️ הפעלת Session Timeout - ניתוק אוטומטי אחרי 30 דקות של חוסר פעילות
     this.sessionTimeoutService.startWatching();
+
+    // זיהוי צבע FAB אחרי כל ניווט בין דפים
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        setTimeout(() => this.checkFabBackground(), 100);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.checkFabBackground(), 100);
   }
 
   handleLogoClick() {

@@ -36,6 +36,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   SocialPlatform = SocialPlatform;
 
+  expandedGalleryIndex = -1;
+
   private fullHeroHeight = 0;
   private rafPending = false;
 
@@ -47,6 +49,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     this.route.params.subscribe(params => {
       const id = +params['id'];
       if (id) {
@@ -80,9 +83,11 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg) return;
+
     const top = window.innerHeight * 0.02;
     this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
     bg.style.height = this.fullHeroHeight + 'px';
+
     this.shrinkHero();
   }
 
@@ -191,6 +196,26 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
     const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : videoUrl;
     return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  setExpandedGallery(index: number): void {
+    this.expandedGalleryIndex = index;
+  }
+
+  get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
+    if (!this.artist) return [];
+    return [
+      ...this.artist.galleryImages.map(img => ({
+        type: 'image' as const,
+        imageUrl: img.imageUrl,
+        caption: img.caption
+      })),
+      ...this.artist.videos.map(vid => ({
+        type: 'video' as const,
+        videoUrl: vid.videoUrl,
+        title: vid.title
+      }))
+    ];
   }
 
   navigateToSong(songId: number): void {
