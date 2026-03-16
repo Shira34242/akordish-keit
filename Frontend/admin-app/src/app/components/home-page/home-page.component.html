@@ -118,6 +118,11 @@
       <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
     </app-carousel>
 
+    <!-- News Banner — כתבת חדשות מרכזית -->
+    <div class="news-banner-section" *ngIf="featuredNewsArticle">
+      <app-news-banner [article]="featuredNewsArticle"></app-news-banner>
+    </div>
+
     <!-- Advertisement Banner -->
     <div class="ad-banner-section">
       <app-ad-display spotTechnicalId="home-banner"></app-ad-display>

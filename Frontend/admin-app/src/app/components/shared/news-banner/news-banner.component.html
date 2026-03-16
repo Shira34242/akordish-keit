@@ -1,0 +1,27 @@
+<div class="news-banner" (click)="navigate()">
+
+  <!-- תמונת רקע -->
+  <div
+    class="banner-bg"
+    [style.background-image]="'url(' + (article.featuredImageUrl || 'assets/default-article.png') + ')'">
+  </div>
+
+  <!-- שכבת כהייה בפינה הימנית תחתונה -->
+  <div class="banner-overlay"></div>
+
+  <!-- טקסט — פינה ימנית תחתונה -->
+  <div class="banner-text">
+    <h3 class="banner-title">{{ article.title }}</h3>
+    <p class="banner-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+  </div>
+
+  <!-- כפתור חץ — פינה שמאלית תחתונה -->
+  <button class="banner-arrow-btn" (click)="$event.stopPropagation(); navigate()" aria-label="לכתבה">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+  </button>
+
+</div>

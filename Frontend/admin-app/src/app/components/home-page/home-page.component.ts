@@ -13,6 +13,7 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { CarouselComponent } from '../shared/carousel/carousel.component';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 
 @Component({
   selector: 'app-home-page',
@@ -24,7 +25,8 @@ import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
     SongCardComponent,
     ArtistCircleComponent,
     CarouselComponent,
-    AdDisplayComponent
+    AdDisplayComponent,
+    NewsBannerComponent
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
@@ -45,6 +47,7 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
   upcomingEvents: UpcomingEventDto[] = [];
+  featuredNewsArticle: Article | null = null;
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -97,8 +100,7 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
-    const top = window.innerHeight * 0.02;
-    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.94);
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -165,6 +167,15 @@ export class HomePageComponent implements OnInit, AfterViewInit {
         .filter(e => e.eventStatus !== 'אירוע שחלף')
         .sort((a, b) => a.daysUntilEvent - b.daysUntilEvent);
     });
+
+    // Featured News Article for banner
+    this.articleService.getArticles(1, 1, undefined, undefined, undefined, ArticleStatus.Published, true)
+      .subscribe((res: any) => {
+        const items = res.items || [];
+        if (items.length > 0) {
+          this.featuredNewsArticle = items[0];
+        }
+      });
   }
 
   navigateToArticle(article: Article): void {

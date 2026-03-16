@@ -21,7 +21,7 @@
   left: 16px;
   right: 16px;
   border-radius: 40px;
-  height: calc(98vh - 16px); /* JS מחליף לפי viewport */
+  height: 96vh; /* JS מחליף לפי viewport */
   z-index: 895;
   background-color: #ddff53;
   overflow: hidden;
@@ -56,7 +56,7 @@
   position: relative;
   z-index: 896;
   margin-top: 2vh;
-  height: calc(98vh - 16px);
+  height: calc(98vh - 85px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -437,6 +437,11 @@
 .content-section {
   width: 100%;
   padding: 40px 0 0;
+}
+
+/* News Banner Section */
+.news-banner-section {
+  margin: 0 16px 32px;
 }
 
 /* Advertisement Banner */
