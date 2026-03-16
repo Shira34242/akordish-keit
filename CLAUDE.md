@@ -93,7 +93,7 @@ Use multiples of 8px as the base spacing unit:
 
 #### מבנה ויזואלי
 - **מלבן מעוגל** — `border-radius: 24px` (מובייל: `16px`)
-- **יחס גובה-רוחב** — `aspect-ratio: 16 / 9` (מובייל: `4 / 3`)
+- **יחס גובה-רוחב** — `aspect-ratio: 4 / 2.7` (מובייל: `4 / 3`)
 - **תמונת רקע** — כיסוי מלא (`background-size: cover`), זום עדין בהובר (`scale(1.03)`)
 
 #### שכבת כהייה (overlay)
@@ -119,6 +119,40 @@ background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, r
 
 ---
 
+### Song Card — כרטיס אקורדים
+
+קומפוננטה משותפת: `app-song-card` (נמצאת ב-`shared/song-card/`).
+שימוש: `<app-song-card [song]="song">` בכל מקום שמציגים שיר / אקורדים.
+
+#### מבנה ויזואלי
+- **מלבן לרוחב** — `aspect-ratio: 4 / 2`, `border-radius: 20px`, רקע `#F2F2F2`
+- **ללא צל, ללא border** — עיצוב שטוח לחלוטין
+- **hover:** רקע מתכהה ל-`#e8e8e8`
+
+#### פריסה פנימית (flex row, RTL)
+| מיקום | אלמנט | תיאור |
+|--------|--------|--------|
+| ימין | תמונה | ריבוע מעוגל `border-radius: 12px`, `aspect-ratio: 1/1`, גובה 100% |
+| שמאל | טקסט | flex column, `gap: 0`, `text-align: right` |
+
+#### תמונה
+- `<img>` עם `object-fit: cover`, `position: absolute; inset: 0`
+- fallback (ללא תמונה): רקע `#ddff53`
+
+#### טקסט (מלמעלה למטה)
+- **"אקורדים לשיר"** — Open Sans Light 300, `0.9rem`, `rgba(0,0,0,0.4)`
+- **שם השיר** — Open Sans ExtraBold 800, `1.3rem`, שחור, `line-height: 1.1`, חיתוך ב-2 שורות
+- **שם האמן** — Open Sans Light 300, `1rem`, `rgba(0,0,0,0.45)`
+- **חץ SVG** — `‹` כלפי שמאל, `18×18px`, `rgba(0,0,0,0.3)`, `margin-top: 6px`
+
+#### גריד תצוגה (דף אקורדים)
+- `grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))`, `gap: 10px`
+
+#### קרוסלה (דף הבית)
+- `:host { min-width: 260px; flex-shrink: 0 }` — הכרטיס לא מתכווץ בתוך הקרוסלה
+
+---
+
 ### Scroll Hero Box — תיבה נגללת
 
 כל תיבת hero שמתכווצת בגלילה מתנהגת לפי העקרונות הבאים (ראה דף אמן כדוגמה):
@@ -131,9 +165,9 @@ background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, r
 
 | גודל תיבה | גובה מלא | גובה מינימלי (פס לאחר גלילה) |
 |-----------|----------|-------------------------------|
-| מסך מלא   | `98vh - 16px` (JS: `innerHeight - 2vh - 16`) | `2vh + 60px` |
-| חצי מסך   | `48vh`   | `2vh + 60px` |
-| גודל מותאם | לפי הבקשה | `2vh + 60px` |
+| מסך מלא   | `98vh - 16px` (JS: `innerHeight - 2vh - 16`) | `2vh + 55px` |
+| חצי מסך   | `48vh`   | `2vh + 55px` |
+| גודל מותאם | לפי הבקשה | `2vh + 55px` |
 
 #### עיגול פינות
 - `border-radius: 40px` (מסך גדול)

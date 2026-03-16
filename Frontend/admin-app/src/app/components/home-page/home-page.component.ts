@@ -6,12 +6,12 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
 import { ArticleService } from '../../services/admin/article.service';
+import { EventService } from '../../services/admin/event.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
-import { CarouselComponent } from '../shared/carousel/carousel.component';
-import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
-import { Article, ArticleStatus } from '../../models/article.model';
+import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
+import { UpcomingEventDto } from '../../models/event.model';
 
 @Component({
   selector: 'app-home-page',
@@ -22,8 +22,6 @@ import { Article, ArticleStatus } from '../../models/article.model';
     RouterModule,
     SongCardComponent,
     ArtistCircleComponent,
-    CarouselComponent,
-    AdDisplayComponent,
     NewsBannerComponent
   ],
   templateUrl: './home-page.component.html',
@@ -42,7 +40,9 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   popularSongs: any[] = [];
   topArtists: any[] = [];
   featuredArtists: any[] = [];
-  featuredNewsArticle: Article | null = null;
+  newsArticles: Article[] = [];
+  blogArticles: Article[] = [];
+  upcomingEvents: UpcomingEventDto[] = [];
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -51,7 +51,8 @@ export class HomePageComponent implements OnInit, AfterViewInit {
     private router: Router,
     private songService: SongService,
     private artistService: ArtistService,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    private eventService: EventService
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -102,16 +103,14 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const minHeight = Math.round(window.innerHeight * 0.02 + 55);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
-    // fade תוכן ב-160px ראשונים של הגלילה
     const progress = Math.min(1, window.scrollY / 160);
     const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
     if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
 
-    // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
     const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (collapseOverlay) {
       const collapseRange = this.fullHeroHeight - minHeight;
@@ -123,34 +122,35 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   }
 
   loadContent() {
-    // Recent Songs
-    this.songService.getSongs(undefined, 1, 10).subscribe((res: any) => {
+    this.songService.getSongs(undefined, 1, 8).subscribe((res: any) => {
       this.recentSongs = res.songs || [];
     });
 
-    // Popular Songs
-    this.songService.getPopularSongs(10).subscribe((songs: any[]) => {
+    this.songService.getPopularSongs(8).subscribe((songs: any[]) => {
       this.popularSongs = songs;
     });
 
-    // Top Artists (legacy)
-    this.artistService.getTopArtists(10).subscribe((artists: any[]) => {
+    this.artistService.getTopArtists(12).subscribe((artists: any[]) => {
       this.topArtists = artists;
     });
 
-    // Featured Artists (Premium + Boost)
-    this.artistService.getFeaturedArtists(10).subscribe((artists: any[]) => {
+    this.artistService.getFeaturedArtists(12).subscribe((artists: any[]) => {
       this.featuredArtists = artists;
     });
 
-    // Featured News Article for banner
-    this.articleService.getArticles(1, 1, undefined, undefined, undefined, ArticleStatus.Published, true)
+    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
       .subscribe((res: any) => {
-        const items = res.items || [];
-        if (items.length > 0) {
-          this.featuredNewsArticle = items[0];
-        }
+        this.newsArticles = res.items || [];
       });
+
+    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+      .subscribe((res: any) => {
+        this.blogArticles = res.items || [];
+      });
+
+    this.eventService.getUpcomingEvents(6).subscribe((events: UpcomingEventDto[]) => {
+      this.upcomingEvents = events;
+    });
   }
 
   onSearchInput(query: string) {
@@ -162,7 +162,6 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   }
 
   onSearchBlur() {
-    // Delay to allow click on results
     setTimeout(() => {
       this.showSearchResults = false;
     }, 200);

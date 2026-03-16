@@ -29,7 +29,6 @@
             class="search-input">
         </div>
 
-        <!-- Search Results Dropdown -->
         <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults.length > 0">
           <div class="search-result-item" *ngFor="let song of searchResults" (click)="selectSong(song)">
             <img [src]="song.imageUrl || 'assets/default-song.png'" class="result-thumb">
@@ -55,38 +54,119 @@
     </div>
   </div>
 
-  <!-- Content Sections -->
+  <!-- Page Content -->
   <div class="content-section">
 
-    <!-- Recent Songs -->
-    <app-carousel title="אקורדים שהועלו לאחרונה" linkUrl="/songs" linkText="עוד">
-      <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
-    </app-carousel>
+    <!-- חדשות המוזיקה -->
+    <section class="home-section" *ngIf="newsArticles.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">חדשות המוזיקה</h2>
+        <a routerLink="/music-news" class="section-link">לכל החדשות ‹</a>
+      </div>
+      <div class="news-grid">
+        <app-news-banner *ngFor="let article of newsArticles" [article]="article"></app-news-banner>
+      </div>
+    </section>
 
-    <!-- Popular Songs -->
-    <app-carousel title="אקורדים פופולריים" linkUrl="/songs" linkText="עוד">
-      <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
-    </app-carousel>
-
-    <!-- Featured Artists (Premium + Boosted) -->
-    <app-carousel title="אומנים מומלצים" linkUrl="/artists" linkText="כל האמנים" *ngIf="featuredArtists.length > 0">
-      <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
-    </app-carousel>
-
-    <!-- News Banner — כתבת חדשות מרכזית -->
-    <div class="news-banner-section" *ngIf="featuredNewsArticle">
-      <app-news-banner [article]="featuredNewsArticle"></app-news-banner>
+    <!-- תיבת Promo — אקורדים -->
+    <div class="promo-box">
+      <div class="promo-content">
+        <h2 class="promo-title">אקורדים</h2>
+        <p class="promo-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
+        <a routerLink="/chords" class="promo-btn">לכל האקורדים ‹</a>
+      </div>
     </div>
 
-    <!-- Advertisement Banner -->
-    <div class="ad-banner-section">
-      <app-ad-display spotTechnicalId="home-banner"></app-ad-display>
+    <!-- אקורדים שהועלו לאחרונה -->
+    <section class="home-section">
+      <div class="section-header">
+        <h2 class="section-title">אקורדים שהועלו לאחרונה</h2>
+      </div>
+      <div class="songs-grid">
+        <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
+      </div>
+    </section>
+
+    <!-- אקורדים פופולאריים -->
+    <section class="home-section">
+      <div class="section-header">
+        <h2 class="section-title">אקורדים פופולאריים</h2>
+      </div>
+      <div class="songs-grid">
+        <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
+      </div>
+    </section>
+
+    <!-- אמנים פופולאריים -->
+    <section class="home-section">
+      <div class="section-header">
+        <h2 class="section-title">אמנים פופולאריים</h2>
+        <a routerLink="/artists" class="section-link">לכל האמנים ‹</a>
+      </div>
+      <div class="artists-scroll">
+        <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
+      </div>
+    </section>
+
+    <!-- תיבת Promo — אינדקס עולם המוזיקה -->
+    <div class="promo-box">
+      <div class="promo-content">
+        <h2 class="promo-title">אינדקס עולם המוזיקה</h2>
+        <p class="promo-subtitle">המאגר הגדול לנותני שירות במוזיקה היהודית</p>
+        <div class="promo-actions">
+          <a routerLink="/professionals" class="promo-btn">לאינדקס ‹</a>
+          <a routerLink="/service-provider/create" class="promo-btn promo-btn-secondary">הצטרף לאינדקס ‹</a>
+        </div>
+      </div>
     </div>
 
-    <!-- Top Artists -->
-    <app-carousel title="אמנים מובילים" linkUrl="/artists" linkText="כל האמנים">
-      <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
-    </app-carousel>
+    <!-- מומלצי המערכת -->
+    <section class="home-section" *ngIf="featuredArtists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">מומלצי המערכת</h2>
+      </div>
+      <div class="artists-scroll">
+        <app-artist-circle *ngFor="let artist of featuredArtists" [artist]="artist"></app-artist-circle>
+      </div>
+    </section>
+
+    <!-- הופעות קרובות -->
+    <section class="home-section" *ngIf="upcomingEvents.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">הופעות קרובות</h2>
+        <a routerLink="/events" class="section-link">לכל ההופעות ‹</a>
+      </div>
+      <div class="events-list">
+        <div class="event-card" *ngFor="let event of upcomingEvents">
+          <div class="event-image-wrap">
+            <img [src]="event.imageUrl || 'assets/default-event.png'" [alt]="event.name" class="event-img">
+          </div>
+          <div class="event-info">
+            <span class="event-status-badge">{{ event.eventStatus }}</span>
+            <h3 class="event-name">{{ event.name }}</h3>
+            <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames?.length > 0">
+              {{ event.artistName || event.taggedArtistNames[0] }}
+            </p>
+            <p class="event-location" *ngIf="event.location">{{ event.location }}</p>
+          </div>
+          <div class="event-date-col">
+            <span class="event-date">{{ event.eventDate | date:'dd/MM' }}</span>
+            <a [href]="event.ticketUrl" class="event-ticket-btn" target="_blank">כרטיסים ‹</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- תוכן — כתבות בלוג -->
+    <section class="home-section" *ngIf="blogArticles.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">תוכן</h2>
+        <a routerLink="/articles" class="section-link">לכל התוכן ‹</a>
+      </div>
+      <div class="news-grid">
+        <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
+      </div>
+    </section>
 
   </div>
 </div>

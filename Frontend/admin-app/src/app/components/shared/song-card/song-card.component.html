@@ -1,18 +1,13 @@
 <div class="song-card" [routerLink]="['/song', song.id]">
-    <!-- Background image -->
-    <img [src]="song.imageUrl || 'assets/default-song.png'" [alt]="song.title" class="song-image">
-
-    <!-- Lime gradient overlay from right -->
-    <div class="card-overlay"></div>
-
-    <!-- Content -->
-    <div class="card-content">
-        <span class="card-label">אקורדים לשיר</span>
-        <h3 class="card-title">{{ song.title }}</h3>
-        <p class="card-artist">{{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}</p>
-        <div class="card-arrow">
-            <span class="material-icons">arrow_back</span>
-        </div>
+    <div class="song-card-image">
+        <img [src]="song.imageUrl || 'assets/default-song.png'" [alt]="song.title" class="song-card-img">
     </div>
-
+    <div class="song-card-info">
+        <span class="song-card-label">אקורדים לשיר</span>
+        <span class="song-card-title">{{ song.title }}</span>
+        <span class="song-card-artist">{{ song.artists && song.artists.length > 0 ? song.artists[0].name : 'אמן לא ידוע' }}</span>
+        <svg class="song-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <polyline points="15,18 9,12 15,6"/>
+        </svg>
+    </div>
 </div>
