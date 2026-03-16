@@ -118,8 +118,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private shrinkHero(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 72);
-    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY * 1);
     bg.style.height = newHeight + 'px';
 
     // fade out all inner content in the first 160px of scroll
@@ -131,6 +131,16 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (infoSide) infoSide.style.opacity = opacity;
     if (socialSide) socialSide.style.opacity = opacity;
     if (overlay) overlay.style.opacity = opacity;
+
+    // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
+    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
   }
 
   private carouselDir = 1; // כיוון גלילה: 1 קדימה, -1 אחורה

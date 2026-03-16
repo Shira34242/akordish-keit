@@ -83,3 +83,69 @@ Use multiples of 8px as the base spacing unit:
 | lg    | 32px  | Section separation |
 | xl    | 48px  | Major section gaps |
 | 2xl   | 64px+ | Page-level spacing |
+
+---
+
+### Scroll Hero Box — תיבה נגללת
+
+כל תיבת hero שמתכווצת בגלילה מתנהגת לפי העקרונות הבאים (ראה דף אמן כדוגמה):
+
+#### מיקום ושוליים
+- `position: fixed`, `top: 2vh`, `left: 16px`, `right: 16px`
+- על מסך קטן (≤600px): `left: 8px`, `right: 8px`
+
+#### גודל
+
+| גודל תיבה | גובה מלא | גובה מינימלי (פס לאחר גלילה) |
+|-----------|----------|-------------------------------|
+| מסך מלא   | `98vh - 16px` (JS: `innerHeight - 2vh - 16`) | `2vh + 60px` |
+| חצי מסך   | `48vh`   | `2vh + 60px` |
+| גודל מותאם | לפי הבקשה | `2vh + 60px` |
+
+#### עיגול פינות
+- `border-radius: 40px` (מסך גדול)
+- `border-radius: 20px` (מסך קטן ≤600px)
+
+#### אנימציית גלילה
+- קצב התכווצות: `newHeight = max(minHeight, fullHeight - scrollY)` — יחס 1:1 (פיקסל לפיקסל)
+- תוכן פנימי (טקסט, כפתורים): נעלם ב-160px הראשונים של הגלילה (`opacity: 0..1`)
+- overlay אפור כהה (`#404040`): מתגבר בהדרגה ככל שהתיבה מתכווצת — מגיע ל-100% כשהתיבה בגודל הפס המינימלי
+
+#### CSS נדרש
+```css
+/* overlay אפור כהה */
+.hero-collapse-overlay {
+  position: absolute;
+  inset: 0;
+  background: #404040;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+```
+
+#### HTML נדרש (בתוך תיבת ה-hero)
+```html
+<div class="hero-collapse-overlay"></div>
+```
+
+#### TS נדרש (בתוך `shrinkHero()`)
+```ts
+const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+bg.style.height = newHeight + 'px';
+
+// fade תוכן ב-160px ראשונים
+const progress = Math.min(1, window.scrollY / 160);
+// ...set opacity on inner elements...
+
+// overlay אפור
+const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+if (collapseOverlay) {
+  const collapseRange = this.fullHeroHeight - minHeight;
+  const collapseProgress = collapseRange > 0
+    ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+    : 0;
+  collapseOverlay.style.opacity = String(collapseProgress);
+}
+```

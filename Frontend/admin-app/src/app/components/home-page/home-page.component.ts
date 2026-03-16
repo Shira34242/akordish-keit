@@ -97,15 +97,23 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
+    // fade תוכן ב-160px ראשונים של הגלילה
+    const progress = Math.min(1, window.scrollY / 160);
     const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
-    if (overlay) {
-      const fadeEnd = this.fullHeroHeight * 0.45;
-      const progress = Math.min(1, window.scrollY / fadeEnd);
-      overlay.style.opacity = String(1 - progress);
+    if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
+
+    // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
+    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
     }
   }
 
