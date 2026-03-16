@@ -7,13 +7,11 @@ import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
-import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
-import { UpcomingEventDto } from '../../models/event.model';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
-import { CarouselComponent } from '../shared/carousel/carousel.component';
-import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
+import { UpcomingEventDto } from '../../models/event.model';
 
 @Component({
   selector: 'app-home-page',
@@ -24,8 +22,6 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
     RouterModule,
     SongCardComponent,
     ArtistCircleComponent,
-    CarouselComponent,
-    AdDisplayComponent,
     NewsBannerComponent
   ],
   templateUrl: './home-page.component.html',
@@ -47,7 +43,6 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
   upcomingEvents: UpcomingEventDto[] = [];
-  featuredNewsArticle: Article | null = null;
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -100,7 +95,7 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = Math.round(window.innerHeight * 0.94);
+    this.fullHeroHeight = window.innerHeight - 16; /* top: 8px + bottom: 8px */
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -108,16 +103,14 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
-    // fade תוכן ב-160px ראשונים של הגלילה
     const progress = Math.min(1, window.scrollY / 160);
     const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
     if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
 
-    // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
     const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (collapseOverlay) {
       const collapseRange = this.fullHeroHeight - minHeight;
@@ -129,53 +122,35 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   }
 
   loadContent() {
-    // Recent Songs
-    this.songService.getSongs(undefined, 1, 10).subscribe((res: any) => {
+    this.songService.getSongs(undefined, 1, 8).subscribe((res: any) => {
       this.recentSongs = res.songs || [];
     });
 
-    // Popular Songs
-    this.songService.getPopularSongs(10).subscribe((songs: any[]) => {
+    this.songService.getPopularSongs(8).subscribe((songs: any[]) => {
       this.popularSongs = songs;
     });
 
-    // Top Artists (legacy)
-    this.artistService.getTopArtists(10).subscribe((artists: any[]) => {
+    this.artistService.getTopArtists(12).subscribe((artists: any[]) => {
       this.topArtists = artists;
     });
 
-    // Featured Artists (Premium + Boost)
-    this.artistService.getFeaturedArtists(10).subscribe((artists: any[]) => {
+    this.artistService.getFeaturedArtists(12).subscribe((artists: any[]) => {
       this.featuredArtists = artists;
     });
 
-    // News Articles
-    this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
-      .subscribe((result) => {
-        this.newsArticles = result.items;
-      });
-
-    // Blog Articles
-    this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-      .subscribe((result) => {
-        this.blogArticles = result.items;
-      });
-
-    // Upcoming Events - sort by date, exclude past
-    this.eventService.getUpcomingEvents(12).subscribe((events) => {
-      this.upcomingEvents = events
-        .filter(e => e.eventStatus !== 'אירוע שחלף')
-        .sort((a, b) => a.daysUntilEvent - b.daysUntilEvent);
-    });
-
-    // Featured News Article for banner
-    this.articleService.getArticles(1, 1, undefined, undefined, undefined, ArticleStatus.Published, true)
+    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
       .subscribe((res: any) => {
-        const items = res.items || [];
-        if (items.length > 0) {
-          this.featuredNewsArticle = items[0];
-        }
+        this.newsArticles = res.items || [];
       });
+
+    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+      .subscribe((res: any) => {
+        this.blogArticles = res.items || [];
+      });
+
+    this.eventService.getUpcomingEvents(6).subscribe((events: UpcomingEventDto[]) => {
+      this.upcomingEvents = events;
+    });
   }
 
   navigateToArticle(article: Article): void {
@@ -196,7 +171,6 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   }
 
   onSearchBlur() {
-    // Delay to allow click on results
     setTimeout(() => {
       this.showSearchResults = false;
     }, 200);

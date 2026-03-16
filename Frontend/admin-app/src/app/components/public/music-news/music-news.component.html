@@ -3,146 +3,96 @@
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="loading-spinner"></div>
-    <p>טוען תוכן...</p>
   </div>
 
   <!-- Main Content -->
-  <div *ngIf="!isLoading" class="content-wrapper">
+  <div *ngIf="!isLoading">
 
-    <!-- כותרת תמונה -->
-    <section class="page-title-section">
-      <img src="news.png" alt="חדשות המוזיקה" class="page-title-image" loading="lazy">
-    </section>
+    <!-- כותרת עמוד -->
+    <div class="page-header">
+      <h1 class="page-title">חדשות<br>המוזיקה</h1>
+    </div>
 
-    <!-- 4 כתבות מרכזיות לרוחב הדף -->
-    <section class="featured-section">
-      <div class="featured-articles-grid">
+    <!-- 4 כתבות מרכזיות -->
+    <section class="featured-section" *ngIf="featuredArticles.length > 0">
+      <div class="featured-grid">
         <div
           *ngFor="let featured of featuredArticles"
-          class="featured-article-item"
+          class="featured-item"
           (click)="navigateToFeaturedArticle(featured)"
         >
-          <div class="featured-article-image-wrapper">
-            <img [src]="featured.article.featuredImageUrl" [alt]="featured.article.title" class="featured-article-img" loading="lazy">
-            <div class="featured-article-overlay">
-              <h3 class="featured-article-title">{{ featured.article.title }}</h3>
-            </div>
+          <img [src]="featured.article.featuredImageUrl" [alt]="featured.article.title" class="featured-img" loading="lazy">
+          <div class="featured-overlay">
+            <h3 class="featured-title">{{ featured.article.title }}</h3>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- פופולאריים -->
-    <section class="section popular-section" *ngIf="popularArticles.length > 0">
-      <div class="section-header">
-        <h2>פופולאריים</h2>
-        <button class="more-btn" (click)="navigateToCategory(10)">
-          <span>עוד</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-      </div>
-      <div class="popular-banners-wrapper">
-        <div class="popular-banners-scroll">
-          <div
-            *ngFor="let article of popularArticles"
-            class="popular-banner"
-            (click)="navigateToArticle(article)"
-          >
-            <div class="popular-banner-image" [style.background-image]="'url(' + article.featuredImageUrl + ')'">
-              <div class="popular-banner-overlay">
-                <h3 class="popular-banner-title">{{ article.title }}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- תוכן (בלוגים) -->
-    <section class="section content-section" *ngIf="blogArticles.length > 0">
-      <div class="section-header">
-        <h2>תוכן</h2>
-        <button class="more-btn" (click)="navigateToContentType(1)">
-          <span>עוד</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-      </div>
-      <div class="content-banners-wrapper">
-        <div class="content-banners-scroll">
-          <div
-            *ngFor="let article of blogArticles"
-            class="content-banner"
-            (click)="navigateToArticle(article)"
-          >
-            <div class="content-banner-image" [style.background-image]="'url(' + article.featuredImageUrl + ')'"></div>
-            <div class="content-banner-overlay">
-              <h3 class="content-banner-title">{{ article.title }}</h3>
-              <p class="content-banner-date" *ngIf="article.publishDate">
-                {{ article.publishDate | date: 'dd/MM/yyyy' }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- תוכן העמוד -->
+    <div class="page-content">
 
+      <!-- פופולאריים -->
+      <section class="page-section" *ngIf="popularArticles.length > 0">
+        <div class="section-header">
+          <h2 class="section-title">פופולאריים</h2>
+          <span class="section-link" (click)="navigateToCategory(10)">לכל הפופולאריים ‹</span>
+        </div>
+        <div class="news-grid">
+          <app-news-banner *ngFor="let article of popularArticles" [article]="article"></app-news-banner>
+        </div>
+      </section>
 
-    <!-- הופעות קרובות -->
-    <section class="section events-section" *ngIf="upcomingEvents.length > 0">
-      <div class="section-header">
-        <h2>הופעות קרובות</h2>
-      </div>
-      <div class="events-banners-wrapper">
-        <div class="events-banners-scroll">
-          <div
-            *ngFor="let event of upcomingEvents"
-            class="event-banner"
-            (click)="openTicketLink(event)"
-          >
-            <div class="event-banner-image" [style.background-image]="'url(' + event.imageUrl + ')'">
-              <div class="event-status-badge"
-                   [class.today]="event.eventStatus === 'היום'"
-                   [class.tomorrow]="event.eventStatus === 'מחר'"
-                   [class.upcoming]="!event.eventStatus.includes('היום') && !event.eventStatus.includes('מחר') && !event.eventStatus.includes('אירוע שחלף')"
-                   [class.past]="event.eventStatus === 'אירוע שחלף'">
+      <!-- תוכן (בלוגים) -->
+      <section class="page-section" *ngIf="blogArticles.length > 0">
+        <div class="section-header">
+          <h2 class="section-title">תוכן</h2>
+          <span class="section-link" (click)="navigateToContentType(1)">לכל התוכן ‹</span>
+        </div>
+        <div class="news-grid">
+          <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
+        </div>
+      </section>
+
+      <!-- הופעות קרובות -->
+      <section class="page-section" *ngIf="upcomingEvents.length > 0">
+        <div class="section-header">
+          <h2 class="section-title">הופעות קרובות</h2>
+        </div>
+        <div class="events-list">
+          <div class="event-card" *ngFor="let event of upcomingEvents" (click)="openTicketLink(event)">
+            <div class="event-image-wrap">
+              <img [src]="event.imageUrl || 'assets/default-event.png'" [alt]="event.name" class="event-img">
+            </div>
+            <div class="event-info">
+              <span class="event-status-badge" [class.past]="event.eventStatus === 'אירוע שחלף'">
                 {{ event.eventStatus }}
-              </div>
+              </span>
+              <h3 class="event-name">{{ event.name }}</h3>
+              <p class="event-artist" *ngIf="event.artistName || (event.taggedArtistNames?.length ?? 0) > 0">
+                {{ event.artistName || event.taggedArtistNames[0] }}
+              </p>
+              <p class="event-location" *ngIf="event.location">{{ event.location }}</p>
+            </div>
+            <div class="event-date-col">
+              <span class="event-date">{{ event.eventDate | date:'dd/MM' }}</span>
+              <span class="event-ticket-btn">כרטיסים ‹</span>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- קליפים -->
-    <section class="section clips-section" *ngIf="clipsArticles.length > 0">
-      <div class="section-header">
-        <h2>קליפים</h2>
-        <button class="more-btn" (click)="navigateToCategory(11)">
-          <span>עוד</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-      </div>
-      <div class="clips-banners-wrapper">
-        <div class="clips-banners-scroll">
-          <div
-            *ngFor="let article of clipsArticles"
-            class="clip-banner"
-            (click)="navigateToArticle(article)"
-          >
-            <div class="clip-banner-image" [style.background-image]="'url(' + article.featuredImageUrl + ')'">
-              <div class="clip-banner-overlay">
-                <h3 class="clip-banner-title">{{ article.title }}</h3>
-              </div>
-            </div>
-          </div>
+      <!-- קליפים -->
+      <section class="page-section" *ngIf="clipsArticles.length > 0">
+        <div class="section-header">
+          <h2 class="section-title">קליפים</h2>
+          <span class="section-link" (click)="navigateToCategory(11)">לכל הקליפים ‹</span>
         </div>
-      </div>
-    </section>
+        <div class="news-grid">
+          <app-news-banner *ngFor="let article of clipsArticles" [article]="article"></app-news-banner>
+        </div>
+      </section>
 
+    </div>
   </div>
 </div>

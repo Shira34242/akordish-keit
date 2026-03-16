@@ -2,13 +2,17 @@
    NEWS BANNER — באנר כתבה / חדשות מוזיקה
 ============================================ */
 
+:host {
+  display: block;
+}
+
 .news-banner {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
   cursor: pointer;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 2.7;
   direction: rtl;
   display: block;
 }
@@ -38,9 +42,9 @@
 /* טקסט — פינה ימנית תחתונה */
 .banner-text {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  left: 72px;   /* מרחק מהכפתור בצד שמאל */
+  bottom: 14px;
+  right: 14px;
+  left: 58px;   /* מרחק מהכפתור בצד שמאל */
   text-align: right;
   direction: rtl;
 }
@@ -50,7 +54,7 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: 1.15rem;
+  font-size: var(--font-sm);
   color: #ffffff;
   margin: 0;
   line-height: 1.35;
@@ -61,20 +65,20 @@
   font-optical-sizing: auto;
   font-weight: 300;
   font-variation-settings: "wdth" 100;
-  font-size: 0.88rem;
+  font-size: var(--font-xs);
   color: rgba(255, 255, 255, 0.85);
-  margin: 5px 0 0 0;
+  margin: 4px 0 0 0;
   line-height: 1.4;
 }
 
 /* כפתור חץ — פינה שמאלית תחתונה */
 .banner-arrow-btn {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  bottom: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: #ddff53;
   color: #000000;
   border: none;
@@ -109,16 +113,16 @@
   }
 
   .banner-arrow-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    bottom: 12px;
-    left: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    bottom: 10px;
+    left: 10px;
   }
 
   .banner-text {
-    bottom: 14px;
-    right: 14px;
-    left: 64px;
+    bottom: 12px;
+    right: 12px;
+    left: 50px;
   }
 }

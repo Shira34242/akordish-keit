@@ -1,121 +1,102 @@
-.song-card {
-    position: relative;
-    width: 390px;
-    height: 250px;
+:host {
+    display: block;
     flex-shrink: 0;
-    border-radius: 48px;
-    overflow: hidden;
+    min-width: 220px;
+}
+
+/* ========================================
+   כרטיס אקורדים — מלבן 4:2, תמונה ימין, טקסט שמאל
+======================================== */
+.song-card {
+    background: #F2F2F2;
+    border-radius: 16px;
+    aspect-ratio: 4 / 2;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+    transition: background 0.15s;
+    overflow: hidden;
     direction: rtl;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .song-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+    background: #e8e8e8;
 }
 
-.song-image {
+/* תמונה — ריבוע מעוגל, ראשון ב-DOM = ימין ב-RTL */
+.song-card-image {
+    flex-shrink: 0;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #ddff53;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.song-card-img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s;
+    display: block;
 }
 
-.song-card:hover .song-image {
-    transform: scale(1.05);
-}
-
-/* Lighter lime gradient — right side gently fades left */
-.card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        to left,
-        rgba(220, 255, 60, 0.82) 0%,
-        rgba(220, 255, 60, 0.55) 40%,
-        rgba(220, 255, 60, 0.1) 70%,
-        transparent 100%
-    );
-    pointer-events: none;
-}
-
-/* All content on the RIGHT side */
-.card-content {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 58%;
-    padding: 14px 16px 16px 8px;
+/* טקסט — שני ב-DOM = שמאל ב-RTL */
+.song-card-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start; /* flex-start = RIGHT in RTL */
+    gap: 0;
     text-align: right;
-    gap: 2px;
+    min-width: 0;
 }
 
-.card-label {
+.song-card-label {
     font-family: 'Open Sans', sans-serif;
-    font-size: 1rem;
-    font-weight: 550;
-    color: rgba(0, 0, 0, 0.6);
-    letter-spacing: 0.02em;
-    margin-bottom: 2px;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    font-size: var(--font-xs);
+    color: rgba(0, 0, 0, 0.4);
 }
 
-.card-title {
-    font-family: 'Karantina', cursive;
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: #000;
-    margin: 0;
-    line-height: 1.0;
-    /* Allow two lines */
-    white-space: normal;
+.song-card-title {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: var(--font-base);
+    color: #000000;
+    line-height: 1.1;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
-    max-width: 100%;
 }
 
-.card-artist {
+.song-card-artist {
     font-family: 'Open Sans', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.7);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    font-size: var(--font-sm);
+    color: rgba(0, 0, 0, 0.45);
 }
 
-/* Arrow — below artist name, RIGHT aligned (same side as text) */
-.card-arrow {
+.song-card-arrow {
+    color: rgba(0, 0, 0, 0.3);
     margin-top: 6px;
-    align-self: flex-start; /* flex-start = RIGHT in RTL */
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
-
-.song-card:hover .card-arrow {
-    background: rgba(0, 0, 0, 0.22);
-}
-
-.card-arrow .material-icons {
-    font-size: 18px;
-    color: #000;
+    display: block;
 }

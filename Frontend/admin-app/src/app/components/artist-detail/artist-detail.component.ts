@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -22,6 +22,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('g3dWrapper') g3dWrapperRef?: ElementRef<HTMLDivElement>;
   @ViewChild('g3dSection') g3dSectionRef?: ElementRef<HTMLDivElement>;
   @ViewChild('g3dCardsEl') g3dCardsElRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('bioTextEl') bioTextEl?: ElementRef<HTMLParagraphElement>;
+  @ViewChild('songsGridEl') songsGridEl?: ElementRef<HTMLDivElement>;
 
   artist: Artist | null = null;
   songs: SongDto[] = [];
@@ -37,11 +39,20 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   articlesPage = 1;
   totalSongs = 0;
   totalArticles = 0;
+  songsExpanded = false;
+  articlesExpanded = false;
+  defaultSongsCount = 6;
+  bioExpanded = false;
+  bioOverflows = false;
 
   SocialPlatform = SocialPlatform;
 
   // וידאו ב-lightbox
   videoLightboxUrl: string | null = null;
+
+  // תמונה ב-lightbox
+  imageLightboxUrl: string | null = null;
+  imageLightboxCaption: string | null = null;
 
   // ========== Hero ==========
   private fullHeroHeight = 0;
@@ -50,16 +61,39 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   // ========== 3D Gallery ==========
   private g3dItems: { el: HTMLElement }[] = [];
   private g3dScrollX = 0;
-  private g3dCardW = 300;
-  private g3dStep = 328;
+  private g3dCardW = 290;
+  private g3dStep = 298;
   private g3dTrack = 0;
   private g3dVwHalf = 0;
+  private g3dTouchStartX = 0;
+  g3dBaseCount = 0;
+  g3dActiveIndex = 0;
+
+  private g3dOnWheel = (e: WheelEvent): void => {
+    e.preventDefault();
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    this.g3dScrollX = this.g3dMod(this.g3dScrollX + delta * 0.7, this.g3dTrack);
+    this.g3dUpdateTransforms();
+  };
+
+  private g3dOnTouchStart = (e: TouchEvent): void => {
+    this.g3dTouchStartX = e.touches[0].clientX;
+  };
+
+  private g3dOnTouchMove = (e: TouchEvent): void => {
+    e.preventDefault();
+    const dx = this.g3dTouchStartX - e.touches[0].clientX;
+    this.g3dScrollX = this.g3dMod(this.g3dScrollX + dx * 1.5, this.g3dTrack);
+    this.g3dTouchStartX = e.touches[0].clientX;
+    this.g3dUpdateTransforms();
+  };
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private artistService: ArtistService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -72,7 +106,14 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    const section = this.g3dSectionRef?.nativeElement;
+    if (section) {
+      section.removeEventListener('wheel', this.g3dOnWheel);
+      section.removeEventListener('touchstart', this.g3dOnTouchStart);
+      section.removeEventListener('touchmove', this.g3dOnTouchMove);
+    }
+  }
 
   loadArtist(id: number): void {
     this.loading = true;
@@ -83,9 +124,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadSongs(id);
         this.loadArticles(id);
         this.loadEvents(id);
+        this.updateDefaultSongsCount();
         setTimeout(() => {
+          this.cdr.detectChanges();
           this.initHeroHeight();
-          setTimeout(() => this.initGallery3D(), 80);
+          this.initGallery3D();
+          this.checkBioOverflow();
         }, 0);
       },
       error: () => {
@@ -102,8 +146,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg) return;
-    const top = window.innerHeight * 0.02;
-    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    this.fullHeroHeight = window.innerHeight - 16; /* top: 8px + bottom: 8px */
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -114,7 +157,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rafPending = true;
     requestAnimationFrame(() => {
       this.shrinkHero();
-      this.g3dUpdateFromScroll();
       this.rafPending = false;
     });
   }
@@ -123,12 +165,13 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   onResize(): void {
     this.initHeroHeight();
     this.g3dHandleResize();
+    this.updateDefaultSongsCount();
   }
 
   private shrinkHero(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
@@ -169,7 +212,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private g3dUpdateTransforms(): void {
-    if (this.g3dTrack === 0) return;
+    if (this.g3dTrack === 0 || this.g3dVwHalf === 0) return;
     const half = this.g3dTrack / 2;
     for (let i = 0; i < this.g3dItems.length; i++) {
       let pos = i * this.g3dStep - this.g3dScrollX;
@@ -179,40 +222,29 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       const tz = (1 - Math.abs(norm)) * 140;
       this.g3dItems[i].el.style.transform = this.g3dGetTransform(pos);
       this.g3dItems[i].el.style.zIndex = String(1000 + Math.round(tz));
-      const blur = Math.abs(norm) < 0.35 ? 0 : Math.pow(Math.abs(norm), 1.2) * 2.5;
+      const blur = Math.abs(norm) < 0.35 ? 0 : Math.pow(Math.abs(norm), 1.2) * 5;
       this.g3dItems[i].el.style.filter = blur > 0 ? `blur(${blur.toFixed(2)}px)` : '';
     }
-  }
-
-  private g3dUpdateFromScroll(): void {
-    const wrapper = this.g3dWrapperRef?.nativeElement;
-    if (!wrapper || this.g3dTrack === 0) return;
-    const rect = wrapper.getBoundingClientRect();
-    const scrolled = -rect.top;
-    if (scrolled < 0) return;
-    const maxScroll = wrapper.offsetHeight - window.innerHeight;
-    if (maxScroll <= 0) return;
-    const progress = Math.min(1, scrolled / maxScroll);
-    this.g3dScrollX = this.g3dMod(progress * this.g3dTrack, this.g3dTrack);
-    this.g3dUpdateTransforms();
+    if (this.g3dBaseCount > 0) {
+      const activeIdx = this.g3dMod(Math.round(this.g3dScrollX / this.g3dStep), this.g3dBaseCount);
+      if (activeIdx !== this.g3dActiveIndex) {
+        this.g3dActiveIndex = activeIdx;
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   private g3dHandleResize(): void {
     const section = this.g3dSectionRef?.nativeElement;
-    if (section) this.g3dVwHalf = section.clientWidth * 0.5;
+    if (section) this.g3dVwHalf = section.clientWidth * 0.5 || window.innerWidth * 0.5;
     const sample = this.g3dItems[0]?.el;
     if (sample) {
       const rect = sample.getBoundingClientRect();
       this.g3dCardW = rect.width || this.g3dCardW;
-      this.g3dStep = this.g3dCardW + 28;
+      this.g3dStep = this.g3dCardW + 8;
       this.g3dTrack = this.g3dItems.length * this.g3dStep;
-      const wrapper = this.g3dWrapperRef?.nativeElement;
-      if (wrapper) {
-        const activeScroll = this.g3dStep * (this.g3dItems.length - 1);
-        wrapper.style.height = `calc(100vh + ${activeScroll}px)`;
-      }
     }
-    this.g3dUpdateFromScroll();
+    this.g3dUpdateTransforms();
   }
 
   private initGallery3D(): void {
@@ -221,8 +253,15 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const cardsEl = this.g3dCardsElRef?.nativeElement;
     if (!wrapper || !section || !cardsEl) return;
 
+    // נקה listener-ים ישנים לפני הוספת חדשים
+    section.removeEventListener('wheel', this.g3dOnWheel);
+    section.removeEventListener('touchstart', this.g3dOnTouchStart);
+    section.removeEventListener('touchmove', this.g3dOnTouchMove);
+
     const baseItems = this.galleryItems;
     if (baseItems.length === 0) return;
+    this.g3dBaseCount = baseItems.length;
+    this.g3dActiveIndex = 0;
 
     // לפחות 6 פריטים על ידי כפל
     let items = [...baseItems];
@@ -248,6 +287,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
           cap.textContent = item.caption;
           card.appendChild(cap);
         }
+        const imageUrl = item.imageUrl;
+        const caption = item.caption || null;
+        card.addEventListener('click', () => this.openImageLightbox(imageUrl, caption));
+        card.style.cursor = 'pointer';
       } else if (item.type === 'video' && item.videoUrl) {
         // thumbnail מ-YouTube
         const thumbnailUrl = this.getYouTubeThumbnail(item.videoUrl);
@@ -275,26 +318,38 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         card.style.cursor = 'pointer';
       }
 
+      // hover — מסיר טשטוש
+      card.addEventListener('mouseenter', () => {
+        card.style.filter = '';
+        card.style.zIndex = '2000';
+      });
+      card.addEventListener('mouseleave', () => {
+        this.g3dUpdateTransforms();
+      });
+
       cardsEl.appendChild(card);
       this.g3dItems.push({ el: card });
     });
 
-    // מדידה
-    const sample = this.g3dItems[0]?.el;
-    if (!sample) return;
-    const rect = sample.getBoundingClientRect();
-    this.g3dCardW = rect.width || 300;
-    this.g3dStep = this.g3dCardW + 28;
-    this.g3dTrack = this.g3dItems.length * this.g3dStep;
-    this.g3dVwHalf = section.clientWidth * 0.5;
+    // רישום אירועי wheel ו-touch
+    section.addEventListener('wheel', this.g3dOnWheel, { passive: false });
+    section.addEventListener('touchstart', this.g3dOnTouchStart, { passive: true });
+    section.addEventListener('touchmove', this.g3dOnTouchMove, { passive: false });
 
-    // גובה wrapper — רק צעד אחד לכל פריט (ללא גלילה מיותרת)
-    const activeScroll = this.g3dStep * (this.g3dItems.length - 1);
-    wrapper.style.height = `calc(100vh + ${activeScroll}px)`;
-
-    // רנדור ראשוני
-    this.g3dScrollX = 0;
-    this.g3dUpdateTransforms();
+    // מדידה ורנדור ראשוני — setTimeout לוודא שה-layout הסתיים לפני המדידה
+    const initMeasure = () => {
+      const sample = this.g3dItems[0]?.el;
+      if (!sample) return;
+      const sectionW = section.clientWidth || window.innerWidth;
+      this.g3dVwHalf = sectionW * 0.5;
+      const rect = sample.getBoundingClientRect();
+      this.g3dCardW = rect.width || 290;
+      this.g3dStep = this.g3dCardW + 8;
+      this.g3dTrack = this.g3dItems.length * this.g3dStep;
+      this.g3dScrollX = 0;
+      this.g3dUpdateTransforms();
+    };
+    setTimeout(initMeasure, 150);
   }
 
   // ============================================================
@@ -302,16 +357,41 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   // ============================================================
 
   g3dArrowPrev(): void {
-    window.scrollBy({ top: -this.g3dStep, behavior: 'smooth' });
+    this.g3dScrollX = this.g3dMod(this.g3dScrollX - this.g3dStep, this.g3dTrack);
+    this.g3dUpdateTransforms();
   }
 
   g3dArrowNext(): void {
-    window.scrollBy({ top: this.g3dStep, behavior: 'smooth' });
+    this.g3dScrollX = this.g3dMod(this.g3dScrollX + this.g3dStep, this.g3dTrack);
+    this.g3dUpdateTransforms();
+  }
+
+  g3dGoTo(index: number): void {
+    this.g3dScrollX = this.g3dMod(index * this.g3dStep, this.g3dTrack);
+    this.g3dUpdateTransforms();
+  }
+
+  get g3dDots(): number[] {
+    return this.g3dBaseCount > 0 ? Array(this.g3dBaseCount).fill(0) : [];
   }
 
   private getYouTubeThumbnail(videoUrl: string): string {
     const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
     return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  // ============================================================
+  // Image Lightbox
+  // ============================================================
+
+  openImageLightbox(imageUrl: string, caption: string | null): void {
+    this.imageLightboxUrl = imageUrl;
+    this.imageLightboxCaption = caption;
+  }
+
+  closeImageLightbox(): void {
+    this.imageLightboxUrl = null;
+    this.imageLightboxCaption = null;
   }
 
   // ============================================================
@@ -338,20 +418,54 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadSongs(artistId: number, page: number = 1): void {
     this.loadingSongs = true;
-    this.artistService.getArtistSongs(artistId, page, 6).subscribe({
+    this.artistService.getArtistSongs(artistId, page, 50).subscribe({
       next: (result) => {
         this.songs = result.items;
         this.totalSongs = result.totalCount;
         this.songsPage = page;
         this.loadingSongs = false;
+        this.updateDefaultSongsCount();
       },
       error: () => { this.loadingSongs = false; }
     });
   }
 
+  private updateDefaultSongsCount(): void {
+    const vw = window.innerWidth;
+    let cols: number;
+    if (vw <= 600) {
+      cols = 1; // media query: grid-template-columns: 1fr
+    } else {
+      const hPad = vw <= 900 ? 24 : 32;
+      const containerWidth = Math.min(vw - hPad, 1200);
+      cols = Math.max(1, Math.floor((containerWidth + 10) / (260 + 10)));
+    }
+    const newCount = cols * 2;
+    if (newCount !== this.defaultSongsCount) {
+      this.defaultSongsCount = newCount;
+      this.cdr.detectChanges();
+    }
+  }
+
+  get visibleSongs(): SongDto[] {
+    return this.songsExpanded ? this.songs : this.songs.slice(0, this.defaultSongsCount);
+  }
+
+  toggleSongsExpanded(): void {
+    this.songsExpanded = !this.songsExpanded;
+  }
+
+  get visibleArticles(): Article[] {
+    return this.articlesExpanded ? this.articles : this.articles.slice(0, 6);
+  }
+
+  toggleArticlesExpanded(): void {
+    this.articlesExpanded = !this.articlesExpanded;
+  }
+
   loadArticles(artistId: number, page: number = 1): void {
     this.loadingArticles = true;
-    this.artistService.getArtistArticles(artistId, page, 6).subscribe({
+    this.artistService.getArtistArticles(artistId, page, 50).subscribe({
       next: (result) => {
         this.articles = result.items;
         this.totalArticles = result.totalCount;
@@ -376,6 +490,19 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   // ============================================================
   // Getters & Helpers
   // ============================================================
+
+  checkBioOverflow(): void {
+    const el = this.bioTextEl?.nativeElement;
+    if (el) {
+      this.bioOverflows = el.scrollHeight > el.clientHeight;
+      this.cdr.detectChanges();
+    }
+  }
+
+  toggleBioExpanded(): void {
+    this.bioExpanded = !this.bioExpanded;
+    setTimeout(() => this.checkBioOverflow(), 0);
+  }
 
   get heroBannerSrc(): string {
     if (!this.artist) return '';

@@ -3,9 +3,9 @@
 ============================================ */
 .main-header {
     background: transparent;
-    height: 72px;
+    height: 56px;
     position: sticky;
-    top: 2vh;
+    top: 8px;
     z-index: 900;
     direction: rtl;
 }
@@ -13,7 +13,7 @@
 
 .header-inner {
     width: 100%;
-    padding: 0 2.5rem;
+    padding: 0 1.5rem; /* 24px — זהה למרווח של לחצן הוספת תוכן */
     height: 100%;
     display: flex;
     justify-content: space-between;
@@ -53,10 +53,10 @@
 .nav-pills {
     background: #ffffff;
     border-radius: 60px;
-    height: 40px;
+    height: 34px;
     display: flex;
     align-items: center;
-    padding: 0 6px;
+    padding: 0 4px;
 }
 
 .main-nav {
@@ -72,19 +72,19 @@
 
 .nav-link {
     font-family: 'Open Sans', sans-serif;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     font-weight: 500;
     color: #000;
     background: transparent;
     text-decoration: none;
     cursor: pointer;
-    padding: 0 14px;
+    padding: 0 12px;
     border-radius: 50px;
     transition: background 0.2s;
     white-space: nowrap;
     display: flex;
     align-items: center;
-    height: 32px;
+    height: 26px;
 }
 
 .nav-link.active {
@@ -98,12 +98,12 @@
     background: #ddff53;
     color: #000;
     font-family: 'Open Sans', sans-serif;
-    font-size: 1rem;
+    font-size: var(--font-sm);
     font-weight: 700;
-    height: 40px;
+    height: 34px;
     min-width: 0;
     max-width: 300px;
-    padding: 0 22px;
+    padding: 0 16px;
     border-radius: 50px;
     text-decoration: none;
     cursor: pointer;
@@ -127,8 +127,8 @@
 }
 
 .btn-music-index--collapsed {
-    min-width: 40px;
-    max-width: 40px;
+    min-width: 34px;
+    max-width: 34px;
     padding: 0;
     gap: 0;
     justify-content: center;
@@ -142,7 +142,7 @@
 .btn-music-index--collapsed:hover {
     min-width: 0;
     max-width: 300px;
-    padding: 0 22px;
+    padding: 0 16px;
     gap: 8px;
 }
 
@@ -152,13 +152,13 @@
 }
 
 .index-search-icon {
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
 }
 
 .btn-bell {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background: #ffffff;
     border: none;
@@ -172,7 +172,7 @@
 
 
 .btn-bell .material-icons {
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .user-profile-wrapper {
@@ -182,16 +182,16 @@
     cursor: pointer;
     background: #ffffff;
     border-radius: 50px;
-    height: 40px;
-    padding: 0 10px 0 6px;
+    height: 34px;
+    padding: 0 8px 0 4px;
     direction: ltr;
     box-sizing: border-box;
 }
 
 
 .user-avatar-img {
-    width: 34px;
-    height: 34px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #F2F2F2;
@@ -210,7 +210,7 @@
 ============================================ */
 .user-menu {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 8px);
     right: 0;
     background: transparent;
     min-width: 0;
@@ -219,7 +219,7 @@
     direction: rtl;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-start;
 }
 
@@ -229,19 +229,19 @@
 }
 
 .user-menu-header {
-    padding: 14px 18px;
+    padding: 10px 14px;
     background: #F2F2F2;
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     direction: rtl;
     white-space: nowrap;
 }
 
 .user-menu-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: 2px solid #ddff53;
     object-fit: cover;
@@ -256,14 +256,14 @@
 .user-menu-name {
     font-family: 'Open Sans', sans-serif;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     color: #000;
     margin-bottom: 2px;
 }
 
 .user-menu-email {
     font-family: 'Open Sans', sans-serif;
-    font-size: 0.78rem;
+    font-size: var(--font-xs);
     color: #666;
 }
 
@@ -277,7 +277,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-start;
     width: 100%;
 }
@@ -285,12 +285,12 @@
 .user-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 11px 18px;
+    gap: 10px;
+    padding: 8px 14px;
     cursor: pointer;
     transition: background-color 0.18s, color 0.18s;
     font-family: 'Open Sans', sans-serif;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     font-weight: 500;
     color: #000;
     direction: rtl;
@@ -325,9 +325,9 @@
 }
 
 .menu-icon {
-    font-size: 20px;
+    font-size: 18px;
     color: #404040;
-    width: 24px;
+    width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -339,11 +339,11 @@
     background: #ddff53;
     color: #000;
     border: none;
-    padding: 8px 20px;
+    padding: 6px 16px;
     border-radius: 50px;
     font-family: 'Open Sans', sans-serif;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     cursor: pointer;
     transition: background 0.2s;
     white-space: nowrap;
@@ -416,7 +416,7 @@
 .mobile-nav-header h3 {
     margin: 0;
     font-family: 'Open Sans', sans-serif;
-    font-size: 1.2rem;
+    font-size: var(--font-lg);
     font-weight: 700;
     color: #fff;
 }
@@ -449,7 +449,7 @@
     display: block;
     padding: 16px 20px;
     font-family: 'Open Sans', sans-serif;
-    font-size: 1.05rem;
+    font-size: var(--font-base);
     color: #ccc;
     text-decoration: none;
     cursor: pointer;
@@ -474,7 +474,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 72px - 180px);
+    min-height: calc(100vh - 56px - 180px);
 }
 
 /* ============================================
@@ -482,14 +482,14 @@
 ============================================ */
 .fab-add-song {
     position: fixed;
-    bottom: 30px;
-    left: 30px;
-    width: 56px;
-    height: 56px;
+    bottom: 24px;
+    left: 24px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background-color: #ddff53;
     color: #000;
-    font-size: 28px;
+    font-size: 24px;
     border: none;
     box-shadow: none;
     cursor: pointer;
@@ -541,13 +541,13 @@
 
 .fab-menu {
     position: fixed;
-    bottom: 98px;
-    left: 30px;
+    bottom: 84px;
+    left: 24px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-start;
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
     z-index: 1001;
     direction: ltr;
@@ -564,12 +564,12 @@
 .fab-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 11px 18px;
+    gap: 10px;
+    padding: 8px 14px;
     cursor: pointer;
     transition: background-color 0.18s, color 0.18s;
     font-family: 'Open Sans', sans-serif;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     font-weight: 500;
     color: #000;
     direction: rtl;
@@ -589,7 +589,7 @@
 }
 
 .fab-menu-icon {
-    font-size: 22px;
+    font-size: 20px;
     color: #404040;
     transition: color 0.18s;
     flex-shrink: 0;
@@ -604,7 +604,7 @@
 }
 
 .fab-menu-expand-icon {
-    font-size: 18px;
+    font-size: 16px;
     color: #404040;
     transition: transform 0.2s, color 0.18s;
     margin-right: auto;
@@ -633,7 +633,7 @@
 }
 
 .fab-menu-item--sub {
-    font-size: 0.88rem;
+    font-size: var(--font-xs);
     color: #404040;
     background: #e4e4e4;
 }
@@ -669,15 +669,15 @@
 
 @media (max-width: 768px) {
     .fab-menu {
-        bottom: 84px;
-        left: 20px;
+        bottom: 76px;
+        left: 18px;
     }
 }
 
 @media (max-width: 480px) {
     .fab-menu {
-        bottom: 76px;
-        left: 16px;
+        bottom: 70px;
+        left: 14px;
     }
 }
 
@@ -737,7 +737,7 @@
     font-family: 'Open Sans', sans-serif;
     color: #888;
     text-decoration: none;
-    font-size: 14px;
+    font-size: var(--font-sm);
     transition: color 0.2s;
     cursor: pointer;
 }
@@ -761,8 +761,8 @@
 ============================================ */
 @media (max-width: 768px) {
     .main-header {
-        height: 64px;
-        top: 1vh;
+        height: 50px;
+        top: 8px;
     }
 
     .header-inner {
@@ -778,20 +778,20 @@
     }
 
     .btn-music-index {
-        font-size: 0.85rem;
-        padding: 0 14px;
+        font-size: var(--font-sm);
+        padding: 0 12px;
     }
 
     .index-search-icon {
-        font-size: 17px;
+        font-size: 16px;
     }
 
     .fab-add-song {
-        bottom: 20px;
-        left: 20px;
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
+        bottom: 18px;
+        left: 18px;
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
     }
 
     .footer-inner {
@@ -801,8 +801,8 @@
 
 @media (max-width: 480px) {
     .main-header {
-        height: 58px;
-        top: 1vh;
+        height: 46px;
+        top: 8px;
     }
 
     .header-inner {
@@ -811,23 +811,23 @@
     }
 
     .btn-music-index {
-        font-size: 0.78rem;
-        padding: 0 12px;
-        gap: 5px;
+        font-size: var(--font-xs);
+        padding: 0 10px;
+        gap: 4px;
     }
 
     .index-search-icon {
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .btn-bell {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
     }
 
     .user-avatar-img {
-        width: 30px;
-        height: 30px;
+        width: 22px;
+        height: 22px;
     }
 
     .user-menu {

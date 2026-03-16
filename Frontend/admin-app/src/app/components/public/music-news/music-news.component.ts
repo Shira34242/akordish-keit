@@ -2,6 +2,7 @@ import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
 import { EventService } from '../../../services/admin/event.service';
@@ -12,7 +13,7 @@ import { UpcomingEventDto } from '../../../models/event.model';
 @Component({
   selector: 'app-music-news',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NewsBannerComponent],
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })

@@ -1,37 +1,35 @@
 <div class="chords-page">
-    <!-- SVG Filter for Liquid Glass -->
-    <svg width="0" height="0" style="position: absolute;">
-        <defs>
-            <filter id="liquidGlass">
-                <feTurbulence type="turbulence" baseFrequency="0.003" numOctaves="3" result="turbulence" />
-                <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-        </defs>
-    </svg>
 
-    <!-- Header -->
-    <div class="page-header">
-        <h1>מאגר האקורדים הגדול בישראל</h1>
-        <p class="subtitle">מצא את האקורדים לשירים האהובים עליך</p>
+    <div class="top-scroll-mask"></div>
 
-        <div class="search-container liquid-glass">
-            <input type="text" 
-                   placeholder="חפש שיר או אמן..." 
-                   [ngModel]="search" 
-                   (input)="onSearch($event)"
-                   class="main-search-input">
-            <span class="search-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-            </span>
+    <!-- Hero Box -->
+    <div class="hero-bg" #heroBg>
+        <div class="hero-collapse-overlay"></div>
+        <div class="hero-content">
+            <h1>מאגר האקורדים הגדול בישראל</h1>
+            <p class="subtitle">מצא את האקורדים לשירים האהובים עליך</p>
+            <div class="search-container">
+                <input type="text"
+                       placeholder="חפש שיר או אמן..."
+                       [ngModel]="search"
+                       (input)="onSearch($event)"
+                       class="main-search-input">
+                <span class="search-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </span>
+            </div>
         </div>
     </div>
 
+    <!-- Spacer so content scrolls from below the hero -->
+    <div class="hero-spacer"></div>
+
     <!-- Filters Bar -->
     <div class="filters-wrapper">
-        <div class="filters-bar liquid-glass">
+        <div class="filters-bar">
             <div class="filters-right">
                 <span class="filter-label">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

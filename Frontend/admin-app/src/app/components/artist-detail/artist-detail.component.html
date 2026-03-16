@@ -74,45 +74,75 @@
     <!-- ביוגרפיה -->
     <div class="bio-card" *ngIf="artist.biography">
       <h2 class="card-section-label">אודות</h2>
-      <p class="biography-text">{{ artist.biography }}</p>
+      <p class="biography-text"
+         #bioTextEl
+         [class.bio-collapsed]="!bioExpanded">{{ artist.biography }}</p>
+      <button class="bio-expand-btn"
+              *ngIf="bioOverflows || bioExpanded"
+              (click)="toggleBioExpanded()">
+        <span>{{ bioExpanded ? 'הצג פחות' : 'הרחב' }}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"
+             [style.transform]="bioExpanded ? 'rotate(180deg)' : 'rotate(0deg)'">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </button>
     </div>
 
     <!-- אקורדים ושירים -->
     <div class="songs-section" *ngIf="totalSongs > 0 || loadingSongs">
       <div class="section-header">
         <h2 class="section-title">אקורדים <span class="section-count">({{ totalSongs }})</span></h2>
-        <a [routerLink]="['/chords']" [queryParams]="{artist: artist.id}" class="see-all-link">כל האקורדים ←</a>
       </div>
       <div class="loading-small" *ngIf="loadingSongs">טוען שירים...</div>
-      <div class="songs-grid" *ngIf="!loadingSongs && songs.length > 0">
-        <div *ngFor="let song of songs" class="song-card" (click)="navigateToSong(song.id)">
-          <div class="song-card-cover">
-            <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title" class="song-cover-img">
-            <div *ngIf="!song.imageUrl" class="song-cover-fallback">
-              <span class="song-cover-initial">{{ song.title.charAt(0) }}</span>
-            </div>
+      <div class="songs-grid" #songsGridEl *ngIf="!loadingSongs && songs.length > 0">
+        <div *ngFor="let song of visibleSongs" class="song-card" (click)="navigateToSong(song.id)">
+          <div class="song-card-image">
+            <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title" class="song-card-img">
+            <span *ngIf="!song.imageUrl" class="song-cover-initial">{{ song.title.charAt(0) }}</span>
           </div>
           <div class="song-card-info">
+            <span class="song-card-label">אקורדים לשיר</span>
             <span class="song-card-title">{{ song.title }}</span>
-            <span class="song-card-artist" *ngIf="song.artists && song.artists.length > 0">
-              {{ song.artists[0].name }}
+            <span class="song-card-artist">
+              {{ (song.artists && song.artists.length > 0) ? song.artists[0].name : artist.name }}
             </span>
-            <span class="song-card-views">{{ song.viewCount }} צפיות</span>
+            <svg class="song-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
           </div>
         </div>
       </div>
       <p class="no-content" *ngIf="!loadingSongs && songs.length === 0">אין שירים זמינים</p>
+      <div class="songs-expand-row" *ngIf="!loadingSongs && songs.length > defaultSongsCount">
+        <button class="songs-expand-btn" (click)="toggleSongsExpanded()">
+          <span *ngIf="!songsExpanded">לכל האקורדים של {{ artist.name }}</span>
+          <span *ngIf="songsExpanded">הצג פחות</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"
+               [style.transform]="songsExpanded ? 'rotate(180deg)' : 'rotate(0deg)'">
+            <polyline points="6,9 12,15 18,9"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- כתבות ותכנים -->
     <div class="articles-section" *ngIf="totalArticles > 0">
       <div class="section-header">
         <h2 class="section-title">כתבות ותכנים <span class="section-count">({{ totalArticles }})</span></h2>
-        <a [routerLink]="['/articles']" [queryParams]="{artist: artist.id}" class="see-all-link">כל הכתבות ←</a>
       </div>
       <div class="loading-small" *ngIf="loadingArticles">טוען כתבות...</div>
       <div class="articles-banners-grid" *ngIf="!loadingArticles && articles.length > 0">
-        <app-news-banner *ngFor="let article of articles" [article]="article"></app-news-banner>
+        <app-news-banner *ngFor="let article of visibleArticles" [article]="article"></app-news-banner>
+      </div>
+      <div class="songs-expand-row" *ngIf="!loadingArticles && articles.length > 6">
+        <button class="songs-expand-btn" (click)="toggleArticlesExpanded()">
+          <span *ngIf="!articlesExpanded">לכל הכתבות של {{ artist.name }}</span>
+          <span *ngIf="articlesExpanded">הצג פחות</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"
+               [style.transform]="articlesExpanded ? 'rotate(180deg)' : 'rotate(0deg)'">
+            <polyline points="6,9 12,15 18,9"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -157,9 +187,27 @@
           <polyline points="9,18 15,12 9,6"/>
         </svg>
       </button>
+
+      <!-- מחוון נקודות -->
+      <div class="g3d-dots" *ngIf="g3dBaseCount > 0">
+        <button *ngFor="let d of g3dDots; let i = index"
+                class="g3d-dot"
+                [class.active]="i === g3dActiveIndex"
+                (click)="g3dGoTo(i)">
+        </button>
+      </div>
     </div>
   </div>
 
+</div>
+
+<!-- Image Lightbox -->
+<div class="image-lightbox" *ngIf="imageLightboxUrl" (click)="closeImageLightbox()">
+  <button class="video-lightbox-close" (click)="closeImageLightbox()">✕</button>
+  <div class="image-lightbox-inner" (click)="$event.stopPropagation()">
+    <img [src]="imageLightboxUrl" class="image-lightbox-img">
+    <p class="image-lightbox-caption" *ngIf="imageLightboxCaption">{{ imageLightboxCaption }}</p>
+  </div>
 </div>
 
 <!-- Video Lightbox -->

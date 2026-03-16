@@ -71,18 +71,113 @@ The site is **light-themed**. Only these 5 colors may be used unless explicitly 
 
 ---
 
-### Spacing Scale
+### Typography Scale — סקאלת טיפוגרפיה
 
-Use multiples of 8px as the base spacing unit:
+כל גדלי הטקסט מוגדרים כ-CSS variables ב-`styles.css`. **תמיד להשתמש בהם — לא לכתוב font-size ישירות.**
 
-| Token | Value | Use |
-|-------|-------|-----|
-| xs    | 8px   | Inner padding of compact elements |
-| sm    | 16px  | Standard inner padding |
-| md    | 24px  | Card padding, section gaps |
-| lg    | 32px  | Section separation |
-| xl    | 48px  | Major section gaps |
-| 2xl   | 64px+ | Page-level spacing |
+| Variable | ערך | שימוש |
+|----------|-----|--------|
+| `--font-xs` | 0.75rem / 12px | תגיות, מטא-מידע, כיתובי תמונה |
+| `--font-sm` | 0.875rem / 14px | טקסט משני, ניווט, כפתורים |
+| `--font-base` | 1rem / 16px | גוף טקסט, תיאורים, ביוגרפיות — **ברירת מחדל לטקסט** |
+| `--font-lg` | 1.125rem / 18px | כותרות כרטיסים, כותרות קטע, הדגשות |
+| `--font-xl` | 1.375rem / 22px | **שמור לתאריכים ומספרים בולטים בלבד** — לא לגוף טקסט |
+| `--font-2xl` | 1.75rem / 28px | כותרות עמוד משניות (H3) |
+| `--font-3xl` | 2.25rem / 36px | כותרות עמוד ראשיות (H2) |
+| `--font-4xl` | 2.75rem / 44px | כותרת H1 קבועה |
+| `--font-hero` | clamp(1.8rem, 2.5vw, 2.5rem) | כותרת hero בלבד — גמישה לפי מסך |
+
+**כלל:** לפני שכותבים font-size — לבדוק אם יש variable מתאים. `--font-hero` מותר רק לכותרות hero / H1 ראשי. `clamp()` לא מותר במקומות אחרים.
+
+---
+
+### Unit Rules — כללי יחידות
+
+#### ✅ מה משתמשים ומתי
+
+| יחידה | שימוש |
+|-------|--------|
+| `rem` (דרך variables) | כל הטקסטים, כל הריווחים (margin, padding, gap) |
+| `%` | רוחבים גמישים, max-width לקונטיינרים ותוכן |
+| `vh` / `dvh` | גבהי hero ותיבות שמגיבות לגובה המסך |
+| `px` | border, קווי הפרדה, גדלי navbar וכפתורי ממשק (height קבוע), גדלי אייקון |
+| `aspect-ratio` | יחסי גובה-רוחב של כרטיסים, תמונות, מדיה |
+
+#### ❌ מה לא משתמשים
+
+- **אל תכתוב font-size בפיקסלים** — תמיד דרך CSS variables
+- **אל תכתוב ריווחים (padding/gap/margin) בפיקסלים** לתוכן — רק דרך `--space-*` variables
+- **אל תכתוב רוחבים קשיחים בפיקסלים** לקונטיינרים ותוכן — השתמש ב-`%` או `max-width`
+- **אל תשתמש ב-`clamp()`** אלא לכותרת hero בלבד (`--font-hero`)
+- **אל תשתמש ב-`vw`** לגדלי טקסט רגיל
+- **אל תיצור ערכי ריווח או גופן חדשים** — לבדוק קודם שאין variable מתאים
+
+#### ✅ מתי px מותר (רשימה סגורה)
+
+- `border: 1px solid ...`
+- `border-radius` — לרכיבי ממשק קטנים ומדויקים
+- גדלי אייקון מ-Material Icons (כגון `font-size: 20px`)
+- `width`/`height` של כפתורי navbar, FAB, אייקוני ממשק קבועים (כגון `40px`, `44px`, `56px`)
+- `height` של navbar עצמה
+
+---
+
+### Standard Component Sizes — גדלים תקניים לרכיבי ממשק
+
+כל רכיבי הממשק החוזרים חייבים לכבד את הגדלים הבאים. **אסור לסטות מהם ללא סיבה מוצדקת.**
+
+#### כפתורים
+
+| סוג | גובה | padding | font-size |
+|-----|------|---------|-----------|
+| כפתור ראשי (pill) | `34px` | `0 16px` | `--font-sm` |
+| כפתור משני / קטן | `26px` | `0 12px` | `--font-sm` |
+| כפתור icon עגול | `34×34px` | — | אייקון 18px |
+| FAB | `48×48px` | — | אייקון 24px |
+
+#### אייקונים
+
+| שימוש | גודל |
+|--------|------|
+| ניווט ו-UI רגיל | `20px` |
+| כפתורי FAB | `24px` |
+| אייקונים קטנים / chevron | `18px` |
+| אייקונים גדולים / hero | `28px` |
+
+#### תמונות פרופיל / אווטאר
+
+| הקשר | גודל |
+|--------|------|
+| hero דף אמן | `160×160px` |
+| רשימה / כרטיס | `48–56px` |
+| כותרת עליונה | `26×26px` |
+
+---
+
+### Spacing Scale — סקאלת ריווח
+
+הריווחים מוגדרים כ-CSS variables ב-`styles.css`. **תמיד להשתמש בהם לתוכן — לא לכתוב px ישירות.**
+
+| Variable | ערך | שימוש |
+|----------|-----|--------|
+| `--space-xs` | 0.25rem / 4px | icon-to-text gap, מיקרו בין אלמנטים קטנים |
+| `--space-sm` | 0.375rem / 6px | צמוד, תגיות, טקסט משני |
+| `--space-md` | 0.625rem / 10px | padding פנימי קטן, בין כפתורים סמוכים |
+| `--space-base` | 0.875rem / 14px | **ברירת מחדל** — padding כרטיסים, רווח בין אלמנטים |
+| `--space-lg` | 1.25rem / 20px | בין קבוצות תוכן בתוך רכיב |
+| `--space-xl` | 1.75rem / 28px | בין אזורים בתוך רכיב גדול |
+| `--space-2xl` | 2.5rem / 40px | בין מקטעים בעמוד |
+| `--space-3xl` | 3.5rem / 56px | בין אזורי תוכן גדולים |
+| `--space-4xl` | 4.5rem / 72px | ריווח חיצוני גדול בין מקטעי עמוד ראשיים |
+
+**קווים מנחים:**
+- padding פנימי של כרטיס → `--space-base` עד `--space-lg`
+- gap בין כרטיסים בגריד → `--space-base` עד `--space-lg`
+- gap בין פריטים סמוכים בתוך רכיב → `--space-sm` עד `--space-md`
+- gap בין icon לטקסט → `--space-sm`
+- בין פסקאות → `--space-base`
+- בין מקטעים אנכיים בעמוד → `--space-2xl` עד `--space-4xl`
+- אין ליצור "אוויר מיותר" — לעדיף דחוס על פני מרווח
 
 ---
 
@@ -93,7 +188,7 @@ Use multiples of 8px as the base spacing unit:
 
 #### מבנה ויזואלי
 - **מלבן מעוגל** — `border-radius: 24px` (מובייל: `16px`)
-- **יחס גובה-רוחב** — `aspect-ratio: 16 / 9` (מובייל: `4 / 3`)
+- **יחס גובה-רוחב** — `aspect-ratio: 4 / 2.7` (מובייל: `4 / 3`)
 - **תמונת רקע** — כיסוי מלא (`background-size: cover`), זום עדין בהובר (`scale(1.03)`)
 
 #### שכבת כהייה (overlay)
@@ -104,18 +199,54 @@ background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, r
 ```
 
 #### טקסט — פינה ימנית תחתונה
-- **כותרת ראשית** — Open Sans ExtraBold 800, `1.15rem`, לבן, מוצגת ראשונה
-- **כותרת משנה** — Open Sans Light 300, `0.88rem`, לבן 85% שקיפות, מתחת לכותרת
+- **כותרת ראשית** — Open Sans ExtraBold 800, `var(--font-sm)`, לבן, מוצגת ראשונה
+- **כותרת משנה** — Open Sans Light 300, `var(--font-xs)`, לבן 85% שקיפות, מתחת לכותרת
 
 #### כפתור חץ — פינה שמאלית תחתונה
-- **צורה:** מלבן מעוגל `border-radius: 14px`, גודל `44×44px`
+- **צורה:** מלבן מעוגל `border-radius: 10px`, גודל `36×36px`
 - **צבע רגיל:** רקע `#ddff53` (צהוב-ירקרק), אייקון שחור
 - **צבע הובר:** רקע `#ffffff` (לבן)
 - **חץ:** מצביע שמאלה (RTL — כיוון קדימה)
 
 #### גריד תצוגה
-- מספר כרטיסים: `grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))`, `gap: 12px`
+- מספר כרטיסים: `grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))`, `gap: 10px`
 - מובייל: עמודה אחת
+
+---
+
+### Song Card — כרטיס אקורדים
+
+קומפוננטה משותפת: `app-song-card` (נמצאת ב-`shared/song-card/`).
+שימוש: `<app-song-card [song]="song">` בכל מקום שמציגים שיר / אקורדים.
+
+#### מבנה ויזואלי
+- **מלבן לרוחב** — `aspect-ratio: 4 / 2`, `border-radius: 16px`, רקע `#F2F2F2`
+- **ללא צל, ללא border** — עיצוב שטוח לחלוטין
+- **hover:** רקע מתכהה ל-`#e8e8e8`
+
+#### פריסה פנימית (flex row, RTL)
+| מיקום | אלמנט | תיאור |
+|--------|--------|--------|
+| ימין | תמונה | ריבוע מעוגל `border-radius: 12px`, `aspect-ratio: 1/1`, גובה 100% |
+| שמאל | טקסט | flex column, `gap: 0`, `text-align: right` |
+
+#### תמונה
+- `<img>` עם `object-fit: cover`, `position: absolute; inset: 0`
+- fallback (ללא תמונה): רקע `#ddff53`
+
+#### טקסט (מלמעלה למטה)
+- **"אקורדים לשיר"** — Open Sans Light 300, `var(--font-xs)`, `rgba(0,0,0,0.4)`
+- **שם השיר** — Open Sans ExtraBold 800, `var(--font-base)`, שחור, `line-height: 1.1`, חיתוך ב-2 שורות
+- **שם האמן** — Open Sans Light 300, `var(--font-sm)`, `rgba(0,0,0,0.45)`
+- **חץ SVG** — `‹` כלפי שמאל, `18×18px`, `rgba(0,0,0,0.3)`, `margin-top: 6px`
+- **padding פנימי:** `10px`
+
+#### גריד תצוגה
+- דף אמן: `grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))`, `gap: 8px`
+- דף אקורדים: `grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))`, `gap: 8px`
+
+#### קרוסלה (דף הבית)
+- `:host { min-width: 220px; flex-shrink: 0 }` — הכרטיס לא מתכווץ בתוך הקרוסלה
 
 ---
 
@@ -131,9 +262,9 @@ background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, r
 
 | גודל תיבה | גובה מלא | גובה מינימלי (פס לאחר גלילה) |
 |-----------|----------|-------------------------------|
-| מסך מלא   | `98vh - 16px` (JS: `innerHeight - 2vh - 16`) | `2vh + 60px` |
-| חצי מסך   | `48vh`   | `2vh + 60px` |
-| גודל מותאם | לפי הבקשה | `2vh + 60px` |
+| מסך מלא   | `98vh - 16px` (JS: `innerHeight - 2vh - 16`) | `2vh + 55px` |
+| חצי מסך   | `48vh`   | `2vh + 55px` |
+| גודל מותאם | לפי הבקשה | `2vh + 55px` |
 
 #### עיגול פינות
 - `border-radius: 40px` (מסך גדול)

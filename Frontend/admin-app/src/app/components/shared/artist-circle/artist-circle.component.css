@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 200px;
+    width: 130px;
     flex-shrink: 0;
     cursor: pointer;
     text-align: center;
@@ -10,22 +10,16 @@
 }
 
 .artist-circle:hover {
-    transform: translateY(-5px);
+    transform: scale(1.05);
 }
 
 .image-wrapper {
-    width: 170px;
-    height: 170px;
+    width: 110px;
+    height: 110px;
     border-radius: 50%;
     overflow: hidden;
-    margin-bottom: 12px;
-    border: 5px solid #ddff53;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s;
-}
-
-.artist-circle:hover .image-wrapper {
-    box-shadow: 0 6px 18px rgba(221, 255, 83, 0.5);
+    margin-bottom: 10px;
+    background: #F2F2F2;
 }
 
 .artist-image {
@@ -35,23 +29,25 @@
 }
 
 .artist-name {
-    font-family: 'Karantina', cursive;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 800;
+    font-variation-settings: "wdth" 100;
     margin: 0;
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: #111;
+    font-size: 0.88rem;
+    color: #000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
     padding: 0 4px;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
 .song-count {
     font-family: 'Open Sans', sans-serif;
-    margin: 2px 0 0;
-    font-size: 0.95rem;
-    color: #666;
-    font-weight: 400;
+    font-weight: 300;
+    margin: 3px 0 0;
+    font-size: 0.78rem;
+    color: rgba(0, 0, 0, 0.45);
 }
