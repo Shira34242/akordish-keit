@@ -7,18 +7,21 @@ import { Artist, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 
 @Component({
   selector: 'app-artist-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NewsBannerComponent],
   templateUrl: './artist-detail.component.html',
   styleUrls: ['./artist-detail.component.css']
 })
 export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('artistHeroBg') artistHeroBg?: ElementRef<HTMLDivElement>;
-  @ViewChild('galleryCarousel') galleryCarousel?: ElementRef<HTMLDivElement>;
+  @ViewChild('g3dWrapper') g3dWrapperRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('g3dSection') g3dSectionRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('g3dCardsEl') g3dCardsElRef?: ElementRef<HTMLDivElement>;
 
   artist: Artist | null = null;
   songs: SongDto[] = [];
@@ -37,13 +40,20 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   SocialPlatform = SocialPlatform;
 
-  expandedGalleryIndex = -1;
-  activeVideoIndex = -1;
-  carouselPaused = false;
+  // וידאו ב-lightbox
+  videoLightboxUrl: string | null = null;
 
+  // ========== Hero ==========
   private fullHeroHeight = 0;
   private rafPending = false;
-  private carouselRafId = 0;
+
+  // ========== 3D Gallery ==========
+  private g3dItems: { el: HTMLElement }[] = [];
+  private g3dScrollX = 0;
+  private g3dCardW = 300;
+  private g3dStep = 328;
+  private g3dTrack = 0;
+  private g3dVwHalf = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -56,17 +66,13 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     window.scrollTo(0, 0);
     this.route.params.subscribe(params => {
       const id = +params['id'];
-      if (id) {
-        this.loadArtist(id);
-      }
+      if (id) this.loadArtist(id);
     });
   }
 
   ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void {
-    if (this.carouselRafId) cancelAnimationFrame(this.carouselRafId);
-  }
+  ngOnDestroy(): void {}
 
   loadArtist(id: number): void {
     this.loading = true;
@@ -79,7 +85,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadEvents(id);
         setTimeout(() => {
           this.initHeroHeight();
-          this.startCarousel();
+          setTimeout(() => this.initGallery3D(), 80);
         }, 0);
       },
       error: () => {
@@ -89,14 +95,16 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  // ============================================================
+  // Hero
+  // ============================================================
+
   private initHeroHeight(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg) return;
-
     const top = window.innerHeight * 0.02;
     this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
     bg.style.height = this.fullHeroHeight + 'px';
-
     this.shrinkHero();
   }
 
@@ -106,6 +114,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.rafPending = true;
     requestAnimationFrame(() => {
       this.shrinkHero();
+      this.g3dUpdateFromScroll();
       this.rafPending = false;
     });
   }
@@ -113,16 +122,16 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:resize')
   onResize(): void {
     this.initHeroHeight();
+    this.g3dHandleResize();
   }
 
   private shrinkHero(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
     const minHeight = Math.round(window.innerHeight * 0.02 + 60);
-    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY * 1);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
-    // fade out all inner content in the first 160px of scroll
     const progress = Math.min(1, window.scrollY / 160);
     const opacity = String(Math.max(0, 1 - progress));
     const infoSide = bg.querySelector('.hero-info-side') as HTMLElement | null;
@@ -132,7 +141,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     if (socialSide) socialSide.style.opacity = opacity;
     if (overlay) overlay.style.opacity = opacity;
 
-    // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
     const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (collapseOverlay) {
       const collapseRange = this.fullHeroHeight - minHeight;
@@ -143,45 +151,190 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private carouselDir = 1; // כיוון גלילה: 1 קדימה, -1 אחורה
+  // ============================================================
+  // 3D Gallery — scroll-driven
+  // ============================================================
 
-  private startCarousel(): void {
-    const carousel = this.galleryCarousel?.nativeElement;
-    if (!carousel || this.galleryItems.length === 0) return;
-    if (this.carouselRafId) cancelAnimationFrame(this.carouselRafId);
+  private g3dMod(n: number, m: number): number {
+    return ((n % m) + m) % m;
+  }
 
-    const scroll = () => {
-      if (!this.carouselPaused) {
-        carousel.scrollLeft += 0.7 * this.carouselDir;
-        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-        if (carousel.scrollLeft >= maxScroll - 1) this.carouselDir = -1;
-        else if (carousel.scrollLeft <= 0) this.carouselDir = 1;
+  private g3dGetTransform(screenX: number): string {
+    const norm = Math.max(-1, Math.min(1, screenX / this.g3dVwHalf));
+    const invNorm = 1 - Math.abs(norm);
+    const ry = -norm * 28;
+    const tz = invNorm * 140;
+    const scale = 0.82 + invNorm * 0.18;
+    return `translate3d(${screenX}px,-50%,${tz}px) rotateY(${ry}deg) scale(${scale})`;
+  }
+
+  private g3dUpdateTransforms(): void {
+    if (this.g3dTrack === 0) return;
+    const half = this.g3dTrack / 2;
+    for (let i = 0; i < this.g3dItems.length; i++) {
+      let pos = i * this.g3dStep - this.g3dScrollX;
+      if (pos < -half) pos += this.g3dTrack;
+      if (pos > half) pos -= this.g3dTrack;
+      const norm = Math.max(-1, Math.min(1, pos / this.g3dVwHalf));
+      const tz = (1 - Math.abs(norm)) * 140;
+      this.g3dItems[i].el.style.transform = this.g3dGetTransform(pos);
+      this.g3dItems[i].el.style.zIndex = String(1000 + Math.round(tz));
+      const blur = Math.abs(norm) < 0.35 ? 0 : Math.pow(Math.abs(norm), 1.2) * 2.5;
+      this.g3dItems[i].el.style.filter = blur > 0 ? `blur(${blur.toFixed(2)}px)` : '';
+    }
+  }
+
+  private g3dUpdateFromScroll(): void {
+    const wrapper = this.g3dWrapperRef?.nativeElement;
+    if (!wrapper || this.g3dTrack === 0) return;
+    const rect = wrapper.getBoundingClientRect();
+    const scrolled = -rect.top;
+    if (scrolled < 0) return;
+    const maxScroll = wrapper.offsetHeight - window.innerHeight;
+    if (maxScroll <= 0) return;
+    const progress = Math.min(1, scrolled / maxScroll);
+    this.g3dScrollX = this.g3dMod(progress * this.g3dTrack, this.g3dTrack);
+    this.g3dUpdateTransforms();
+  }
+
+  private g3dHandleResize(): void {
+    const section = this.g3dSectionRef?.nativeElement;
+    if (section) this.g3dVwHalf = section.clientWidth * 0.5;
+    const sample = this.g3dItems[0]?.el;
+    if (sample) {
+      const rect = sample.getBoundingClientRect();
+      this.g3dCardW = rect.width || this.g3dCardW;
+      this.g3dStep = this.g3dCardW + 28;
+      this.g3dTrack = this.g3dItems.length * this.g3dStep;
+      const wrapper = this.g3dWrapperRef?.nativeElement;
+      if (wrapper) {
+        const activeScroll = this.g3dStep * (this.g3dItems.length - 1);
+        wrapper.style.height = `calc(100vh + ${activeScroll}px)`;
       }
-      this.carouselRafId = requestAnimationFrame(scroll);
-    };
-    this.carouselRafId = requestAnimationFrame(scroll);
-  }
-
-  pauseCarousel(): void {
-    this.carouselPaused = true;
-  }
-
-  resumeCarousel(): void {
-    this.expandedGalleryIndex = -1;
-    if (this.activeVideoIndex === -1) {
-      this.carouselPaused = false;
     }
+    this.g3dUpdateFromScroll();
   }
 
-  toggleVideo(index: number): void {
-    if (this.activeVideoIndex === index) {
-      this.activeVideoIndex = -1;
-      this.carouselPaused = false;
-    } else {
-      this.activeVideoIndex = index;
-      this.carouselPaused = true;
-    }
+  private initGallery3D(): void {
+    const wrapper = this.g3dWrapperRef?.nativeElement;
+    const section = this.g3dSectionRef?.nativeElement;
+    const cardsEl = this.g3dCardsElRef?.nativeElement;
+    if (!wrapper || !section || !cardsEl) return;
+
+    const baseItems = this.galleryItems;
+    if (baseItems.length === 0) return;
+
+    // לפחות 6 פריטים על ידי כפל
+    let items = [...baseItems];
+    while (items.length < 6) items = [...items, ...baseItems];
+
+    // יצירת כרטיסים
+    cardsEl.innerHTML = '';
+    this.g3dItems = [];
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'g3d-card';
+
+      if (item.type === 'image' && item.imageUrl) {
+        const img = document.createElement('img');
+        img.src = item.imageUrl;
+        img.alt = item.caption || '';
+        img.draggable = false;
+        card.appendChild(img);
+        if (item.caption) {
+          const cap = document.createElement('div');
+          cap.className = 'g3d-card-caption';
+          cap.textContent = item.caption;
+          card.appendChild(cap);
+        }
+      } else if (item.type === 'video' && item.videoUrl) {
+        // thumbnail מ-YouTube
+        const thumbnailUrl = this.getYouTubeThumbnail(item.videoUrl);
+        if (thumbnailUrl) {
+          const img = document.createElement('img');
+          img.src = thumbnailUrl;
+          img.alt = item.title || '';
+          img.draggable = false;
+          card.appendChild(img);
+        }
+        // overlay עם כפתור הפעלה
+        const overlay = document.createElement('div');
+        overlay.className = 'g3d-card-play-overlay';
+        overlay.innerHTML = `
+          <div class="g3d-card-play">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+          </div>
+          ${item.title ? `<div class="g3d-card-video-title">${item.title}</div>` : ''}
+        `;
+        card.appendChild(overlay);
+        const videoUrl = item.videoUrl;
+        card.addEventListener('click', () => this.openVideoLightbox(videoUrl));
+        card.style.cursor = 'pointer';
+      }
+
+      cardsEl.appendChild(card);
+      this.g3dItems.push({ el: card });
+    });
+
+    // מדידה
+    const sample = this.g3dItems[0]?.el;
+    if (!sample) return;
+    const rect = sample.getBoundingClientRect();
+    this.g3dCardW = rect.width || 300;
+    this.g3dStep = this.g3dCardW + 28;
+    this.g3dTrack = this.g3dItems.length * this.g3dStep;
+    this.g3dVwHalf = section.clientWidth * 0.5;
+
+    // גובה wrapper — רק צעד אחד לכל פריט (ללא גלילה מיותרת)
+    const activeScroll = this.g3dStep * (this.g3dItems.length - 1);
+    wrapper.style.height = `calc(100vh + ${activeScroll}px)`;
+
+    // רנדור ראשוני
+    this.g3dScrollX = 0;
+    this.g3dUpdateTransforms();
   }
+
+  // ============================================================
+  // Gallery Arrows
+  // ============================================================
+
+  g3dArrowPrev(): void {
+    window.scrollBy({ top: -this.g3dStep, behavior: 'smooth' });
+  }
+
+  g3dArrowNext(): void {
+    window.scrollBy({ top: this.g3dStep, behavior: 'smooth' });
+  }
+
+  private getYouTubeThumbnail(videoUrl: string): string {
+    const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  // ============================================================
+  // Video Lightbox
+  // ============================================================
+
+  openVideoLightbox(videoUrl: string): void {
+    this.videoLightboxUrl = videoUrl;
+  }
+
+  closeVideoLightbox(): void {
+    this.videoLightboxUrl = null;
+  }
+
+  getYouTubeEmbedUrl(videoUrl: string): SafeResourceUrl {
+    const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
+    const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : videoUrl;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  // ============================================================
+  // Data loading
+  // ============================================================
 
   loadSongs(artistId: number, page: number = 1): void {
     this.loadingSongs = true;
@@ -220,10 +373,30 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  // ============================================================
+  // Getters & Helpers
+  // ============================================================
+
   get heroBannerSrc(): string {
     if (!this.artist) return '';
     if (this.artist.isPremium && this.artist.bannerGifUrl) return this.artist.bannerGifUrl;
     return this.artist.bannerImageUrl || '';
+  }
+
+  get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
+    if (!this.artist) return [];
+    return [
+      ...this.artist.galleryImages.map(img => ({
+        type: 'image' as const,
+        imageUrl: img.imageUrl,
+        caption: img.caption
+      })),
+      ...this.artist.videos.map(vid => ({
+        type: 'video' as const,
+        videoUrl: vid.videoUrl,
+        title: vid.title
+      }))
+    ];
   }
 
   getShortUrl(url: string): string {
@@ -259,42 +432,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     const svg = icons[platform] ?? icons[SocialPlatform.Website];
     return this.sanitizer.bypassSecurityTrustHtml(svg);
-  }
-
-  getYouTubeEmbedUrl(videoUrl: string): SafeResourceUrl {
-    const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
-    const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : videoUrl;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
-  }
-
-  setExpandedGallery(index: number): void {
-    this.expandedGalleryIndex = index;
-  }
-
-  get galleryDisplayItems(): Array<{ type: 'image' | 'video' | 'placeholder'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
-    const items = this.galleryItems as Array<{ type: 'image' | 'video' | 'placeholder'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }>;
-    const result = [...items];
-    const MIN_ITEMS = 10;
-    while (result.length < MIN_ITEMS) {
-      result.push({ type: 'placeholder' });
-    }
-    return result;
-  }
-
-  get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
-    if (!this.artist) return [];
-    return [
-      ...this.artist.galleryImages.map(img => ({
-        type: 'image' as const,
-        imageUrl: img.imageUrl,
-        caption: img.caption
-      })),
-      ...this.artist.videos.map(vid => ({
-        type: 'video' as const,
-        videoUrl: vid.videoUrl,
-        title: vid.title
-      }))
-    ];
   }
 
   navigateToSong(songId: number): void {

@@ -1,0 +1,124 @@
+/* ============================================
+   NEWS BANNER — באנר כתבה / חדשות מוזיקה
+============================================ */
+
+.news-banner {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  direction: rtl;
+  display: block;
+}
+
+/* תמונת רקע */
+.banner-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.4s ease;
+}
+
+.news-banner:hover .banner-bg {
+  transform: scale(1.03);
+}
+
+/* שכבת כהייה — כיסוי כל הריבוע, כהה בתחתית ומתמוסס לשקוף כלפי מעלה */
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.30) 50%, rgba(0, 0, 0, 0.05) 100%);
+  pointer-events: none;
+}
+
+/* טקסט — פינה ימנית תחתונה */
+.banner-text {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  left: 72px;   /* מרחק מהכפתור בצד שמאל */
+  text-align: right;
+  direction: rtl;
+}
+
+.banner-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: 1.15rem;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.banner-subtitle {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 5px 0 0 0;
+  line-height: 1.4;
+}
+
+/* כפתור חץ — פינה שמאלית תחתונה */
+.banner-arrow-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #ddff53;
+  color: #000000;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.banner-arrow-btn:hover {
+  background: #ffffff;
+  transform: scale(1.08);
+}
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+@media (max-width: 600px) {
+  .news-banner {
+    border-radius: 16px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .banner-title {
+    font-size: 1rem;
+  }
+
+  .banner-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .banner-arrow-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .banner-text {
+    bottom: 14px;
+    right: 14px;
+    left: 64px;
+  }
+}

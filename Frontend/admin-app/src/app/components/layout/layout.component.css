@@ -32,17 +32,6 @@
     position: relative;
 }
 
-.header-right::before {
-    content: '';
-    position: absolute;
-    inset: -22px -28px;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    mask-image: radial-gradient(ellipse at center, black 35%, transparent 72%);
-    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 72%);
-    pointer-events: none;
-    z-index: -1;
-}
 
 /* ============================================
    LEFT GROUP: Music Index + Nav Links
@@ -55,17 +44,6 @@
     position: relative;
 }
 
-.header-left-group::before {
-    content: '';
-    position: absolute;
-    inset: -22px -28px;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    mask-image: radial-gradient(ellipse at center, black 35%, transparent 72%);
-    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 72%);
-    pointer-events: none;
-    z-index: -1;
-}
 
 .desktop-nav {
     display: flex;
