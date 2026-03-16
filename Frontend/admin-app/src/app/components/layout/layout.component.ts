@@ -8,6 +8,7 @@ import { AuthService, User, AuthResponse } from '../../services/auth.service';
 import { SongService } from '../../services/song.service';
 import { ModalService } from '../../services/modal.service';
 import { SessionTimeoutService } from '../../services/session-timeout.service';
+import { ArtistPageService } from '../../services/artist-page.service';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthModalComponent } from '../auth/auth-modal.component';
 import { AdditionalDetailsModalComponent, UserType } from '../auth/additional-details-modal.component';
@@ -42,6 +43,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   isScrolled: boolean = false;
   fabOnYellow: boolean = false;
   adminEditTarget: { label: string; url: string } | null = null;
+  isArtistPage = false;
   private lastScrollY: number = 0;
 
   @HostListener('window:scroll')
@@ -84,7 +86,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     private socialAuthService: SocialAuthService,
     private modalService: ModalService,
-    private sessionTimeoutService: SessionTimeoutService
+    private sessionTimeoutService: SessionTimeoutService,
+    private artistPageService: ArtistPageService
   ) { }
 
   ngOnInit() {
@@ -153,20 +156,32 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     const teacherMatch = cleanUrl.match(/^\/teacher\/(\w+)/);
 
     if (artistMatch) {
-      this.adminEditTarget = { label: 'עריכת דף אמן', url: '/admin/artists' };
+      this.isArtistPage = true;
+      this.adminEditTarget = { label: 'עריכת דף אמן', url: '' };
     } else if (teacherMatch) {
+      this.isArtistPage = false;
       this.adminEditTarget = { label: 'עריכת דף מורה', url: `/admin/teachers/edit/${teacherMatch[1]}` };
     } else if (cleanUrl === '/professionals') {
+      this.isArtistPage = false;
       this.adminEditTarget = { label: 'ניהול בעלי מקצוע', url: '/admin/service-providers' };
     } else {
+      this.isArtistPage = false;
       this.adminEditTarget = null;
     }
+  }
+
+  get canEditArtistPage(): boolean {
+    return this.isAdmin && !!this.adminEditTarget;
   }
 
   fabAdminEdit(): void {
     if (!this.adminEditTarget) return;
     this.closeFabMenu();
-    this.router.navigate([this.adminEditTarget.url]);
+    if (this.isArtistPage) {
+      this.artistPageService.triggerEdit();
+    } else {
+      this.router.navigate([this.adminEditTarget.url]);
+    }
   }
 
   goToAdmin() {

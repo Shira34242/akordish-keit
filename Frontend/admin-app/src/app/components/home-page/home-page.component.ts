@@ -153,15 +153,6 @@ export class HomePageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  navigateToArticle(article: Article): void {
-    const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
-    this.router.navigate([route, article.slug]);
-  }
-
-  openEventTicket(event: UpcomingEventDto): void {
-    window.open(event.ticketUrl, '_blank');
-  }
-
   onSearchInput(query: string) {
     this.searchSubject.next(query);
   }

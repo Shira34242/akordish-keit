@@ -10,6 +10,7 @@ namespace AkordishKeit.Models.Enum
         TikTok = 4,
         Website = 5,
         Twitter = 6,
-        Spotify = 7
+        Spotify = 7,
+        Zing = 8
     }
 }

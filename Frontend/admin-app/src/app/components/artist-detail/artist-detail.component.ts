@@ -2,17 +2,21 @@ import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, E
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 import { ArtistService } from '../../services/artist.service';
+import { AuthService } from '../../services/auth.service';
+import { ArtistPageService } from '../../services/artist-page.service';
 import { Artist, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
 
 @Component({
   selector: 'app-artist-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, ArtistEditModalComponent],
   templateUrl: './artist-detail.component.html',
   styleUrls: ['./artist-detail.component.css']
 })
@@ -46,6 +50,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   bioOverflows = false;
 
   SocialPlatform = SocialPlatform;
+
+  // עריכת דף אמן
+  showEditModal = false;
+  private editSub?: Subscription;
 
   // וידאו ב-lightbox
   videoLightboxUrl: string | null = null;
@@ -93,7 +101,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private artistService: ArtistService,
     private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
+    private artistPageService: ArtistPageService
   ) {}
 
   ngOnInit(): void {
@@ -101,6 +111,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.route.params.subscribe(params => {
       const id = +params['id'];
       if (id) this.loadArtist(id);
+    });
+
+    this.editSub = this.artistPageService.editTrigger$.subscribe(() => {
+      if (this.canEdit) {
+        this.showEditModal = true;
+      }
     });
   }
 
@@ -113,6 +129,28 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       section.removeEventListener('touchstart', this.g3dOnTouchStart);
       section.removeEventListener('touchmove', this.g3dOnTouchMove);
     }
+    this.editSub?.unsubscribe();
+    this.artistPageService.setOwnerId(null);
+  }
+
+  get canEdit(): boolean {
+    const user = this.authService.currentUserValue;
+    if (!user) return false;
+    if (user.role === 'Admin' || user.role === 4) return true;
+    return !!(this.artist?.userId && user.id === this.artist.userId);
+  }
+
+  openEditModal(): void {
+    this.showEditModal = true;
+  }
+
+  onEditModalClose(): void {
+    this.showEditModal = false;
+  }
+
+  onEditModalSaved(): void {
+    this.showEditModal = false;
+    if (this.artist) this.loadArtist(this.artist.id);
   }
 
   loadArtist(id: number): void {
@@ -121,6 +159,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (artist) => {
         this.artist = artist;
         this.loading = false;
+        this.artistPageService.setOwnerId(artist.userId ?? null);
         this.loadSongs(id);
         this.loadArticles(id);
         this.loadEvents(id);
@@ -542,7 +581,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       [SocialPlatform.Twitter]: 'Twitter / X',
       [SocialPlatform.TikTok]: 'TikTok',
       [SocialPlatform.Spotify]: 'Spotify',
-      [SocialPlatform.Website]: 'אתר'
+      [SocialPlatform.Website]: 'אתר',
+      [SocialPlatform.Zing]: 'Zing'
     };
     return names[platform] || 'קישור';
   }
@@ -555,7 +595,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       [SocialPlatform.Twitter]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
       [SocialPlatform.TikTok]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.77a8.18 8.18 0 0 0 4.79 1.53V6.86a4.85 4.85 0 0 1-1.02-.17z"/></svg>`,
       [SocialPlatform.Spotify]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>`,
-      [SocialPlatform.Website]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`
+      [SocialPlatform.Website]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+      [SocialPlatform.Zing]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M8 10.5L16 7v2.5L8 13.5z"/></svg>`
     };
     const svg = icons[platform] ?? icons[SocialPlatform.Website];
     return this.sanitizer.bypassSecurityTrustHtml(svg);

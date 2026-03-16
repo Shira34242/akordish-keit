@@ -74,6 +74,17 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .IsRequired()
                .HasDefaultValue(false);
 
+        // Performance banner properties
+        builder.Property(e => e.PerformanceImageUrl)
+               .HasMaxLength(500);
+
+        builder.Property(e => e.PerformanceTicketUrl)
+               .HasMaxLength(500);
+
+        builder.Property(e => e.PerformanceIsActive)
+               .IsRequired()
+               .HasDefaultValue(false);
+
         // Indexes
         builder.HasIndex(e => e.Name)
                .HasDatabaseName("IX_Artists_Name");

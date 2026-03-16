@@ -43,6 +43,8 @@ export class ArtistEditModalComponent implements OnInit {
   error: string | null = null;
   isEditMode = false;
 
+  readonly MUSIC_PLATFORMS = [3, 7, 8]; // YouTube, Spotify, Zing
+
   // Edit form
   editForm = {
     name: '',
@@ -56,6 +58,10 @@ export class ArtistEditModalComponent implements OnInit {
     status: ArtistStatus.Pending,
     isPremium: false,
     socialLinks: [] as SocialLinkForm[],
+    musicLinks: [] as SocialLinkForm[],
+    performanceImageUrl: '',
+    performanceTicketUrl: '',
+    performanceIsActive: false,
     galleryImages: [] as GalleryImageForm[],
     videos: [] as VideoForm[]
   };
@@ -92,11 +98,19 @@ export class ArtistEditModalComponent implements OnInit {
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
-          socialLinks: artist.socialLinks?.map(link => ({
+          socialLinks: artist.socialLinks?.filter(l => !this.MUSIC_PLATFORMS.includes(l.platform)).map(link => ({
             id: link.id,
             platform: link.platform,
             url: link.url
           })) || [],
+          musicLinks: artist.socialLinks?.filter(l => this.MUSIC_PLATFORMS.includes(l.platform)).map(link => ({
+            id: link.id,
+            platform: link.platform,
+            url: link.url
+          })) || [],
+          performanceImageUrl: artist.performanceImageUrl || '',
+          performanceTicketUrl: artist.performanceTicketUrl || '',
+          performanceIsActive: artist.performanceIsActive ?? false,
           galleryImages: artist.galleryImages?.map(img => ({
             id: img.id,
             imageUrl: img.imageUrl,
@@ -134,6 +148,11 @@ export class ArtistEditModalComponent implements OnInit {
 
     if (this.isEditMode && this.artistId) {
       // Update existing artist
+      const allLinks = [
+        ...this.editForm.socialLinks,
+        ...this.editForm.musicLinks
+      ].filter(l => l.url?.trim());
+
       const updateDto: UpdateArtistDto = {
         englishName: this.editForm.englishName || undefined,
         shortBio: this.editForm.shortBio || undefined,
@@ -142,9 +161,12 @@ export class ArtistEditModalComponent implements OnInit {
         bannerImageUrl: this.editForm.bannerImageUrl || undefined,
         bannerGifUrl: this.editForm.bannerGifUrl || undefined,
         websiteUrl: this.editForm.websiteUrl || undefined,
-        status: Number(this.editForm.status),  // Convert to number
+        status: Number(this.editForm.status),
         isPremium: this.editForm.isPremium,
-        socialLinks: this.editForm.socialLinks.filter(link => link.url?.trim()).map(link => ({
+        performanceImageUrl: this.editForm.performanceImageUrl || undefined,
+        performanceTicketUrl: this.editForm.performanceTicketUrl || undefined,
+        performanceIsActive: this.editForm.performanceIsActive,
+        socialLinks: allLinks.map(link => ({
           id: link.id,
           platform: Number(link.platform),
           url: link.url
@@ -175,6 +197,11 @@ export class ArtistEditModalComponent implements OnInit {
       });
     } else {
       // Create new artist
+      const createAllLinks = [
+        ...this.editForm.socialLinks,
+        ...this.editForm.musicLinks
+      ].filter(l => l.url?.trim());
+
       const createDto: any = {
         name: this.editForm.name,
         englishName: this.editForm.englishName || undefined,
@@ -184,9 +211,12 @@ export class ArtistEditModalComponent implements OnInit {
         bannerImageUrl: this.editForm.bannerImageUrl || undefined,
         bannerGifUrl: this.editForm.bannerGifUrl || undefined,
         websiteUrl: this.editForm.websiteUrl || undefined,
-        status: Number(this.editForm.status),  // Convert to number
+        status: Number(this.editForm.status),
         isPremium: this.editForm.isPremium,
-        socialLinks: this.editForm.socialLinks.filter(link => link.url?.trim()).map(link => ({
+        performanceImageUrl: this.editForm.performanceImageUrl || undefined,
+        performanceTicketUrl: this.editForm.performanceTicketUrl || undefined,
+        performanceIsActive: this.editForm.performanceIsActive,
+        socialLinks: createAllLinks.map(link => ({
           platform: Number(link.platform),
           url: link.url
         })),
@@ -222,14 +252,19 @@ export class ArtistEditModalComponent implements OnInit {
 
   // Social Links Management
   addSocialLink(): void {
-    this.editForm.socialLinks.push({
-      platform: 1, // Facebook as default
-      url: ''
-    });
+    this.editForm.socialLinks.push({ platform: 1, url: '' });
   }
 
   removeSocialLink(index: number): void {
     this.editForm.socialLinks.splice(index, 1);
+  }
+
+  addMusicLink(): void {
+    this.editForm.musicLinks.push({ platform: 7, url: '' }); // Spotify default
+  }
+
+  removeMusicLink(index: number): void {
+    this.editForm.musicLinks.splice(index, 1);
   }
 
   // Gallery Images Management

@@ -146,38 +146,25 @@
     <div class="form-section">
       <h2 class="section-title">
         <span class="material-icons">share</span>
-        קישורי רשתות חברתיות
+        רשתות חברתיות
       </h2>
 
       <div *ngFor="let link of artistForm.socialLinks; let i = index" class="social-link-item">
         <div class="form-row">
           <div class="form-group" style="flex: 1;">
             <label class="form-label">פלטפורמה</label>
-            <select
-              [(ngModel)]="link.platform"
-              [name]="'platform_' + i"
-              class="form-select"
-            >
+            <select [(ngModel)]="link.platform" [name]="'social_platform_' + i" class="form-select">
               <option [value]="1">Instagram</option>
               <option [value]="2">Facebook</option>
-              <option [value]="3">YouTube</option>
               <option [value]="4">TikTok</option>
               <option [value]="5">אתר אינטרנט</option>
-              <option [value]="6">Twitter</option>
-              <option [value]="7">Spotify</option>
+              <option [value]="6">Twitter / X</option>
             </select>
           </div>
-
           <div class="form-group" style="flex: 2;">
             <label class="form-label">קישור</label>
             <div class="input-with-button">
-              <input
-                type="url"
-                [(ngModel)]="link.url"
-                [name]="'url_' + i"
-                class="form-input"
-                placeholder="https://..."
-              />
+              <input type="url" [(ngModel)]="link.url" [name]="'social_url_' + i" class="form-input" placeholder="https://..." />
               <button type="button" class="btn-remove" (click)="removeSocialLink(i)">
                 <span class="material-icons">delete</span>
               </button>
@@ -188,8 +175,83 @@
 
       <button type="button" class="btn-add" (click)="addSocialLink()">
         <span class="material-icons">add</span>
-        הוסף קישור חברתי
+        הוסף רשת חברתית
       </button>
+    </div>
+
+    <!-- Music Platform Links -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <span class="material-icons">music_note</span>
+        פלטפורמות מוזיקה
+      </h2>
+
+      <div *ngFor="let link of artistForm.musicLinks; let i = index" class="social-link-item">
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">פלטפורמה</label>
+            <select [(ngModel)]="link.platform" [name]="'music_platform_' + i" class="form-select">
+              <option [value]="3">YouTube</option>
+              <option [value]="7">Spotify</option>
+              <option [value]="8">Zing</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label">קישור לדף שלך</label>
+            <div class="input-with-button">
+              <input type="url" [(ngModel)]="link.url" [name]="'music_url_' + i" class="form-input" placeholder="https://..." />
+              <button type="button" class="btn-remove" (click)="removeMusicLink(i)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-add" (click)="addMusicLink()">
+        <span class="material-icons">add</span>
+        הוסף פלטפורמת מוזיקה
+      </button>
+    </div>
+
+    <!-- Performance Banner -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <span class="material-icons">campaign</span>
+        באנר הופעה
+      </h2>
+      <p class="section-desc">תמונת פרסומת להופעה שתוצג מעל הביוגרפיה בדף האומן</p>
+
+      <div class="form-group">
+        <label class="form-label">תמונת הבאנר</label>
+        <app-file-upload-input
+          [(url)]="artistForm.performanceImageUrl"
+          placeholder="https://example.com/show.jpg"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">קישור לרכישת כרטיסים</label>
+        <input
+          type="url"
+          [(ngModel)]="artistForm.performanceTicketUrl"
+          name="performanceTicketUrl"
+          class="form-input"
+          placeholder="https://tickets.example.com/..."
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label toggle-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="artistForm.performanceIsActive"
+            name="performanceIsActive"
+            class="form-checkbox"
+          />
+          הצג באנר בדף האומן
+        </label>
+      </div>
     </div>
 
     <!-- Gallery - Soft Lock -->

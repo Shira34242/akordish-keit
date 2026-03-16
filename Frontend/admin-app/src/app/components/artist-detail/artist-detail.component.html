@@ -71,6 +71,16 @@
   ============================== -->
   <div class="page-content">
 
+    <!-- באנר הופעה -->
+    <a *ngIf="artist.performanceIsActive && artist.performanceImageUrl"
+       [href]="artist.performanceTicketUrl || '#'"
+       [target]="artist.performanceTicketUrl ? '_blank' : '_self'"
+       class="performance-banner"
+       rel="noopener">
+      <img [src]="artist.performanceImageUrl" alt="הופעה קרובה" class="performance-banner-img" />
+      <div *ngIf="artist.performanceTicketUrl" class="performance-ticket-btn">לרכישת כרטיסים ←</div>
+    </a>
+
     <!-- ביוגרפיה -->
     <div class="bio-card" *ngIf="artist.biography">
       <h2 class="card-section-label">אודות</h2>
@@ -209,6 +219,14 @@
     <p class="image-lightbox-caption" *ngIf="imageLightboxCaption">{{ imageLightboxCaption }}</p>
   </div>
 </div>
+
+<!-- Edit Modal -->
+<app-artist-edit-modal
+  *ngIf="showEditModal && artist"
+  [artistId]="artist.id"
+  (close)="onEditModalClose()"
+  (saved)="onEditModalSaved()">
+</app-artist-edit-modal>
 
 <!-- Video Lightbox -->
 <div class="video-lightbox" *ngIf="videoLightboxUrl" (click)="closeVideoLightbox()">

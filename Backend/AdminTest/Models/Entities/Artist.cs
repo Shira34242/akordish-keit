@@ -50,6 +50,11 @@ public class Artist
     public int? UserId { get; set; }
     public int? PersonId { get; set; }
 
+    // באנר הופעה (תמונה + קישור לכרטיסים)
+    public string? PerformanceImageUrl { get; set; }  // תמונת הבאנר
+    public string? PerformanceTicketUrl { get; set; } // קישור לכרטיסים
+    public bool PerformanceIsActive { get; set; } = false; // מוצג/מוסתר
+
     // תאריכים
     public DateTime CreatedAt { get; set; }
     public bool IsDeleted { get; set; }
