@@ -1,5 +1,5 @@
 /* === SERVICE PROVIDERS LIST — Design System === */
-.service-providers-container { padding: 0; direction: rtl; }
+.service-providers-container, .providers-container { padding: 0; direction: rtl; }
 
 .page-header { background: #ffffff; padding: 24px 32px; border-radius: 24px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
 .page-header h1 { font-family: 'Open Sans', sans-serif; font-size: 1.8rem; font-weight: 800; color: #000000; margin: 0; }
@@ -21,12 +21,14 @@
 
 .table-container { background: #ffffff; border-radius: 24px; overflow: hidden; }
 
-.service-providers-table { width: 100%; border-collapse: collapse; }
-.service-providers-table thead { background: #F2F2F2; }
-.service-providers-table th { padding: 16px 20px; text-align: right; font-family: 'Open Sans', sans-serif; font-weight: 800; color: #000000; font-size: 0.85rem; white-space: nowrap; }
-.service-providers-table td { padding: 16px 20px; border-bottom: 1px solid #F2F2F2; vertical-align: middle; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: 0.9rem; color: #000000; }
-.service-providers-table tbody tr:last-child td { border-bottom: none; }
-.service-providers-table tbody tr:hover { background: #F2F2F2; }
+.service-providers-table, .providers-table { width: 100%; border-collapse: collapse; }
+.service-providers-table thead, .providers-table thead { background: #F2F2F2; }
+.service-providers-table th, .providers-table th { padding: 16px 20px; text-align: right; font-family: 'Open Sans', sans-serif; font-weight: 800; color: #000000; font-size: 0.85rem; white-space: nowrap; }
+.service-providers-table td, .providers-table td { padding: 16px 20px; border-bottom: 1px solid #F2F2F2; vertical-align: middle; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: 0.9rem; color: #000000; }
+.service-providers-table tbody tr:last-child td, .providers-table tbody tr:last-child td { border-bottom: none; }
+.service-providers-table tbody tr:hover, .providers-table tbody tr:hover { background: #F2F2F2; }
+
+.badge-star { background: #ddff53; color: #000000; }
 
 .badge { display: inline-block; padding: 4px 14px; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: 0.78rem; font-weight: 800; }
 .badge-success { background: #ddff53; color: #000000; }

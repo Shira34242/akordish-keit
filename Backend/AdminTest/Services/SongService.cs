@@ -1066,6 +1066,69 @@ public class SongService : ISongService
         }
     }
 
+    public async Task<SongDto> DuplicateSongAsync(int id)
+    {
+        var original = await _context.Songs
+            .Include(s => s.SongArtists)
+            .Include(s => s.SongGenres)
+            .Include(s => s.SongTags)
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+
+        if (original == null)
+            throw new InvalidOperationException("השיר לא נמצא");
+
+        var newSong = new Song
+        {
+            Title = original.Title + " - עותק",
+            LyricsWithChords = original.LyricsWithChords,
+            OriginalKeyId = original.OriginalKeyId,
+            EasyKeyId = original.EasyKeyId,
+            YouTubeUrl = original.YouTubeUrl,
+            SpotifyUrl = original.SpotifyUrl,
+            ImageUrl = original.ImageUrl,
+            ComposerId = original.ComposerId,
+            LyricistId = original.LyricistId,
+            ArrangerId = original.ArrangerId,
+            Language = original.Language,
+            DurationSeconds = original.DurationSeconds,
+            IsApproved = false,
+            UploadedByUserId = null,
+            ViewCount = 0,
+            PlayCount = 0,
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = false
+        };
+
+        _context.Songs.Add(newSong);
+        await _context.SaveChangesAsync();
+
+        foreach (var sa in original.SongArtists)
+        {
+            _context.SongArtists.Add(new SongArtist
+            {
+                SongId = newSong.Id,
+                ArtistId = sa.ArtistId,
+                TempArtistName = sa.TempArtistName,
+                Order = sa.Order,
+                IsTemporary = sa.IsTemporary
+            });
+        }
+
+        foreach (var sg in original.SongGenres)
+        {
+            _context.SongGenres.Add(new SongGenre { SongId = newSong.Id, GenreId = sg.GenreId });
+        }
+
+        foreach (var st in original.SongTags)
+        {
+            _context.SongTags.Add(new SongTag { SongId = newSong.Id, TagId = st.TagId });
+        }
+
+        await _context.SaveChangesAsync();
+
+        return (await GetSongByIdAsync(newSong.Id, includeUnapproved: true))!;
+    }
+
     // ============================================
     // LOW PRIORITY - Reference Data
     // ============================================

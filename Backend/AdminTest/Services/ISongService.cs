@@ -70,6 +70,11 @@ public interface ISongService
     /// </summary>
     Task<bool> ToggleSongApprovalAsync(int id, bool isApproved);
 
+    /// <summary>
+    /// Duplicate a song (Admin only)
+    /// </summary>
+    Task<SongDto> DuplicateSongAsync(int id);
+
     // ============================================
     // LOW PRIORITY - Reference Data
     // ============================================

@@ -557,6 +557,30 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // POST: api/Songs/{id}/duplicate
+    // Duplicate a song (Admin only)
+    // ============================================
+    [HttpPost("{id}/duplicate")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SongDto>> DuplicateSong(int id)
+    {
+        try
+        {
+            var duplicate = await _songService.DuplicateSongAsync(id);
+            return Ok(duplicate);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error duplicating song: {ex.Message}");
+            return StatusCode(500, new { message = "שגיאה בשכפול השיר" });
+        }
+    }
+
+    // ============================================
     // Helper: Get current user ID from token
     // ============================================
     private int? GetCurrentUserId()

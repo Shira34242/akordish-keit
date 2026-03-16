@@ -136,6 +136,21 @@ export class ArticlesListComponent implements OnInit {
   }
 
 
+  duplicateArticle(article: Article): void {
+    if (confirm(`האם לשכפל את הכתבה "${article.title}"?`)) {
+      this.articleService.duplicateArticle(article.id).subscribe({
+        next: (duplicate) => {
+          alert(`הכתבה "${duplicate.title}" שוכפלה בהצלחה!`);
+          this.loadArticles();
+        },
+        error: (err) => {
+          console.error('שגיאה בשכפול כתבה:', err);
+          alert('שגיאה בשכפול הכתבה');
+        }
+      });
+    }
+  }
+
   deleteArticle(article: Article): void {
     if (confirm(`האם אתה בטוח שברצונך למחוק את הכתבה "${article.title}"?`)) {
       this.articleService.deleteArticle(article.id).subscribe({

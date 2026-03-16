@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleCategory, ArticleContentType } from '../../../models/article.model';
+import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
 import { ArticleCardComponent } from '../../shared/article-card/article-card.component';
 import { LikedContentService } from '../../../services/liked-content.service';
@@ -85,7 +85,7 @@ export class ArticleViewComponent implements OnInit {
       undefined,
       categoryId,
       article.contentType,
-      undefined,
+      ArticleStatus.Published,
       undefined
     ).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

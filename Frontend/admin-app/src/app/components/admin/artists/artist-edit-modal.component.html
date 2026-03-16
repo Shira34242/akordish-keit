@@ -76,11 +76,11 @@
             name="biography"
             class="form-textarea"
             rows="6"
-            maxlength="2000"
+            maxlength="3000"
             placeholder="ביוגרפיה מפורטת על האומן, קריירה, השפעות..."
           ></textarea>
-          <span class="char-counter" [class.warning]="getCharCount(editForm.biography) > 1800" [class.danger]="getCharCount(editForm.biography) > 1950">
-            {{ getCharCount(editForm.biography) }}/2000
+          <span class="char-counter" [class.warning]="getCharCount(editForm.biography) > 2700" [class.danger]="getCharCount(editForm.biography) > 2850">
+            {{ getCharCount(editForm.biography) }}/3000
           </span>
         </div>
       </div>

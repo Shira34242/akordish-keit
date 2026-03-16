@@ -27,7 +27,7 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .HasMaxLength(300);
 
         builder.Property(e => e.Biography)
-               .HasMaxLength(2000);
+               .HasMaxLength(3000);
 
         builder.Property(e => e.ImageUrl)
                .HasMaxLength(500);

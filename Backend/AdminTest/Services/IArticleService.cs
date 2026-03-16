@@ -34,4 +34,6 @@ public interface IArticleService
     Task<int> IncrementLikeCountAsync(int id);
 
     Task<bool> SlugExistsAsync(string slug, int? excludeArticleId = null);
+
+    Task<ArticleDto> DuplicateArticleAsync(int id);
 }

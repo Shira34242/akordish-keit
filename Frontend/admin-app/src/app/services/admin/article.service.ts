@@ -146,6 +146,13 @@ export class ArticleService {
   }
 
   /**
+   * Duplicate article
+   */
+  duplicateArticle(id: number): Observable<Article> {
+    return this.http.post<Article>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
+
+  /**
    * Increment view count
    */
   incrementView(id: number): Observable<{ viewCount: number }> {
