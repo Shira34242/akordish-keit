@@ -114,6 +114,15 @@
 <div class="fab-menu-backdrop" *ngIf="showFabMenu" (click)="closeFabMenu()"></div>
 
 <div class="fab-menu" *ngIf="showFabMenu" (click)="$event.stopPropagation()">
+    <!-- עריכת הדף - למנהלים בלבד -->
+    <ng-container *ngIf="isAdmin && adminEditTarget">
+        <div class="fab-menu-item fab-menu-item--admin" (click)="fabAdminEdit()">
+            <span class="material-icons fab-menu-icon">edit</span>
+            <span class="fab-menu-label">{{ adminEditTarget.label }}</span>
+        </div>
+        <div class="fab-admin-divider"></div>
+    </ng-container>
+
     <!-- חדשות -->
     <div class="fab-menu-item" (click)="fabAddNews()">
         <span class="material-icons fab-menu-icon">feed</span>

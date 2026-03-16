@@ -14,6 +14,8 @@
        [style.backgroundImage]="heroBannerSrc ? 'url(' + heroBannerSrc + ')' : null">
     <!-- overlay כהה רק כשיש תמונה, לנראות הטקסט -->
     <div class="hero-overlay-right" *ngIf="heroBannerSrc"></div>
+    <!-- overlay אפור כהה שמתגבר בגלילה -->
+    <div class="hero-collapse-overlay"></div>
 
     <!-- ימין-תחתון: תמונת פרופיל + מידע -->
     <div class="hero-info-side">
@@ -86,39 +88,47 @@
         <p class="biography-text">{{ artist.biography }}</p>
       </div>
 
-      <!-- גלריה accordion — שורה אחת, פריט ראשון פתוח, לחיצה מרחיבה -->
+      <!-- גלריה קרוסלה — שורה אחת, גוללת אוטומטית, עוצרת ומגדילה על hover -->
       <div class="gallery-section" *ngIf="galleryItems.length > 0">
         <h2 class="card-section-label" *ngIf="artist.biography">גלריה</h2>
-        <div class="gallery-strip" (mouseleave)="expandedGalleryIndex = -1">
-          <div *ngFor="let item of galleryItems; let i = index"
-               class="strip-item"
-               [class.is-expanded]="expandedGalleryIndex === i"
-               (mouseenter)="setExpandedGallery(i)">
+        <div class="gallery-carousel" #galleryCarousel
+             (mouseenter)="pauseCarousel()"
+             (mouseleave)="resumeCarousel()">
+          <div class="carousel-track">
+            <div *ngFor="let item of galleryDisplayItems; let i = index"
+                 class="carousel-item"
+                 [class.is-hovered]="expandedGalleryIndex === i || activeVideoIndex === i"
+                 [class.is-placeholder]="item.type === 'placeholder'"
+                 (mouseenter)="item.type !== 'placeholder' ? setExpandedGallery(i) : null">
 
-            <!-- תמונה -->
-            <ng-container *ngIf="item.type === 'image'">
-              <img [src]="item.imageUrl!" [alt]="item.caption || ''" class="strip-img">
-              <div class="strip-caption-bar" *ngIf="item.caption && expandedGalleryIndex === i">
-                {{ item.caption }}
-              </div>
-            </ng-container>
+              <!-- תמונה -->
+              <ng-container *ngIf="item.type === 'image'">
+                <img [src]="item.imageUrl!" [alt]="item.caption || ''" class="carousel-img">
+                <div class="carousel-caption" *ngIf="item.caption && expandedGalleryIndex === i">
+                  {{ item.caption }}
+                </div>
+              </ng-container>
 
-            <!-- וידאו מכווץ -->
-            <div *ngIf="item.type === 'video' && expandedGalleryIndex !== i"
-                 class="strip-video-collapsed">
-              <div class="strip-play-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
-                  <polygon points="5,3 19,12 5,21"/>
-                </svg>
+              <!-- וידאו -->
+              <div *ngIf="item.type === 'video'" class="carousel-video-thumb"
+                   (click)="toggleVideo(i)">
+                <div class="carousel-play-icon" *ngIf="activeVideoIndex !== i">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                    <polygon points="5,3 19,12 5,21"/>
+                  </svg>
+                </div>
+                <iframe *ngIf="activeVideoIndex === i"
+                        [src]="getYouTubeEmbedUrl(item.videoUrl!)"
+                        frameborder="0"
+                        allowfullscreen
+                        class="carousel-video-iframe">
+                </iframe>
               </div>
+
+              <!-- ריבוע placeholder אפור -->
+              <div *ngIf="item.type === 'placeholder'" class="carousel-placeholder"></div>
+
             </div>
-
-            <!-- וידאו פתוח -->
-            <iframe *ngIf="item.type === 'video' && expandedGalleryIndex === i"
-                    [src]="getYouTubeEmbedUrl(item.videoUrl!)"
-                    frameborder="0"
-                    allowfullscreen
-                    class="strip-video-iframe"></iframe>
           </div>
         </div>
       </div>
