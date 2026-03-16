@@ -95,7 +95,7 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = Math.round(window.innerHeight * 0.94);
+    this.fullHeroHeight = window.innerHeight - 16; /* top: 8px + bottom: 8px */
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -103,7 +103,7 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 55);
+    const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 

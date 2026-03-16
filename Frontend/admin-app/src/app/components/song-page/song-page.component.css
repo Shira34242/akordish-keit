@@ -4,7 +4,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 2vh;
+    height: 8px;
     background: #ffffff;
     z-index: 897;
     pointer-events: none;
@@ -15,10 +15,11 @@
     font-family: 'Open Sans', sans-serif;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
+    font-weight: 300;
     background-color: #ffffff;
     min-height: 100vh;
     direction: rtl;
-    color: #1f2937;
+    color: #000000;
 }
 
 /* Flat Effect */
@@ -29,25 +30,37 @@
 .song-header {
     background-color: #ddff53;
     position: fixed;
-    top: 2vh;
-    left: 16px;
-    right: 16px;
-    border-radius: 20px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    border-radius: 28px;
     height: 320px; /* fallback - JS מחליף לאחר מדידה */
     z-index: 895;
     pointer-events: none;
     will-change: height;
+    overflow: hidden;
+}
+
+/* overlay בהיר — מתגבר בגלילה כשהתיבה מתכווצת */
+.hero-collapse-overlay {
+    position: absolute;
+    inset: -2px;
+    background: #F2F2F2;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    transform: translateZ(0);
 }
 
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
     margin-top: 0; /* bg הוא position:fixed - לא צריך overlap */
-    margin-bottom: 8px;
-    padding: calc(2vh + 16px) 24px 16px;
+    margin-bottom: var(--space-md);
+    padding: calc(2vh + var(--space-base)) var(--space-xl) var(--space-base);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-md);
     position: relative;
     z-index: 896;
 }
@@ -141,7 +154,7 @@
 .header-top-row {
     display: flex;
     flex-direction: row;
-    gap: 24px;
+    gap: var(--space-xl);
     align-items: stretch;
 }
 
@@ -153,30 +166,30 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: 0;
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .header-subtitle {
-    font-size: 0.9rem;
-    color: rgba(0, 0, 0, 0.6);
+    font-size: var(--font-sm);
+    color: rgba(0, 0, 0, 0.55);
     margin: 0;
-    font-weight: 400;
+    font-weight: 300;
 }
 
 .main-title {
-    font-size: 2.2rem;
+    font-size: var(--font-3xl);
     font-weight: 800;
     color: #000000;
-    line-height: 1.1;
+    line-height: var(--lh-heading);
     margin: 0;
     letter-spacing: -0.5px;
 }
 
 .artist-name {
-    font-size: 1.3rem;
+    font-size: var(--font-lg);
     color: #000;
-    font-weight: 600;
-    margin: 4px 0 8px 0;
+    font-weight: 800;
+    margin: var(--space-xs) 0 var(--space-sm) 0;
     cursor: pointer;
 }
 
@@ -193,17 +206,17 @@
 }
 
 .credit-line {
-    font-size: 0.82rem;
+    font-size: var(--font-xs);
     color: rgba(0, 0, 0, 0.55);
-    line-height: 1.4;
+    line-height: var(--lh-small);
 }
 
 /* Meta Info */
 .header-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    font-size: 0.8rem;
+    gap: var(--space-md);
+    font-size: var(--font-xs);
     color: rgba(0, 0, 0, 0.55);
     margin: 0;
     align-items: center;
@@ -212,18 +225,18 @@
 .meta-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .meta-label {
-    font-weight: 600;
+    font-weight: 800;
     color: rgba(0, 0, 0, 0.7);
 }
 
 /* Action Buttons - בתחתית, צמוד לשמאל פיזי (flex-end ב-RTL) */
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--space-sm);
     align-self: flex-end;
 }
 
@@ -255,7 +268,7 @@
 /* 2. Floating Toolbar */
 .sticky-toolbar {
     position: sticky;
-    top: calc(2vh + 14px);
+    top: 70px;
     z-index: 950;
     max-width: 1200px;
     margin: 0 auto 8px auto;
@@ -290,21 +303,21 @@
     padding: 0;
     background: transparent;
     border: none;
-    color: #4b5563;
+    color: rgba(0, 0, 0, 0.6);
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 800;
 }
 
 .toolbar-btn:hover {
-    background-color: #f3f4f6;
-    color: #111827;
+    background-color: #F2F2F2;
+    color: #000000;
 }
 
 .toolbar-btn.active {
-    background-color: #eff6ff;
-    color: #2563eb;
+    background-color: #ddff53;
+    color: #000000;
 }
 
 .toolbar-btn svg {
@@ -316,7 +329,7 @@
 .btn-text {
     width: auto;
     padding: 0 12px;
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     border-radius: 100px;
 }
 
@@ -347,8 +360,8 @@
 }
 
 .instrument-group .instrument-btn:hover {
-    background-color: #e2e2e2;
-    color: #111827;
+    background-color: #e8e8e8;
+    color: #000000;
 }
 
 .instrument-group .instrument-btn.active {
@@ -375,7 +388,7 @@
 }
 
 .controls-group .toolbar-btn:hover {
-    background-color: #e2e2e2;
+    background-color: #e8e8e8;
 }
 
 .controls-group .toolbar-btn.btn-text {
@@ -390,21 +403,21 @@
 }
 
 .transpose-val {
-    font-weight: 700;
-    font-size: 1rem;
+    font-weight: 800;
+    font-size: var(--font-base);
     width: 30px;
     text-align: center;
-    color: #2563eb;
+    color: #000000;
 }
 
 .toolbar-btn-reset {
-    background: #fee2e2;
-    color: #dc2626;
+    background: #F2F2F2;
+    color: #000000;
     border-radius: 50%;
 }
 
 .toolbar-btn-reset:hover {
-    background: #fecaca;
+    background: #e8e8e8;
 }
 
 /* Auto Scroll Controls */
@@ -422,20 +435,20 @@
 }
 
 .scroll-speed-display {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #2563eb;
+    font-weight: 800;
+    font-size: var(--font-sm);
+    color: #000000;
     min-width: 28px;
     text-align: center;
 }
 
 .btn-stop {
-    background: #fee2e2;
-    color: #dc2626;
+    background: #F2F2F2;
+    color: #000000;
 }
 
 .btn-stop:hover {
-    background: #fecaca;
+    background: #e8e8e8;
 }
 
 .btn-scroll {
@@ -451,11 +464,11 @@
 /* 3. Main Layout */
 .main-layout {
     max-width: 1200px;
-    margin: 8px auto 24px auto;
-    padding: 0 24px;
+    margin: var(--space-md) auto var(--space-xl) auto;
+    padding: 0 var(--space-xl);
     display: grid;
     grid-template-columns: 1fr 280px;
-    gap: 16px;
+    gap: var(--space-base);
     align-items: start; /* חשוב - מיישר את הסיידבר לראש */
 }
 
@@ -464,7 +477,7 @@
     background: #F2F2F2;
     position: relative;
     min-height: 600px;
-    padding: 40px;
+    padding: var(--space-2xl);
     border-radius: 24px;
     width: 100%;
     box-sizing: border-box;
@@ -476,7 +489,7 @@
 }
 .lyrics-content {
     direction: rtl;
-    color: #1f2937;
+    color: #000000;
     white-space: pre-wrap;
     line-height: 2.2;
     font-size: var(--lyrics-font-size, 1.1rem);
@@ -488,15 +501,15 @@
 
 /* Chords Styling */
 ::ng-deep .chord-inline {
-    color: #2563eb;
-    font-weight: 700;
+    color: #000000;
+    font-weight: 800;
     font-size: 0.9em;
     display: inline-block;
     position: relative;
     vertical-align: top;
     top: -1.2em;
     margin-right: 0.2em;
-    background: #dbeafe;
+    background: #ddff53;
     padding: 2px 6px;
     border-radius: 4px;
     border: none;
@@ -505,16 +518,16 @@
 }
 
 ::ng-deep .chord-inline:hover {
-    color: #1d4ed8;
+    color: #000000;
     text-decoration: underline;
-    background: #bfdbfe;
+    background: #c8e84a;
 }
 
 ::ng-deep .chord-block {
-    color: #2563eb;
-    font-weight: 700;
+    color: #000000;
+    font-weight: 800;
     font-size: 1em;
-    background: #dbeafe;
+    background: #ddff53;
     padding: 2px 6px;
     border-radius: 4px;
     cursor: pointer;
@@ -523,13 +536,13 @@
 
 /* Dark Mode Chords */
 .lyrics-column.dark-mode ::ng-deep .chord-inline {
-    color: #60a5fa;
-    background: rgba(37, 99, 235, 0.2);
+    color: #000000;
+    background: #ddff53;
 }
 
 .lyrics-column.dark-mode ::ng-deep .chord-block {
-    color: #60a5fa;
-    background: rgba(37, 99, 235, 0.2);
+    color: #000000;
+    background: #ddff53;
 }
 
 /* Sidebar */
@@ -537,23 +550,23 @@
 .sidebar-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-md);
     position: sticky;
-    top: calc(2vh + 80px);
+    top: calc(8px + 80px);
 }
 
 .sidebar-card {
     background: #F2F2F2;
     border-radius: 20px;
-    padding: 20px;
+    padding: var(--space-lg);
 }
 
 .sidebar-card h3 {
-    margin: 0 0 12px 0;
+    margin: 0 0 var(--space-md) 0;
     font-family: 'Open Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #888888;
+    font-size: var(--font-xs);
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.45);
     text-align: right;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -565,7 +578,7 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .song-list li {
@@ -573,16 +586,16 @@
     background: #ffffff;
     border-radius: 12px;
     cursor: pointer;
-    color: #222222;
-    font-weight: 400;
-    font-size: 0.85rem;
+    color: #000000;
+    font-weight: 300;
+    font-size: var(--font-sm);
     text-align: right;
     transition: background-color 0.15s;
     border: none;
     direction: rtl;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-md);
 }
 
 .song-list li:hover {
@@ -594,7 +607,7 @@
 .song-list li.current {
     background: #ddff53;
     color: #000000;
-    font-weight: 600;
+    font-weight: 800;
     cursor: default;
     pointer-events: none;
 }
@@ -625,58 +638,42 @@
     color: #000000;
 }
 
-.rank {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #bbbbbb;
-    min-width: 16px;
-    text-align: center;
-    flex-shrink: 0;
-    background: none !important;
-    border-radius: 0 !important;
-    width: auto;
-    height: auto;
-    padding: 0;
-    line-height: 1;
-}
-
 .loading-small {
     text-align: center;
-    padding: 16px;
-    color: #6b7280;
-    font-size: 0.85rem;
+    padding: var(--space-lg);
+    color: rgba(0, 0, 0, 0.45);
+    font-size: var(--font-sm);
 }
 
 .no-songs {
     text-align: center;
-    color: #9ca3af;
-    font-style: italic;
-    padding: 12px;
+    color: rgba(0, 0, 0, 0.45);
+    padding: var(--space-md);
 }
 
 /* Popular Songs with Rank */
 .popular-card .song-list li {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-md);
 }
 
 .rank {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #1a1a1a;
+    background: #ddff53;
+    color: #000000;
     width: 24px;
     height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-xs);
+    font-weight: 800;
     flex-shrink: 0;
 }
 
 .popular-card h3 {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-base);
 }
 @keyframes spin {
     0% {
@@ -723,17 +720,17 @@
     }
 
     .main-title {
-        font-size: 1.8rem;
+        font-size: var(--font-2xl);
     }
 
     .artist-name {
-        font-size: 1.1rem;
+        font-size: var(--font-base);
     }
 
     .sticky-toolbar {
         grid-template-columns: 1fr;
         padding: 0 12px;
-        top: calc(2vh + 14px);
+        top: 70px;
     }
 
     .toolbar-content {
@@ -762,12 +759,12 @@
     /* Make text buttons more compact */
     .btn-text {
         padding: 0 8px;
-        font-size: 0.8rem;
+        font-size: var(--font-xs);
     }
 
     /* Easy mode button - shorter text on mobile */
     .btn-easy {
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
     }
 
     .btn-easy svg {
@@ -782,14 +779,14 @@
     }
 
     .transpose-val {
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
         width: 24px;
     }
 
     /* Auto scroll controls */
     .autoscroll-controls {
         display: flex;
-        gap: 4px;
+        gap: var(--space-xs);
     }
 
     .toolbar-btn-sm {
@@ -798,12 +795,12 @@
     }
 
     .scroll-speed-display {
-        font-size: 0.8rem;
+        font-size: var(--font-xs);
     }
 
     .main-layout {
         grid-template-columns: 1fr;
-        padding: 0 12px;
+        padding: 0 var(--space-md);
     }
 
     .song-list li {
@@ -811,7 +808,7 @@
     }
 
     .lyrics-column {
-        padding: 20px;
+        padding: var(--space-lg);
     }
 }
 
@@ -820,17 +817,17 @@
     .song-header {
         left: 8px;
         right: 8px;
-        border-radius: 16px;
+        border-radius: 20px;
     }
 
     .sticky-toolbar {
-        padding: 0 8px;
-        top: calc(2vh + 14px);
+        padding: 0 var(--space-sm);
+        top: 70px;
     }
 
     .toolbar-content {
         padding: 6px 8px;
-        gap: 4px;
+        gap: var(--space-xs);
     }
 
     .toolbar-btn {
@@ -840,28 +837,28 @@
 
     /* Hide text in "Auto Scroll" button on very small screens */
     .btn-scroll {
-        font-size: 0.7rem;
+        font-size: var(--font-xs);
     }
 
     /* Make the easy mode button icon-only on very small screens */
     .btn-easy {
         padding: 0 6px;
-        font-size: 0.7rem;
+        font-size: var(--font-xs);
     }
 
     .main-layout {
-        padding: 0 8px;
+        padding: 0 var(--space-sm);
     }
 
     .lyrics-column {
-        padding: 16px;
+        padding: var(--space-base);
         border-radius: 16px;
     }
 
     .copy-notification {
         top: 90px;
-        padding: 12px 20px;
-        font-size: 0.9rem;
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--font-sm);
     }
 }
 
@@ -873,18 +870,17 @@
     transform: translateX(-50%) translateY(-100px);
     background: #ddff53;
     color: #000;
-    padding: 16px 28px;
-    border-radius: 12px;
+    padding: var(--space-base) var(--space-xl);
+    border-radius: 999px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-weight: 700;
-    font-size: 1rem;
+    gap: var(--space-md);
+    font-weight: 800;
+    font-size: var(--font-base);
     opacity: 0;
     pointer-events: none;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     z-index: 10000;
-    box-shadow: 0 4px 20px rgba(221, 255, 83, 0.4);
 }
 
 .copy-notification.show {

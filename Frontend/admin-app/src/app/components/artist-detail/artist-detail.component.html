@@ -187,6 +187,15 @@
           <polyline points="9,18 15,12 9,6"/>
         </svg>
       </button>
+
+      <!-- מחוון נקודות -->
+      <div class="g3d-dots" *ngIf="g3dBaseCount > 0">
+        <button *ngFor="let d of g3dDots; let i = index"
+                class="g3d-dot"
+                [class.active]="i === g3dActiveIndex"
+                (click)="g3dGoTo(i)">
+        </button>
+      </div>
     </div>
   </div>
 

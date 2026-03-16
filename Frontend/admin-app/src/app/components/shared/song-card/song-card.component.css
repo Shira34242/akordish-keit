@@ -1,7 +1,7 @@
 :host {
     display: block;
     flex-shrink: 0;
-    min-width: 260px;
+    min-width: 220px;
 }
 
 /* ========================================
@@ -9,13 +9,13 @@
 ======================================== */
 .song-card {
     background: #F2F2F2;
-    border-radius: 20px;
+    border-radius: 16px;
     aspect-ratio: 4 / 2;
-    padding: 16px;
+    padding: 10px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     cursor: pointer;
     transition: background 0.15s;
     overflow: hidden;
@@ -67,7 +67,7 @@
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
     font-weight: 300;
-    font-size: 0.9rem;
+    font-size: var(--font-xs);
     color: rgba(0, 0, 0, 0.4);
 }
 
@@ -76,7 +76,7 @@
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: var(--font-base);
     color: #000000;
     line-height: 1.1;
     overflow: hidden;
@@ -91,7 +91,7 @@
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
     font-weight: 300;
-    font-size: 1rem;
+    font-size: var(--font-sm);
     color: rgba(0, 0, 0, 0.45);
 }
 

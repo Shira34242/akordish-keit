@@ -61,15 +61,18 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   // ========== 3D Gallery ==========
   private g3dItems: { el: HTMLElement }[] = [];
   private g3dScrollX = 0;
-  private g3dCardW = 300;
-  private g3dStep = 328;
+  private g3dCardW = 290;
+  private g3dStep = 298;
   private g3dTrack = 0;
   private g3dVwHalf = 0;
   private g3dTouchStartX = 0;
+  g3dBaseCount = 0;
+  g3dActiveIndex = 0;
 
   private g3dOnWheel = (e: WheelEvent): void => {
     e.preventDefault();
-    this.g3dScrollX = this.g3dMod(this.g3dScrollX + e.deltaY * 0.7, this.g3dTrack);
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    this.g3dScrollX = this.g3dMod(this.g3dScrollX + delta * 0.7, this.g3dTrack);
     this.g3dUpdateTransforms();
   };
 
@@ -143,8 +146,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg) return;
-    const top = window.innerHeight * 0.02;
-    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    this.fullHeroHeight = window.innerHeight - 16; /* top: 8px + bottom: 8px */
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -169,7 +171,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private shrinkHero(): void {
     const bg = this.artistHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 55);
+    const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 
@@ -210,7 +212,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private g3dUpdateTransforms(): void {
-    if (this.g3dTrack === 0) return;
+    if (this.g3dTrack === 0 || this.g3dVwHalf === 0) return;
     const half = this.g3dTrack / 2;
     for (let i = 0; i < this.g3dItems.length; i++) {
       let pos = i * this.g3dStep - this.g3dScrollX;
@@ -223,16 +225,23 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       const blur = Math.abs(norm) < 0.35 ? 0 : Math.pow(Math.abs(norm), 1.2) * 5;
       this.g3dItems[i].el.style.filter = blur > 0 ? `blur(${blur.toFixed(2)}px)` : '';
     }
+    if (this.g3dBaseCount > 0) {
+      const activeIdx = this.g3dMod(Math.round(this.g3dScrollX / this.g3dStep), this.g3dBaseCount);
+      if (activeIdx !== this.g3dActiveIndex) {
+        this.g3dActiveIndex = activeIdx;
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   private g3dHandleResize(): void {
     const section = this.g3dSectionRef?.nativeElement;
-    if (section) this.g3dVwHalf = section.clientWidth * 0.5;
+    if (section) this.g3dVwHalf = section.clientWidth * 0.5 || window.innerWidth * 0.5;
     const sample = this.g3dItems[0]?.el;
     if (sample) {
       const rect = sample.getBoundingClientRect();
       this.g3dCardW = rect.width || this.g3dCardW;
-      this.g3dStep = this.g3dCardW + 28;
+      this.g3dStep = this.g3dCardW + 8;
       this.g3dTrack = this.g3dItems.length * this.g3dStep;
     }
     this.g3dUpdateTransforms();
@@ -244,8 +253,15 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const cardsEl = this.g3dCardsElRef?.nativeElement;
     if (!wrapper || !section || !cardsEl) return;
 
+    // נקה listener-ים ישנים לפני הוספת חדשים
+    section.removeEventListener('wheel', this.g3dOnWheel);
+    section.removeEventListener('touchstart', this.g3dOnTouchStart);
+    section.removeEventListener('touchmove', this.g3dOnTouchMove);
+
     const baseItems = this.galleryItems;
     if (baseItems.length === 0) return;
+    this.g3dBaseCount = baseItems.length;
+    this.g3dActiveIndex = 0;
 
     // לפחות 6 פריטים על ידי כפל
     let items = [...baseItems];
@@ -315,23 +331,25 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       this.g3dItems.push({ el: card });
     });
 
-    // מדידה
-    const sample = this.g3dItems[0]?.el;
-    if (!sample) return;
-    const rect = sample.getBoundingClientRect();
-    this.g3dCardW = rect.width || 300;
-    this.g3dStep = this.g3dCardW + 28;
-    this.g3dTrack = this.g3dItems.length * this.g3dStep;
-    this.g3dVwHalf = section.clientWidth * 0.5;
-
     // רישום אירועי wheel ו-touch
     section.addEventListener('wheel', this.g3dOnWheel, { passive: false });
     section.addEventListener('touchstart', this.g3dOnTouchStart, { passive: true });
     section.addEventListener('touchmove', this.g3dOnTouchMove, { passive: false });
 
-    // רנדור ראשוני
-    this.g3dScrollX = 0;
-    this.g3dUpdateTransforms();
+    // מדידה ורנדור ראשוני — setTimeout לוודא שה-layout הסתיים לפני המדידה
+    const initMeasure = () => {
+      const sample = this.g3dItems[0]?.el;
+      if (!sample) return;
+      const sectionW = section.clientWidth || window.innerWidth;
+      this.g3dVwHalf = sectionW * 0.5;
+      const rect = sample.getBoundingClientRect();
+      this.g3dCardW = rect.width || 290;
+      this.g3dStep = this.g3dCardW + 8;
+      this.g3dTrack = this.g3dItems.length * this.g3dStep;
+      this.g3dScrollX = 0;
+      this.g3dUpdateTransforms();
+    };
+    setTimeout(initMeasure, 150);
   }
 
   // ============================================================
@@ -346,6 +364,15 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   g3dArrowNext(): void {
     this.g3dScrollX = this.g3dMod(this.g3dScrollX + this.g3dStep, this.g3dTrack);
     this.g3dUpdateTransforms();
+  }
+
+  g3dGoTo(index: number): void {
+    this.g3dScrollX = this.g3dMod(index * this.g3dStep, this.g3dTrack);
+    this.g3dUpdateTransforms();
+  }
+
+  get g3dDots(): number[] {
+    return this.g3dBaseCount > 0 ? Array(this.g3dBaseCount).fill(0) : [];
   }
 
   private getYouTubeThumbnail(videoUrl: string): string {

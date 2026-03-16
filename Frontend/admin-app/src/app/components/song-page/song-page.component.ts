@@ -191,7 +191,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         const content = this.songHeaderContent?.nativeElement;
         if (!bg || !content) return;
         const contentRect = content.getBoundingClientRect();
-        const boxTop = window.innerHeight * 0.02; // matches CSS top: 2vh
+        const boxTop = 8; // matches CSS top: 8px
         const h = Math.round(contentRect.bottom - boxTop + window.scrollY);
         this.fullHeaderHeight = h;
         bg.style.height = h + 'px';
@@ -201,10 +201,27 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     private shrinkHeader() {
         const bg = this.songHeaderBg?.nativeElement;
         if (!bg || this.fullHeaderHeight === 0) return;
-        // מינימום = גובה הכותרת העליונה (נשאר כרקע לניווט)
-        const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+
+        const minHeight = 56;
         const newHeight = Math.max(minHeight, this.fullHeaderHeight - window.scrollY);
         bg.style.height = newHeight + 'px';
+
+        // fade תוכן ב-160px הראשונים של הגלילה
+        const content = this.songHeaderContent?.nativeElement;
+        if (content) {
+            const fadeProgress = Math.min(1, window.scrollY / 160);
+            content.style.opacity = String(1 - fadeProgress);
+        }
+
+        // overlay אפור כהה — מתגבר ככל שהתיבה מתכווצת
+        const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+        if (collapseOverlay) {
+            const collapseRange = this.fullHeaderHeight - minHeight;
+            const collapseProgress = collapseRange > 0
+                ? Math.min(1, (this.fullHeaderHeight - newHeight) / collapseRange)
+                : 0;
+            collapseOverlay.style.opacity = String(collapseProgress);
+        }
     }
 
     transpose(direction: number) {
