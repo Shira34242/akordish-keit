@@ -118,7 +118,7 @@ export class TeachersListComponent implements OnInit {
   }
 
   viewTeacher(id: number): void {
-    this.router.navigate(['/admin/teachers/view', id]);
+    this.router.navigate(['/teacher', id]);
   }
 
   approveTeacher(id: number): void {
