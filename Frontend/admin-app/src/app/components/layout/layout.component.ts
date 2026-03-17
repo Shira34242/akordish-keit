@@ -9,6 +9,7 @@ import { SongService } from '../../services/song.service';
 import { ModalService } from '../../services/modal.service';
 import { SessionTimeoutService } from '../../services/session-timeout.service';
 import { ArtistPageService } from '../../services/artist-page.service';
+import { ContentPageService } from '../../services/content-page.service';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthModalComponent } from '../auth/auth-modal.component';
 import { AdditionalDetailsModalComponent, UserType } from '../auth/additional-details-modal.component';
@@ -44,6 +45,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   fabOnYellow: boolean = false;
   adminEditTarget: { label: string; url: string } | null = null;
   isArtistPage = false;
+  isArticlePage = false;
+  private currentArticleId: number | null = null;
   private lastScrollY: number = 0;
 
   @HostListener('window:scroll')
@@ -87,7 +90,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private socialAuthService: SocialAuthService,
     private modalService: ModalService,
     private sessionTimeoutService: SessionTimeoutService,
-    private artistPageService: ArtistPageService
+    private artistPageService: ArtistPageService,
+    private contentPageService: ContentPageService
   ) { }
 
   ngOnInit() {
@@ -123,6 +127,11 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     // עדכון כפתור עריכה גם בטעינה הראשונית
     this.updateAdminEditTarget(this.router.url);
+
+    // מעקב אחרי מזהה כתבה נוכחית
+    this.contentPageService.currentArticleId$.subscribe(id => {
+      this.currentArticleId = id;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -154,18 +163,35 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     const cleanUrl = url.split('?')[0];
     const artistMatch = cleanUrl.match(/^\/artist\/(\w+)/);
     const teacherMatch = cleanUrl.match(/^\/teacher\/(\w+)/);
+    const newsMatch = cleanUrl.match(/^\/news\/.+/);
+    const blogMatch = cleanUrl.match(/^\/blog\/.+/);
+    const songMatch = cleanUrl.match(/^\/song\/(\d+)/);
+
+    this.isArtistPage = false;
+    this.isArticlePage = false;
 
     if (artistMatch) {
       this.isArtistPage = true;
       this.adminEditTarget = { label: 'עריכת דף אמן', url: '' };
     } else if (teacherMatch) {
-      this.isArtistPage = false;
       this.adminEditTarget = { label: 'עריכת דף מורה', url: `/admin/teachers/edit/${teacherMatch[1]}` };
     } else if (cleanUrl === '/professionals') {
-      this.isArtistPage = false;
       this.adminEditTarget = { label: 'ניהול בעלי מקצוע', url: '/admin/service-providers' };
+    } else if (newsMatch) {
+      this.isArticlePage = true;
+      this.adminEditTarget = { label: 'עריכת כתבה', url: '' };
+    } else if (blogMatch) {
+      this.isArticlePage = true;
+      this.adminEditTarget = { label: 'עריכת תוכן', url: '' };
+    } else if (cleanUrl === '/music-news') {
+      this.adminEditTarget = { label: 'ניהול חדשות', url: '/admin/content/articles' };
+    } else if (cleanUrl === '/articles') {
+      this.adminEditTarget = { label: 'ניהול תוכן', url: '/admin/content/articles' };
+    } else if (cleanUrl === '/teachers') {
+      this.adminEditTarget = { label: 'ניהול מורים', url: '/admin/teachers' };
+    } else if (songMatch) {
+      this.adminEditTarget = { label: 'עריכת שיר', url: '/admin/content/songs' };
     } else {
-      this.isArtistPage = false;
       this.adminEditTarget = null;
     }
   }
@@ -179,6 +205,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.closeFabMenu();
     if (this.isArtistPage) {
       this.artistPageService.triggerEdit();
+    } else if (this.isArticlePage) {
+      if (this.currentArticleId) {
+        this.router.navigate([`/admin/content/articles/edit/${this.currentArticleId}`]);
+      } else {
+        this.router.navigate(['/admin/content/articles']);
+      }
     } else {
       this.router.navigate([this.adminEditTarget.url]);
     }

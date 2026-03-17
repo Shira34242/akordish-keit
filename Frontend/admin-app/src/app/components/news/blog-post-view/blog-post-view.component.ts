@@ -7,6 +7,7 @@ import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
 import { LikedContentService } from '../../../services/liked-content.service';
+import { ContentPageService } from '../../../services/content-page.service';
 
 @Component({
   
@@ -23,6 +24,11 @@ export class BlogPostViewComponent implements OnInit {
   private readonly articleService = inject(ArticleService);
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly contentPageService = inject(ContentPageService);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
+  }
 
   article: Article | null = null;
   loading = true;
@@ -43,6 +49,7 @@ export class BlogPostViewComponent implements OnInit {
       .subscribe({
         next: (article) => {
           this.article = article;
+          this.contentPageService.setCurrentArticle(article.id);
 
           // Increment view count
           this.articleService.incrementView(article.id)
