@@ -37,6 +37,24 @@
 .image-preview { margin-top: 12px; max-width: 360px; border-radius: 16px; overflow: hidden; }
 .image-preview img { width: 100%; height: auto; display: block; }
 
+/* Artist Tagging Dropdown */
+.artists-selection { display: flex; flex-direction: column; gap: 10px; }
+.custom-dropdown { position: relative; width: 100%; }
+.dropdown-input { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: 2px solid #000; border-radius: 999px; cursor: pointer; background: #fff; }
+.dropdown-search { flex: 1; border: none; outline: none; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: 0.9rem; color: #000; background: transparent; }
+.dropdown-arrow { font-size: 0.8rem; color: #000; flex-shrink: 0; }
+.dropdown-list { position: absolute; top: calc(100% + 4px); right: 0; left: 0; background: #fff; border: 2px solid #000; border-radius: 16px; max-height: 240px; overflow-y: auto; z-index: 100; }
+.dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; transition: background 0.15s; }
+.dropdown-item:hover, .dropdown-item.selected { background: #F2F2F2; }
+.artist-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.artist-name { font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: 0.9rem; color: #000; }
+.no-results { padding: 12px 16px; font-family: 'Open Sans', sans-serif; font-weight: 300; color: #000; opacity: 0.5; font-size: 0.9rem; }
+.selected-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.artist-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; background: #ddff53; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 0.82rem; cursor: pointer; transition: background 0.15s; }
+.artist-tag:hover { background: #c8e840; }
+.remove-icon { font-size: 1rem; line-height: 1; }
+.no-artists { text-align: center; padding: 20px; font-family: 'Open Sans', sans-serif; font-weight: 300; color: #000; opacity: 0.5; }
+
 .form-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 20px 24px; background: #ffffff; border-radius: 24px; position: sticky; bottom: 16px; z-index: 10; }
 
 .btn-primary, .btn-secondary { padding: 12px 32px; border: none; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: background 0.15s ease; min-width: 120px; }

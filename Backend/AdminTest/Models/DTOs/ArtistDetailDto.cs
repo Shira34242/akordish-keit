@@ -21,6 +21,11 @@ public class ArtistDetailDto
     public ArtistStatus Status { get; set; }
     public int? UserId { get; set; }
 
+    // באנר הופעה
+    public string? PerformanceImageUrl { get; set; }
+    public string? PerformanceTicketUrl { get; set; }
+    public bool PerformanceIsActive { get; set; }
+
     // מדיה
     public List<ArtistGalleryImageDto> GalleryImages { get; set; } = new();
     public List<ArtistVideoDto> Videos { get; set; } = new();

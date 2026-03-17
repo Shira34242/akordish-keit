@@ -27,6 +27,11 @@ export interface Artist {
   videos: ArtistVideo[];                // וידאו מוטמע (משלם)
   socialLinks: SocialLink[];            // רשתות חברתיות
 
+  // באנר הופעה
+  performanceImageUrl?: string;
+  performanceTicketUrl?: string;
+  performanceIsActive: boolean;
+
   // סטטיסטיקות
   songCount: number;               // כמות שירים
   articleCount: number;            // כמות כתבות
@@ -98,13 +103,14 @@ export enum ArtistStatus {
  * פלטפורמות רשתות חברתיות
  */
 export enum SocialPlatform {
-  Facebook = 1,
-  Instagram = 2,
+  Instagram = 1,
+  Facebook = 2,
   YouTube = 3,
-  Twitter = 4,
-  TikTok = 5,
-  Spotify = 6,
-  Website = 7
+  TikTok = 4,
+  Website = 5,
+  Twitter = 6,
+  Spotify = 7,
+  Zing = 8
 }
 
 // ========================================
@@ -125,6 +131,9 @@ export interface UpdateArtistDto {
   websiteUrl?: string;
   status?: ArtistStatus;           // ניהול סטטוס (Admin)
   isPremium?: boolean;             // חשבון משלם (Admin)
+  performanceImageUrl?: string;
+  performanceTicketUrl?: string;
+  performanceIsActive?: boolean;
   socialLinks?: SocialLink[];      // קישורי רשתות חברתיות
   galleryImages?: AddGalleryImageDto[];  // תמונות גלריה
   videos?: AddVideoDto[];          // סרטונים

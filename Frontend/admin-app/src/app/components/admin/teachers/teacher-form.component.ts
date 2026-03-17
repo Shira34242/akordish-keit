@@ -12,11 +12,12 @@ import { UserListDto } from '../../../models/user.model';
 import { TeachingLanguage, getTeachingLanguageOptions, hasLanguage, toggleLanguage } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions, hasAudience, toggleAudience } from '../../../models/target-audience.enum';
 import { UserSelectionModalComponent } from './user-selection-modal.component';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-teacher-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, UserSelectionModalComponent],
+  imports: [CommonModule, FormsModule, UserSelectionModalComponent, FileUploadInputComponent],
   templateUrl: './teacher-form.component.html',
   styleUrls: ['./teacher-form.component.css']
 })

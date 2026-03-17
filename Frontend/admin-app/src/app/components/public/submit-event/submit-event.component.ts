@@ -6,11 +6,12 @@ import { EventService } from '../../../services/admin/event.service';
 import { ArtistService } from '../../../services/artist.service';
 import { CreateEventDto } from '../../../models/event.model';
 import { ArtistListDto } from '../../../models/artist.model';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-submit-event',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './submit-event.component.html',
   styleUrls: ['./submit-event.component.css']
 })

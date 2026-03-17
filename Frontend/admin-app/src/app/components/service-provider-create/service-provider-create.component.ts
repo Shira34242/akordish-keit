@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -26,7 +27,7 @@ interface Category {
 @Component({
   selector: 'app-service-provider-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './service-provider-create.component.html',
   styleUrls: ['./service-provider-create.component.css']
 })

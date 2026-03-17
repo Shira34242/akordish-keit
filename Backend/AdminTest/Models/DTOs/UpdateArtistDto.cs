@@ -17,6 +17,12 @@ public class UpdateArtistDto
     public string? WebsiteUrl { get; set; }
     public ArtistStatus? Status { get; set; }        // ניהול סטטוס (Admin)
     public bool? IsPremium { get; set; }             // חשבון משלם (Admin)
+
+    // באנר הופעה
+    public string? PerformanceImageUrl { get; set; }
+    public string? PerformanceTicketUrl { get; set; }
+    public bool? PerformanceIsActive { get; set; }
+
     public List<SocialLinkDto>? SocialLinks { get; set; }
     public List<AddGalleryImageDto>? GalleryImages { get; set; }
     public List<AddVideoDto>? Videos { get; set; }

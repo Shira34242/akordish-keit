@@ -3,21 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EventService } from '../../../../services/admin/event.service';
-import { MediaService } from '../../../../services/admin/media.service';
 import { ArtistService } from '../../../../services/artist.service';
 import { CreateEventDto, UpdateEventDto, Event } from '../../../../models/event.model';
 import { ArtistListDto } from '../../../../models/artist.model';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './event-form.component.html',
   styleUrls: ['./event-form.component.css']
 })
 export class EventFormComponent implements OnInit {
   private readonly eventService = inject(EventService);
-  private readonly mediaService = inject(MediaService);
   private readonly artistService = inject(ArtistService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -26,7 +25,6 @@ export class EventFormComponent implements OnInit {
   eventId?: number;
   loading = false;
   saving = false;
-  uploadingImage = false;
   loadingArtists = false;
 
   // רשימת כל האמנים זמינים במערכת
@@ -122,23 +120,6 @@ export class EventFormComponent implements OnInit {
     return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
   }
 
-  onImageFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.uploadingImage = true;
-      this.mediaService.uploadMedia(file).subscribe({
-        next: (response) => {
-          this.event.imageUrl = response.url;
-          this.uploadingImage = false;
-        },
-        error: (error) => {
-          console.error('Error uploading image:', error);
-          alert('שגיאה בהעלאת התמונה');
-          this.uploadingImage = false;
-        }
-      });
-    }
-  }
 
   toggleArtistSelection(artistId: number): void {
     const index = this.selectedArtistIds.indexOf(artistId);

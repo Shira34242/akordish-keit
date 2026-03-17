@@ -27,7 +27,7 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .HasMaxLength(300);
 
         builder.Property(e => e.Biography)
-               .HasMaxLength(2000);
+               .HasMaxLength(3000);
 
         builder.Property(e => e.ImageUrl)
                .HasMaxLength(500);
@@ -71,6 +71,17 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .HasDefaultValue(ProfileTier.Free);
 
         builder.Property(e => e.IsPrimaryProfile)
+               .IsRequired()
+               .HasDefaultValue(false);
+
+        // Performance banner properties
+        builder.Property(e => e.PerformanceImageUrl)
+               .HasMaxLength(500);
+
+        builder.Property(e => e.PerformanceTicketUrl)
+               .HasMaxLength(500);
+
+        builder.Property(e => e.PerformanceIsActive)
                .IsRequired()
                .HasDefaultValue(false);
 

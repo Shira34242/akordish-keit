@@ -74,12 +74,10 @@
         </div>
 
         <div class="form-group">
-          <label for="logoUrl">כתובת לוגו</label>
-          <input
-            type="url"
-            id="logoUrl"
-            formControlName="logoUrl"
-            class="form-control"
+          <label>לוגו</label>
+          <app-file-upload-input
+            [url]="clientForm.get('logoUrl')?.value || ''"
+            (urlChange)="clientForm.patchValue({logoUrl: $event})"
             placeholder="https://example.com/logo.png"
           />
         </div>

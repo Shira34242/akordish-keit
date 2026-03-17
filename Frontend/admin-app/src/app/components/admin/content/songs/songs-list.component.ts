@@ -112,6 +112,21 @@ export class SongsListComponent implements OnInit {
     });
   }
 
+  duplicateSong(song: SongDto): void {
+    if (confirm(`האם לשכפל את השיר "${song.title}"?`)) {
+      this.songService.duplicateSong(song.id).subscribe({
+        next: (duplicate) => {
+          alert(`השיר "${duplicate.title}" שוכפל בהצלחה!`);
+          this.loadSongs();
+        },
+        error: (err) => {
+          console.error('שגיאה בשכפול שיר:', err);
+          alert('שגיאה בשכפול השיר');
+        }
+      });
+    }
+  }
+
   async deleteSong(song: SongDto): Promise<void> {
     if (confirm(`האם אתה בטוח שברצונך למחוק את "${song.title}"?`)) {
       this.songService.deleteSong(song.id).subscribe({

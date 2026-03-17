@@ -205,11 +205,8 @@
 
           <div class="form-group">
             <label for="profileImageUrl">תמונת פרופיל (URL)</label>
-            <input
-              type="url"
-              id="profileImageUrl"
-              [(ngModel)]="profileImageUrl"
-              name="profileImageUrl"
+            <app-file-upload-input
+              [(url)]="profileImageUrl"
               placeholder="https://example.com/image.jpg"
             />
           </div>
@@ -240,11 +237,10 @@
             <label>גלריית תמונות</label>
             <div class="gallery-manager">
               <div class="gallery-add">
-                <input
-                  type="url"
-                  [(ngModel)]="newGalleryImage.imageUrl"
-                  [ngModelOptions]="{standalone: true}"
+                <app-file-upload-input
+                  [(url)]="newGalleryImage.imageUrl"
                   placeholder="URL של תמונה"
+                  [showPreview]="false"
                 />
                 <input
                   type="text"

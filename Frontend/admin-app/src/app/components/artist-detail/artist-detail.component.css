@@ -310,6 +310,44 @@
 }
 
 /* ========================================
+   Performance Banner
+======================================== */
+.performance-banner {
+  display: block;
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.performance-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  transition: transform 0.3s ease;
+}
+
+.performance-banner:hover .performance-banner-img {
+  transform: scale(1.02);
+}
+
+.performance-ticket-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: #ddff53;
+  color: #000;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 10px 22px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* ========================================
    Bio Card
 ======================================== */
 .bio-card {

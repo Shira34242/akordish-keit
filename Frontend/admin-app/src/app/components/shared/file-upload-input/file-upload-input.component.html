@@ -1,0 +1,39 @@
+<div class="fui-wrapper">
+  <div class="fui-row">
+    <input
+      type="text"
+      class="fui-url-input form-input"
+      [value]="url || ''"
+      (input)="onUrlInput($event)"
+      [placeholder]="placeholder"
+    />
+    <button
+      type="button"
+      class="fui-pin-btn"
+      (click)="fileInput.click()"
+      [disabled]="uploading"
+      title="צרף קובץ"
+    >
+      <span class="material-icons">{{ uploading ? 'hourglass_empty' : 'attach_file' }}</span>
+    </button>
+    <input
+      #fileInput
+      type="file"
+      [accept]="accept"
+      (change)="onFileSelected($event)"
+      style="display: none"
+    />
+  </div>
+
+  <div *ngIf="uploading" class="fui-uploading">
+    <span class="material-icons fui-spin">hourglass_empty</span>
+    מעלה קובץ...
+  </div>
+
+  <div *ngIf="url && isImage(url) && showPreview && !uploading" class="fui-preview">
+    <img [src]="url" alt="preview" />
+    <button type="button" class="fui-clear-btn" (click)="clear()" title="הסר">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+</div>

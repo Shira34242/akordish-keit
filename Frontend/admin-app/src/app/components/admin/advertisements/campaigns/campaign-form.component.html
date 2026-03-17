@@ -63,80 +63,25 @@
 
         <!-- Media Upload -->
         <div class="form-group">
-          <label for="mediaFile">מדיה לדסקטופ (תמונה/וידאו/GIF)</label>
-          <div class="file-upload-section">
-            <input
-              type="file"
-              id="mediaFile"
-              (change)="onMediaFileSelected($event, false)"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
-              class="file-input"
-              #mediaFileInput
-            />
-            <button type="button" class="btn-upload" (click)="mediaFileInput.click()">
-              בחר קובץ
-            </button>
-            <span class="file-info" *ngIf="mediaFile">{{ mediaFile.name }} ({{ (mediaFile.size / 1024 / 1024).toFixed(2) }}MB)</span>
-            <span class="upload-hint" *ngIf="!mediaFile && !mediaPreviewUrl">JPG, PNG, GIF, WEBP, MP4, WEBM - עד 10MB</span>
-          </div>
-
-          <!-- Preview -->
-          <div class="media-preview" *ngIf="mediaPreviewUrl">
-            <button type="button" class="btn-remove-preview" (click)="removeMedia(false)">&times;</button>
-            <img *ngIf="getMediaType(mediaPreviewUrl) === 'image'" [src]="mediaPreviewUrl" alt="Preview" />
-            <video *ngIf="getMediaType(mediaPreviewUrl) === 'video'" [src]="mediaPreviewUrl" controls></video>
-          </div>
-
-          <!-- Alternative: Manual URL input -->
-          <div *ngIf="!mediaFile && !mediaPreviewUrl" style="margin-top: 1rem;">
-            <label for="mediaUrl">כתובת URL ידנית  </label> 
-            
-            <input
-              type="url"
-              id="mediaUrl"
-              formControlName="mediaUrl"
-              class="form-control"
-              placeholder="https://example.com/banner.jpg"
-            />
-          </div>
+          <label>מדיה לדסקטופ (תמונה/וידאו/GIF)</label>
+          <app-file-upload-input
+            [url]="campaignForm.get('mediaUrl')?.value || ''"
+            (urlChange)="campaignForm.patchValue({mediaUrl: $event})"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            [showPreview]="false"
+            placeholder="https://example.com/banner.jpg"
+          />
         </div>
 
         <div class="form-group">
-          <label for="mobileMediaFile">מדיה למובייל (תמונה/וידאו/GIF)</label>
-          <div class="file-upload-section">
-            <input
-              type="file"
-              id="mobileMediaFile"
-              (change)="onMediaFileSelected($event, true)"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
-              class="file-input"
-              #mobileMediaFileInput
-            />
-            <button type="button" class="btn-upload" (click)="mobileMediaFileInput.click()">
-              בחר קובץ
-            </button>
-            <span class="file-info" *ngIf="mobileMediaFile">{{ mobileMediaFile.name }} ({{ (mobileMediaFile.size / 1024 / 1024).toFixed(2) }}MB)</span>
-            <span class="upload-hint" *ngIf="!mobileMediaFile && !mobileMediaPreviewUrl">JPG, PNG, GIF, WEBP, MP4, WEBM - עד 10MB</span>
-          </div>
-
-          <!-- Preview -->
-          <div class="media-preview" *ngIf="mobileMediaPreviewUrl">
-            <button type="button" class="btn-remove-preview" (click)="removeMedia(true)">&times;</button>
-            <img *ngIf="getMediaType(mobileMediaPreviewUrl) === 'image'" [src]="mobileMediaPreviewUrl" alt="Mobile Preview" />
-            <video *ngIf="getMediaType(mobileMediaPreviewUrl) === 'video'" [src]="mobileMediaPreviewUrl" controls></video>
-          </div>
-
-          <!-- Alternative: Manual URL input -->
-          <div *ngIf="!mobileMediaFile && !mobileMediaPreviewUrl" style="margin-top: 1rem;">
-            <label for="mobileMediaUrl">כתובת URL ידנית  </label>
-            <input
-              type="url"
-              id="mobileMediaUrl"
-              formControlName="mobileMediaUrl"
-              class="form-control"
-              placeholder="https://example.com/mobile-banner.jpg"
-            />
-          </div>
+          <label>מדיה למובייל (תמונה/וידאו/GIF)</label>
+          <app-file-upload-input
+            [url]="campaignForm.get('mobileMediaUrl')?.value || ''"
+            (urlChange)="campaignForm.patchValue({mobileMediaUrl: $event})"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            [showPreview]="false"
+            placeholder="https://example.com/mobile-banner.jpg"
+          />
         </div>
 
         <!-- Target URL -->
@@ -262,9 +207,8 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-cancel" (click)="onCancel()">ביטול</button>
-        <button type="submit" class="btn btn-save" [disabled]="campaignForm.invalid || uploadingMedia || uploadingMobileMedia || availabilityError || checkingAvailability">
-          <span *ngIf="!uploadingMedia && !uploadingMobileMedia">{{ isEditMode ? 'שמור שינויים' : 'צור קמפיין' }}</span>
-          <span *ngIf="uploadingMedia || uploadingMobileMedia">מעלה קבצים...</span>
+        <button type="submit" class="btn btn-save" [disabled]="campaignForm.invalid || availabilityError || checkingAvailability">
+          {{ isEditMode ? 'שמור שינויים' : 'צור קמפיין' }}
         </button>
       </div>
     </form>

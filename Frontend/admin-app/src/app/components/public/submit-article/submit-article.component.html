@@ -146,12 +146,11 @@
         </h2>
 
         <div class="form-group">
-          <label class="form-label">תמונת קאבר (URL)</label>
-          <input type="url" class="form-input" [(ngModel)]="article.featuredImageUrl" name="featuredImageUrl"
-            placeholder="https://...">
-          <div class="image-preview" *ngIf="article.featuredImageUrl">
-            <img [src]="article.featuredImageUrl" alt="תצוגה מקדימה">
-          </div>
+          <label class="form-label">תמונת קאבר</label>
+          <app-file-upload-input
+            [(url)]="article.featuredImageUrl"
+            placeholder="https://..."
+          />
         </div>
 
         <div class="form-row-2">
@@ -190,8 +189,11 @@
           <div class="form-row-2">
             <div class="form-group">
               <label class="form-label">קישור לתמונה</label>
-              <input type="url" class="form-input" [(ngModel)]="newGalleryImage.imageUrl" name="newGalleryImageUrl"
-                placeholder="https://...">
+              <app-file-upload-input
+                [(url)]="newGalleryImage.imageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
             </div>
             <div class="form-group">
               <label class="form-label">כיתוב (אופציונלי)</label>

@@ -208,6 +208,9 @@ public class ArtistsController : ControllerBase
                 IsPremium = artist.IsPremium,
                 Status = artist.Status,
                 UserId = artist.UserId,
+                PerformanceImageUrl = artist.PerformanceImageUrl,
+                PerformanceTicketUrl = artist.PerformanceTicketUrl,
+                PerformanceIsActive = artist.PerformanceIsActive,
                 GalleryImages = artist.GalleryImages.Select(gi => new ArtistGalleryImageDto
                 {
                     Id = gi.Id,
@@ -398,6 +401,12 @@ public class ArtistsController : ControllerBase
             artist.BannerImageUrl = dto.BannerImageUrl;
             artist.BannerGifUrl = dto.BannerGifUrl;  // Admin יכול לעדכן לכולם
             artist.WebsiteUrl = dto.WebsiteUrl;
+
+            // עדכון באנר הופעה
+            artist.PerformanceImageUrl = dto.PerformanceImageUrl;
+            artist.PerformanceTicketUrl = dto.PerformanceTicketUrl;
+            if (dto.PerformanceIsActive.HasValue)
+                artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
 
             // רק Admin יכול לעדכן סטטוס ו-Premium
             if (isAdmin)
@@ -844,6 +853,9 @@ public class ArtistsController : ControllerBase
                     IsPremium = a.IsPremium,
                     Status = a.Status,
                     UserId = a.UserId,
+                    PerformanceImageUrl = a.PerformanceImageUrl,
+                    PerformanceTicketUrl = a.PerformanceTicketUrl,
+                    PerformanceIsActive = a.PerformanceIsActive,
                     GalleryImages = a.GalleryImages.Select(gi => new ArtistGalleryImageDto
                     {
                         Id = gi.Id,
@@ -919,7 +931,10 @@ public class ArtistsController : ControllerBase
                 IsVerified = false,
                 DisplayOrder = 999,
                 CreatedAt = DateTime.UtcNow,
-                IsDeleted = false
+                IsDeleted = false,
+                PerformanceImageUrl = dto.PerformanceImageUrl,
+                PerformanceTicketUrl = dto.PerformanceTicketUrl,
+                PerformanceIsActive = dto.PerformanceIsActive ?? false
             };
 
             _context.Artists.Add(artist);
@@ -989,6 +1004,9 @@ public class ArtistsController : ControllerBase
                     IsPremium = a.IsPremium,
                     Status = a.Status,
                     UserId = a.UserId,
+                    PerformanceImageUrl = a.PerformanceImageUrl,
+                    PerformanceTicketUrl = a.PerformanceTicketUrl,
+                    PerformanceIsActive = a.PerformanceIsActive,
                     GalleryImages = a.GalleryImages.Select(gi => new ArtistGalleryImageDto
                     {
                         Id = gi.Id,
@@ -1149,6 +1167,9 @@ public class ArtistsController : ControllerBase
                     IsPremium = a.IsPremium,
                     Status = a.Status,
                     UserId = a.UserId,
+                    PerformanceImageUrl = a.PerformanceImageUrl,
+                    PerformanceTicketUrl = a.PerformanceTicketUrl,
+                    PerformanceIsActive = a.PerformanceIsActive,
                     GalleryImages = a.GalleryImages.Select(gi => new ArtistGalleryImageDto
                     {
                         Id = gi.Id,

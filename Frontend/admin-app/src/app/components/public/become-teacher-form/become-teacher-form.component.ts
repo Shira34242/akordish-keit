@@ -9,11 +9,12 @@ import { ProfileStatus, CreateGalleryImageDto } from '../../../models/music-serv
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { AuthService } from '../../../services/auth.service';
+import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-become-teacher-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './become-teacher-form.component.html',
   styleUrls: ['./become-teacher-form.component.css']
 })

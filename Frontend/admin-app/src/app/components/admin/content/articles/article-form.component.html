@@ -154,12 +154,11 @@
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label">תמונת קאבר (URL)</label>
-          <input type="url" class="form-input" [(ngModel)]="article.featuredImageUrl" name="featuredImageUrl"
-            placeholder="https://...">
-          <div class="image-preview" *ngIf="article.featuredImageUrl">
-            <img [src]="article.featuredImageUrl" alt="Preview">
-          </div>
+          <label class="form-label">תמונת קאבר</label>
+          <app-file-upload-input
+            [(url)]="article.featuredImageUrl"
+            placeholder="https://..."
+          />
         </div>
       </div>
 
@@ -202,8 +201,11 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">קישור לתמונה</label>
-          <input type="url" class="form-input" [(ngModel)]="newGalleryImage.imageUrl" name="newGalleryImageUrl"
-            placeholder="https://...">
+          <app-file-upload-input
+            [(url)]="newGalleryImage.imageUrl"
+            placeholder="https://..."
+            [showPreview]="false"
+          />
         </div>
 
         <div class="form-group">
@@ -345,9 +347,11 @@
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label">Open Graph Image (URL)</label>
-          <input type="url" class="form-input" [(ngModel)]="article.openGraphImageUrl" name="openGraphImageUrl"
-            placeholder="https://...">
+          <label class="form-label">Open Graph Image</label>
+          <app-file-upload-input
+            [(url)]="article.openGraphImageUrl"
+            placeholder="https://..."
+          />
           <div class="field-hint">תמונה לשיתוף ברשתות חברתיות (פייסבוק, וואטסאפ)</div>
         </div>
       </div>

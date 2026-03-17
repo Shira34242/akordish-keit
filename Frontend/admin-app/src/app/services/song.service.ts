@@ -156,6 +156,10 @@ export class SongService {
         return this.http.patch<any>(`${this.apiUrl}/${songId}/approval`, { isApproved });
     }
 
+    duplicateSong(songId: number): Observable<SongDto> {
+        return this.http.post<SongDto>(`${this.apiUrl}/${songId}/duplicate`, {});
+    }
+
     /**
      * Get song by ID for admin (includes unapproved songs)
      */

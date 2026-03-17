@@ -150,6 +150,21 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // POST: api/Articles/5/duplicate
+    [HttpPost("{id}/duplicate")]
+    public async Task<ActionResult<ArticleDto>> DuplicateArticle(int id)
+    {
+        try
+        {
+            var duplicate = await _articleService.DuplicateArticleAsync(id);
+            return Ok(duplicate);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     // DELETE: api/Articles/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteArticle(int id)

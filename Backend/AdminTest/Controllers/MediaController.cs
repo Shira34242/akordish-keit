@@ -1,3 +1,5 @@
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AkordishKeit.Controllers
@@ -6,111 +8,99 @@ namespace AkordishKeit.Controllers
     [ApiController]
     public class MediaController : ControllerBase
     {
-        // TODO: For production with thousands of files, consider migrating to cloud storage:
-        // - Azure Blob Storage
-        // - AWS S3
-        // - Cloudinary (optimized for images/videos)
-        // This will provide better scalability, CDN, and automatic backups
+        private readonly Cloudinary _cloudinary;
 
-        private readonly IWebHostEnvironment _environment;
+        private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
+        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp" };
 
-        public MediaController(IWebHostEnvironment environment)
+        public MediaController(IConfiguration configuration)
         {
-            _environment = environment;
+            var account = new Account(
+                configuration["Cloudinary:CloudName"],
+                configuration["Cloudinary:ApiKey"],
+                configuration["Cloudinary:ApiSecret"]
+            );
+            _cloudinary = new Cloudinary(account);
+            _cloudinary.Api.Secure = true;
         }
 
         [HttpPost("upload")]
         public async Task<ActionResult<string>> UploadMedia(IFormFile file)
         {
             if (file == null || file.Length == 0)
-            {
                 return BadRequest(new { message = "No file uploaded" });
-            }
 
-            // Validate file type
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp" };
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-            if (!allowedExtensions.Contains(fileExtension))
-            {
+            if (!AllowedExtensions.Contains(fileExtension))
                 return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP" });
-            }
 
-            // Validate file size (max 10MB)
             if (file.Length > 10 * 1024 * 1024)
-            {
                 return BadRequest(new { message = "File size exceeds 10MB limit" });
-            }
 
-            // Get or create wwwroot path
-            var webRootPath = _environment.WebRootPath;
-            if (string.IsNullOrEmpty(webRootPath))
+            var now = DateTime.UtcNow;
+            var folder = $"uploads/{now.Year}/{now.Month:D2}";
+            var publicId = $"{folder}/{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}";
+
+            using var stream = file.OpenReadStream();
+            var fileDescription = new FileDescription(file.FileName, stream);
+
+            UploadResult uploadResult;
+
+            if (VideoExtensions.Contains(fileExtension))
             {
-                webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                uploadResult = await _cloudinary.UploadAsync(new VideoUploadParams
+                {
+                    File = fileDescription,
+                    PublicId = publicId,
+                    Overwrite = false
+                });
             }
-
-            // Organize files by year and month to prevent huge directories
-            var now = DateTime.Now;
-            var yearMonth = $"{now.Year}/{now.Month:D2}";
-            var uploadsPath = Path.Combine(webRootPath, "uploads", "campaigns", yearMonth);
-
-            if (!Directory.Exists(uploadsPath))
+            else
             {
-                Directory.CreateDirectory(uploadsPath);
+                uploadResult = await _cloudinary.UploadAsync(new ImageUploadParams
+                {
+                    File = fileDescription,
+                    PublicId = publicId,
+                    Overwrite = false
+                });
             }
 
-            // Generate unique filename with timestamp prefix for better organization
-            var timestamp = now.ToString("yyyyMMdd_HHmmss");
-            var fileName = $"{timestamp}_{Guid.NewGuid()}{fileExtension}";
-            var filePath = Path.Combine(uploadsPath, fileName);
+            if (uploadResult.Error != null)
+                return StatusCode(500, new { message = uploadResult.Error.Message });
 
-            // Save file
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            // Return URL with year/month path
-            var fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/campaigns/{yearMonth}/{fileName}";
-            return Ok(new { url = fileUrl });
+            return Ok(new { url = uploadResult.SecureUrl.ToString() });
         }
 
         [HttpDelete("delete")]
-        public ActionResult DeleteMedia([FromQuery] string url)
+        public async Task<ActionResult> DeleteMedia([FromQuery] string url)
         {
             if (string.IsNullOrEmpty(url))
-            {
                 return BadRequest(new { message = "URL is required" });
-            }
 
             try
             {
-                // Get or create wwwroot path
-                var webRootPath = _environment.WebRootPath;
-                if (string.IsNullOrEmpty(webRootPath))
-                {
-                    webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                }
-
-                // Extract the full path after /uploads/ from URL
+                // Cloudinary URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{public_id}.{ext}
                 var uri = new Uri(url);
-                var pathParts = uri.LocalPath.Split(new[] { "/uploads/" }, StringSplitOptions.None);
-                if (pathParts.Length < 2)
-                {
-                    return BadRequest(new { message = "Invalid file URL format" });
-                }
+                var pathSegments = uri.AbsolutePath.Split("/upload/");
+                if (pathSegments.Length < 2)
+                    return BadRequest(new { message = "Invalid Cloudinary URL" });
 
-                // Reconstruct the relative path (e.g., "campaigns/2025/12/filename.jpg")
-                var relativePath = pathParts[1];
-                var filePath = Path.Combine(webRootPath, "uploads", relativePath);
+                // Remove version prefix (v1234/) and file extension to get public_id
+                var withoutVersion = System.Text.RegularExpressions.Regex.Replace(pathSegments[1], @"^v\d+/", "");
+                var publicId = Path.ChangeExtension(withoutVersion, null);
 
-                if (System.IO.File.Exists(filePath))
+                var resourceType = uri.AbsolutePath.Contains("/video/") ? ResourceType.Video : ResourceType.Image;
+
+                var deleteResult = await _cloudinary.DestroyAsync(new DeletionParams(publicId)
                 {
-                    System.IO.File.Delete(filePath);
+                    ResourceType = resourceType
+                });
+
+                if (deleteResult.Result == "ok" || deleteResult.Result == "not found")
                     return Ok(new { message = "File deleted successfully" });
-                }
 
-                return NotFound(new { message = "File not found" });
+                return StatusCode(500, new { message = "Failed to delete file" });
             }
             catch (Exception ex)
             {

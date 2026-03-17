@@ -83,7 +83,7 @@ public class ArticleService : IArticleService
             .Include(a => a.GalleryImages)
             .Include(a => a.ArticleArtists)
                 .ThenInclude(aa => aa.Artist)
-            .FirstOrDefaultAsync(a => a.Slug == slug);
+            .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == (int)ArticleStatus.Published);
 
         return article == null ? null : MapToDto(article);
     }
@@ -386,6 +386,77 @@ public class ArticleService : IArticleService
         }
 
         return await query.AnyAsync();
+    }
+
+    public async Task<ArticleDto> DuplicateArticleAsync(int id)
+    {
+        var original = await _context.Articles
+            .Include(a => a.ArticleCategories)
+            .Include(a => a.ArticleTags)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.ArticleArtists)
+            .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+        if (original == null)
+            throw new InvalidOperationException("הכתבה לא נמצאה");
+
+        var baseSlug = original.Slug + "-copy";
+        var slug = baseSlug;
+        var counter = 1;
+        while (await SlugExistsAsync(slug))
+            slug = $"{baseSlug}-{counter++}";
+
+        var newArticle = new Article
+        {
+            Title = original.Title + " - עותק",
+            Subtitle = original.Subtitle,
+            Content = original.Content,
+            FeaturedImageUrl = original.FeaturedImageUrl,
+            AuthorName = original.AuthorName,
+            ContentType = original.ContentType,
+            Slug = slug,
+            CanonicalUrl = null,
+            VideoEmbedUrl = original.VideoEmbedUrl,
+            AudioEmbedUrl = original.AudioEmbedUrl,
+            ImageCredit = original.ImageCredit,
+            ShortDescription = original.ShortDescription,
+            IsFeatured = false,
+            DisplayOrder = 0,
+            Status = (int)ArticleStatus.Draft,
+            ScheduledDate = null,
+            IsPremium = original.IsPremium,
+            MetaTitle = original.MetaTitle,
+            MetaDescription = original.MetaDescription,
+            OpenGraphImageUrl = original.OpenGraphImageUrl,
+            ReadTimeMinutes = original.ReadTimeMinutes,
+            PublishDate = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            ViewCount = 0,
+            LikeCount = 0,
+            IsDeleted = false
+        };
+
+        _context.Articles.Add(newArticle);
+        await _context.SaveChangesAsync();
+
+        var categoryIds = original.ArticleCategories.Select(ac => ac.CategoryId).ToList();
+        if (categoryIds.Any()) await AddArticleCategoriesAsync(newArticle.Id, categoryIds);
+
+        var tagIds = original.ArticleTags.Select(at => at.TagId).ToList();
+        if (tagIds.Any()) await AddArticleTagsAsync(newArticle.Id, tagIds);
+
+        var galleryImages = original.GalleryImages.Select(gi => new CreateArticleGalleryImageDto
+        {
+            ImageUrl = gi.ImageUrl,
+            Caption = gi.Caption,
+            DisplayOrder = gi.DisplayOrder
+        }).ToList();
+        if (galleryImages.Any()) await AddGalleryImagesAsync(newArticle.Id, galleryImages);
+
+        var artistIds = original.ArticleArtists.Select(aa => aa.ArtistId).ToList();
+        if (artistIds.Any()) await AddArticleArtistsAsync(newArticle.Id, artistIds);
+
+        return (await GetArticleByIdAsync(newArticle.Id))!;
     }
 
     #region Private Helper Methods

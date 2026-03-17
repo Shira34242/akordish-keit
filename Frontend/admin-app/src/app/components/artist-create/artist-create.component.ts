@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ArtistService } from '../../services/artist.service';
+import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
 import { UpdateArtistDto } from '../../models/artist.model';
 
@@ -16,7 +17,12 @@ interface ArtistFormData {
   biography: string;
   imageUrl: string;
   websiteUrl: string;
-  socialLinks: { platform: number; url: string }[];
+  socialLinks: { platform: number; url: string }[];   // רשתות חברתיות
+  musicLinks: { platform: number; url: string }[];    // פלטפורמות מוזיקה
+  // Performance banner
+  performanceImageUrl: string;
+  performanceTicketUrl: string;
+  performanceIsActive: boolean;
   // Premium fields
   bannerImageUrl?: string;
   bannerGifUrl?: string;
@@ -27,7 +33,7 @@ interface ArtistFormData {
 @Component({
   selector: 'app-artist-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './artist-create.component.html',
   styleUrls: ['./artist-create.component.css']
 })
@@ -47,6 +53,10 @@ export class ArtistCreateComponent implements OnInit {
     imageUrl: '',
     websiteUrl: '',
     socialLinks: [],
+    musicLinks: [],
+    performanceImageUrl: '',
+    performanceTicketUrl: '',
+    performanceIsActive: false,
     galleryImages: [],
     videos: []
   };
@@ -129,6 +139,14 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.socialLinks.splice(index, 1);
   }
 
+  addMusicLink() {
+    this.artistForm.musicLinks.push({ platform: 7, url: '' }); // Spotify as default
+  }
+
+  removeMusicLink(index: number) {
+    this.artistForm.musicLinks.splice(index, 1);
+  }
+
   addGalleryImage() {
     if (!this.artistForm.galleryImages) {
       this.artistForm.galleryImages = [];
@@ -159,15 +177,22 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.videos?.splice(index, 1);
   }
 
-  getPlatformName(platform: number): string {
+  getSocialPlatformName(platform: number): string {
     const platforms: Record<number, string> = {
-      1: 'Facebook',
-      2: 'Instagram',
+      1: 'Instagram',
+      2: 'Facebook',
+      4: 'TikTok',
+      5: 'אתר אינטרנט',
+      6: 'Twitter / X'
+    };
+    return platforms[platform] || 'אחר';
+  }
+
+  getMusicPlatformName(platform: number): string {
+    const platforms: Record<number, string> = {
       3: 'YouTube',
-      4: 'Twitter',
-      5: 'TikTok',
-      6: 'Spotify',
-      7: 'אתר אינטרנט'
+      7: 'Spotify',
+      8: 'Zing'
     };
     return platforms[platform] || 'אחר';
   }
@@ -186,7 +211,13 @@ export class ArtistCreateComponent implements OnInit {
     this.saving = true;
     this.error = '';
 
-    // הכנת ה-DTO לשליחה - כל השדות נשמרים תמיד (המנוי קובע מה יוצג בציבור)
+    // מיזוג קישורי רשתות חברתיות + קישורי מוזיקה
+    const allLinks = [
+      ...this.artistForm.socialLinks,
+      ...this.artistForm.musicLinks
+    ].filter(l => l.url.trim());
+
+    // הכנת ה-DTO לשליחה
     const dto: UpdateArtistDto = {
       name: this.artistForm.name,
       englishName: this.artistForm.englishName || undefined,
@@ -194,12 +225,12 @@ export class ArtistCreateComponent implements OnInit {
       biography: this.artistForm.biography || undefined,
       imageUrl: this.artistForm.imageUrl || undefined,
       websiteUrl: this.artistForm.websiteUrl || undefined,
-      socialLinks: this.artistForm.socialLinks.length > 0
-        ? this.artistForm.socialLinks.map(sl => ({
-            platform: sl.platform,
-            url: sl.url
-          }))
+      socialLinks: allLinks.length > 0
+        ? allLinks.map(sl => ({ platform: Number(sl.platform), url: sl.url }))
         : undefined,
+      performanceImageUrl: this.artistForm.performanceImageUrl || undefined,
+      performanceTicketUrl: this.artistForm.performanceTicketUrl || undefined,
+      performanceIsActive: this.artistForm.performanceIsActive,
       // שדות פרמיום - נשמרים תמיד בבסיס הנתונים
       bannerImageUrl: this.artistForm.bannerImageUrl || undefined,
       bannerGifUrl: this.artistForm.bannerGifUrl || undefined,
