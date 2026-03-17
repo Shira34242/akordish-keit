@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -17,7 +17,7 @@ import { ReportModalComponent } from '../../shared/report-modal/report-modal.com
   templateUrl: './article-view.component.html',
   styleUrls: ['./article-view.component.css']
 })
-export class ArticleViewComponent implements OnInit {
+export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
@@ -25,15 +25,80 @@ export class ArticleViewComponent implements OnInit {
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private _heroEl: ElementRef<HTMLElement> | undefined;
+
+  /* סטר — מופעל ברגע ש-*ngIf הופך true ואלמנט ה-hero מופיע ב-DOM */
+  @ViewChild('articleHero')
+  set heroEl(el: ElementRef<HTMLElement> | undefined) {
+    this._heroEl = el;
+    if (el) {
+      this.fullHeroHeight = window.innerHeight - 16;
+      el.nativeElement.style.height = this.fullHeroHeight + 'px';
+      this.shrinkHero();
+    }
+  }
+
   article: Article | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
   isFavorite = false;
   feedbackGiven = false;
+  feedbackChoice: 'yes' | 'no' | null = null;
+  feedbackYesCount = 0;
+  feedbackNoCount = 0;
   relatedArticles: Article[] = [];
   isReportModalOpen = false;
+  fullHeroHeight = 0;
+
+  feedbackPct(type: 'yes' | 'no'): number {
+    const total = this.feedbackYesCount + this.feedbackNoCount;
+    if (total === 0) return 50;
+    const count = type === 'yes' ? this.feedbackYesCount : this.feedbackNoCount;
+    return Math.round((count / total) * 100);
+  }
+
+  feedbackCircleSize(type: 'yes' | 'no'): number {
+    const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
+    return 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+  }
+
+  ngAfterViewInit(): void { /* hero מאותחל ע"י הסטר */ }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    this.shrinkHero();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.fullHeroHeight = window.innerHeight - 16;
+    this.shrinkHero();
+  }
+
+  shrinkHero(): void {
+    const hero = this._heroEl?.nativeElement;
+    if (!hero || this.fullHeroHeight === 0) return;
+
+    const minHeight = 56; /* גובה ה-navbar — hero מתכווץ לשורת הכותרת */
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    hero.style.height = newHeight + 'px';
+
+    const progress = Math.min(1, window.scrollY / 160);
+    const content = hero.querySelector('.hero-content') as HTMLElement | null;
+    if (content) content.style.opacity = String(1 - progress);
+
+    const collapseOverlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
+  }
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadArticle(slug);
@@ -222,16 +287,16 @@ export class ArticleViewComponent implements OnInit {
   giveFeedbackYes(): void {
     if (this.feedbackGiven) return;
     this.feedbackGiven = true;
-    // TODO: Send feedback to backend
-    console.log('User gave positive feedback');
+    this.feedbackChoice = 'yes';
+    this.feedbackYesCount = 1;
   }
 
   // Feedback - No
   giveFeedbackNo(): void {
     if (this.feedbackGiven) return;
     this.feedbackGiven = true;
-    // TODO: Send feedback to backend
-    console.log('User gave negative feedback');
+    this.feedbackChoice = 'no';
+    this.feedbackNoCount = 1;
   }
 
   // Report Modal

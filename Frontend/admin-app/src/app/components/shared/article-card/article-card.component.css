@@ -1,67 +1,74 @@
-/* Default (Overlay) Styles */
+/* ============================================
+   ARTICLE CARD
+   Supports two layouts: overlay (default) | card
+============================================ */
+
 .article-card {
-  width: 260px;
+  width: 240px;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  background: #000000;
   position: relative;
+  transition: opacity 0.2s;
 }
 
 .article-card.card-layout {
-  background: #fff;
-  border: 1px solid #eee;
+  background: #F2F2F2;
   width: 100%;
   max-width: 300px;
 }
 
 .article-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0.88;
 }
+
+/* ============================================
+   IMAGE CONTAINER
+============================================ */
 
 .image-container {
   position: relative;
   width: 100%;
-  height: 150px;
+  aspect-ratio: 4 / 2.7;
   overflow: hidden;
 }
 
 .article-card.card-layout .image-container {
-  height: 160px;
+  aspect-ratio: 16 / 9;
 }
 
 .article-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  display: block;
+  transition: transform 0.35s ease;
 }
 
 .article-card:hover .article-image {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
+/* Gradient overlay for overlay layout */
 .overlay-gradient {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0) 100%);
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.32) 55%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
   pointer-events: none;
 }
 
+/* Read overlay on hover */
 .read-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,30 +82,34 @@
 }
 
 .read-overlay .material-icons {
-  color: #ffc107;
-  font-size: 40px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  color: #ddff53;
+  font-size: 28px;
 }
 
-/* Overlay Info Styles */
+/* ============================================
+   OVERLAY LAYOUT INFO
+============================================ */
+
 .article-info {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 12px 16px;
+  padding: var(--space-base);
   z-index: 2;
   box-sizing: border-box;
+  text-align: right;
 }
 
-.article-title {
+.article-info .article-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  color: #ffffff;
   font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -106,69 +117,82 @@
 }
 
 .article-info .article-subtitle {
-  color: #ddd;
-  font-size: 12px;
-  margin: 4px 0 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-xs);
+  font-weight: 300;
+  font-family: 'Open Sans', sans-serif;
+  margin: var(--space-xs) 0 0;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.3;
-  font-family: 'Open Sans', sans-serif;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: var(--lh-small);
 }
 
-.article-meta {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #ddd;
+.article-info .article-meta {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 300;
+  font-family: 'Open Sans', sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 500;
-  font-family: 'Open Sans', sans-serif;
 }
 
-/* Card Layout Info Styles */
+/* ============================================
+   CARD LAYOUT INFO
+============================================ */
+
 .card-info {
-  padding: 12px 16px;
-  background: #fff;
+  padding: var(--space-base);
+  background: #F2F2F2;
   text-align: right;
 }
 
 .article-card.card-layout .article-title {
-  color: #333;
-  text-shadow: none;
-  font-size: 15px;
-  margin-bottom: 6px;
-}
-
-.article-subtitle {
-  color: #666;
-  font-size: 13px;
-  margin: 0 0 12px 0;
+  color: #000000;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  margin: 0 0 var(--space-xs);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.4;
+  line-height: var(--lh-small);
+}
+
+.article-subtitle {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: var(--font-xs);
+  font-weight: 300;
   font-family: 'Open Sans', sans-serif;
+  margin: 0 0 var(--space-sm);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: var(--lh-small);
 }
 
 .card-footer {
-  margin-top: 12px;
+  margin-top: var(--space-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
-  color: #999;
+  font-size: var(--font-xs);
+  color: rgba(0, 0, 0, 0.4);
   font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
 }
 
 .view-count {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .view-count .material-icons {
@@ -176,5 +200,5 @@
 }
 
 .publish-date {
-  font-size: 11px;
+  font-size: var(--font-xs);
 }

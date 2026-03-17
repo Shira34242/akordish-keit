@@ -1,6 +1,10 @@
 <div class="article-view-container" *ngIf="!loading && article">
+  <!-- מסכה עליונה — מסתירה את ה-hero מעל -->
+  <div class="top-scroll-mask"></div>
+
   <!-- Hero Section with Background Image -->
-  <div class="article-hero" [style.backgroundImage]="'url(' + article.featuredImageUrl + ')'">
+  <div class="article-hero" #articleHero [style.backgroundImage]="'url(' + article.featuredImageUrl + ')'">
+    <div class="hero-collapse-overlay"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <span class="category-badge">{{ getCategoryName() }}</span>
@@ -19,6 +23,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Spacer for fixed hero -->
+  <div class="hero-spacer"></div>
 
   <!-- Content Container with Video and Text - WITH SIDEBARS -->
   <div class="content-with-sidebars">
@@ -71,26 +78,41 @@
         </div>
       </div>
 
-      <!-- Feedback Section - Outside white box -->
+      <!-- Feedback Section -->
       <div class="feedback-section-outside">
-        <h3 class="feedback-title">האם הכתבה עניינה אותך?</h3>
-        <div class="feedback-buttons">
-          <button
-            class="feedback-btn feedback-yes"
-            [class.selected]="feedbackGiven"
-            (click)="giveFeedbackYes()"
-            [disabled]="feedbackGiven">
-            <span class="material-icons">thumb_up</span>
-            כן
-          </button>
-          <button
-            class="feedback-btn feedback-no"
-            [class.selected]="feedbackGiven"
-            (click)="giveFeedbackNo()"
-            [disabled]="feedbackGiven">
-            <span class="material-icons">thumb_down</span>
-            לא
-          </button>
+        <p class="feedback-title">האם הכתבה עניינה אותך?</p>
+        <div class="feedback-circles">
+
+          <!-- כן -->
+          <div class="feedback-circle-item">
+            <button
+              class="feedback-circle"
+              [class.chosen-yes]="feedbackChoice === 'yes'"
+              [style.width.px]="feedbackCircleSize('yes')"
+              [style.height.px]="feedbackCircleSize('yes')"
+              (click)="giveFeedbackYes()"
+              [disabled]="feedbackGiven">
+              <span class="material-icons">thumb_up</span>
+              <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('yes') }}%</span>
+            </button>
+            <span class="circle-label">כן</span>
+          </div>
+
+          <!-- לא -->
+          <div class="feedback-circle-item">
+            <button
+              class="feedback-circle"
+              [class.chosen-no]="feedbackChoice === 'no'"
+              [style.width.px]="feedbackCircleSize('no')"
+              [style.height.px]="feedbackCircleSize('no')"
+              (click)="giveFeedbackNo()"
+              [disabled]="feedbackGiven">
+              <span class="material-icons">thumb_down</span>
+              <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('no') }}%</span>
+            </button>
+            <span class="circle-label">לא</span>
+          </div>
+
         </div>
         <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
       </div>
