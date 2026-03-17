@@ -9,6 +9,7 @@ import { AdDisplayComponent } from '../../public/ad-display/ad-display.component
 import { ArticleCardComponent } from '../../shared/article-card/article-card.component';
 import { LikedContentService } from '../../../services/liked-content.service';
 import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
+import { ContentPageService } from '../../../services/content-page.service';
 
 @Component({
   selector: 'app-article-view',
@@ -24,6 +25,11 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly articleService = inject(ArticleService);
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly contentPageService = inject(ContentPageService);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
+  }
 
   private _heroEl: ElementRef<HTMLElement> | undefined;
 
@@ -112,6 +118,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: (article) => {
           this.article = article;
+          this.contentPageService.setCurrentArticle(article.id);
 
           // Increment view count
           this.articleService.incrementView(article.id)
