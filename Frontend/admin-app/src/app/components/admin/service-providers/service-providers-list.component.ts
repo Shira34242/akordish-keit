@@ -121,7 +121,7 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   viewProvider(id: number): void {
-    this.router.navigate(['/admin/service-providers/view', id]);
+    this.router.navigate(['/admin/service-providers/edit', id]);
   }
 
   approveProvider(id: number): void {
