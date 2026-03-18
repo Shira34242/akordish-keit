@@ -10,6 +10,7 @@
   min-height: 100vh;
   direction: rtl;
   color: #000000;
+  overflow-x: hidden;
 }
 
 /* ════════════════════════════════════════════════════
@@ -27,7 +28,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   HERO BACKGROUND — fixed, מתכווץ בגלילה
+   HERO — fixed, מתכווץ בגלילה
 ════════════════════════════════════════════════════ */
 .teacher-hero-bg {
   position: fixed;
@@ -35,30 +36,13 @@
   left: 8px;
   right: 8px;
   border-radius: 28px;
-  height: calc(100vh - 16px); /* JS מחליף לפי viewport */
+  height: calc(100vh - 16px);
   z-index: 895;
-  background-color: #F2F2F2; /* fallback ללא תמונת באנר */
-  background-size: cover;
-  background-position: center;
+  background-color: #F2F2F2;
   overflow: hidden;
   will-change: height;
 }
 
-/* overlay כהה — רק כשיש באנר */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 0.72) 0%,
-    rgba(0, 0, 0, 0.45) 35%,
-    rgba(0, 0, 0, 0.08) 70%,
-    rgba(0, 0, 0, 0.00) 100%
-  );
-  pointer-events: none;
-}
-
-/* overlay כהייה בגלילה */
 .hero-collapse-overlay {
   position: absolute;
   inset: -2px;
@@ -69,52 +53,52 @@
   transform: translateZ(0);
 }
 
-/* ════════════════════════════════════════════════════
-   HERO INFO SIDE — ימין-תחתון, בתוך ה-hero-bg
-════════════════════════════════════════════════════ */
-.hero-info-side {
+/* ── תוכן Hero — מרכז-תחתון, עמודה, היררכיה ברורה ── */
+.hero-content {
   position: absolute;
-  bottom: var(--space-xl);
-  right: var(--space-xl);
+  bottom: var(--space-2xl);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: var(--space-lg);
-  align-items: flex-start;
-  max-width: 540px;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
   z-index: 2;
+  width: 90%;
+  max-width: 480px;
 }
 
 .hero-avatar-wrap {
-  flex-shrink: 0;
+  margin-bottom: var(--space-sm);
 }
 
 .hero-avatar {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  border: 3px solid rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border: 3px solid rgba(0, 0, 0, 0.1);
 }
 
-.teacher-page.has-banner .hero-avatar {
-  border-color: rgba(255, 255, 255, 0.3);
+/* שם — כותרת ראשית */
+.hero-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-hero);
+  line-height: var(--lh-heading);
+  margin: 0;
+  color: #000000;
+  text-align: center;
 }
 
-/* ── טקסטים ── */
-.hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  text-align: right;
-}
-
-.hero-badges {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
+/* Badge */
 .badge-featured {
+  display: inline-block;
   background: #000000;
   color: #ddff53;
   padding: var(--space-xs) var(--space-base);
@@ -126,26 +110,12 @@
   font-weight: 800;
 }
 
-.hero-name {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-hero);
-  line-height: var(--lh-heading);
-  margin: 0;
-  color: #000000;
-}
-
-.teacher-page.has-banner .hero-name {
-  color: #ffffff;
-}
-
 /* כלי נגינה */
 .instruments-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
+  justify-content: center;
 }
 
 .instrument-chip {
@@ -158,11 +128,6 @@
   font-weight: 300;
 }
 
-.teacher-page.has-banner .instrument-chip {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.8);
-}
-
 .instrument-chip.primary {
   background: #ddff53;
   color: #000000;
@@ -173,6 +138,7 @@
 .city-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
@@ -181,26 +147,50 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
-.teacher-page.has-banner .city-row {
-  color: rgba(255, 255, 255, 0.5);
-}
-
 .city-row .material-icons {
   font-size: 18px;
 }
 
-/* ════════════════════════════════════════════════════
-   HERO SOCIAL — שמאל-תחתון
-════════════════════════════════════════════════════ */
-.hero-social {
-  position: absolute;
-  bottom: var(--space-xl);
-  left: 70px;
+/* כפתורי פעולה */
+.hero-actions {
   display: flex;
-  gap: var(--space-md);
-  z-index: 2;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-sm);
 }
 
+/* Pill Regular — WhatsApp */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 34px;
+  padding: 0 var(--space-lg);
+  background: #ddff53;
+  color: #000000;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-whatsapp:hover {
+  opacity: 0.82;
+}
+
+.btn-whatsapp .material-icons {
+  font-size: 18px;
+}
+
+/* Circle Icon — קשר */
 .social-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -211,21 +201,11 @@
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
   flex-shrink: 0;
-  background: #000000;
-  color: #ffffff;
-}
-
-.social-icon-btn:hover {
-  background: #ddff53;
-  color: #000000;
-}
-
-.teacher-page:not(.has-banner) .social-icon-btn {
   background: rgba(0, 0, 0, 0.1);
   color: #000000;
 }
 
-.teacher-page:not(.has-banner) .social-icon-btn:hover {
+.social-icon-btn:hover {
   background: #000000;
   color: #ddff53;
 }
@@ -235,7 +215,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   HERO SCROLL SPACER — מרווח גלילה בתזרים
+   SCROLL SPACER
 ════════════════════════════════════════════════════ */
 .hero-scroll-spacer {
   margin-top: 8px;
@@ -244,56 +224,28 @@
 }
 
 /* ════════════════════════════════════════════════════
-   PAGE CONTENT
+   PAGE CONTENT — עמודה אחת, max-width 900px
 ════════════════════════════════════════════════════ */
 .page-content {
   max-width: 900px;
-  margin: var(--space-xl) auto 0;
-  padding: 0 var(--space-lg) var(--space-xl);
+  margin: var(--space-2xl) auto 0;
+  padding: 0 var(--space-lg) var(--space-2xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-base);
 }
 
 /* ════════════════════════════════════════════════════
-   MAIN LAYOUT — תוכן (ימין) + sidebar (שמאל)
+   SECTION HEADER
 ════════════════════════════════════════════════════ */
-.main-layout {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: var(--space-base);
-  align-items: start;
-}
-
-/* ════════════════════════════════════════════════════
-   CONTENT COLUMN
-════════════════════════════════════════════════════ */
-.content-column {
+.section-header {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-base);
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-base);
 }
 
-/* ── ביו קצר ── */
-.short-bio-card {
-  background: #ddff53;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.short-bio-text {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-base);
-  color: #000000;
-  margin: 0;
-  line-height: var(--lh-body);
-  text-align: right;
-}
-
-/* ── section label pill (כמו דף אמן) ── */
+/* Pill label — #ddff53 */
 .card-section-label {
   display: inline-block;
   font-family: 'Open Sans', sans-serif;
@@ -303,37 +255,23 @@
   font-size: var(--font-sm);
   color: #000000;
   background: #ddff53;
-  padding: var(--space-sm) var(--space-base);
+  padding: var(--space-xs) var(--space-base);
   border-radius: 999px;
-  margin: 0 0 var(--space-base) 0;
+  margin-bottom: var(--space-base);
   text-align: right;
 }
 
-/* ── תיאור מלא ── */
-.description-card {
+/* ════════════════════════════════════════════════════
+   BIO CARD — Bio Card pattern
+════════════════════════════════════════════════════ */
+.bio-card {
   background: #F2F2F2;
   border-radius: 24px;
   padding: var(--space-lg) var(--space-xl);
 }
 
-.full-desc-text {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 300;
-  font-size: var(--font-base);
-  color: #000000;
-  line-height: var(--lh-body);
-  white-space: pre-wrap;
-  margin: 0;
-  text-align: right;
-}
-
-/* ── כרטיס מידע ── */
-.info-card {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
+/* ── Info Rows ── */
+.info-rows {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -353,19 +291,14 @@
   color: rgba(0, 0, 0, 0.38);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  min-width: 88px;
+  min-width: 96px;
   padding-top: var(--space-xs);
   flex-shrink: 0;
   text-align: right;
 }
 
-.chips-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
-
-.chip {
+/* Pill Tag Secondary — #F2F2F2 variant (on white bg) */
+.pill-tag-secondary {
   display: inline-block;
   padding: var(--space-xs) var(--space-base);
   background: #ffffff;
@@ -376,55 +309,99 @@
   color: #000000;
 }
 
-/* ════════════════════════════════════════════════════
-   SECTION HEADER
-════════════════════════════════════════════════════ */
-.section-header {
+.tags-inline {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--space-base);
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
-.section-title {
+/* ── Bio Texts ── */
+.short-bio-text {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-weight: 800;
-  font-size: var(--font-lg);
+  font-size: var(--font-base);
   color: #000000;
+  margin: 0 0 var(--space-base) 0;
+  line-height: var(--lh-body);
+  text-align: right;
+}
+
+.full-desc-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-base);
+  color: #000000;
+  line-height: var(--lh-body);
+  white-space: pre-wrap;
   margin: 0;
   text-align: right;
 }
 
-/* ── אקורדים ── */
+/* ════════════════════════════════════════════════════
+   TAGS ROW — התמחויות
+════════════════════════════════════════════════════ */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* ════════════════════════════════════════════════════
+   VIDEO
+════════════════════════════════════════════════════ */
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.video-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 16px;
+}
+
+/* ════════════════════════════════════════════════════
+   SONGS GRID — Song Card pattern
+════════════════════════════════════════════════════ */
 .songs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-md);
 }
 
-/* ── כתבות ── */
+/* ════════════════════════════════════════════════════
+   ARTICLES GRID — News Banner Card pattern
+════════════════════════════════════════════════════ */
 .articles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-md);
 }
 
-/* ── המלצות תלמידים ── */
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--space-base);
-}
-
-.testimonial-card {
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: var(--space-lg) var(--space-xl);
+/* ════════════════════════════════════════════════════
+   TESTIMONIALS — Bio Card, עמודה אחת
+════════════════════════════════════════════════════ */
+.testimonials-stack {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+}
+
+.testimonial-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .testimonial-text {
@@ -450,198 +427,193 @@
   text-align: right;
 }
 
-/* ── גלריה נגללת ── */
-.gallery-section {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.gallery-scroll {
-  display: flex;
-  gap: var(--space-md);
-  overflow-x: auto;
-  padding-bottom: var(--space-sm);
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #ddff53 transparent;
-}
-
-.gallery-scroll::-webkit-scrollbar { height: 4px; }
-.gallery-scroll::-webkit-scrollbar-track { background: transparent; }
-.gallery-scroll::-webkit-scrollbar-thumb { background: #ddff53; border-radius: 999px; }
-
-.gallery-item {
-  flex-shrink: 0;
-  width: 220px;
-  height: 160px;
-  border-radius: 16px;
+/* ════════════════════════════════════════════════════
+   3D GALLERY — זהה לדף אמן, overflow: hidden
+════════════════════════════════════════════════════ */
+.g3d-wrapper {
+  position: relative;
+  width: 100%;
   overflow: hidden;
 }
 
-.gallery-item img {
+.g3d-section {
+  position: relative;
+  width: 100%;
+  height: 55vh;
+  overflow: hidden;
+  perspective: 1800px;
+  -webkit-user-select: none;
+  user-select: none;
+  background: #ffffff;
+}
+
+.g3d-cards {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.g3d-arrow {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 2000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.g3d-arrow:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.g3d-arrow-prev { left: 20px; }
+.g3d-arrow-next { right: 20px; }
+
+.g3d-dots {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-sm);
+  z-index: 2000;
+  pointer-events: auto;
+}
+
+.g3d-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.g3d-dot.active {
+  background: #000000;
+  transform: scale(1.35);
+}
+
+/* כרטיסי גלריה — נוצרים ב-JS */
+:host ::ng-deep .g3d-card {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: min(24vw, 290px);
+  aspect-ratio: 4.7 / 3;
+  backface-visibility: hidden;
+  will-change: transform, filter;
+  transition: filter 0.18s ease;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+:host ::ng-deep .g3d-card img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.2s;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
-.gallery-item:hover img {
-  transform: scale(1.04);
-}
-
-/* ── וידאו ── */
-.video-section {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.video-wrapper {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  border-radius: 16px;
-}
-
-.video-iframe {
+:host ::ng-deep .g3d-card-caption {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  border: none;
-  border-radius: 16px;
-}
-
-/* ════════════════════════════════════════════════════
-   SIDEBAR COLUMN
-════════════════════════════════════════════════════ */
-.sidebar-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  position: sticky;
-  top: calc(8px + 80px);
-}
-
-.sidebar-card {
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: var(--space-lg);
-  overflow: hidden;
-}
-
-.sidebar-card h3 {
-  margin: 0 0 var(--space-md) 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xl) var(--space-lg) var(--space-base);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
+  color: #ffffff;
   font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-xs);
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.45);
-  text-align: right;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-/* ── כפתור יצירת קשר ── */
-.btn-contact {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  height: 34px;
-  background: #000000;
-  color: #ddff53;
-  border: none;
-  border-radius: 999px;
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-sm);
-  cursor: pointer;
-  margin-bottom: var(--space-md);
-  transition: opacity 0.15s;
-}
-
-.btn-contact:hover {
-  opacity: 0.82;
-}
-
-.btn-contact .material-icons {
-  font-size: 18px;
-}
-
-/* ── פרטי קשר ── */
-.contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-base);
-  border-radius: 12px;
-  font-family: 'Open Sans', sans-serif;
-  font-size: var(--font-sm);
   font-weight: 300;
-  color: #000000;
-  text-decoration: none;
-}
-
-.contact-item .material-icons {
-  font-size: 18px;
-  color: #000;
-  opacity: 0.45;
-  flex-shrink: 0;
-}
-
-.contact-item.link {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.contact-item.link:hover {
-  background: #ddff53;
-}
-
-/* ── ווטסאפ ── */
-.btn-whatsapp {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  height: 34px;
-  padding: 0 var(--space-lg);
-  background: #ddff53;
-  color: #000000;
-  border-radius: 999px;
-  text-decoration: none;
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
   font-size: var(--font-sm);
-  transition: opacity 0.15s;
-}
-
-.btn-whatsapp:hover {
-  opacity: 0.82;
-}
-
-.btn-whatsapp .material-icons {
-  font-size: 18px;
+  text-align: right;
 }
 
 /* ════════════════════════════════════════════════════
-   LOADING STATE
+   IMAGE LIGHTBOX
+════════════════════════════════════════════════════ */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-base);
+  max-width: min(92vw, 1200px);
+}
+
+.image-lightbox-img {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 24px;
+  display: block;
+}
+
+.image-lightbox-caption {
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-base);
+  text-align: center;
+  margin: 0;
+}
+
+.lightbox-close-btn {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox-close-btn .material-icons {
+  font-size: 20px;
+}
+
+/* ════════════════════════════════════════════════════
+   LOADING
 ════════════════════════════════════════════════════ */
 .loading-container {
   display: flex;
@@ -672,34 +644,10 @@
 /* ════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-  .hero-info-side {
-    bottom: var(--space-lg);
-    right: var(--space-lg);
-    max-width: 55%;
-  }
-
-  .hero-avatar { width: 130px; height: 130px; }
-  .hero-name { font-size: clamp(1.6rem, 3vw, 2.2rem); }
-
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-column {
-    position: relative;
-    top: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .sidebar-card:first-child {
-    grid-column: 1 / -1;
-  }
-
-  .page-content {
-    padding: var(--space-md) var(--space-md) var(--space-base);
-  }
+@media (max-width: 768px) {
+  .hero-avatar { width: 100px; height: 100px; }
+  .hero-content { bottom: var(--space-xl); }
+  .page-content { padding: 0 var(--space-md) var(--space-xl); }
 }
 
 @media (max-width: 600px) {
@@ -709,28 +657,13 @@
     border-radius: 18px;
   }
 
-  .hero-info-side {
-    bottom: var(--space-base);
-    right: var(--space-md);
-    left: var(--space-md);
-    max-width: 100%;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--space-md);
-  }
-
-  .hero-avatar { width: 100px; height: 100px; }
+  .hero-avatar { width: 80px; height: 80px; }
   .hero-name { font-size: 1.8rem; }
-  .hero-social { display: none; }
 
-  .sidebar-column { grid-template-columns: 1fr; }
   .songs-grid { grid-template-columns: 1fr; }
   .articles-grid { grid-template-columns: 1fr; }
-  .testimonials-grid { grid-template-columns: 1fr; }
 
-  .gallery-item { width: 160px; height: 120px; }
+  .page-content { padding: 0 var(--space-sm) var(--space-base); }
 
-  .page-content {
-    padding: 0 var(--space-sm) var(--space-base);
-  }
+  :host ::ng-deep .g3d-card { width: min(60vw, 220px); }
 }
