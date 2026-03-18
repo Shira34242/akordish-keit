@@ -7,11 +7,14 @@ import { TeacherDto } from '../../../models/teacher.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { TeachingLanguage } from '../../../models/teaching-language.enum';
 import { TargetAudience } from '../../../models/target-audience.enum';
+import { Article } from '../../../models/article.model';
+import { SongCardComponent } from '../../shared/song-card/song-card.component';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 
 @Component({
   selector: 'app-teacher-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent],
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })
@@ -23,6 +26,15 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   cities: City[] = [];
   loading = true;
   showContact = false;
+
+  // ⚠️ ממתין לחיבור בקאנד: אקורדים שהמורה העלה
+  teacherSongs: any[] = [];
+
+  // ⚠️ ממתין לחיבור בקאנד: כתבות שהמורה העלה
+  teacherArticles: Article[] = [];
+
+  // ⚠️ ממתין לחיבור בקאנד: המלצות תלמידים (דורש הוספת שדה testimonials למודל)
+  teacherTestimonials: { text: string; studentName: string }[] = [];
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -71,7 +83,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.heroBannerSrc) {
       bg.style.backgroundImage = `url('${this.heroBannerSrc}')`;
     }
-    this.fullHeroHeight = Math.round(window.innerHeight * 0.50 - 8);
+    this.fullHeroHeight = Math.round(window.innerHeight - 16);
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }

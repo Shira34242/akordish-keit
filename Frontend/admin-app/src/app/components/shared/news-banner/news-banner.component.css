@@ -71,7 +71,7 @@
   font-variation-settings: "wdth" 100;
   font-size: var(--font-xs);
   color: rgba(255, 255, 255, 0.85);
-  margin: 4px 0 0 0;
+  margin: var(--space-xs) 0 0 0;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -113,11 +113,11 @@
   }
 
   .banner-title {
-    font-size: 1rem;
+    font-size: var(--font-base);
   }
 
   .banner-subtitle {
-    font-size: 0.82rem;
+    font-size: var(--font-sm);
   }
 
   .banner-arrow-btn {
