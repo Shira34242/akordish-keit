@@ -89,6 +89,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     loadSong(id: number) {
+        window.scrollTo(0, 0);
+        this.headerLayoutDone = false;
         this.isLoading = true;
         this.error = null;
         this.canEdit = false; 

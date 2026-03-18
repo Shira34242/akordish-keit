@@ -7,11 +7,15 @@ import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
+import { TeacherService } from '../../services/teacher.service';
+import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
+import { TeacherListDto } from '../../models/teacher.model';
+import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
 
 @Component({
   selector: 'app-home-page',
@@ -43,6 +47,8 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
   upcomingEvents: UpcomingEventDto[] = [];
+  featuredTeachers: TeacherListDto[] = [];
+  featuredProviders: MusicServiceProviderListDto[] = [];
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -52,7 +58,9 @@ export class HomePageComponent implements OnInit, AfterViewInit {
     private songService: SongService,
     private artistService: ArtistService,
     private articleService: ArticleService,
-    private eventService: EventService
+    private eventService: EventService,
+    private teacherService: TeacherService,
+    private providerService: MusicServiceProviderService
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -150,6 +158,14 @@ export class HomePageComponent implements OnInit, AfterViewInit {
 
     this.eventService.getUpcomingEvents(6).subscribe((events: UpcomingEventDto[]) => {
       this.upcomingEvents = events;
+    });
+
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).subscribe((res: any) => {
+      this.featuredTeachers = res.items || [];
+    });
+
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).subscribe((res: any) => {
+      this.featuredProviders = res.items || [];
     });
   }
 

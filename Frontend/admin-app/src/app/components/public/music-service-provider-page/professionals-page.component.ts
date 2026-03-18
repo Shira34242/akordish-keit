@@ -6,7 +6,6 @@ import { MusicServiceProviderService } from '../../../services/music-service-pro
 import { CitiesService, City } from '../../../services/cities.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
 import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
-import { ProfessionalProfileModalComponent } from './professional-profile-modal.component';
 import { BecomeProfessionalFormComponent } from '../become-professional-form/become-professional-form.component';
 import { AuthService } from '../../../services/auth.service';
 
@@ -18,13 +17,11 @@ interface Category {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfessionalProfileModalComponent, BecomeProfessionalFormComponent],
+  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })
 export class ProfessionalsPageComponent implements OnInit {
-  // Modal
-  selectedProfessionalId: number | null = null;
   showBecomeProfessionalForm = false;
 
   // Search fields
@@ -286,11 +283,7 @@ export class ProfessionalsPageComponent implements OnInit {
   }
 
   viewProfessional(professionalId: number): void {
-    this.selectedProfessionalId = professionalId;
-  }
-
-  closeProfessionalProfile(): void {
-    this.selectedProfessionalId = null;
+    this.router.navigate(['/professional', professionalId]);
   }
 
   openBecomeProfessionalForm(): void {

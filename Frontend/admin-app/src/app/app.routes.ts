@@ -105,6 +105,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/public/teacher-detail/teacher-detail.component').then(m => m.TeacherDetailComponent),
                 title: 'מורה - אקורדישקייט'
             },
+            {
+                path: 'professional/:id',
+                loadComponent: () => import('./components/public/music-service-provider-page/professional-profile-modal.component').then(m => m.ProfessionalProfileModalComponent),
+                title: 'בעל מקצוע - אקורדישקייט'
+            },
             // ===== מנויים ותשלומים =====
             {
                 path: 'subscription/select',

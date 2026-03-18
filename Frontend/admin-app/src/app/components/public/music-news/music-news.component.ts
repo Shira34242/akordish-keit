@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -17,7 +17,9 @@ import { UpcomingEventDto } from '../../../models/event.model';
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })
-export class MusicNewsComponent implements OnInit {
+export class MusicNewsComponent implements OnInit, OnDestroy {
+  @ViewChild('pageHero', { static: false }) pageHeroRef!: ElementRef;
+
   private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
   private readonly eventService = inject(EventService);
@@ -41,8 +43,50 @@ export class MusicNewsComponent implements OnInit {
 
   isLoading = true;
 
+  private fullHeroHeight = 0;
+  private scrollListener?: () => void;
+
   ngOnInit(): void {
     this.loadAllContent();
+  }
+
+  ngOnDestroy(): void {
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+  }
+
+  private initHero(): void {
+    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
+    if (!hero) return;
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.48);
+    hero.style.height = this.fullHeroHeight + 'px';
+    this.scrollListener = () => this.shrinkHero();
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  private shrinkHero(): void {
+    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
+    if (!hero) return;
+
+    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    hero.style.height = newHeight + 'px';
+
+    // fade תוכן ב-160px ראשונים
+    const progress = Math.min(1, window.scrollY / 160);
+    const inner = hero.querySelector('.hero-inner') as HTMLElement | null;
+    if (inner) inner.style.opacity = String(1 - progress);
+
+    // overlay אפור
+    const overlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (overlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      overlay.style.opacity = String(collapseProgress);
+    }
   }
 
   private loadAllContent(): void {
@@ -57,6 +101,7 @@ export class MusicNewsComponent implements OnInit {
       this.loadUpcomingEvents()
     ]).then(() => {
       this.isLoading = false;
+      setTimeout(() => this.initHero(), 0);
     }).catch(error => {
       console.error('Error loading content:', error);
       this.isLoading = false;

@@ -41,11 +41,11 @@
     overflow: hidden;
 }
 
-/* overlay בהיר — מתגבר בגלילה כשהתיבה מתכווצת */
+/* overlay כהה — מתגבר בגלילה כשהתיבה מתכווצת */
 .hero-collapse-overlay {
     position: absolute;
     inset: -2px;
-    background: #F2F2F2;
+    background: #404040;
     opacity: 0;
     pointer-events: none;
     z-index: 1;
@@ -55,7 +55,7 @@
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
-    margin-top: 0; /* bg הוא position:fixed - לא צריך overlap */
+    margin-top: 0;
     margin-bottom: var(--space-md);
     padding: calc(2vh + var(--space-base)) var(--space-xl) var(--space-base);
     display: flex;
@@ -268,14 +268,14 @@
 /* 2. Floating Toolbar */
 .sticky-toolbar {
     position: sticky;
-    top: 70px;
+    top: 12px;
     z-index: 950;
     max-width: 1200px;
     margin: 0 auto 8px auto;
-    padding: 0 24px;
+    padding: 0 var(--space-xl);
     display: grid;
     grid-template-columns: 1fr 280px;
-    gap: 32px;
+    gap: var(--space-base);
     pointer-events: none;
 }
 
@@ -484,8 +484,8 @@
 }
 
 .lyrics-column.dark-mode {
-    background: #1f2937;
-    color: #e5e7eb;
+    background: #404040;
+    color: #ffffff;
 }
 .lyrics-content {
     direction: rtl;
@@ -496,7 +496,7 @@
 }
 
 .lyrics-column.dark-mode .lyrics-content {
-    color: #e5e7eb;
+    color: #ffffff;
 }
 
 /* Chords Styling */
@@ -730,7 +730,7 @@
     .sticky-toolbar {
         grid-template-columns: 1fr;
         padding: 0 12px;
-        top: 70px;
+        top: 12px;
     }
 
     .toolbar-content {
@@ -822,7 +822,7 @@
 
     .sticky-toolbar {
         padding: 0 var(--space-sm);
-        top: 70px;
+        top: 12px;
     }
 
     .toolbar-content {

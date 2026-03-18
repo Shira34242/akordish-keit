@@ -48,6 +48,23 @@ The site is **light-themed**. Only these 5 colors may be used unless explicitly 
 - **Uniform gutters** — consistent spacing between all cards and between cards and page edge
 - **RTL** — `direction: rtl`, `text-align: right` everywhere by default
 
+#### Hero / Full-Screen Box — מרווחי שוליים תקניים
+
+**כלל קבוע:** כל תיבה גדולה שממלאת את רוחב הדף (hero, header section, featured card) חייבת להיות עם שוליים מהמסך:
+
+```css
+position: fixed; /* או relative/absolute לפי ההקשר */
+top: 8px;
+left: 8px;
+right: 8px;
+border-radius: 28px;
+```
+
+- שוליים: **8px מכל צד** — top, left, right (ו-bottom במידת הצורך)
+- פינות: **`border-radius: 28px`** לתיבות גדולות
+- מסך קטן (≤768px): `left: 4px; right: 4px; border-radius: 20px`
+- **אסור** להצמיד תיבה גדולה לשוליים הדף ללא מרווח זה
+
 #### Border Radius
 - **All corners are rounded** — uniform `border-radius` applied consistently throughout
 - When an element's width ≈ height → full pill / circle (`border-radius: 50%`)
