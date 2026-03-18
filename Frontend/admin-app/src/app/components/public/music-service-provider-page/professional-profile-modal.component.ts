@@ -1,5 +1,7 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { MusicServiceProviderDto } from '../../../models/music-service-provider.model';
 import { CitiesService, City } from '../../../services/cities.service';
@@ -11,102 +13,129 @@ import { CitiesService, City } from '../../../services/cities.service';
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })
-export class ProfessionalProfileModalComponent implements OnInit {
-  @Input() professionalId: number | null = null;
-  @Output() close = new EventEmitter<void>();
+export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  @ViewChild('professionalHeroBg') professionalHeroBg?: ElementRef<HTMLDivElement>;
 
   professional: MusicServiceProviderDto | null = null;
   loading = false;
   error: string | null = null;
   cities: City[] = [];
+  showContact = false;
+
+  private fullHeroHeight = 0;
+  private rafPending = false;
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private professionalService: MusicServiceProviderService,
-    private citiesService: CitiesService
-  ) { }
+    private citiesService: CitiesService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
-    if (this.professionalId) {
-      this.loadProfessional();
-    }
-    this.loadCities();
+    this.route.params.subscribe(params => {
+      const id = +params['id'];
+      if (id) this.loadProfessional(id);
+    });
+    this.citiesService.getCities().subscribe({
+      next: cities => this.cities = cities,
+      error: () => {}
+    });
   }
 
-  loadProfessional(): void {
-    if (!this.professionalId) return;
+  ngAfterViewInit(): void {}
+
+  ngOnDestroy(): void {}
+
+  loadProfessional(id?: number): void {
+    const professionalId = id ?? +this.route.snapshot.params['id'];
+    if (!professionalId) return;
 
     this.loading = true;
     this.error = null;
 
-    this.professionalService.getServiceProviderById(this.professionalId).subscribe({
+    this.professionalService.getServiceProviderById(professionalId).subscribe({
       next: (professional) => {
         this.professional = professional;
         this.loading = false;
+        setTimeout(() => this.initHeroHeight(), 0);
       },
-      error: (err) => {
-        console.error('שגיאה בטעינת פרטי בעל מקצוע:', err);
+      error: () => {
         this.error = 'שגיאה בטעינת פרטי בעל המקצוע';
         this.loading = false;
       }
     });
   }
 
-  loadCities(): void {
-    this.citiesService.getCities().subscribe({
-      next: (cities) => {
-        this.cities = cities;
-      },
-      error: (err) => {
-        console.error('שגיאה בטעינת ערים:', err);
-      }
+  private initHeroHeight(): void {
+    const bg = this.professionalHeroBg?.nativeElement;
+    if (!bg) return;
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.25 - 8);
+    bg.style.height = this.fullHeroHeight + 'px';
+    this.shrinkHero();
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.rafPending = false;
     });
   }
 
+  @HostListener('window:resize')
+  onResize(): void {
+    this.initHeroHeight();
+  }
+
+  private shrinkHero(): void {
+    const bg = this.professionalHeroBg?.nativeElement;
+    if (!bg || this.fullHeroHeight === 0) return;
+    const minHeight = 8 + 55;
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    bg.style.height = newHeight + 'px';
+
+    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
+  }
+
+  toggleContact(): void {
+    this.showContact = !this.showContact;
+  }
+
+  goBack(): void {
+    this.router.navigate(['/professionals']);
+  }
+
   getCityName(cityId: number | null | undefined): string {
-    if (!cityId) return '-';
-    const city = this.cities.find(c => c.id === cityId);
-    return city ? city.name : '-';
-  }
-
-  getStatusLabel(status: number): string {
-    switch (status) {
-      case 0: return 'ממתין לאישור';
-      case 1: return 'מאושר';
-      case 2: return 'מושעה';
-      default: return 'לא ידוע';
-    }
-  }
-
-  getStatusBadgeClass(status: number): string {
-    switch (status) {
-      case 0: return 'badge-warning';
-      case 1: return 'badge-success';
-      case 2: return 'badge-danger';
-      default: return 'badge-secondary';
-    }
+    if (!cityId) return '';
+    return this.cities.find(c => c.id === cityId)?.name || '';
   }
 
   getCategoriesDisplay(): string {
-    if (!this.professional?.categories || this.professional.categories.length === 0) {
-      return '-';
-    }
+    if (!this.professional?.categories?.length) return '';
     return this.professional.categories.map(c => c.categoryName).join(', ');
   }
 
-  onClose(): void {
-    this.close.emit();
-  }
-
-  onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.onClose();
-    }
+  getSafeVideoUrl(url: string): SafeResourceUrl {
+    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
+    const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 
   openWhatsApp(): void {
     if (this.professional?.whatsAppNumber) {
-      const phoneNumber = this.professional.whatsAppNumber.replace(/\D/g, '');
-      window.open(`https://wa.me/${phoneNumber}`, '_blank');
+      window.open(`https://wa.me/${this.professional.whatsAppNumber.replace(/\D/g, '')}`, '_blank');
     }
   }
 

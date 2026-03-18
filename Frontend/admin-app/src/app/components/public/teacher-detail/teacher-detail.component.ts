@@ -71,8 +71,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.heroBannerSrc) {
       bg.style.backgroundImage = `url('${this.heroBannerSrc}')`;
     }
-    const top = window.innerHeight * 0.02;
-    this.fullHeroHeight = Math.round(window.innerHeight - top - 16);
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.50 - 8);
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -95,9 +94,18 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   private shrinkHero(): void {
     const bg = this.teacherHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
-    const minHeight = Math.round(window.innerHeight * 0.02 + 72);
+    const minHeight = 8 + 55;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
+
+    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
   }
 
   get heroBannerSrc(): string {

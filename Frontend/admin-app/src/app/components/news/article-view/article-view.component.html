@@ -29,17 +29,6 @@
 
   <!-- Content Container with Video and Text - WITH SIDEBARS -->
   <div class="content-with-sidebars">
-    <!-- Left Sidebar - Related Articles -->
-    <aside class="sidebar sidebar-left" *ngIf="relatedArticles.length > 0">
-      <h3 class="sidebar-title">כתבות נוספות</h3>
-      <div class="related-articles">
-        <app-article-card
-          *ngFor="let relArticle of relatedArticles.slice(0, 6)"
-          [article]="relArticle"
-          layout="card">
-        </app-article-card>
-      </div>
-    </aside>
 
     <!-- Main Content Box -->
     <div class="content-container">
@@ -61,20 +50,50 @@
           <div [innerHTML]="article.content"></div>
         </div>
 
+        <!-- Audio Section -->
+        <div class="audio-section" *ngIf="article.audioEmbedUrl">
+          <iframe
+            [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
+            frameborder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            class="audio-frame">
+          </iframe>
+        </div>
+
+        <!-- Gallery Section -->
+        <div class="gallery-section" *ngIf="article.galleryImages && article.galleryImages.length > 0">
+          <div class="gallery-grid">
+            <div class="gallery-item" *ngFor="let img of article.galleryImages; let i = index" (click)="openLightbox(i)">
+              <img [src]="img.imageUrl" [alt]="img.caption || article.title" class="gallery-img">
+              <p class="gallery-caption" *ngIf="img.caption">{{ img.caption }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lightbox -->
+        <div class="lightbox-overlay" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">
+          <button class="lightbox-close" (click)="closeLightbox()">
+            <span class="material-icons">close</span>
+          </button>
+          <button class="lightbox-nav lightbox-prev" (click)="$event.stopPropagation(); lightboxStep(-1)" *ngIf="article.galleryImages.length > 1">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div class="lightbox-content" (click)="$event.stopPropagation()">
+            <img [src]="article.galleryImages[lightboxIndex!].imageUrl" [alt]="article.galleryImages[lightboxIndex!].caption || article.title" class="lightbox-img">
+            <p class="lightbox-caption" *ngIf="article.galleryImages[lightboxIndex!].caption">{{ article.galleryImages[lightboxIndex!].caption }}</p>
+            <span class="lightbox-counter">{{ lightboxIndex! + 1 }} / {{ article.galleryImages.length }}</span>
+          </div>
+          <button class="lightbox-nav lightbox-next" (click)="$event.stopPropagation(); lightboxStep(1)" *ngIf="article.galleryImages.length > 1">
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+
         <!-- Tagged Artists -->
         <div class="tagged-artists-section" *ngIf="article.taggedArtists && article.taggedArtists.length > 0">
-          <h3 class="section-title">אמנים בכתבה</h3>
-          <div class="artists-list">
-            <a *ngFor="let artist of article.taggedArtists"
-               [routerLink]="['/artists', artist.artistId]"
-               class="artist-chip">
-              <img *ngIf="artist.artistImageUrl"
-                   [src]="artist.artistImageUrl"
-                   [alt]="artist.artistName"
-                   class="artist-avatar">
-              <span class="artist-name">{{ artist.artistName }}</span>
-            </a>
-          </div>
+          <a *ngFor="let artist of article.taggedArtists"
+             [routerLink]="['/artist', artist.artistId]"
+             class="artist-link">{{ artist.artistName }}</a>
         </div>
       </div>
 

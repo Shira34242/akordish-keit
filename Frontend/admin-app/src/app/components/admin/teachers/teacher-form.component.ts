@@ -606,6 +606,13 @@ export class TeacherFormComponent implements OnInit {
     this.router.navigate(['/admin/teachers']);
   }
 
+  preventEnterSubmit(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' && (target as HTMLInputElement).type !== 'submit') {
+      event.preventDefault();
+    }
+  }
+
   // Close dropdowns when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {

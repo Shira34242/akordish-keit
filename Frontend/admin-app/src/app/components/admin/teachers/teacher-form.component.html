@@ -15,7 +15,7 @@
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="teacher-form">
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" (keydown.enter)="preventEnterSubmit($event)" class="teacher-form">
 
     <!-- Basic Information -->
     <div class="form-section">
@@ -56,16 +56,18 @@
 
       <div class="form-group" *ngIf="isEditMode">
         <label class="form-label">משתמש מקושר</label>
-        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
-          <span *ngIf="userName" style="color: #2d7a3e; font-weight: 500;">
-            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person</span>
-            {{ userName }}
-            <span *ngIf="userEmail" style="color: #666; font-size: 0.9em;">({{ userEmail }})</span>
-          </span>
-          <span *ngIf="!userName" style="color: #666;">
-            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person_off</span>
-            לא מקושר למשתמש - פרופיל צף
-          </span>
+        <div class="selected-user-box" *ngIf="userName">
+          <div class="user-info-display">
+            <span class="material-icons user-icon">person</span>
+            <div class="user-details">
+              <div class="user-name">{{ userName }}</div>
+              <div class="user-email" *ngIf="userEmail">{{ userEmail }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="user-floating-badge" *ngIf="!userName">
+          <span class="material-icons user-icon">person_off</span>
+          <span class="form-hint">לא מקושר למשתמש — פרופיל צף</span>
         </div>
         <small class="form-hint">להוספה/הסרה של קישור למשתמש, השתמש בכפתורים בטבלה הראשית</small>
       </div>

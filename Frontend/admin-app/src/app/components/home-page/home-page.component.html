@@ -108,6 +108,24 @@
       </div>
     </section>
 
+    <!-- מורים -->
+    <section class="home-section" *ngIf="featuredTeachers.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">מורים</h2>
+        <a routerLink="/teachers" class="section-link">לכל המורים ‹</a>
+      </div>
+      <div class="persons-scroll">
+        <a class="person-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
+          <div class="person-avatar">
+            <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
+            <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
+          </div>
+          <p class="person-name">{{ teacher.displayName }}</p>
+          <p class="person-sub">{{ teacher.primaryInstrument || 'מורה למוזיקה' }}</p>
+        </a>
+      </div>
+    </section>
+
     <!-- תיבת Promo — אינדקס עולם המוזיקה -->
     <div class="promo-box">
       <div class="promo-content">
@@ -119,6 +137,24 @@
         </div>
       </div>
     </div>
+
+    <!-- בעלי מקצוע -->
+    <section class="home-section" *ngIf="featuredProviders.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">בעלי מקצוע</h2>
+        <a routerLink="/professionals" class="section-link">לכל בעלי המקצוע ‹</a>
+      </div>
+      <div class="persons-scroll">
+        <a class="person-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]">
+          <div class="person-avatar">
+            <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
+            <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
+          </div>
+          <p class="person-name">{{ pro.displayName }}</p>
+          <p class="person-sub">{{ pro.categoryName || 'בעל מקצוע' }}</p>
+        </a>
+      </div>
+    </section>
 
     <!-- מומלצי המערכת -->
     <section class="home-section" *ngIf="featuredArtists.length > 0">

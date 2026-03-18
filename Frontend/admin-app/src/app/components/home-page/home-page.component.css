@@ -306,6 +306,95 @@
 }
 
 /* ============================================
+   PERSONS SCROLL ROW (מורים + בעלי מקצוע)
+============================================ */
+.persons-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.persons-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.person-card {
+  flex-shrink: 0;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #000;
+  transition: opacity 0.15s;
+}
+
+.person-card:hover {
+  opacity: 0.75;
+}
+
+.person-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #F2F2F2;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.person-initial {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: 1.8rem;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+.person-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.8rem;
+  color: #000;
+  text-align: center;
+  margin: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-sub {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.72rem;
+  color: rgba(0, 0, 0, 0.45);
+  text-align: center;
+  margin: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================
    PROMO BOX (תיבה צהובה)
 ============================================ */
 .promo-box {

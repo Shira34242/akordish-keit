@@ -38,6 +38,7 @@
   top: 2vh;
   left: 16px;
   right: 16px;
+  height: 48vh; /* ברירת מחדל — JS מעדכן לאחר טעינה */
   border-radius: 40px;
   overflow: hidden;
   background: #ddff53;
@@ -46,7 +47,6 @@
   justify-content: flex-start;
   z-index: 10;
   will-change: height;
-  /* גובה מוגדר ע"י JS */
 }
 
 .hero-collapse-overlay {

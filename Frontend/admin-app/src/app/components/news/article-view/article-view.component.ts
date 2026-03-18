@@ -21,7 +21,7 @@ import { ContentPageService } from '../../../services/content-page.service';
 export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly sanitizer = inject(DomSanitizer);
+  readonly sanitizer = inject(DomSanitizer);
   private readonly articleService = inject(ArticleService);
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
@@ -55,6 +55,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   relatedArticles: Article[] = [];
   isReportModalOpen = false;
   fullHeroHeight = 0;
+  lightboxIndex: number | null = null;
 
   feedbackPct(type: 'yes' | 'no'): number {
     const total = this.feedbackYesCount + this.feedbackNoCount;
@@ -304,6 +305,29 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     this.feedbackGiven = true;
     this.feedbackChoice = 'no';
     this.feedbackNoCount = 1;
+  }
+
+  // Lightbox
+  openLightbox(index: number): void {
+    this.lightboxIndex = index;
+  }
+
+  closeLightbox(): void {
+    this.lightboxIndex = null;
+  }
+
+  lightboxStep(dir: 1 | -1): void {
+    if (this.lightboxIndex === null || !this.article) return;
+    const len = this.article.galleryImages.length;
+    this.lightboxIndex = (this.lightboxIndex + dir + len) % len;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    if (this.lightboxIndex === null) return;
+    if (e.key === 'ArrowLeft') this.lightboxStep(1);
+    if (e.key === 'ArrowRight') this.lightboxStep(-1);
+    if (e.key === 'Escape') this.closeLightbox();
   }
 
   // Report Modal
