@@ -1,131 +1,181 @@
+/* ========================================
+   Pagination — Design System
+   מבוסס על: nav-pills, icon buttons, spacing variables
+======================================== */
+
 .pagination-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background: #f8f9fa;
-  border-top: 1px solid #dee2e6;
-  border-radius: 0 0 12px 12px;
+  padding: var(--space-lg) var(--space-xl);
+  background: transparent;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-lg);
 }
 
+/* ---- Info + Page Size Selector ---- */
 .pagination-info {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: var(--space-xl);
   flex-wrap: wrap;
 }
 
 .info-text {
-  color: #495057;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .page-size-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .page-size-selector label {
-  color: #6c757d;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.45);
 }
 
+/* select מעוצב כ-pill — בדיוק כמו כפתורי header */
 .page-size-select {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  background: white;
-  color: #495057;
-  font-size: 0.9rem;
+  height: 34px;
+  padding: 0 var(--space-base);
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-sm);
+  font-weight: 300;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s;
+  outline: none;
 }
 
 .page-size-select:hover {
-  border-color: #c99039;
+  background: #e8e8e8;
 }
 
 .page-size-select:focus {
-  outline: none;
-  border-color: #c99039;
-  box-shadow: 0 0 0 3px rgba(201, 144, 57, 0.1);
+  background: #ddff53;
 }
 
+/* ---- Controls: Prev + Numbers + Next ---- */
 .pagination-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
-.pagination-btn,
-.page-btn {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 0.5rem;
-  border: 1px solid #dee2e6;
-  background: white;
-  color: #495057;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
+/* ---- כפתורי Prev / Next / First / Last — כמו social-icon-btn ---- */
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  background: #F2F2F2;
+  color: #000000;
+  border-radius: 50%;
+  font-size: var(--font-lg);
+  line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.pagination-btn:hover:not(:disabled),
-.page-btn:hover:not(:disabled):not(.ellipsis) {
-  background: #f8f9fa;
-  border-color: #c99039;
-  color: #c99039;
+.pagination-btn:hover:not(:disabled) {
+  background: #000000;
+  color: #ddff53;
 }
 
-.pagination-btn:disabled,
-.page-btn:disabled {
-  opacity: 0.4;
+.pagination-btn:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
+/* ---- מספרי עמודים — בדיוק כמו nav-pills ---- */
 .page-numbers {
   display: flex;
-  gap: 0.25rem;
+  align-items: center;
+  background: #F2F2F2;
+  border-radius: 60px;
+  height: 34px;
+  padding: 0 var(--space-xs);
+  gap: 0;
 }
 
+/* ---- כפתור מספר — כמו nav-link ---- */
+.page-btn {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 var(--space-sm);
+  border: none;
+  background: transparent;
+  color: #000000;
+  border-radius: 50px;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.page-btn:hover:not(:disabled):not(.ellipsis) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* active — כמו nav-link active + הדגשה ב-ddff53 */
 .page-btn.active {
-  background: #c99039;
-  border-color: #c99039;
-  color: white;
-  font-weight: 600;
+  background: #ddff53;
+  color: #000000;
+  font-weight: 800;
 }
 
+/* ellipsis — לא ניתן ללחיצה, מעומעם */
 .page-btn.ellipsis {
-  border: none;
   background: transparent;
+  color: rgba(0, 0, 0, 0.35);
   cursor: default;
-  color: #6c757d;
+  pointer-events: none;
 }
 
-.page-btn.ellipsis:hover {
-  background: transparent;
-  border: none;
-}
-
-/* Responsive */
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
   .pagination-container {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    padding: var(--space-base) var(--space-lg);
+    gap: var(--space-md);
   }
 
   .pagination-info {
-    justify-content: space-between;
+    justify-content: center;
+    gap: var(--space-lg);
     width: 100%;
   }
 
@@ -136,24 +186,28 @@
 
   .page-numbers {
     flex-wrap: wrap;
-    justify-content: center;
+    height: auto;
+    padding: var(--space-xs);
+    border-radius: 999px;
   }
 }
 
 @media (max-width: 480px) {
-  .pagination-btn,
+  .pagination-btn {
+    width: 30px;
+    height: 30px;
+  }
+
   .page-btn {
-    min-width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
+    min-width: 24px;
+    height: 24px;
+    font-size: var(--font-xs);
+    padding: 0 var(--space-xs);
   }
 
-  .info-text {
-    font-size: 0.85rem;
-  }
-
+  .info-text,
   .page-size-selector label,
   .page-size-select {
-    font-size: 0.85rem;
+    font-size: var(--font-xs);
   }
 }

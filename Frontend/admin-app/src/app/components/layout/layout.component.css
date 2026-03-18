@@ -28,7 +28,7 @@
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-md);
     position: relative;
 }
 
@@ -39,7 +39,7 @@
 .header-left-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-md);
     direction: ltr;
     position: relative;
 }
@@ -56,7 +56,7 @@
     height: 34px;
     display: flex;
     align-items: center;
-    padding: 0 4px;
+    padding: 0 var(--space-xs);
 }
 
 .main-nav {
@@ -78,7 +78,7 @@
     background: transparent;
     text-decoration: none;
     cursor: pointer;
-    padding: 0 12px;
+    padding: 0 var(--space-md);
     border-radius: 50px;
     transition: background 0.2s;
     white-space: nowrap;
@@ -94,7 +94,7 @@
 .btn-music-index {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-sm);
     background: #ddff53;
     color: #000;
     font-family: 'Open Sans', sans-serif;
@@ -103,7 +103,7 @@
     height: 34px;
     min-width: 0;
     max-width: 300px;
-    padding: 0 16px;
+    padding: 0 var(--space-base);
     border-radius: 50px;
     text-decoration: none;
     cursor: pointer;
@@ -142,8 +142,8 @@
 .btn-music-index--collapsed:hover {
     min-width: 0;
     max-width: 300px;
-    padding: 0 16px;
-    gap: 8px;
+    padding: 0 var(--space-base);
+    gap: var(--space-sm);
 }
 
 .btn-music-index--collapsed:hover .btn-music-index-text {
@@ -178,12 +178,12 @@
 .user-profile-wrapper {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-sm);
     cursor: pointer;
     background: #ffffff;
     border-radius: 50px;
     height: 34px;
-    padding: 0 8px 0 4px;
+    padding: 0 var(--space-md) 0 var(--space-xs);
     direction: ltr;
     box-sizing: border-box;
 }
@@ -219,7 +219,7 @@
     direction: rtl;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-xs);
     align-items: flex-start;
 }
 
@@ -229,12 +229,12 @@
 }
 
 .user-menu-header {
-    padding: 10px 14px;
+    padding: var(--space-md) var(--space-base);
     background: #F2F2F2;
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-md);
     direction: rtl;
     white-space: nowrap;
 }
@@ -277,7 +277,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-xs);
     align-items: flex-start;
     width: 100%;
 }
@@ -285,8 +285,8 @@
 .user-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-base);
     cursor: pointer;
     transition: background-color 0.18s, color 0.18s;
     font-family: 'Open Sans', sans-serif;
@@ -339,7 +339,7 @@
     background: #ddff53;
     color: #000;
     border: none;
-    padding: 6px 16px;
+    padding: var(--space-sm) var(--space-base);
     border-radius: 50px;
     font-family: 'Open Sans', sans-serif;
     font-weight: 700;
@@ -409,7 +409,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
+    padding: var(--space-lg);
     border-bottom: 1px solid #2a2a2a;
 }
 
@@ -447,7 +447,7 @@
 
 .mobile-nav-link {
     display: block;
-    padding: 16px 20px;
+    padding: var(--space-base) var(--space-lg);
     font-family: 'Open Sans', sans-serif;
     font-size: var(--font-base);
     color: #ccc;
@@ -545,14 +545,14 @@
     left: 24px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-sm);
     align-items: flex-start;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
     z-index: 1001;
     direction: ltr;
     animation: fabMenuSlideUp 0.2s ease-out;
-    padding: 4px 0;
+    padding: var(--space-xs) 0;
     min-width: 0;
 }
 
@@ -564,8 +564,8 @@
 .fab-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-base);
     cursor: pointer;
     transition: background-color 0.18s, color 0.18s;
     font-family: 'Open Sans', sans-serif;
@@ -627,8 +627,8 @@
 .fab-sub-menu {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding-right: 8px;
+    gap: var(--space-sm);
+    padding-right: var(--space-sm);
     width: 100%;
 }
 
@@ -686,7 +686,7 @@
 ============================================ */
 .main-footer {
     border-top: 1px solid #1e1e1e;
-    padding: 40px 0;
+    padding: var(--space-2xl) 0;
     margin-top: auto;
     direction: rtl;
 }
@@ -704,7 +704,7 @@
 .footer-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-base);
 }
 
 .footer-logo-img {
@@ -726,7 +726,7 @@
 .footer-links {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-md);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -779,7 +779,7 @@
 
     .btn-music-index {
         font-size: var(--font-sm);
-        padding: 0 12px;
+        padding: 0 var(--space-md);
     }
 
     .index-search-icon {
@@ -807,13 +807,13 @@
 
     .header-inner {
         padding: 0 0.75rem;
-        gap: 8px;
+        gap: var(--space-md);
     }
 
     .btn-music-index {
         font-size: var(--font-xs);
-        padding: 0 10px;
-        gap: 4px;
+        padding: 0 var(--space-md);
+        gap: var(--space-xs);
     }
 
     .index-search-icon {

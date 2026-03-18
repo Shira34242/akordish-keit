@@ -10,10 +10,11 @@
   min-height: 100vh;
   direction: rtl;
   color: #000000;
+  overflow-x: hidden;
 }
 
 /* ════════════════════════════════════════════════════
-   TOP SCROLL MASK — מסכה לבנה מעל ה-hero
+   TOP SCROLL MASK
 ════════════════════════════════════════════════════ */
 .top-scroll-mask {
   position: fixed;
@@ -27,7 +28,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   HERO BACKGROUND — fixed, מתכווץ בגלילה
+   HERO — fixed, מתכווץ בגלילה
 ════════════════════════════════════════════════════ */
 .teacher-hero-bg {
   position: fixed;
@@ -35,102 +36,92 @@
   left: 8px;
   right: 8px;
   border-radius: 28px;
-  height: calc(50vh - 8px); /* JS מחליף */
+  height: calc(100vh - 16px);
   z-index: 895;
-  background-color: #404040;
-  background-size: cover;
-  background-position: center;
+  background-color: #F2F2F2;
   overflow: hidden;
   will-change: height;
 }
 
-/* שכבת כהות קלה */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.05) 100%);
-  pointer-events: none;
-}
-
-/* שכבת כהייה בגלילה (אפור כהה) */
 .hero-collapse-overlay {
   position: absolute;
-  inset: 0;
-  background: #404040;
+  inset: -2px;
+  background: #F2F2F2;
   opacity: 0;
   pointer-events: none;
   z-index: 1;
+  transform: translateZ(0);
 }
 
-/* ════════════════════════════════════════════════════
-   HERO CONTENT AREA — בתזרים רגיל, מעל ה-bg
-════════════════════════════════════════════════════ */
-.hero-content-area {
-  position: relative;
-  z-index: 896;
-  height: calc(50vh - 8px); /* זהה לגובה hero-bg הראשוני */
-}
-
-/* ════════════════════════════════════════════════════
-   TEACHER INFO CARD — תחתית הhero, ימין
-════════════════════════════════════════════════════ */
-.teacher-info-card {
+/* ── תוכן Hero — מרכז-תחתון, עמודה, היררכיה ברורה ── */
+.hero-content {
   position: absolute;
-  bottom: 0;
-  right: var(--space-2xl);
-  width: 36%;
-  min-width: 260px;
-  max-width: 420px;
-  background: #000000;
-  border-radius: 20px 20px 0 0;
-  padding: var(--space-lg) var(--space-xl) 76px; /* תחתית גדולה — מקום לתמונת הפרופיל */
-  overflow: visible;
+  bottom: var(--space-2xl);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-sm);
+  text-align: center;
+  z-index: 2;
+  width: 90%;
+  max-width: 480px;
 }
 
-/* ── טקסט בתוך הכרטיס ── */
-.hero-badges {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+.hero-avatar-wrap {
+  margin-bottom: var(--space-sm);
 }
 
-.badge-featured {
-  background: #ddff53;
+.hero-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #ffffff;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+}
+
+/* שם — כותרת ראשית */
+.hero-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-hero);
+  line-height: var(--lh-heading);
+  margin: 0;
   color: #000000;
-  padding: 3px 12px;
+  text-align: center;
+}
+
+/* Badge */
+.badge-featured {
+  display: inline-block;
+  background: #000000;
+  color: #ddff53;
+  padding: var(--space-xs) var(--space-base);
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-size: var(--font-xs);
   font-weight: 800;
-  display: inline-block;
 }
 
-.teacher-name {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-2xl);
-  color: #ffffff;
-  line-height: 1.1;
-  margin: 0;
-}
-
+/* כלי נגינה */
 .instruments-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
+  justify-content: center;
 }
 
 .instrument-chip {
-  padding: 3px 10px;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.8);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.65);
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
@@ -143,167 +134,41 @@
   font-weight: 800;
 }
 
+/* עיר */
 .city-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
-  color: rgba(255, 255, 255, 0.5);
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
   font-weight: 300;
   margin: 0;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .city-row .material-icons {
-  font-size: 15px;
-}
-
-/* ════════════════════════════════════════════════════
-   PROFILE BUBBLE — בולטת מחוץ לתיבה (למטה)
-════════════════════════════════════════════════════ */
-.profile-bubble {
-  position: absolute;
-  bottom: -56px;
-  right: var(--space-xl);
-  width: 112px;
-  height: 112px;
-  z-index: 10;
-}
-
-.profile-img {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #ddff53;
-  display: block;
-}
-
-.star-badge {
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  background: #ddff53;
-  color: #000000;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.star-badge .material-icons {
-  font-size: 14px;
-}
-
-/* ════════════════════════════════════════════════════
-   PAGE CONTENT (מתחת ל-hero)
-════════════════════════════════════════════════════ */
-.page-content {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: var(--space-4xl) var(--space-base) var(--space-3xl);
-}
-
-/* ════════════════════════════════════════════════════
-   MAIN LAYOUT — גריד: sidebar (ימין) + תוכן (שמאל)
-════════════════════════════════════════════════════ */
-.main-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: var(--space-base);
-  align-items: start;
-}
-
-/* ════════════════════════════════════════════════════
-   SIDEBAR
-════════════════════════════════════════════════════ */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  position: sticky;
-  top: calc(8px + 55px + var(--space-base));
-}
-
-.contact-card {
-  background: #F2F2F2;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.btn-contact {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-base) var(--space-lg);
-  background: #000000;
-  color: #ffffff;
-  border: none;
-  border-radius: 20px;
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-sm);
-  cursor: pointer;
-  text-align: right;
-  transition: background 0.15s;
-}
-
-.btn-contact:hover {
-  background: #404040;
-}
-
-.btn-contact .material-icons {
-  font-size: 20px;
-}
-
-.contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-sm);
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-base);
-  border-radius: 12px;
-  font-family: 'Open Sans', sans-serif;
-  font-size: var(--font-sm);
-  font-weight: 300;
-  color: #000000;
-  text-decoration: none;
-}
-
-.contact-item .material-icons {
   font-size: 18px;
-  color: #000;
-  opacity: 0.45;
-  flex-shrink: 0;
 }
 
-.contact-item.link {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.contact-item.link:hover {
-  background: #ddff53;
-}
-
-.btn-whatsapp {
+/* כפתורי פעולה */
+.hero-actions {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-md);
-  padding: 0 var(--space-xl);
-  height: 42px;
+  margin-top: var(--space-sm);
+}
+
+/* Pill Regular — WhatsApp */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 34px;
+  padding: 0 var(--space-lg);
   background: #ddff53;
   color: #000000;
   border-radius: 999px;
@@ -314,6 +179,7 @@
   font-weight: 800;
   font-size: var(--font-sm);
   transition: opacity 0.15s;
+  flex-shrink: 0;
 }
 
 .btn-whatsapp:hover {
@@ -321,75 +187,91 @@
 }
 
 .btn-whatsapp .material-icons {
+  font-size: 18px;
+}
+
+/* Circle Icon — קשר */
+.social-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
+.social-icon-btn:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.social-icon-btn .material-icons {
   font-size: 20px;
 }
 
 /* ════════════════════════════════════════════════════
-   CONTENT COLUMN
+   SCROLL SPACER
 ════════════════════════════════════════════════════ */
-.content-column {
+.hero-scroll-spacer {
+  margin-top: 8px;
+  height: calc(100vh - 76px);
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════
+   PAGE CONTENT — עמודה אחת, max-width 900px
+════════════════════════════════════════════════════ */
+.page-content {
+  max-width: 900px;
+  margin: var(--space-2xl) auto 0;
+  padding: 0 var(--space-lg) var(--space-2xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-base);
 }
 
-/* ── ביו קצר ── */
-.short-bio-card {
+/* ════════════════════════════════════════════════════
+   SECTION HEADER
+════════════════════════════════════════════════════ */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-base);
+}
+
+/* Pill label — #ddff53 */
+.card-section-label {
+  display: inline-block;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  color: #000000;
   background: #ddff53;
-  border-radius: 24px;
-  padding: var(--space-2xl) var(--space-2xl);
-}
-
-.short-bio-text {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 800;
-  font-size: var(--font-base);
-  color: #000000;
-  margin: 0;
-  line-height: 1.65;
+  padding: var(--space-xs) var(--space-base);
+  border-radius: 999px;
+  margin-bottom: var(--space-base);
   text-align: right;
 }
 
-/* ── תיאור מלא ── */
-.description-card {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-xl) var(--space-2xl);
-}
-
-.card-label {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-xs);
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0 0 var(--space-base) 0;
-  text-align: right;
-}
-
-.full-desc-text {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  font-weight: 300;
-  font-size: var(--font-base);
-  color: #000000;
-  line-height: 1.9;
-  white-space: pre-wrap;
-  margin: 0;
-  text-align: right;
-}
-
-/* ── כרטיס מידע ── */
-.info-card {
+/* ════════════════════════════════════════════════════
+   BIO CARD — Bio Card pattern
+════════════════════════════════════════════════════ */
+.bio-card {
   background: #F2F2F2;
   border-radius: 24px;
   padding: var(--space-lg) var(--space-xl);
+}
+
+/* ── Info Rows ── */
+.info-rows {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -409,88 +291,68 @@
   color: rgba(0, 0, 0, 0.38);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  min-width: 88px;
-  padding-top: 4px;
+  min-width: 96px;
+  padding-top: var(--space-xs);
   flex-shrink: 0;
   text-align: right;
 }
 
-.chips-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
-
-.chip {
+/* Pill Tag Secondary — #F2F2F2 variant (on white bg) */
+.pill-tag-secondary {
   display: inline-block;
-  padding: 4px 12px;
+  padding: var(--space-xs) var(--space-base);
   background: #ffffff;
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-sm);
   font-weight: 300;
   color: #000000;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
-/* ── Divider ── */
-.divider {
-  height: 2px;
-  background: #F2F2F2;
-  border-radius: 999px;
-  margin: var(--space-xs) 0;
-}
-
-/* ── גלריה נגללת ── */
-.gallery-section {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.gallery-scroll {
+.tags-inline {
   display: flex;
-  gap: var(--space-md);
-  overflow-x: auto;
-  padding-bottom: var(--space-sm);
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #ddff53 transparent;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
-.gallery-scroll::-webkit-scrollbar { height: 4px; }
-.gallery-scroll::-webkit-scrollbar-track { background: transparent; }
-.gallery-scroll::-webkit-scrollbar-thumb { background: #ddff53; border-radius: 999px; }
-
-.gallery-item {
-  flex-shrink: 0;
-  width: 220px;
-  height: 160px;
-  border-radius: 16px;
-  overflow: hidden;
+/* ── Bio Texts ── */
+.short-bio-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-base);
+  color: #000000;
+  margin: 0 0 var(--space-base) 0;
+  line-height: var(--lh-body);
+  text-align: right;
 }
 
-.gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.2s;
+.full-desc-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-base);
+  color: #000000;
+  line-height: var(--lh-body);
+  white-space: pre-wrap;
+  margin: 0;
+  text-align: right;
 }
 
-.gallery-item:hover img {
-  transform: scale(1.04);
+/* ════════════════════════════════════════════════════
+   TAGS ROW — התמחויות
+════════════════════════════════════════════════════ */
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
-/* ── וידאו ── */
-.video-section {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
+/* ════════════════════════════════════════════════════
+   VIDEO
+════════════════════════════════════════════════════ */
 .video-wrapper {
   position: relative;
   padding-bottom: 56.25%;
@@ -501,14 +363,257 @@
 
 .video-iframe {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border: none;
   border-radius: 16px;
 }
 
 /* ════════════════════════════════════════════════════
-   LOADING STATE
+   SONGS GRID — Song Card pattern
+════════════════════════════════════════════════════ */
+.songs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ════════════════════════════════════════════════════
+   ARTICLES GRID — News Banner Card pattern
+════════════════════════════════════════════════════ */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ════════════════════════════════════════════════════
+   TESTIMONIALS — Bio Card, עמודה אחת
+════════════════════════════════════════════════════ */
+.testimonials-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.testimonial-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.testimonial-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-base);
+  color: #000000;
+  line-height: var(--lh-body);
+  margin: 0;
+  text-align: right;
+}
+
+.testimonial-author {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
+  text-align: right;
+}
+
+/* ════════════════════════════════════════════════════
+   3D GALLERY — זהה לדף אמן, overflow: hidden
+════════════════════════════════════════════════════ */
+.g3d-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.g3d-section {
+  position: relative;
+  width: 100%;
+  height: 55vh;
+  overflow: hidden;
+  perspective: 1800px;
+  -webkit-user-select: none;
+  user-select: none;
+  background: #ffffff;
+}
+
+.g3d-cards {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.g3d-arrow {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 2000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.g3d-arrow:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.g3d-arrow-prev { left: 20px; }
+.g3d-arrow-next { right: 20px; }
+
+.g3d-dots {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-sm);
+  z-index: 2000;
+  pointer-events: auto;
+}
+
+.g3d-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.g3d-dot.active {
+  background: #000000;
+  transform: scale(1.35);
+}
+
+/* כרטיסי גלריה — נוצרים ב-JS */
+:host ::ng-deep .g3d-card {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: min(24vw, 290px);
+  aspect-ratio: 4.7 / 3;
+  backface-visibility: hidden;
+  will-change: transform, filter;
+  transition: filter 0.18s ease;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+:host ::ng-deep .g3d-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+:host ::ng-deep .g3d-card-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xl) var(--space-lg) var(--space-base);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-sm);
+  text-align: right;
+}
+
+/* ════════════════════════════════════════════════════
+   IMAGE LIGHTBOX
+════════════════════════════════════════════════════ */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-base);
+  max-width: min(92vw, 1200px);
+}
+
+.image-lightbox-img {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 24px;
+  display: block;
+}
+
+.image-lightbox-caption {
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-base);
+  text-align: center;
+  margin: 0;
+}
+
+.lightbox-close-btn {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox-close-btn .material-icons {
+  font-size: 20px;
+}
+
+/* ════════════════════════════════════════════════════
+   LOADING
 ════════════════════════════════════════════════════ */
 .loading-container {
   display: flex;
@@ -539,88 +644,26 @@
 /* ════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-  .teacher-info-card {
-    right: var(--space-base);
-    width: 46%;
-    padding: var(--space-base) var(--space-lg) 76px;
-  }
-
-  .teacher-name {
-    font-size: var(--font-xl);
-  }
-
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: relative;
-    top: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-  }
-
-  .contact-card {
-    grid-column: 1 / -1;
-  }
+@media (max-width: 768px) {
+  .hero-avatar { width: 100px; height: 100px; }
+  .hero-content { bottom: var(--space-xl); }
+  .page-content { padding: 0 var(--space-md) var(--space-xl); }
 }
 
 @media (max-width: 600px) {
   .teacher-hero-bg {
     left: 4px;
     right: 4px;
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
-  .teacher-info-card {
-    right: 4px;
-    left: 4px;
-    width: auto;
-    min-width: unset;
-    max-width: unset;
-    padding: var(--space-base) var(--space-base) 76px;
-    border-radius: 16px 16px 0 0;
-  }
+  .hero-avatar { width: 80px; height: 80px; }
+  .hero-name { font-size: 1.8rem; }
 
-  .teacher-name {
-    font-size: var(--font-lg);
-  }
+  .songs-grid { grid-template-columns: 1fr; }
+  .articles-grid { grid-template-columns: 1fr; }
 
-  .profile-bubble {
-    right: var(--space-base);
-    width: 96px;
-    height: 96px;
-    bottom: -48px;
-  }
+  .page-content { padding: 0 var(--space-sm) var(--space-base); }
 
-  .profile-img {
-    width: 96px;
-    height: 96px;
-  }
-
-  .page-content {
-    padding-top: var(--space-3xl);
-    padding-left: var(--space-sm);
-    padding-right: var(--space-sm);
-  }
-
-  .sidebar {
-    grid-template-columns: 1fr;
-  }
-
-  .short-bio-card,
-  .description-card,
-  .info-card,
-  .gallery-section,
-  .video-section {
-    padding: var(--space-base) var(--space-base);
-    border-radius: 16px;
-  }
-
-  .gallery-item {
-    width: 160px;
-    height: 120px;
-  }
+  :host ::ng-deep .g3d-card { width: min(60vw, 220px); }
 }

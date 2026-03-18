@@ -271,7 +271,7 @@
     top: 12px;
     z-index: 950;
     max-width: 1200px;
-    margin: 0 auto 8px auto;
+    margin: 0 auto var(--space-xs) auto;
     padding: 0 var(--space-xl);
     display: grid;
     grid-template-columns: 1fr 280px;
@@ -287,7 +287,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--space-sm);
     pointer-events: auto;
     width: 100%;
     box-sizing: border-box;
@@ -328,7 +328,7 @@
 
 .btn-text {
     width: auto;
-    padding: 0 12px;
+    padding: 0 var(--space-md);
     font-size: var(--font-sm);
     border-radius: 100px;
 }
@@ -336,7 +336,7 @@
 .toolbar-divider {
     width: 1px;
     height: 24px;
-    background-color: #d1d5db;
+    background-color: rgba(0, 0, 0, 0.15);
     margin: 0;
     flex-shrink: 0;
 }
@@ -348,15 +348,15 @@
     justify-content: center;
     background: #F2F2F2;
     border-radius: 100px;
-    padding: 6px 10px;
-    gap: 4px;
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-xs);
     flex-shrink: 0;
 }
 
 .instrument-group .instrument-btn {
     background: transparent;
     border-radius: 50%;
-    color: #4b5563;
+    color: #404040;
 }
 
 .instrument-group .instrument-btn:hover {
@@ -376,8 +376,8 @@
     justify-content: center;
     background: #F2F2F2;
     border-radius: 100px;
-    padding: 6px 16px;
-    gap: 6px;
+    padding: var(--space-sm) var(--space-base);
+    gap: var(--space-sm);
     flex: 1;
     min-width: 0;
 }
@@ -399,7 +399,7 @@
 .transpose-group {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-xs);
 }
 
 .transpose-val {
@@ -424,7 +424,7 @@
 .autoscroll-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-sm);
 }
 
 .toolbar-btn-sm {
@@ -520,7 +520,7 @@
 ::ng-deep .chord-inline:hover {
     color: #000000;
     text-decoration: underline;
-    background: #c8e84a;
+    background: #ddff53;
 }
 
 ::ng-deep .chord-block {
@@ -582,7 +582,7 @@
 }
 
 .song-list li {
-    padding: 9px 12px;
+    padding: var(--space-md) var(--space-md);
     background: #ffffff;
     border-radius: 12px;
     cursor: pointer;
@@ -624,9 +624,9 @@
 .popular-card .song-list li {
     background: transparent;
     border-radius: 0;
-    padding: 10px 4px;
+    padding: var(--space-md) var(--space-xs);
     border-bottom: 1px solid #e0e0e0;
-    gap: 12px;
+    gap: var(--space-md);
 }
 
 .popular-card .song-list li:last-child {
@@ -729,15 +729,15 @@
 
     .sticky-toolbar {
         grid-template-columns: 1fr;
-        padding: 0 12px;
+        padding: 0 var(--space-md);
         top: 12px;
     }
 
     .toolbar-content {
-        padding: 8px 12px;
+        padding: var(--space-md) var(--space-md);
         flex-wrap: wrap;
         justify-content: center;
-        gap: 6px;
+        gap: var(--space-sm);
     }
 
     /* Hide some dividers on mobile for cleaner look */
@@ -748,7 +748,7 @@
     .toolbar-btn {
         min-width: 32px;
         height: 32px;
-        padding: 0 6px;
+        padding: 0 var(--space-sm);
     }
 
     .toolbar-btn svg {
@@ -758,7 +758,7 @@
 
     /* Make text buttons more compact */
     .btn-text {
-        padding: 0 8px;
+        padding: 0 var(--space-sm);
         font-size: var(--font-xs);
     }
 
@@ -826,7 +826,7 @@
     }
 
     .toolbar-content {
-        padding: 6px 8px;
+        padding: var(--space-sm) var(--space-md);
         gap: var(--space-xs);
     }
 
@@ -842,7 +842,7 @@
 
     /* Make the easy mode button icon-only on very small screens */
     .btn-easy {
-        padding: 0 6px;
+        padding: 0 var(--space-sm);
         font-size: var(--font-xs);
     }
 
