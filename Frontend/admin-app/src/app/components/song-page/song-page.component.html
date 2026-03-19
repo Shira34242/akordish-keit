@@ -207,8 +207,10 @@
             <div class="toolbar-divider" *ngIf="song.easyKeyId"></div>
 
             <!-- Font Size -->
-            <button class="toolbar-btn btn-text" (click)="changeFontSize(-1)" title="הקטן טקסט">A-</button>
-            <button class="toolbar-btn btn-text" (click)="changeFontSize(1)" title="הגדל טקסט">A+</button>
+            <div class="font-size-group">
+                <button class="toolbar-btn btn-text" (click)="changeFontSize(-1)" title="הקטן טקסט">A-</button>
+                <button class="toolbar-btn btn-text" (click)="changeFontSize(1)" title="הגדל טקסט">A+</button>
+            </div>
 
             <div class="toolbar-divider"></div>
 

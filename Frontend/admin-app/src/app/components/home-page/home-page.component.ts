@@ -205,6 +205,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initParticleEffect(): void {
+    if (window.innerWidth < 1025) return;
+
     const canvas = this.heroCanvas?.nativeElement;
     const heroBg = this.heroBg?.nativeElement;
     if (!canvas || !heroBg) return;
@@ -217,9 +219,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       const rect = heroBg.getBoundingClientRect();
       if (e.clientX < rect.left || e.clientX > rect.right ||
           e.clientY < rect.top || e.clientY > rect.bottom) return;
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      this.spawnHeroParticles(x, y, e.movementX, e.movementY);
+
+      // Scale mouse coordinates to canvas pixel space
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      this.spawnHeroParticles(x, y, e.movementX * scaleX, e.movementY * scaleY);
     };
     window.addEventListener('mousemove', this.heroMouseHandler);
     this.animateHeroParticles();
@@ -250,7 +256,18 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private animateHeroParticles(): void {
     const ctx = this.heroCtx;
     const canvas = this.heroCanvas?.nativeElement;
+    const heroBg = this.heroBg?.nativeElement;
     if (!ctx || !canvas) return;
+
+    // Sync canvas pixel size to current hero-bg size
+    if (heroBg) {
+      const w = heroBg.clientWidth;
+      const h = heroBg.clientHeight;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const dt = 1 / 60;
