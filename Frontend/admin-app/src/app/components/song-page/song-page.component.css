@@ -461,6 +461,12 @@
     white-space: nowrap;
 }
 
+/* אייקון גלילה — מוסתר בdesktop, מוצג במובייל */
+.btn-scroll-icon {
+    display: none;
+    flex-shrink: 0;
+}
+
 /* 3. Main Layout */
 .main-layout {
     max-width: 1200px;
@@ -815,35 +821,117 @@
 /* Extra small screens (phones) */
 @media (max-width: 600px) {
     .song-header {
-        left: 8px;
-        right: 8px;
-        border-radius: 20px;
+        left: 4px;
+        right: 4px;
+        border-radius: 18px;
     }
 
+    .header-content {
+        padding: calc(1vh + var(--space-sm)) var(--space-md) var(--space-base);
+    }
+
+    .header-image-section {
+        width: 130px;
+    }
+
+    /* toolbar — נועל מתחת לheader עם רווח קטן, רקע צהוב עצמאי */
     .sticky-toolbar {
-        padding: 0 var(--space-sm);
-        top: 12px;
+        top: 72px;
+        z-index: 896;
+        background: #ddff53;
+        border-radius: 18px;
+        padding: var(--space-xs) var(--space-sm);
+        margin: 0 4px;
+        max-width: calc(100% - 8px);
     }
 
+    /* toolbar — גלילה אופקית רק כשצריך (כשנפתחים כפתורי גלילה אוטומטית) */
     .toolbar-content {
-        padding: var(--space-sm) var(--space-md);
-        gap: var(--space-xs);
+        padding: 4px 6px;
+        gap: 4px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: transparent;
     }
 
+    .toolbar-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* לחצנים קטנים — 26px */
     .toolbar-btn {
-        min-width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        flex-shrink: 0;
     }
 
-    /* Hide text in "Auto Scroll" button on very small screens */
-    .btn-scroll {
+    .toolbar-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* קבוצת כלים — רקע עמום על הצהוב */
+    .instrument-group {
+        padding: 4px 6px;
+        gap: 2px;
+        flex-shrink: 0;
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .controls-group {
+        padding: 4px 6px;
+        gap: 4px;
+        flex-shrink: 0;
+        flex: none;
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    /* הסתרת תצוגת סולם נוכחי — חוסך מקום */
+    .current-key-label {
+        display: none;
+    }
+
+    /* ערך טרנספוזיציה — צר יותר */
+    .transpose-val {
         font-size: var(--font-xs);
+        width: 18px;
     }
 
-    /* Make the easy mode button icon-only on very small screens */
+    /* לחצני טקסט (A-, A+, גרסה קלה) — compact */
+    .btn-text {
+        padding: 0 5px;
+        font-size: 11px;
+    }
+
+    /* כפתור גלילה — אייקון בלבד */
+    .btn-scroll-icon {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-scroll-text {
+        display: none;
+    }
+
+    .btn-scroll.btn-text {
+        padding: 0;
+        width: 26px;
+        border-radius: 50%;
+    }
+
     .btn-easy {
-        padding: 0 var(--space-sm);
-        font-size: var(--font-xs);
+        white-space: nowrap;
+    }
+
+    /* כפתורי גלילה אוטומטית קטנים */
+    .toolbar-btn-sm {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
     }
 
     .main-layout {
@@ -858,6 +946,20 @@
     .copy-notification {
         top: 90px;
         padding: var(--space-md) var(--space-lg);
+        font-size: var(--font-sm);
+    }
+}
+
+@media (max-width: 400px) {
+    .header-image-section {
+        width: 100px;
+    }
+
+    .main-title {
+        font-size: var(--font-xl);
+    }
+
+    .artist-name {
         font-size: var(--font-sm);
     }
 }

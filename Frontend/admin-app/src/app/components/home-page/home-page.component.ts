@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,13 @@ import { UpcomingEventDto } from '../../models/event.model';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
 
+interface HeroParticle {
+  x: number; y: number;
+  vx: number; vy: number;
+  life: number; maxLife: number;
+  size: number;
+}
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -31,9 +38,10 @@ import { MusicServiceProviderListDto } from '../../models/music-service-provider
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
 })
-export class HomePageComponent implements OnInit, AfterViewInit {
+export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
+  @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
 
   searchQuery = '';
   searchResults: any[] = [];
@@ -52,6 +60,11 @@ export class HomePageComponent implements OnInit, AfterViewInit {
 
   private fullHeroHeight = 0;
   private rafPending = false;
+
+  private heroCtx?: CanvasRenderingContext2D | null;
+  private heroParticles: HeroParticle[] = [];
+  private particleAnimId?: number;
+  private heroMouseHandler?: (e: MouseEvent) => void;
 
   constructor(
     private router: Router,
@@ -82,7 +95,15 @@ export class HomePageComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => this.initHeroHeight(), 0);
+    setTimeout(() => {
+      this.initHeroHeight();
+      this.initParticleEffect();
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
+    if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
   }
 
   @HostListener('window:scroll')
@@ -181,5 +202,82 @@ export class HomePageComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.showSearchResults = false;
     }, 200);
+  }
+
+  private initParticleEffect(): void {
+    const canvas = this.heroCanvas?.nativeElement;
+    const heroBg = this.heroBg?.nativeElement;
+    if (!canvas || !heroBg) return;
+
+    this.heroCtx = canvas.getContext('2d');
+    canvas.width = heroBg.clientWidth;
+    canvas.height = heroBg.clientHeight;
+
+    this.heroMouseHandler = (e: MouseEvent) => {
+      const rect = heroBg.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right ||
+          e.clientY < rect.top || e.clientY > rect.bottom) return;
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.spawnHeroParticles(x, y, e.movementX, e.movementY);
+    };
+    window.addEventListener('mousemove', this.heroMouseHandler);
+    this.animateHeroParticles();
+  }
+
+  private spawnHeroParticles(x: number, y: number, dx: number, dy: number): void {
+    const moveSpeed = Math.sqrt(dx * dx + dy * dy);
+    const count = Math.min(10, 4 + Math.floor(moveSpeed * 0.3));
+
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 2.5 + 0.4;
+      const isBig = Math.random() < 0.25;
+
+      this.heroParticles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed + dx * 0.03,
+        vy: Math.sin(angle) * speed + dy * 0.03,
+        life: 1,
+        maxLife: isBig ? 1.8 + Math.random() * 0.8 : 0.9 + Math.random() * 0.7,
+        size: isBig ? 8 + Math.random() * 12 : 2 + Math.random() * 3.5
+      });
+    }
+    if (this.heroParticles.length > 400) this.heroParticles.splice(0, this.heroParticles.length - 400);
+  }
+
+  private animateHeroParticles(): void {
+    const ctx = this.heroCtx;
+    const canvas = this.heroCanvas?.nativeElement;
+    if (!ctx || !canvas) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dt = 1 / 60;
+
+    this.heroParticles = this.heroParticles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+      p.life -= dt / p.maxLife;
+      if (p.life <= 0) return false;
+
+      const alpha = Math.pow(p.life, 1.6);
+      const r = p.size * (0.4 + p.life * 0.6);
+
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+      g.addColorStop(0,   `rgba(255,255,255,${(alpha * 0.55).toFixed(3)})`);
+      g.addColorStop(0.35, `rgba(255,255,255,${(alpha * 0.18).toFixed(3)})`);
+      g.addColorStop(1,   'rgba(255,255,255,0)');
+
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      return true;
+    });
+
+    this.particleAnimId = requestAnimationFrame(() => this.animateHeroParticles());
   }
 }
