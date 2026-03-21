@@ -27,6 +27,13 @@ export class ArtistsListComponent implements OnInit {
   // Filters
   filterPremium: boolean | undefined = undefined;
   sortBy: string = 'name';
+  searchTerm: string = '';
+
+  get filteredArtists(): ArtistListDto[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return this.allArtists;
+    return this.allArtists.filter(a => a.name.toLowerCase().includes(term));
+  }
 
   constructor(
     private artistService: ArtistService,
@@ -81,6 +88,11 @@ export class ArtistsListComponent implements OnInit {
   }
 
   onSortChange(): void {
+    this.loadAllArtists(1);
+  }
+
+  setSortBy(sort: string): void {
+    this.sortBy = sort;
     this.loadAllArtists(1);
   }
 
