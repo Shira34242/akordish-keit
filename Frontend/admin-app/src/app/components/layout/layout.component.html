@@ -2,23 +2,19 @@
 <header class="main-header">
     <div class="header-inner">
 
-        <!-- Right Side: Bell + Profile -->
+        <!-- Right Side: המבורגר (נעול תמיד בימין) + bell+profile (דסקטופ בלבד) -->
         <div class="header-right">
-            <!-- Mobile Hamburger -->
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
-                <span class="material-icons">menu</span>
+                <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
-            <button class="btn-bell">
+            <button class="btn-bell header-desktop-only">
                 <span class="material-icons">notifications</span>
             </button>
-
             <ng-container *ngIf="loggedIn && user; else loginBtn">
-                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
+                <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
                     <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
                          onerror="this.onerror=null; this.src='/logo.png'">
                     <span class="material-icons chevron-icon">expand_more</span>
-
-                    <!-- User Dropdown Menu -->
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
                             <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
@@ -28,9 +24,7 @@
                                 <div class="user-menu-email">{{ user.email }}</div>
                             </div>
                         </div>
-
                         <div class="user-menu-divider"></div>
-
                         <ul class="user-menu-list">
                             <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
@@ -44,16 +38,12 @@
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>הרשימות שלי</span>
                             </li>
-
                             <div class="user-menu-divider"></div>
-
                             <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">card_membership</span>
                                 <span>המנוי שלי / הפרופיל שלי</span>
                             </li>
-
                             <div class="user-menu-divider"></div>
-
                             <li class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
                                 <span>התנתקות</span>
@@ -62,10 +52,127 @@
                     </div>
                 </div>
             </ng-container>
-
             <ng-template #loginBtn>
+                <button class="btn-login header-desktop-only" (click)="openAuthModal()">כניסה</button>
+            </ng-template>
+        </div>
+
+        <!-- מובייל — bell+profile בשמאל כשסגור -->
+        <div class="header-mobile-actions" *ngIf="!showMobileMenu">
+            <button class="btn-bell">
+                <span class="material-icons">notifications</span>
+            </button>
+            <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
+                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
+                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
+                         onerror="this.onerror=null; this.src='/logo.png'">
+                    <span class="material-icons chevron-icon">expand_more</span>
+                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                        <div class="user-menu-header">
+                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
+                                onerror="this.onerror=null; this.src='/logo.png'">
+                            <div class="user-menu-info">
+                                <div class="user-menu-name">{{ user.username }}</div>
+                                <div class="user-menu-email">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <ul class="user-menu-list">
+                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
+                                <span class="material-icons menu-icon">admin_panel_settings</span>
+                                <span>ניהול</span>
+                            </li>
+                            <li class="user-menu-item disabled">
+                                <span class="material-icons menu-icon">upload_file</span>
+                                <span>תכנים שהעליתי</span>
+                            </li>
+                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">bookmark</span>
+                                <span>הרשימות שלי</span>
+                            </li>
+                            <div class="user-menu-divider"></div>
+                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">card_membership</span>
+                                <span>המנוי שלי / הפרופיל שלי</span>
+                            </li>
+                            <div class="user-menu-divider"></div>
+                            <li class="user-menu-item logout" (click)="signOut()">
+                                <span class="material-icons menu-icon">logout</span>
+                                <span>התנתקות</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #loginBtnMobile>
                 <button class="btn-login" (click)="openAuthModal()">כניסה</button>
             </ng-template>
+        </div>
+
+        <!-- מובייל — שורה נגללת כשפתוח (RTL: בית→אקורדים→חדשות→אינדקס→bell→profile) -->
+        <div class="mobile-nav-scroll" *ngIf="showMobileMenu">
+            <!-- nav-pills: בית, אקורדים, חדשות (RTL: בית בימין) -->
+            <div class="nav-pills">
+                <ul class="main-nav mobile-main-nav">
+                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
+                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
+                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                </ul>
+            </div>
+            <!-- אינדקס — כפתור נפרד, טקסט קצר במובייל -->
+            <a class="btn-music-index" routerLink="/professionals">
+                <span class="material-icons index-search-icon">search</span>
+                <span class="btn-music-index-text">אינדקס</span>
+            </a>
+            <!-- bell + profile בסוף הגלילה (שמאל) -->
+            <button class="btn-bell">
+                <span class="material-icons">notifications</span>
+            </button>
+            <ng-container *ngIf="loggedIn && user">
+                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
+                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
+                         onerror="this.onerror=null; this.src='/logo.png'">
+                    <span class="material-icons chevron-icon">expand_more</span>
+                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                        <div class="user-menu-header">
+                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
+                                onerror="this.onerror=null; this.src='/logo.png'">
+                            <div class="user-menu-info">
+                                <div class="user-menu-name">{{ user.username }}</div>
+                                <div class="user-menu-email">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <ul class="user-menu-list">
+                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
+                                <span class="material-icons menu-icon">admin_panel_settings</span>
+                                <span>ניהול</span>
+                            </li>
+                            <li class="user-menu-item disabled">
+                                <span class="material-icons menu-icon">upload_file</span>
+                                <span>תכנים שהעליתי</span>
+                            </li>
+                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">bookmark</span>
+                                <span>הרשימות שלי</span>
+                            </li>
+                            <div class="user-menu-divider"></div>
+                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">card_membership</span>
+                                <span>המנוי שלי / הפרופיל שלי</span>
+                            </li>
+                            <div class="user-menu-divider"></div>
+                            <li class="user-menu-item logout" (click)="signOut()">
+                                <span class="material-icons menu-icon">logout</span>
+                                <span>התנתקות</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-container *ngIf="!loggedIn || !user">
+                <button class="btn-login" (click)="openAuthModal()">כניסה</button>
+            </ng-container>
         </div>
 
         <!-- Left Group: Music Index + Nav Links -->
@@ -89,22 +196,6 @@
     </div>
 </header>
 
-<!-- Mobile Navigation Menu -->
-<div class="mobile-nav-menu" *ngIf="showMobileMenu" (click)="closeMobileMenu()">
-    <div class="mobile-nav-content" (click)="$event.stopPropagation()">
-        <div class="mobile-nav-header">
-            <h3>תפריט</h3>
-            <button class="close-btn" (click)="closeMobileMenu()"><span class="material-icons">close</span></button>
-        </div>
-        <ul class="mobile-nav-list">
-            <li><a class="mobile-nav-link" routerLink="/" (click)="closeMobileMenu()">בית</a></li>
-            <li><a class="mobile-nav-link" routerLink="/music-news" (click)="closeMobileMenu()">חדשות המוזיקה</a></li>
-            <li><a class="mobile-nav-link" routerLink="/chords" (click)="closeMobileMenu()">אקורדים</a></li>
-            <li><a class="mobile-nav-link mobile-nav-link--accent" routerLink="/professionals" (click)="closeMobileMenu()">אינדקס עולם המוזיקה</a></li>
-            <li *ngIf="loggedIn && user?.hasProfessionalProfile"><a class="mobile-nav-link" routerLink="/subscription/status" (click)="closeMobileMenu()">המנוי שלי</a></li>
-        </ul>
-    </div>
-</div>
 
 <main class="main-content">
     <router-outlet></router-outlet>

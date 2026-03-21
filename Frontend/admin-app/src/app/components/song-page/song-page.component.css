@@ -831,48 +831,49 @@
         border-radius: 18px;
     }
 
-    /* header — תמונה + פרטים זה לצד זה, כמו desktop */
+    /* header — תמונה מעל פרטים, הכל ממורכז */
     .header-content {
         padding: calc(1vh + var(--space-sm)) var(--space-md) var(--space-sm);
-        text-align: right;
-        align-items: flex-start;
+        text-align: center;
+        align-items: center;
     }
 
     .header-top-row {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: var(--space-md);
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
         width: 100%;
     }
 
     .header-image-section {
-        width: 140px;
-        flex: 0 0 140px;
+        width: 110px;
+        flex: 0 0 110px;
     }
 
     .header-info-section {
-        text-align: right;
-        align-items: flex-start;
-        justify-content: flex-start;
-        flex: 1;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        flex: unset;
+        width: 100%;
         min-width: 0;
     }
 
     .main-title {
-        font-size: var(--font-2xl);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: var(--font-xl);
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
     }
 
     .artist-name {
-        font-size: var(--font-base);
+        font-size: var(--font-sm);
     }
 
-    /* לחצני פעולה — ימין-תחתון, בשורה עם הinfo */
+    /* לחצני פעולה — ממורכזים */
     .header-actions {
-        align-self: flex-end;
-        gap: 2px;
+        align-self: center;
+        gap: var(--space-sm);
     }
 
     .action-btn {
@@ -885,7 +886,7 @@
         height: 17px;
     }
 
-    /* toolbar — נועל מתחת לheader עם רווח קטן, רקע צהוב עצמאי */
+    /* toolbar — מתחת לheader, רקע צהוב, גלילה אופקית אחידה */
     .sticky-toolbar {
         top: 72px;
         z-index: 896;
@@ -894,9 +895,10 @@
         padding: var(--space-xs) var(--space-sm);
         margin: 0 4px;
         max-width: calc(100% - 8px);
+        overflow: hidden;
     }
 
-    /* toolbar — שתי קבוצות ממלאות את כל הרוחב */
+    /* toolbar-content — גלילה אחידה על כל הרוחב */
     .toolbar-content {
         padding: 0;
         gap: 6px;
@@ -913,7 +915,7 @@
         display: none;
     }
 
-    /* קבוצת כלים — גודל קבוע, pill */
+    /* instrument-group — גלילה ביחד עם שאר ה-toolbar */
     .instrument-group {
         flex: 0 0 auto;
         padding: 3px 4px;
@@ -922,21 +924,15 @@
         border-radius: 100px;
     }
 
-    /* קבוצת שליטה — ממלאת את שאר הרוחב, גלילה פנימית כשמתרחבת */
+    /* controls-group — גלילה ביחד, ללא גלילה פנימית */
     .controls-group {
-        flex: 1 1 0;
-        min-width: 0;
+        flex: 0 0 auto;
         padding: 3px 6px;
-        gap: 0;
-        justify-content: space-between;
+        gap: 4px;
+        justify-content: flex-start;
         background: rgba(0, 0, 0, 0.1);
         border-radius: 100px;
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-
-    .controls-group::-webkit-scrollbar {
-        display: none;
+        overflow-x: visible;
     }
 
     /* לחצנים — עיגול, 28px */
@@ -983,6 +979,7 @@
     .btn-text {
         padding: 0 5px;
         font-size: 11px;
+        white-space: nowrap;
     }
 
     /* כפתור גלילה — אייקון בלבד */
@@ -1007,7 +1004,7 @@
         padding: 0 5px;
     }
 
-    /* כפתורי גלילה אוטומטית — כשנפתחים, controls-group גולל */
+    /* כפתורי גלילה אוטומטית */
     .toolbar-btn-sm {
         width: 28px;
         height: 28px;
@@ -1034,15 +1031,16 @@
 
 @media (max-width: 400px) {
     .header-image-section {
-        width: 100px;
+        width: 90px;
+        flex: 0 0 90px;
     }
 
     .main-title {
-        font-size: var(--font-xl);
+        font-size: var(--font-lg);
     }
 
     .artist-name {
-        font-size: var(--font-sm);
+        font-size: var(--font-xs);
     }
 }
 

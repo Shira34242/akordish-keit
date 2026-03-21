@@ -107,7 +107,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 );
 
                 this.transposeStep = 0;
-                this.fontSize = 18;
+                this.fontSize = window.innerWidth <= 600 ? 14 : 18;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
@@ -204,7 +204,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         const bg = this.songHeaderBg?.nativeElement;
         if (!bg || this.fullHeaderHeight === 0) return;
 
-        const minHeight = 56;
+        const minHeight = window.innerWidth <= 600 ? 44 : 56;
         const newHeight = Math.max(minHeight, this.fullHeaderHeight - window.scrollY);
         bg.style.height = newHeight + 'px';
 
