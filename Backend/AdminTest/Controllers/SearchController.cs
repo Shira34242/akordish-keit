@@ -58,7 +58,7 @@ public class SearchController : ControllerBase
             .ToListAsync();
 
         var articlesTask = _context.Articles
-            .Where(a => a.Status == ArticleStatus.Published && a.Title.Contains(term))
+            .Where(a => a.Status == (int)ArticleStatus.Published && a.Title.Contains(term))
             .OrderByDescending(a => a.PublishDate)
             .Take(5)
             .Select(a => new SearchItemDto
@@ -115,12 +115,12 @@ public class SearchController : ControllerBase
 
         return Ok(new SearchResultsDto
         {
-            Songs = songsTask.Result,
-            Artists = artistsTask.Result,
-            Articles = articlesTask.Result,
-            Teachers = teachersTask.Result,
-            Professionals = professionalsTask.Result,
-            Playlists = playlistsTask.Result
+            Songs = await songsTask,
+            Artists = await artistsTask,
+            Articles = await articlesTask,
+            Teachers = await teachersTask,
+            Professionals = await professionalsTask,
+            Playlists = await playlistsTask
         });
     }
 }
