@@ -1,5 +1,5 @@
 /* ============================================
-   PAGE — גלילה רגילה
+   PAGE
 ============================================ */
 .bento-page {
   direction: rtl;
@@ -8,7 +8,6 @@
   flex-direction: column;
   gap: var(--space-base);
   background: #ffffff;
-  min-height: 100vh;
 }
 
 /* ============================================
@@ -36,55 +35,83 @@
 
 /* ============================================
    SHARED BENTO GRID
-   אותה פריסה לכל הגרידים — אחידות חזותית
+   3 שורות מפורשות בגבהים שונים —
+   זה מה שיוצר את אפקט הגריד האמיתי
+   שורה 1: קצרה  → label / כותרות
+   שורה 2: גבוהה → תוכן ראשי
+   שורה 3: בינונית → תוכן משני
 ============================================ */
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-auto-rows: minmax(240px, auto);
+  grid-template-rows: 130px 300px 210px;
+  grid-auto-rows: 210px;
   gap: var(--space-base);
 }
 
 /* ============================================
    HERO GRID
-   Cell-1 ו-2: שני תאים גדולים שווים (3×2)
-   Cell-3,4,5: שורה תחתונה (2×1 כל אחד)
+   [title 2×1]    [art-1 4×2]
+   [art-2 2×2]    [art-1 cont.]
+   [art-2 cont.]  [art-3 2×1] [art-4 2×1]
 ============================================ */
-.hero-cell-1 { grid-column: 1 / 4; grid-row: 1 / 3; }
-.hero-cell-2 { grid-column: 4 / 7; grid-row: 1 / 3; }
-.hero-cell-3 { grid-column: 1 / 3; }
-.hero-cell-4 { grid-column: 3 / 5; }
-.hero-cell-5 { grid-column: 5 / 7; }
+.hero-title-cell { grid-column: 1 / 3; grid-row: 1; }
+.hero-cell-1     { grid-column: 3 / 7; grid-row: 1 / 3; }
+.hero-cell-2     { grid-column: 1 / 3; grid-row: 2 / 4; }
+.hero-cell-3     { grid-column: 3 / 5; grid-row: 3; }
+.hero-cell-4     { grid-column: 5 / 7; grid-row: 3; }
+
+/*
+  גבהים שנוצרים (130px gap=16px 300px gap=16px 210px):
+  hero-cell-1: 130+16+300 = 446px  (דומיננטי)
+  hero-cell-2: 300+16+210 = 526px  (הכי גבוה — אסימטריה מכוונת)
+  hero-cell-3/4: 210px             (משניים)
+  hero-title-cell: 130px           (קטן וצנוע)
+*/
 
 /* ============================================
    SECTION GRID — STANDARD (זוגי)
-   Label ימין (קריאה RTL) | כתבה גדולה שמאל
-============================================ */
-.section-grid .label-cell  { grid-column: 1 / 3; grid-row: 1 / 3; }
-.section-grid .art-cell-1  { grid-column: 3 / 7; grid-row: 1 / 3; }
-.section-grid .art-cell-2  { grid-column: 1 / 3; grid-row: 3; }
-.section-grid .art-cell-3  { grid-column: 3 / 5; grid-row: 3; }
-.section-grid .expand-cell { grid-column: 5 / 7; grid-row: 3; }
+   label ימין-למעלה (קצר), כתבה גדולה שמאל
 
-/* SECTION GRID — ALT (אי-זוגי)
-   כתבה גדולה ימין | Label שמאל
+   [label 2×1]    [art-1 4×2]
+   [art-2 2×2]    [art-1 cont.]
+   [art-2 cont.]  [art-3 2×1] [expand 2×1]
 ============================================ */
-.section-grid.section-alt .label-cell  { grid-column: 5 / 7; grid-row: 1 / 3; }
-.section-grid.section-alt .art-cell-1  { grid-column: 1 / 5; grid-row: 1 / 3; }
-.section-grid.section-alt .art-cell-2  { grid-column: 1 / 3; grid-row: 3; }
-.section-grid.section-alt .art-cell-3  { grid-column: 3 / 5; grid-row: 3; }
-.section-grid.section-alt .expand-cell { grid-column: 5 / 7; grid-row: 3; }
+.section-grid .section-label { grid-column: 1 / 3; grid-row: 1; }
+.section-grid .art-cell-1    { grid-column: 3 / 7; grid-row: 1 / 3; }
+.section-grid .art-cell-2    { grid-column: 1 / 3; grid-row: 2 / 4; }
+.section-grid .art-cell-3    { grid-column: 3 / 5; grid-row: 3; }
+.section-grid .expand-cell   { grid-column: 5 / 7; grid-row: 3; }
 
-/* כתבות מורחבות — 2 עמודות כל אחת */
+/* ============================================
+   SECTION GRID — ALT (אי-זוגי)
+   label שמאל-למעלה, כתבה גדולה ימין
+
+   [art-1 4×2]    [label 2×1]
+   [art-1 cont.]  [art-2 2×1]
+   [art-3 4×1]    [expand 2×1]
+============================================ */
+.section-grid.section-alt .section-label { grid-column: 5 / 7; grid-row: 1; }
+.section-grid.section-alt .art-cell-1    { grid-column: 1 / 5; grid-row: 1 / 3; }
+.section-grid.section-alt .art-cell-2    { grid-column: 5 / 7; grid-row: 2; }
+.section-grid.section-alt .art-cell-3    { grid-column: 1 / 5; grid-row: 3; }
+.section-grid.section-alt .expand-cell   { grid-column: 5 / 7; grid-row: 3; }
+
+/* כתבות מורחבות בהרחבה — 2 עמודות כל אחת, 210px */
 .art-extra { grid-column: span 2; }
 
 /* ============================================
    EVENTS GRID
-   Label ימין | הופעה גדולה שמאל | קטנות בשורה 3
+   אותו layout כמו section-standard:
+   [label 2×1]    [event-big 4×2]
+   [ev-sm-1 2×2]  [event-big cont.]
+   [ev-sm-1 cont.][ev-sm-2 2×1] [ev-sm-3 2×1]
 ============================================ */
-.events-grid .label-cell { grid-column: 1 / 3; grid-row: 1 / 3; }
-.events-grid .event-big  { grid-column: 3 / 7; grid-row: 1 / 3; }
-.events-grid .event-sm   { grid-column: span 2; }
+.events-grid .events-label { grid-column: 1 / 3; grid-row: 1; }
+.events-grid .event-big    { grid-column: 3 / 7; grid-row: 1 / 3; }
+.events-grid .event-sm-1   { grid-column: 1 / 3; grid-row: 2 / 4; }
+.events-grid .event-sm-2   { grid-column: 3 / 5; grid-row: 3; }
+.events-grid .event-sm-3   { grid-column: 5 / 7; grid-row: 3; }
 
 /* ============================================
    BENTO CELL — base
@@ -94,10 +121,8 @@
   overflow: hidden;
   border-radius: 20px;
   background: #F2F2F2;
-  min-height: 240px;
 }
 
-/* news-banner ממלא את התא לחלוטין */
 .bento-cell app-news-banner {
   position: absolute;
   inset: 0;
@@ -118,23 +143,32 @@
 }
 
 /* ============================================
-   LABEL CELL — כותרת קטגוריה (צהוב)
+   LABEL CELL — קטגוריה / כותרת דף
+   תמיד בשורה 1 = 130px → נראה קטן ביחס לתוכן
 ============================================ */
 .label-cell {
   background: #ddff53;
   border-radius: 20px;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
   direction: rtl;
   transition: opacity 0.2s;
-  min-height: 240px;
 }
 
 .label-cell:hover {
   opacity: 0.85;
+}
+
+/* כותרת דף — לא קישור, לא cursor */
+.hero-title-cell {
+  cursor: default;
+}
+
+.hero-title-cell:hover {
+  opacity: 1;
 }
 
 .label-text {
@@ -142,21 +176,26 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: clamp(1.6rem, 2.2vw, 2.8rem);
+  font-size: clamp(1rem, 1.4vw, 1.5rem);
   color: #000000;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .label-link {
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
-  font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.55);
+  font-size: var(--font-xs);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 /* גרסה כהה — הופעות */
 .label-dark {
   background: #404040;
+  cursor: default;
+}
+
+.label-dark:hover {
+  opacity: 1;
 }
 
 .label-dark .label-text {
@@ -164,11 +203,13 @@
 }
 
 .label-dark .label-link {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* ============================================
-   EXPAND CELL — עוד כתבות
+   EXPAND CELL — "עוד ›"
+   תמיד בשורה 3, עמודה שמאלית = bottom-left
+   גודל בינוני (210px) אבל תוכן מינימלי
 ============================================ */
 .expand-cell {
   background: #000000;
@@ -177,7 +218,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  min-height: 240px;
   transition: opacity 0.2s;
 }
 
@@ -190,7 +230,7 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: var(--font-base);
+  font-size: var(--font-sm);
   color: #ddff53;
 }
 
@@ -203,7 +243,6 @@
   border-radius: 20px;
   background: #404040;
   cursor: pointer;
-  min-height: 240px;
 }
 
 .event-bg {
@@ -227,7 +266,7 @@
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.88) 0%,
     rgba(0, 0, 0, 0.25) 55%,
     transparent 100%
   );
@@ -265,7 +304,7 @@
 .event-bottom {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 4px;
 }
 
 .event-name {
@@ -284,7 +323,7 @@
 .event-meta {
   display: flex;
   gap: var(--space-sm);
-  align-items: center;
+  align-items: baseline;
 }
 
 .event-date-big {
@@ -320,21 +359,18 @@
 
 /* ============================================
    RESPONSIVE — TABLET ≤1024px
-   Hero נשאר 6 עמודות, sections נשאר
+   שורות קצת יותר קטנות
 ============================================ */
 @media (max-width: 1024px) {
   .bento-grid {
-    grid-auto-rows: minmax(200px, auto);
-  }
-
-  .label-text {
-    font-size: clamp(1.4rem, 2vw, 2.2rem);
+    grid-template-rows: 110px 250px 180px;
+    grid-auto-rows: 180px;
   }
 }
 
 /* ============================================
    RESPONSIVE — MOBILE ≤640px
-   מעבר ל-2 עמודות, כל התאים משטחים
+   2 עמודות, שורות אוטומטיות, מאפס placements
 ============================================ */
 @media (max-width: 640px) {
   .bento-page {
@@ -344,49 +380,47 @@
 
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: unset;
     grid-auto-rows: minmax(160px, auto);
     gap: var(--space-sm);
   }
 
   /* Hero mobile */
-  .hero-cell-1 { grid-column: 1 / 3; grid-row: auto; }
-  .hero-cell-2 { grid-column: 1;     grid-row: auto; }
-  .hero-cell-3 { grid-column: 2;     grid-row: auto; }
-  .hero-cell-4 { grid-column: 1;     grid-row: auto; }
-  .hero-cell-5 { grid-column: 2;     grid-row: auto; }
+  .hero-title-cell { grid-column: 1 / 3; grid-row: auto; }
+  .hero-cell-1     { grid-column: 1 / 3; grid-row: auto; }
+  .hero-cell-2     { grid-column: 1;     grid-row: auto; }
+  .hero-cell-3     { grid-column: 2;     grid-row: auto; }
+  .hero-cell-4     { grid-column: 1 / 3; grid-row: auto; }
 
-  /* Sections mobile — איפוס לשני עמודות */
-  .section-grid .label-cell,
-  .section-grid.section-alt .label-cell  { grid-column: 1 / 3; grid-row: auto; }
+  /* Sections mobile */
+  .section-grid .section-label,
+  .section-grid.section-alt .section-label { grid-column: 1 / 3; grid-row: auto; }
 
   .section-grid .art-cell-1,
-  .section-grid.section-alt .art-cell-1  { grid-column: 1 / 3; grid-row: auto; }
+  .section-grid.section-alt .art-cell-1    { grid-column: 1 / 3; grid-row: auto; }
 
   .section-grid .art-cell-2,
-  .section-grid.section-alt .art-cell-2  { grid-column: 1;     grid-row: auto; }
+  .section-grid.section-alt .art-cell-2    { grid-column: 1;     grid-row: auto; }
 
   .section-grid .art-cell-3,
-  .section-grid.section-alt .art-cell-3  { grid-column: 2;     grid-row: auto; }
+  .section-grid.section-alt .art-cell-3    { grid-column: 2;     grid-row: auto; }
 
   .section-grid .expand-cell,
-  .section-grid.section-alt .expand-cell { grid-column: 1 / 3; grid-row: auto; }
+  .section-grid.section-alt .expand-cell   { grid-column: 1 / 3; grid-row: auto; }
 
   .art-extra { grid-column: 1; }
 
   /* Events mobile */
-  .events-grid .label-cell { grid-column: 1 / 3; grid-row: auto; }
-  .events-grid .event-big  { grid-column: 1 / 3; grid-row: auto; }
-  .events-grid .event-sm   { grid-column: 1;     grid-row: auto; }
-
-  .label-text {
-    font-size: var(--font-lg);
-  }
+  .events-grid .events-label { grid-column: 1 / 3; grid-row: auto; }
+  .events-grid .event-big    { grid-column: 1 / 3; grid-row: auto; }
+  .events-grid .event-sm-1   { grid-column: 1;     grid-row: auto; }
+  .events-grid .event-sm-2   { grid-column: 2;     grid-row: auto; }
+  .events-grid .event-sm-3   { grid-column: 1 / 3; grid-row: auto; }
 
   .bento-cell,
   .label-cell,
   .expand-cell,
   .event-cell {
     border-radius: 14px;
-    min-height: 160px;
   }
 }

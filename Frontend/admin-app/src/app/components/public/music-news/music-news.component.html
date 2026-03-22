@@ -8,9 +8,17 @@
   <ng-container *ngIf="!isLoading">
 
     <!-- ══════════════════════════════════════
-         Hero — 5 כתבות מרכזיות
+         Hero — כותרת דף + 4 כתבות מרכזיות
+         Layout:
+           [title 2col×1row] [art-1 4col×2rows]
+           [art-2 2col×2rows continues…]
+           [art-2 cont.] [art-3 2col] [art-4 2col]
     ══════════════════════════════════════ -->
     <div class="bento-grid hero-grid">
+
+      <div class="label-cell hero-title-cell">
+        <span class="label-text">חדשות<br>המוזיקה</span>
+      </div>
 
       <div class="bento-cell hero-cell-1">
         <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
@@ -32,51 +40,47 @@
         <div *ngIf="!featuredArticles[3]" class="skeleton-fill"></div>
       </div>
 
-      <div class="bento-cell hero-cell-5">
-        <app-news-banner *ngIf="featuredArticles[4]" [article]="featuredArticles[4].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[4]" class="skeleton-fill"></div>
-      </div>
-
     </div>
 
     <!-- ══════════════════════════════════════
          קטגוריות דינמיות
-         זוגי: label ימין | אי-זוגי: label שמאל
+
+         STANDARD (זוגי) — label ימין-למעלה:
+           [label 2col×1row] [art-1 4col×2rows]
+           [art-2 2col×2rows] [art-1 cont.]
+           [art-2 cont.]      [art-3 2col] [expand 2col]
+
+         ALT (אי-זוגי) — label שמאל-למעלה:
+           [art-1 4col×2rows] [label 2col×1row]
+           [art-1 cont.]      [art-2 2col×1row]
+           [art-3 4col×1row]  [expand 2col]
     ══════════════════════════════════════ -->
     <ng-container *ngFor="let section of sections; let i = index">
       <div class="bento-grid section-grid"
            [class.section-alt]="i % 2 === 1"
            *ngIf="section.articles.length > 0">
 
-        <!-- תיבת כותרת קטגוריה -->
-        <div class="label-cell" (click)="navigateToSection(section)">
+        <div class="label-cell section-label" (click)="navigateToSection(section)">
           <span class="label-text">{{ section.title }}</span>
           <span class="label-link">לכל התוכן ›</span>
         </div>
 
-        <!-- כתבה גדולה -->
         <div class="bento-cell art-cell-1">
           <app-news-banner [article]="section.articles[0]"></app-news-banner>
         </div>
 
-        <!-- כתבה 2 -->
         <div class="bento-cell art-cell-2" *ngIf="section.articles[1]">
           <app-news-banner [article]="section.articles[1]"></app-news-banner>
         </div>
 
-        <!-- כתבה 3 -->
         <div class="bento-cell art-cell-3" *ngIf="section.articles[2]">
           <app-news-banner [article]="section.articles[2]"></app-news-banner>
         </div>
 
-        <!-- תיבת הרחבה -->
         <div class="expand-cell" (click)="toggleSection(i)">
-          <span class="expand-label">
-            {{ isExpanded(i) ? 'פחות ↑' : 'עוד כתבות ›' }}
-          </span>
+          <span class="expand-label">{{ isExpanded(i) ? 'פחות ↑' : 'עוד ›' }}</span>
         </div>
 
-        <!-- כתבות נוספות בהרחבה (article[3] ואילך) -->
         <ng-container *ngIf="isExpanded(i)">
           <div class="bento-cell art-extra"
                *ngFor="let article of section.articles | slice:3">
@@ -89,15 +93,17 @@
 
     <!-- ══════════════════════════════════════
          הופעות קרובות
+         Layout (= standard section):
+           [label 2col×1row] [event-big 4col×2rows]
+           [event-sm-1 2col×2rows] [event-big cont.]
+           [event-sm-1 cont.] [ev-2 2col] [ev-3 2col]
     ══════════════════════════════════════ -->
     <div class="bento-grid events-grid" *ngIf="upcomingEvents.length > 0">
 
-      <!-- תיבת כותרת — כהה -->
-      <div class="label-cell label-dark">
-        <span class="label-text">הופעות קרובות</span>
+      <div class="label-cell label-dark events-label">
+        <span class="label-text">הופעות<br>קרובות</span>
       </div>
 
-      <!-- הופעה גדולה -->
       <div class="event-cell event-big"
            *ngIf="upcomingEvents[0]"
            (click)="openTicketLink(upcomingEvents[0])">
@@ -106,40 +112,78 @@
              [class.no-image]="!upcomingEvents[0].imageUrl"></div>
         <div class="event-overlay"></div>
         <div class="event-content">
-          <span class="event-badge"
-                [class.past]="upcomingEvents[0].eventStatus === 'אירוע שחלף'">
+          <span class="event-badge" [class.past]="upcomingEvents[0].eventStatus === 'אירוע שחלף'">
             {{ upcomingEvents[0].eventStatus }}
           </span>
           <div class="event-bottom">
             <h3 class="event-name">{{ upcomingEvents[0].name }}</h3>
             <div class="event-meta">
               <span class="event-date-big">{{ upcomingEvents[0].eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="upcomingEvents[0].location" class="event-location">
-                {{ upcomingEvents[0].location }}
-              </span>
+              <span *ngIf="upcomingEvents[0].location" class="event-location">{{ upcomingEvents[0].location }}</span>
             </div>
             <span class="event-ticket">כרטיסים ›</span>
           </div>
         </div>
       </div>
 
-      <!-- הופעות קטנות -->
-      <div class="event-cell event-sm"
-           *ngFor="let event of upcomingEvents | slice:1:4"
-           (click)="openTicketLink(event)">
+      <div class="event-cell event-sm event-sm-1"
+           *ngIf="upcomingEvents[1]"
+           (click)="openTicketLink(upcomingEvents[1])">
         <div class="event-bg"
-             [style.backgroundImage]="event.imageUrl ? 'url(' + event.imageUrl + ')' : null"
-             [class.no-image]="!event.imageUrl"></div>
+             [style.backgroundImage]="upcomingEvents[1].imageUrl ? 'url(' + upcomingEvents[1].imageUrl + ')' : null"
+             [class.no-image]="!upcomingEvents[1].imageUrl"></div>
         <div class="event-overlay"></div>
         <div class="event-content">
-          <span class="event-badge" [class.past]="event.eventStatus === 'אירוע שחלף'">
-            {{ event.eventStatus }}
+          <span class="event-badge" [class.past]="upcomingEvents[1].eventStatus === 'אירוע שחלף'">
+            {{ upcomingEvents[1].eventStatus }}
           </span>
           <div class="event-bottom">
-            <h3 class="event-name">{{ event.name }}</h3>
+            <h3 class="event-name">{{ upcomingEvents[1].name }}</h3>
             <div class="event-meta">
-              <span class="event-date-big">{{ event.eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="event.location" class="event-location">{{ event.location }}</span>
+              <span class="event-date-big">{{ upcomingEvents[1].eventDate | date:'dd/MM' }}</span>
+              <span *ngIf="upcomingEvents[1].location" class="event-location">{{ upcomingEvents[1].location }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-cell event-sm event-sm-2"
+           *ngIf="upcomingEvents[2]"
+           (click)="openTicketLink(upcomingEvents[2])">
+        <div class="event-bg"
+             [style.backgroundImage]="upcomingEvents[2].imageUrl ? 'url(' + upcomingEvents[2].imageUrl + ')' : null"
+             [class.no-image]="!upcomingEvents[2].imageUrl"></div>
+        <div class="event-overlay"></div>
+        <div class="event-content">
+          <span class="event-badge" [class.past]="upcomingEvents[2].eventStatus === 'אירוע שחלף'">
+            {{ upcomingEvents[2].eventStatus }}
+          </span>
+          <div class="event-bottom">
+            <h3 class="event-name">{{ upcomingEvents[2].name }}</h3>
+            <div class="event-meta">
+              <span class="event-date-big">{{ upcomingEvents[2].eventDate | date:'dd/MM' }}</span>
+              <span *ngIf="upcomingEvents[2].location" class="event-location">{{ upcomingEvents[2].location }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-cell event-sm event-sm-3"
+           *ngIf="upcomingEvents[3]"
+           (click)="openTicketLink(upcomingEvents[3])">
+        <div class="event-bg"
+             [style.backgroundImage]="upcomingEvents[3].imageUrl ? 'url(' + upcomingEvents[3].imageUrl + ')' : null"
+             [class.no-image]="!upcomingEvents[3].imageUrl"></div>
+        <div class="event-overlay"></div>
+        <div class="event-content">
+          <span class="event-badge" [class.past]="upcomingEvents[3].eventStatus === 'אירוע שחלף'">
+            {{ upcomingEvents[3].eventStatus }}
+          </span>
+          <div class="event-bottom">
+            <h3 class="event-name">{{ upcomingEvents[3].name }}</h3>
+            <div class="event-meta">
+              <span class="event-date-big">{{ upcomingEvents[3].eventDate | date:'dd/MM' }}</span>
+              <span *ngIf="upcomingEvents[3].location" class="event-location">{{ upcomingEvents[3].location }}</span>
             </div>
           </div>
         </div>
