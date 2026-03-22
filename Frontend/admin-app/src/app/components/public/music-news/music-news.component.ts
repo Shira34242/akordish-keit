@@ -1,192 +1,100 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, inject, DestroyRef, ElementRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { CarouselComponent } from '../../shared/carousel/carousel.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
-import { ArticleService } from '../../../services/admin/article.service';
+import { EventService } from '../../../services/admin/event.service';
+import { NewsPageSectionService } from '../../../services/news-page-section.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
-import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { Article } from '../../../models/article.model';
+import { NewsPageSection } from '../../../models/news-page-section.model';
+import { UpcomingEventDto } from '../../../models/event.model';
 
 @Component({
   selector: 'app-music-news',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, CarouselComponent],
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })
-export class MusicNewsComponent implements OnInit, OnDestroy, AfterViewInit {
+export class MusicNewsComponent implements OnInit, OnDestroy {
+  @ViewChild('pageHero', { static: false }) pageHeroRef!: ElementRef;
 
   private readonly featuredContentService = inject(FeaturedContentService);
-  private readonly articleService = inject(ArticleService);
+  private readonly eventService = inject(EventService);
+  private readonly newsPageSectionService = inject(NewsPageSectionService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly el = inject(ElementRef);
-  private readonly ngZone = inject(NgZone);
 
+  // שורה ראשונה - 4 כתבות מרכזיות
   featuredArticles: FeaturedContent[] = [];
-  popularArticles: Article[] = [];
-  blogArticles: Article[] = [];
-  clipsArticles: Article[] = [];
+
+  // פסים דינמיים מה-API
+  sections: NewsPageSection[] = [];
+
+  // הופעות קרובות
+  upcomingEvents: UpcomingEventDto[] = [];
 
   isLoading = true;
 
-  // ───── קטגוריות ─────
-  readonly categories = [
-    { index: 0, label: 'ראשי' },
-    { index: 1, label: 'פופולאריים' },
-    { index: 2, label: 'תוכן' },
-    { index: 3, label: 'קליפים' },
-  ];
-
-  activeCategory = 0;
-  prevCategory = -1;
-  isTransitioning = false;
-  scrollDirection: 'down' | 'up' = 'down';
-  labelVisible = true;
-
-  // ───── הרחבה ─────
-  expandedCategory: number | null = null;
-  expandedClosing = false;
-
-  private lastSwitchTime = 0;
-  private touchStartY = 0;
-  private wheelHandler?: (e: WheelEvent) => void;
+  private fullHeroHeight = 0;
+  private scrollListener?: () => void;
 
   ngOnInit(): void {
     this.loadAllContent();
   }
 
-  ngAfterViewInit(): void {
-    this.wheelHandler = (e: WheelEvent) => {
-      // כשה-overlay פתוח — לא לחסום גלילה רגילה
-      if (this.expandedCategory !== null) return;
-      e.preventDefault();
-
-      // בדיקות ריצה מחוץ ל-zone לתגובה מיידית
-      if (this.isTransitioning) return;
-      const now = Date.now();
-      if (now - this.lastSwitchTime < 900) return;
-
-      // עדכון timestamp לפני zone כדי לחסום את האירוע הבא מיד
-      this.lastSwitchTime = now;
-
-      this.ngZone.run(() => {
-        if (e.deltaY > 0) this.goToNext();
-        else this.goToPrev();
-      });
-    };
-    this.el.nativeElement.addEventListener('wheel', this.wheelHandler, { passive: false });
-  }
-
   ngOnDestroy(): void {
-    if (this.wheelHandler) {
-      this.el.nativeElement.removeEventListener('wheel', this.wheelHandler);
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
     }
   }
 
-  @HostListener('touchstart', ['$event'])
-  onTouchStart(e: TouchEvent): void {
-    this.touchStartY = e.touches[0].clientY;
+  private initHero(): void {
+    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
+    if (!hero) return;
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.48);
+    hero.style.height = this.fullHeroHeight + 'px';
+    this.scrollListener = () => this.shrinkHero();
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
   }
 
-  @HostListener('touchend', ['$event'])
-  onTouchEnd(e: TouchEvent): void {
-    if (this.expandedCategory !== null) return;
-    const delta = this.touchStartY - e.changedTouches[0].clientY;
-    if (Math.abs(delta) < 60) return;
-    if (delta > 0) this.goToNext();
-    else this.goToPrev();
-  }
+  private shrinkHero(): void {
+    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
+    if (!hero) return;
 
-  goToNext(): void {
-    if (this.activeCategory < this.categories.length - 1) {
-      this.switchTo(this.activeCategory + 1, 'down');
+    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    hero.style.height = newHeight + 'px';
+
+    const progress = Math.min(1, window.scrollY / 160);
+    const inner = hero.querySelector('.hero-inner') as HTMLElement | null;
+    if (inner) inner.style.opacity = String(1 - progress);
+
+    const overlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (overlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      overlay.style.opacity = String(collapseProgress);
     }
   }
-
-  goToPrev(): void {
-    if (this.activeCategory > 0) {
-      this.switchTo(this.activeCategory - 1, 'up');
-    }
-  }
-
-  switchTo(index: number, direction: 'down' | 'up'): void {
-    if (this.isTransitioning || index === this.activeCategory) return;
-    this.scrollDirection = direction;
-    this.prevCategory = this.activeCategory;
-    this.activeCategory = index;
-    this.isTransitioning = true;
-    this.labelVisible = false;
-    setTimeout(() => { this.labelVisible = true; }, 300);
-    setTimeout(() => {
-      this.ngZone.run(() => {
-        this.isTransitioning = false;
-        this.prevCategory = -1;
-      });
-    }, 650);
-  }
-
-  isGridVisible(index: number): boolean {
-    return this.activeCategory === index || this.prevCategory === index;
-  }
-
-  getGridClasses(index: number): Record<string, boolean> {
-    const isActive = this.activeCategory === index;
-    const isPrev = this.prevCategory === index;
-    const dir = this.scrollDirection;
-    return {
-      'grid-visible':        isActive && !this.isTransitioning,
-      'grid-enter-bottom':   isActive && this.isTransitioning && dir === 'down',
-      'grid-enter-top':      isActive && this.isTransitioning && dir === 'up',
-      'grid-exit-top':       isPrev   && this.isTransitioning && dir === 'down',
-      'grid-exit-bottom':    isPrev   && this.isTransitioning && dir === 'up',
-    };
-  }
-
-  // ───── הרחבה ─────
-
-  expandCategory(index: number): void {
-    this.expandedCategory = index;
-    this.expandedClosing = false;
-  }
-
-  collapseCategory(): void {
-    this.expandedClosing = true;
-    setTimeout(() => {
-      this.ngZone.run(() => {
-        this.expandedCategory = null;
-        this.expandedClosing = false;
-      });
-    }, 380);
-  }
-
-  collapseAndNext(): void {
-    if (this.expandedCategory === null) return;
-    const next = this.expandedCategory + 1;
-    this.expandedClosing = true;
-    setTimeout(() => {
-      this.ngZone.run(() => {
-        this.expandedCategory = null;
-        this.expandedClosing = false;
-        if (next < this.categories.length) {
-          this.switchTo(next, 'down');
-        }
-      });
-    }, 380);
-  }
-
-  // ───── טעינת נתונים ─────
 
   private loadAllContent(): void {
     this.isLoading = true;
+
     Promise.all([
       this.loadFeaturedContent(),
-      this.loadPopularArticles(),
-      this.loadBlogContent(),
-      this.loadClips(),
+      this.loadSections(),
+      this.loadUpcomingEvents()
     ]).then(() => {
       this.isLoading = false;
-    }).catch(() => {
+      setTimeout(() => this.initHero(), 0);
+    }).catch(error => {
+      console.error('Error loading content:', error);
       this.isLoading = false;
     });
   }
@@ -200,51 +108,89 @@ export class MusicNewsComponent implements OnInit, OnDestroy, AfterViewInit {
             this.featuredArticles = content.sort((a, b) => a.displayOrder - b.displayOrder);
             resolve();
           },
-          error: (err) => { console.error(err); reject(err); }
+          error: (error) => {
+            console.error('Error loading featured content:', error);
+            reject(error);
+          }
         });
     });
   }
 
-  private loadPopularArticles(): Promise<void> {
+  /**
+   * טוען את הפסים הדינמיים מה-API — כולל הכתבות של כל פס
+   */
+  private loadSections(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.articleService.getArticles(1, 10, undefined, ArticleCategory.Popular, undefined, ArticleStatus.Published)
+      this.newsPageSectionService.getActiveSections()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: (result) => {
-            this.popularArticles = result.items.sort((a, b) =>
-              new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
-            );
+          next: (sections) => {
+            this.sections = sections;
             resolve();
           },
-          error: (err) => { console.error(err); reject(err); }
+          error: (error) => {
+            console.error('Error loading news page sections:', error);
+            reject(error);
+          }
         });
     });
   }
 
-  private loadBlogContent(): Promise<void> {
+  private loadUpcomingEvents(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+      this.eventService.getUpcomingEvents(10)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: (result) => { this.blogArticles = result.items; resolve(); },
-          error: (err) => { console.error(err); reject(err); }
-        });
-    });
-  }
-
-  private loadClips(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.articleService.getArticles(1, 10, undefined, ArticleCategory.Clips, undefined, ArticleStatus.Published)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (result) => {
-            this.clipsArticles = result.items.sort((a, b) =>
-              new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
-            );
+          next: (events) => {
+            this.upcomingEvents = this.sortEventsByPriority(events);
             resolve();
           },
-          error: (err) => { console.error(err); reject(err); }
+          error: (error) => {
+            console.error('Error loading upcoming events:', error);
+            reject(error);
+          }
         });
     });
+  }
+
+  private sortEventsByPriority(events: UpcomingEventDto[]): UpcomingEventDto[] {
+    return events.sort((a, b) => {
+      const priorityA = this.getEventPriority(a);
+      const priorityB = this.getEventPriority(b);
+      if (priorityA === priorityB) {
+        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+      }
+      return priorityA - priorityB;
+    });
+  }
+
+  private getEventPriority(event: UpcomingEventDto): number {
+    if (event.eventStatus === 'היום') return 1;
+    if (event.eventStatus === 'אירוע שחלף') return 3;
+    return 2;
+  }
+
+  navigateToArticle(article: Article): void {
+    const route = article.contentType === 0 ? '/news' : '/blog';
+    this.router.navigate([route, article.slug]);
+  }
+
+  navigateToFeaturedArticle(featured: FeaturedContent): void {
+    this.navigateToArticle(featured.article);
+  }
+
+  openTicketLink(event: UpcomingEventDto): void {
+    window.open(event.ticketUrl, '_blank');
+  }
+
+  /**
+   * ניווט ל"כל הכתבות" של פס — לפי קטגוריה או סוג תוכן
+   */
+  navigateToSection(section: NewsPageSection): void {
+    if (section.sectionType === 0 && section.categoryId !== undefined) {
+      this.router.navigate(['/articles'], { queryParams: { category: section.categoryId } });
+    } else if (section.sectionType === 1 && section.contentTypeId !== undefined) {
+      this.router.navigate(['/articles'], { queryParams: { contentType: section.contentTypeId } });
+    }
   }
 }

@@ -1,178 +1,100 @@
 <div class="music-news-page" dir="rtl">
 
-  <!-- Loading -->
-  <div class="loading-container" *ngIf="isLoading">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
     <div class="loading-spinner"></div>
   </div>
 
-  <ng-container *ngIf="!isLoading">
+  <!-- Main Content -->
+  <div *ngIf="!isLoading">
 
-    <!-- ══════════════════════════════════════
-         Floating bar: category label + expand btn
-    ══════════════════════════════════════ -->
-    <div class="float-bar">
-      <span class="category-label" [class.visible]="labelVisible">
-        {{ categories[activeCategory].label }}
-      </span>
-      <button class="expand-btn" (click)="expandCategory(activeCategory)">עוד ›</button>
-    </div>
+    <!-- Bento Hero — מלא מסך -->
+    <section class="bento-hero">
+      <div class="bento-news-grid">
 
-    <!-- ══════════════════════════════════════
-         Dot Nav — fixed bottom center
-    ══════════════════════════════════════ -->
-    <nav class="dot-nav" aria-label="ניווט בין קטגוריות">
-      <button class="dot"
-              *ngFor="let cat of categories"
-              [class.active]="activeCategory === cat.index"
-              (click)="switchTo(cat.index, cat.index > activeCategory ? 'down' : 'up')"
-              [attr.aria-label]="cat.label">
-      </button>
-    </nav>
+        <div class="bento-cell bento-cell-1">
+          <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
+          <div *ngIf="!featuredArticles[0]" class="skeleton-fill"></div>
+        </div>
 
-    <!-- ══════════════════════════════════════
-         Layout A — ראשי (2 big + 3 small)
-    ══════════════════════════════════════ -->
-    <div class="grid-wrapper layout-a"
-         *ngIf="isGridVisible(0)"
-         [ngClass]="getGridClasses(0)">
-      <div class="bento-cell cell-1">
-        <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[0]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-2">
-        <app-news-banner *ngIf="featuredArticles[1]" [article]="featuredArticles[1].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[1]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-3">
-        <app-news-banner *ngIf="featuredArticles[2]" [article]="featuredArticles[2].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[2]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-4">
-        <app-news-banner *ngIf="featuredArticles[3]" [article]="featuredArticles[3].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[3]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-5">
-        <app-news-banner *ngIf="featuredArticles[4]" [article]="featuredArticles[4].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[4]" class="skeleton-fill"></div>
-      </div>
-    </div>
+        <div class="bento-cell bento-cell-2">
+          <app-news-banner *ngIf="featuredArticles[1]" [article]="featuredArticles[1].article"></app-news-banner>
+          <div *ngIf="!featuredArticles[1]" class="skeleton-fill"></div>
+        </div>
 
-    <!-- ══════════════════════════════════════
-         Layout B — פופולאריים (dominant + right col + bottom row)
-    ══════════════════════════════════════ -->
-    <div class="grid-wrapper layout-b"
-         *ngIf="isGridVisible(1)"
-         [ngClass]="getGridClasses(1)">
-      <div class="bento-cell cell-1">
-        <app-news-banner *ngIf="popularArticles[0]" [article]="popularArticles[0]"></app-news-banner>
-        <div *ngIf="!popularArticles[0]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-2">
-        <app-news-banner *ngIf="popularArticles[1]" [article]="popularArticles[1]"></app-news-banner>
-        <div *ngIf="!popularArticles[1]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-3">
-        <app-news-banner *ngIf="popularArticles[2]" [article]="popularArticles[2]"></app-news-banner>
-        <div *ngIf="!popularArticles[2]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-4">
-        <app-news-banner *ngIf="popularArticles[3]" [article]="popularArticles[3]"></app-news-banner>
-        <div *ngIf="!popularArticles[3]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-5">
-        <app-news-banner *ngIf="popularArticles[4]" [article]="popularArticles[4]"></app-news-banner>
-        <div *ngIf="!popularArticles[4]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-6">
-        <app-news-banner *ngIf="popularArticles[5]" [article]="popularArticles[5]"></app-news-banner>
-        <div *ngIf="!popularArticles[5]" class="skeleton-fill"></div>
-      </div>
-    </div>
+        <div class="bento-cell bento-cell-3">
+          <app-news-banner *ngIf="featuredArticles[2]" [article]="featuredArticles[2].article"></app-news-banner>
+          <div *ngIf="!featuredArticles[2]" class="skeleton-fill"></div>
+        </div>
 
-    <!-- ══════════════════════════════════════
-         Layout C — תוכן (9 uniform cells)
-    ══════════════════════════════════════ -->
-    <div class="grid-wrapper layout-c"
-         *ngIf="isGridVisible(2)"
-         [ngClass]="getGridClasses(2)">
-      <div class="bento-cell" *ngFor="let article of blogArticles | slice:0:9">
-        <app-news-banner [article]="article"></app-news-banner>
-      </div>
-    </div>
+        <div class="bento-cell bento-cell-4">
+          <app-news-banner *ngIf="featuredArticles[3]" [article]="featuredArticles[3].article"></app-news-banner>
+          <div *ngIf="!featuredArticles[3]" class="skeleton-fill"></div>
+        </div>
 
-    <!-- ══════════════════════════════════════
-         Layout D — קליפים (3 cells: big top + 2 bottom)
-    ══════════════════════════════════════ -->
-    <div class="grid-wrapper layout-d"
-         *ngIf="isGridVisible(3)"
-         [ngClass]="getGridClasses(3)">
-      <div class="bento-cell cell-1">
-        <app-news-banner *ngIf="clipsArticles[0]" [article]="clipsArticles[0]"></app-news-banner>
-        <div *ngIf="!clipsArticles[0]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-2">
-        <app-news-banner *ngIf="clipsArticles[1]" [article]="clipsArticles[1]"></app-news-banner>
-        <div *ngIf="!clipsArticles[1]" class="skeleton-fill"></div>
-      </div>
-      <div class="bento-cell cell-3">
-        <app-news-banner *ngIf="clipsArticles[2]" [article]="clipsArticles[2]"></app-news-banner>
-        <div *ngIf="!clipsArticles[2]" class="skeleton-fill"></div>
-      </div>
-    </div>
+        <div class="bento-cell bento-cell-5">
+          <app-news-banner *ngIf="featuredArticles[4]" [article]="featuredArticles[4].article"></app-news-banner>
+          <div *ngIf="!featuredArticles[4]" class="skeleton-fill"></div>
+        </div>
 
-    <!-- ══════════════════════════════════════
-         Expanded overlay — גלילה חופשית
-    ══════════════════════════════════════ -->
-    <div class="expanded-overlay"
-         *ngIf="expandedCategory !== null"
-         [class.closing]="expandedClosing">
-
-      <div class="expanded-header">
-        <span class="category-label visible">{{ categories[expandedCategory!].label }}</span>
-        <button class="expanded-close-btn" (click)="collapseCategory()">סגור ✕</button>
       </div>
+    </section>
 
-      <div class="expanded-grid">
+    <!-- Category Sections — מקצה לקצה -->
+    <div class="sections-wrapper">
 
-        <!-- ראשי -->
-        <ng-container *ngIf="expandedCategory === 0">
-          <div class="expanded-cell" *ngFor="let fc of featuredArticles">
-            <app-news-banner [article]="fc.article"></app-news-banner>
+      <!-- פסים דינמיים — מוצגים לפי הגדרת המנהל -->
+      <ng-container *ngFor="let section of sections; let i = index">
+        <section class="news-section" *ngIf="section.articles.length > 0">
+          <div class="section-header">
+            <span class="category-pill">{{ section.title }}</span>
+            <span class="section-link" (click)="navigateToSection(section)">הצג הכל ›</span>
+          </div>
+          <app-carousel title="" linkText="" linkUrl="/">
+            <div class="scroll-item" *ngFor="let article of section.articles">
+              <app-news-banner [article]="article"></app-news-banner>
+            </div>
+          </app-carousel>
+        </section>
+      </ng-container>
+
+      <!-- הופעות קרובות -->
+      <section class="news-section events-section">
+        <div class="section-header">
+          <span class="category-pill">הופעות קרובות</span>
+        </div>
+        <ng-container *ngIf="upcomingEvents.length > 0; else eventsSkeleton">
+          <div class="events-list">
+            <div class="event-card" *ngFor="let event of upcomingEvents" (click)="openTicketLink(event)">
+              <div class="event-image-wrap">
+                <img [src]="event.imageUrl || 'assets/default-event.png'" [alt]="event.name" class="event-img">
+              </div>
+              <div class="event-info">
+                <span class="event-status-badge" [class.past]="event.eventStatus === 'אירוע שחלף'">
+                  {{ event.eventStatus }}
+                </span>
+                <h3 class="event-name">{{ event.name }}</h3>
+                <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames.length > 0">
+                  {{ event.artistName || event.taggedArtistNames[0] }}
+                </p>
+                <p class="event-location" *ngIf="event.location">{{ event.location }}</p>
+              </div>
+              <div class="event-date-col">
+                <span class="event-date">{{ event.eventDate | date:'dd/MM' }}</span>
+                <span class="event-ticket-btn">כרטיסים ›</span>
+              </div>
+            </div>
           </div>
         </ng-container>
-
-        <!-- פופולאריים -->
-        <ng-container *ngIf="expandedCategory === 1">
-          <div class="expanded-cell" *ngFor="let article of popularArticles">
-            <app-news-banner [article]="article"></app-news-banner>
+        <ng-template #eventsSkeleton>
+          <div class="events-list">
+            <div class="skeleton-event" *ngFor="let i of [1,2,3]"></div>
           </div>
-        </ng-container>
-
-        <!-- תוכן -->
-        <ng-container *ngIf="expandedCategory === 2">
-          <div class="expanded-cell" *ngFor="let article of blogArticles">
-            <app-news-banner [article]="article"></app-news-banner>
-          </div>
-        </ng-container>
-
-        <!-- קליפים -->
-        <ng-container *ngIf="expandedCategory === 3">
-          <div class="expanded-cell" *ngFor="let article of clipsArticles">
-            <app-news-banner [article]="article"></app-news-banner>
-          </div>
-        </ng-container>
-
-      </div>
-
-      <!-- תחתית: המשך לקטגוריה הבאה -->
-      <div class="expanded-footer">
-        <button class="continue-btn" (click)="collapseAndNext()">
-          {{ expandedCategory! < categories.length - 1 ? 'לקטגוריה הבאה ›' : 'חזרה לדף' }}
-        </button>
-      </div>
+        </ng-template>
+      </section>
 
     </div>
 
-  </ng-container>
+  </div>
 
 </div>
