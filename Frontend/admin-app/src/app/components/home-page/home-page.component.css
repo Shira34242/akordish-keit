@@ -151,9 +151,28 @@
   background: #fff;
   border-radius: 16px;
   z-index: 100;
-  max-height: 300px;
+  max-height: 420px;
   overflow-y: auto;
   direction: rtl;
+}
+
+.search-group {
+  border-bottom: 1px solid #F2F2F2;
+}
+
+.search-group:last-child {
+  border-bottom: none;
+}
+
+.search-group-label {
+  display: block;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--space-md) var(--space-base) var(--space-xs);
 }
 
 .search-result-item {
@@ -190,23 +209,21 @@
   font-size: var(--font-base);
 }
 
-.result-artist {
+.result-subtitle {
   font-size: var(--font-sm);
   color: rgba(0, 0, 0, 0.45);
 }
 
+.result-thumb--round {
+  border-radius: 50%;
+}
+
 .no-results {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: #fff;
-  padding: var(--space-base);
+  padding: var(--space-lg) var(--space-base);
   text-align: center;
-  border-radius: 16px;
-  z-index: 100;
   font-family: 'Open Sans', sans-serif;
   color: rgba(0, 0, 0, 0.45);
+  font-size: var(--font-sm);
 }
 
 /* ============================================

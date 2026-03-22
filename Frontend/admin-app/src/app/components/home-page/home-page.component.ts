@@ -9,6 +9,7 @@ import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
 import { TeacherService } from '../../services/teacher.service';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
+import { SearchService, SearchResults, SearchItem } from '../../services/search.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
@@ -44,7 +45,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
 
   searchQuery = '';
-  searchResults: any[] = [];
+  searchResults: SearchResults | null = null;
   showSearchResults = false;
   private searchSubject = new Subject<string>();
 
@@ -73,19 +74,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     private articleService: ArticleService,
     private eventService: EventService,
     private teacherService: TeacherService,
-    private providerService: MusicServiceProviderService
+    private providerService: MusicServiceProviderService,
+    private searchService: SearchService
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(query => {
         if (!query || query.length < 2) {
-          return of({ songs: [] });
+          return of(null);
         }
-        return this.songService.getSongs(query, 1, 5);
+        return this.searchService.search(query);
       })
-    ).subscribe((response: any) => {
-      this.searchResults = response.songs || [];
+    ).subscribe(results => {
+      this.searchResults = results;
       this.showSearchResults = this.searchQuery.length >= 2;
     });
   }
@@ -194,8 +196,23 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchSubject.next(query);
   }
 
-  selectSong(song: any) {
-    this.router.navigate(['/song', song.id]);
+  navigateToResult(item: SearchItem): void {
+    const routes: Record<string, string> = {
+      song: '/song',
+      artist: '/artist',
+      article: '/article',
+      teacher: '/teacher',
+      professional: '/professional',
+      playlist: '/playlist'
+    };
+    const base = routes[item.type];
+    if (base) this.router.navigate([base, item.id]);
+    this.showSearchResults = false;
+  }
+
+  get hasNoResults(): boolean {
+    if (!this.searchResults) return false;
+    return this.searchResults.totalCount === 0;
   }
 
   onSearchBlur() {

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, AfterViewInit, OnDestroy, OnChanges, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -13,7 +13,10 @@ import { CitiesService, City } from '../../../services/cities.service';
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })
-export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+
+  @Input() professionalId: number | null = null;
+  @Output() close = new EventEmitter<void>();
 
   @ViewChild('professionalHeroBg') professionalHeroBg?: ElementRef<HTMLDivElement>;
 
@@ -43,6 +46,10 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       next: cities => this.cities = cities,
       error: () => {}
     });
+  }
+
+  ngOnChanges(): void {
+    if (this.professionalId) this.loadProfessional(this.professionalId);
   }
 
   ngAfterViewInit(): void {}
