@@ -1,12 +1,14 @@
 /* ============================================
-   PAGE BASE — תאים ממלאים את כל המסך
+   PAGE — גלילה רגילה
 ============================================ */
-.music-news-page {
-  position: relative;
-  height: calc(100dvh - 56px);
-  overflow: hidden;
-  background: #ffffff;
+.bento-page {
   direction: rtl;
+  padding: var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+  background: #ffffff;
+  min-height: 100vh;
 }
 
 /* ============================================
@@ -16,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  min-height: 60vh;
 }
 
 .loading-spinner {
@@ -33,219 +35,69 @@
 }
 
 /* ============================================
-   FLOATING BAR — שם קטגוריה + כפתור הרחבה
-   צף מעל התאים בחלק העליון
+   SHARED BENTO GRID
+   אותה פריסה לכל הגרידים — אחידות חזותית
 ============================================ */
-.float-bar {
-  position: fixed;
-  top: 72px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  direction: rtl;
-}
-
-.category-label {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-xl);
-  background: #ddff53;
-  color: #000000;
-  border-radius: 999px;
-  padding: 10px 28px;
-  white-space: nowrap;
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
-.category-label.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.expand-btn {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-sm);
-  background: #000000;
-  color: #ffffff;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-}
-
-.expand-btn:hover {
-  opacity: 0.75;
-}
-
-/* ============================================
-   DOT NAV — fixed bottom center, horizontal
-============================================ */
-.dot-nav {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 999px;
-  padding: 10px 20px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.22);
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: background 0.25s, width 0.3s, border-radius 0.3s;
-  flex-shrink: 0;
-}
-
-.dot.active {
-  background: #000000;
-  width: 28px;
-  border-radius: 999px;
-}
-
-.dot:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-/* ============================================
-   GRID WRAPPER — מכסה את כל העמוד
-============================================ */
-.grid-wrapper {
-  position: absolute;
-  inset: 0;
-  padding: var(--space-base);
+.bento-grid {
   display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: minmax(240px, auto);
   gap: var(--space-base);
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* ============================================
-   ANIMATION STATES
+   HERO GRID
+   Cell-1 ו-2: שני תאים גדולים שווים (3×2)
+   Cell-3,4,5: שורה תחתונה (2×1 כל אחד)
 ============================================ */
-.grid-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.grid-enter-bottom {
-  opacity: 1;
-  pointer-events: auto;
-  animation: gridEnterBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.grid-enter-top {
-  opacity: 1;
-  pointer-events: auto;
-  animation: gridEnterTop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.grid-exit-top {
-  opacity: 1;
-  pointer-events: none;
-  animation: gridExitTop 0.38s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-
-.grid-exit-bottom {
-  opacity: 1;
-  pointer-events: none;
-  animation: gridExitBottom 0.38s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-
-@keyframes gridEnterBottom {
-  from { transform: translateY(80px) scale(0.97); opacity: 0; }
-  to   { transform: translateY(0)    scale(1);    opacity: 1; }
-}
-
-@keyframes gridEnterTop {
-  from { transform: translateY(-80px) scale(0.97); opacity: 0; }
-  to   { transform: translateY(0)     scale(1);    opacity: 1; }
-}
-
-@keyframes gridExitTop {
-  from { transform: translateY(0);     opacity: 1; }
-  to   { transform: translateY(-50px); opacity: 0; }
-}
-
-@keyframes gridExitBottom {
-  from { transform: translateY(0);    opacity: 1; }
-  to   { transform: translateY(50px); opacity: 0; }
-}
-
-/* ── Staggered cell entrance ── */
-.grid-enter-bottom .bento-cell,
-.grid-enter-top .bento-cell {
-  opacity: 0;
-  animation: cellPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.grid-enter-bottom .bento-cell:nth-child(1),
-.grid-enter-top .bento-cell:nth-child(1) { animation-delay: 0.06s; }
-
-.grid-enter-bottom .bento-cell:nth-child(2),
-.grid-enter-top .bento-cell:nth-child(2) { animation-delay: 0.12s; }
-
-.grid-enter-bottom .bento-cell:nth-child(3),
-.grid-enter-top .bento-cell:nth-child(3) { animation-delay: 0.18s; }
-
-.grid-enter-bottom .bento-cell:nth-child(4),
-.grid-enter-top .bento-cell:nth-child(4) { animation-delay: 0.24s; }
-
-.grid-enter-bottom .bento-cell:nth-child(5),
-.grid-enter-top .bento-cell:nth-child(5) { animation-delay: 0.30s; }
-
-.grid-enter-bottom .bento-cell:nth-child(6),
-.grid-enter-top .bento-cell:nth-child(6) { animation-delay: 0.34s; }
-
-.grid-enter-bottom .bento-cell:nth-child(7),
-.grid-enter-top .bento-cell:nth-child(7) { animation-delay: 0.38s; }
-
-.grid-enter-bottom .bento-cell:nth-child(8),
-.grid-enter-top .bento-cell:nth-child(8) { animation-delay: 0.42s; }
-
-.grid-enter-bottom .bento-cell:nth-child(9),
-.grid-enter-top .bento-cell:nth-child(9) { animation-delay: 0.46s; }
-
-@keyframes cellPop {
-  from { opacity: 0; transform: translateY(20px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
+.hero-cell-1 { grid-column: 1 / 4; grid-row: 1 / 3; }
+.hero-cell-2 { grid-column: 4 / 7; grid-row: 1 / 3; }
+.hero-cell-3 { grid-column: 1 / 3; }
+.hero-cell-4 { grid-column: 3 / 5; }
+.hero-cell-5 { grid-column: 5 / 7; }
 
 /* ============================================
-   BENTO CELL
+   SECTION GRID — STANDARD (זוגי)
+   Label ימין (קריאה RTL) | כתבה גדולה שמאל
+============================================ */
+.section-grid .label-cell  { grid-column: 1 / 3; grid-row: 1 / 3; }
+.section-grid .art-cell-1  { grid-column: 3 / 7; grid-row: 1 / 3; }
+.section-grid .art-cell-2  { grid-column: 1 / 3; grid-row: 3; }
+.section-grid .art-cell-3  { grid-column: 3 / 5; grid-row: 3; }
+.section-grid .expand-cell { grid-column: 5 / 7; grid-row: 3; }
+
+/* SECTION GRID — ALT (אי-זוגי)
+   כתבה גדולה ימין | Label שמאל
+============================================ */
+.section-grid.section-alt .label-cell  { grid-column: 5 / 7; grid-row: 1 / 3; }
+.section-grid.section-alt .art-cell-1  { grid-column: 1 / 5; grid-row: 1 / 3; }
+.section-grid.section-alt .art-cell-2  { grid-column: 1 / 3; grid-row: 3; }
+.section-grid.section-alt .art-cell-3  { grid-column: 3 / 5; grid-row: 3; }
+.section-grid.section-alt .expand-cell { grid-column: 5 / 7; grid-row: 3; }
+
+/* כתבות מורחבות — 2 עמודות כל אחת */
+.art-extra { grid-column: span 2; }
+
+/* ============================================
+   EVENTS GRID
+   Label ימין | הופעה גדולה שמאל | קטנות בשורה 3
+============================================ */
+.events-grid .label-cell { grid-column: 1 / 3; grid-row: 1 / 3; }
+.events-grid .event-big  { grid-column: 3 / 7; grid-row: 1 / 3; }
+.events-grid .event-sm   { grid-column: span 2; }
+
+/* ============================================
+   BENTO CELL — base
 ============================================ */
 .bento-cell {
   position: relative;
   overflow: hidden;
   border-radius: 20px;
   background: #F2F2F2;
+  min-height: 240px;
 }
 
+/* news-banner ממלא את התא לחלוטין */
 .bento-cell app-news-banner {
   position: absolute;
   inset: 0;
@@ -266,257 +118,275 @@
 }
 
 /* ============================================
-   LAYOUT A — ראשי
-   6 cols × 3 rows: 2 גדולים + 3 קטנים
+   LABEL CELL — כותרת קטגוריה (צהוב)
 ============================================ */
-.layout-a {
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
-.layout-a .cell-1 { grid-column: 1 / 4; grid-row: 1 / 3; }
-.layout-a .cell-2 { grid-column: 4 / 7; grid-row: 1 / 3; }
-.layout-a .cell-3 { grid-column: 1 / 3; grid-row: 3; }
-.layout-a .cell-4 { grid-column: 3 / 5; grid-row: 3; }
-.layout-a .cell-5 { grid-column: 5 / 7; grid-row: 3; }
-
-/* ============================================
-   LAYOUT B — פופולאריים
-   6 cols × 3 rows: תא דומיננטי + עמודת ימין + שורה תחתונה
-============================================ */
-.layout-b {
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
-.layout-b .cell-1 { grid-column: 1 / 5; grid-row: 1 / 3; }
-.layout-b .cell-2 { grid-column: 5 / 7; grid-row: 1; }
-.layout-b .cell-3 { grid-column: 5 / 7; grid-row: 2; }
-.layout-b .cell-4 { grid-column: 1 / 3; grid-row: 3; }
-.layout-b .cell-5 { grid-column: 3 / 5; grid-row: 3; }
-.layout-b .cell-6 { grid-column: 5 / 7; grid-row: 3; }
-
-/* ============================================
-   LAYOUT C — תוכן
-   3 cols × 3 rows: 9 תאים אחידים
-============================================ */
-.layout-c {
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
-/* ============================================
-   LAYOUT D — קליפים
-   6 cols × 3 rows: תא גדול למעלה + 2 תחתונים
-   פחות תאים = יותר נשימה לכל אחד
-============================================ */
-.layout-d {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
-.layout-d .cell-1 { grid-column: 1 / 3; grid-row: 1 / 3; }
-.layout-d .cell-2 { grid-column: 1;     grid-row: 3; }
-.layout-d .cell-3 { grid-column: 2;     grid-row: 3; }
-
-/* ============================================
-   EXPANDED OVERLAY — גלילה חופשית
-============================================ */
-.expanded-overlay {
-  position: fixed;
-  top: 56px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 300;
-  background: #ffffff;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  direction: rtl;
-  animation: overlayIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.expanded-overlay.closing {
-  animation: overlayOut 0.38s ease-in forwards;
-}
-
-@keyframes overlayIn {
-  from { transform: translateY(60px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-@keyframes overlayOut {
-  from { transform: translateY(0);    opacity: 1; }
-  to   { transform: translateY(60px); opacity: 0; }
-}
-
-/* Header — sticky בגלילה */
-.expanded-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #ffffff;
-  padding: var(--space-md) var(--space-base);
+.label-cell {
+  background: #ddff53;
+  border-radius: 20px;
+  padding: var(--space-md);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
+  cursor: pointer;
   direction: rtl;
+  transition: opacity 0.2s;
+  min-height: 240px;
 }
 
-.expanded-close-btn {
+.label-cell:hover {
+  opacity: 0.85;
+}
+
+.label-text {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: clamp(1.6rem, 2.2vw, 2.8rem);
+  color: #000000;
+  line-height: 1.1;
+}
+
+.label-link {
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
   font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.5);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
+  color: rgba(0, 0, 0, 0.55);
 }
 
-.expanded-close-btn:hover {
-  color: #000000;
+/* גרסה כהה — הופעות */
+.label-dark {
+  background: #404040;
 }
 
-/* Grid תוכן מורחב */
-.expanded-grid {
-  padding: 0 var(--space-base) var(--space-base);
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-base);
+.label-dark .label-text {
+  color: #ffffff;
 }
 
-.expanded-cell {
-  position: relative;
-  height: 240px;
+.label-dark .label-link {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   EXPAND CELL — עוד כתבות
+============================================ */
+.expand-cell {
+  background: #000000;
   border-radius: 20px;
-  overflow: hidden;
-  background: #F2F2F2;
-}
-
-.expanded-cell app-news-banner {
-  position: absolute;
-  inset: 0;
-  display: block;
-}
-
-.expanded-cell ::ng-deep .news-banner {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: unset;
-  border-radius: 0;
-}
-
-/* Footer — לקטגוריה הבאה */
-.expanded-footer {
-  grid-column: 1 / -1;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-xl) 0;
+  cursor: pointer;
+  min-height: 240px;
+  transition: opacity 0.2s;
 }
 
-.continue-btn {
+.expand-cell:hover {
+  opacity: 0.75;
+}
+
+.expand-label {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
   font-size: var(--font-base);
-  background: #ddff53;
-  color: #000000;
-  border: none;
-  border-radius: 999px;
-  padding: 14px 40px;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  color: #ddff53;
 }
 
-.continue-btn:hover {
-  opacity: 0.8;
+/* ============================================
+   EVENT CELL
+============================================ */
+.event-cell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #404040;
+  cursor: pointer;
+  min-height: 240px;
+}
+
+.event-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.4s ease;
+}
+
+.event-bg.no-image {
+  background: #404040;
+}
+
+.event-cell:hover .event-bg {
+  transform: scale(1.03);
+}
+
+.event-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.25) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.event-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-md);
+  direction: rtl;
+}
+
+.event-badge {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  background: #ddff53;
+  color: #000000;
+  border-radius: 999px;
+  padding: 3px 12px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.event-badge.past {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.event-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.event-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-base);
+  color: #ffffff;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.event-date-big {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-lg);
+  color: #ddff53;
+}
+
+.event-location {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-xs);
+  color: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-ticket {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  background: #000000;
+  color: #ddff53;
+  border-radius: 999px;
+  padding: 4px 14px;
+  display: inline-block;
+  align-self: flex-start;
 }
 
 /* ============================================
    RESPONSIVE — TABLET ≤1024px
+   Hero נשאר 6 עמודות, sections נשאר
 ============================================ */
 @media (max-width: 1024px) {
-  .category-label {
-    font-size: var(--font-lg);
-    padding: 8px 22px;
+  .bento-grid {
+    grid-auto-rows: minmax(200px, auto);
+  }
+
+  .label-text {
+    font-size: clamp(1.4rem, 2vw, 2.2rem);
   }
 }
 
 /* ============================================
    RESPONSIVE — MOBILE ≤640px
+   מעבר ל-2 עמודות, כל התאים משטחים
 ============================================ */
 @media (max-width: 640px) {
-  .float-bar {
-    top: 64px;
-    gap: var(--space-xs);
-  }
-
-  .category-label {
-    font-size: var(--font-base);
-    padding: 7px 18px;
-  }
-
-  .expand-btn {
-    font-size: var(--font-xs);
-    padding: 7px 14px;
-  }
-
-  .dot-nav {
-    bottom: 16px;
-    padding: 8px 16px;
-  }
-
-  .grid-wrapper {
+  .bento-page {
     padding: var(--space-sm);
     gap: var(--space-sm);
   }
 
-  /* 2 עמודות לכל הפריסות */
-  .layout-a,
-  .layout-b {
+  .bento-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-  }
-
-  .layout-a .cell-1 { grid-column: 1 / 3; grid-row: 1; }
-  .layout-a .cell-2 { grid-column: 1;     grid-row: 2; }
-  .layout-a .cell-3 { grid-column: 2;     grid-row: 2; }
-  .layout-a .cell-4 { grid-column: 1;     grid-row: 3; }
-  .layout-a .cell-5 { grid-column: 2;     grid-row: 3; }
-
-  .layout-b .cell-1 { grid-column: 1 / 3; grid-row: 1; }
-  .layout-b .cell-2 { grid-column: 1;     grid-row: 2; }
-  .layout-b .cell-3 { grid-column: 2;     grid-row: 2; }
-  .layout-b .cell-4 { grid-column: 1;     grid-row: 3; }
-  .layout-b .cell-5 { grid-column: 2;     grid-row: 3; }
-  .layout-b .cell-6 { display: none; }
-
-  .layout-c {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-  }
-
-  .layout-c .bento-cell:nth-child(n+7) {
-    display: none;
-  }
-
-  /* layout-d כבר 2 עמודות, ישאר */
-
-  .bento-cell {
-    border-radius: 14px;
-  }
-
-  .expanded-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-auto-rows: minmax(160px, auto);
     gap: var(--space-sm);
-    padding: 0 var(--space-sm) var(--space-sm);
   }
 
-  .expanded-cell {
-    height: 180px;
+  /* Hero mobile */
+  .hero-cell-1 { grid-column: 1 / 3; grid-row: auto; }
+  .hero-cell-2 { grid-column: 1;     grid-row: auto; }
+  .hero-cell-3 { grid-column: 2;     grid-row: auto; }
+  .hero-cell-4 { grid-column: 1;     grid-row: auto; }
+  .hero-cell-5 { grid-column: 2;     grid-row: auto; }
+
+  /* Sections mobile — איפוס לשני עמודות */
+  .section-grid .label-cell,
+  .section-grid.section-alt .label-cell  { grid-column: 1 / 3; grid-row: auto; }
+
+  .section-grid .art-cell-1,
+  .section-grid.section-alt .art-cell-1  { grid-column: 1 / 3; grid-row: auto; }
+
+  .section-grid .art-cell-2,
+  .section-grid.section-alt .art-cell-2  { grid-column: 1;     grid-row: auto; }
+
+  .section-grid .art-cell-3,
+  .section-grid.section-alt .art-cell-3  { grid-column: 2;     grid-row: auto; }
+
+  .section-grid .expand-cell,
+  .section-grid.section-alt .expand-cell { grid-column: 1 / 3; grid-row: auto; }
+
+  .art-extra { grid-column: 1; }
+
+  /* Events mobile */
+  .events-grid .label-cell { grid-column: 1 / 3; grid-row: auto; }
+  .events-grid .event-big  { grid-column: 1 / 3; grid-row: auto; }
+  .events-grid .event-sm   { grid-column: 1;     grid-row: auto; }
+
+  .label-text {
+    font-size: var(--font-lg);
+  }
+
+  .bento-cell,
+  .label-cell,
+  .expand-cell,
+  .event-cell {
     border-radius: 14px;
+    min-height: 160px;
   }
 }

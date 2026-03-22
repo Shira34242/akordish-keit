@@ -39,6 +39,21 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
 
   isLoading = true;
 
+  // ───── הרחבת קטגוריות ─────
+  expandedSections = new Set<number>();
+
+  toggleSection(index: number): void {
+    if (this.expandedSections.has(index)) {
+      this.expandedSections.delete(index);
+    } else {
+      this.expandedSections.add(index);
+    }
+  }
+
+  isExpanded(index: number): boolean {
+    return this.expandedSections.has(index);
+  }
+
   private fullHeroHeight = 0;
   private scrollListener?: () => void;
 
