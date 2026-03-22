@@ -43,65 +43,20 @@
     <!-- Category Sections — מקצה לקצה -->
     <div class="sections-wrapper">
 
-      <!-- פופולאריים -->
-      <section class="news-section">
-        <div class="section-header">
-          <span class="category-pill">פופולאריים</span>
-          <span class="section-link" (click)="navigateToCategory(10)">הצג הכל ›</span>
-        </div>
-        <app-carousel title="" linkText="" linkUrl="/">
-          <ng-container *ngIf="popularArticles.length > 0; else sk1">
-            <div class="scroll-item" *ngFor="let article of popularArticles">
+      <!-- פסים דינמיים — מוצגים לפי הגדרת המנהל -->
+      <ng-container *ngFor="let section of sections; let i = index">
+        <section class="news-section" *ngIf="section.articles.length > 0">
+          <div class="section-header">
+            <span class="category-pill">{{ section.title }}</span>
+            <span class="section-link" (click)="navigateToSection(section)">הצג הכל ›</span>
+          </div>
+          <app-carousel title="" linkText="" linkUrl="/">
+            <div class="scroll-item" *ngFor="let article of section.articles">
               <app-news-banner [article]="article"></app-news-banner>
             </div>
-          </ng-container>
-          <ng-template #sk1>
-            <div class="scroll-item" *ngFor="let i of [1,2,3,4,5]">
-              <div class="skeleton-banner"></div>
-            </div>
-          </ng-template>
-        </app-carousel>
-      </section>
-
-      <!-- תוכן -->
-      <section class="news-section">
-        <div class="section-header">
-          <span class="category-pill">תוכן</span>
-          <span class="section-link" (click)="navigateToContentType(1)">הצג הכל ›</span>
-        </div>
-        <app-carousel title="" linkText="" linkUrl="/">
-          <ng-container *ngIf="blogArticles.length > 0; else sk2">
-            <div class="scroll-item" *ngFor="let article of blogArticles">
-              <app-news-banner [article]="article"></app-news-banner>
-            </div>
-          </ng-container>
-          <ng-template #sk2>
-            <div class="scroll-item" *ngFor="let i of [1,2,3,4,5]">
-              <div class="skeleton-banner"></div>
-            </div>
-          </ng-template>
-        </app-carousel>
-      </section>
-
-      <!-- קליפים -->
-      <section class="news-section">
-        <div class="section-header">
-          <span class="category-pill">קליפים</span>
-          <span class="section-link" (click)="navigateToCategory(11)">הצג הכל ›</span>
-        </div>
-        <app-carousel title="" linkText="" linkUrl="/">
-          <ng-container *ngIf="clipsArticles.length > 0; else sk3">
-            <div class="scroll-item" *ngFor="let article of clipsArticles">
-              <app-news-banner [article]="article"></app-news-banner>
-            </div>
-          </ng-container>
-          <ng-template #sk3>
-            <div class="scroll-item" *ngFor="let i of [1,2,3,4,5]">
-              <div class="skeleton-banner"></div>
-            </div>
-          </ng-template>
-        </app-carousel>
-      </section>
+          </app-carousel>
+        </section>
+      </ng-container>
 
       <!-- הופעות קרובות -->
       <section class="news-section events-section">
@@ -119,7 +74,7 @@
                   {{ event.eventStatus }}
                 </span>
                 <h3 class="event-name">{{ event.name }}</h3>
-                <p class="event-artist" *ngIf="event.artistName || (event.taggedArtistNames?.length ?? 0) > 0">
+                <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames.length > 0">
                   {{ event.artistName || event.taggedArtistNames[0] }}
                 </p>
                 <p class="event-location" *ngIf="event.location">{{ event.location }}</p>

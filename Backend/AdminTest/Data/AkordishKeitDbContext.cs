@@ -61,6 +61,9 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<Event> Events { get; set; }
     public DbSet<FeaturedContent> FeaturedContents { get; set; }
 
+    // News Page Dynamic Sections
+    public DbSet<NewsPageSection> NewsPageSections { get; set; }
+
     // View Tracking
     public DbSet<SongView> SongViews { get; set; }
 
@@ -158,6 +161,9 @@ public class AkordishKeitDbContext : DbContext
 
         // Boost Configuration (חדש!)
         modelBuilder.ApplyConfiguration(new BoostConfiguration());
+
+        // News Page Sections Configuration
+        modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

@@ -239,6 +239,11 @@ export const routes: Routes = [
                 title: 'ניהול תוכן מרכזי - אקורדישקייט'
             },
             {
+                path: 'content/news-sections',
+                loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
+                title: 'ניהול פסי חדשות - אקורדישקייט'
+            },
+            {
                 path: 'reports',
                 loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
                 title: 'ניהול דיווחים - אקורדישקייט'

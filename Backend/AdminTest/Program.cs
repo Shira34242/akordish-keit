@@ -35,6 +35,7 @@ builder.Services.AddScoped<ILikedContentService, LikedContentService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
+builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
