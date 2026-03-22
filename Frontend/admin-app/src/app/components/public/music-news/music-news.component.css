@@ -31,28 +31,24 @@
 }
 
 /* ============================================
-   PAGE BODY
+   BENTO HERO — מלא מסך
 ============================================ */
 
-.page-body {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-xl) var(--space-xl) var(--space-4xl);
+.bento-hero {
+  height: calc(100dvh - 56px); /* 56px = גובה ה-navbar */
+  padding: var(--space-base);
 }
-
-/* ============================================
-   BENTO NEWS GRID
-============================================ */
 
 .bento-news-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(3, 250px);
+  height: 100%;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: var(--space-base);
-  margin-bottom: var(--space-4xl);
 }
 
-/* תאי הגריד */
+/* --- תאי הגריד --- */
+
 .bento-cell {
   position: relative;
   overflow: hidden;
@@ -67,7 +63,7 @@
   display: block;
 }
 
-/* עוקף aspect-ratio כדי שהכרטיס ימלא את גובה התא */
+/* עוקף aspect-ratio — הכרטיס ממלא את גובה התא */
 .bento-cell ::ng-deep .news-banner {
   width: 100%;
   height: 100%;
@@ -75,33 +71,35 @@
   border-radius: 0;
 }
 
-/* קובייה 1: גדולה — 3 עמודות, 2 שורות */
+/* --- מיקומי הקוביות --- */
+
+/* קובייה 1: גדולה שמאלית — 3 עמודות × 2 שורות */
 .bento-cell-1 {
   grid-column: 1 / 4;
   grid-row: 1 / 3;
 }
 
-/* קובייה 2: קטנה — עמודה 4, שורה 1 */
+/* קובייה 2: גדולה ימנית — 3 עמודות × 2 שורות */
 .bento-cell-2 {
-  grid-column: 4;
-  grid-row: 1;
+  grid-column: 4 / 7;
+  grid-row: 1 / 3;
 }
 
-/* קובייה 3: קטנה — עמודה 4, שורה 2 */
+/* קובייה 3: תחתונה שמאלית — 2 עמודות */
 .bento-cell-3 {
-  grid-column: 4;
-  grid-row: 2;
-}
-
-/* קובייה 4: רוחב — עמודות 1-2, שורה 3 */
-.bento-cell-4 {
   grid-column: 1 / 3;
   grid-row: 3;
 }
 
-/* קובייה 5: רוחב — עמודות 3-4, שורה 3 */
-.bento-cell-5 {
+/* קובייה 4: תחתונה אמצעית — 2 עמודות */
+.bento-cell-4 {
   grid-column: 3 / 5;
+  grid-row: 3;
+}
+
+/* קובייה 5: תחתונה ימנית — 2 עמודות */
+.bento-cell-5 {
+  grid-column: 5 / 7;
   grid-row: 3;
 }
 
@@ -130,13 +128,31 @@
 }
 
 /* ============================================
-   SECTIONS CONTAINER
+   SECTIONS WRAPPER — מקצה לקצה, ללא max-width
 ============================================ */
 
-.sections-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4xl);
+.sections-wrapper {
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+}
+
+/* ============================================
+   NEWS SECTION
+============================================ */
+
+.news-section {
+  /*
+    padding: 0 28px — החיצים נמצאים ב-position:absolute; [right/left]: -19px
+    מהקצה של carousel-container. עם 28px padding הם יוצגו ב-9px מקצה ה-section.
+    overflow: hidden — מונע overflow אופקי בכל הדף (מבלי לפגוע בגלילה הפנימית של הפס).
+  */
+  padding: 0 var(--space-xl);
+  overflow: hidden;
+  margin-bottom: var(--space-lg);
+}
+
+.news-section:last-child {
+  margin-bottom: 0;
 }
 
 /* ============================================
@@ -147,7 +163,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-lg);
+  padding: 0;
+  margin-bottom: var(--space-base);
 }
 
 .category-pill {
@@ -179,33 +196,40 @@
 }
 
 /* ============================================
-   NEWS SCROLL STRIP
+   CAROUSEL — מסתיר כותרת פנימית, גדלים
 ============================================ */
 
-.news-scroll-strip {
-  display: flex;
-  gap: var(--space-base);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: var(--space-sm);
-  scroll-snap-type: x mandatory;
-}
-
-.news-scroll-strip::-webkit-scrollbar {
+/* מסתיר את ה-header הפנימי של carousel — יש לנו section-header משלנו */
+.news-section ::ng-deep .carousel-header {
   display: none;
 }
 
+/* מסיר margin-bottom פנימי */
+.news-section ::ng-deep .carousel-section {
+  margin-bottom: 0;
+}
+
+/* מצמצם padding פנימי של scroll-content — ה-section כבר מרווח מהצד */
+.news-section ::ng-deep .scroll-content {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+/* גדלי כרטיסים — פרופורציה נכונה לרוחב הדף */
 .scroll-item {
-  min-width: 300px;
-  width: 300px;
+  min-width: 220px;
+  width: 220px;
   flex-shrink: 0;
-  scroll-snap-align: start;
 }
 
 /* ============================================
-   EVENTS LIST
+   EVENTS LIST — מוגבל לרוחב נוח לקריאה
 ============================================ */
+
+.events-section .events-list {
+  max-width: 860px;
+  padding: 0;
+}
 
 .events-list {
   display: flex;
@@ -326,50 +350,47 @@
 
 /* ============================================
    RESPONSIVE — TABLET ≤1024px
+   3 עמודות, 3 שורות, מלא מסך
 ============================================ */
 
 @media (max-width: 1024px) {
-  .page-body {
-    padding: var(--space-lg) var(--space-lg) var(--space-3xl);
-  }
-
-  .bento-news-grid {
-    grid-template-rows: repeat(3, 200px);
-  }
-
   .scroll-item {
-    min-width: 260px;
-    width: 260px;
+    min-width: 200px;
+    width: 200px;
   }
 }
 
 /* ============================================
-   RESPONSIVE — MOBILE ≤768px
+   RESPONSIVE — MOBILE ≤640px
+   2 עמודות, גובה טבעי, scroll אנכי
 ============================================ */
 
-@media (max-width: 768px) {
-  .page-body {
-    padding: var(--space-base) var(--space-base) var(--space-2xl);
+@media (max-width: 640px) {
+  .bento-hero {
+    height: auto;
+    padding: var(--space-base);
   }
 
-  /* בנטו → stack אנכי, קוביות בגובה טבעי */
   .bento-news-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     grid-template-rows: none;
-    gap: var(--space-base);
-  }
-
-  .bento-cell-1,
-  .bento-cell-2,
-  .bento-cell-3,
-  .bento-cell-4,
-  .bento-cell-5 {
-    grid-column: 1;
-    grid-row: auto;
     height: auto;
   }
 
-  /* מחזירים aspect-ratio לכרטיסים במובייל */
+  /* כרטיס 1: רוחב מלא */
+  .bento-cell-1 { grid-column: 1 / 3; grid-row: auto; }
+  .bento-cell-2 { grid-column: auto;  grid-row: auto; }
+  .bento-cell-3 { grid-column: auto;  grid-row: auto; }
+  .bento-cell-4 { grid-column: auto;  grid-row: auto; }
+  .bento-cell-5 { grid-column: auto;  grid-row: auto; }
+
+  /* מחזירים מצב טבעי — גובה מ-aspect-ratio */
+  .bento-cell {
+    height: auto;
+    overflow: visible;
+    border-radius: 16px;
+  }
+
   .bento-cell app-news-banner {
     position: static;
     inset: unset;
@@ -381,19 +402,14 @@
     border-radius: 16px;
   }
 
-  .bento-cell {
-    border-radius: 16px;
-    height: auto;
-    overflow: visible;
-  }
-
-  .sections-container {
-    gap: var(--space-3xl);
+  .news-section {
+    padding: 0 var(--space-base);
+    margin-bottom: var(--space-base);
   }
 
   .scroll-item {
-    min-width: 240px;
-    width: 240px;
+    min-width: 180px;
+    width: 180px;
   }
 
   .event-card {
