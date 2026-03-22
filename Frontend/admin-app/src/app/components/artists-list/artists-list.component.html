@@ -15,7 +15,8 @@
         type="text"
         class="search-input"
         placeholder="חפש אמן..."
-        [(ngModel)]="searchTerm">
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchTermChange($event)">
     </div>
     <div class="sort-pills">
       <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="setSortBy('name')">א–ת</button>
@@ -33,13 +34,13 @@
     </div>
 
     <!-- Grid -->
-    <div class="artists-grid" *ngIf="!loadingAll && filteredArtists.length > 0">
+    <div class="artists-grid" *ngIf="!loadingAll && allArtists.length > 0">
       <div
-        *ngFor="let artist of filteredArtists"
+        *ngFor="let artist of allArtists"
         class="artist-card"
         (click)="navigateToArtist(artist.id)">
         <div class="artist-photo">
-          <img [src]="artist.imageUrl || 'assets/default-artist.png'" [alt]="artist.name">
+          <img [src]="artist.imageUrl || 'assets/default-artist.png'" [alt]="artist.name" loading="lazy">
         </div>
         <div class="artist-info">
           <span class="artist-name">{{ artist.name }}</span>
@@ -49,7 +50,7 @@
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="!loadingAll && filteredArtists.length === 0">
+    <div class="empty-state" *ngIf="!loadingAll && allArtists.length === 0">
       <span class="material-icons">person_search</span>
       <p>לא נמצאו אמנים</p>
       <span *ngIf="searchTerm">נסה מילת חיפוש אחרת</span>

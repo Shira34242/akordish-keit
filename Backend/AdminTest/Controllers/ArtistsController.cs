@@ -32,7 +32,8 @@ public class ArtistsController : ControllerBase
         [FromQuery] ArtistStatus? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] string sortBy = "name")
+        [FromQuery] string sortBy = "name",
+        [FromQuery] string? search = null)
     {
         try
         {
@@ -44,6 +45,9 @@ public class ArtistsController : ControllerBase
 
             if (isPremium.HasValue)
                 query = query.Where(a => a.IsPremium == isPremium.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(a => a.Name.Contains(search));
 
             var totalCount = await query.CountAsync();
 

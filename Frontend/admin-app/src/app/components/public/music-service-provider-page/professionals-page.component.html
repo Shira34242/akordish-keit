@@ -97,7 +97,7 @@
       <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
         <div class="prof-card" *ngFor="let p of filteredProfessionals" (click)="viewProfessional(p.id)">
           <div class="prof-card-img">
-            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
             <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
           </div>
           <div class="prof-card-body">
@@ -128,7 +128,7 @@
         <div class="professionals-strip">
           <div class="prof-card" *ngFor="let p of featuredProfessionals" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -152,7 +152,7 @@
         <div class="professionals-strip">
           <div class="prof-card" *ngFor="let p of musicStores" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -175,7 +175,7 @@
         <div class="professionals-strip">
           <div class="prof-card" *ngFor="let p of recordingStudios" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -198,7 +198,7 @@
         <div class="professionals-strip">
           <div class="prof-card" *ngFor="let p of amplification" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -223,7 +223,7 @@
       <div class="professionals-grid">
         <div class="prof-card" *ngFor="let p of additionalProfessionals" (click)="viewProfessional(p.id)">
           <div class="prof-card-img">
-            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
           </div>
           <div class="prof-card-body">
             <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>

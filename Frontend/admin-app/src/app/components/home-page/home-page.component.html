@@ -30,18 +30,84 @@
             class="search-input">
         </div>
 
-        <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults.length > 0">
-          <div class="search-result-item" *ngFor="let song of searchResults" (click)="selectSong(song)">
-            <img [src]="song.imageUrl || 'assets/default-song.png'" class="result-thumb">
-            <div class="result-info">
-              <span class="result-title">{{ song.title }}</span>
-              <span class="result-artist">{{ song.artists[0]?.name }}</span>
+        <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults">
+
+          <!-- שירים ואקורדים -->
+          <div *ngIf="searchResults.songs.length > 0" class="search-group">
+            <span class="search-group-label">שירים ואקורדים</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.songs" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-song.png'" class="result-thumb" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="no-results" *ngIf="showSearchResults && searchResults.length === 0 && searchQuery.length >= 2">
-          לא נמצאו תוצאות
+          <!-- אמנים -->
+          <div *ngIf="searchResults.artists.length > 0" class="search-group">
+            <span class="search-group-label">אמנים</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.artists" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-artist.png'" class="result-thumb" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- כתבות -->
+          <div *ngIf="searchResults.articles.length > 0" class="search-group">
+            <span class="search-group-label">כתבות</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.articles" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-article.png'" class="result-thumb" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- מורים -->
+          <div *ngIf="searchResults.teachers.length > 0" class="search-group">
+            <span class="search-group-label">מורים</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.teachers" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-avatar.png'" class="result-thumb result-thumb--round" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- בעלי מקצוע -->
+          <div *ngIf="searchResults.professionals.length > 0" class="search-group">
+            <span class="search-group-label">בעלי מקצוע</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.professionals" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-avatar.png'" class="result-thumb result-thumb--round" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- רשימות שמורות -->
+          <div *ngIf="searchResults.playlists.length > 0" class="search-group">
+            <span class="search-group-label">רשימות שמורות</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.playlists" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-playlist.png'" class="result-thumb" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- אין תוצאות -->
+          <div class="no-results" *ngIf="hasNoResults">
+            לא נמצאו תוצאות עבור "{{ searchQuery }}"
+          </div>
+
         </div>
       </div>
 

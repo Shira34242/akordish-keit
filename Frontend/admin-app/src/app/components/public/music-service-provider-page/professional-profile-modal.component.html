@@ -159,7 +159,7 @@
           <div class="gallery-scroll">
             <div *ngFor="let img of professional.galleryImages" class="gallery-item">
               <img [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"
-                   onerror="this.onerror=null; this.src='/logo.png'" />
+                   loading="lazy" onerror="this.onerror=null; this.src='/logo.png'" />
             </div>
           </div>
         </div>

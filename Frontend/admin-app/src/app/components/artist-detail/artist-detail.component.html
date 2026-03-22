@@ -77,7 +77,7 @@
        [target]="artist.performanceTicketUrl ? '_blank' : '_self'"
        class="performance-banner"
        rel="noopener">
-      <img [src]="artist.performanceImageUrl" alt="הופעה קרובה" class="performance-banner-img" />
+      <img [src]="artist.performanceImageUrl" alt="הופעה קרובה" class="performance-banner-img" loading="lazy" />
       <div *ngIf="artist.performanceTicketUrl" class="performance-ticket-btn">לרכישת כרטיסים ←</div>
     </a>
 
@@ -107,7 +107,7 @@
       <div class="songs-grid" #songsGridEl *ngIf="!loadingSongs && songs.length > 0">
         <div *ngFor="let song of visibleSongs" class="song-card" (click)="navigateToSong(song.id)">
           <div class="song-card-image">
-            <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title" class="song-card-img">
+            <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title" class="song-card-img" loading="lazy">
             <span *ngIf="!song.imageUrl" class="song-cover-initial">{{ song.title.charAt(0) }}</span>
           </div>
           <div class="song-card-info">

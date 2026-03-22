@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ArtistService } from '../../services/artist.service';
 import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
 
@@ -12,7 +14,7 @@ import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
   templateUrl: './artists-list.component.html',
   styleUrls: ['./artists-list.component.css']
 })
-export class ArtistsListComponent implements OnInit {
+export class ArtistsListComponent implements OnInit, OnDestroy {
   featuredArtists: ArtistListDto[] = [];
   allArtists: ArtistListDto[] = [];
 
@@ -29,11 +31,8 @@ export class ArtistsListComponent implements OnInit {
   sortBy: string = 'name';
   searchTerm: string = '';
 
-  get filteredArtists(): ArtistListDto[] {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) return this.allArtists;
-    return this.allArtists.filter(a => a.name.toLowerCase().includes(term));
-  }
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private artistService: ArtistService,
@@ -43,6 +42,24 @@ export class ArtistsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadFeaturedArtists();
     this.loadAllArtists();
+
+    // חיפוש שרת עם debounce — 300ms אחרי שהמשתמש מפסיק להקליד
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(term => {
+      this.loadAllArtists(1, term);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchTermChange(term: string): void {
+    this.searchSubject.next(term.trim());
   }
 
   loadFeaturedArtists(): void {
@@ -60,15 +77,18 @@ export class ArtistsListComponent implements OnInit {
     });
   }
 
-  loadAllArtists(page: number = 1): void {
+  loadAllArtists(page: number = 1, search?: string): void {
     this.loadingAll = true;
+
+    const searchParam = search !== undefined ? search : this.searchTerm.trim() || undefined;
 
     this.artistService.getArtists(
       this.filterPremium,
       ArtistStatus.Active,
       page,
       this.pageSize,
-      this.sortBy
+      this.sortBy,
+      searchParam
     ).subscribe({
       next: (result) => {
         this.allArtists = result.items;
@@ -84,10 +104,6 @@ export class ArtistsListComponent implements OnInit {
   }
 
   onFilterChange(): void {
-    this.loadAllArtists(1);
-  }
-
-  onSortChange(): void {
     this.loadAllArtists(1);
   }
 
@@ -121,10 +137,7 @@ export class ArtistsListComponent implements OnInit {
   }
 
   becomeArtist(): void {
-    // שמירת הבחירה להפוך לאומן
     localStorage.setItem('pendingProfessionalType', 'artist');
-
-    // ניווט לדף בחירת מנוי (לא תשלום בפועל, רק בחירה)
     this.router.navigate(['/subscription/select'], {
       queryParams: { from: 'become-artist' }
     });

@@ -2,6 +2,8 @@ import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { CitiesService, City } from '../../../services/cities.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
@@ -39,7 +41,6 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   categories: Category[] = [];
 
   // Professionals data
-  allProfessionals: MusicServiceProviderListDto[] = [];
   featuredProfessionals: MusicServiceProviderListDto[] = [];
   musicStores: MusicServiceProviderListDto[] = [];
   recordingStudios: MusicServiceProviderListDto[] = [];
@@ -70,7 +71,6 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadCities();
-    this.loadCategories();
     this.loadProfessionals();
   }
 
@@ -124,44 +124,48 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  loadCategories(): void {
-    this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
-      next: (response: any) => {
+  loadProfessionals(): void {
+    this.loading = true;
+
+    // שלב 1: טעינת קטגוריות (ממוטמן לאחר הקריאה הראשונה)
+    this.systemTablesService.getItems('music-service-provider-categories', 1, 100).pipe(
+      switchMap((response: any) => {
         this.categories = response.items || response;
 
-        // Map quick search category IDs
+        // מיפוי quick search categories
         this.quickSearchCategories.forEach(quick => {
           const category = this.categories.find(c =>
             c.name.toLowerCase().includes(quick.name.toLowerCase())
           );
-          if (category) {
-            quick.id = category.id;
-          }
+          if (category) quick.id = category.id;
         });
-      },
-      error: (err) => console.error('Error loading categories:', err)
-    });
-  }
 
-  loadProfessionals(): void {
-    this.loading = true;
+        const musicStoreCat = this.categories.find(c => c.name.includes('חנויות מוזיקה'));
+        const recordingStudioCat = this.categories.find(c => c.name.includes('אולפני הקלטות'));
+        const amplificationCat = this.categories.find(c => c.name.includes('הגברה'));
 
-    // Load featured professionals (top 10)
-    this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 10).subscribe({
-      next: (response: any) => {
-        this.featuredProfessionals = response.items || response.data || [];
-      },
-      error: (err) => console.error('Error loading featured professionals:', err)
-    });
-
-    // Load all active professionals (non-teachers)
-    this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 200).subscribe({
-      next: (response: any) => {
-        this.allProfessionals = response.items || response.data || [];
-
-        // Load specific categories
-        this.loadCategoryBanners();
-
+        // שלב 2: כל הסקשנים בקריאה מקבילה — כל אחד מחזיר רק מה שצריך
+        return forkJoin({
+          featured: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 10),
+          musicStores: musicStoreCat
+            ? this.professionalService.getServiceProviders(undefined, musicStoreCat.id, undefined, 1, undefined, false, 1, 10)
+            : of({ items: [], data: [] } as any),
+          recordingStudios: recordingStudioCat
+            ? this.professionalService.getServiceProviders(undefined, recordingStudioCat.id, undefined, 1, undefined, false, 1, 10)
+            : of({ items: [], data: [] } as any),
+          amplification: amplificationCat
+            ? this.professionalService.getServiceProviders(undefined, amplificationCat.id, undefined, 1, undefined, false, 1, 10)
+            : of({ items: [], data: [] } as any),
+          catalog: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 20)
+        });
+      })
+    ).subscribe({
+      next: (results: any) => {
+        this.featuredProfessionals = results.featured.items || results.featured.data || [];
+        this.musicStores = results.musicStores.items || results.musicStores.data || [];
+        this.recordingStudios = results.recordingStudios.items || results.recordingStudios.data || [];
+        this.amplification = results.amplification.items || results.amplification.data || [];
+        this.additionalProfessionals = results.catalog.items || results.catalog.data || [];
         this.loading = false;
       },
       error: (err) => {
@@ -171,81 +175,28 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  loadCategoryBanners(): void {
-    // Load music stores
-    const musicStoreCategory = this.categories.find(c => c.name.includes('חנויות מוזיקה'));
-    if (musicStoreCategory) {
-      this.professionalService.getServiceProviders(undefined, musicStoreCategory.id, undefined, 1, undefined, false, 1, 10).subscribe({
-        next: (response: any) => {
-          this.musicStores = response.items || response.data || [];
-          this.updateAdditionalProfessionals();
-        },
-        error: (err) => console.error('Error loading music stores:', err)
-      });
-    }
-
-    // Load recording studios
-    const recordingStudioCategory = this.categories.find(c => c.name.includes('אולפני הקלטות'));
-    if (recordingStudioCategory) {
-      this.professionalService.getServiceProviders(undefined, recordingStudioCategory.id, undefined, 1, undefined, false, 1, 10).subscribe({
-        next: (response: any) => {
-          this.recordingStudios = response.items || response.data || [];
-          this.updateAdditionalProfessionals();
-        },
-        error: (err) => console.error('Error loading recording studios:', err)
-      });
-    }
-
-    // Load amplification
-    const amplificationCategory = this.categories.find(c => c.name.includes('הגברה'));
-    if (amplificationCategory) {
-      this.professionalService.getServiceProviders(undefined, amplificationCategory.id, undefined, 1, undefined, false, 1, 10).subscribe({
-        next: (response: any) => {
-          this.amplification = response.items || response.data || [];
-          this.updateAdditionalProfessionals();
-        },
-        error: (err) => console.error('Error loading amplification:', err)
-      });
-    }
-  }
-
-  updateAdditionalProfessionals(): void {
-    // Additional professionals (not in any specific category)
-    const categorizedIds = new Set([
-      ...this.featuredProfessionals.map(p => p.id),
-      ...this.musicStores.map(p => p.id),
-      ...this.recordingStudios.map(p => p.id),
-      ...this.amplification.map(p => p.id)
-    ]);
-
-    this.additionalProfessionals = this.allProfessionals.filter(p => !categorizedIds.has(p.id));
-  }
-
   onSearch(): void {
-    // Check if any filter is active
     const hasActiveFilter =
       this.searchTerm.trim() !== '' ||
       this.selectedCityId !== null ||
       this.selectedCategoryId !== null;
 
     if (!hasActiveFilter) {
-      // No filters - show default view with banners
       this.isFiltered = false;
       this.filteredProfessionals = [];
       return;
     }
 
-    // Apply filters using API
     this.isFiltered = true;
     this.professionalService.getServiceProviders(
       this.searchTerm || undefined,
       this.selectedCategoryId || undefined,
       this.selectedCityId || undefined,
-      1, // status = Active
-      undefined,
-      false, // isTeacher = false (professionals only)
       1,
-      200
+      undefined,
+      false,
+      1,
+      50
     ).subscribe({
       next: (response: any) => {
         this.filteredProfessionals = response.items || response.data || [];
@@ -273,59 +224,41 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onViewMore(category: string): void {
-    // Filter to show only this category (no limit - show all)
+  onViewMore(section: string): void {
     this.isFiltered = true;
 
-    switch(category) {
+    let categoryId: number | undefined;
+    switch (section) {
       case 'featured':
-        // Show all featured professionals
-        this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 200).subscribe({
-          next: (response: any) => {
-            this.filteredProfessionals = response.items || response.data || [];
-          },
-          error: (err) => console.error('Error loading featured professionals:', err)
+        this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 50).subscribe({
+          next: (response: any) => { this.filteredProfessionals = response.items || response.data || []; },
+          error: (err) => console.error('Error:', err)
         });
         break;
       case 'musicStores':
-        const musicStoreCategory = this.categories.find(c => c.name.includes('חנויות מוזיקה'));
-        if (musicStoreCategory) {
-          this.professionalService.getServiceProviders(undefined, musicStoreCategory.id, undefined, 1, undefined, false, 1, 200).subscribe({
-            next: (response: any) => {
-              this.filteredProfessionals = response.items || response.data || [];
-            },
-            error: (err) => console.error('Error loading music stores:', err)
-          });
-        }
+        categoryId = this.categories.find(c => c.name.includes('חנויות מוזיקה'))?.id;
+        if (categoryId) this.loadFilteredSection(categoryId);
         break;
       case 'recordingStudios':
-        const recordingStudioCategory = this.categories.find(c => c.name.includes('אולפני הקלטות'));
-        if (recordingStudioCategory) {
-          this.professionalService.getServiceProviders(undefined, recordingStudioCategory.id, undefined, 1, undefined, false, 1, 200).subscribe({
-            next: (response: any) => {
-              this.filteredProfessionals = response.items || response.data || [];
-            },
-            error: (err) => console.error('Error loading recording studios:', err)
-          });
-        }
+        categoryId = this.categories.find(c => c.name.includes('אולפני הקלטות'))?.id;
+        if (categoryId) this.loadFilteredSection(categoryId);
         break;
       case 'amplification':
-        const amplificationCategory = this.categories.find(c => c.name.includes('הגברה'));
-        if (amplificationCategory) {
-          this.professionalService.getServiceProviders(undefined, amplificationCategory.id, undefined, 1, undefined, false, 1, 200).subscribe({
-            next: (response: any) => {
-              this.filteredProfessionals = response.items || response.data || [];
-            },
-            error: (err) => console.error('Error loading amplification:', err)
-          });
-        }
+        categoryId = this.categories.find(c => c.name.includes('הגברה'))?.id;
+        if (categoryId) this.loadFilteredSection(categoryId);
         break;
       default:
-        this.filteredProfessionals = this.allProfessionals;
+        this.isFiltered = false;
     }
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private loadFilteredSection(categoryId: number): void {
+    this.professionalService.getServiceProviders(undefined, categoryId, undefined, 1, undefined, false, 1, 50).subscribe({
+      next: (response: any) => { this.filteredProfessionals = response.items || response.data || []; },
+      error: (err) => console.error('Error:', err)
+    });
   }
 
   viewProfessional(professionalId: number): void {
@@ -337,7 +270,6 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       this.authService.requestLogin('/professionals');
       return;
     }
-    // Route through subscription selection
     localStorage.setItem('pendingProfessionalType', 'service-provider');
     this.router.navigate(['/subscription/select']);
   }

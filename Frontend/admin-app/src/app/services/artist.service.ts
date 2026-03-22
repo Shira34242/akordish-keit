@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import {
   Artist,
   ArtistListDto,
@@ -24,6 +25,7 @@ import { UpcomingEventDto } from '../models/event.model';
 })
 export class ArtistService {
     private apiUrl = 'https://localhost:44395/api/Artists';
+    private featuredArtistsCache$?: Observable<ArtistListDto[]>;
 
     constructor(private http: HttpClient) { }
 
@@ -39,7 +41,8 @@ export class ArtistService {
         status?: ArtistStatus,
         page: number = 1,
         pageSize: number = 20,
-        sortBy: string = 'name'
+        sortBy: string = 'name',
+        search?: string
     ): Observable<PagedResult<ArtistListDto>> {
         let params = new HttpParams()
             .set('page', page.toString())
@@ -54,6 +57,10 @@ export class ArtistService {
             params = params.set('isPremium', isPremium.toString());
         }
 
+        if (search !== undefined && search.trim() !== '') {
+            params = params.set('search', search.trim());
+        }
+
         return this.http.get<PagedResult<ArtistListDto>>(this.apiUrl, { params });
     }
 
@@ -61,7 +68,12 @@ export class ArtistService {
      * אומנים מומלצים (Premium + Boost) - לדף הבית
      */
     getFeaturedArtists(count: number = 10): Observable<ArtistListDto[]> {
-        return this.http.get<ArtistListDto[]>(`${this.apiUrl}/featured?count=${count}`);
+        if (!this.featuredArtistsCache$) {
+            this.featuredArtistsCache$ = this.http.get<ArtistListDto[]>(`${this.apiUrl}/featured?count=${count}`).pipe(
+                shareReplay(1)
+            );
+        }
+        return this.featuredArtistsCache$;
     }
 
     /**
