@@ -54,6 +54,16 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     return this.expandedSections.has(index);
   }
 
+  // ───── layout per section ─────
+  // a: 3 כתבות | b: 5 כתבות | c: 4 כתבות | d: 4 כתבות
+  getSectionLayout(index: number): string {
+    return ['a', 'b', 'c', 'd'][index % 4];
+  }
+
+  getInitialArticleCount(index: number): number {
+    return [3, 5, 4, 4][index % 4];
+  }
+
   private fullHeroHeight = 0;
   private scrollListener?: () => void;
 

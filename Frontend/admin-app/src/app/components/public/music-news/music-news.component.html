@@ -9,10 +9,10 @@
 
     <!-- ══════════════════════════════════════
          Hero — כותרת דף + 4 כתבות מרכזיות
-         Layout:
-           [title 2col×1row] [art-1 4col×2rows]
-           [art-2 2col×2rows continues…]
-           [art-2 cont.] [art-3 2col] [art-4 2col]
+
+         [title 2×1]    [art-1 4×2]
+         [art-2 2×2]    [art-1 cont.]
+         [art-2 cont.]  [art-3 2×1] [art-4 2×1]
     ══════════════════════════════════════ -->
     <div class="bento-grid hero-grid">
 
@@ -24,17 +24,14 @@
         <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
         <div *ngIf="!featuredArticles[0]" class="skeleton-fill"></div>
       </div>
-
       <div class="bento-cell hero-cell-2">
         <app-news-banner *ngIf="featuredArticles[1]" [article]="featuredArticles[1].article"></app-news-banner>
         <div *ngIf="!featuredArticles[1]" class="skeleton-fill"></div>
       </div>
-
       <div class="bento-cell hero-cell-3">
         <app-news-banner *ngIf="featuredArticles[2]" [article]="featuredArticles[2].article"></app-news-banner>
         <div *ngIf="!featuredArticles[2]" class="skeleton-fill"></div>
       </div>
-
       <div class="bento-cell hero-cell-4">
         <app-news-banner *ngIf="featuredArticles[3]" [article]="featuredArticles[3].article"></app-news-banner>
         <div *ngIf="!featuredArticles[3]" class="skeleton-fill"></div>
@@ -43,47 +40,60 @@
     </div>
 
     <!-- ══════════════════════════════════════
-         קטגוריות דינמיות
+         קטגוריות דינמיות — 4 פריסות שונות
 
-         STANDARD (זוגי) — label ימין-למעלה:
-           [label 2col×1row] [art-1 4col×2rows]
-           [art-2 2col×2rows] [art-1 cont.]
-           [art-2 cont.]      [art-3 2col] [expand 2col]
-
-         ALT (אי-זוגי) — label שמאל-למעלה:
-           [art-1 4col×2rows] [label 2col×1row]
-           [art-1 cont.]      [art-2 2col×1row]
-           [art-3 4col×1row]  [expand 2col]
+         layout-a (i%4=0): 3 כתבות, label ימין
+         layout-b (i%4=1): 5 כתבות, label שמאל
+         layout-c (i%4=2): 4 כתבות, label ימין
+         layout-d (i%4=3): 4 כתבות, label שמאל
     ══════════════════════════════════════ -->
     <ng-container *ngFor="let section of sections; let i = index">
       <div class="bento-grid section-grid"
-           [class.section-alt]="i % 2 === 1"
+           [ngClass]="'layout-' + getSectionLayout(i)"
            *ngIf="section.articles.length > 0">
 
+        <!-- כותרת קטגוריה — מרוכז -->
         <div class="label-cell section-label" (click)="navigateToSection(section)">
           <span class="label-text">{{ section.title }}</span>
           <span class="label-link">לכל התוכן ›</span>
         </div>
 
-        <div class="bento-cell art-cell-1">
+        <!-- כתבה 1 -->
+        <div class="bento-cell art-cell-1" *ngIf="section.articles[0]">
           <app-news-banner [article]="section.articles[0]"></app-news-banner>
         </div>
 
+        <!-- כתבה 2 -->
         <div class="bento-cell art-cell-2" *ngIf="section.articles[1]">
           <app-news-banner [article]="section.articles[1]"></app-news-banner>
         </div>
 
+        <!-- כתבה 3 -->
         <div class="bento-cell art-cell-3" *ngIf="section.articles[2]">
           <app-news-banner [article]="section.articles[2]"></app-news-banner>
         </div>
 
-        <div class="expand-cell" (click)="toggleSection(i)">
-          <span class="expand-label">{{ isExpanded(i) ? 'פחות ↑' : 'עוד ›' }}</span>
+        <!-- כתבה 4 — רק ב-layout b, c, d -->
+        <div class="bento-cell art-cell-4"
+             *ngIf="section.articles[3] && getInitialArticleCount(i) >= 4">
+          <app-news-banner [article]="section.articles[3]"></app-news-banner>
         </div>
 
+        <!-- כתבה 5 — רק ב-layout b -->
+        <div class="bento-cell art-cell-5"
+             *ngIf="section.articles[4] && getInitialArticleCount(i) >= 5">
+          <app-news-banner [article]="section.articles[4]"></app-news-banner>
+        </div>
+
+        <!-- כפתור הרחבה — מרוכז, תמיד בפינה שמאל-תחתית -->
+        <div class="expand-cell" (click)="toggleSection(i)">
+          <span class="expand-label">{{ isExpanded(i) ? '↑ פחות' : 'עוד ›' }}</span>
+        </div>
+
+        <!-- כתבות נוספות בהרחבה -->
         <ng-container *ngIf="isExpanded(i)">
           <div class="bento-cell art-extra"
-               *ngFor="let article of section.articles | slice:3">
+               *ngFor="let article of section.articles | slice:getInitialArticleCount(i)">
             <app-news-banner [article]="article"></app-news-banner>
           </div>
         </ng-container>
@@ -93,10 +103,6 @@
 
     <!-- ══════════════════════════════════════
          הופעות קרובות
-         Layout (= standard section):
-           [label 2col×1row] [event-big 4col×2rows]
-           [event-sm-1 2col×2rows] [event-big cont.]
-           [event-sm-1 cont.] [ev-2 2col] [ev-3 2col]
     ══════════════════════════════════════ -->
     <div class="bento-grid events-grid" *ngIf="upcomingEvents.length > 0">
 
@@ -104,8 +110,7 @@
         <span class="label-text">הופעות<br>קרובות</span>
       </div>
 
-      <div class="event-cell event-big"
-           *ngIf="upcomingEvents[0]"
+      <div class="event-cell event-big" *ngIf="upcomingEvents[0]"
            (click)="openTicketLink(upcomingEvents[0])">
         <div class="event-bg"
              [style.backgroundImage]="upcomingEvents[0].imageUrl ? 'url(' + upcomingEvents[0].imageUrl + ')' : null"
@@ -126,17 +131,14 @@
         </div>
       </div>
 
-      <div class="event-cell event-sm event-sm-1"
-           *ngIf="upcomingEvents[1]"
+      <div class="event-cell event-sm-1" *ngIf="upcomingEvents[1]"
            (click)="openTicketLink(upcomingEvents[1])">
         <div class="event-bg"
              [style.backgroundImage]="upcomingEvents[1].imageUrl ? 'url(' + upcomingEvents[1].imageUrl + ')' : null"
              [class.no-image]="!upcomingEvents[1].imageUrl"></div>
         <div class="event-overlay"></div>
         <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[1].eventStatus === 'אירוע שחלף'">
-            {{ upcomingEvents[1].eventStatus }}
-          </span>
+          <span class="event-badge" [class.past]="upcomingEvents[1].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[1].eventStatus }}</span>
           <div class="event-bottom">
             <h3 class="event-name">{{ upcomingEvents[1].name }}</h3>
             <div class="event-meta">
@@ -147,17 +149,14 @@
         </div>
       </div>
 
-      <div class="event-cell event-sm event-sm-2"
-           *ngIf="upcomingEvents[2]"
+      <div class="event-cell event-sm-2" *ngIf="upcomingEvents[2]"
            (click)="openTicketLink(upcomingEvents[2])">
         <div class="event-bg"
              [style.backgroundImage]="upcomingEvents[2].imageUrl ? 'url(' + upcomingEvents[2].imageUrl + ')' : null"
              [class.no-image]="!upcomingEvents[2].imageUrl"></div>
         <div class="event-overlay"></div>
         <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[2].eventStatus === 'אירוע שחלף'">
-            {{ upcomingEvents[2].eventStatus }}
-          </span>
+          <span class="event-badge" [class.past]="upcomingEvents[2].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[2].eventStatus }}</span>
           <div class="event-bottom">
             <h3 class="event-name">{{ upcomingEvents[2].name }}</h3>
             <div class="event-meta">
@@ -168,17 +167,14 @@
         </div>
       </div>
 
-      <div class="event-cell event-sm event-sm-3"
-           *ngIf="upcomingEvents[3]"
+      <div class="event-cell event-sm-3" *ngIf="upcomingEvents[3]"
            (click)="openTicketLink(upcomingEvents[3])">
         <div class="event-bg"
              [style.backgroundImage]="upcomingEvents[3].imageUrl ? 'url(' + upcomingEvents[3].imageUrl + ')' : null"
              [class.no-image]="!upcomingEvents[3].imageUrl"></div>
         <div class="event-overlay"></div>
         <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[3].eventStatus === 'אירוע שחלף'">
-            {{ upcomingEvents[3].eventStatus }}
-          </span>
+          <span class="event-badge" [class.past]="upcomingEvents[3].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[3].eventStatus }}</span>
           <div class="event-bottom">
             <h3 class="event-name">{{ upcomingEvents[3].name }}</h3>
             <div class="event-meta">
