@@ -120,7 +120,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     // זיהוי צבע FAB + עדכון כפתור עריכה למנהל אחרי כל ניווט
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        setTimeout(() => this.checkFabBackground(), 100);
+        setTimeout(() => this.checkFabBackground(), 200);
+        setTimeout(() => this.checkFabBackground(), 800);
         this.updateAdminEditTarget(event.urlAfterRedirects);
       }
     });
@@ -135,7 +136,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => this.checkFabBackground(), 100);
+    setTimeout(() => this.checkFabBackground(), 200);
+    setTimeout(() => this.checkFabBackground(), 800);
   }
 
   handleLogoClick() {

@@ -5,6 +5,7 @@
 
   <!-- Hero Background — fixed, shrinks on scroll -->
   <div class="hero-bg" #heroBg>
+    <canvas #heroCanvas class="hero-canvas"></canvas>
     <div class="hero-overlay"></div>
     <div class="hero-collapse-overlay"></div>
   </div>
@@ -56,6 +57,7 @@
 
   <!-- Page Content -->
   <div class="content-section">
+    <div class="page-content">
 
     <!-- חדשות המוזיקה -->
     <section class="home-section" *ngIf="newsArticles.length > 0">
@@ -204,5 +206,6 @@
       </div>
     </section>
 
+    </div><!-- /page-content -->
   </div>
 </div>

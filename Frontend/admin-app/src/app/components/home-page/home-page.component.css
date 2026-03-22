@@ -38,6 +38,16 @@
   transform: translateZ(0);
 }
 
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 2;
+}
+
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -231,11 +241,17 @@
   padding: var(--space-2xl) 0 var(--space-3xl);
 }
 
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
 /* ============================================
    HOME SECTIONS
 ============================================ */
 .home-section {
-  margin: 0 var(--space-lg) var(--space-3xl);
+  margin-bottom: var(--space-3xl);
   direction: rtl;
 }
 
@@ -285,7 +301,7 @@
 ============================================ */
 .songs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-md);
 }
 
@@ -311,7 +327,7 @@
 .persons-scroll {
   display: flex;
   flex-direction: row;
-  gap: var(--space-base);
+  gap: var(--space-lg);
   overflow-x: auto;
   padding-bottom: var(--space-md);
   scrollbar-width: none;
@@ -323,7 +339,7 @@
 
 .person-card {
   flex-shrink: 0;
-  width: 100px;
+  width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -339,8 +355,8 @@
 }
 
 .person-avatar {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   background: #F2F2F2;
   overflow: hidden;
@@ -398,10 +414,10 @@
    PROMO BOX (תיבה צהובה)
 ============================================ */
 .promo-box {
-  margin: 0 var(--space-lg) var(--space-3xl);
+  margin: var(--space-4xl) 0;
   min-height: 25vh;
   background: #ddff53;
-  border-radius: 40px;
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -587,10 +603,17 @@
 /* ============================================
    RESPONSIVE
 ============================================ */
+
+/* Tablet ≤1024px */
+@media (max-width: 1024px) {
+  .page-content {
+    padding: 0 var(--space-lg);
+  }
+}
+
+/* Mobile ≤768px */
 @media (max-width: 768px) {
   .hero-bg {
-    left: 8px;
-    right: 8px;
     border-radius: 20px;
   }
 
@@ -607,11 +630,19 @@
     padding: var(--space-xl) 0 var(--space-3xl);
   }
 
+  .page-content {
+    padding: 0 var(--space-md);
+  }
+
+  .home-section {
+    margin-bottom: var(--space-2xl);
+  }
+
   .promo-box {
-    border-radius: 24px;
+    border-radius: 20px;
     padding: var(--space-xl) var(--space-xl);
     justify-content: center;
-    text-align: center;
+    margin: var(--space-3xl) 0;
   }
 
   .promo-content {
@@ -624,37 +655,6 @@
 
   .promo-actions {
     justify-content: center;
-  }
-
-  .home-section {
-    margin: 0 var(--space-md) var(--space-2xl);
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-bg {
-    left: 8px;
-    right: 8px;
-    border-radius: 20px;
-  }
-
-  .hero-title {
-    font-size: 3.5rem;
-    letter-spacing: -1px;
-    margin-bottom: var(--space-xl);
-  }
-
-  .hero-subtitle {
-    font-size: var(--font-sm);
-  }
-
-  .quick-link {
-    font-size: var(--font-sm);
-  }
-
-  .promo-box {
-    margin: 0 var(--space-md) var(--space-2xl);
-    border-radius: 20px;
   }
 
   .news-grid {
@@ -673,5 +673,26 @@
     flex-direction: row;
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+/* Small mobile ≤480px */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 3.5rem;
+    letter-spacing: -1px;
+    margin-bottom: var(--space-xl);
+  }
+
+  .hero-subtitle {
+    font-size: var(--font-sm);
+  }
+
+  .quick-link {
+    font-size: var(--font-sm);
+  }
+
+  .promo-box {
+    border-radius: 16px;
   }
 }

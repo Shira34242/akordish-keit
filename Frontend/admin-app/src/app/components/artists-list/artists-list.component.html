@@ -1,119 +1,66 @@
-<div class="artists-page-container">
-  <!-- כותרת -->
-  <div class="page-header">
-    <h1 class="page-title">אומנים</h1>
-    <p class="page-subtitle">גלה את האומנים המובילים במוזיקה חרדית</p>
+<div class="artists-page">
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <span class="section-label">אמנים</span>
+    <h1 class="page-title">האמנים שלנו</h1>
+    <p class="page-subtitle">{{ totalCount }} אמנים באתר</p>
+  </header>
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="search-wrapper">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="חפש אמן..."
+        [(ngModel)]="searchTerm">
+    </div>
+    <div class="sort-pills">
+      <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="setSortBy('name')">א–ת</button>
+      <button class="sort-pill" [class.active]="sortBy === 'songcount'" (click)="setSortBy('songcount')">פופולרי</button>
+      <button class="sort-pill" [class.active]="sortBy === 'created'" (click)="setSortBy('created')">חדשים</button>
+    </div>
   </div>
 
-  <!-- אומנים מומלצים -->
-  <section class="featured-section">
-    <h2 class="section-title">אומנים מומלצים 🌟</h2>
+  <!-- Content -->
+  <div class="artists-container">
 
-    <div class="loading-state" *ngIf="loadingFeatured">
-      <div class="spinner"></div>
-      <p>טוען אומנים מומלצים...</p>
-    </div>
-
-    <div class="artists-grid featured-grid" *ngIf="!loadingFeatured && featuredArtists.length > 0">
-      <div *ngFor="let artist of featuredArtists"
-           class="artist-card featured-card"
-           (click)="navigateToArtist(artist.id)">
-        <div class="artist-image-wrapper">
-          <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-               [alt]="artist.name"
-               class="artist-image">
-          <span class="verified-badge" *ngIf="artist.isVerified">✓</span>
-          <span class="premium-badge" *ngIf="artist.isPremium">👑</span>
-        </div>
-        <div class="artist-info">
-          <h3 class="artist-name">{{ artist.name }}</h3>
-          <p class="artist-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
-          <div class="artist-stats">
-            <span class="stat-item">
-              <strong>{{ artist.songCount }}</strong> שירים
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p class="no-artists" *ngIf="!loadingFeatured && featuredArtists.length === 0">
-      אין אומנים מומלצים כרגע
-    </p>
-  </section>
-
-  <!-- כל האומנים -->
-  <section class="all-artists-section">
-    <div class="section-header">
-      <div class="header-left">
-        <h2 class="section-title">כל האומנים ({{ totalCount }})</h2>
-        <button class="become-artist-btn" (click)="becomeArtist()">
-          <span class="material-icons">star</span>
-          הפוך לאומן
-        </button>
-      </div>
-
-      <!-- פילטרים -->
-      <div class="filters">
-        <select [(ngModel)]="sortBy" (change)="onSortChange()" class="filter-select">
-          <option value="name">מיון: א-ב</option>
-          <option value="songcount">מיון: לפי מספר שירים</option>
-          <option value="created">מיון: חדשים ביותר</option>
-        </select>
-
-        <select [(ngModel)]="filterPremium" (change)="onFilterChange()" class="filter-select">
-          <option [ngValue]="undefined">הכל</option>
-          <option [ngValue]="true">משלמים בלבד</option>
-          <option [ngValue]="false">חינמיים בלבד</option>
-        </select>
-      </div>
-    </div>
-
+    <!-- Loading -->
     <div class="loading-state" *ngIf="loadingAll">
       <div class="spinner"></div>
-      <p>טוען אומנים...</p>
     </div>
 
-    <div class="artists-grid" *ngIf="!loadingAll && allArtists.length > 0">
-      <div *ngFor="let artist of allArtists"
-           class="artist-card"
-           (click)="navigateToArtist(artist.id)">
-        <div class="artist-image-wrapper">
-          <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-               [alt]="artist.name"
-               class="artist-image">
-          <span class="verified-badge" *ngIf="artist.isVerified">✓</span>
-          <span class="premium-badge" *ngIf="artist.isPremium">👑</span>
+    <!-- Grid -->
+    <div class="artists-grid" *ngIf="!loadingAll && filteredArtists.length > 0">
+      <div
+        *ngFor="let artist of filteredArtists"
+        class="artist-card"
+        (click)="navigateToArtist(artist.id)">
+        <div class="artist-photo">
+          <img [src]="artist.imageUrl || 'assets/default-artist.png'" [alt]="artist.name">
         </div>
         <div class="artist-info">
-          <h3 class="artist-name">{{ artist.name }}</h3>
-          <p class="artist-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>
-          <div class="artist-stats">
-            <span class="stat-item">
-              <strong>{{ artist.songCount }}</strong> שירים
-            </span>
-          </div>
+          <span class="artist-name">{{ artist.name }}</span>
+          <span class="artist-songs">{{ artist.songCount }} שירים</span>
         </div>
       </div>
     </div>
 
-    <p class="no-artists" *ngIf="!loadingAll && allArtists.length === 0">
-      לא נמצאו אומנים
-    </p>
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loadingAll && filteredArtists.length === 0">
+      <span class="material-icons">person_search</span>
+      <p>לא נמצאו אמנים</p>
+      <span *ngIf="searchTerm">נסה מילת חיפוש אחרת</span>
+    </div>
 
     <!-- Pagination -->
-    <div class="pagination" *ngIf="totalPages > 1 && !loadingAll">
-      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
-        ← הקודם
-      </button>
-
-      <span class="page-info">
-        עמוד {{ currentPage }} מתוך {{ totalPages }}
-      </span>
-
-      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
-        הבא →
-      </button>
+    <div class="pagination" *ngIf="totalPages > 1 && !loadingAll && !searchTerm">
+      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">הקודם</button>
+      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">הבא</button>
     </div>
-  </section>
+
+  </div>
 </div>

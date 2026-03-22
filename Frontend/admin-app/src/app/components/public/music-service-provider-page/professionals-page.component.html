@@ -1,312 +1,255 @@
-<div class="professionals-page">
+<div class="professionals-page" dir="rtl">
 
-  <!-- Hero Section -->
-  <div class="page-hero">
+  <!-- Top scroll mask -->
+  <div class="top-scroll-mask"></div>
+
+  <!-- ════════════════════════════════════════
+       HERO BG — fixed, מצטמצם בגלילה
+  ════════════════════════════════════════ -->
+  <div class="hero-bg" #heroBg>
+    <div class="hero-collapse-overlay"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       HERO CONTENT AREA — in-flow, spacer + תוכן
+  ════════════════════════════════════════ -->
+  <div class="hero-content-area">
     <div class="hero-content">
+
       <h1 class="hero-title">עולם המוזיקה</h1>
-      <p class="hero-subtitle">מצא בעלי מקצוע, חנויות מוזיקה ואולפני הקלטות</p>
+      <p class="hero-subtitle">מצא מורים, אולפנים, חנויות מוזיקה ובעלי מקצוע</p>
 
-      <div class="hero-search">
-        <div class="search-input-wrapper">
-          <span class="material-icons search-icon">search</span>
-          <input
-            type="text"
-            class="search-input"
-            placeholder="חיפוש לפי שם..."
-            [(ngModel)]="searchTerm"
-            (keyup.enter)="onSearch()">
-        </div>
+      <!-- חיפוש -->
+      <div class="search-wrap">
+        <input type="text"
+               placeholder="חפש שם, תחום או עיר..."
+               [(ngModel)]="searchTerm"
+               (keyup.enter)="onSearch()"
+               class="search-input">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </div>
 
-        <select
-          class="filter-select"
-          [(ngModel)]="selectedCityId"
-          (change)="onSearch()">
+      <!-- פילטרים -->
+      <div class="filters-row">
+        <select [(ngModel)]="selectedCityId" (change)="onSearch()" class="filter-pill">
           <option [ngValue]="null">כל הערים</option>
           <option *ngFor="let city of cities" [ngValue]="city.id">{{ city.name }}</option>
         </select>
-
-        <select
-          class="filter-select"
-          [(ngModel)]="selectedCategoryId"
-          (change)="onSearch()">
+        <select [(ngModel)]="selectedCategoryId" (change)="onSearch()" class="filter-pill">
           <option [ngValue]="null">כל הקטגוריות</option>
           <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
         </select>
-
-        <button class="search-btn" (click)="onSearch()">חפש</button>
       </div>
+
+      <!-- ניקוי -->
+      <div class="clear-row" *ngIf="isFiltered">
+        <button class="btn-clear" (click)="clearFilters()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+          נקה סינונים
+        </button>
+      </div>
+
     </div>
   </div>
 
-  <!-- Toolbar: Quick Search + Become Professional -->
-  <div class="toolbar-row">
-    <button
-      *ngIf="authService.isLoggedIn"
-      class="become-professional-btn"
-      (click)="openBecomeProfessionalForm()">
-      <span class="material-icons">business</span>
-      השתדרג לבעל מקצוע
-    </button>
 
-    <div class="quick-search-pills">
-      <button
-        *ngFor="let category of quickSearchCategories"
-        class="quick-search-btn"
-        (click)="onQuickSearch(category.name)">
-        {{ category.hebrewName }}
-      </button>
-    </div>
-
-    <div class="clear-filters-wrapper" *ngIf="isFiltered">
-      <button class="clear-filters-btn" (click)="clearFilters()">
-        <span class="material-icons">close</span>
-        נקה סינון
-      </button>
-    </div>
-  </div>
-
-  <!-- Loading -->
+  <!-- ════════════════════════════════════════
+       LOADING
+  ════════════════════════════════════════ -->
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
     <p>טוען בעלי מקצוע...</p>
   </div>
 
-  <!-- Filtered Results -->
-  <div *ngIf="!loading && isFiltered" class="filtered-section">
-    <div class="section-header">
-      <h2 class="section-title">תוצאות חיפוש</h2>
-      <span class="results-count">{{ filteredProfessionals.length }} תוצאות</span>
-    </div>
 
-    <div *ngIf="filteredProfessionals.length > 0" class="professionals-grid">
-      <div
-        *ngFor="let professional of filteredProfessionals"
-        class="professional-card"
-        (click)="viewProfessional(professional.id)">
-        <div class="professional-image">
-          <img
-            [src]="professional.profileImageUrl || 'logo.png'"
-            [alt]="professional.displayName"
-            onerror="this.onerror=null; this.src='logo.png'">
-          <span *ngIf="professional.isFeatured" class="featured-badge">
-            <span class="material-icons">star</span>
-          </span>
-        </div>
-        <div class="professional-info">
-          <h3 class="professional-name">{{ professional.displayName }}</h3>
-          <p class="professional-category" *ngIf="professional.categoryName">{{ professional.categoryName }}</p>
-          <p class="professional-location" *ngIf="professional.cityId">
-            <span class="material-icons">location_on</span>
-            {{ getCityName(professional.cityId) }}
-          </p>
-          <p class="professional-experience" *ngIf="professional.yearsOfExperience">
-            {{ professional.yearsOfExperience }} שנות ניסיון
-          </p>
-        </div>
+  <!-- ════════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════ -->
+  <div *ngIf="!loading" class="professionals-content">
+
+    <!-- Quick Categories -->
+    <div class="quick-categories-row">
+      <div class="quick-categories">
+        <button *ngFor="let cat of quickSearchCategories"
+                class="quick-cat-btn"
+                (click)="onQuickSearch(cat.name)">
+          {{ cat.hebrewName }}
+        </button>
       </div>
-    </div>
-
-    <div *ngIf="filteredProfessionals.length === 0" class="empty-state">
-      <span class="material-icons empty-icon">search_off</span>
-      <h3>לא נמצאו תוצאות</h3>
-      <p>נסה לשנות את הסינון</p>
-      <button class="clear-filters-btn" (click)="clearFilters()">
-        <span class="material-icons">close</span>
-        נקה סינון
+      <button *ngIf="authService.isLoggedIn"
+              class="btn-become-pro"
+              (click)="openBecomeProfessionalForm()">
+        <span class="material-icons">add</span>
+        הצטרף כבעל מקצוע
       </button>
     </div>
-  </div>
 
-  <!-- Default Banners View -->
-  <div *ngIf="!loading && !isFiltered" class="banners-section">
-
-    <!-- Featured -->
-    <div class="professional-banner" *ngIf="featuredProfessionals.length > 0">
-      <div class="banner-header">
-        <h2 class="banner-title">מומלצים</h2>
-        <button class="view-more-btn" (click)="onViewMore('featured')">
-          עוד
-          <span class="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div class="professionals-carousel">
-        <div
-          *ngFor="let professional of featuredProfessionals"
-          class="professional-card"
-          (click)="viewProfessional(professional.id)">
-          <div class="professional-image">
-            <img
-              [src]="professional.profileImageUrl || 'logo.png'"
-              [alt]="professional.displayName"
-              onerror="this.onerror=null; this.src='logo.png'">
-            <span class="featured-badge">
-              <span class="material-icons">star</span>
-            </span>
-          </div>
-          <div class="professional-info">
-            <h3 class="professional-name">{{ professional.displayName }}</h3>
-            <p class="professional-category" *ngIf="professional.categoryName">{{ professional.categoryName }}</p>
-            <p class="professional-location" *ngIf="professional.cityId">
-              <span class="material-icons">location_on</span>
-              {{ getCityName(professional.cityId) }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Music Stores -->
-    <div class="professional-banner" *ngIf="musicStores.length > 0">
-      <div class="banner-header">
-        <h2 class="banner-title">חנויות מוזיקה</h2>
-        <button class="view-more-btn" (click)="onViewMore('musicStores')">
-          עוד
-          <span class="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div class="professionals-carousel">
-        <div
-          *ngFor="let professional of musicStores"
-          class="professional-card"
-          (click)="viewProfessional(professional.id)">
-          <div class="professional-image">
-            <img
-              [src]="professional.profileImageUrl || 'logo.png'"
-              [alt]="professional.displayName"
-              onerror="this.onerror=null; this.src='logo.png'">
-          </div>
-          <div class="professional-info">
-            <h3 class="professional-name">{{ professional.displayName }}</h3>
-            <p class="professional-location" *ngIf="professional.cityId">
-              <span class="material-icons">location_on</span>
-              {{ getCityName(professional.cityId) }}
-            </p>
-            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
-              {{ professional.yearsOfExperience }} שנות ניסיון
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recording Studios -->
-    <div class="professional-banner" *ngIf="recordingStudios.length > 0">
-      <div class="banner-header">
-        <h2 class="banner-title">אולפני הקלטות</h2>
-        <button class="view-more-btn" (click)="onViewMore('recordingStudios')">
-          עוד
-          <span class="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div class="professionals-carousel">
-        <div
-          *ngFor="let professional of recordingStudios"
-          class="professional-card"
-          (click)="viewProfessional(professional.id)">
-          <div class="professional-image">
-            <img
-              [src]="professional.profileImageUrl || 'logo.png'"
-              [alt]="professional.displayName"
-              onerror="this.onerror=null; this.src='logo.png'">
-          </div>
-          <div class="professional-info">
-            <h3 class="professional-name">{{ professional.displayName }}</h3>
-            <p class="professional-location" *ngIf="professional.cityId">
-              <span class="material-icons">location_on</span>
-              {{ getCityName(professional.cityId) }}
-            </p>
-            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
-              {{ professional.yearsOfExperience }} שנות ניסיון
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Amplification -->
-    <div class="professional-banner" *ngIf="amplification.length > 0">
-      <div class="banner-header">
-        <h2 class="banner-title">הגברה</h2>
-        <button class="view-more-btn" (click)="onViewMore('amplification')">
-          עוד
-          <span class="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div class="professionals-carousel">
-        <div
-          *ngFor="let professional of amplification"
-          class="professional-card"
-          (click)="viewProfessional(professional.id)">
-          <div class="professional-image">
-            <img
-              [src]="professional.profileImageUrl || 'logo.png'"
-              [alt]="professional.displayName"
-              onerror="this.onerror=null; this.src='logo.png'">
-          </div>
-          <div class="professional-info">
-            <h3 class="professional-name">{{ professional.displayName }}</h3>
-            <p class="professional-location" *ngIf="professional.cityId">
-              <span class="material-icons">location_on</span>
-              {{ getCityName(professional.cityId) }}
-            </p>
-            <p class="professional-experience" *ngIf="professional.yearsOfExperience">
-              {{ professional.yearsOfExperience }} שנות ניסיון
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Professionals Table -->
-    <div class="additional-professionals-section" *ngIf="additionalProfessionals.length > 0">
+    <!-- Results (when filtered) -->
+    <div class="results-section" *ngIf="isFiltered">
       <div class="section-header">
-        <h2 class="section-title">בעלי מקצוע נוספים</h2>
+        <span class="section-tag section-tag--accent">נמצאו {{ filteredProfessionals.length }} תוצאות</span>
       </div>
-
-      <div class="professionals-table">
-        <div
-          *ngFor="let professional of additionalProfessionals"
-          class="professional-row"
-          (click)="viewProfessional(professional.id)">
-          <div class="row-image">
-            <img
-              [src]="professional.profileImageUrl || 'logo.png'"
-              [alt]="professional.displayName"
-              onerror="this.onerror=null; this.src='logo.png'">
+      <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
+        <div class="prof-card" *ngFor="let p of filteredProfessionals" (click)="viewProfessional(p.id)">
+          <div class="prof-card-img">
+            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
           </div>
-          <div class="row-info">
-            <h3 class="row-name">{{ professional.displayName }}</h3>
-            <div class="row-details">
-              <span *ngIf="professional.cityId" class="detail-item">
-                <span class="material-icons">location_on</span>
-                {{ getCityName(professional.cityId) }}
-              </span>
-              <span *ngIf="professional.yearsOfExperience" class="detail-item">
-                {{ professional.yearsOfExperience }} שנות ניסיון
-              </span>
+          <div class="prof-card-body">
+            <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+            <h3 class="prof-card-name">{{ p.displayName }}</h3>
+            <div class="prof-card-meta" *ngIf="p.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(p.cityId) }}
             </div>
           </div>
-          <div class="row-action">
-            <span class="material-icons">arrow_back</span>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="filteredProfessionals.length === 0">
+        <p>לא נמצאו תוצאות עבור החיפוש</p>
+        <button class="btn-clear" (click)="clearFilters()">נקה סינונים</button>
+      </div>
+    </div>
+
+    <!-- Sections Area -->
+    <div class="sections-area">
+
+      <!-- מומלצים -->
+      <div class="section" *ngIf="featuredProfessionals.length > 0">
+        <div class="section-header">
+          <span class="section-tag section-tag--accent">מומלצים</span>
+          <button class="btn-show-all" (click)="onViewMore('featured')">הצג הכל ›</button>
+        </div>
+        <div class="professionals-strip">
+          <div class="prof-card" *ngFor="let p of featuredProfessionals" (click)="viewProfessional(p.id)">
+            <div class="prof-card-img">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+              <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+              <h3 class="prof-card-name">{{ p.displayName }}</h3>
+              <div class="prof-card-meta" *ngIf="p.cityId">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(p.cityId) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- חנויות מוזיקה -->
+      <div class="section" *ngIf="musicStores.length > 0">
+        <div class="section-header">
+          <span class="section-tag section-tag--accent">חנויות מוזיקה</span>
+          <button class="btn-show-all" (click)="onViewMore('musicStores')">הצג הכל ›</button>
+        </div>
+        <div class="professionals-strip">
+          <div class="prof-card" *ngFor="let p of musicStores" (click)="viewProfessional(p.id)">
+            <div class="prof-card-img">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+              <h3 class="prof-card-name">{{ p.displayName }}</h3>
+              <div class="prof-card-meta" *ngIf="p.cityId">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(p.cityId) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- אולפני הקלטות -->
+      <div class="section" *ngIf="recordingStudios.length > 0">
+        <div class="section-header">
+          <span class="section-tag section-tag--accent">אולפני הקלטות</span>
+          <button class="btn-show-all" (click)="onViewMore('recordingStudios')">הצג הכל ›</button>
+        </div>
+        <div class="professionals-strip">
+          <div class="prof-card" *ngFor="let p of recordingStudios" (click)="viewProfessional(p.id)">
+            <div class="prof-card-img">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+              <h3 class="prof-card-name">{{ p.displayName }}</h3>
+              <div class="prof-card-meta" *ngIf="p.cityId">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(p.cityId) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- הגברה -->
+      <div class="section" *ngIf="amplification.length > 0">
+        <div class="section-header">
+          <span class="section-tag section-tag--accent">הגברה</span>
+          <button class="btn-show-all" (click)="onViewMore('amplification')">הצג הכל ›</button>
+        </div>
+        <div class="professionals-strip">
+          <div class="prof-card" *ngFor="let p of amplification" (click)="viewProfessional(p.id)">
+            <div class="prof-card-img">
+              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+              <h3 class="prof-card-name">{{ p.displayName }}</h3>
+              <div class="prof-card-meta" *ngIf="p.cityId">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(p.cityId) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Catalog -->
+    <div class="catalog-section" *ngIf="!isFiltered && additionalProfessionals.length > 0">
+      <div class="section-header">
+        <span class="section-tag section-tag--secondary">כל בעלי המקצוע</span>
+        <span class="total-badge">{{ additionalProfessionals.length }}</span>
+      </div>
+      <div class="professionals-grid">
+        <div class="prof-card" *ngFor="let p of additionalProfessionals" (click)="viewProfessional(p.id)">
+          <div class="prof-card-img">
+            <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" onerror="this.onerror=null; this.src='logo.png'">
+          </div>
+          <div class="prof-card-body">
+            <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
+            <h3 class="prof-card-name">{{ p.displayName }}</h3>
+            <div class="prof-card-meta" *ngIf="p.cityId">
+              <span class="material-icons">location_on</span>
+              {{ getCityName(p.cityId) }}
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-  </div>
+    <!-- Empty State -->
+    <div class="empty-state"
+         *ngIf="!isFiltered && featuredProfessionals.length === 0 && additionalProfessionals.length === 0 && musicStores.length === 0 && recordingStudios.length === 0 && amplification.length === 0">
+      <p>אין בעלי מקצוע זמינים כרגע</p>
+    </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading && featuredProfessionals.length === 0 && additionalProfessionals.length === 0 && !isFiltered" class="empty-state">
-    <span class="material-icons empty-icon">business</span>
-    <h3>אין בעלי מקצוע זמינים כרגע</h3>
-    <p>נסה שוב מאוחר יותר</p>
-  </div>
+    <!-- Become Professional Form -->
+    <app-become-professional-form
+      *ngIf="showBecomeProfessionalForm"
+      (close)="closeBecomeProfessionalForm()"
+      (success)="loadProfessionals()">
+    </app-become-professional-form>
 
-  <!-- Become Professional Form -->
-  <app-become-professional-form
-    *ngIf="showBecomeProfessionalForm"
-    (close)="closeBecomeProfessionalForm()"
-    (success)="loadProfessionals()"
-  ></app-become-professional-form>
+  </div>
 
 </div>

@@ -420,6 +420,11 @@
     background: #e8e8e8;
 }
 
+/* Font Size Group */
+.font-size-group {
+    display: contents; /* שקוף לגמרי בdesktop */
+}
+
 /* Auto Scroll Controls */
 .autoscroll-controls {
     display: flex;
@@ -459,6 +464,12 @@
     display: flex;
     align-items: center;
     white-space: nowrap;
+}
+
+/* אייקון גלילה — מוסתר בdesktop, מוצג במובייל */
+.btn-scroll-icon {
+    display: none;
+    flex-shrink: 0;
 }
 
 /* 3. Main Layout */
@@ -815,35 +826,191 @@
 /* Extra small screens (phones) */
 @media (max-width: 600px) {
     .song-header {
-        left: 8px;
-        right: 8px;
-        border-radius: 20px;
+        left: 4px;
+        right: 4px;
+        border-radius: 18px;
     }
 
+    /* header — תמונה מעל פרטים, הכל ממורכז */
+    .header-content {
+        padding: calc(1vh + var(--space-sm)) var(--space-md) var(--space-sm);
+        text-align: center;
+        align-items: center;
+    }
+
+    .header-top-row {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
+        width: 100%;
+    }
+
+    .header-image-section {
+        width: 110px;
+        flex: 0 0 110px;
+    }
+
+    .header-info-section {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        flex: unset;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .main-title {
+        font-size: var(--font-xl);
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .artist-name {
+        font-size: var(--font-sm);
+    }
+
+    /* לחצני פעולה — ממורכזים */
+    .header-actions {
+        align-self: center;
+        gap: var(--space-sm);
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .action-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    /* toolbar — מתחת לheader, רקע צהוב, גלילה אופקית אחידה */
     .sticky-toolbar {
-        padding: 0 var(--space-sm);
-        top: 12px;
+        top: 72px;
+        z-index: 896;
+        background: #ddff53;
+        border-radius: 18px;
+        padding: var(--space-xs) var(--space-sm);
+        margin: 0 4px;
+        max-width: calc(100% - 8px);
+        overflow: hidden;
     }
 
+    /* toolbar-content — גלילה אחידה על כל הרוחב */
     .toolbar-content {
-        padding: var(--space-sm) var(--space-md);
-        gap: var(--space-xs);
+        padding: 0;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: transparent;
     }
 
+    .toolbar-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* instrument-group — גלילה ביחד עם שאר ה-toolbar */
+    .instrument-group {
+        flex: 0 0 auto;
+        padding: 3px 4px;
+        gap: 1px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 100px;
+    }
+
+    /* controls-group — גלילה ביחד, ללא גלילה פנימית */
+    .controls-group {
+        flex: 0 0 auto;
+        padding: 3px 6px;
+        gap: 4px;
+        justify-content: flex-start;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 100px;
+        overflow-x: visible;
+    }
+
+    /* לחצנים — עיגול, 28px */
     .toolbar-btn {
-        min-width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        flex-shrink: 0;
+        border-radius: 50%;
     }
 
-    /* Hide text in "Auto Scroll" button on very small screens */
-    .btn-scroll {
+    .toolbar-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* הסתרת תצוגת סולם ומפרידים */
+    .current-key-label,
+    .toolbar-divider {
+        display: none;
+    }
+
+    /* קבוצת טרנספוז — gap צמוד */
+    .transpose-group {
+        gap: 1px;
+    }
+
+    /* ערך טרנספוזיציה */
+    .transpose-val {
         font-size: var(--font-xs);
+        width: 16px;
+        flex: none;
     }
 
-    /* Make the easy mode button icon-only on very small screens */
+    /* A- ו-A+ צמודים יחד */
+    .font-size-group {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        flex-shrink: 0;
+    }
+
+    /* לחצני טקסט (A-, A+, גרסה קלה) */
+    .btn-text {
+        padding: 0 5px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    /* כפתור גלילה — אייקון בלבד */
+    .btn-scroll-icon {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-scroll-text {
+        display: none;
+    }
+
+    .btn-scroll.btn-text {
+        padding: 0;
+        width: 28px;
+        border-radius: 50%;
+    }
+
     .btn-easy {
-        padding: 0 var(--space-sm);
-        font-size: var(--font-xs);
+        white-space: nowrap;
+        font-size: 11px;
+        padding: 0 5px;
+    }
+
+    /* כפתורי גלילה אוטומטית */
+    .toolbar-btn-sm {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        flex-shrink: 0;
+        border-radius: 50%;
     }
 
     .main-layout {
@@ -859,6 +1026,21 @@
         top: 90px;
         padding: var(--space-md) var(--space-lg);
         font-size: var(--font-sm);
+    }
+}
+
+@media (max-width: 400px) {
+    .header-image-section {
+        width: 90px;
+        flex: 0 0 90px;
+    }
+
+    .main-title {
+        font-size: var(--font-lg);
+    }
+
+    .artist-name {
+        font-size: var(--font-xs);
     }
 }
 

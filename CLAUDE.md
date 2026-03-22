@@ -42,6 +42,64 @@ If approval is needed, stop and send this message to the developer:
 ------------------------
 ```
 
+### Protected Design vs Rebuild
+
+Before starting any task, state whether the page is **Protected** or **Rebuild**.
+
+#### 🔒 Protected (do not break desktop)
+
+The following are reference designs — do not alter their desktop appearance:
+- Artist page
+- Song page (chord view)
+- Article / News page
+- Header (top navigation)
+
+All patterns derived from them are also protected:
+- Hero behavior
+- Song cards
+- News banner cards
+- Gallery (as in artist page)
+- Button system
+- Layout behavior
+
+**Rules:**
+- Do not change their desktop design
+- Do not change layout or visual hierarchy
+- Do not "improve" visually
+
+**Allowed:**
+- Code cleanup
+- Alignment with DESIGN_RULES
+- Responsive via media queries only
+
+#### 🧱 Rebuild (rest of the site)
+
+All pages not listed above must be rebuilt professionally according to DESIGN_RULES.md.
+
+**Order of work:**
+1. Build desktop correctly (layout, hierarchy, spacing)
+2. Adapt for tablet
+3. Adapt for mobile
+
+**Important:**
+- Do not rely on existing design if it is weak
+- Do use existing patterns (cards, buttons, etc.)
+
+#### 📱 Responsive — correct approach
+
+Protected: desktop stays exactly as-is; only add responsive overrides for small screens.
+
+Rebuild: build desktop first, then adapt for mobile. Do not create a different design — only adapt.
+
+#### ❗ Critical rules
+
+- No horizontal scroll under any condition
+- All content stays within the screen
+- No inventing new components
+- Use only what is defined in DESIGN_RULES
+
+---
+
 ### Component reuse
 - Prefer using existing shared components before creating new ones
 - Do not duplicate styles or UI patterns that already exist

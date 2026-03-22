@@ -157,7 +157,7 @@
             <!-- Transpose with Key Display FIRST -->
             <div class="transpose-group">
                 <!-- Current Key Display -->
-                <span class="text-sm text-gray-600 px-2 whitespace-nowrap font-medium">{{ currentKey }}</span>
+                <span class="text-sm text-gray-600 px-2 whitespace-nowrap font-medium current-key-label">{{ currentKey }}</span>
 
                 <!-- Transpose Down -->
                 <button class="toolbar-btn" (click)="transpose(-1)" title="הורד חצי טון">
@@ -207,14 +207,21 @@
             <div class="toolbar-divider" *ngIf="song.easyKeyId"></div>
 
             <!-- Font Size -->
-            <button class="toolbar-btn btn-text" (click)="changeFontSize(-1)" title="הקטן טקסט">A-</button>
-            <button class="toolbar-btn btn-text" (click)="changeFontSize(1)" title="הגדל טקסט">A+</button>
+            <div class="font-size-group">
+                <button class="toolbar-btn btn-text" (click)="changeFontSize(-1)" title="הקטן טקסט">A-</button>
+                <button class="toolbar-btn btn-text" (click)="changeFontSize(1)" title="הגדל טקסט">A+</button>
+            </div>
 
             <div class="toolbar-divider"></div>
 
             <!-- Auto Scroll - Show button when NOT scrolling, show controls when scrolling -->
             <button *ngIf="!isAutoScroll" class="toolbar-btn btn-scroll btn-text" (click)="toggleAutoScroll()">
-                <span class="text-xs whitespace-nowrap">גלילה אוטומטית</span>
+                <svg class="btn-scroll-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20"></path>
+                    <path d="m19 15-7 7-7-7"></path>
+                </svg>
+                <span class="btn-scroll-text">גלילה אוטומטית</span>
             </button>
 
             <!-- Auto Scroll Speed Controls (shown when active) -->

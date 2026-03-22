@@ -193,7 +193,7 @@
 
 .content-container {
   max-width: 720px;
-  margin: -200px auto var(--space-3xl);
+  margin: -120px auto var(--space-3xl);
   position: relative;
   z-index: 11; /* מעל ה-hero (z-index: 10) */
 }
@@ -237,6 +237,20 @@
   color: #000000;
   direction: rtl;
   text-align: right;
+}
+
+/* תמונות בתוכן דינמי — לא יוצאות מה-container */
+.article-content img,
+.article-content video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* טבלאות בתוכן דינמי — גלילה אופקית מבוקרת */
+.article-content table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
 }
 
 .article-content p {
@@ -368,7 +382,7 @@
 }
 
 .lightbox-close {
-  position: fixed;
+  position: absolute;
   top: 20px;
   left: 20px;
   width: 40px;
@@ -593,46 +607,210 @@
   }
 }
 
+/* ============================================
+   TABLET — 769px–1023px
+============================================ */
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  .content-with-sidebars {
+    padding: 0 var(--space-lg);
+    overflow-x: hidden;
+  }
+
+  .hero-content {
+    padding: var(--space-xl);
+    max-width: 560px;
+  }
+}
+
+/* ============================================
+   MOBILE — ≤768px
+============================================ */
+
 @media (max-width: 768px) {
+  /* --- Hero --- */
   .article-hero {
     left: 4px;
     right: 4px;
     border-radius: 20px;
   }
 
+  .hero-content {
+    padding: var(--space-xl) var(--space-lg);
+    max-width: 100%;
+  }
+
+  /* כותרת ראשית — מוגדלת למובייל */
+  .article-title {
+    font-size: var(--font-4xl);
+  }
+
+  /* כותרת משנה — קטנה ביחס לכותרת */
+  .article-subtitle {
+    font-size: var(--font-xs);
+    padding: 0 var(--space-xs);
+  }
+
+  /* --- Layout --- */
   .content-with-sidebars {
     padding: 0 var(--space-base);
+    /* overflow-x: hidden הוסר — גורם לחיתוך של content-container שמוזז ב--48px */
   }
 
   .content-container {
-    margin: -64px auto var(--space-2xl);
+    margin: -48px auto var(--space-2xl);
     max-width: 100%;
   }
 
   .content-box {
     border-radius: 16px;
+    /* fix: iOS Safari overflow:hidden + border-radius clipping bug */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
+  /* --- Video — padding מלא + radius מלא = כרטיס צף מעל התוכן --- */
+  .video-section {
+    padding: 6px 6px 0;
+  }
+
+  .video-wrapper {
+    border-radius: 10px;
+  }
+
+  /* --- Article content — שוליים נשמרים --- */
   .article-content {
-    padding: var(--space-lg);
+    padding: var(--space-xl);
+    font-size: var(--font-sm);
   }
 
+  .article-content h2 {
+    font-size: var(--font-2xl);
+    margin: var(--space-xl) 0 var(--space-base);
+  }
+
+  .article-content h3 {
+    font-size: var(--font-lg);
+    margin: var(--space-lg) 0 var(--space-xs);
+  }
+
+  /* --- Gallery --- */
   .gallery-section {
-    padding: 0 var(--space-lg) var(--space-lg);
+    padding: 0 var(--space-xl) var(--space-xl);
   }
 
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  /* --- Audio --- */
   .audio-section {
-    padding: 0 var(--space-lg) var(--space-sm);
+    padding: 0 var(--space-xl) var(--space-base);
   }
 
+  /* --- Tagged artists --- */
+  .tagged-artists-section {
+    padding: var(--space-base) var(--space-xl);
+  }
+
+  .feedback-section-outside {
+    padding: var(--space-xl);
+    margin-top: var(--space-lg);
+  }
+
+  /* --- Feedback circles — ללא zoom כדי שאנימציית הגדלה תעבוד --- */
+  .feedback-circles {
+    gap: var(--space-xl);
+  }
+
+  /* --- Lightbox --- */
+  .lightbox-nav {
+    width: 36px;
+    height: 36px;
+  }
+
+  .lightbox-content {
+    max-width: calc(100vw - 96px);
+  }
+
+  /* X — ימין למעלה (position: absolute, מיקום בתוך ה-overlay) */
+  .lightbox-close {
+    top: 16px;
+    right: 16px;
+    left: auto;
+  }
 }
 
+/* ============================================
+   MOBILE SMALL — ≤480px
+============================================ */
+
 @media (max-width: 480px) {
+  /* Hero */
+  .hero-content {
+    padding: var(--space-lg) var(--space-lg);
+  }
+
+  .article-title {
+    font-size: var(--font-3xl);
+  }
+
+  .article-subtitle {
+    font-size: var(--font-xs);
+  }
+
+  /* Content */
   .content-container {
-    margin: -120px auto var(--space-2xl);
+    margin: -32px auto var(--space-xl);
   }
 
   .article-content {
-    padding: var(--space-base);
+    padding: var(--space-xl);
+  }
+
+  .article-content h2 {
+    font-size: var(--font-xl);
+    margin: var(--space-lg) 0 var(--space-base);
+  }
+
+  .article-content h3 {
+    font-size: var(--font-base);
+    margin: var(--space-lg) 0 var(--space-xs);
+  }
+
+  /* Gallery */
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Feedback circles — ללא zoom, אנימציה עובדת */
+  .feedback-circles {
+    gap: var(--space-lg);
+  }
+
+  /* Lightbox — row נשמר, כפתורים על הצדדים */
+  .lightbox-overlay {
+    gap: 4px;
+    padding: 0 4px;
+  }
+
+  .lightbox-nav {
+    position: static;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .lightbox-content {
+    max-width: calc(100vw - 88px);
+    flex: 1;
+  }
+
+  .lightbox-close {
+    top: 16px;
+    right: 16px;
+    left: auto;
+    width: 40px;
+    height: 40px;
   }
 }
