@@ -1,117 +1,196 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, inject, DestroyRef, ElementRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
-import { CarouselComponent } from '../../shared/carousel/carousel.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
-import { EventService } from '../../../services/admin/event.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
-import { UpcomingEventDto } from '../../../models/event.model';
 
 @Component({
   selector: 'app-music-news',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent, CarouselComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent],
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })
-export class MusicNewsComponent implements OnInit, OnDestroy {
-  @ViewChild('pageHero', { static: false }) pageHeroRef!: ElementRef;
+export class MusicNewsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
-  private readonly eventService = inject(EventService);
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly el = inject(ElementRef);
+  private readonly ngZone = inject(NgZone);
 
-  // שורה ראשונה - 4 כתבות מרכזיות
   featuredArticles: FeaturedContent[] = [];
-
-  // פופולאריים - קטגוריה 10
   popularArticles: Article[] = [];
-
-  // קליפים - קטגוריה 11
-  clipsArticles: Article[] = [];
-
-  // תוכן - בלוגים
   blogArticles: Article[] = [];
-
-  // הופעות קרובות
-  upcomingEvents: UpcomingEventDto[] = [];
+  clipsArticles: Article[] = [];
 
   isLoading = true;
 
-  private fullHeroHeight = 0;
-  private scrollListener?: () => void;
+  // ───── קטגוריות ─────
+  readonly categories = [
+    { index: 0, label: 'ראשי' },
+    { index: 1, label: 'פופולאריים' },
+    { index: 2, label: 'תוכן' },
+    { index: 3, label: 'קליפים' },
+  ];
+
+  activeCategory = 0;
+  prevCategory = -1;
+  isTransitioning = false;
+  scrollDirection: 'down' | 'up' = 'down';
+  labelVisible = true;
+
+  // ───── הרחבה ─────
+  expandedCategory: number | null = null;
+  expandedClosing = false;
+
+  private lastSwitchTime = 0;
+  private touchStartY = 0;
+  private wheelHandler?: (e: WheelEvent) => void;
 
   ngOnInit(): void {
     this.loadAllContent();
   }
 
+  ngAfterViewInit(): void {
+    this.wheelHandler = (e: WheelEvent) => {
+      // כשה-overlay פתוח — לא לחסום גלילה רגילה
+      if (this.expandedCategory !== null) return;
+      e.preventDefault();
+
+      // בדיקות ריצה מחוץ ל-zone לתגובה מיידית
+      if (this.isTransitioning) return;
+      const now = Date.now();
+      if (now - this.lastSwitchTime < 900) return;
+
+      // עדכון timestamp לפני zone כדי לחסום את האירוע הבא מיד
+      this.lastSwitchTime = now;
+
+      this.ngZone.run(() => {
+        if (e.deltaY > 0) this.goToNext();
+        else this.goToPrev();
+      });
+    };
+    this.el.nativeElement.addEventListener('wheel', this.wheelHandler, { passive: false });
+  }
+
   ngOnDestroy(): void {
-    if (this.scrollListener) {
-      window.removeEventListener('scroll', this.scrollListener);
+    if (this.wheelHandler) {
+      this.el.nativeElement.removeEventListener('wheel', this.wheelHandler);
     }
   }
 
-  private initHero(): void {
-    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
-    if (!hero) return;
-    this.fullHeroHeight = Math.round(window.innerHeight * 0.48);
-    hero.style.height = this.fullHeroHeight + 'px';
-    this.scrollListener = () => this.shrinkHero();
-    window.addEventListener('scroll', this.scrollListener, { passive: true });
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(e: TouchEvent): void {
+    this.touchStartY = e.touches[0].clientY;
   }
 
-  private shrinkHero(): void {
-    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
-    if (!hero) return;
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(e: TouchEvent): void {
+    if (this.expandedCategory !== null) return;
+    const delta = this.touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(delta) < 60) return;
+    if (delta > 0) this.goToNext();
+    else this.goToPrev();
+  }
 
-    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
-    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
-    hero.style.height = newHeight + 'px';
-
-    // fade תוכן ב-160px ראשונים
-    const progress = Math.min(1, window.scrollY / 160);
-    const inner = hero.querySelector('.hero-inner') as HTMLElement | null;
-    if (inner) inner.style.opacity = String(1 - progress);
-
-    // overlay אפור
-    const overlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
-    if (overlay) {
-      const collapseRange = this.fullHeroHeight - minHeight;
-      const collapseProgress = collapseRange > 0
-        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
-        : 0;
-      overlay.style.opacity = String(collapseProgress);
+  goToNext(): void {
+    if (this.activeCategory < this.categories.length - 1) {
+      this.switchTo(this.activeCategory + 1, 'down');
     }
   }
+
+  goToPrev(): void {
+    if (this.activeCategory > 0) {
+      this.switchTo(this.activeCategory - 1, 'up');
+    }
+  }
+
+  switchTo(index: number, direction: 'down' | 'up'): void {
+    if (this.isTransitioning || index === this.activeCategory) return;
+    this.scrollDirection = direction;
+    this.prevCategory = this.activeCategory;
+    this.activeCategory = index;
+    this.isTransitioning = true;
+    this.labelVisible = false;
+    setTimeout(() => { this.labelVisible = true; }, 300);
+    setTimeout(() => {
+      this.ngZone.run(() => {
+        this.isTransitioning = false;
+        this.prevCategory = -1;
+      });
+    }, 650);
+  }
+
+  isGridVisible(index: number): boolean {
+    return this.activeCategory === index || this.prevCategory === index;
+  }
+
+  getGridClasses(index: number): Record<string, boolean> {
+    const isActive = this.activeCategory === index;
+    const isPrev = this.prevCategory === index;
+    const dir = this.scrollDirection;
+    return {
+      'grid-visible':        isActive && !this.isTransitioning,
+      'grid-enter-bottom':   isActive && this.isTransitioning && dir === 'down',
+      'grid-enter-top':      isActive && this.isTransitioning && dir === 'up',
+      'grid-exit-top':       isPrev   && this.isTransitioning && dir === 'down',
+      'grid-exit-bottom':    isPrev   && this.isTransitioning && dir === 'up',
+    };
+  }
+
+  // ───── הרחבה ─────
+
+  expandCategory(index: number): void {
+    this.expandedCategory = index;
+    this.expandedClosing = false;
+  }
+
+  collapseCategory(): void {
+    this.expandedClosing = true;
+    setTimeout(() => {
+      this.ngZone.run(() => {
+        this.expandedCategory = null;
+        this.expandedClosing = false;
+      });
+    }, 380);
+  }
+
+  collapseAndNext(): void {
+    if (this.expandedCategory === null) return;
+    const next = this.expandedCategory + 1;
+    this.expandedClosing = true;
+    setTimeout(() => {
+      this.ngZone.run(() => {
+        this.expandedCategory = null;
+        this.expandedClosing = false;
+        if (next < this.categories.length) {
+          this.switchTo(next, 'down');
+        }
+      });
+    }, 380);
+  }
+
+  // ───── טעינת נתונים ─────
 
   private loadAllContent(): void {
     this.isLoading = true;
-
-    // טען את כל התוכן במקביל
     Promise.all([
       this.loadFeaturedContent(),
       this.loadPopularArticles(),
-      this.loadClips(),
       this.loadBlogContent(),
-      this.loadUpcomingEvents()
+      this.loadClips(),
     ]).then(() => {
       this.isLoading = false;
-      setTimeout(() => this.initHero(), 0);
-    }).catch(error => {
-      console.error('Error loading content:', error);
+    }).catch(() => {
       this.isLoading = false;
     });
   }
 
-  /**
-   * טען 4 כתבות מרכזיות
-   */
   private loadFeaturedContent(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.featuredContentService.getActiveFeaturedContent()
@@ -121,195 +200,51 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
             this.featuredArticles = content.sort((a, b) => a.displayOrder - b.displayOrder);
             resolve();
           },
-          error: (error) => {
-            console.error('Error loading featured content:', error);
-            reject(error);
-          }
+          error: (err) => { console.error(err); reject(err); }
         });
     });
   }
 
-  /**
-   * טען כתבות פופולאריות - קטגוריה Popular - 10 באנרים
-   */
   private loadPopularArticles(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.articleService.getArticles(
-        1, // page
-        10, // page size - 10 באנרים
-        undefined, // search
-        ArticleCategory.Popular, // categoryId: פופולאריים
-        undefined, // contentType
-        ArticleStatus.Published, // status: Published
-        undefined, // isFeatured
-        undefined, // isPremium
-        undefined  // authorName
-      ).pipe(takeUntilDestroyed(this.destroyRef))
+      this.articleService.getArticles(1, 10, undefined, ArticleCategory.Popular, undefined, ArticleStatus.Published)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
-            // מיין לפי תאריך פרסום (החדשים ראשון)
             this.popularArticles = result.items.sort((a, b) =>
               new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
             );
             resolve();
           },
-          error: (error) => {
-            console.error('Error loading popular articles:', error);
-            reject(error);
-          }
+          error: (err) => { console.error(err); reject(err); }
         });
     });
   }
 
-  /**
-   * טען קליפים - קטגוריה Clips - 10 באנרים
-   */
+  private loadBlogContent(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result) => { this.blogArticles = result.items; resolve(); },
+          error: (err) => { console.error(err); reject(err); }
+        });
+    });
+  }
+
   private loadClips(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.articleService.getArticles(
-        1, // page
-        10, // page size - 10 באנרים
-        undefined, // search
-        ArticleCategory.Clips, // categoryId: קליפים
-        undefined, // contentType
-        ArticleStatus.Published, // status: Published
-        undefined, // isFeatured
-        undefined, // isPremium
-        undefined  // authorName
-      ).pipe(takeUntilDestroyed(this.destroyRef))
+      this.articleService.getArticles(1, 10, undefined, ArticleCategory.Clips, undefined, ArticleStatus.Published)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
-            // מיין לפי תאריך פרסום (החדשים ראשון)
             this.clipsArticles = result.items.sort((a, b) =>
               new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
             );
             resolve();
           },
-          error: (error) => {
-            console.error('Error loading clips:', error);
-            reject(error);
-          }
+          error: (err) => { console.error(err); reject(err); }
         });
-    });
-  }
-
-  /**
-   * טען תוכן (בלוגים) - ContentType = Blog - 10 באנרים
-   */
-  private loadBlogContent(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.articleService.getArticles(
-        1, // page
-        10, // page size - 10 באנרים עם גלילה
-        undefined, // search
-        undefined, // categoryId
-        ArticleContentType.Blog, // contentType: Blog
-        ArticleStatus.Published, // status: Published
-        undefined, // isFeatured
-        undefined, // isPremium
-        undefined  // authorName
-      ).pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (result) => {
-            this.blogArticles = result.items;
-            resolve();
-          },
-          error: (error) => {
-            console.error('Error loading blog content:', error);
-            reject(error);
-          }
-        });
-    });
-  }
-
-  /**
-   * טען הופעות קרובות - 10 באנרים
-   */
-  private loadUpcomingEvents(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.eventService.getUpcomingEvents(10)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (events) => {
-            // מיין את ההופעות: ראשון היום, אחר כך קרובות, בסוף שחלפו
-            this.upcomingEvents = this.sortEventsByPriority(events);
-            resolve();
-          },
-          error: (error) => {
-            console.error('Error loading upcoming events:', error);
-            reject(error);
-          }
-        });
-    });
-  }
-
-  /**
-   * מיין הופעות לפי עדיפות: היום -> קרובות -> שחלפו
-   */
-  private sortEventsByPriority(events: UpcomingEventDto[]): UpcomingEventDto[] {
-    return events.sort((a, b) => {
-      const priorityA = this.getEventPriority(a);
-      const priorityB = this.getEventPriority(b);
-
-      // אם יש אותה עדיפות, מיין לפי תאריך
-      if (priorityA === priorityB) {
-        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-      }
-
-      return priorityA - priorityB;
-    });
-  }
-
-  /**
-   * החזר מספר עדיפות להופעה: 1=היום, 2=קרובות, 3=שחלפו
-   */
-  private getEventPriority(event: UpcomingEventDto): number {
-    if (event.eventStatus === 'היום') {
-      return 1;
-    } else if (event.eventStatus === 'אירוע שחלף') {
-      return 3;
-    } else {
-      return 2; // קרובות (מחר, בעוד X ימים)
-    }
-  }
-
-  /**
-   * ניווט לכתבה
-   */
-  navigateToArticle(article: Article): void {
-    const route = article.contentType === 0 ? '/news' : '/blog';
-    this.router.navigate([route, article.slug]);
-  }
-
-  /**
-   * ניווט לכתבה מתוך FeaturedContent
-   */
-  navigateToFeaturedArticle(featured: FeaturedContent): void {
-    this.navigateToArticle(featured.article);
-  }
-
-  /**
-   * פתח קישור לרכישת כרטיסים להופעה
-   */
-  openTicketLink(event: UpcomingEventDto): void {
-    window.open(event.ticketUrl, '_blank');
-  }
-
-  /**
-   * ניווט לדף כתבות מסוננות לפי קטגוריה
-   */
-  navigateToCategory(categoryId: ArticleCategory): void {
-    this.router.navigate(['/articles'], {
-      queryParams: { category: categoryId }
-    });
-  }
-
-  /**
-   * ניווט לדף כתבות מסוננות לפי סוג תוכן
-   */
-  navigateToContentType(contentType: ArticleContentType): void {
-    this.router.navigate(['/articles'], {
-      queryParams: { contentType: contentType }
     });
   }
 }

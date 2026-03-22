@@ -20,9 +20,9 @@ export class CarouselComponent {
         const container = this.scrollContainer.nativeElement;
         const scrollAmount = 300;
         if (direction === 'left') {
-            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        } else {
             container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
         }
     }
 }
