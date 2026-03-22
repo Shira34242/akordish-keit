@@ -1,6 +1,5 @@
 <div class="bento-page" dir="rtl">
 
-  <!-- ══ Loading ══ -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="loading-spinner"></div>
   </div>
@@ -8,16 +7,15 @@
   <ng-container *ngIf="!isLoading">
 
     <!-- ══════════════════════════════════════
-         Hero — כותרת דף + 4 כתבות מרכזיות
-
+         Hero
          [title 2×1]    [art-1 4×2]
          [art-2 2×2]    [art-1 cont.]
-         [art-2 cont.]  [art-3 2×1] [art-4 2×1]
+         [art-2 cont.]  [art-3 4×1]
     ══════════════════════════════════════ -->
     <div class="bento-grid hero-grid">
 
       <div class="label-cell hero-title-cell">
-        <span class="label-text">חדשות<br>המוזיקה</span>
+        <span class="label-text">חדשות המוזיקה</span>
       </div>
 
       <div class="bento-cell hero-cell-1">
@@ -40,152 +38,58 @@
     </div>
 
     <!-- ══════════════════════════════════════
-         קטגוריות דינמיות — 4 פריסות שונות
-
-         layout-a (i%4=0): 3 כתבות, label ימין
-         layout-b (i%4=1): 5 כתבות, label שמאל
-         layout-c (i%4=2): 4 כתבות, label ימין
-         layout-d (i%4=3): 4 כתבות, label שמאל
+         קטגוריות דינמיות
+         הגריד ממלא את כל 6 העמודות — ללא תא expand
+         כפתור expand = pill קטן מחוץ לגריד
     ══════════════════════════════════════ -->
     <ng-container *ngFor="let section of sections; let i = index">
-      <div class="bento-grid section-grid"
-           [ngClass]="'layout-' + getSectionLayout(i)"
-           *ngIf="section.articles.length > 0">
+      <div class="section-wrapper" *ngIf="section.articles.length > 0">
 
-        <!-- כותרת קטגוריה — מרוכז -->
-        <div class="label-cell section-label" (click)="navigateToSection(section)">
-          <span class="label-text">{{ section.title }}</span>
-          <span class="label-link">לכל התוכן ›</span>
+        <!-- גריד הקטגוריה -->
+        <div class="bento-grid section-grid" [ngClass]="'layout-' + getSectionLayout(i)">
+
+          <div class="label-cell section-label" (click)="navigateToSection(section)">
+            <span class="label-text">{{ section.title }}</span>
+            <span class="label-link">לכל התוכן ›</span>
+          </div>
+
+          <div class="bento-cell art-cell-1" *ngIf="section.articles[0]">
+            <app-news-banner [article]="section.articles[0]"></app-news-banner>
+          </div>
+          <div class="bento-cell art-cell-2" *ngIf="section.articles[1]">
+            <app-news-banner [article]="section.articles[1]"></app-news-banner>
+          </div>
+          <div class="bento-cell art-cell-3" *ngIf="section.articles[2]">
+            <app-news-banner [article]="section.articles[2]"></app-news-banner>
+          </div>
+          <div class="bento-cell art-cell-4" *ngIf="section.articles[3] && getInitialArticleCount(i) >= 4">
+            <app-news-banner [article]="section.articles[3]"></app-news-banner>
+          </div>
+          <div class="bento-cell art-cell-5" *ngIf="section.articles[4] && getInitialArticleCount(i) >= 5">
+            <app-news-banner [article]="section.articles[4]"></app-news-banner>
+          </div>
+
         </div>
 
-        <!-- כתבה 1 -->
-        <div class="bento-cell art-cell-1" *ngIf="section.articles[0]">
-          <app-news-banner [article]="section.articles[0]"></app-news-banner>
+        <!-- כפתור expand — pill קטן, מחוץ לגריד, צמוד שמאל -->
+        <div class="expand-row">
+          <button class="expand-pill" (click)="toggleSection(i)">
+            {{ isExpanded(i) ? '↑ פחות' : 'עוד ›' }}
+          </button>
         </div>
 
-        <!-- כתבה 2 -->
-        <div class="bento-cell art-cell-2" *ngIf="section.articles[1]">
-          <app-news-banner [article]="section.articles[1]"></app-news-banner>
-        </div>
-
-        <!-- כתבה 3 -->
-        <div class="bento-cell art-cell-3" *ngIf="section.articles[2]">
-          <app-news-banner [article]="section.articles[2]"></app-news-banner>
-        </div>
-
-        <!-- כתבה 4 — רק ב-layout b, c, d -->
-        <div class="bento-cell art-cell-4"
-             *ngIf="section.articles[3] && getInitialArticleCount(i) >= 4">
-          <app-news-banner [article]="section.articles[3]"></app-news-banner>
-        </div>
-
-        <!-- כתבה 5 — רק ב-layout b -->
-        <div class="bento-cell art-cell-5"
-             *ngIf="section.articles[4] && getInitialArticleCount(i) >= 5">
-          <app-news-banner [article]="section.articles[4]"></app-news-banner>
-        </div>
-
-        <!-- כפתור הרחבה — מרוכז, תמיד בפינה שמאל-תחתית -->
-        <div class="expand-cell" (click)="toggleSection(i)">
-          <span class="expand-label">{{ isExpanded(i) ? '↑ פחות' : 'עוד ›' }}</span>
-        </div>
-
-        <!-- כתבות נוספות בהרחבה -->
+        <!-- גריד הרחבה -->
         <ng-container *ngIf="isExpanded(i)">
-          <div class="bento-cell art-extra"
-               *ngFor="let article of section.articles | slice:getInitialArticleCount(i)">
-            <app-news-banner [article]="article"></app-news-banner>
+          <div class="bento-grid expanded-grid">
+            <div class="bento-cell art-extra"
+                 *ngFor="let article of section.articles | slice:getInitialArticleCount(i)">
+              <app-news-banner [article]="article"></app-news-banner>
+            </div>
           </div>
         </ng-container>
 
       </div>
     </ng-container>
-
-    <!-- ══════════════════════════════════════
-         הופעות קרובות
-    ══════════════════════════════════════ -->
-    <div class="bento-grid events-grid" *ngIf="upcomingEvents.length > 0">
-
-      <div class="label-cell label-dark events-label">
-        <span class="label-text">הופעות<br>קרובות</span>
-      </div>
-
-      <div class="event-cell event-big" *ngIf="upcomingEvents[0]"
-           (click)="openTicketLink(upcomingEvents[0])">
-        <div class="event-bg"
-             [style.backgroundImage]="upcomingEvents[0].imageUrl ? 'url(' + upcomingEvents[0].imageUrl + ')' : null"
-             [class.no-image]="!upcomingEvents[0].imageUrl"></div>
-        <div class="event-overlay"></div>
-        <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[0].eventStatus === 'אירוע שחלף'">
-            {{ upcomingEvents[0].eventStatus }}
-          </span>
-          <div class="event-bottom">
-            <h3 class="event-name">{{ upcomingEvents[0].name }}</h3>
-            <div class="event-meta">
-              <span class="event-date-big">{{ upcomingEvents[0].eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="upcomingEvents[0].location" class="event-location">{{ upcomingEvents[0].location }}</span>
-            </div>
-            <span class="event-ticket">כרטיסים ›</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="event-cell event-sm-1" *ngIf="upcomingEvents[1]"
-           (click)="openTicketLink(upcomingEvents[1])">
-        <div class="event-bg"
-             [style.backgroundImage]="upcomingEvents[1].imageUrl ? 'url(' + upcomingEvents[1].imageUrl + ')' : null"
-             [class.no-image]="!upcomingEvents[1].imageUrl"></div>
-        <div class="event-overlay"></div>
-        <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[1].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[1].eventStatus }}</span>
-          <div class="event-bottom">
-            <h3 class="event-name">{{ upcomingEvents[1].name }}</h3>
-            <div class="event-meta">
-              <span class="event-date-big">{{ upcomingEvents[1].eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="upcomingEvents[1].location" class="event-location">{{ upcomingEvents[1].location }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="event-cell event-sm-2" *ngIf="upcomingEvents[2]"
-           (click)="openTicketLink(upcomingEvents[2])">
-        <div class="event-bg"
-             [style.backgroundImage]="upcomingEvents[2].imageUrl ? 'url(' + upcomingEvents[2].imageUrl + ')' : null"
-             [class.no-image]="!upcomingEvents[2].imageUrl"></div>
-        <div class="event-overlay"></div>
-        <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[2].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[2].eventStatus }}</span>
-          <div class="event-bottom">
-            <h3 class="event-name">{{ upcomingEvents[2].name }}</h3>
-            <div class="event-meta">
-              <span class="event-date-big">{{ upcomingEvents[2].eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="upcomingEvents[2].location" class="event-location">{{ upcomingEvents[2].location }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="event-cell event-sm-3" *ngIf="upcomingEvents[3]"
-           (click)="openTicketLink(upcomingEvents[3])">
-        <div class="event-bg"
-             [style.backgroundImage]="upcomingEvents[3].imageUrl ? 'url(' + upcomingEvents[3].imageUrl + ')' : null"
-             [class.no-image]="!upcomingEvents[3].imageUrl"></div>
-        <div class="event-overlay"></div>
-        <div class="event-content">
-          <span class="event-badge" [class.past]="upcomingEvents[3].eventStatus === 'אירוע שחלף'">{{ upcomingEvents[3].eventStatus }}</span>
-          <div class="event-bottom">
-            <h3 class="event-name">{{ upcomingEvents[3].name }}</h3>
-            <div class="event-meta">
-              <span class="event-date-big">{{ upcomingEvents[3].eventDate | date:'dd/MM' }}</span>
-              <span *ngIf="upcomingEvents[3].location" class="event-location">{{ upcomingEvents[3].location }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
 
   </ng-container>
 
