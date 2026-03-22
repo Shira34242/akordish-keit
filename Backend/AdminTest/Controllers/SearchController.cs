@@ -28,7 +28,8 @@ public class SearchController : ControllerBase
 
         var term = q.Trim();
 
-        var songsTask = _context.Songs
+        // EF Core DbContext אינו thread-safe — הקוורי רצים בסדר רציף
+        var songs = await _context.Songs
             .Where(s => !s.IsDeleted && s.IsApproved && s.Title.Contains(term))
             .OrderByDescending(s => s.ViewCount)
             .Take(5)
@@ -42,7 +43,7 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var artistsTask = _context.Artists
+        var artists = await _context.Artists
             .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active && a.Name.Contains(term))
             .OrderByDescending(a => a.Tier)
             .ThenBy(a => a.Name)
@@ -57,7 +58,7 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var articlesTask = _context.Articles
+        var articles = await _context.Articles
             .Where(a => a.Status == (int)ArticleStatus.Published && a.Title.Contains(term))
             .OrderByDescending(a => a.PublishDate)
             .Take(5)
@@ -71,7 +72,7 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var teachersTask = _context.ServiceProviders
+        var teachers = await _context.ServiceProviders
             .Where(p => p.Status == ProfileStatus.Active && p.IsTeacher && !p.IsDeleted && p.DisplayName.Contains(term))
             .Take(5)
             .Select(p => new SearchItemDto
@@ -84,7 +85,7 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var professionalsTask = _context.ServiceProviders
+        var professionals = await _context.ServiceProviders
             .Where(p => p.Status == ProfileStatus.Active && !p.IsTeacher && !p.IsDeleted && p.DisplayName.Contains(term))
             .Take(5)
             .Select(p => new SearchItemDto
@@ -97,7 +98,7 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var playlistsTask = _context.Playlists
+        var playlists = await _context.Playlists
             .Where(pl => pl.IsPublic && pl.Name.Contains(term))
             .OrderByDescending(pl => pl.CreatedAt)
             .Take(5)
@@ -111,16 +112,14 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        await Task.WhenAll(songsTask, artistsTask, articlesTask, teachersTask, professionalsTask, playlistsTask);
-
         return Ok(new SearchResultsDto
         {
-            Songs = await songsTask,
-            Artists = await artistsTask,
-            Articles = await articlesTask,
-            Teachers = await teachersTask,
-            Professionals = await professionalsTask,
-            Playlists = await playlistsTask
+            Songs = songs,
+            Artists = artists,
+            Articles = articles,
+            Teachers = teachers,
+            Professionals = professionals,
+            Playlists = playlists
         });
     }
 }
