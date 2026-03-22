@@ -136,7 +136,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   private initHeroHeight(): void {
     const bg = this.teacherHeroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = Math.round(window.innerHeight - 16);
+    this.fullHeroHeight = 300; // compact dark banner (not full-screen)
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }

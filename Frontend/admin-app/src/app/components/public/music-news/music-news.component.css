@@ -8,7 +8,8 @@
   direction: rtl;
 }
 
-/* Loading */
+/* --- Loading --- */
+
 .loading-container {
   display: flex;
   align-items: center;
@@ -30,161 +31,136 @@
 }
 
 /* ============================================
-   HERO HEADER — scroll-shrink fixed
+   PAGE BODY
 ============================================ */
 
-.page-hero {
-  position: fixed;
-  top: 2vh;
-  left: 16px;
-  right: 16px;
-  height: 48vh; /* ברירת מחדל — JS מעדכן לאחר טעינה */
-  border-radius: 40px;
-  overflow: hidden;
-  background: #ddff53;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  z-index: 10;
-  will-change: height;
-}
-
-.hero-collapse-overlay {
-  position: absolute;
-  inset: 0;
-  background: #404040;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.hero-inner {
-  position: relative;
-  z-index: 2;
-  padding: var(--space-3xl) var(--space-4xl);
-  direction: rtl;
-  width: 100%;
-}
-
-.page-title {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-4xl);
-  color: #000000;
-  margin: 0;
-  line-height: 1.1;
-}
-
-/* Spacer — מחזיק את המקום של ה-hero הקבוע */
-.hero-spacer {
-  height: calc(2vh + 48vh);
-  pointer-events: none;
-}
-
-/* Page body — מגלגל מעל ה-hero */
 .page-body {
-  position: relative;
-  z-index: 11;
-  background: #ffffff;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-xl) var(--space-4xl);
 }
 
 /* ============================================
-   FEATURED ARTICLES GRID
+   BENTO NEWS GRID
 ============================================ */
 
-.featured-section {
-  padding: var(--space-base);
-}
-
-.featured-grid {
+.bento-news-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: var(--space-sm);
-  height: 52vh;
-  max-height: 560px;
-  min-height: 320px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 250px);
+  gap: var(--space-base);
+  margin-bottom: var(--space-4xl);
 }
 
-.featured-item {
+/* תאי הגריד */
+.bento-cell {
   position: relative;
   overflow: hidden;
-  cursor: pointer;
-  border-radius: 16px;
+  border-radius: 24px;
   background: #F2F2F2;
 }
 
-.featured-item:nth-child(1) { grid-row: 1 / 3; grid-column: 1; }
-.featured-item:nth-child(2) { grid-row: 1; grid-column: 2 / 4; }
-.featured-item:nth-child(3) { grid-row: 2; grid-column: 2; }
-.featured-item:nth-child(4) { grid-row: 2; grid-column: 3; }
+/* app-news-banner ממלא את התא בשלמות */
+.bento-cell app-news-banner {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
 
-.featured-img {
+/* עוקף aspect-ratio כדי שהכרטיס ימלא את גובה התא */
+.bento-cell ::ng-deep .news-banner {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  aspect-ratio: unset;
+  border-radius: 0;
+}
+
+/* קובייה 1: גדולה — 3 עמודות, 2 שורות */
+.bento-cell-1 {
+  grid-column: 1 / 4;
+  grid-row: 1 / 3;
+}
+
+/* קובייה 2: קטנה — עמודה 4, שורה 1 */
+.bento-cell-2 {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+/* קובייה 3: קטנה — עמודה 4, שורה 2 */
+.bento-cell-3 {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+/* קובייה 4: רוחב — עמודות 1-2, שורה 3 */
+.bento-cell-4 {
+  grid-column: 1 / 3;
+  grid-row: 3;
+}
+
+/* קובייה 5: רוחב — עמודות 3-4, שורה 3 */
+.bento-cell-5 {
+  grid-column: 3 / 5;
+  grid-row: 3;
+}
+
+/* ============================================
+   SKELETON PLACEHOLDERS
+============================================ */
+
+.skeleton-fill {
+  width: 100%;
+  height: 100%;
+  background: #F2F2F2;
+}
+
+.skeleton-banner {
+  aspect-ratio: 4 / 2.7;
+  background: #F2F2F2;
+  border-radius: 24px;
+  width: 100%;
   display: block;
-  transition: transform 0.4s ease;
 }
 
-.featured-item:hover .featured-img {
-  transform: scale(1.04);
-}
-
-.featured-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.05) 100%);
-  padding: var(--space-xl) var(--space-base) var(--space-base);
-}
-
-.featured-title {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-sm);
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.3;
+.skeleton-event {
+  height: 80px;
+  background: #F2F2F2;
+  border-radius: 20px;
 }
 
 /* ============================================
-   PAGE CONTENT
+   SECTIONS CONTAINER
 ============================================ */
 
-.page-content {
-  padding: var(--space-2xl) 0 var(--space-4xl);
+.sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4xl);
 }
 
 /* ============================================
-   SECTIONS
+   SECTION HEADER — pill + link
 ============================================ */
-
-.page-section {
-  margin: 0 var(--space-base) var(--space-3xl);
-  direction: rtl;
-}
 
 .section-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-base);
+  margin-bottom: var(--space-lg);
 }
 
-.section-title {
+.category-pill {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: var(--font-2xl);
+  font-size: var(--font-base);
+  background: #ddff53;
   color: #000000;
-  margin: 0;
+  border-radius: 999px;
+  padding: 6px 20px;
+  line-height: 1;
 }
 
 .section-link {
@@ -192,7 +168,7 @@
   font-weight: 300;
   font-size: var(--font-sm);
   color: #000000;
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.2s;
@@ -203,13 +179,28 @@
 }
 
 /* ============================================
-   NEWS GRID
+   NEWS SCROLL STRIP
 ============================================ */
 
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-md);
+.news-scroll-strip {
+  display: flex;
+  gap: var(--space-base);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: var(--space-sm);
+  scroll-snap-type: x mandatory;
+}
+
+.news-scroll-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-item {
+  min-width: 300px;
+  width: 300px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 /* ============================================
@@ -219,7 +210,7 @@
 .events-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-base);
 }
 
 .event-card {
@@ -228,7 +219,7 @@
   gap: var(--space-base);
   background: #F2F2F2;
   border-radius: 20px;
-  padding: var(--space-base);
+  padding: var(--space-lg);
   direction: rtl;
   cursor: pointer;
   transition: background 0.2s;
@@ -329,60 +320,85 @@
   background: #000000;
   color: #ddff53;
   border-radius: 999px;
-  padding: var(--space-sm) var(--space-base);
+  padding: var(--space-sm) var(--space-lg);
   white-space: nowrap;
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE — TABLET ≤1024px
+============================================ */
+
+@media (max-width: 1024px) {
+  .page-body {
+    padding: var(--space-lg) var(--space-lg) var(--space-3xl);
+  }
+
+  .bento-news-grid {
+    grid-template-rows: repeat(3, 200px);
+  }
+
+  .scroll-item {
+    min-width: 260px;
+    width: 260px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE ≤768px
 ============================================ */
 
 @media (max-width: 768px) {
-  .page-hero {
-    left: 8px;
-    right: 8px;
-    border-radius: 20px;
+  .page-body {
+    padding: var(--space-base) var(--space-base) var(--space-2xl);
   }
 
-  .hero-inner {
-    padding: var(--space-2xl) var(--space-lg);
-  }
-
-  .page-title {
-    font-size: var(--font-3xl);
-  }
-
-  .featured-section {
-    padding: var(--space-sm);
-  }
-
-  .featured-grid {
+  /* בנטו → stack אנכי, קוביות בגובה טבעי */
+  .bento-news-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
-    height: auto;
-    max-height: none;
-    min-height: auto;
+    gap: var(--space-base);
   }
 
-  .featured-item:nth-child(1),
-  .featured-item:nth-child(2),
-  .featured-item:nth-child(3),
-  .featured-item:nth-child(4) {
+  .bento-cell-1,
+  .bento-cell-2,
+  .bento-cell-3,
+  .bento-cell-4,
+  .bento-cell-5 {
+    grid-column: 1;
     grid-row: auto;
-    grid-column: auto;
-    height: 200px;
+    height: auto;
   }
 
-  .page-section {
-    margin: 0 var(--space-sm) var(--space-2xl);
+  /* מחזירים aspect-ratio לכרטיסים במובייל */
+  .bento-cell app-news-banner {
+    position: static;
+    inset: unset;
   }
 
-  .news-grid {
-    grid-template-columns: 1fr;
+  .bento-cell ::ng-deep .news-banner {
+    height: auto;
+    aspect-ratio: 4 / 2.7;
+    border-radius: 16px;
+  }
+
+  .bento-cell {
+    border-radius: 16px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sections-container {
+    gap: var(--space-3xl);
+  }
+
+  .scroll-item {
+    min-width: 240px;
+    width: 240px;
   }
 
   .event-card {
     flex-wrap: wrap;
+    padding: var(--space-base);
   }
 
   .event-date-col {

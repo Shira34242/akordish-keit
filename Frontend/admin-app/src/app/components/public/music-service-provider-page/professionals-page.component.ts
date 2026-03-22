@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,7 +21,12 @@ interface Category {
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })
-export class ProfessionalsPageComponent implements OnInit {
+export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
+
+  @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
+  private fullHeroHeight = 0;
+  private rafPending = false;
+
   showBecomeProfessionalForm = false;
 
   // Search fields
@@ -67,6 +72,47 @@ export class ProfessionalsPageComponent implements OnInit {
     this.loadCities();
     this.loadCategories();
     this.loadProfessionals();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initHeroHeight(), 0);
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.rafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.initHeroHeight();
+  }
+
+  private initHeroHeight(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg) return;
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
+    bg.style.height = this.fullHeroHeight + 'px';
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg || this.fullHeroHeight === 0) return;
+    const minHeight = 56;
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    bg.style.height = newHeight + 'px';
+    const overlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (overlay) {
+      const range = this.fullHeroHeight - minHeight;
+      const progress = range > 0 ? Math.min(1, (this.fullHeroHeight - newHeight) / range) : 0;
+      overlay.style.opacity = String(progress);
+    }
   }
 
   loadCities(): void {
