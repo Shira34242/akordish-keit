@@ -17,6 +17,11 @@ public class Song
     public int OriginalKeyId { get; set; }
     public int? EasyKeyId { get; set; }
     public int? UploadedByUserId { get; set; }
+
+    // תיוג מעלה תוכן — UserId של פרופיל ציבורי + סוג הפרופיל
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; } // "artist" | "serviceProvider"
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int ViewCount { get; set; }
@@ -33,6 +38,7 @@ public class Song
     public virtual MusicalKey OriginalKey { get; set; }
     public virtual MusicalKey? EasyKey { get; set; }
     public virtual User? UploadedBy { get; set; }
+    public virtual User? UploaderUser { get; set; }
     public virtual ICollection<SongArtist> SongArtists { get; set; }
     public virtual ICollection<SongGenre> SongGenres { get; set; }
     public virtual ICollection<SongTag> SongTags { get; set; }

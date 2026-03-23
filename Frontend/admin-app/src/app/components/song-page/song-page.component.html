@@ -318,17 +318,23 @@
             <!-- הכי נצפים השבוע -->
             <div class="sidebar-card popular-card">
                 <h3>הכי נצפים השבוע</h3>
-                
+
                 <div *ngIf="isLoadingPopularSongs" class="loading-small">טוען...</div>
-                
+
                 <ul class="song-list" *ngIf="!isLoadingPopularSongs">
-                    <li *ngFor="let popSong of popularSongs; let i = index" 
+                    <li *ngFor="let popSong of popularSongs; let i = index"
                         [class.current]="popSong.id === songId"
                         (click)="navigateToSong(popSong.id)">
                         <span class="rank">{{ i + 1 }}</span>
                         {{ popSong.title }}
                     </li>
                 </ul>
+            </div>
+
+            <!-- Uploader Badge -->
+            <div *ngIf="song.uploaderProfile" class="sidebar-card uploader-card">
+                <h3>הועלה על ידי</h3>
+                <app-content-uploader-badge [profile]="song.uploaderProfile" />
             </div>
 
         </div>

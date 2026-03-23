@@ -93,7 +93,7 @@ public class ArticlesController : ControllerBase
     {
         try
         {
-            var article = await _articleService.CreateArticleAsync(dto);
+            var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
 
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
@@ -121,7 +121,7 @@ public class ArticlesController : ControllerBase
             if (dto.CategoryIds == null || dto.CategoryIds.Count == 0)
                 dto.CategoryIds = new List<int> { 1 };
 
-            var article = await _articleService.CreateArticleAsync(dto);
+            var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
         catch (InvalidOperationException ex)

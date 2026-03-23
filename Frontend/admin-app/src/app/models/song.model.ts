@@ -1,3 +1,12 @@
+export interface UserWithProfile {
+    userId: number;
+    displayName: string;
+    imageUrl?: string;
+    profileType: 'artist' | 'serviceProvider';
+    profileId: number;
+    profileUrl: string;
+}
+
 export interface ArtistInput {
     id?: number;  // undefined/null = אמן חדש
     name: string;
@@ -33,6 +42,8 @@ export interface AddSongRequest {
     arranger?: PersonInput;  // שונה מ-arrangerId
     genres?: GenreInput[];  // שונה מ-genreIds
     isApproved?: boolean;
+    uploaderUserId?: number;
+    uploaderProfileType?: 'artist' | 'serviceProvider';
 }
 
 export interface SongDto {
@@ -60,6 +71,7 @@ export interface SongDto {
     createdAt: Date;
     updatedAt?: Date;
     uploadedByUserId?: number;
+    uploaderProfile?: import('./article.model').ContentUploaderProfile;
 }
 
 export interface ArtistBasicDto {

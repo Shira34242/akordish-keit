@@ -130,6 +130,12 @@ public class AddSongRequestDto
     public PersonInputDto? Arranger { get; set; }
     public List<GenreInputDto>? Genres { get; set; }
     public bool IsApproved { get; set; } = false;
+
+    /// <summary>UserId של מי שהעלה את התוכן (פרופיל ציבורי)</summary>
+    public int? UploaderUserId { get; set; }
+
+    /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
+    public string? UploaderProfileType { get; set; }
 }
 /// <summary>
 /// DTO לעריכת שיר קיים
@@ -169,6 +175,12 @@ public class UpdateSongRequestDto
     public PersonInputDto? Composer { get; set; }
     public PersonInputDto? Lyricist { get; set; }
     public PersonInputDto? Arranger { get; set; }
+
+    /// <summary>UserId של מי שהעלה את התוכן (פרופיל ציבורי)</summary>
+    public int? UploaderUserId { get; set; }
+
+    /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
+    public string? UploaderProfileType { get; set; }
 }
 // ============================================
 // RESPONSE DTOs - מה שחוזר ל-Angular
@@ -229,6 +241,8 @@ public class SongDto
     public DateTime? UpdatedAt { get; set; }
     public int? UploadedByUserId { get; set; }
 
+    /// <summary>פרופיל ציבורי שהעלה את השיר (אמן / מורה / בעל מקצוע)</summary>
+    public ContentUploaderProfileDto? UploaderProfile { get; set; }
 }
 
 /// <summary>

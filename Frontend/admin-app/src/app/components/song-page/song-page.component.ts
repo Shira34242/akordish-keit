@@ -15,11 +15,12 @@ import {
 import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
 import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
+import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent],
+    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })

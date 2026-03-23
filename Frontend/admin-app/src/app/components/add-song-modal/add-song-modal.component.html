@@ -305,6 +305,66 @@
                     </div>
                 </div>
 
+                <!-- Uploader Profile -->
+                <div class="form-group uploader-group" *ngIf="isProfessionalNonAdmin || isAdminUser">
+                    <label class="form-label">תיוג תוכן</label>
+
+                    <!-- Professional (non-admin): checkbox -->
+                    <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
+                        <label class="checkbox-label-modal">
+                            <input type="checkbox" [(ngModel)]="tagAsMyself" [ngModelOptions]="{standalone: true}" (change)="onTagAsMyselfChange()">
+                            <span>תייג תוכן על שמי</span>
+                        </label>
+                        <div *ngIf="tagAsMyself && selectedUploaderProfile" class="selected-profile-tag" style="margin-top: 8px;">
+                            <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
+                            <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
+                            <div class="profile-tag-info">
+                                <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
+                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin: search for any user -->
+                    <div *ngIf="isAdminUser">
+                        <div *ngIf="selectedUploaderProfile" class="selected-profile-tag">
+                            <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
+                            <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
+                            <div class="profile-tag-info">
+                                <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
+                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                            </div>
+                            <button type="button" class="btn-clear-profile" (click)="clearUploaderProfile()">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
+                            <input
+                                type="text"
+                                class="form-input"
+                                [(ngModel)]="profileSearchQuery"
+                                [ngModelOptions]="{standalone: true}"
+                                (input)="onProfileSearchInput()"
+                                (focus)="onProfileSearchInput()"
+                                placeholder="חפש לפי שם אמן / מורה / בעל מקצוע..."
+                                autocomplete="off">
+                            <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
+                                <div *ngFor="let p of profileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(p)">
+                                    <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
+                                    <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
+                                    <div class="profile-dropdown-info">
+                                        <span class="profile-dropdown-name">{{ p.displayName }}</span>
+                                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
+                                <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group checkbox-group">
                     <label>
                         <input type="checkbox" formControlName="isApproved">

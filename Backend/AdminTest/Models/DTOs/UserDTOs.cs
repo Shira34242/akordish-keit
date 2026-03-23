@@ -1,5 +1,19 @@
 namespace AkordishKeit.Models.DTOs;
 
+/// <summary>
+/// תוצאת חיפוש משתמשים עם פרופיל ציבורי (לתיוג מעלה תוכן)
+/// </summary>
+public class UserWithProfileDto
+{
+    public int UserId { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    /// <summary>"artist" | "serviceProvider"</summary>
+    public string ProfileType { get; set; } = string.Empty;
+    public int ProfileId { get; set; }
+    public string ProfileUrl { get; set; } = string.Empty;
+}
+
 public class UserListDto
 {
     public int Id { get; set; }

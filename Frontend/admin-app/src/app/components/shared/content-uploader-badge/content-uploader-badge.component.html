@@ -1,0 +1,14 @@
+<a [routerLink]="profile.profileUrl" class="uploader-badge">
+  <div class="uploader-avatar">
+    <img
+      *ngIf="profile.imageUrl; else initials"
+      [src]="profile.imageUrl"
+      [alt]="profile.name"
+      class="uploader-img"
+    />
+    <ng-template #initials>
+      <span class="uploader-initials">{{ profile.name.charAt(0) }}</span>
+    </ng-template>
+  </div>
+  <span class="uploader-name">{{ getDisplayText() }}</span>
+</a>

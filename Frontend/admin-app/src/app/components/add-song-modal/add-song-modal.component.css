@@ -750,3 +750,123 @@ select option {
         gap: 0;
     }
 }
+
+/* Uploader Profile Search */
+.uploader-group { margin-top: 16px; }
+
+.tag-myself-wrapper { display: flex; flex-direction: column; gap: 8px; }
+
+.checkbox-label-modal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    direction: rtl;
+}
+
+.profile-search-wrapper { position: relative; }
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    border-radius: 12px;
+    z-index: 200;
+    overflow: hidden;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    border-bottom: 1px solid #F2F2F2;
+    direction: rtl;
+}
+.profile-dropdown-item:last-child { border-bottom: none; }
+.profile-dropdown-item:hover { background: #ddff53; }
+
+.profile-dropdown-avatar,
+.profile-tag-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-dropdown-initial,
+.profile-tag-initial {
+    background: #000000;
+    color: #ddff53;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-dropdown-info,
+.profile-tag-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.profile-dropdown-name,
+.profile-tag-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: #000000;
+}
+
+.profile-dropdown-type,
+.profile-tag-type {
+    font-weight: 300;
+    font-size: 11px;
+    color: #404040;
+}
+
+.profile-dropdown-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: #404040;
+}
+
+.selected-profile-tag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #F2F2F2;
+    border: 1.5px solid #000000;
+    border-radius: 12px;
+    direction: rtl;
+}
+
+.btn-clear-profile {
+    margin-right: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    color: #404040;
+    border-radius: 50%;
+    transition: background 0.1s ease;
+}
+.btn-clear-profile:hover { background: #ddff53; color: #000000; }
+.btn-clear-profile .material-icons { font-size: 16px; }
+

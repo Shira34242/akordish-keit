@@ -35,6 +35,10 @@ public class ArticleService : IArticleService
             .Include(a => a.GalleryImages)
             .Include(a => a.ArticleArtists)
                 .ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ServiceProviderProfiles)
             .AsQueryable();
 
         // Apply filters
@@ -68,6 +72,10 @@ public class ArticleService : IArticleService
             .Include(a => a.GalleryImages)
             .Include(a => a.ArticleArtists)
                 .ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ServiceProviderProfiles)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         return article == null ? null : MapToDto(article);
@@ -83,6 +91,10 @@ public class ArticleService : IArticleService
             .Include(a => a.GalleryImages)
             .Include(a => a.ArticleArtists)
                 .ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ServiceProviderProfiles)
             .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == (int)ArticleStatus.Published);
 
         return article == null ? null : MapToDto(article);
@@ -106,6 +118,10 @@ public class ArticleService : IArticleService
                 .ThenInclude(at => at.Tag)
             .Include(a => a.ArticleArtists)
                 .ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser)
+                .ThenInclude(u => u!.ServiceProviderProfiles)
             .OrderBy(a => a.DisplayOrder)
             .ThenByDescending(a => a.PublishDate)
             .Take(limit)
@@ -130,7 +146,7 @@ public class ArticleService : IArticleService
         };
     }
 
-    public async Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto)
+    public async Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto, int? callerUserId = null)
     {
         // Validate slug uniqueness
         if (await SlugExistsAsync(dto.Slug))
@@ -163,6 +179,8 @@ public class ArticleService : IArticleService
             MetaDescription = dto.MetaDescription,
             OpenGraphImageUrl = dto.OpenGraphImageUrl,
             ReadTimeMinutes = dto.ReadTimeMinutes,
+            UploaderUserId = dto.UploaderUserId ?? callerUserId,
+            UploaderProfileType = dto.UploaderProfileType,
             ViewCount = 0,
             LikeCount = 0,
             IsDeleted = false
@@ -241,6 +259,8 @@ public class ArticleService : IArticleService
         article.MetaDescription = dto.MetaDescription;
         article.OpenGraphImageUrl = dto.OpenGraphImageUrl;
         article.ReadTimeMinutes = dto.ReadTimeMinutes;
+        article.UploaderUserId = dto.UploaderUserId;
+        article.UploaderProfileType = dto.UploaderProfileType;
 
         // Update categories
         _context.ArticleArticleCategories.RemoveRange(article.ArticleCategories);
@@ -546,6 +566,8 @@ public class ArticleService : IArticleService
             ReadTimeMinutes = original.ReadTimeMinutes,
             PublishDate = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
+            UploaderUserId = original.UploaderUserId,
+            UploaderProfileType = original.UploaderProfileType,
             ViewCount = 0,
             LikeCount = 0,
             IsDeleted = false
@@ -691,8 +713,50 @@ public class ArticleService : IArticleService
                 ArtistId = aa.ArtistId,
                 ArtistName = aa.Artist.Name,
                 ArtistImageUrl = aa.Artist.ImageUrl
-            }).ToList() ?? new List<ArticleArtistDto>()
+            }).ToList() ?? new List<ArticleArtistDto>(),
+            UploaderProfile = ResolveUploaderProfile(article.UploaderUser, article.UploaderProfileType),
+            UploaderUserId = article.UploaderUserId,
+            UploaderProfileType = article.UploaderProfileType
         };
+    }
+
+    private static ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType)
+    {
+        if (user == null || string.IsNullOrEmpty(profileType)) return null;
+
+        if (profileType == "artist" && user.ManagedArtist != null)
+        {
+            var artist = user.ManagedArtist;
+            return new ContentUploaderProfileDto
+            {
+                Type = "artist",
+                Name = artist.Name,
+                ImageUrl = artist.ImageUrl,
+                ProfileUrl = $"/artist/{artist.Id}"
+            };
+        }
+
+        if (profileType == "serviceProvider")
+        {
+            var provider = user.ServiceProviderProfiles
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.IsPrimaryProfile)
+                .FirstOrDefault();
+
+            if (provider != null)
+            {
+                var route = provider.IsTeacher ? "teacher" : "provider";
+                return new ContentUploaderProfileDto
+                {
+                    Type = "serviceProvider",
+                    Name = provider.DisplayName,
+                    ImageUrl = provider.ProfileImageUrl,
+                    ProfileUrl = $"/{route}/{provider.Id}"
+                };
+            }
+        }
+
+        return null;
     }
 
     private async Task AddArticleCategoriesAsync(int articleId, List<int> categoryIds)

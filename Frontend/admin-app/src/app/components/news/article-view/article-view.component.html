@@ -95,6 +95,11 @@
              [routerLink]="['/artist', artist.artistId]"
              class="artist-link">{{ artist.artistName }}</a>
         </div>
+
+        <!-- Uploader Badge -->
+        <div *ngIf="article.uploaderProfile" class="uploader-badge-wrapper">
+          <app-content-uploader-badge [profile]="article.uploaderProfile" />
+        </div>
       </div>
 
       <!-- Feedback Section -->

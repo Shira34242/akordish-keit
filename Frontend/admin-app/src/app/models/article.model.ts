@@ -1,3 +1,10 @@
+export interface ContentUploaderProfile {
+    type: 'artist' | 'serviceProvider';
+    name: string;
+    imageUrl?: string;
+    profileUrl: string;
+}
+
 export interface ArticleGalleryImage {
     id: number;
     imageUrl: string;
@@ -46,6 +53,9 @@ export interface Article {
     tags: string[];
     galleryImages: ArticleGalleryImage[];
     taggedArtists: ArticleArtist[];
+    uploaderProfile?: ContentUploaderProfile;
+    uploaderUserId?: number;
+    uploaderProfileType?: 'artist' | 'serviceProvider';
 }
 
 export interface CreateArticleDto {
@@ -78,6 +88,8 @@ export interface CreateArticleDto {
         displayOrder: number;
     }[];
     artistIds?: number[];
+    uploaderUserId?: number;
+    uploaderProfileType?: 'artist' | 'serviceProvider';
 }
 
 export enum ArticleCategory {

@@ -2,7 +2,10 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormArray } from '@angular/forms';
 import { SongService } from '../../services/song.service';
+import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 import { AddSongRequest, AutocompleteResult, MusicalKey, SongBasicDto, YouTubeMetadata } from '../../models/song.model';
+import { UserWithProfileDto } from '../../models/user.model';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -45,6 +48,23 @@ export class AddSongModalComponent implements OnInit {
     youtubeMetadata: YouTubeMetadata | null = null;
     selectedComposer: { id?: number; name: string } | null = null; 
 
+    // Uploader profile search state
+    profileSearchQuery = '';
+    profileSearchResults: UserWithProfileDto[] = [];
+    profileSearchLoading = false;
+    selectedUploaderProfile: UserWithProfileDto | null = null;
+    showProfileDropdown = false;
+    tagAsMyself = true;
+    private profileSearch$ = new Subject<string>();
+
+    get isAdminUser(): boolean {
+        return Number(this.authService.currentUserValue?.role) >= 3;
+    }
+
+    get isProfessionalNonAdmin(): boolean {
+        return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
+    }
+
     // Search subjects
     private artistSearch$ = new Subject<string>();
     private tagSearch$ = new Subject<string>();
@@ -54,6 +74,8 @@ export class AddSongModalComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private songService: SongService,
+        private userService: UserService,
+        private authService: AuthService,
         private sanitizer: DomSanitizer
     ) {
         this.songForm = this.fb.group({
@@ -88,12 +110,14 @@ export class AddSongModalComponent implements OnInit {
     ngOnInit(): void {
         this.loadMusicalKeys();
         this.setupAutocomplete();
+        this.initProfileSearch();
         
         // Only setup duplicate check for new songs
         if (!this.editMode) {
             this.setupDuplicateCheck();
+            this.autoFillUploaderFromCurrentUser();
         }
-        
+
         // If edit mode, populate form with existing data
         if (this.editMode && this.songToEdit) {
             this.populateFormForEdit();
@@ -147,11 +171,24 @@ export class AddSongModalComponent implements OnInit {
         // Tags
         if (this.songToEdit.tags && this.songToEdit.tags.length > 0) {
             this.songToEdit.tags.forEach((tag: any) => {
-                this.tagsArray.push(this.fb.control({ 
-                    id: tag.id, 
-                    name: tag.name 
+                this.tagsArray.push(this.fb.control({
+                    id: tag.id,
+                    name: tag.name
                 }));
             });
+        }
+
+        // Uploader profile
+        if (this.songToEdit.uploaderProfile && this.songToEdit.uploaderUserId) {
+            this.selectedUploaderProfile = {
+                userId: this.songToEdit.uploaderUserId,
+                displayName: this.songToEdit.uploaderProfile.name,
+                imageUrl: this.songToEdit.uploaderProfile.imageUrl,
+                profileType: this.songToEdit.uploaderProfile.type,
+                profileId: 0,
+                profileUrl: this.songToEdit.uploaderProfile.profileUrl
+            };
+            this.profileSearchQuery = this.songToEdit.uploaderProfile.name;
         }
     }
     get artistsArray() {
@@ -228,6 +265,66 @@ export class AddSongModalComponent implements OnInit {
             })
         ).subscribe(results => this.genreSuggestions = results);
     }
+
+    autoFillUploaderFromCurrentUser(): void {
+        if (!this.isProfessionalNonAdmin) return;
+
+        this.userService.getMyUploaderProfile().subscribe(profile => {
+            if (profile) {
+                this.selectUploaderProfile(profile);
+                this.tagAsMyself = true;
+            }
+        });
+    }
+
+    onTagAsMyselfChange(): void {
+        if (this.tagAsMyself) {
+            this.autoFillUploaderFromCurrentUser();
+        } else {
+            this.clearUploaderProfile();
+        }
+    }
+
+    initProfileSearch(): void {
+        this.profileSearch$.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            switchMap(q => {
+                this.profileSearchLoading = true;
+                return this.userService.searchUsersWithProfiles(q, 20).pipe(catchError(() => of([])));
+            })
+        ).subscribe({
+            next: (results) => {
+                this.profileSearchResults = results;
+                this.profileSearchLoading = false;
+                this.showProfileDropdown = true;
+            },
+            error: () => { this.profileSearchLoading = false; }
+        });
+    }
+
+    onProfileSearchInput(): void {
+        this.profileSearch$.next(this.profileSearchQuery);
+    }
+
+    selectUploaderProfile(profile: UserWithProfileDto): void {
+        this.selectedUploaderProfile = profile;
+        this.profileSearchQuery = profile.displayName;
+        this.showProfileDropdown = false;
+        this.profileSearchResults = [];
+    }
+
+    clearUploaderProfile(): void {
+        this.selectedUploaderProfile = null;
+        this.profileSearchQuery = '';
+        this.profileSearchResults = [];
+        this.showProfileDropdown = false;
+    }
+
+    getProfileTypeLabel(type: string): string {
+        return type === 'artist' ? 'אמן' : 'מורה / בעל מקצוע';
+    }
+
     onComposerInput(event: Event) {
         const value = (event.target as HTMLInputElement).value;
         this.composerSearch$.next(value);
@@ -485,7 +582,9 @@ export class AddSongModalComponent implements OnInit {
                 } : undefined,
                 lyricist: undefined,  // נשאיר כרגע - נעדכן אחר כך
                 arranger: undefined,  // נשאיר כרגע - נעדכן אחר כך
-                isApproved: formValue.isApproved ?? false
+                isApproved: formValue.isApproved ?? false,
+                uploaderUserId: this.selectedUploaderProfile?.userId,
+                uploaderProfileType: this.selectedUploaderProfile?.profileType
             };
 
             // Choose add or update based on mode
