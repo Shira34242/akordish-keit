@@ -47,8 +47,8 @@ export const routes: Routes = [
             },
             {
                 path: 'teachers',
-                loadComponent: () => import('./components/public/teachers-page/teachers-page.component').then(m => m.TeachersPageComponent),
-                title: 'מורים למוזיקה חרדית - אקורדישקייט'
+                redirectTo: 'professionals',
+                pathMatch: 'full'
             },
             {
                 path: 'professionals',
@@ -242,6 +242,11 @@ export const routes: Routes = [
                 path: 'content/news-sections',
                 loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
                 title: 'ניהול פסי חדשות - אקורדישקייט'
+            },
+            {
+                path: 'content/stats',
+                loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
+                title: 'סטטיסטיקות תוכן - אקורדישקייט'
             },
             {
                 path: 'reports',

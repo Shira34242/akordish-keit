@@ -36,4 +36,11 @@ public interface IArticleService
     Task<bool> SlugExistsAsync(string slug, int? excludeArticleId = null);
 
     Task<ArticleDto> DuplicateArticleAsync(int id);
+
+    // ─── Feedback ─────────────────────────────────────────────
+    Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress);
+    Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress);
+
+    // ─── Top Content (Admin) ──────────────────────────────────
+    Task<List<ArticleRankDto>> GetTopContentAsync(int limit = 20);
 }

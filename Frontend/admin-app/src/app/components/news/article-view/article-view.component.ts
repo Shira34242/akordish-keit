@@ -10,6 +10,7 @@ import { ArticleCardComponent } from '../../shared/article-card/article-card.com
 import { LikedContentService } from '../../../services/liked-content.service';
 import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
 import { ContentPageService } from '../../../services/content-page.service';
+import { ArticleFeedbackService } from '../../../services/article-feedback.service';
 
 @Component({
   selector: 'app-article-view',
@@ -26,6 +27,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly contentPageService = inject(ContentPageService);
+  private readonly feedbackService = inject(ArticleFeedbackService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -137,6 +139,9 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
           // Check if article is liked
           this.checkIfLiked(article.id);
+
+          // Load feedback counts
+          this.loadFeedback(article.id);
 
           this.loading = false;
         },
@@ -291,20 +296,58 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Feedback - Yes
-  giveFeedbackYes(): void {
-    if (this.feedbackGiven) return;
-    this.feedbackGiven = true;
-    this.feedbackChoice = 'yes';
-    this.feedbackYesCount = 1;
+  // ─── Feedback ─────────────────────────────────────────────────────────────
+
+  loadFeedback(articleId: number): void {
+    this.feedbackService.getFeedback(articleId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+          if (result.hasVoted) {
+            this.feedbackGiven = true;
+            this.feedbackChoice = result.userChoice ? 'yes' : 'no';
+          }
+        },
+        error: () => { /* silent — feedback is non-critical */ }
+      });
   }
 
-  // Feedback - No
+  giveFeedbackYes(): void {
+    if (this.feedbackGiven || !this.article) return;
+    this.feedbackGiven = true;
+    this.feedbackChoice = 'yes';
+    this.feedbackService.submitFeedback(this.article.id, true)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+        },
+        error: () => {
+          this.feedbackGiven = false;
+          this.feedbackChoice = null;
+        }
+      });
+  }
+
   giveFeedbackNo(): void {
-    if (this.feedbackGiven) return;
+    if (this.feedbackGiven || !this.article) return;
     this.feedbackGiven = true;
     this.feedbackChoice = 'no';
-    this.feedbackNoCount = 1;
+    this.feedbackService.submitFeedback(this.article.id, false)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+        },
+        error: () => {
+          this.feedbackGiven = false;
+          this.feedbackChoice = null;
+        }
+      });
   }
 
   // Lightbox

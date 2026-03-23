@@ -679,6 +679,49 @@ namespace AkordishKeit.Migrations
                     b.ToTable("ArticleViews", (string)null);
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArticleFeedback", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("IsPositive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ArticleId", "IpAddress")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ArticleFeedback_Article_IP")
+                        .HasFilter("[UserId] IS NULL AND [IpAddress] IS NOT NULL");
+
+                    b.HasIndex("ArticleId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ArticleFeedback_Article_User")
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.ToTable("ArticleFeedbacks", (string)null);
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.Artist", b =>
                 {
                     b.Property<int>("Id")
@@ -3003,6 +3046,24 @@ namespace AkordishKeit.Migrations
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.ArticleView", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Article", "Article")
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Article");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArticleFeedback", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.Article", "Article")
                         .WithMany()

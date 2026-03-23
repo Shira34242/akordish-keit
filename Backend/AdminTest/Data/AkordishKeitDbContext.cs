@@ -56,6 +56,7 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<ArticleTag> ArticleTags { get; set; }
     public DbSet<ArticleGalleryImage> ArticleGalleryImages { get; set; }
     public DbSet<ArticleView> ArticleViews { get; set; }
+    public DbSet<ArticleFeedback> ArticleFeedbacks { get; set; }
 
     // Events & Featured Content
     public DbSet<Event> Events { get; set; }
@@ -130,6 +131,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ArticleTagConfiguration());
         modelBuilder.ApplyConfiguration(new ArticleGalleryImageConfiguration());
         modelBuilder.ApplyConfiguration(new ArticleViewConfiguration());
+        modelBuilder.ApplyConfiguration(new ArticleFeedbackConfiguration());
 
         // Events & Featured Content Configurations
         modelBuilder.ApplyConfiguration(new EventConfiguration());
