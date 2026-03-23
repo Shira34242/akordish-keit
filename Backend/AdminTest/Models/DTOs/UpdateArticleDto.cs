@@ -77,4 +77,11 @@ public class UpdateArticleDto
     /// אם מסופק, מחליף את הרשימה הקיימת
     /// </summary>
     public List<int>? ArtistIds { get; set; }
+
+    /// <summary>UserId של מי שהעלה את התוכן (פרופיל ציבורי)</summary>
+    public int? UploaderUserId { get; set; }
+
+    /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
+    [StringLength(30)]
+    public string? UploaderProfileType { get; set; }
 }

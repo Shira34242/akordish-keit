@@ -2,11 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { ArtistService } from '../../../../services/artist.service';
+import { UserService } from '../../../../services/user.service';
+import { AuthService } from '../../../../services/auth.service';
 import { ArtistListDto } from '../../../../models/artist.model';
+import { UserWithProfileDto } from '../../../../models/user.model';
 import {
   Article,
   CreateArticleDto,
@@ -28,6 +33,8 @@ export class ArticleFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
+  private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
 
   // State
   categories: SystemItem[] = [];
@@ -38,6 +45,23 @@ export class ArticleFormComponent implements OnInit {
   saving = false;
   fetchingYouTube = false;
   youtubeMessage = '';
+
+  // Uploader profile search state
+  profileSearchQuery = '';
+  profileSearchResults: UserWithProfileDto[] = [];
+  profileSearchLoading = false;
+  selectedProfile: UserWithProfileDto | null = null;
+  showProfileDropdown = false;
+  tagAsMyself = true;
+  private profileSearch$ = new Subject<string>();
+
+  get isAdminUser(): boolean {
+    return Number(this.authService.currentUserValue?.role) >= 3;
+  }
+
+  get isProfessionalNonAdmin(): boolean {
+    return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
+  }
 
   // Gallery state
   newGalleryImage = { imageUrl: '', caption: '' };
@@ -85,6 +109,7 @@ export class ArticleFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadArtists();
+    this.initProfileSearch();
 
     // Check if we're in edit mode
     this.route.params.subscribe(params => {
@@ -92,6 +117,8 @@ export class ArticleFormComponent implements OnInit {
         this.isEditMode = true;
         this.articleId = +params['id'];
         this.loadArticle();
+      } else {
+        this.autoFillUploaderFromCurrentUser();
       }
     });
 
@@ -101,6 +128,69 @@ export class ArticleFormComponent implements OnInit {
         this.article.contentType = ArticleContentType.Blog;
       }
     });
+  }
+
+  autoFillUploaderFromCurrentUser(): void {
+    if (!this.isProfessionalNonAdmin) return;
+
+    this.userService.getMyUploaderProfile().subscribe(profile => {
+      if (profile) {
+        this.selectProfile(profile);
+        this.tagAsMyself = true;
+      }
+    });
+  }
+
+  onTagAsMyselfChange(): void {
+    if (this.tagAsMyself) {
+      this.autoFillUploaderFromCurrentUser();
+    } else {
+      this.clearProfile();
+    }
+  }
+
+  initProfileSearch(): void {
+    this.profileSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => {
+        this.profileSearchLoading = true;
+        return this.userService.searchUsersWithProfiles(q, 20);
+      })
+    ).subscribe({
+      next: (results) => {
+        this.profileSearchResults = results;
+        this.profileSearchLoading = false;
+        this.showProfileDropdown = true;
+      },
+      error: () => { this.profileSearchLoading = false; }
+    });
+  }
+
+  onProfileSearchInput(): void {
+    this.profileSearch$.next(this.profileSearchQuery);
+  }
+
+  selectProfile(profile: UserWithProfileDto): void {
+    this.selectedProfile = profile;
+    this.article.uploaderUserId = profile.userId;
+    this.article.uploaderProfileType = profile.profileType;
+    this.profileSearchQuery = profile.displayName;
+    this.showProfileDropdown = false;
+    this.profileSearchResults = [];
+  }
+
+  clearProfile(): void {
+    this.selectedProfile = null;
+    this.article.uploaderUserId = undefined;
+    this.article.uploaderProfileType = undefined;
+    this.profileSearchQuery = '';
+    this.profileSearchResults = [];
+    this.showProfileDropdown = false;
+  }
+
+  getProfileTypeLabel(type: string): string {
+    return type === 'artist' ? 'אמן' : 'מורה / בעל מקצוע';
   }
 
   loadCategories(): void {
@@ -156,8 +246,21 @@ export class ArticleFormComponent implements OnInit {
             caption: img.caption || '',
             displayOrder: img.displayOrder
           })),
-          artistIds: data.taggedArtists?.map(a => a.artistId) || []
+          artistIds: data.taggedArtists?.map(a => a.artistId) || [],
+          uploaderUserId: data.uploaderUserId,
+          uploaderProfileType: data.uploaderProfileType
         };
+        if (data.uploaderProfile && data.uploaderUserId) {
+          this.selectedProfile = {
+            userId: data.uploaderUserId,
+            displayName: data.uploaderProfile.name,
+            imageUrl: data.uploaderProfile.imageUrl,
+            profileType: data.uploaderProfile.type,
+            profileId: 0,
+            profileUrl: data.uploaderProfile.profileUrl
+          };
+          this.profileSearchQuery = data.uploaderProfile.name;
+        }
         this.loading = false;
       },
       error: (error) => {

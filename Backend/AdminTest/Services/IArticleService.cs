@@ -23,7 +23,7 @@ public interface IArticleService
 
     Task<ArticleStatsDto> GetArticleStatsAsync();
 
-    Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto);
+    Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto, int? callerUserId = null);
 
     Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto);
 

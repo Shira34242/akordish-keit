@@ -455,6 +455,11 @@
   transition: color 0.15s;
 }
 
+.uploader-badge-wrapper {
+  padding: var(--space-base) var(--space-xl);
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
 .artist-link:hover {
   color: rgba(0, 0, 0, 0.5);
 }

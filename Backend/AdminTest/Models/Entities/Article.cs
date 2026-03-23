@@ -33,9 +33,14 @@ public class Article
     public string? UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
 
+    // תיוג מעלה תוכן — UserId של פרופיל ציבורי + סוג הפרופיל
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; } // "artist" | "serviceProvider"
+
     // Navigation Properties
     public virtual ICollection<ArticleTag> ArticleTags { get; set; }
     public virtual ICollection<ArticleGalleryImage> GalleryImages { get; set; }
     public virtual ICollection<ArticleArticleCategory> ArticleCategories { get; set; }
     public virtual ICollection<ArticleArtist> ArticleArtists { get; set; }
+    public virtual User? UploaderUser { get; set; }
 }

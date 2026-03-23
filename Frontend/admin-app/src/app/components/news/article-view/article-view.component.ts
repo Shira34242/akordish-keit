@@ -11,11 +11,12 @@ import { LikedContentService } from '../../../services/liked-content.service';
 import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
 import { ContentPageService } from '../../../services/content-page.service';
 import { ArticleFeedbackService } from '../../../services/article-feedback.service';
+import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 
 @Component({
   selector: 'app-article-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdDisplayComponent, ArticleCardComponent, ReportModalComponent],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, ArticleCardComponent, ReportModalComponent, ContentUploaderBadgeComponent],
   templateUrl: './article-view.component.html',
   styleUrls: ['./article-view.component.css']
 })

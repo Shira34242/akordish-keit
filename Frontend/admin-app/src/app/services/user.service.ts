@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { UserListDto, PagedResult } from '../models/user.model';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { UserListDto, UserWithProfileDto, PagedResult } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -34,6 +35,19 @@ export class UserService {
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params });
   }
+  searchUsersWithProfiles(q?: string, limit: number = 20): Observable<UserWithProfileDto[]> {
+    let params = new HttpParams().set('limit', limit.toString());
+    if (q) params = params.set('q', q);
+    return this.http.get<UserWithProfileDto[]>(`${this.apiUrl}/with-profiles`, { params });
+  }
+
+  getMyUploaderProfile(): Observable<UserWithProfileDto | null> {
+    return this.http.get<UserWithProfileDto>(`${this.apiUrl}/me/uploader-profile`, { observe: 'response' }).pipe(
+      map(res => res.status === 204 ? null : res.body),
+      catchError(() => of(null))
+    );
+  }
+
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

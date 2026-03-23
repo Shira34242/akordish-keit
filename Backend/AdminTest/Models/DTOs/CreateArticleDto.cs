@@ -75,6 +75,13 @@ public class CreateArticleDto
     /// רשימת IDs של אומנים לתיוג (מהמערכת)
     /// </summary>
     public List<int>? ArtistIds { get; set; }
+
+    /// <summary>UserId של מי שהעלה את התוכן (פרופיל ציבורי)</summary>
+    public int? UploaderUserId { get; set; }
+
+    /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
+    [StringLength(30)]
+    public string? UploaderProfileType { get; set; }
 }
 
 public class CreateArticleGalleryImageDto

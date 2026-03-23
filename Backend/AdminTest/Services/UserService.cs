@@ -65,6 +65,95 @@ public class UserService : IUserService
     }
 
 
+    public async Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20)
+    {
+        var results = new List<UserWithProfileDto>();
+        var q = query?.Trim().ToLower() ?? "";
+
+        // --- אמנים פעילים עם UserId ---
+        var artists = await _context.Artists
+            .Where(a => !a.IsDeleted
+                && a.UserId != null
+                && a.Status == ArtistStatus.Active
+                && (string.IsNullOrEmpty(q) || a.Name.ToLower().Contains(q)))
+            .OrderBy(a => a.Name)
+            .Take(limit)
+            .Select(a => new UserWithProfileDto
+            {
+                UserId = a.UserId!.Value,
+                DisplayName = a.Name,
+                ImageUrl = a.ImageUrl,
+                ProfileType = "artist",
+                ProfileId = a.Id,
+                ProfileUrl = $"/artist/{a.Id}"
+            })
+            .ToListAsync();
+
+        results.AddRange(artists);
+
+        // --- בעלי מקצוע / מורים פעילים עם UserId ---
+        var providers = await _context.ServiceProviders
+            .Where(p => !p.IsDeleted
+                && p.UserId != null
+                && p.Status == ProfileStatus.Active
+                && (string.IsNullOrEmpty(q) || p.DisplayName.ToLower().Contains(q)))
+            .OrderBy(p => p.DisplayName)
+            .Take(limit)
+            .Select(p => new UserWithProfileDto
+            {
+                UserId = p.UserId!.Value,
+                DisplayName = p.DisplayName,
+                ImageUrl = p.ProfileImageUrl,
+                ProfileType = "serviceProvider",
+                ProfileId = p.Id,
+                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}"
+            })
+            .ToListAsync();
+
+        results.AddRange(providers);
+
+        return results
+            .OrderBy(r => r.DisplayName)
+            .Take(limit)
+            .ToList();
+    }
+
+    public async Task<UserWithProfileDto?> GetUploaderProfileByUserIdAsync(int userId)
+    {
+        // בדוק קודם אם יש פרופיל אמן פעיל
+        var artist = await _context.Artists
+            .Where(a => !a.IsDeleted && a.UserId == userId && a.Status == ArtistStatus.Active)
+            .Select(a => new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = a.Name,
+                ImageUrl = a.ImageUrl,
+                ProfileType = "artist",
+                ProfileId = a.Id,
+                ProfileUrl = $"/artist/{a.Id}"
+            })
+            .FirstOrDefaultAsync();
+
+        if (artist != null) return artist;
+
+        // אחרת בדוק אם יש פרופיל בעל מקצוע / מורה פעיל
+        var provider = await _context.ServiceProviders
+            .Where(p => !p.IsDeleted && p.UserId == userId && p.Status == ProfileStatus.Active)
+            .OrderByDescending(p => p.IsPrimaryProfile)
+            .Select(p => new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = p.DisplayName,
+                ImageUrl = p.ProfileImageUrl,
+                ProfileType = "serviceProvider",
+                ProfileId = p.Id,
+                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}"
+            })
+            .FirstOrDefaultAsync();
+
+        return provider;
+    }
+
     // ═══════════════════════════════════════════════════════════
     //                    Mapping Methods
     // ═══════════════════════════════════════════════════════════

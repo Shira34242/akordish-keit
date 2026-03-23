@@ -1,3 +1,12 @@
+export interface UserWithProfileDto {
+  userId: number;
+  displayName: string;
+  imageUrl?: string;
+  profileType: 'artist' | 'serviceProvider';
+  profileId: number;
+  profileUrl: string;
+}
+
 export interface UserListDto {
   id: number;
   username: string;

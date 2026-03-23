@@ -79,6 +79,8 @@ public class SongService : ISongService
                 ArrangerId = arrangerId,
                 DurationSeconds = durationSeconds,
                 UploadedByUserId = userId,
+                UploaderUserId = dto.UploaderUserId ?? userId,
+                UploaderProfileType = dto.UploaderProfileType,
                 IsApproved = dto.IsApproved,
                 ViewCount = 0,
                 PlayCount = 0,
@@ -343,6 +345,8 @@ public class SongService : ISongService
             song.ComposerId = await GetOrCreatePersonAsync(dto.Composer, userId);
             song.LyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
             song.ArrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
+            song.UploaderUserId = dto.UploaderUserId;
+            song.UploaderProfileType = dto.UploaderProfileType;
             song.UpdatedAt = DateTime.UtcNow;
 
             // 4. Update artists - remove and re-add (support both existing and new artists)
@@ -706,6 +710,10 @@ public class SongService : ISongService
                     .ThenInclude(sg => sg.Genre)
                 .Include(s => s.SongTags)
                     .ThenInclude(st => st.Tag)
+                .Include(s => s.UploaderUser)
+                    .ThenInclude(u => u!.ManagedArtist)
+                .Include(s => s.UploaderUser)
+                    .ThenInclude(u => u!.ServiceProviderProfiles)
                 .FirstOrDefaultAsync();
 
             if (song == null)
@@ -782,7 +790,8 @@ public class SongService : ISongService
                 DurationSeconds = song.DurationSeconds,
                 CreatedAt = song.CreatedAt,
                 UpdatedAt = song.UpdatedAt,
-                UploadedByUserId = song.UploadedByUserId
+                UploadedByUserId = song.UploadedByUserId,
+                UploaderProfile = ResolveUploaderProfile(song.UploaderUser, song.UploaderProfileType)
             };
         }
         catch (Exception ex)
@@ -790,6 +799,45 @@ public class SongService : ISongService
             Console.WriteLine($"Error getting song by ID: {ex.Message}");
             throw;
         }
+    }
+
+    private static ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType)
+    {
+        if (user == null || string.IsNullOrEmpty(profileType)) return null;
+
+        if (profileType == "artist" && user.ManagedArtist != null)
+        {
+            var artist = user.ManagedArtist;
+            return new ContentUploaderProfileDto
+            {
+                Type = "artist",
+                Name = artist.Name,
+                ImageUrl = artist.ImageUrl,
+                ProfileUrl = $"/artist/{artist.Id}"
+            };
+        }
+
+        if (profileType == "serviceProvider")
+        {
+            var provider = user.ServiceProviderProfiles
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.IsPrimaryProfile)
+                .FirstOrDefault();
+
+            if (provider != null)
+            {
+                var route = provider.IsTeacher ? "teacher" : "provider";
+                return new ContentUploaderProfileDto
+                {
+                    Type = "serviceProvider",
+                    Name = provider.DisplayName,
+                    ImageUrl = provider.ProfileImageUrl,
+                    ProfileUrl = $"/{route}/{provider.Id}"
+                };
+            }
+        }
+
+        return null;
     }
 
     public async Task<SongDto?> GetRandomSongAsync()

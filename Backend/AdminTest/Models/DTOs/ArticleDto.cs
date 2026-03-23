@@ -42,6 +42,28 @@ public class ArticleDto
     /// אומנים מתוייגים בכתבה
     /// </summary>
     public List<ArticleArtistDto> TaggedArtists { get; set; } = new();
+
+    /// <summary>
+    /// פרופיל ציבורי שהעלה את התוכן (אמן / מורה / בעל מקצוע)
+    /// </summary>
+    public ContentUploaderProfileDto? UploaderProfile { get; set; }
+
+    /// <summary>שדות גולמיים — לשימוש בטופס עריכה</summary>
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; }
+}
+
+/// <summary>
+/// פרופיל ציבורי שהעלה תוכן (אמן / מורה / בעל מקצוע)
+/// </summary>
+public class ContentUploaderProfileDto
+{
+    /// <summary>"artist" | "serviceProvider"</summary>
+    public string Type { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    /// <summary>נתיב לדף הפרופיל, לדוגמה: /artist/5 או /teacher/12</summary>
+    public string ProfileUrl { get; set; } = string.Empty;
 }
 
 /// <summary>
