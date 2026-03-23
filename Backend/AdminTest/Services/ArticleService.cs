@@ -376,6 +376,121 @@ public class ArticleService : IArticleService
         return article.LikeCount;
     }
 
+    // ─── Feedback ─────────────────────────────────────────────────────────────
+
+    public async Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress)
+    {
+        var feedbacks = await _context.ArticleFeedbacks
+            .Where(f => f.ArticleId == articleId)
+            .ToListAsync();
+
+        var yes = feedbacks.Count(f => f.IsPositive);
+        var no = feedbacks.Count(f => !f.IsPositive);
+        var total = yes + no;
+
+        ArticleFeedback? userVote = null;
+        if (userId.HasValue)
+            userVote = feedbacks.FirstOrDefault(f => f.UserId == userId);
+        else if (!string.IsNullOrEmpty(ipAddress))
+            userVote = feedbacks.FirstOrDefault(f => f.UserId == null && f.IpAddress == ipAddress);
+
+        return BuildFeedbackResult(yes, no, total, userVote);
+    }
+
+    public async Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress)
+    {
+        // בדיקה שהכתבה קיימת
+        if (!await _context.Articles.AnyAsync(a => a.Id == articleId))
+            throw new KeyNotFoundException("Article not found");
+
+        // בדיקה האם כבר הצביע
+        ArticleFeedback? existing = null;
+        if (userId.HasValue)
+            existing = await _context.ArticleFeedbacks
+                .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
+        else if (!string.IsNullOrEmpty(ipAddress))
+            existing = await _context.ArticleFeedbacks
+                .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
+
+        if (existing != null)
+            throw new InvalidOperationException("Already voted");
+
+        _context.ArticleFeedbacks.Add(new ArticleFeedback
+        {
+            ArticleId = articleId,
+            UserId = userId,
+            IpAddress = string.IsNullOrEmpty(ipAddress) ? null : ipAddress,
+            IsPositive = isPositive,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+
+        return await GetFeedbackAsync(articleId, userId, ipAddress);
+    }
+
+    private static ArticleFeedbackResultDto BuildFeedbackResult(int yes, int no, int total, ArticleFeedback? userVote)
+    {
+        int yesPct = total > 0 ? (int)Math.Round((double)yes / total * 100) : 50;
+        int noPct = total > 0 ? 100 - yesPct : 50;
+        return new ArticleFeedbackResultDto
+        {
+            YesCount = yes,
+            NoCount = no,
+            TotalCount = total,
+            YesPct = yesPct,
+            NoPct = noPct,
+            HasVoted = userVote != null,
+            UserChoice = userVote?.IsPositive
+        };
+    }
+
+    // ─── Top Content (Admin) ───────────────────────────────────────────────────
+
+    public async Task<List<ArticleRankDto>> GetTopContentAsync(int limit = 20)
+    {
+        var articles = await _context.Articles
+            .Where(a => !a.IsDeleted && a.Status == (int)AkordishKeit.Models.Enum.ArticleStatus.Published)
+            .OrderByDescending(a => a.ViewCount + a.LikeCount * 3)
+            .Take(limit)
+            .ToListAsync();
+
+        var articleIds = articles.Select(a => a.Id).ToList();
+
+        var feedbackGroups = await _context.ArticleFeedbacks
+            .Where(f => articleIds.Contains(f.ArticleId))
+            .GroupBy(f => f.ArticleId)
+            .Select(g => new
+            {
+                ArticleId = g.Key,
+                Yes = g.Count(f => f.IsPositive),
+                No = g.Count(f => !f.IsPositive)
+            })
+            .ToListAsync();
+
+        return articles.Select(a =>
+        {
+            var fb = feedbackGroups.FirstOrDefault(g => g.ArticleId == a.Id);
+            var yes = fb?.Yes ?? 0;
+            var no = fb?.No ?? 0;
+            var total = yes + no;
+            return new ArticleRankDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Slug = a.Slug,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                ContentType = a.ContentType,
+                ViewCount = a.ViewCount,
+                LikeCount = a.LikeCount,
+                FeedbackYes = yes,
+                FeedbackNo = no,
+                FeedbackTotal = total,
+                YesPct = total > 0 ? (int)Math.Round((double)yes / total * 100) : 0
+            };
+        }).ToList();
+    }
+
     public async Task<bool> SlugExistsAsync(string slug, int? excludeArticleId = null)
     {
         var query = _context.Articles.Where(a => a.Slug == slug);

@@ -231,6 +231,56 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // GET: api/Articles/5/feedback
+    [HttpGet("{id}/feedback")]
+    public async Task<ActionResult<ArticleFeedbackResultDto>> GetFeedback(int id)
+    {
+        int? userId = GetCurrentUserId();
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _articleService.GetFeedbackAsync(id, userId, ip);
+        return Ok(result);
+    }
+
+    // POST: api/Articles/5/feedback
+    [HttpPost("{id}/feedback")]
+    public async Task<ActionResult<ArticleFeedbackResultDto>> SubmitFeedback(int id, [FromBody] SubmitFeedbackDto dto)
+    {
+        int? userId = GetCurrentUserId();
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        try
+        {
+            var result = await _articleService.SubmitFeedbackAsync(id, dto.IsPositive, userId, ip);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException)
+        {
+            // כבר הצביע — מחזירים את המצב הנוכחי בלי שגיאה
+            var current = await _articleService.GetFeedbackAsync(id, userId, ip);
+            return Ok(current);
+        }
+    }
+
+    // GET: api/Articles/top-content (Admin)
+    [HttpGet("top-content")]
+    public async Task<ActionResult<List<ArticleRankDto>>> GetTopContent([FromQuery] int limit = 20)
+    {
+        var result = await _articleService.GetTopContentAsync(limit);
+        return Ok(result);
+    }
+
+    // ─── Helper ──────────────────────────────────────────────────────────────────
+
+    private int? GetCurrentUserId()
+    {
+        if (User.Identity?.IsAuthenticated != true) return null;
+        var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        return claim != null && int.TryParse(claim.Value, out var id) ? id : null;
+    }
+
     // GET: api/Articles/youtube-metadata?url=...
     [HttpGet("youtube-metadata")]
     public async Task<ActionResult<YouTubeMetadataDto>> GetYouTubeMetadata([FromQuery] string url)

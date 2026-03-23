@@ -74,3 +74,39 @@ public class ArticleStatsDto
     public int NewsCount { get; set; }
     public int BlogCount { get; set; }
 }
+
+/// <summary>תגובת פידבק לכתבה (yes/no)</summary>
+public class ArticleFeedbackResultDto
+{
+    public int YesCount { get; set; }
+    public int NoCount { get; set; }
+    public int TotalCount { get; set; }
+    public int YesPct { get; set; }
+    public int NoPct { get; set; }
+    /// <summary>האם המשתמש הנוכחי כבר הצביע</summary>
+    public bool HasVoted { get; set; }
+    /// <summary>true=כן, false=לא, null=לא הצביע</summary>
+    public bool? UserChoice { get; set; }
+}
+
+/// <summary>שליחת פידבק</summary>
+public class SubmitFeedbackDto
+{
+    public bool IsPositive { get; set; }
+}
+
+/// <summary>כתבה בדירוג תוכן (לאדמין)</summary>
+public class ArticleRankDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Slug { get; set; }
+    public string? FeaturedImageUrl { get; set; }
+    public int ContentType { get; set; }
+    public int ViewCount { get; set; }
+    public int LikeCount { get; set; }
+    public int FeedbackYes { get; set; }
+    public int FeedbackNo { get; set; }
+    public int FeedbackTotal { get; set; }
+    public int YesPct { get; set; }
+}
