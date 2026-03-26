@@ -168,58 +168,43 @@ export class ChordTooltipComponent implements OnChanges {
     }
 
     /**
-     * Generate variations of the chord name to try matching
-     * Returns array in order of preference (exact match -> simplified versions)
+     * Generate variations of the chord name to try matching against the DB.
+     * Returns array in order of preference: exact → normalized → simplified extensions → root only.
      */
     private getChordVariations(chord: string): string[] {
         const variations: string[] = [];
 
-        // 1. Exact match
+        // 1. Exact match (as received, e.g. "Am7b5", "CΔ7", "G7(b9)")
         variations.push(chord);
 
-        // 2. Normalize common variations (min -> m, maj7 -> maj7, etc.)
-        const normalized = chord
-            .replace(/min(?!or)/gi, 'm')  // min -> m (but not "minor")
-            .replace(/major/gi, 'maj')     // major -> maj
-            .replace(/Maj/g, 'maj')        // Maj -> maj
-            .replace(/M7/g, 'maj7')        // M7 -> maj7
-            .replace(/M(?!aj)/g, 'maj');   // M -> maj (but not Maj)
-
-        if (normalized !== chord) {
-            variations.push(normalized);
+        // 2. Normalized name via parser — handles Δ, °, ø, +, parentheses, min→m, M7→maj7 …
+        //    e.g. "CΔ7" → "Cmaj7",  "G7(b9)" → "G7b9",  "Cmin7" → "Cm7"
+        const parsed = parseChord(chord);
+        if (parsed?.normalizedName && !variations.includes(parsed.normalizedName)) {
+            variations.push(parsed.normalizedName);
         }
 
-        // 3. Try with simplified extensions
-        // For complex chords like Cm7b5, try Cm7, then Cm
-        const parsed = parseChord(chord);
+        // 3. Try progressive simplifications (strip extensions one by one)
         if (parsed) {
-            const root = parsed.root;
-            const suffix = parsed.suffix;
-            const bass = parsed.bass;
+            const { root, suffix, bass } = parsed;
 
-            // Try without bass note
+            // Without bass note (e.g. "Am7/C" → "Am7")
             if (bass) {
                 const withoutBass = root + suffix;
-                variations.push(withoutBass);
+                if (!variations.includes(withoutBass)) variations.push(withoutBass);
             }
 
-            // Try common simplifications of the suffix
+            // Simplified suffixes (e.g. "m7b5" → ["m7b5","m7","m",""])
             if (suffix) {
-                // Remove numbers after certain patterns
-                const simplifiedSuffixes = this.simplifySuffix(suffix);
-                for (const simpleSuffix of simplifiedSuffixes) {
-                    const simpleChord = root + simpleSuffix + (bass ? '/' + bass : '');
-                    if (!variations.includes(simpleChord)) {
-                        variations.push(simpleChord);
-                    }
+                for (const simpleSuffix of this.simplifySuffix(suffix)) {
+                    const candidate = root + simpleSuffix + (bass ? '/' + bass : '');
+                    if (!variations.includes(candidate)) variations.push(candidate);
                 }
             }
 
-            // 4. Ultimate fallback: just root + m if minor, or just root
+            // 4. Ultimate fallback: root + m (if minor quality) or just root
             const basicSimple = simplifyChord(chord);
-            if (!variations.includes(basicSimple)) {
-                variations.push(basicSimple);
-            }
+            if (!variations.includes(basicSimple)) variations.push(basicSimple);
         }
 
         return variations;

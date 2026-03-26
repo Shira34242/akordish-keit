@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SongService } from '../../services/song.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     transposeChord,
     analyzePreferFlat,
-    isChord
+    isChord,
+    isChordLine
 } from '../../utils/music-utils';
 
 import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
@@ -55,6 +56,14 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // Tooltip State
     hoveredChord: string | null = null;
     tooltipPosition: { x: number, y: number } = { x: 0, y: 0 };
+    tooltipAbove: boolean = true;
+
+    // YouTube Modal State
+    showYoutubeModal: boolean = false;
+    youtubeEmbedUrl: SafeResourceUrl | null = null;
+
+    // Bookmark State
+    isSongSaved: boolean = false;
 
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
@@ -109,6 +118,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
                 this.transposeStep = 0;
                 this.fontSize = window.innerWidth <= 600 ? 14 : 18;
+                this.isSongSaved = false;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
@@ -305,26 +315,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         return `${sign}${tones}`;
     }
 
-    // Helper to check if a line is purely chords
-    isChordLine(line: string): boolean {
-        if (!line.trim()) return false;
-        // If it contains Hebrew, it's definitely not a chord line
-        if (/[א-ת]/.test(line)) return false;
-
-        const tokens = line.trim().split(/\s+/);
-        // Filter tokens that look like chords
-        const chordCount = tokens.filter(t => isChord(t) || this.looksLikeChord(t)).length;
-
-        // If more than 50% of tokens are chords, treat as chord line.
-        return chordCount > 0 && (chordCount / tokens.length >= 0.5);
-    }
-
-    looksLikeChord(token: string): boolean {
-        // Basic regex for things that look like chords but might not pass strict validation
-        // e.g. A, Am, F#m7, G/B
-        return /^[A-G][b#]?(m|maj|dim|aug|sus|add|7|9|11|13)*(\/[A-G][b#]?)?$/.test(token);
-    }
-
     // ⭐ הלוגיקה החדשה - תמיכה גם ב-Inline וגם ב-Block (Line over Line)
     get formattedLyricsHtml(): SafeHtml {
         if (!this.song || !this.song.lyricsWithChords) return '';
@@ -333,16 +323,16 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         const processedLines = lines.map((line: string) => {
             // 1. Check for Line-over-Line Chords (Block Chords)
-            if (this.isChordLine(line)) {
+            if (isChordLine(line)) {
                 if (!this.showChords) return null; // Hide line if chords are hidden
 
-                // Wrap chords in span with class 'chord-block'
-                // We use a regex to identify chords and wrap them, while preserving spaces.
-                // Regex matches chord patterns.
-                return line.replace(/([A-G][b#]?(?:m|maj|dim|aug|sus|add|7|9|11|13)*(?:\/[A-G][b#]?)?)/g, (match) => {
+                // Wrap each non-whitespace token that isChord recognises.
+                // /\S+/g preserves all original spacing between chords.
+                return line.replace(/\S+/g, (token) => {
+                    if (!isChord(token)) return token;
                     const transposed = this.transposeStep !== 0
-                        ? transposeChord(match, this.transposeStep, { preferFlat: this.preferFlat })
-                        : match;
+                        ? transposeChord(token, this.transposeStep, { preferFlat: this.preferFlat })
+                        : token;
                     return `<span class="chord-block">${transposed}</span>`;
                 });
             }
@@ -383,12 +373,19 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
             this.hoveredChord = target.innerText.trim();
             const rect = target.getBoundingClientRect();
-            // Position tooltip centered above the chord
-            // We'll use fixed positioning in CSS, so x/y are viewport coordinates
-            this.tooltipPosition = {
-                x: rect.left + rect.width / 2,
-                y: rect.top
-            };
+
+            const tooltipW = 150;
+            const tooltipH = 180;
+
+            // מרכז X עם clamping לא יחרוג מגבולות המסך
+            let x = rect.left + rect.width / 2;
+            x = Math.max(tooltipW / 2 + 8, Math.min(window.innerWidth - tooltipW / 2 - 8, x));
+
+            // אם יש מקום מעל — tooltip מעל; אחרת מתחת
+            this.tooltipAbove = rect.top > tooltipH + 16;
+            const y = this.tooltipAbove ? rect.top - 8 : rect.bottom + 8;
+
+            this.tooltipPosition = { x, y };
         } else {
             this.hoveredChord = null;
         }
@@ -458,9 +455,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         const lines = this.song.lyricsWithChords.split('\n');
         const processedLyrics = lines.map((line: string) => {
             // Block Chords
-            if (this.isChordLine(line)) {
-                return line.replace(/([A-G][b#]?(?:m|maj|dim|aug|sus|add|7|9|11|13)*(?:\/[A-G][b#]?)?)/g,
-                    '<span class="chord">$1</span>');
+            if (isChordLine(line)) {
+                return line.replace(/\S+/g, (token) =>
+                    isChord(token) ? `<span class="chord">${token}</span>` : token
+                );
             }
 
             // Inline Chords [Am]
@@ -608,5 +606,36 @@ private getKeyIndex(keyName: string): number {
 
     closeReportModal(): void {
         this.isReportModalOpen = false;
+    }
+
+    openYoutubeVideo(): void {
+        if (!this.song?.youtubeUrl) return;
+        const videoId = this.extractYoutubeVideoId(this.song.youtubeUrl);
+        if (videoId) {
+            const url = `https://www.youtube.com/embed/${videoId}?rel=0`;
+            this.youtubeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+            this.showYoutubeModal = true;
+        } else {
+            // URL לא מוכר — פתח ביוטיוב ישירות
+            window.open(this.song.youtubeUrl, '_blank');
+        }
+    }
+
+    closeYoutubeVideo(): void {
+        this.showYoutubeModal = false;
+        this.youtubeEmbedUrl = null;
+    }
+
+    private extractYoutubeVideoId(url: string): string | null {
+        // מטפל בפורמטים: watch?v=, youtu.be/, embed/, shorts/, m.youtube.com
+        const match = url.match(
+            /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+        );
+        return match ? match[1] : null;
+    }
+
+    onSongSaved(): void {
+        this.isSongSaved = true;
+        this.isPlaylistPopupOpen = false;
     }
 }
