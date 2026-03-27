@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import {
     transposeChord,
+    simplifyChord,
     analyzePreferFlat,
     isChord,
     isChordLine
@@ -330,10 +331,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 // /\S+/g preserves all original spacing between chords.
                 return line.replace(/\S+/g, (token) => {
                     if (!isChord(token)) return token;
-                    const transposed = this.transposeStep !== 0
+                    let chord = this.transposeStep !== 0
                         ? transposeChord(token, this.transposeStep, { preferFlat: this.preferFlat })
                         : token;
-                    return `<span class="chord-block">${transposed}</span>`;
+                    if (this.isEasyMode) chord = simplifyChord(chord);
+                    return `<span class="chord-block">${chord}</span>`;
                 });
             }
 
@@ -352,10 +354,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             if (this.showChords) {
                 processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
                     if (!isChord(chord)) return match;
-                    const transposed = this.transposeStep !== 0
+                    let result = this.transposeStep !== 0
                         ? transposeChord(chord, this.transposeStep, { preferFlat: this.preferFlat })
                         : chord;
-                    return `<span class="chord-inline">${transposed}</span>`;
+                    if (this.isEasyMode) result = simplifyChord(result);
+                    return `<span class="chord-inline">${result}</span>`;
                 });
             } else {
                 // Remove chords if hidden

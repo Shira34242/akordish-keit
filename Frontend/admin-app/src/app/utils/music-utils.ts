@@ -452,21 +452,63 @@ export function analyzePreferFlat(lyrics: string, originalKey: string): boolean 
 // -------------------------------------------------------------------
 
 /**
- * Reduce a chord to its basic form (root + major/minor only).
- * E.g.: Cm7b5 → Cm,  Cmaj7 → C,  F#m7 → F#m,  Caug → C
+ * Simplify a chord to its beginner-friendly form.
+ *
+ * Rules:
+ *  - minor, minor7, dim, dim7, halfDim (m7b5)  → root + m   (keep minor quality)
+ *  - dominant (7)                                → root + 7   (strip modifiers/extensions)
+ *  - major + numeric extensions ≥ 9 (G9, G13)  → root + 7   (implied dominant)
+ *  - major7, aug, sus2, sus4, sus               → root only
+ *  - major + add9/add11 modifiers               → root only
+ *  - plain major, plain minor                   → unchanged
+ *  - Slash chords: simplify root part, keep bass note
+ *
+ * Examples:
+ *  Cmaj7 → C,  Cadd9 → C,  Gsus4 → G,  Caug → C
+ *  Bm7b5 → Bm, Cdim → Cm,  F#m7 → F#m
+ *  G7b9 → G7,  G13 → G7,   G9 → G7
+ *  Cmaj7/B → C/B,  Bm7b5/F → Bm/F
  */
 export function simplifyChord(symbol = ''): string {
     if (!symbol) return symbol;
     const parsed = parseChord(symbol);
     if (!parsed) return symbol;
 
-    const isMinorQuality =
-        parsed.quality === 'minor'   ||
-        parsed.quality === 'minor7'  ||
-        parsed.quality === 'halfDim';
+    const { root, quality, extensions, bass } = parsed;
 
-    // parsed.root already includes the accidental ("F#", "Bb", etc.)
-    return parsed.root + (isMinorQuality ? 'm' : '');
+    let simplifiedSuffix: string;
+
+    switch (quality) {
+        case 'minor':
+            simplifiedSuffix = 'm';
+            break;
+        case 'dominant':
+            // Strip all extensions/modifiers — keep just the 7th
+            simplifiedSuffix = '7';
+            break;
+        case 'minor7':
+        case 'dim':
+        case 'dim7':
+        case 'halfDim':
+            // Reduce to plain minor
+            simplifiedSuffix = 'm';
+            break;
+        case 'major7':
+        case 'aug':
+        case 'sus2':
+        case 'sus4':
+        case 'sus':
+            // Reduce to root
+            simplifiedSuffix = '';
+            break;
+        case 'major':
+        default:
+            // Major with large numeric extensions (9, 11, 13) → implied dominant → 7
+            simplifiedSuffix = extensions.some(e => e >= 9) ? '7' : '';
+            break;
+    }
+
+    return root + simplifiedSuffix + (bass ? '/' + bass : '');
 }
 
 // -------------------------------------------------------------------
