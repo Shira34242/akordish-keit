@@ -156,6 +156,8 @@ function parseSuffix(s: string): { quality: ChordQuality; extensions: number[]; 
 
     // Determine base quality from prefix (longer patterns checked first)
     if      (s.startsWith('maj7'))  { quality = 'major7';  s = s.slice(4); }
+    // maj9 / maj11 / maj13 — large extension on a major-7 base (musically implies maj7)
+    else if (s.startsWith('maj') && /^\d/.test(s[3] ?? '')) { quality = 'major7'; s = s.slice(3); }
     else if (s.startsWith('maj'))   { quality = 'major';   s = s.slice(3); }
     else if (s.startsWith('m7b5')) { quality = 'halfDim'; s = s.slice(4); }
     else if (s.startsWith('dim7')) { quality = 'dim7';    s = s.slice(4); }
@@ -564,6 +566,15 @@ const CHORD_TEST_CASES: ChordTestCase[] = [
     { input: 'Bb7',        expectedNormalized: 'Bb7',     expectedQuality: 'dominant' },
     // Sharp-root chords
     { input: 'F#m',        expectedNormalized: 'F#m',     expectedQuality: 'minor'    },
+    // maj9 / maj11 / maj13 — must be major7 quality (not major)
+    { input: 'Cmaj9',      expectedNormalized: 'Cmaj79',  expectedQuality: 'major7'   },
+    { input: 'Cmaj11',     expectedNormalized: 'Cmaj711', expectedQuality: 'major7'   },
+    { input: 'Cmaj13',     expectedNormalized: 'Cmaj713', expectedQuality: 'major7'   },
+    // plain 9 / 11 / 13 stay major (implied dominant handled in simplifyChord)
+    { input: 'G9',         expectedNormalized: 'G9',      expectedQuality: 'major'    },
+    { input: 'G13',        expectedNormalized: 'G13',     expectedQuality: 'major'    },
+    // minor 9 stays minor
+    { input: 'Am9',        expectedNormalized: 'Am9',     expectedQuality: 'minor'    },
 ];
 
 /**
@@ -597,5 +608,65 @@ export function runChordTests(): void {
     }
 
     console.log(`\n${passed}/${CHORD_TEST_CASES.length} passed${failed > 0 ? `, ${failed} failed` : ' — all green ✓'}`);
+    console.groupEnd();
+
+    runSimplifyTests();
+}
+
+interface SimplifyTestCase { input: string; expected: string; }
+
+const SIMPLIFY_TEST_CASES: SimplifyTestCase[] = [
+    // Basic — unchanged
+    { input: 'C',         expected: 'C'    },
+    { input: 'Am',        expected: 'Am'   },
+    { input: 'G7',        expected: 'G7'   },
+    // Major extensions → root
+    { input: 'Cmaj7',     expected: 'C'    },
+    { input: 'Gmaj9',     expected: 'G'    },
+    { input: 'Fmaj13',    expected: 'F'    },
+    // Minor extensions → minor
+    { input: 'Am7',       expected: 'Am'   },
+    { input: 'Bm7',       expected: 'Bm'   },
+    { input: 'F#m9',      expected: 'F#m'  },
+    // add chords → root
+    { input: 'Cadd9',     expected: 'C'    },
+    { input: 'Amadd9',    expected: 'Am'   },
+    // Suspended → root (plain sus) or 7 (7sus)
+    { input: 'Csus4',     expected: 'C'    },
+    { input: 'Gsus2',     expected: 'G'    },
+    { input: 'G7sus4',    expected: 'G7'   },
+    // Diminished / half-dim → minor
+    { input: 'Cdim',      expected: 'Cm'   },
+    { input: 'Cdim7',     expected: 'Cm'   },
+    { input: 'Bm7b5',     expected: 'Bm'   },
+    // Augmented → root
+    { input: 'Caug',      expected: 'C'    },
+    // Dominant alterations → 7
+    { input: 'G7b9',      expected: 'G7'   },
+    { input: 'E7#9',      expected: 'E7'   },
+    // Plain extensions on major (implied dominant) → 7
+    { input: 'G9',        expected: 'G7'   },
+    { input: 'G13',       expected: 'G7'   },
+    // Slash chords — simplify root, keep bass
+    { input: 'G/B',       expected: 'G/B'  },
+    { input: 'Cmaj7/B',   expected: 'C/B'  },
+    { input: 'Bm7b5/F#',  expected: 'Bm/F#'},
+    // Alias inputs
+    { input: 'CΔ7',       expected: 'C'    },
+    { input: 'C°',        expected: 'Cm'   },
+    { input: 'Cø7',       expected: 'Cm'   },
+    { input: 'C+',        expected: 'C'    },
+];
+
+export function runSimplifyTests(): void {
+    console.group('[music-utils] simplifyChord Tests');
+    let passed = 0; let failed = 0;
+    for (const tc of SIMPLIFY_TEST_CASES) {
+        const got = simplifyChord(tc.input);
+        const ok  = got === tc.expected;
+        if (ok) { console.log(`✅ simplify("${tc.input}") → "${got}"`); passed++; }
+        else    { console.warn(`❌ simplify("${tc.input}"): expected "${tc.expected}", got "${got}"`); failed++; }
+    }
+    console.log(`\n${passed}/${SIMPLIFY_TEST_CASES.length} passed${failed > 0 ? `, ${failed} failed` : ' — all green ✓'}`);
     console.groupEnd();
 }
