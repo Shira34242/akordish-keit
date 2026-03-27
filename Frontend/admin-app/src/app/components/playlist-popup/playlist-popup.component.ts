@@ -15,6 +15,7 @@ import { Playlist, CreatePlaylistDto } from '../../models/playlist.model';
 export class PlaylistPopupComponent implements OnInit {
   @Input() songId!: number;
   @Output() close = new EventEmitter<void>();
+  @Output() songSaved = new EventEmitter<void>();
 
   recentPlaylists: Playlist[] = [];
   isLoading = false;
@@ -52,6 +53,7 @@ export class PlaylistPopupComponent implements OnInit {
     this.playlistService.addSongToPlaylist(playlistId, this.songId).subscribe({
       next: () => {
         this.successMessage = 'השיר נוסף לרשימה בהצלחה!';
+        this.songSaved.emit();
         setTimeout(() => {
           this.closePopup();
         }, 1500);

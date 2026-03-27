@@ -1,95 +1,70 @@
-<div class="bento-page" dir="rtl">
+<div class="news-page" dir="rtl">
 
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="loading-spinner"></div>
+  <!-- LOADING INITIAL -->
+  <div *ngIf="isLoading" class="page-loading">
+    <div class="spinner"></div>
   </div>
 
   <ng-container *ngIf="!isLoading">
 
     <!-- ══════════════════════════════════════
-         Hero
-         [title 2×1]    [art-1 4×2]
-         [art-2 2×2]    [art-1 cont.]
-         [art-2 cont.]  [art-3 4×1]
+         HERO GRID — 6 כתבות מוצגות מהניהול
+         ללא כותרת, ממלא מסך שלם
     ══════════════════════════════════════ -->
-    <div class="bento-grid hero-grid">
+    <div class="hero-grid">
 
-      <div class="label-cell hero-title-cell">
-        <span class="label-text">חדשות המוזיקה</span>
-      </div>
-
-      <div class="bento-cell hero-cell-1">
+      <div class="hero-cell hc-1">
         <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[0]" class="skeleton-fill"></div>
+        <div *ngIf="!featuredArticles[0]" class="cell-skeleton"></div>
       </div>
-      <div class="bento-cell hero-cell-2">
+
+      <div class="hero-cell hc-2">
         <app-news-banner *ngIf="featuredArticles[1]" [article]="featuredArticles[1].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[1]" class="skeleton-fill"></div>
+        <div *ngIf="!featuredArticles[1]" class="cell-skeleton"></div>
       </div>
-      <div class="bento-cell hero-cell-3">
+
+      <div class="hero-cell hc-3">
         <app-news-banner *ngIf="featuredArticles[2]" [article]="featuredArticles[2].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[2]" class="skeleton-fill"></div>
+        <div *ngIf="!featuredArticles[2]" class="cell-skeleton"></div>
       </div>
-      <div class="bento-cell hero-cell-4">
+
+      <div class="hero-cell hc-4">
         <app-news-banner *ngIf="featuredArticles[3]" [article]="featuredArticles[3].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[3]" class="skeleton-fill"></div>
+        <div *ngIf="!featuredArticles[3]" class="cell-skeleton"></div>
+      </div>
+
+      <div class="hero-cell hc-5">
+        <app-news-banner *ngIf="featuredArticles[4]" [article]="featuredArticles[4].article"></app-news-banner>
+        <div *ngIf="!featuredArticles[4]" class="cell-skeleton"></div>
+      </div>
+
+      <div class="hero-cell hc-6">
+        <app-news-banner *ngIf="featuredArticles[5]" [article]="featuredArticles[5].article"></app-news-banner>
+        <div *ngIf="!featuredArticles[5]" class="cell-skeleton"></div>
       </div>
 
     </div>
 
     <!-- ══════════════════════════════════════
-         קטגוריות דינמיות
-         הגריד ממלא את כל 6 העמודות — ללא תא expand
-         כפתור expand = pill קטן מחוץ לגריד
+         STREAM GRID — גריד מגזיני רציף
+         שורת בסיס 60px, spans מגוונים
+         dense packing — ללא חורים
     ══════════════════════════════════════ -->
-    <ng-container *ngFor="let section of sections; let i = index">
-      <div class="section-wrapper" *ngIf="section.articles.length > 0">
-
-        <!-- גריד הקטגוריה -->
-        <div class="bento-grid section-grid" [ngClass]="'layout-' + getSectionLayout(i)">
-
-          <div class="label-cell section-label" (click)="navigateToSection(section)">
-            <span class="label-text">{{ section.title }}</span>
-            <span class="label-link">לכל התוכן ›</span>
-          </div>
-
-          <div class="bento-cell art-cell-1" *ngIf="section.articles[0]">
-            <app-news-banner [article]="section.articles[0]"></app-news-banner>
-          </div>
-          <div class="bento-cell art-cell-2" *ngIf="section.articles[1]">
-            <app-news-banner [article]="section.articles[1]"></app-news-banner>
-          </div>
-          <div class="bento-cell art-cell-3" *ngIf="section.articles[2]">
-            <app-news-banner [article]="section.articles[2]"></app-news-banner>
-          </div>
-          <div class="bento-cell art-cell-4" *ngIf="section.articles[3] && getInitialArticleCount(i) >= 4">
-            <app-news-banner [article]="section.articles[3]"></app-news-banner>
-          </div>
-          <div class="bento-cell art-cell-5" *ngIf="section.articles[4] && getInitialArticleCount(i) >= 5">
-            <app-news-banner [article]="section.articles[4]"></app-news-banner>
-          </div>
-
-        </div>
-
-        <!-- כפתור expand — pill קטן, מחוץ לגריד, צמוד שמאל -->
-        <div class="expand-row">
-          <button class="expand-pill" (click)="toggleSection(i)">
-            {{ isExpanded(i) ? '↑ פחות' : 'עוד ›' }}
-          </button>
-        </div>
-
-        <!-- גריד הרחבה -->
-        <ng-container *ngIf="isExpanded(i)">
-          <div class="bento-grid expanded-grid">
-            <div class="bento-cell art-extra"
-                 *ngFor="let article of section.articles | slice:getInitialArticleCount(i)">
-              <app-news-banner [article]="article"></app-news-banner>
-            </div>
-          </div>
-        </ng-container>
-
+    <div class="stream-grid">
+      <div
+        class="stream-cell"
+        *ngFor="let article of newsArticles; let i = index"
+        [ngClass]="getCellClass(i)">
+        <app-news-banner [article]="article"></app-news-banner>
       </div>
-    </ng-container>
+    </div>
+
+    <!-- SENTINEL גלילה אינסופית -->
+    <div #sentinel class="sentinel"></div>
+
+    <div *ngIf="isLoadingMore" class="loading-more">
+      <div class="spinner"></div>
+    </div>
 
   </ng-container>
 

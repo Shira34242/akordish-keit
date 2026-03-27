@@ -101,7 +101,7 @@
     position: absolute;
     bottom: 10px;
     left: 10px;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -111,16 +111,17 @@
     cursor: pointer;
     transition: background 0.2s;
     z-index: 10;
+    border: none;
+    padding: 0;
 }
 
 .youtube-play-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(255, 0, 0, 0.8);
 }
 
 .youtube-play-btn svg {
-    color: #ffffff;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 .spotify-play-btn {
@@ -1076,5 +1077,89 @@
     stroke: #000;
     stroke-width: 3;
     flex-shrink: 0;
+}
+
+/* Bookmark Saved State */
+.btn-bookmark.saved {
+    color: #e63939;
+}
+.btn-bookmark.saved svg {
+    fill: #e63939;
+    stroke: #e63939;
+}
+
+/* YouTube Modal */
+.youtube-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.youtube-modal-card {
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    max-width: 840px;
+}
+
+.youtube-embed-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+}
+
+.youtube-embed-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0 0 20px 20px;
+}
+
+.youtube-modal-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.youtube-modal-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.youtube-modal-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font-xs);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.youtube-modal-fallback:hover {
+    color: #fff;
 }
 
