@@ -348,9 +348,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
 
-            // Inline Chords [Am]
+            // Inline Chords [Am] — only real chords get highlighted; [Verse], [Intro] etc. pass through as-is
             if (this.showChords) {
                 processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
+                    if (!isChord(chord)) return match;
                     const transposed = this.transposeStep !== 0
                         ? transposeChord(chord, this.transposeStep, { preferFlat: this.preferFlat })
                         : chord;
@@ -461,8 +462,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 );
             }
 
-            // Inline Chords [Am]
-            return line.replace(/\[(.*?)\]/g, '<span class="chord">$1</span>');
+            // Inline Chords [Am] — only real chords; [Verse] etc. pass through
+            return line.replace(/\[(.*?)\]/g, (match, chord) =>
+                isChord(chord) ? `<span class="chord">${chord}</span>` : match
+            );
         }).join('\n');
 
         const printContent = `
