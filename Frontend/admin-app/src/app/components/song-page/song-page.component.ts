@@ -60,6 +60,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     tooltipPosition: { x: number, y: number } = { x: 0, y: 0 };
     tooltipAbove: boolean = true;
 
+    // Pinned Tooltip State (desktop only)
+    pinnedChord: string | null = null;
+    pinnedPosition: { x: number, y: number } = { x: 0, y: 0 };
+    pinnedAbove: boolean = true;
+
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
@@ -199,6 +204,35 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.rafPending = false;
             });
         }
+        // On mobile, scroll closes the open tooltip
+        if (this.isMobileDevice()) this.hoveredChord = null;
+    }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(_event: MouseEvent) {
+        if (this.pinnedChord) this.pinnedChord = null;
+    }
+
+    /** Active chord for the single shared tooltip element */
+    get activeTooltipChord(): string | null {
+        return this.pinnedChord ?? this.hoveredChord;
+    }
+    get activeTooltipPosition() {
+        return this.pinnedChord ? this.pinnedPosition : this.tooltipPosition;
+    }
+    get activeTooltipAbove(): boolean {
+        return this.pinnedChord ? this.pinnedAbove : this.tooltipAbove;
+    }
+
+    /** Compute tooltip position from a bounding rect — shared between hover and pin */
+    private tooltipPositionFromRect(rect: DOMRect): { x: number; y: number; above: boolean } {
+        const tooltipW = 150;
+        const tooltipH = 180;
+        let x = rect.left + rect.width / 2;
+        x = Math.max(tooltipW / 2 + 8, Math.min(window.innerWidth - tooltipW / 2 - 8, x));
+        const above = rect.top > tooltipH + 16;
+        const y = above ? rect.top - 8 : rect.bottom + 8;
+        return { x, y, above };
     }
 
     private updateHeaderLayout() {
@@ -382,30 +416,49 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     handleLyricsMouseOver(event: MouseEvent) {
+        if (this.pinnedChord) return; // hover suppressed while pinned
         const target = event.target as HTMLElement;
         if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
             this.hoveredChord = target.innerText.trim();
-            const rect = target.getBoundingClientRect();
-
-            const tooltipW = 150;
-            const tooltipH = 180;
-
-            // מרכז X עם clamping לא יחרוג מגבולות המסך
-            let x = rect.left + rect.width / 2;
-            x = Math.max(tooltipW / 2 + 8, Math.min(window.innerWidth - tooltipW / 2 - 8, x));
-
-            // אם יש מקום מעל — tooltip מעל; אחרת מתחת
-            this.tooltipAbove = rect.top > tooltipH + 16;
-            const y = this.tooltipAbove ? rect.top - 8 : rect.bottom + 8;
-
-            this.tooltipPosition = { x, y };
+            const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+            this.tooltipPosition = { x: pos.x, y: pos.y };
+            this.tooltipAbove = pos.above;
         } else {
             this.hoveredChord = null;
         }
     }
 
     handleLyricsLeave() {
+        if (this.pinnedChord) return; // don't close while pinned
         this.hoveredChord = null;
+    }
+
+    handleLyricsClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        const isChord = target.classList.contains('chord-inline') || target.classList.contains('chord-block');
+        if (!isChord) return;
+
+        const chord = target.innerText.trim();
+        const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+
+        if (this.isMobileDevice()) {
+            // Mobile: tap shows/hides hover tooltip (no pin)
+            this.hoveredChord = this.hoveredChord === chord ? null : chord;
+            this.tooltipPosition = { x: pos.x, y: pos.y };
+            this.tooltipAbove = pos.above;
+            return;
+        }
+
+        // Desktop: pin the chord (stopPropagation prevents document:click from immediately closing)
+        event.stopPropagation();
+        this.hoveredChord = null;
+        this.pinnedChord = chord;
+        this.pinnedPosition = { x: pos.x, y: pos.y };
+        this.pinnedAbove = pos.above;
+    }
+
+    closePinnedTooltip() {
+        this.pinnedChord = null;
     }
 
     // Check if user is on mobile device

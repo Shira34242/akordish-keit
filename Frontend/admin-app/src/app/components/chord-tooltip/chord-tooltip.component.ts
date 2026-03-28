@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GUITAR_CHORDS, PIANO_CHORDS, GuitarChord } from '../../utils/chord-data';
 import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
@@ -13,6 +13,8 @@ import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-uti
 export class ChordTooltipComponent implements OnChanges {
     @Input() chordName: string = '';
     @Input() instrument: 'guitar' | 'piano' = 'guitar';
+    @Input() isPinned: boolean = false;
+    @Output() closePinned = new EventEmitter<void>();
 
     guitarChord: GuitarChord | null = null;
     pianoKeys: number[] | null = null;

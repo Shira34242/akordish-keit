@@ -1,4 +1,5 @@
-<div class="tooltip-container">
+<div class="tooltip-container" (click)="$event.stopPropagation()">
+    <button *ngIf="isPinned" class="tooltip-close-btn" (click)="closePinned.emit()" aria-label="סגור">×</button>
     <div class="chord-name">
         {{ chordName }}
         <span class="simplified-note" *ngIf="displayChordName && displayChordName !== chordName">

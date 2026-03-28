@@ -278,14 +278,25 @@
         <!-- Right Column: Lyrics -->
         <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
-            <div class="lyrics-content" [innerHTML]="formattedLyricsHtml" (mouseover)="handleLyricsMouseOver($event)"
-                (mouseleave)="handleLyricsLeave()">
+            <div class="lyrics-content" [innerHTML]="formattedLyricsHtml"
+                (mouseover)="handleLyricsMouseOver($event)"
+                (mouseleave)="handleLyricsLeave()"
+                (click)="handleLyricsClick($event)">
             </div>
 
-            <!-- Chord Tooltip -->
-            <app-chord-tooltip *ngIf="hoveredChord" [chordName]="hoveredChord" [instrument]="selectedInstrument === 'lyrics' ? 'guitar' : selectedInstrument"
-                [style.position]="'fixed'" [style.left.px]="tooltipPosition.x" [style.top.px]="tooltipPosition.y"
-                [style.transform]="tooltipAbove ? 'translate(-50%, -110%)' : 'translate(-50%, 0)'" [style.zIndex]="1000">
+            <!-- Chord Tooltip (hover + pinned) -->
+            <app-chord-tooltip
+                *ngIf="activeTooltipChord"
+                [chordName]="activeTooltipChord!"
+                [instrument]="selectedInstrument === 'lyrics' ? 'guitar' : selectedInstrument"
+                [isPinned]="!!pinnedChord"
+                [style.position]="'fixed'"
+                [style.left.px]="activeTooltipPosition.x"
+                [style.top.px]="activeTooltipPosition.y"
+                [style.transform]="activeTooltipAbove ? 'translate(-50%, -110%)' : 'translate(-50%, 0)'"
+                [style.zIndex]="1000"
+                [style.pointer-events]="pinnedChord ? 'auto' : 'none'"
+                (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>
         <!-- Left Column: Sidebar -->

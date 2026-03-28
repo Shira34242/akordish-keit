@@ -1,4 +1,5 @@
 .tooltip-container {
+    position: relative;
     background: white;
     padding: 12px;
     border-radius: 8px;
@@ -9,6 +10,30 @@
     pointer-events: none;
     /* Force LTR for all chord names and musical notation (fixes G# → #G RTL bug) */
     direction: ltr;
+}
+
+.tooltip-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+}
+.tooltip-close-btn:hover {
+    color: #111;
+    background: #f2f2f2;
 }
 
 .chord-name {
