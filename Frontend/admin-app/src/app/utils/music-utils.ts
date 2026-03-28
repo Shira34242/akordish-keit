@@ -450,6 +450,40 @@ export function analyzePreferFlat(lyrics: string, originalKey: string): boolean 
 }
 
 // -------------------------------------------------------------------
+// preferFlatForKey — returns true if the key uses flat notation
+// -------------------------------------------------------------------
+
+export function preferFlatForKey(keyName: string): boolean {
+    const sharpKeys = new Set([
+        'G', 'D', 'A', 'E', 'B', 'F#',
+        'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m'
+    ]);
+    const flatKeys = new Set([
+        'F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb',
+        'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm'
+    ]);
+    const key = keyName?.trim() ?? '';
+    if (sharpKeys.has(key)) return false;
+    if (flatKeys.has(key))  return true;
+    return true; // C, Am — neutral keys default to flat convention
+}
+
+// -------------------------------------------------------------------
+// enharmonicRoot — returns the enharmonic equivalent of a root note
+// -------------------------------------------------------------------
+
+export function enharmonicRoot(root: string): string | null {
+    const map: { [k: string]: string } = {
+        'C#': 'Db', 'Db': 'C#',
+        'D#': 'Eb', 'Eb': 'D#',
+        'F#': 'Gb', 'Gb': 'F#',
+        'G#': 'Ab', 'Ab': 'G#',
+        'A#': 'Bb', 'Bb': 'A#',
+    };
+    return map[root] ?? null;
+}
+
+// -------------------------------------------------------------------
 // simplifyChord — updated to use new ParsedChord fields
 // -------------------------------------------------------------------
 

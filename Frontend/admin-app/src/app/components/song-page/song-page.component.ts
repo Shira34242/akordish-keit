@@ -10,6 +10,7 @@ import {
     transposeChord,
     simplifyChord,
     analyzePreferFlat,
+    preferFlatForKey,
     isChord,
     isChordLine
 } from '../../utils/music-utils';
@@ -296,13 +297,21 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
    get currentKey(): string {
-    if (!this.song || !this.song.originalKeyName) return '';
+        if (!this.song || !this.song.originalKeyName) return '';
+        const originalKey = this.song.originalKeyName;
+        if (this.transposeStep === 0) return originalKey;
+        return transposeChord(originalKey, this.transposeStep, { preferFlat: this.preferFlat });
+    }
 
-    const originalKey = this.song.originalKeyName;
-    if (this.transposeStep === 0) return originalKey;
-
-    return transposeChord(originalKey, this.transposeStep, { preferFlat: this.preferFlat });
-}
+    /**
+     * Returns the flat/sharp preference for the CURRENT (possibly transposed) key.
+     * Used by all transposeChord calls so accidentals match the target key.
+     */
+    get activePreferFlat(): boolean {
+        if (this.transposeStep === 0) return this.preferFlat;
+        const key = this.currentKey;
+        return key ? preferFlatForKey(key) : this.preferFlat;
+    }
 
 
     // Get transpose display value in tones (half-steps / 2)
@@ -332,7 +341,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 return line.replace(/\S+/g, (token) => {
                     if (!isChord(token)) return token;
                     let chord = this.transposeStep !== 0
-                        ? transposeChord(token, this.transposeStep, { preferFlat: this.preferFlat })
+                        ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
                         : token;
                     if (this.isEasyMode) chord = simplifyChord(chord);
                     return `<span class="chord-block">${chord}</span>`;
@@ -355,7 +364,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
                     if (!isChord(chord)) return match;
                     let result = this.transposeStep !== 0
-                        ? transposeChord(chord, this.transposeStep, { preferFlat: this.preferFlat })
+                        ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat })
                         : chord;
                     if (this.isEasyMode) result = simplifyChord(result);
                     return `<span class="chord-inline">${result}</span>`;

@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GUITAR_CHORDS, PIANO_CHORDS, GuitarChord } from '../../utils/chord-data';
-import { simplifyChord, parseChord } from '../../utils/music-utils';
+import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
 
 @Component({
     selector: 'app-chord-tooltip',
@@ -192,6 +192,28 @@ export class ChordTooltipComponent implements OnChanges {
             if (bass) {
                 const withoutBass = root + suffix;
                 if (!variations.includes(withoutBass)) variations.push(withoutBass);
+            }
+
+            // Enharmonic equivalent (e.g. G#m7 → Abm7, Fm/Ab → Fm/G#)
+            const altRoot = enharmonicRoot(root);
+            if (altRoot) {
+                const enharmonicName = altRoot + suffix + (bass ? '/' + bass : '');
+                if (!variations.includes(enharmonicName)) variations.push(enharmonicName);
+                if (bass) {
+                    const altBass = enharmonicRoot(bass);
+                    if (altBass) {
+                        const bothAlt = altRoot + suffix + '/' + altBass;
+                        if (!variations.includes(bothAlt)) variations.push(bothAlt);
+                        const origWithAltBass = root + suffix + '/' + altBass;
+                        if (!variations.includes(origWithAltBass)) variations.push(origWithAltBass);
+                    }
+                }
+            } else if (bass) {
+                const altBass = enharmonicRoot(bass);
+                if (altBass) {
+                    const origWithAltBass = root + suffix + '/' + altBass;
+                    if (!variations.includes(origWithAltBass)) variations.push(origWithAltBass);
+                }
             }
 
             // Simplified suffixes (e.g. "m7b5" → ["m7b5","m7","m",""])

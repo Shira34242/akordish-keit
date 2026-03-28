@@ -181,6 +181,14 @@ export const GUITAR_CHORDS: { [key: string]: GuitarChord } = {
     'Bsus4': { frets: [-1, 2, 4, 4, 5, 2], barres: [{ fret: 2, fromString: 5, toString: 1 }] },
     'Bm7b5': { frets: [-1, 2, 3, 4, 3, 5] },
     'Bdim7': { frets: [-1, 2, 3, 4, 3, 4] },
+
+    // ============ SLASH CHORDS (common inversions) ============
+    'C/E':  { frets: [0, 3, 2, 0, 1, 0] },                          // E on low string
+    'D/F#': { frets: [2, 0, 0, 2, 3, 2] },                          // F# on low string
+    'F/A':  { frets: [-1, 0, 3, 2, 1, 1] },                         // A on A string (open)
+    'G/B':  { frets: [-1, 2, 0, 0, 0, 3] },                         // B on A string
+    'A/C#': { frets: [-1, 4, 2, 2, 2, 0] },                         // C# on A string fret 4
+    'E/G#': { frets: [4, -1, 2, 1, 0, 0] },                         // G# on low string fret 4
 };
 
 // Comprehensive Piano Chord Database
@@ -371,4 +379,12 @@ export const PIANO_CHORDS: { [key: string]: number[] } = {
     'Bsus4': [11, 4, 6],
     'Bm7b5': [11, 2, 5, 9],  // B D F A
     'Bdim7': [11, 2, 5, 8],  // B D F Ab
+
+    // ============ SLASH CHORDS (common inversions) ============
+    'C/E':  [4, 0, 7],   // E G C
+    'D/F#': [6, 2, 9],   // F# A D
+    'F/A':  [9, 5, 0],   // A C F
+    'G/B':  [11, 7, 2],  // B D G
+    'A/C#': [1, 9, 4],   // C# E A
+    'E/G#': [8, 4, 11],  // G# B E
 };
