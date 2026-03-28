@@ -208,12 +208,28 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (this.isMobileDevice()) this.hoveredChord = null;
     }
 
-    // Flag to skip the document:click that fires immediately after pinning
-    private skipNextDocumentClick = false;
+    /**
+     * Central click handler at document level.
+     * Checks the click target directly — no stopPropagation needed.
+     */
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
 
-    @HostListener('document:click')
-    onDocumentClick() {
-        if (this.skipNextDocumentClick) { this.skipNextDocumentClick = false; return; }
+        // Click on a chord element → pin it (desktop only)
+        if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
+            if (!this.isMobileDevice()) {
+                const chord = target.innerText.trim();
+                const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+                this.hoveredChord = null;
+                this.pinnedChord = chord;
+                this.pinnedPosition = { x: pos.x, y: pos.y };
+                this.pinnedAbove = pos.above;
+            }
+            return;
+        }
+
+        // Any other click → close pin
         if (this.pinnedChord) this.pinnedChord = null;
     }
 
@@ -334,6 +350,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         }
     }
 
+    get capoFret(): number | null {
+        if (this.transposeStep === 0) return null;
+        return this.transposeStep > 0 ? this.transposeStep : 12 + this.transposeStep;
+    }
+
    get currentKey(): string {
         if (!this.song || !this.song.originalKeyName) return '';
         const originalKey = this.song.originalKeyName;
@@ -437,28 +458,16 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.hoveredChord = null;
     }
 
+    // Mobile only: tap toggles hover tooltip (desktop pin is handled by onDocumentClick)
     handleLyricsClick(event: MouseEvent) {
+        if (!this.isMobileDevice()) return;
         const target = event.target as HTMLElement;
-        const isChord = target.classList.contains('chord-inline') || target.classList.contains('chord-block');
-        if (!isChord) return;
-
+        if (!target.classList.contains('chord-inline') && !target.classList.contains('chord-block')) return;
         const chord = target.innerText.trim();
         const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
-
-        if (this.isMobileDevice()) {
-            // Mobile: tap shows/hides hover tooltip (no pin)
-            this.hoveredChord = this.hoveredChord === chord ? null : chord;
-            this.tooltipPosition = { x: pos.x, y: pos.y };
-            this.tooltipAbove = pos.above;
-            return;
-        }
-
-        // Desktop: pin the chord
-        this.skipNextDocumentClick = true; // prevent the same click from immediately closing the pin
-        this.hoveredChord = null;
-        this.pinnedChord = chord;
-        this.pinnedPosition = { x: pos.x, y: pos.y };
-        this.pinnedAbove = pos.above;
+        this.hoveredChord = this.hoveredChord === chord ? null : chord;
+        this.tooltipPosition = { x: pos.x, y: pos.y };
+        this.tooltipAbove = pos.above;
     }
 
     closePinnedTooltip() {
