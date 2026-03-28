@@ -18,8 +18,19 @@ export class ChordTooltipComponent implements OnChanges {
     pianoKeys: number[] | null = null;
     displayChordName: string = ''; // The chord name we're actually displaying
 
+    // Slash chord fallback: bass note that's not part of the root diagram
+    parsedBass: string | null = null;
+    bassAbsoluteNote: number | null = null;
+
     // Piano: absolute note positions (computed from pianoKeys)
     activeAbsoluteNotes: Set<number> = new Set();
+
+    // Note name → semitone (0–11) lookup for bass detection
+    private readonly noteToSemitone: Record<string, number> = {
+        'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+        'E': 4, 'Fb': 4, 'F': 5, 'E#': 5, 'F#': 6, 'Gb': 6,
+        'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11
+    };
 
     // Dynamic piano display keys (computed per chord)
     pianoWhiteKeys: { note: number }[] = [];
@@ -54,7 +65,10 @@ export class ChordTooltipComponent implements OnChanges {
     updateChordData() {
         if (!this.chordName) return;
 
-        // Try to find the chord with progressive simplification
+        // Parse original chord once — used to detect slash-chord fallback
+        const originalParsed = parseChord(this.chordName);
+        const originalBass = originalParsed?.bass ?? null;
+
         const chordVariations = this.getChordVariations(this.chordName);
 
         if (this.instrument === 'guitar') {
@@ -62,11 +76,17 @@ export class ChordTooltipComponent implements OnChanges {
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
             this.pianoBlackKeys = [];
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
             // Try each variation until we find a match
             for (const variation of chordVariations) {
                 if (GUITAR_CHORDS[variation]) {
                     this.guitarChord = GUITAR_CHORDS[variation];
                     this.displayChordName = variation;
+                    // If original had a bass note but the matched variation doesn't — it's a fallback
+                    if (originalBass && !variation.includes('/')) {
+                        this.parsedBass = originalBass;
+                    }
                     return;
                 }
             }
@@ -75,11 +95,17 @@ export class ChordTooltipComponent implements OnChanges {
             this.displayChordName = this.chordName;
         } else {
             this.guitarChord = null;
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
             // Try each variation until we find a match
             for (const variation of chordVariations) {
                 if (PIANO_CHORDS[variation]) {
                     this.pianoKeys = PIANO_CHORDS[variation];
                     this.displayChordName = variation;
+                    // If original had a bass note but the matched variation doesn't — it's a fallback
+                    if (originalBass && !variation.includes('/')) {
+                        this.parsedBass = originalBass;
+                    }
                     this.computeAbsoluteNotes();
                     return;
                 }
@@ -154,6 +180,18 @@ export class ChordTooltipComponent implements OnChanges {
 
         // Set display width based on number of white keys
         this.pianoDisplayWidth = this.pianoWhiteKeys.length * 20;
+
+        // Compute which absolute note corresponds to the bass note (for slash chord fallback)
+        this.bassAbsoluteNote = null;
+        if (this.parsedBass) {
+            const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+            if (bassSemitone >= 0) {
+                const bassAbsolute = bassSemitone >= root ? bassSemitone : bassSemitone + 12;
+                if (this.activeAbsoluteNotes.has(bassAbsolute)) {
+                    this.bassAbsoluteNote = bassAbsolute;
+                }
+            }
+        }
     }
 
     /**
@@ -309,6 +347,12 @@ export class ChordTooltipComponent implements OnChanges {
     // Helper for Piano SVG
     isKeyActiveAbsolute(note: number): boolean {
         return this.activeAbsoluteNotes.has(note);
+    }
+
+    getPianoKeyFill(note: number, isBlack: boolean): string {
+        if (!this.isKeyActiveAbsolute(note)) return isBlack ? 'black' : 'white';
+        if (this.bassAbsoluteNote !== null && note === this.bassAbsoluteNote) return '#404040';
+        return '#ddff53';
     }
 
     // Helpers for Barre
