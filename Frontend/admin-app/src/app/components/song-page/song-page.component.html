@@ -47,7 +47,11 @@
             <div class="header-info-section">
                 <p class="header-subtitle">אקורדים לשיר</p>
                 <h1 class="main-title">{{ song.title }}</h1>
-                <h2 class="artist-name" (click)="navigateToArtist(song.artists[0]?.id)">{{ song.artists[0]?.name }}</h2>
+                <div class="artist-names">
+                    <ng-container *ngFor="let artist of song.artists; let last = last">
+                        <span class="artist-name-link" (click)="navigateToArtist(artist.id)">{{ artist.name }}</span><span *ngIf="!last" class="artist-separator">,&nbsp;</span>
+                    </ng-container>
+                </div>
 
                 <div class="credits-block" *ngIf="song.lyricist || song.composer">
                     <span class="credit-line" *ngIf="song.lyricist">מילים: {{ song.lyricist.name }}</span>
@@ -151,7 +155,7 @@
             <!-- Transpose with Key Display FIRST -->
             <div class="transpose-group">
                 <!-- Current Key Display -->
-                <span class="text-sm text-gray-600 px-2 whitespace-nowrap font-medium current-key-label">{{ currentKey }}</span>
+                <span class="current-key-label"><span class="key-prefix-text">סולם: </span>{{ currentKey }}</span>
 
                 <!-- Transpose Down -->
                 <button class="toolbar-btn" (click)="transpose(-1)" title="הורד חצי טון">
@@ -187,18 +191,16 @@
             <div class="toolbar-divider"></div>
 
             <!-- Easy Version -->
-            <button class="toolbar-btn btn-easy btn-text" 
-                    *ngIf="song.easyKeyId" 
-                    [class.active]="isEasyMode"
+            <button class="toolbar-btn btn-easy btn-text"
+                    *ngIf="song.easyKeyId && !isEasyMode"
                     (click)="toggleEasyMode()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    style="margin-left: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                    stroke="none" style="margin-left: 4px;">
                     <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
                 </svg>
-                {{ isEasyMode ? 'סולם מקורי' : 'גרסה קלה' }}
+                גרסה קלה
             </button>
-            <div class="toolbar-divider" *ngIf="song.easyKeyId"></div>
+            <div class="toolbar-divider" *ngIf="song.easyKeyId && !isEasyMode"></div>
 
             <!-- Font Size -->
             <div class="font-size-group">
@@ -278,6 +280,18 @@
         <!-- Right Column: Lyrics -->
         <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
+            <!-- Capo Hint -->
+            <div class="capo-hint" *ngIf="capoFret !== null && selectedInstrument === 'guitar'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <circle cx="7" cy="12" r="2" fill="currentColor"></circle>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+                    <circle cx="17" cy="12" r="2" fill="currentColor"></circle>
+                </svg>
+                קאפו שריג {{ capoFret }} לנגינה בסולם המקורי
+            </div>
+
             <div class="lyrics-content" [innerHTML]="formattedLyricsHtml"
                 (mouseover)="handleLyricsMouseOver($event)"
                 (mouseleave)="handleLyricsLeave()"

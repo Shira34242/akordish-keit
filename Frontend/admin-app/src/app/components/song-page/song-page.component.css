@@ -57,7 +57,7 @@
     margin: 0 auto;
     margin-top: 0;
     margin-bottom: var(--space-md);
-    padding: calc(2vh + var(--space-base)) var(--space-xl) var(--space-base);
+    padding: 80px var(--space-xl) var(--space-md);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
@@ -67,7 +67,7 @@
 
 /* Image Section */
 .header-image-section {
-    flex: 0 0 200px; /* קטן יותר */
+    flex: 0 0 260px;
     position: relative;
 }
 
@@ -156,7 +156,7 @@
     display: flex;
     flex-direction: row;
     gap: var(--space-xl);
-    align-items: stretch;
+    align-items: flex-end;
 }
 
 /* Info Section */
@@ -171,14 +171,14 @@
 }
 
 .header-subtitle {
-    font-size: var(--font-sm);
+    font-size: var(--font-md);
     color: rgba(0, 0, 0, 0.55);
     margin: 0;
     font-weight: 300;
 }
 
 .main-title {
-    font-size: var(--font-3xl);
+    font-size: var(--font-4xl);
     font-weight: 800;
     color: #000000;
     line-height: var(--lh-heading);
@@ -186,17 +186,30 @@
     letter-spacing: -0.5px;
 }
 
-.artist-name {
-    font-size: var(--font-lg);
-    color: #000;
-    font-weight: 800;
+.artist-names {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     margin: var(--space-xs) 0 var(--space-sm) 0;
-    cursor: pointer;
 }
 
-.artist-name:hover {
+.artist-name-link {
+    font-size: var(--font-base);
+    color: #000;
+    font-weight: 300;
+    cursor: pointer;
+    display: inline;
+}
+
+.artist-name-link:hover {
     text-decoration: underline;
     color: rgba(0, 0, 0, 0.7);
+}
+
+.artist-separator {
+    font-size: var(--font-base);
+    font-weight: 300;
+    color: #000;
 }
 
 .credits-block {
@@ -207,7 +220,7 @@
 }
 
 .credit-line {
-    font-size: var(--font-xs);
+    font-size: var(--font-sm);
     color: rgba(0, 0, 0, 0.55);
     line-height: var(--lh-small);
 }
@@ -374,13 +387,17 @@
 .controls-group {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     background: #F2F2F2;
     border-radius: 100px;
     padding: var(--space-sm) var(--space-base);
     gap: var(--space-sm);
     flex: 1;
     min-width: 0;
+    font-size: var(--font-sm);
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
 }
 
 .controls-group .toolbar-btn {
@@ -396,6 +413,12 @@
     border-radius: 100px;
 }
 
+/* Key prefix — "סולם: " מוצג רק ב-desktop */
+.key-prefix-text {
+    display: inline;
+    color: rgba(0, 0, 0, 0.6);
+}
+
 /* Transpose Group */
 .transpose-group {
     display: flex;
@@ -403,10 +426,16 @@
     gap: var(--space-xs);
 }
 
+.current-key-label {
+    margin-inline-end: var(--space-sm);
+    font-weight: 800;
+    font-size: var(--font-sm);
+    white-space: nowrap;
+}
+
 .transpose-val {
     font-weight: 800;
-    font-size: var(--font-base);
-    width: 30px;
+    width: 28px;
     text-align: center;
     color: #000000;
 }
@@ -735,7 +764,8 @@
         font-size: var(--font-2xl);
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-base);
     }
 
@@ -772,6 +802,16 @@
     .btn-text {
         padding: 0 var(--space-sm);
         font-size: var(--font-xs);
+    }
+
+    /* הסתרת "סולם: " — מציגים רק את שם הסולם (C, D, וכד') */
+    .key-prefix-text {
+        display: none;
+    }
+
+    /* הסתרת מספר מהירות גלילה */
+    .scroll-speed-display {
+        display: none;
     }
 
     /* Easy mode button - shorter text on mobile */
@@ -867,7 +907,8 @@
         text-overflow: unset;
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-sm);
     }
 
@@ -928,8 +969,8 @@
     /* controls-group — גלילה ביחד, ללא גלילה פנימית */
     .controls-group {
         flex: 0 0 auto;
-        padding: 3px 6px;
-        gap: 4px;
+        padding: 3px 10px;
+        gap: 6px;
         justify-content: flex-start;
         background: rgba(0, 0, 0, 0.1);
         border-radius: 100px;
@@ -943,6 +984,14 @@
         min-width: 28px;
         flex-shrink: 0;
         border-radius: 50%;
+    }
+
+    /* לחצני טקסט (pill) — לא עיגול */
+    .toolbar-btn.btn-text {
+        width: auto;
+        min-width: auto;
+        height: 28px;
+        border-radius: 100px;
     }
 
     .toolbar-btn svg {
@@ -978,7 +1027,7 @@
 
     /* לחצני טקסט (A-, A+, גרסה קלה) */
     .btn-text {
-        padding: 0 5px;
+        padding: 0 8px;
         font-size: 11px;
         white-space: nowrap;
     }
@@ -1002,7 +1051,7 @@
     .btn-easy {
         white-space: nowrap;
         font-size: 11px;
-        padding: 0 5px;
+        padding: 0 10px;
     }
 
     /* כפתורי גלילה אוטומטית */
@@ -1040,7 +1089,8 @@
         font-size: var(--font-lg);
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-xs);
     }
 }
@@ -1077,6 +1127,25 @@
     stroke: #000;
     stroke-width: 3;
     flex-shrink: 0;
+}
+
+/* Capo Hint */
+.capo-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 5px var(--space-md);
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.65);
+    margin-bottom: var(--space-md);
+}
+
+.capo-hint svg {
+    flex-shrink: 0;
+    opacity: 0.5;
 }
 
 /* Bookmark Saved State */

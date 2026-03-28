@@ -252,12 +252,24 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     /** Compute tooltip position from a bounding rect — shared between hover and pin */
     private tooltipPositionFromRect(rect: DOMRect): { x: number; y: number; above: boolean } {
-        const tooltipW = 150;
-        const tooltipH = 180;
+        const tooltipW = 160;
+        const tooltipH = 210;
+        const margin = 8;
+
+        // Horizontal: center on chord element, clamped so tooltip never exits viewport
         let x = rect.left + rect.width / 2;
-        x = Math.max(tooltipW / 2 + 8, Math.min(window.innerWidth - tooltipW / 2 - 8, x));
-        const above = rect.top > tooltipH + 16;
-        const y = above ? rect.top - 8 : rect.bottom + 8;
+        x = Math.max(tooltipW / 2 + margin, Math.min(window.innerWidth - tooltipW / 2 - margin, x));
+
+        // Vertical: prefer above; fallback to below; if neither fits, pick whichever has more room
+        const spaceAbove = rect.top;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const above = spaceAbove >= tooltipH + margin
+            ? true
+            : spaceBelow >= tooltipH + margin
+                ? false
+                : spaceAbove >= spaceBelow;
+
+        const y = above ? rect.top - margin : rect.bottom + margin;
         return { x, y, above };
     }
 
@@ -301,10 +313,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     transpose(direction: number) {
         if ((this.transposeStep >= 6 && direction > 0) || (this.transposeStep <= -5 && direction < 0)) return;
+        this.isEasyMode = false;
         this.transposeStep += direction;
     }
 
     resetTranspose() {
+        this.isEasyMode = false;
         this.transposeStep = 0;
     }
 
