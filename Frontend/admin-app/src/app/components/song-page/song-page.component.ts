@@ -208,8 +208,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (this.isMobileDevice()) this.hoveredChord = null;
     }
 
-    @HostListener('document:click', ['$event'])
-    onDocumentClick(_event: MouseEvent) {
+    // Flag to skip the document:click that fires immediately after pinning
+    private skipNextDocumentClick = false;
+
+    @HostListener('document:click')
+    onDocumentClick() {
+        if (this.skipNextDocumentClick) { this.skipNextDocumentClick = false; return; }
         if (this.pinnedChord) this.pinnedChord = null;
     }
 
@@ -449,8 +453,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             return;
         }
 
-        // Desktop: pin the chord (stopPropagation prevents document:click from immediately closing)
-        event.stopPropagation();
+        // Desktop: pin the chord
+        this.skipNextDocumentClick = true; // prevent the same click from immediately closing the pin
         this.hoveredChord = null;
         this.pinnedChord = chord;
         this.pinnedPosition = { x: pos.x, y: pos.y };
@@ -461,10 +465,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.pinnedChord = null;
     }
 
-    // Check if user is on mobile device
+    // Check if user is on a touch/mobile device (pointer: coarse = no precise cursor)
     isMobileDevice(): boolean {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-               (window.innerWidth <= 768);
+               (window.matchMedia?.('(pointer: coarse)').matches ?? false);
     }
 
     // Show copy notification

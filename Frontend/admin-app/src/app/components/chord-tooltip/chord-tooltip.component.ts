@@ -323,6 +323,13 @@ export class ChordTooltipComponent implements OnChanges {
         return results;
     }
 
+    // Returns the lowest active fret (> 0) in the chord — used for position label
+    getMinActiveFret(): number {
+        if (!this.guitarChord) return 1;
+        const active = this.guitarChord.frets.filter(f => f > 0);
+        return active.length > 0 ? Math.min(...active) : 1;
+    }
+
     // Helpers for Guitar SVG
     getStringX(stringIndex: number): number {
         return 10 + stringIndex * 10;
