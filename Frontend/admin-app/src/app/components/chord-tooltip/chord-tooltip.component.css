@@ -7,7 +7,8 @@
     border: 1px solid #e5e7eb;
     min-width: 120px;
     pointer-events: none;
-    /* So it doesn't flicker */
+    /* Force LTR for all chord names and musical notation (fixes G# → #G RTL bug) */
+    direction: ltr;
 }
 
 .chord-name {
@@ -27,7 +28,8 @@
 
 .diagram {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .no-data {
@@ -35,10 +37,12 @@
     color: #6b7280;
     padding: 8px;
 }
+
 .bass-note-label {
     font-size: 0.7rem;
     font-weight: 700;
     color: #404040;
     margin-top: 4px;
+    text-align: center;
     letter-spacing: 0.03em;
 }

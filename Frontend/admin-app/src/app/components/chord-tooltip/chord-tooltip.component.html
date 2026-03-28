@@ -26,12 +26,14 @@
                 <text *ngIf="fret === -1" [attr.x]="10 + i*10" y="6" text-anchor="middle" font-size="8"
                     font-family="Arial">x</text>
 
-                <!-- Open (o) -->
-                <circle *ngIf="fret === 0" [attr.cx]="10 + i*10" cy="5" r="2" fill="none" stroke="black"
-                    stroke-width="1" />
+                <!-- Open (o) — filled yellow if this string is the bass note -->
+                <circle *ngIf="fret === 0" [attr.cx]="10 + i*10" cy="5" r="2"
+                    [attr.fill]="getBassStringIndex() === i ? '#ddff53' : 'none'"
+                    stroke="black" stroke-width="1" />
 
-                <!-- Finger (filled circle) -->
-                <circle *ngIf="fret > 0" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5" fill="#1a1a1a" />
+                <!-- Finger (filled circle) — yellow if this string is the bass note -->
+                <circle *ngIf="fret > 0" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5"
+                    [attr.fill]="getBassStringIndex() === i ? '#ddff53' : '#1a1a1a'" />
             </ng-container>
 
             <!-- Barres -->
@@ -40,9 +42,9 @@
                     [attr.y]="10 + barre.fret*12 - 9" [attr.width]="getBarreWidth(barre)" height="6" rx="3"
                     fill="#1a1a1a" opacity="0.2" />
             </ng-container>
-
         </svg>
-        <!-- Bass note label for slash chord fallback -->
+
+        <!-- Bass note label — centered below diagram -->
         <div *ngIf="parsedBass" class="bass-note-label">בס: {{ parsedBass }}</div>
     </div>
 
@@ -50,18 +52,26 @@
     <div *ngIf="pianoKeys" class="diagram piano">
         <svg [attr.viewBox]="'0 0 ' + pianoDisplayWidth + ' 60'" [attr.width]="pianoDisplayWidth" height="60">
             <!-- White Keys -->
-            <rect *ngFor="let key of pianoWhiteKeys; let i = index"
-                [attr.x]="i * 20" y="0" width="20" height="60"
-                stroke="black" stroke-width="1"
-                [attr.fill]="getPianoKeyFill(key.note, false)" />
+            <ng-container *ngFor="let key of pianoWhiteKeys; let i = index">
+                <rect [attr.x]="i * 20" y="0" width="20" height="60"
+                    stroke="black" stroke-width="1"
+                    [attr.fill]="getPianoKeyFill(key.note, false)" />
+                <!-- Bass note indicator: small dot at bottom of white key -->
+                <circle *ngIf="bassAbsoluteNote !== null && key.note === bassAbsoluteNote"
+                    [attr.cx]="i * 20 + 10" cy="53" r="3" fill="#000" />
+            </ng-container>
 
             <!-- Black Keys -->
             <ng-container *ngFor="let key of pianoBlackKeys">
                 <rect [attr.x]="key.x" y="0" width="12" height="35"
                     [attr.fill]="getPianoKeyFill(key.note, true)" />
+                <!-- Bass note indicator: small dot inside black key -->
+                <circle *ngIf="bassAbsoluteNote !== null && key.note === bassAbsoluteNote"
+                    [attr.cx]="key.x + 6" cy="29" r="2.5" fill="white" />
             </ng-container>
         </svg>
-        <!-- Bass note legend for slash chord fallback -->
+
+        <!-- Bass note label — centered below diagram -->
         <div *ngIf="parsedBass" class="bass-note-label">בס: {{ parsedBass }}</div>
     </div>
 

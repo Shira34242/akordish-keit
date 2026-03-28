@@ -351,8 +351,23 @@ export class ChordTooltipComponent implements OnChanges {
 
     getPianoKeyFill(note: number, isBlack: boolean): string {
         if (!this.isKeyActiveAbsolute(note)) return isBlack ? 'black' : 'white';
-        if (this.bassAbsoluteNote !== null && note === this.bassAbsoluteNote) return '#404040';
-        return '#ddff53';
+        return '#ddff53'; // all active notes (including bass) get accent yellow
+    }
+
+    /**
+     * Returns the string index (0=low E … 5=high e) that produces the bass note,
+     * or null if the bass note is not found in the current guitar voicing.
+     */
+    getBassStringIndex(): number | null {
+        if (!this.guitarChord || !this.parsedBass) return null;
+        const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+        if (bassSemitone < 0) return null;
+        const openStrings = [4, 9, 2, 7, 11, 4]; // E A D G B e
+        for (let i = 0; i < 6; i++) {
+            if (this.guitarChord.frets[i] < 0) continue; // muted
+            if ((openStrings[i] + this.guitarChord.frets[i]) % 12 === bassSemitone) return i;
+        }
+        return null;
     }
 
     // Helpers for Barre
