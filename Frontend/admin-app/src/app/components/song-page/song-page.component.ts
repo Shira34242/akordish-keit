@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SongService } from '../../services/song.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -83,27 +83,57 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     private scrollInterval: any = null;
 
     constructor(
-        private route: ActivatedRoute,  
+        private route: ActivatedRoute,
         private songService: SongService,
         private sanitizer: DomSanitizer,
-        private authService: AuthService, 
-        private router: Router,  
+        private authService: AuthService,
+        private router: Router,
+        private ngZone: NgZone,
     ) { }
 
-   ngOnInit(): void {
+    ngOnInit(): void {
         this.route.params.subscribe(params => {
             const id = params['id'];
             if (id) {
-                this.songId = +id; 
+                this.songId = +id;
                 this.loadSong(this.songId);
             }
+        });
+
+        // Native listener — guaranteed to fire in DOM bubble order, independent of Angular zone
+        this.ngZone.runOutsideAngular(() => {
+            document.addEventListener('click', this.nativeDocumentClick);
         });
     }
 
     ngOnDestroy() {
+        document.removeEventListener('click', this.nativeDocumentClick);
         this.stopAutoScroll();
         this.isAutoScroll = false;
     }
+
+    // Arrow function preserves `this` when used as a callback
+    private nativeDocumentClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        const isChord = target.classList.contains('chord-inline') ||
+                        target.classList.contains('chord-block');
+
+        if (isChord && !this.isMobileDevice()) {
+            const chord = target.innerText.trim();
+            const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+            this.ngZone.run(() => {
+                this.hoveredChord = null;
+                this.pinnedChord = chord;
+                this.pinnedPosition = { x: pos.x, y: pos.y };
+                this.pinnedAbove = pos.above;
+            });
+            return;
+        }
+
+        if (this.pinnedChord && !isChord) {
+            this.ngZone.run(() => { this.pinnedChord = null; });
+        }
+    };
 
     loadSong(id: number) {
         window.scrollTo(0, 0);
@@ -208,30 +238,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (this.isMobileDevice()) this.hoveredChord = null;
     }
 
-    /**
-     * Central click handler at document level.
-     * Checks the click target directly — no stopPropagation needed.
-     */
-    @HostListener('document:click', ['$event'])
-    onDocumentClick(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-
-        // Click on a chord element → pin it (desktop only)
-        if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
-            if (!this.isMobileDevice()) {
-                const chord = target.innerText.trim();
-                const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
-                this.hoveredChord = null;
-                this.pinnedChord = chord;
-                this.pinnedPosition = { x: pos.x, y: pos.y };
-                this.pinnedAbove = pos.above;
-            }
-            return;
-        }
-
-        // Any other click → close pin
-        if (this.pinnedChord) this.pinnedChord = null;
-    }
 
     /** Active chord for the single shared tooltip element */
     get activeTooltipChord(): string | null {
