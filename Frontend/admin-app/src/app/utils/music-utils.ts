@@ -217,7 +217,10 @@ function parseSuffix(s: string): { quality: ChordQuality; extensions: number[]; 
             continue;
         }
 
-        if (!matched) { s = s.slice(1); } // skip unknown character
+        if (!matched) {
+            if (/[a-zA-Z]/.test(s[0])) { quality = 'unknown'; break; } // unknown word → not a chord
+            s = s.slice(1); // skip unknown non-letter character
+        }
     }
 
     // Consolidate: minor + 7 in extensions → minor7; major + 7 → dominant
@@ -362,7 +365,11 @@ export function isChord(token: string = ''): boolean {
 // -------------------------------------------------------------------
 
 function tokenize(line: string): string[] {
-    return line ? line.trim().split(/[\s|]+/).filter(Boolean) : [];
+    if (!line) return [];
+    return line.trim()
+        .split(/[\s|]+/)
+        .filter(tok => tok !== '/' && !/^x\d+$/i.test(tok))
+        .filter(Boolean);
 }
 
 export function isChordLine(line: string): boolean {
@@ -381,7 +388,7 @@ export interface ParsedLine {
 
 export function parseConsecutiveChordLines(lines: string[]): ParsedLine[] {
     return lines.map(line => {
-        const tokens = line.trim().split(/\s+/).filter(tok => tok !== '|' && tok.trim() !== '');
+        const tokens = line.trim().split(/[\s|]+/).filter(tok => tok !== '/' && !/^x\d+$/i.test(tok)).filter(Boolean);
         if (tokens.length === 0) return { type: 'empty', content: '' };
         const isChords = tokens.every(tok => isChord(tok));
         return { type: isChords ? 'chords' : 'lyrics', content: line };
