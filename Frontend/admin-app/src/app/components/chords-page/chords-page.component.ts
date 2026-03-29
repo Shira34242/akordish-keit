@@ -65,6 +65,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     showArtistDropdown: boolean = false;
     showGenreDropdown: boolean = false;
     showKeyDropdown: boolean = false;
+    showSortDropdown: boolean = false;
 
     private searchSubject = new Subject<string>();
     private recentlyViewedKey = 'chords-recently-viewed';
@@ -405,6 +406,9 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.showArtistDropdown = false;
             this.showGenreDropdown = false;
             this.showKeyDropdown = false;
+        }
+        if (!target.closest('.sort-btn-wrap')) {
+            this.showSortDropdown = false;
         }
     }
 }

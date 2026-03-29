@@ -16,54 +16,114 @@
   <div class="hero-content-area">
     <div class="hero-content">
 
-      <h1 class="hero-title">עולם המוזיקה</h1>
-      <p class="hero-subtitle">מצא מורים, אולפנים, חנויות מוזיקה ובעלי מקצוע</p>
+      <h1 class="hero-title">אינדקס עולם המוזיקה</h1>
+      <p class="hero-subtitle">הבית הגדול והמוביל למציאת אנשי מקצוע ונותני שירות במוזיקה היהודית</p>
 
-      <!-- Tab Switcher -->
-      <div class="tabs-row">
-        <button class="tab-btn" [class.active]="activeTab === 'professionals'" (click)="setTab('professionals')">
-          בעלי מקצוע
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'teachers'" (click)="setTab('teachers')">
-          מורים
-        </button>
-      </div>
+      <!-- שורת חיפוש + פילטרים — סגנון אקורדים -->
+      <div class="search-row">
 
-      <!-- חיפוש -->
-      <div class="search-wrap">
-        <input type="text"
-               [placeholder]="activeTab === 'professionals' ? 'חפש שם, תחום או עיר...' : 'חפש שם מורה או כלי נגינה...'"
-               [(ngModel)]="searchTerm"
-               (keyup.enter)="onSearch()"
-               class="search-input">
-        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="m21 21-4.35-4.35"></path>
-        </svg>
-      </div>
+        <!-- פילטר קטגוריה — מימין לחיפוש -->
+        <div class="filter-btn-wrap filter-btn-category"
+             [class.filter-active]="topFilterValue !== 'all'"
+             (click)="showCategoryDropdown = !showCategoryDropdown">
+          <span class="filter-btn-label">קטגוריות</span>
+          <svg class="filter-btn-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+          <div class="filter-dropdown" *ngIf="showCategoryDropdown" (click)="$event.stopPropagation()">
+            <button class="filter-option" [class.active]="topFilterValue === 'all'"
+                    (click)="setTopFilter('all'); showCategoryDropdown = false">כל הקטגוריות</button>
+            <button class="filter-option" [class.active]="topFilterValue === 'teachers'"
+                    (click)="setTopFilter('teachers'); showCategoryDropdown = false">מורים</button>
+            <button class="filter-option" *ngFor="let cat of categories"
+                    [class.active]="topFilterValue === cat.id.toString()"
+                    (click)="setTopFilter(cat.id.toString()); showCategoryDropdown = false">{{ cat.name }}</button>
+          </div>
+        </div>
 
-      <!-- פילטרים — בעלי מקצוע -->
-      <div class="filters-row" *ngIf="activeTab === 'professionals'">
-        <select [(ngModel)]="selectedCityId" (change)="onSearch()" class="filter-pill">
-          <option [ngValue]="null">כל הערים</option>
-          <option *ngFor="let city of cities" [ngValue]="city.id">{{ city.name }}</option>
-        </select>
-        <select [(ngModel)]="selectedCategoryId" (change)="onSearch()" class="filter-pill">
-          <option [ngValue]="null">כל הקטגוריות</option>
-          <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
-        </select>
-      </div>
+        <!-- חיפוש — אחרי כפתור הקטגוריה -->
+        <div class="search-wrap">
+          <input type="text"
+                 [placeholder]="activeTab === 'professionals' ? 'חפש שם, תחום או עיר...' : 'חפש שם מורה או כלי נגינה...'"
+                 [(ngModel)]="searchTerm"
+                 (keyup.enter)="onSearch()"
+                 class="search-input">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </div>
 
-      <!-- פילטרים — מורים -->
-      <div class="filters-row" *ngIf="activeTab === 'teachers'">
-        <select [(ngModel)]="selectedCityId" (change)="onSearch()" class="filter-pill">
-          <option [ngValue]="null">כל הערים</option>
-          <option *ngFor="let city of cities" [ngValue]="city.id">{{ city.name }}</option>
-        </select>
-        <select [(ngModel)]="selectedInstrumentId" (change)="onSearch()" class="filter-pill">
-          <option [ngValue]="null">כל כלי הנגינה</option>
-          <option *ngFor="let instrument of instruments" [ngValue]="instrument.id">{{ instrument.name }}</option>
-        </select>
+        <!-- פילטר עיר -->
+        <div class="filter-btn-wrap"
+             [class.filter-active]="selectedCityId !== null"
+             (click)="showCityDropdown = !showCityDropdown">
+          <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <div class="filter-dropdown" *ngIf="showCityDropdown" (click)="$event.stopPropagation()">
+            <button class="filter-option" [class.active]="selectedCityId === null"
+                    (click)="selectedCityId = null; onSearch(); showCityDropdown = false">כל הערים</button>
+            <button class="filter-option" *ngFor="let city of cities"
+                    [class.active]="selectedCityId === city.id"
+                    (click)="selectedCityId = city.id; onSearch(); showCityDropdown = false">{{ city.name }}</button>
+          </div>
+        </div>
+
+        <!-- פילטרי מורים בלבד -->
+        <ng-container *ngIf="activeTab === 'teachers'">
+
+          <!-- כלי נגינה -->
+          <div class="filter-btn-wrap"
+               [class.filter-active]="selectedInstrumentId !== null"
+               (click)="showInstrumentDropdown = !showInstrumentDropdown">
+            <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+            </svg>
+            <div class="filter-dropdown" *ngIf="showInstrumentDropdown" (click)="$event.stopPropagation()">
+              <button class="filter-option" [class.active]="selectedInstrumentId === null"
+                      (click)="selectedInstrumentId = null; onSearch(); showInstrumentDropdown = false">כל כלי הנגינה</button>
+              <button class="filter-option" *ngFor="let instr of instruments"
+                      [class.active]="selectedInstrumentId === instr.id"
+                      (click)="selectedInstrumentId = instr.id; onSearch(); showInstrumentDropdown = false">{{ instr.name }}</button>
+            </div>
+          </div>
+
+          <!-- שפת הוראה -->
+          <div class="filter-btn-wrap"
+               [class.filter-active]="selectedLanguage !== null"
+               (click)="showLanguageDropdown = !showLanguageDropdown">
+            <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
+            </svg>
+            <div class="filter-dropdown" *ngIf="showLanguageDropdown" (click)="$event.stopPropagation()">
+              <button class="filter-option" [class.active]="selectedLanguage === null"
+                      (click)="selectedLanguage = null; onSearch(); showLanguageDropdown = false">כל השפות</button>
+              <button class="filter-option" *ngFor="let opt of languageOptions"
+                      [class.active]="selectedLanguage === opt.value"
+                      (click)="selectedLanguage = opt.value; onSearch(); showLanguageDropdown = false">{{ opt.label }}</button>
+            </div>
+          </div>
+
+          <!-- קהל יעד -->
+          <div class="filter-btn-wrap"
+               [class.filter-active]="selectedTargetAudience !== null"
+               (click)="showAudienceDropdown = !showAudienceDropdown">
+            <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <div class="filter-dropdown" *ngIf="showAudienceDropdown" (click)="$event.stopPropagation()">
+              <button class="filter-option" [class.active]="selectedTargetAudience === null"
+                      (click)="selectedTargetAudience = null; onSearch(); showAudienceDropdown = false">כל קהלי היעד</button>
+              <button class="filter-option" *ngFor="let opt of targetAudienceOptions"
+                      [class.active]="selectedTargetAudience === opt.value"
+                      (click)="selectedTargetAudience = opt.value; onSearch(); showAudienceDropdown = false">{{ opt.label }}</button>
+            </div>
+          </div>
+
+        </ng-container>
+
       </div>
 
       <!-- ניקוי -->
@@ -77,6 +137,17 @@
       </div>
 
     </div>
+
+    <!-- לחצן הצטרפות — פינה שמאלית-תחתונה בתוך ה-hero -->
+    <button class="btn-join-index"
+            *ngIf="authService.isLoggedIn"
+            (click)="openBecomeProfessionalForm()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      להצטרפות
+    </button>
+
   </div>
 
 
@@ -103,8 +174,8 @@
   <div *ngIf="(activeTab === 'professionals' && !loading) || (activeTab === 'teachers' && !loadingTeachers)"
        class="professionals-content">
 
-    <!-- Quick Categories / Instruments + Become button -->
-    <div class="quick-categories-row">
+    <!-- Quick Categories / Instruments — שורה נגללת של ריבועים -->
+    <div class="quick-categories-strip">
 
       <!-- בעלי מקצוע: quick categories -->
       <div class="quick-categories" *ngIf="activeTab === 'professionals'">
@@ -124,33 +195,7 @@
         </button>
       </div>
 
-      <!-- Become button -->
-      <button *ngIf="authService.isLoggedIn && activeTab === 'professionals'"
-              class="btn-become-pro"
-              (click)="openBecomeProfessionalForm()">
-        <span class="material-icons">add</span>
-        הצטרף כבעל מקצוע
-      </button>
-      <button *ngIf="authService.isLoggedIn && activeTab === 'teachers'"
-              class="btn-become-pro"
-              (click)="openBecomeTeacherForm()">
-        <span class="material-icons">school</span>
-        השתדרג למורה
-      </button>
     </div>
-
-    <!-- פילטרים מתקדמים — מורים (קהל יעד + שפה) -->
-    <div class="teacher-advanced-filters" *ngIf="activeTab === 'teachers'">
-      <select [(ngModel)]="selectedTargetAudience" (change)="onSearch()" class="filter-pill filter-pill--light">
-        <option [ngValue]="null">כל קהלי היעד</option>
-        <option *ngFor="let option of targetAudienceOptions" [ngValue]="option.value">{{ option.label }}</option>
-      </select>
-      <select [(ngModel)]="selectedLanguage" (change)="onSearch()" class="filter-pill filter-pill--light">
-        <option [ngValue]="null">כל שפות ההוראה</option>
-        <option *ngFor="let option of languageOptions" [ngValue]="option.value">{{ option.label }}</option>
-      </select>
-    </div>
-
 
     <!-- ════════════════════
          TAB: בעלי מקצוע
@@ -205,6 +250,30 @@
                 <div class="prof-card-meta" *ngIf="p.cityId">
                   <span class="material-icons">location_on</span>
                   {{ getCityName(p.cityId) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- מורים מובילים -->
+        <div class="section" *ngIf="featuredTeachers.length > 0">
+          <div class="section-header">
+            <span class="section-tag section-tag--accent">מורים מובילים</span>
+            <button class="btn-show-all" (click)="setTopFilter('teachers')">הצג הכל ›</button>
+          </div>
+          <div class="professionals-strip">
+            <div class="prof-card" *ngFor="let t of featuredTeachers" (click)="viewTeacher(t.id)">
+              <div class="prof-card-img">
+                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
+              </div>
+              <div class="prof-card-body">
+                <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
+                <h3 class="prof-card-name">{{ t.displayName }}</h3>
+                <div class="prof-card-meta" *ngIf="t.cityId">
+                  <span class="material-icons">location_on</span>
+                  {{ getCityName(t.cityId) }}
                 </div>
               </div>
             </div>
@@ -282,11 +351,11 @@
 
       </div>
 
-      <!-- Catalog -->
-      <div class="catalog-section" *ngIf="!isFiltered && additionalProfessionals.length > 0">
+      <!-- Catalog — כל בעלי המוזיקה (מורים + בעלי מקצוע) -->
+      <div class="catalog-section" *ngIf="!isFiltered && (additionalProfessionals.length > 0 || additionalTeachers.length > 0)">
         <div class="section-header">
-          <span class="section-tag section-tag--secondary">כל בעלי המקצוע</span>
-          <span class="total-badge">{{ additionalProfessionals.length }}</span>
+          <span class="section-tag section-tag--secondary">כל בעלי המוזיקה</span>
+          <span class="total-badge">{{ additionalProfessionals.length + additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
           <div class="prof-card" *ngFor="let p of additionalProfessionals" (click)="viewProfessional(p.id)">
@@ -299,6 +368,19 @@
               <div class="prof-card-meta" *ngIf="p.cityId">
                 <span class="material-icons">location_on</span>
                 {{ getCityName(p.cityId) }}
+              </div>
+            </div>
+          </div>
+          <div class="prof-card" *ngFor="let t of additionalTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card-img">
+              <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
+              <h3 class="prof-card-name">{{ t.displayName }}</h3>
+              <div class="prof-card-meta" *ngIf="t.cityId">
+                <span class="material-icons">location_on</span>
+                {{ getCityName(t.cityId) }}
               </div>
             </div>
           </div>

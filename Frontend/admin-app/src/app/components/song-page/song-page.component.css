@@ -769,28 +769,66 @@
         font-size: var(--font-base);
     }
 
+    /* toolbar — ננעל מתחת לכותרת (לא עליה) */
     .sticky-toolbar {
+        top: 72px;
+        z-index: 896;
+        background: #ddff53;
+        border-radius: 18px;
+        padding: var(--space-xs) var(--space-sm);
+        margin: 0 var(--space-sm);
+        max-width: calc(100% - var(--space-lg));
+        overflow: hidden;
         grid-template-columns: 1fr;
-        padding: 0 var(--space-md);
-        top: 12px;
     }
 
     .toolbar-content {
-        padding: var(--space-md) var(--space-md);
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: var(--space-sm);
+        padding: 0;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: transparent;
     }
 
-    /* Hide some dividers on mobile for cleaner look */
+    .toolbar-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* קבוצות — רקע כהה-שקוף על הצהוב */
+    .instrument-group {
+        flex: 0 0 auto;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .controls-group {
+        flex: 0 0 auto;
+        justify-content: flex-start;
+        background: rgba(0, 0, 0, 0.1);
+        overflow-x: visible;
+    }
+
+    /* Hide dividers */
     .toolbar-divider {
         display: none;
     }
 
     .toolbar-btn {
+        width: 32px;
         min-width: 32px;
         height: 32px;
-        padding: 0 var(--space-sm);
+        flex-shrink: 0;
+        border-radius: 50%;
+    }
+
+    .toolbar-btn.btn-text {
+        width: auto;
+        min-width: auto;
+        height: 32px;
+        border-radius: 100px;
     }
 
     .toolbar-btn svg {
@@ -798,13 +836,13 @@
         height: 18px;
     }
 
-    /* Make text buttons more compact */
+    /* לחצני טקסט */
     .btn-text {
         padding: 0 var(--space-sm);
         font-size: var(--font-xs);
     }
 
-    /* הסתרת "סולם: " — מציגים רק את שם הסולם (C, D, וכד') */
+    /* הסתרת "סולם: " */
     .key-prefix-text {
         display: none;
     }
@@ -814,9 +852,9 @@
         display: none;
     }
 
-    /* Easy mode button - shorter text on mobile */
     .btn-easy {
         font-size: var(--font-xs);
+        padding: 0 var(--space-sm);
     }
 
     .btn-easy svg {
@@ -825,7 +863,6 @@
         margin-left: 2px;
     }
 
-    /* Transpose group - make it more compact */
     .transpose-group {
         gap: 2px;
     }
@@ -835,19 +872,16 @@
         width: 24px;
     }
 
-    /* Auto scroll controls */
     .autoscroll-controls {
         display: flex;
         gap: var(--space-xs);
     }
 
     .toolbar-btn-sm {
+        width: 28px;
         min-width: 28px;
         height: 28px;
-    }
-
-    .scroll-speed-display {
-        font-size: var(--font-xs);
+        border-radius: 50%;
     }
 
     .main-layout {
@@ -928,53 +962,21 @@
         height: 17px;
     }
 
-    /* toolbar — מתחת לheader, רקע צהוב, גלילה אופקית אחידה */
+    /* toolbar — מרווח צמוד יותר בנייד */
     .sticky-toolbar {
-        top: 72px;
-        z-index: 896;
-        background: #ddff53;
-        border-radius: 18px;
-        padding: var(--space-xs) var(--space-sm);
         margin: 0 4px;
         max-width: calc(100% - 8px);
-        overflow: hidden;
     }
 
-    /* toolbar-content — גלילה אחידה על כל הרוחב */
-    .toolbar-content {
-        padding: 0;
-        gap: 6px;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        justify-content: flex-start;
-        align-items: center;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        background: transparent;
-    }
-
-    .toolbar-content::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* instrument-group — גלילה ביחד עם שאר ה-toolbar */
+    /* קבוצות — קומפקטיות יותר */
     .instrument-group {
-        flex: 0 0 auto;
         padding: 3px 4px;
         gap: 1px;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 100px;
     }
 
-    /* controls-group — גלילה ביחד, ללא גלילה פנימית */
     .controls-group {
-        flex: 0 0 auto;
         padding: 3px 10px;
         gap: 6px;
-        justify-content: flex-start;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 100px;
-        overflow-x: visible;
     }
 
     /* לחצנים — עיגול, 28px */
@@ -982,16 +984,10 @@
         width: 28px;
         height: 28px;
         min-width: 28px;
-        flex-shrink: 0;
-        border-radius: 50%;
     }
 
-    /* לחצני טקסט (pill) — לא עיגול */
     .toolbar-btn.btn-text {
-        width: auto;
-        min-width: auto;
         height: 28px;
-        border-radius: 100px;
     }
 
     .toolbar-btn svg {
@@ -999,25 +995,18 @@
         height: 16px;
     }
 
-    /* הסתרת תצוגת סולם ומפרידים */
-    .current-key-label,
-    .toolbar-divider {
-        display: none;
-    }
-
-    /* קבוצת טרנספוז — gap צמוד */
+    /* קבוצת טרנספוז */
     .transpose-group {
         gap: 1px;
     }
 
-    /* ערך טרנספוזיציה */
     .transpose-val {
         font-size: var(--font-xs);
         width: 16px;
         flex: none;
     }
 
-    /* A- ו-A+ צמודים יחד */
+    /* A- ו-A+ */
     .font-size-group {
         display: flex;
         align-items: center;
@@ -1025,11 +1014,10 @@
         flex-shrink: 0;
     }
 
-    /* לחצני טקסט (A-, A+, גרסה קלה) */
+    /* לחצני טקסט */
     .btn-text {
         padding: 0 8px;
         font-size: 11px;
-        white-space: nowrap;
     }
 
     /* כפתור גלילה — אייקון בלבד */
@@ -1049,7 +1037,6 @@
     }
 
     .btn-easy {
-        white-space: nowrap;
         font-size: 11px;
         padding: 0 10px;
     }
@@ -1059,8 +1046,6 @@
         width: 28px;
         height: 28px;
         min-width: 28px;
-        flex-shrink: 0;
-        border-radius: 50%;
     }
 
     .main-layout {

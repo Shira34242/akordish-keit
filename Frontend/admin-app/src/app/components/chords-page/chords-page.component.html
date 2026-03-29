@@ -20,82 +20,35 @@
             <h1 class="hero-title">אקורדים</h1>
             <p class="hero-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
 
-            <!-- שדה חיפוש -->
-            <div class="search-wrap">
-                <input type="text"
-                       placeholder="חפש שיר, אמן או מילים..."
-                       [ngModel]="search"
-                       (input)="onSearch($event)"
-                       class="search-input">
-                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-            </div>
-
-            <!-- שורת פילטרים ומיון -->
-            <div class="filters-row">
-
-                <!-- אמן -->
-                <div class="filter-autocomplete">
+            <!-- שדה חיפוש + כפתור מיון -->
+            <div class="search-row">
+                <div class="search-wrap">
                     <input type="text"
-                           placeholder="כל האמנים"
-                           [(ngModel)]="artistSearchText"
-                           (input)="onArtistSearch($event)"
-                           (focus)="showArtistDropdown = true"
-                           class="filter-input">
-                    <span class="dropdown-arrow">▾</span>
-                    <div class="autocomplete-dropdown" *ngIf="showArtistDropdown && filteredArtists.length > 0">
-                        <div class="autocomplete-item" (click)="selectArtist(null)">כל האמנים</div>
-                        <div class="autocomplete-item"
-                             *ngFor="let artist of filteredArtists"
-                             (click)="selectArtist(artist)">{{ artist.name }}</div>
+                           placeholder="חפש שיר, אמן או מילים..."
+                           [ngModel]="search"
+                           (input)="onSearch($event)"
+                           class="search-input">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+
+                <!-- כפתור מיון — מוצג רק בתוצאות חיפוש -->
+                <div class="sort-btn-wrap" *ngIf="isFiltered" (click)="showSortDropdown = !showSortDropdown">
+                    <svg class="sort-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M3 6h18M7 12h10M11 18h2"/>
+                    </svg>
+                    <!-- תפריט מיון מותאם -->
+                    <div class="sort-dropdown" *ngIf="showSortDropdown" (click)="$event.stopPropagation()">
+                        <button class="sort-option" [class.active]="sortBy === 'date'"
+                                (click)="sortBy = 'date'; onFilterChange(); showSortDropdown = false">חדש → ישן</button>
+                        <button class="sort-option" [class.active]="sortBy === 'views'"
+                                (click)="sortBy = 'views'; onFilterChange(); showSortDropdown = false">הכי נצפה</button>
+                        <button class="sort-option" [class.active]="sortBy === 'name'"
+                                (click)="sortBy = 'name'; onFilterChange(); showSortDropdown = false">א–ת</button>
                     </div>
                 </div>
-
-                <!-- סגנון -->
-                <div class="filter-autocomplete">
-                    <input type="text"
-                           placeholder="כל הסגנונות"
-                           [(ngModel)]="genreSearchText"
-                           (input)="onGenreSearch($event)"
-                           (focus)="showGenreDropdown = true"
-                           class="filter-input">
-                    <span class="dropdown-arrow">▾</span>
-                    <div class="autocomplete-dropdown" *ngIf="showGenreDropdown && filteredGenres.length > 0">
-                        <div class="autocomplete-item" (click)="selectGenre(null)">כל הסגנונות</div>
-                        <div class="autocomplete-item"
-                             *ngFor="let genre of filteredGenres"
-                             (click)="selectGenre(genre)">{{ genre.name }}</div>
-                    </div>
-                </div>
-
-                <!-- סולם -->
-                <div class="filter-autocomplete">
-                    <input type="text"
-                           placeholder="כל הסולמות"
-                           [(ngModel)]="keySearchText"
-                           (input)="onKeySearch($event)"
-                           (focus)="showKeyDropdown = true"
-                           class="filter-input">
-                    <span class="dropdown-arrow">▾</span>
-                    <div class="autocomplete-dropdown" *ngIf="showKeyDropdown && filteredKeys.length > 0">
-                        <div class="autocomplete-item" (click)="selectKey(null)">כל הסולמות</div>
-                        <div class="autocomplete-item"
-                             *ngFor="let key of filteredKeys"
-                             (click)="selectKey(key)">{{ key.displayName }}</div>
-                    </div>
-                </div>
-
-                <!-- מיון -->
-                <div class="filter-autocomplete">
-                    <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-input filter-select">
-                        <option value="date">הכי חדש</option>
-                        <option value="views">הכי נצפה</option>
-                        <option value="name">א–ת</option>
-                    </select>
-                </div>
-
             </div>
 
             <!-- ניקוי סינונים -->
