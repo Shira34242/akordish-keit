@@ -310,6 +310,7 @@
                 [style.transform]="activeTooltipAbove ? 'translate(-50%, -110%)' : 'translate(-50%, 0)'"
                 [style.zIndex]="1000"
                 [style.pointer-events]="pinnedChord ? 'auto' : 'none'"
+                (playBtnHoverChange)="handlePlayBtnHover($event)"
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>

@@ -71,3 +71,42 @@
     text-align: center;
     letter-spacing: 0.03em;
 }
+
+.play-chord-btn {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: auto;
+    height: 24px;
+    padding: 0 10px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    direction: rtl;
+    white-space: nowrap;
+}
+
+.play-chord-btn:hover {
+    background: #ddff53;
+    border-color: #000;
+    color: #000;
+}
+
+.play-chord-btn.playing {
+    background: #ddff53;
+    border-color: #000;
+    color: #000;
+}
+
+.play-chord-label {
+    font-size: 0.65rem;
+    font-weight: 400;
+    font-family: "Open Sans", sans-serif;
+    line-height: 1;
+}

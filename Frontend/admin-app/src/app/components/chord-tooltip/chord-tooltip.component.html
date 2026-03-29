@@ -86,4 +86,26 @@
     <div *ngIf="!guitarChord && !pianoKeys" class="no-data">
         אין תרשים זמין עבור {{ chordName }}
     </div>
+
+    <!-- כפתור ניגון — מוצג תמיד כשיש תרשים -->
+    <button
+        *ngIf="guitarChord || pianoKeys"
+        class="play-chord-btn"
+        [class.playing]="isPlaying"
+        (click)="playChord($event)"
+        (mouseenter)="playBtnHoverChange.emit(true)"
+        (mouseleave)="playBtnHoverChange.emit(false)"
+        title="נגן אקורד">
+        <!-- אייקון רמקול -->
+        <svg *ngIf="!isPlaying" viewBox="0 0 24 24" width="13" height="13" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="m15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <!-- אייקון עצירה -->
+        <svg *ngIf="isPlaying" viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+            <rect x="4" y="4" width="5" height="16"/><rect x="15" y="4" width="5" height="16"/>
+        </svg>
+        <span class="play-chord-label">{{ isPlaying ? 'מנגן...' : 'להשמעת האקורד' }}</span>
+    </button>
 </div>

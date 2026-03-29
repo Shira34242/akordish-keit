@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { GUITAR_CHORDS, PIANO_CHORDS, GuitarChord } from '../../utils/chord-data';
 import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
+import { ChordPlayerService } from '../../services/chord-player.service';
 
 @Component({
     selector: 'app-chord-tooltip',
@@ -15,6 +16,35 @@ export class ChordTooltipComponent implements OnChanges {
     @Input() instrument: 'guitar' | 'piano' = 'guitar';
     @Input() isPinned: boolean = false;
     @Output() closePinned = new EventEmitter<void>();
+    @Output() playBtnHoverChange = new EventEmitter<boolean>();
+
+    isPlaying = false;
+    private playTimer: any = null;
+
+    constructor(private chordPlayer: ChordPlayerService) {}
+
+    async playChord(event: Event): Promise<void> {
+        event.stopPropagation();
+        if (this.isPlaying) {
+            this.chordPlayer.stopAll();
+            this.isPlaying = false;
+            clearTimeout(this.playTimer);
+            return;
+        }
+
+        this.isPlaying = true;
+        clearTimeout(this.playTimer);
+
+        if (this.instrument === 'guitar' && this.guitarChord) {
+            await this.chordPlayer.playGuitar(this.guitarChord.frets);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 1500);
+        } else if (this.instrument !== 'guitar' && this.pianoKeys) {
+            await this.chordPlayer.playPiano(this.activeAbsoluteNotes, this.bassAbsoluteNote);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 2500);
+        } else {
+            this.isPlaying = false;
+        }
+    }
 
     guitarChord: GuitarChord | null = null;
     pianoKeys: number[] | null = null;

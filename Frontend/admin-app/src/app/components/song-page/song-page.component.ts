@@ -65,6 +65,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     pinnedPosition: { x: number, y: number } = { x: 0, y: 0 };
     pinnedAbove: boolean = true;
 
+    // Tooltip hover-sticky state
+    tooltipHovered = false;
+    private tooltipCloseTimer: any = null;
+
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
@@ -132,6 +136,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         if (this.pinnedChord && !isChord) {
             this.ngZone.run(() => { this.pinnedChord = null; });
+        }
+
+        // מובייל — סגור טולטיפ hover כשלוחצים על אזור שאינו אקורד
+        if (this.isMobileDevice() && !isChord && this.hoveredChord) {
+            this.ngZone.run(() => { this.hoveredChord = null; });
         }
     };
 
@@ -461,21 +470,36 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     handleLyricsMouseOver(event: MouseEvent) {
-        if (this.pinnedChord) return; // hover suppressed while pinned
+        if (this.pinnedChord) return;
         const target = event.target as HTMLElement;
         if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
+            clearTimeout(this.tooltipCloseTimer);
             this.hoveredChord = target.innerText.trim();
             const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
             this.tooltipPosition = { x: pos.x, y: pos.y };
             this.tooltipAbove = pos.above;
-        } else {
-            this.hoveredChord = null;
         }
+        // אין else — הטולטיפ נשאר פתוח כשנעים בתוך אזור המילים
+        // סגירה מתרחשת רק כשעוזבים את אזור המילים (handleLyricsLeave)
     }
 
     handleLyricsLeave() {
-        if (this.pinnedChord) return; // don't close while pinned
-        this.hoveredChord = null;
+        if (this.pinnedChord) return;
+        if (this.isMobileDevice()) return; // מובייל — סגירה רק מלחיצה/גלילה, לא מ-mouseleave מדומה
+        clearTimeout(this.tooltipCloseTimer);
+        this.tooltipCloseTimer = setTimeout(() => {
+            if (!this.tooltipHovered) this.hoveredChord = null;
+        }, 400);
+    }
+
+    /** נקרא כשהעכבר נכנס/יוצא מכפתור ההשמעה (שיש לו pointer-events: auto) */
+    handlePlayBtnHover(hovered: boolean) {
+        this.tooltipHovered = hovered;
+        if (hovered) {
+            clearTimeout(this.tooltipCloseTimer);
+        } else if (!this.pinnedChord) {
+            this.hoveredChord = null;
+        }
     }
 
     // Mobile only: tap toggles hover tooltip (desktop pin is handled by onDocumentClick)
