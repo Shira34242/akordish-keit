@@ -1,3 +1,10 @@
+export interface UkuleleChord {
+    frets: number[]; // 4 strings: G, C, E, A. -1 for mute, 0 for open.
+    fingers?: number[];
+    barres?: { fret: number, fromString: number, toString: number }[];
+    baseFret?: number;
+}
+
 export interface GuitarChord {
     frets: number[]; // 6 strings, from low E to high E. -1 for mute, 0 for open.
     fingers?: number[]; // 0 for open/mute, 1-4 for fingers
@@ -387,4 +394,143 @@ export const PIANO_CHORDS: { [key: string]: number[] } = {
     'G/B':  [11, 7, 2],  // B D G
     'A/C#': [1, 9, 4],   // C# E A
     'E/G#': [8, 4, 11],  // G# B E
+};
+
+// Ukulele chord database — standard GCEA tuning (G4=67, C4=60, E4=64, A4=69)
+// Fret arrays: [G string, C string, E string, A string]
+export const UKULELE_CHORDS: { [key: string]: UkuleleChord } = {
+    // ============ C CHORDS ============
+    'C':     { frets: [0, 0, 0, 3] },
+    'Cm':    { frets: [0, 3, 3, 3], barres: [{ fret: 3, fromString: 1, toString: 3 }] },
+    'C7':    { frets: [0, 0, 0, 1] },
+    'Cmaj7': { frets: [0, 0, 0, 2] },
+    'Cm7':   { frets: [3, 3, 3, 3], barres: [{ fret: 3, fromString: 0, toString: 3 }] },
+    'Cdim':  { frets: [2, 3, 2, 3] },
+    'Caug':  { frets: [1, 0, 0, 3] },
+    'Csus2': { frets: [0, 2, 0, 3] },
+    'Csus4': { frets: [0, 0, 1, 3] },
+    'C6':    { frets: [0, 0, 0, 0] },
+
+    // ============ C# / Db CHORDS ============
+    'C#':    { frets: [1, 1, 1, 4], barres: [{ fret: 1, fromString: 0, toString: 2 }] },
+    'Db':    { frets: [1, 1, 1, 4], barres: [{ fret: 1, fromString: 0, toString: 2 }] },
+    'C#m':   { frets: [1, 4, 4, 4], barres: [{ fret: 4, fromString: 1, toString: 3 }] },
+    'Dbm':   { frets: [1, 4, 4, 4], barres: [{ fret: 4, fromString: 1, toString: 3 }] },
+    'C#7':   { frets: [1, 1, 1, 2], barres: [{ fret: 1, fromString: 0, toString: 2 }] },
+    'Db7':   { frets: [1, 1, 1, 2], barres: [{ fret: 1, fromString: 0, toString: 2 }] },
+    'C#maj7':{ frets: [1, 1, 1, 3] },
+    'Dbmaj7':{ frets: [1, 1, 1, 3] },
+
+    // ============ D CHORDS ============
+    'D':     { frets: [2, 2, 2, 0] },
+    'Dm':    { frets: [2, 2, 1, 0] },
+    'D7':    { frets: [2, 2, 2, 3] },
+    'Dmaj7': { frets: [2, 2, 2, 4] },
+    'Dm7':   { frets: [2, 2, 1, 3] },
+    'Ddim':  { frets: [1, 2, 1, 2] },
+    'Daug':  { frets: [2, 1, 2, 1] },
+    'Dsus2': { frets: [2, 2, 0, 0] },
+    'Dsus4': { frets: [0, 2, 3, 0] },
+    'D6':    { frets: [2, 2, 2, 2], barres: [{ fret: 2, fromString: 0, toString: 3 }] },
+
+    // ============ D# / Eb CHORDS ============
+    'D#':    { frets: [3, 3, 3, 1], barres: [{ fret: 3, fromString: 0, toString: 2 }] },
+    'Eb':    { frets: [3, 3, 3, 1], barres: [{ fret: 3, fromString: 0, toString: 2 }] },
+    'D#m':   { frets: [3, 3, 2, 1] },
+    'Ebm':   { frets: [3, 3, 2, 1] },
+    'D#7':   { frets: [3, 3, 3, 4] },
+    'Eb7':   { frets: [3, 3, 3, 4] },
+    'D#maj7':{ frets: [3, 3, 3, 5] },
+    'Ebmaj7':{ frets: [3, 3, 3, 5] },
+
+    // ============ E CHORDS ============
+    'E':     { frets: [1, 4, 0, 2] },
+    'Em':    { frets: [0, 4, 3, 2] },
+    'E7':    { frets: [1, 2, 0, 2] },
+    'Emaj7': { frets: [1, 3, 0, 2] },
+    'Em7':   { frets: [0, 2, 0, 2] },
+    'Edim':  { frets: [0, 1, 0, 1] },
+    'Eaug':  { frets: [1, 0, 0, 3] },
+    'Esus4': { frets: [2, 4, 0, 2] },
+
+    // ============ F CHORDS ============
+    'F':     { frets: [2, 0, 1, 0] },
+    'Fm':    { frets: [1, 0, 1, 3] },
+    'F7':    { frets: [2, 3, 1, 3] },
+    'Fmaj7': { frets: [2, 4, 1, 0] },
+    'Fm7':   { frets: [1, 3, 1, 3] },
+    'Fdim':  { frets: [1, 2, 1, 2] },
+    'Faug':  { frets: [2, 1, 1, 0] },
+    'Fsus2': { frets: [0, 0, 1, 3] },
+    'Fsus4': { frets: [3, 0, 1, 1] },
+
+    // ============ F# / Gb CHORDS ============
+    'F#':    { frets: [3, 1, 2, 1], barres: [{ fret: 1, fromString: 1, toString: 3 }] },
+    'Gb':    { frets: [3, 1, 2, 1], barres: [{ fret: 1, fromString: 1, toString: 3 }] },
+    'F#m':   { frets: [2, 1, 2, 0] },
+    'Gbm':   { frets: [2, 1, 2, 0] },
+    'F#7':   { frets: [3, 4, 2, 4] },
+    'Gb7':   { frets: [3, 4, 2, 4] },
+    'F#maj7':{ frets: [3, 3, 2, 1] },
+    'Gbmaj7':{ frets: [3, 3, 2, 1] },
+    'F#m7':  { frets: [2, 4, 2, 4] },
+    'Gbm7':  { frets: [2, 4, 2, 4] },
+
+    // ============ G CHORDS ============
+    'G':     { frets: [0, 2, 3, 2] },
+    'Gm':    { frets: [0, 2, 3, 1] },
+    'G7':    { frets: [0, 2, 1, 2] },
+    'Gmaj7': { frets: [0, 2, 2, 2] },
+    'Gm7':   { frets: [0, 2, 1, 1] },
+    'Gdim':  { frets: [0, 1, 0, 1] },
+    'Gaug':  { frets: [0, 3, 3, 2] },
+    'Gsus2': { frets: [0, 2, 3, 0] },
+    'Gsus4': { frets: [0, 2, 3, 3] },
+    'G6':    { frets: [0, 2, 0, 2] },
+
+    // ============ G# / Ab CHORDS ============
+    'G#':    { frets: [5, 3, 4, 3], barres: [{ fret: 3, fromString: 1, toString: 3 }] },
+    'Ab':    { frets: [5, 3, 4, 3], barres: [{ fret: 3, fromString: 1, toString: 3 }] },
+    'G#m':   { frets: [4, 3, 4, 2] },
+    'Abm':   { frets: [4, 3, 4, 2] },
+    'G#7':   { frets: [1, 3, 2, 3] },
+    'Ab7':   { frets: [1, 3, 2, 3] },
+    'G#maj7':{ frets: [1, 3, 3, 3] },
+    'Abmaj7':{ frets: [1, 3, 3, 3] },
+    'G#m7':  { frets: [1, 3, 2, 2] },
+    'Abm7':  { frets: [1, 3, 2, 2] },
+
+    // ============ A CHORDS ============
+    'A':     { frets: [2, 1, 0, 0] },
+    'Am':    { frets: [2, 0, 0, 0] },
+    'A7':    { frets: [0, 1, 0, 0] },
+    'Amaj7': { frets: [1, 1, 0, 0] },
+    'Am7':   { frets: [0, 0, 0, 0] },
+    'Adim':  { frets: [2, 3, 2, 3] },
+    'Aaug':  { frets: [2, 1, 1, 0] },
+    'Asus2': { frets: [2, 4, 0, 0] },
+    'Asus4': { frets: [2, 2, 0, 0] },
+    'A6':    { frets: [2, 4, 2, 4] },
+
+    // ============ A# / Bb CHORDS ============
+    'A#':    { frets: [3, 2, 1, 1], barres: [{ fret: 1, fromString: 2, toString: 3 }] },
+    'Bb':    { frets: [3, 2, 1, 1], barres: [{ fret: 1, fromString: 2, toString: 3 }] },
+    'A#m':   { frets: [3, 1, 1, 1], barres: [{ fret: 1, fromString: 1, toString: 3 }] },
+    'Bbm':   { frets: [3, 1, 1, 1], barres: [{ fret: 1, fromString: 1, toString: 3 }] },
+    'A#7':   { frets: [1, 2, 1, 1], barres: [{ fret: 1, fromString: 0, toString: 3 }] },
+    'Bb7':   { frets: [1, 2, 1, 1], barres: [{ fret: 1, fromString: 0, toString: 3 }] },
+    'A#maj7':{ frets: [3, 2, 1, 0] },
+    'Bbmaj7':{ frets: [3, 2, 1, 0] },
+    'A#m7':  { frets: [1, 1, 1, 1], barres: [{ fret: 1, fromString: 0, toString: 3 }] },
+    'Bbm7':  { frets: [1, 1, 1, 1], barres: [{ fret: 1, fromString: 0, toString: 3 }] },
+
+    // ============ B CHORDS ============
+    'B':     { frets: [4, 3, 2, 2] },
+    'Bm':    { frets: [4, 2, 2, 2], barres: [{ fret: 2, fromString: 1, toString: 3 }] },
+    'B7':    { frets: [2, 3, 2, 2] },
+    'Bmaj7': { frets: [3, 3, 2, 2] },
+    'Bm7':   { frets: [2, 2, 2, 2], barres: [{ fret: 2, fromString: 0, toString: 3 }] },
+    'Bdim':  { frets: [0, 1, 0, 1] },
+    'Baug':  { frets: [0, 3, 3, 2] },
+    'Bsus4': { frets: [4, 4, 2, 2] },
 };

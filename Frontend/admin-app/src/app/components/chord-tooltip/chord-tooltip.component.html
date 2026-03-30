@@ -83,13 +83,69 @@
         <div *ngIf="parsedBass" class="bass-note-label">בס: {{ parsedBass }}</div>
     </div>
 
-    <div *ngIf="!guitarChord && !pianoKeys" class="no-data">
+    <!-- Ukulele Diagram (4 strings: G C E A) -->
+    <div *ngIf="ukuleleChord" class="diagram ukulele">
+        <svg viewBox="0 0 56 80" width="90" height="120">
+            <!-- Nut -->
+            <line x1="10" y1="10" x2="52" y2="10" stroke="black" stroke-width="2" />
+
+            <!-- Frets -->
+            <line *ngFor="let i of [1,2,3,4,5]"
+                [attr.x1]="10" [attr.y1]="10 + i*12"
+                [attr.x2]="52" [attr.y2]="10 + i*12"
+                stroke="#999" stroke-width="1" />
+
+            <!-- Strings (4) -->
+            <line *ngFor="let i of [0,1,2,3]"
+                [attr.x1]="getUkuStringX(i)" y1="10"
+                [attr.x2]="getUkuStringX(i)" y2="70"
+                stroke="black" stroke-width="1" />
+
+            <!-- Tuning labels G C E A -->
+            <text *ngFor="let label of ['G','C','E','A']; let i = index"
+                [attr.x]="getUkuStringX(i)" y="78"
+                text-anchor="middle" font-size="6" font-family="Arial" fill="#555">{{ label }}</text>
+
+            <!-- Mute/Open/Finger per string -->
+            <ng-container *ngFor="let fret of ukuleleChord.frets; let i = index">
+                <text *ngIf="fret === -1"
+                    [attr.x]="getUkuStringX(i)" y="6"
+                    text-anchor="middle" font-size="8" font-family="Arial">x</text>
+
+                <circle *ngIf="fret === 0"
+                    [attr.cx]="getUkuStringX(i)" cy="5" r="2"
+                    fill="none" stroke="black" stroke-width="1" />
+
+                <circle *ngIf="fret > 0"
+                    [attr.cx]="getUkuStringX(i)" [attr.cy]="getUkuFretY(fret) - 6" r="3.5"
+                    fill="#1a1a1a" />
+            </ng-container>
+
+            <!-- Barres -->
+            <ng-container *ngIf="ukuleleChord.barres">
+                <rect *ngFor="let barre of ukuleleChord.barres"
+                    [attr.x]="getUkuBarreX(barre)"
+                    [attr.y]="getUkuFretY(barre.fret) - 9"
+                    [attr.width]="getUkuBarreWidth(barre)" height="6" rx="3"
+                    fill="#1a1a1a" opacity="0.2" />
+            </ng-container>
+
+            <!-- Fret position label -->
+            <text *ngIf="getUkuMinActiveFret() > 1"
+                x="56" [attr.y]="getUkuFretY(getUkuMinActiveFret()) - 2"
+                text-anchor="start" font-size="7" font-family="Arial" fill="#555">
+                {{ getUkuMinActiveFret() }}fr
+            </text>
+        </svg>
+    </div>
+
+    <div *ngIf="!guitarChord && !pianoKeys && !ukuleleChord" class="no-data">
         אין תרשים זמין עבור {{ chordName }}
     </div>
 
     <!-- כפתור ניגון — מוצג תמיד כשיש תרשים -->
     <button
-        *ngIf="guitarChord || pianoKeys"
+        *ngIf="guitarChord || pianoKeys || ukuleleChord"
         class="play-chord-btn"
         [class.playing]="isPlaying"
         (click)="playChord($event)"

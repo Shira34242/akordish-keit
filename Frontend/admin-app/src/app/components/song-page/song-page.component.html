@@ -106,30 +106,14 @@
     <div class="sticky-toolbar" [class.sticky]="isToolbarSticky">
         <div class="toolbar-content">
 
-            <!-- Instruments & Chords -->
+            <!-- Instruments & Chords — סדר RTL: קלידים | גיטרה | יוקלילי | מילים -->
             <div class="instrument-group">
-                <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'guitar'"
-                    (click)="selectInstrument('guitar')" title="גיטרה">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m11.9 12.1 4.514-4.514"></path>
-                        <path
-                            d="M20.1 2.3a1 1 0 0 0-1.4 0l-1.114 1.114A2 2 0 0 0 17 4.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 17.828 7h1.344a2 2 0 0 0 1.414-.586L21.7 5.3a1 1 0 0 0 0-1.4z">
-                        </path>
-                        <path d="m6 16 2 2"></path>
-                        <path
-                            d="M8.2 9.9C8.7 8.8 9.8 8 11 8c2.8 0 5 2.2 5 5 0 1.2-.8 2.3-1.9 2.8l-.9.4A2 2 0 0 0 12 18a4 4 0 0 1-4 4c-3.3 0-6-2.7-6-6a4 4 0 0 1 4-4 2 2 0 0 0 1.8-1.2z">
-                        </path>
-                        <circle cx="11.5" cy="12.5" r=".5" fill="currentColor"></circle>
-                    </svg>
-                </button>
+                <!-- קלידים -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'piano'"
                     (click)="selectInstrument('piano')" title="פסנתר">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M18.5 8c-1.4 0-2.6-.8-3.2-2A6.87 6.87 0 0 0 2 9v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8.5C22 9.6 20.4 8 18.5 8">
-                        </path>
+                        <path d="M18.5 8c-1.4 0-2.6-.8-3.2-2A6.87 6.87 0 0 0 2 9v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8.5C22 9.6 20.4 8 18.5 8"></path>
                         <path d="M2 14h20"></path>
                         <path d="M6 14v4"></path>
                         <path d="M10 14v4"></path>
@@ -137,6 +121,38 @@
                         <path d="M18 14v4"></path>
                     </svg>
                 </button>
+                <!-- גיטרה -->
+                <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'guitar'"
+                    (click)="selectInstrument('guitar')" title="גיטרה">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- ראש (headstock) -->
+                        <path d="M10 2h4v2h-4z"></path>
+                        <circle cx="9" cy="3" r=".5" fill="currentColor"></circle>
+                        <circle cx="15" cy="3" r=".5" fill="currentColor"></circle>
+                        <!-- צוואר -->
+                        <path d="M10.5 4h3v7h-3z"></path>
+                        <!-- גוף עם שתי קרניים עליונות (double cutaway) -->
+                        <path d="M13.5 11C15 10 17.5 10 18 12C18.5 13 17 13.5 16.5 14.5C18.5 15.5 19 17 19 19C19 21 17 22 14.5 22H9.5C7 22 5 21 5 19C5 17 5.5 15.5 7.5 14.5C7 13.5 5.5 13 6 12C6.5 10 9 10 10.5 11"></path>
+                        <!-- פיקאפ -->
+                        <line x1="9" y1="16.5" x2="15" y2="16.5"></line>
+                        <!-- ברידג' -->
+                        <line x1="10.5" y1="19.5" x2="13.5" y2="19.5"></line>
+                    </svg>
+                </button>
+                <!-- יוקלילי -->
+                <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'ukulele'"
+                    (click)="selectInstrument('ukulele')" title="יוקלילי">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m11.9 12.1 4.514-4.514"></path>
+                        <path d="M20.1 2.3a1 1 0 0 0-1.4 0l-1.114 1.114A2 2 0 0 0 17 4.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 17.828 7h1.344a2 2 0 0 0 1.414-.586L21.7 5.3a1 1 0 0 0 0-1.4z"></path>
+                        <path d="m6 16 2 2"></path>
+                        <path d="M8.2 9.9C8.7 8.8 9.8 8 11 8c2.8 0 5 2.2 5 5 0 1.2-.8 2.3-1.9 2.8l-.9.4A2 2 0 0 0 12 18a4 4 0 0 1-4 4c-3.3 0-6-2.7-6-6a4 4 0 0 1 4-4 2 2 0 0 0 1.8-1.2z"></path>
+                        <circle cx="11.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                    </svg>
+                </button>
+                <!-- מילים בלבד -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'lyrics'"
                     (click)="selectInstrument('lyrics')" title="מילים בלבד">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"

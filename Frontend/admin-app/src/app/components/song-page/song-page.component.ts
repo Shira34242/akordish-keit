@@ -49,7 +49,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isAutoScroll: boolean = false;
     scrollSpeed: number = 1;
     showChords: boolean = true;
-    selectedInstrument: 'guitar' | 'piano' | 'lyrics' = 'guitar';
+    selectedInstrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics' = 'guitar';
     isDarkMode: boolean = false;
     isToolbarSticky: boolean = false;
     preferFlat: boolean = false;
@@ -338,7 +338,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
 
-    selectInstrument(instrument: 'guitar' | 'piano' | 'lyrics') {
+    selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
     }

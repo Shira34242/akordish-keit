@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GUITAR_CHORDS, PIANO_CHORDS, GuitarChord } from '../../utils/chord-data';
+import { GUITAR_CHORDS, PIANO_CHORDS, UKULELE_CHORDS, GuitarChord, UkuleleChord } from '../../utils/chord-data';
 import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
 import { ChordPlayerService } from '../../services/chord-player.service';
 
@@ -13,7 +13,7 @@ import { ChordPlayerService } from '../../services/chord-player.service';
 })
 export class ChordTooltipComponent implements OnChanges {
     @Input() chordName: string = '';
-    @Input() instrument: 'guitar' | 'piano' = 'guitar';
+    @Input() instrument: 'guitar' | 'piano' | 'ukulele' = 'guitar';
     @Input() isPinned: boolean = false;
     @Output() closePinned = new EventEmitter<void>();
     @Output() playBtnHoverChange = new EventEmitter<boolean>();
@@ -38,7 +38,10 @@ export class ChordTooltipComponent implements OnChanges {
         if (this.instrument === 'guitar' && this.guitarChord) {
             await this.chordPlayer.playGuitar(this.guitarChord.frets);
             this.playTimer = setTimeout(() => (this.isPlaying = false), 1500);
-        } else if (this.instrument !== 'guitar' && this.pianoKeys) {
+        } else if (this.instrument === 'ukulele' && this.ukuleleChord) {
+            await this.chordPlayer.playUkulele(this.ukuleleChord.frets);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 1800);
+        } else if (this.instrument === 'piano' && this.pianoKeys) {
             await this.chordPlayer.playPiano(this.activeAbsoluteNotes, this.bassAbsoluteNote);
             this.playTimer = setTimeout(() => (this.isPlaying = false), 2500);
         } else {
@@ -47,6 +50,7 @@ export class ChordTooltipComponent implements OnChanges {
     }
 
     guitarChord: GuitarChord | null = null;
+    ukuleleChord: UkuleleChord | null = null;
     pianoKeys: number[] | null = null;
     displayChordName: string = ''; // The chord name we're actually displaying
 
@@ -105,36 +109,50 @@ export class ChordTooltipComponent implements OnChanges {
 
         if (this.instrument === 'guitar') {
             this.pianoKeys = null;
+            this.ukuleleChord = null;
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
             this.pianoBlackKeys = [];
             this.parsedBass = null;
             this.bassAbsoluteNote = null;
-            // Try each variation until we find a match
             for (const variation of chordVariations) {
                 if (GUITAR_CHORDS[variation]) {
                     this.guitarChord = GUITAR_CHORDS[variation];
                     this.displayChordName = variation;
-                    // If original had a bass note but the matched variation doesn't — it's a fallback
                     if (originalBass && !variation.includes('/')) {
                         this.parsedBass = originalBass;
                     }
                     return;
                 }
             }
-            // No match found
             this.guitarChord = null;
+            this.displayChordName = this.chordName;
+        } else if (this.instrument === 'ukulele') {
+            this.guitarChord = null;
+            this.pianoKeys = null;
+            this.activeAbsoluteNotes = new Set();
+            this.pianoWhiteKeys = [];
+            this.pianoBlackKeys = [];
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
+            for (const variation of chordVariations) {
+                if (UKULELE_CHORDS[variation]) {
+                    this.ukuleleChord = UKULELE_CHORDS[variation];
+                    this.displayChordName = variation;
+                    return;
+                }
+            }
+            this.ukuleleChord = null;
             this.displayChordName = this.chordName;
         } else {
             this.guitarChord = null;
+            this.ukuleleChord = null;
             this.parsedBass = null;
             this.bassAbsoluteNote = null;
-            // Try each variation until we find a match
             for (const variation of chordVariations) {
                 if (PIANO_CHORDS[variation]) {
                     this.pianoKeys = PIANO_CHORDS[variation];
                     this.displayChordName = variation;
-                    // If original had a bass note but the matched variation doesn't — it's a fallback
                     if (originalBass && !variation.includes('/')) {
                         this.parsedBass = originalBass;
                     }
@@ -142,7 +160,6 @@ export class ChordTooltipComponent implements OnChanges {
                     return;
                 }
             }
-            // No match found
             this.pianoKeys = null;
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
@@ -409,7 +426,7 @@ export class ChordTooltipComponent implements OnChanges {
         return null;
     }
 
-    // Helpers for Barre
+    // Helpers for Barre (guitar)
     getBarreX(barre: any): number {
         const minString = Math.min(barre.fromString, barre.toString);
         return 10 + minString * 10 - 4;
@@ -418,5 +435,25 @@ export class ChordTooltipComponent implements OnChanges {
     getBarreWidth(barre: any): number {
         const diff = Math.abs(barre.fromString - barre.toString);
         return diff * 10 + 8;
+    }
+
+    // Helpers for Ukulele SVG (4 strings, spacing 14px, start x=10)
+    getUkuStringX(i: number): number { return 10 + i * 14; }
+    getUkuFretY(fret: number): number { return 10 + fret * 12; }
+
+    getUkuBarreX(barre: any): number {
+        const minS = Math.min(barre.fromString, barre.toString);
+        return 10 + minS * 14 - 4;
+    }
+
+    getUkuBarreWidth(barre: any): number {
+        const diff = Math.abs(barre.fromString - barre.toString);
+        return diff * 14 + 8;
+    }
+
+    getUkuMinActiveFret(): number {
+        if (!this.ukuleleChord) return 1;
+        const active = this.ukuleleChord.frets.filter(f => f > 0);
+        return active.length > 0 ? Math.min(...active) : 1;
     }
 }

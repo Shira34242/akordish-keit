@@ -546,6 +546,8 @@
     font-weight: 800;
     font-size: 0.9em;
     display: inline-block;
+    direction: ltr;
+    unicode-bidi: embed;
     position: relative;
     vertical-align: top;
     top: -1.2em;
@@ -573,6 +575,8 @@
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+    direction: ltr;
+    unicode-bidi: embed;
 }
 
 /* Dark Mode Chords */
