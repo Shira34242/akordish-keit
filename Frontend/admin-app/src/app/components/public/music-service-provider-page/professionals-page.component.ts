@@ -41,6 +41,16 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   // ─── Tab ─────────────────────────────────────────
   activeTab: 'professionals' | 'teachers' = 'professionals';
 
+  // ─── Top filter (category dropdown — כולל מורים) ──
+  topFilterValue: string = 'all'; // 'all' | 'teachers' | category id as string
+
+  // ─── Dropdown visibility ──────────────────────────
+  showCategoryDropdown = false;
+  showCityDropdown = false;
+  showInstrumentDropdown = false;
+  showLanguageDropdown = false;
+  showAudienceDropdown = false;
+
   showBecomeProfessionalForm = false;
 
   // ─── Shared search fields ─────────────────────────
@@ -150,6 +160,18 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       const range = this.fullHeroHeight - minHeight;
       const progress = range > 0 ? Math.min(1, (this.fullHeroHeight - newHeight) / range) : 0;
       overlay.style.opacity = String(progress);
+    }
+  }
+
+  // ─── Top filter (category dropdown) ─────────────
+  setTopFilter(value: string): void {
+    this.topFilterValue = value;
+    if (value === 'teachers') {
+      this.setTab('teachers');
+    } else {
+      if (this.activeTab !== 'professionals') this.setTab('professionals');
+      this.selectedCategoryId = value === 'all' ? null : parseInt(value, 10);
+      this.onSearch();
     }
   }
 

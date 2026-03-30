@@ -1,15 +1,18 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SongService } from '../../services/song.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import {
     transposeChord,
+    simplifyChord,
     analyzePreferFlat,
-    isChord
+    preferFlatForKey,
+    isChord,
+    isChordLine
 } from '../../utils/music-utils';
 
 import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
@@ -46,7 +49,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isAutoScroll: boolean = false;
     scrollSpeed: number = 1;
     showChords: boolean = true;
-    selectedInstrument: 'guitar' | 'piano' | 'lyrics' = 'guitar';
+    selectedInstrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics' = 'guitar';
     isDarkMode: boolean = false;
     isToolbarSticky: boolean = false;
     preferFlat: boolean = false;
@@ -55,6 +58,23 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // Tooltip State
     hoveredChord: string | null = null;
     tooltipPosition: { x: number, y: number } = { x: 0, y: 0 };
+    tooltipAbove: boolean = true;
+
+    // Pinned Tooltip State (desktop only)
+    pinnedChord: string | null = null;
+    pinnedPosition: { x: number, y: number } = { x: 0, y: 0 };
+    pinnedAbove: boolean = true;
+
+    // Tooltip hover-sticky state
+    tooltipHovered = false;
+    private tooltipCloseTimer: any = null;
+
+    // YouTube Modal State
+    showYoutubeModal: boolean = false;
+    youtubeEmbedUrl: SafeResourceUrl | null = null;
+
+    // Bookmark State
+    isSongSaved: boolean = false;
 
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
@@ -67,27 +87,62 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     private scrollInterval: any = null;
 
     constructor(
-        private route: ActivatedRoute,  
+        private route: ActivatedRoute,
         private songService: SongService,
         private sanitizer: DomSanitizer,
-        private authService: AuthService, 
-        private router: Router,  
+        private authService: AuthService,
+        private router: Router,
+        private ngZone: NgZone,
     ) { }
 
-   ngOnInit(): void {
+    ngOnInit(): void {
         this.route.params.subscribe(params => {
             const id = params['id'];
             if (id) {
-                this.songId = +id; 
+                this.songId = +id;
                 this.loadSong(this.songId);
             }
+        });
+
+        // Native listener — guaranteed to fire in DOM bubble order, independent of Angular zone
+        this.ngZone.runOutsideAngular(() => {
+            document.addEventListener('click', this.nativeDocumentClick);
         });
     }
 
     ngOnDestroy() {
+        document.removeEventListener('click', this.nativeDocumentClick);
         this.stopAutoScroll();
         this.isAutoScroll = false;
     }
+
+    // Arrow function preserves `this` when used as a callback
+    private nativeDocumentClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        const isChord = target.classList.contains('chord-inline') ||
+                        target.classList.contains('chord-block');
+
+        if (isChord && !this.isMobileDevice()) {
+            const chord = target.innerText.trim();
+            const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+            this.ngZone.run(() => {
+                this.hoveredChord = null;
+                this.pinnedChord = chord;
+                this.pinnedPosition = { x: pos.x, y: pos.y };
+                this.pinnedAbove = pos.above;
+            });
+            return;
+        }
+
+        if (this.pinnedChord && !isChord) {
+            this.ngZone.run(() => { this.pinnedChord = null; });
+        }
+
+        // מובייל — סגור טולטיפ hover כשלוחצים על אזור שאינו אקורד
+        if (this.isMobileDevice() && !isChord && this.hoveredChord) {
+            this.ngZone.run(() => { this.hoveredChord = null; });
+        }
+    };
 
     loadSong(id: number) {
         window.scrollTo(0, 0);
@@ -109,6 +164,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
                 this.transposeStep = 0;
                 this.fontSize = window.innerWidth <= 600 ? 14 : 18;
+                this.isSongSaved = false;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
@@ -187,6 +243,43 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.rafPending = false;
             });
         }
+        // On mobile, scroll closes the open tooltip
+        if (this.isMobileDevice()) this.hoveredChord = null;
+    }
+
+
+    /** Active chord for the single shared tooltip element */
+    get activeTooltipChord(): string | null {
+        return this.pinnedChord ?? this.hoveredChord;
+    }
+    get activeTooltipPosition() {
+        return this.pinnedChord ? this.pinnedPosition : this.tooltipPosition;
+    }
+    get activeTooltipAbove(): boolean {
+        return this.pinnedChord ? this.pinnedAbove : this.tooltipAbove;
+    }
+
+    /** Compute tooltip position from a bounding rect — shared between hover and pin */
+    private tooltipPositionFromRect(rect: DOMRect): { x: number; y: number; above: boolean } {
+        const tooltipW = 160;
+        const tooltipH = 210;
+        const margin = 8;
+
+        // Horizontal: center on chord element, clamped so tooltip never exits viewport
+        let x = rect.left + rect.width / 2;
+        x = Math.max(tooltipW / 2 + margin, Math.min(window.innerWidth - tooltipW / 2 - margin, x));
+
+        // Vertical: prefer above; fallback to below; if neither fits, pick whichever has more room
+        const spaceAbove = rect.top;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const above = spaceAbove >= tooltipH + margin
+            ? true
+            : spaceBelow >= tooltipH + margin
+                ? false
+                : spaceAbove >= spaceBelow;
+
+        const y = above ? rect.top - margin : rect.bottom + margin;
+        return { x, y, above };
     }
 
     private updateHeaderLayout() {
@@ -229,10 +322,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     transpose(direction: number) {
         if ((this.transposeStep >= 6 && direction > 0) || (this.transposeStep <= -5 && direction < 0)) return;
+        this.isEasyMode = false;
         this.transposeStep += direction;
     }
 
     resetTranspose() {
+        this.isEasyMode = false;
         this.transposeStep = 0;
     }
 
@@ -243,7 +338,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
 
-    selectInstrument(instrument: 'guitar' | 'piano' | 'lyrics') {
+    selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
     }
@@ -284,14 +379,27 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         }
     }
 
+    get capoFret(): number | null {
+        if (this.transposeStep === 0) return null;
+        return this.transposeStep > 0 ? this.transposeStep : 12 + this.transposeStep;
+    }
+
    get currentKey(): string {
-    if (!this.song || !this.song.originalKeyName) return '';
+        if (!this.song || !this.song.originalKeyName) return '';
+        const originalKey = this.song.originalKeyName;
+        if (this.transposeStep === 0) return originalKey;
+        return transposeChord(originalKey, this.transposeStep, { preferFlat: this.preferFlat });
+    }
 
-    const originalKey = this.song.originalKeyName;
-    if (this.transposeStep === 0) return originalKey;
-
-    return transposeChord(originalKey, this.transposeStep, { preferFlat: this.preferFlat });
-}
+    /**
+     * Returns the flat/sharp preference for the CURRENT (possibly transposed) key.
+     * Used by all transposeChord calls so accidentals match the target key.
+     */
+    get activePreferFlat(): boolean {
+        if (this.transposeStep === 0) return this.preferFlat;
+        const key = this.currentKey;
+        return key ? preferFlatForKey(key) : this.preferFlat;
+    }
 
 
     // Get transpose display value in tones (half-steps / 2)
@@ -305,26 +413,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         return `${sign}${tones}`;
     }
 
-    // Helper to check if a line is purely chords
-    isChordLine(line: string): boolean {
-        if (!line.trim()) return false;
-        // If it contains Hebrew, it's definitely not a chord line
-        if (/[א-ת]/.test(line)) return false;
-
-        const tokens = line.trim().split(/\s+/);
-        // Filter tokens that look like chords
-        const chordCount = tokens.filter(t => isChord(t) || this.looksLikeChord(t)).length;
-
-        // If more than 50% of tokens are chords, treat as chord line.
-        return chordCount > 0 && (chordCount / tokens.length >= 0.5);
-    }
-
-    looksLikeChord(token: string): boolean {
-        // Basic regex for things that look like chords but might not pass strict validation
-        // e.g. A, Am, F#m7, G/B
-        return /^[A-G][b#]?(m|maj|dim|aug|sus|add|7|9|11|13)*(\/[A-G][b#]?)?$/.test(token);
-    }
-
     // ⭐ הלוגיקה החדשה - תמיכה גם ב-Inline וגם ב-Block (Line over Line)
     get formattedLyricsHtml(): SafeHtml {
         if (!this.song || !this.song.lyricsWithChords) return '';
@@ -333,17 +421,18 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         const processedLines = lines.map((line: string) => {
             // 1. Check for Line-over-Line Chords (Block Chords)
-            if (this.isChordLine(line)) {
+            if (isChordLine(line)) {
                 if (!this.showChords) return null; // Hide line if chords are hidden
 
-                // Wrap chords in span with class 'chord-block'
-                // We use a regex to identify chords and wrap them, while preserving spaces.
-                // Regex matches chord patterns.
-                return line.replace(/([A-G][b#]?(?:m|maj|dim|aug|sus|add|7|9|11|13)*(?:\/[A-G][b#]?)?)/g, (match) => {
-                    const transposed = this.transposeStep !== 0
-                        ? transposeChord(match, this.transposeStep, { preferFlat: this.preferFlat })
-                        : match;
-                    return `<span class="chord-block">${transposed}</span>`;
+                // Wrap each non-whitespace token that isChord recognises.
+                // /\S+/g preserves all original spacing between chords.
+                return line.replace(/\S+/g, (token) => {
+                    if (!isChord(token)) return token;
+                    let chord = this.transposeStep !== 0
+                        ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
+                        : token;
+                    if (this.isEasyMode) chord = simplifyChord(chord);
+                    return `<span class="chord-block">${chord}</span>`;
                 });
             }
 
@@ -358,13 +447,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
 
-            // Inline Chords [Am]
+            // Inline Chords [Am] — only real chords get highlighted; [Verse], [Intro] etc. pass through as-is
             if (this.showChords) {
                 processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
-                    const transposed = this.transposeStep !== 0
-                        ? transposeChord(chord, this.transposeStep, { preferFlat: this.preferFlat })
+                    if (!isChord(chord)) return match;
+                    let result = this.transposeStep !== 0
+                        ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat })
                         : chord;
-                    return `<span class="chord-inline">${transposed}</span>`;
+                    if (this.isEasyMode) result = simplifyChord(result);
+                    return `<span class="chord-inline">${result}</span>`;
                 });
             } else {
                 // Remove chords if hidden
@@ -379,29 +470,58 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     handleLyricsMouseOver(event: MouseEvent) {
+        if (this.pinnedChord) return;
         const target = event.target as HTMLElement;
         if (target.classList.contains('chord-inline') || target.classList.contains('chord-block')) {
+            clearTimeout(this.tooltipCloseTimer);
             this.hoveredChord = target.innerText.trim();
-            const rect = target.getBoundingClientRect();
-            // Position tooltip centered above the chord
-            // We'll use fixed positioning in CSS, so x/y are viewport coordinates
-            this.tooltipPosition = {
-                x: rect.left + rect.width / 2,
-                y: rect.top
-            };
-        } else {
+            const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+            this.tooltipPosition = { x: pos.x, y: pos.y };
+            this.tooltipAbove = pos.above;
+        }
+        // אין else — הטולטיפ נשאר פתוח כשנעים בתוך אזור המילים
+        // סגירה מתרחשת רק כשעוזבים את אזור המילים (handleLyricsLeave)
+    }
+
+    handleLyricsLeave() {
+        if (this.pinnedChord) return;
+        if (this.isMobileDevice()) return; // מובייל — סגירה רק מלחיצה/גלילה, לא מ-mouseleave מדומה
+        clearTimeout(this.tooltipCloseTimer);
+        this.tooltipCloseTimer = setTimeout(() => {
+            if (!this.tooltipHovered) this.hoveredChord = null;
+        }, 400);
+    }
+
+    /** נקרא כשהעכבר נכנס/יוצא מכפתור ההשמעה (שיש לו pointer-events: auto) */
+    handlePlayBtnHover(hovered: boolean) {
+        this.tooltipHovered = hovered;
+        if (hovered) {
+            clearTimeout(this.tooltipCloseTimer);
+        } else if (!this.pinnedChord) {
             this.hoveredChord = null;
         }
     }
 
-    handleLyricsLeave() {
-        this.hoveredChord = null;
+    // Mobile only: tap toggles hover tooltip (desktop pin is handled by onDocumentClick)
+    handleLyricsClick(event: MouseEvent) {
+        if (!this.isMobileDevice()) return;
+        const target = event.target as HTMLElement;
+        if (!target.classList.contains('chord-inline') && !target.classList.contains('chord-block')) return;
+        const chord = target.innerText.trim();
+        const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+        this.hoveredChord = this.hoveredChord === chord ? null : chord;
+        this.tooltipPosition = { x: pos.x, y: pos.y };
+        this.tooltipAbove = pos.above;
     }
 
-    // Check if user is on mobile device
+    closePinnedTooltip() {
+        this.pinnedChord = null;
+    }
+
+    // Check if user is on a touch/mobile device (pointer: coarse = no precise cursor)
     isMobileDevice(): boolean {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-               (window.innerWidth <= 768);
+               (window.matchMedia?.('(pointer: coarse)').matches ?? false);
     }
 
     // Show copy notification
@@ -458,13 +578,16 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         const lines = this.song.lyricsWithChords.split('\n');
         const processedLyrics = lines.map((line: string) => {
             // Block Chords
-            if (this.isChordLine(line)) {
-                return line.replace(/([A-G][b#]?(?:m|maj|dim|aug|sus|add|7|9|11|13)*(?:\/[A-G][b#]?)?)/g,
-                    '<span class="chord">$1</span>');
+            if (isChordLine(line)) {
+                return line.replace(/\S+/g, (token) =>
+                    isChord(token) ? `<span class="chord">${token}</span>` : token
+                );
             }
 
-            // Inline Chords [Am]
-            return line.replace(/\[(.*?)\]/g, '<span class="chord">$1</span>');
+            // Inline Chords [Am] — only real chords; [Verse] etc. pass through
+            return line.replace(/\[(.*?)\]/g, (match, chord) =>
+                isChord(chord) ? `<span class="chord">${chord}</span>` : match
+            );
         }).join('\n');
 
         const printContent = `
@@ -608,5 +731,36 @@ private getKeyIndex(keyName: string): number {
 
     closeReportModal(): void {
         this.isReportModalOpen = false;
+    }
+
+    openYoutubeVideo(): void {
+        if (!this.song?.youtubeUrl) return;
+        const videoId = this.extractYoutubeVideoId(this.song.youtubeUrl);
+        if (videoId) {
+            const url = `https://www.youtube.com/embed/${videoId}?rel=0`;
+            this.youtubeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+            this.showYoutubeModal = true;
+        } else {
+            // URL לא מוכר — פתח ביוטיוב ישירות
+            window.open(this.song.youtubeUrl, '_blank');
+        }
+    }
+
+    closeYoutubeVideo(): void {
+        this.showYoutubeModal = false;
+        this.youtubeEmbedUrl = null;
+    }
+
+    private extractYoutubeVideoId(url: string): string | null {
+        // מטפל בפורמטים: watch?v=, youtu.be/, embed/, shorts/, m.youtube.com
+        const match = url.match(
+            /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+        );
+        return match ? match[1] : null;
+    }
+
+    onSongSaved(): void {
+        this.isSongSaved = true;
+        this.isPlaylistPopupOpen = false;
     }
 }

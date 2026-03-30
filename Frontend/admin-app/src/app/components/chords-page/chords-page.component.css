@@ -101,11 +101,20 @@
     margin: 0 0 var(--space-lg) 0;
 }
 
+/* Search row — עוטף את החיפוש + כפתור המיון */
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    max-width: 560px;
+}
+
 /* Search wrap */
 .search-wrap {
     position: relative;
-    width: 100%;
-    max-width: 560px;
+    flex: 1;
+    min-width: 0;
 }
 
 .search-input {
@@ -145,90 +154,73 @@
     align-items: center;
 }
 
-/* Filters row */
-.filters-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-md);
-    width: 100%;
-    max-width: 560px;
-}
-
-/* Autocomplete */
-.filter-autocomplete {
+/* Sort button — עיגול עם אייקון מיון, מוצג רק בתוצאות */
+.sort-btn-wrap {
     position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
 }
 
-.filter-input {
+.sort-btn-wrap:hover {
+    background: #ffffff;
+}
+
+.sort-btn-icon {
+    color: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+}
+
+/* תפריט מיון מותאם */
+.sort-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 300;
+    min-width: 130px;
+    white-space: nowrap;
+}
+
+.sort-option {
+    display: block;
     width: 100%;
-    height: 34px;
-    padding: 0 var(--space-base) 0 var(--space-xl);
+    padding: var(--space-sm) var(--space-md);
     border: none;
-    border-radius: 999px;
+    border-radius: 12px;
+    background: transparent;
     font-family: 'Open Sans', sans-serif;
     font-optical-sizing: auto;
     font-weight: 300;
     font-variation-settings: "wdth" 100;
     font-size: var(--font-sm);
-    background: #000000;
-    color: #ddff53;
-    cursor: pointer;
-    box-sizing: border-box;
-    transition: opacity 0.2s;
-}
-
-.filter-input:focus {
-    outline: none;
-    opacity: 0.85;
-}
-
-.filter-input::placeholder {
-    color: rgba(221, 255, 83, 0.5);
-}
-
-.filter-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ddff53' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left var(--space-base) center;
-    cursor: pointer;
-}
-
-.dropdown-arrow {
-    position: absolute;
-    left: var(--space-base);
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: var(--font-xs);
-    color: rgba(221, 255, 83, 0.55);
-    pointer-events: none;
-}
-
-.autocomplete-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
-    background: #ffffff;
-    border-radius: 16px;
-    max-height: 260px;
-    overflow-y: auto;
-    z-index: 200;
-}
-
-.autocomplete-item {
-    padding: var(--space-md) var(--space-base);
-    cursor: pointer;
-    font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
-    font-size: var(--font-sm);
     color: #000;
+    cursor: pointer;
+    text-align: right;
     transition: background 0.15s;
 }
 
-.autocomplete-item:first-child { border-radius: 16px 16px 0 0; }
-.autocomplete-item:last-child  { border-radius: 0 0 16px 16px; }
-.autocomplete-item:hover       { background: #F2F2F2; }
+.sort-option:hover {
+    background: #F2F2F2;
+}
+
+.sort-option.active {
+    font-weight: 800;
+    background: #ddff53;
+}
 
 /* Clear */
 .clear-row {
@@ -358,18 +350,27 @@
 .section-tag {
     display: inline-flex;
     align-items: center;
-    height: 26px;
-    padding: 0 var(--space-base);
-    border-radius: 999px;
+    gap: var(--space-xs);
     font-family: 'Open Sans', sans-serif;
     font-optical-sizing: auto;
     font-weight: 800;
     font-variation-settings: "wdth" 100;
-    font-size: var(--font-sm);
+    font-size: var(--font-base);
 }
 
-.section-tag--accent    { background: #ddff53; color: #000; }
-.section-tag--secondary { background: #F2F2F2; color: #000; }
+/* נקודת הדגשה לפני כותרות ראשיות */
+.section-tag--accent::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ddff53;
+    flex-shrink: 0;
+}
+
+.section-tag--accent    { color: #000000; }
+.section-tag--secondary { color: rgba(0, 0, 0, 0.45); }
 
 .total-badge {
     font-size: var(--font-sm);
@@ -393,35 +394,33 @@
 ═══════════════════════════════════════════════════════════════ */
 .strip-wrapper {
     position: relative;
-    padding: 0 var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .strip-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 34px;
-    height: 34px;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: none;
-    background: #000;
-    color: #ddff53;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.3);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, color 0.15s;
+    transition: color 0.15s;
 }
 
 .strip-arrow:hover {
-    background: #ddff53;
     color: #000;
 }
 
-/* ב-RTL: right = ראשית הפס, left = סוף הפס */
-.strip-arrow--prev { right: 0; }
-.strip-arrow--next { left: 0; }
+/* ב-RTL: prev בצד ימין (ראשית הפס), next בצד שמאל */
+.strip-arrow--prev { order: -1; }
+.strip-arrow--next { order: 1; }
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -435,6 +434,8 @@
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-width: 0;
 }
 
 .songs-strip::-webkit-scrollbar { display: none; }
@@ -588,15 +589,22 @@
 @media (max-width: 768px) {
     .hero-bg { border-radius: 20px; }
 
+    /* Hero גובה מצומצם — אין מסננים, תוכן קצר יותר */
+    .hero-content-area { height: calc(50vh - 76px); }
+
     .hero-title { font-size: 3rem; letter-spacing: 0; }
 
-    .hero-subtitle { font-size: var(--font-sm); }
-
-    .filters-row {
-        grid-template-columns: 1fr 1fr;
+    .hero-subtitle {
+        font-size: var(--font-sm);
+        margin: 0 0 var(--space-md) 0;
     }
 
+    /* חיצי גלילה — מוסתרים, touch נגלל */
     .strip-arrow { display: none; }
+
+    /* Strip ממלא את כל הרוחב כשחיצים מוסתרים */
+    .strip-wrapper { gap: 0; }
+    .songs-strip { flex: 1; }
 
     .chords-content {
         padding: var(--space-xl) var(--space-lg) var(--space-3xl);
@@ -604,6 +612,9 @@
     }
 
     .sections-area { gap: var(--space-2xl); }
+
+    /* כותרות קטגוריה — קטנות יותר */
+    .section-tag { font-size: var(--font-sm); }
 
     .songs-grid { grid-template-columns: 1fr; }
 
@@ -620,15 +631,30 @@
 @media (max-width: 480px) {
     .hero-bg { border-radius: 16px; }
 
-    .hero-content-area { padding: 0 var(--space-md); }
+    .hero-content-area {
+        height: auto;
+        min-height: calc(44vh - 76px);
+        padding: var(--space-2xl) var(--space-md) var(--space-xl);
+        align-items: flex-end;
+    }
 
-    .hero-title { font-size: 2.2rem; }
+    .hero-title { font-size: 2.4rem; }
+
+    .hero-subtitle { display: none; }
+
+    /* שורת חיפוש — רוחב מלא, מרווח בסיסי */
+    .search-row { max-width: 100%; }
+
+    .search-input { font-size: var(--font-sm); }
 
     .chords-content {
         padding: var(--space-lg) var(--space-md) var(--space-3xl);
     }
 
-    .strip-card { width: 220px; }
+    .strip-card { width: 200px; }
 
     .artist-avatar { width: 48px; height: 48px; }
+
+    /* תפריט מיון — רוחב מצומצם */
+    .sort-dropdown { min-width: 120px; }
 }

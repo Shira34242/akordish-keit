@@ -1,4 +1,5 @@
 .tooltip-container {
+    position: relative;
     background: white;
     padding: 12px;
     border-radius: 8px;
@@ -7,7 +8,32 @@
     border: 1px solid #e5e7eb;
     min-width: 120px;
     pointer-events: none;
-    /* So it doesn't flicker */
+    /* Force LTR for all chord names and musical notation (fixes G# → #G RTL bug) */
+    direction: ltr;
+}
+
+.tooltip-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+}
+.tooltip-close-btn:hover {
+    color: #111;
+    background: #f2f2f2;
 }
 
 .chord-name {
@@ -27,11 +53,60 @@
 
 .diagram {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .no-data {
     font-size: 0.9rem;
     color: #6b7280;
     padding: 8px;
+}
+
+.bass-note-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #404040;
+    margin-top: 4px;
+    text-align: center;
+    letter-spacing: 0.03em;
+}
+
+.play-chord-btn {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: auto;
+    height: 24px;
+    padding: 0 10px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    direction: rtl;
+    white-space: nowrap;
+}
+
+.play-chord-btn:hover {
+    background: #ddff53;
+    border-color: #000;
+    color: #000;
+}
+
+.play-chord-btn.playing {
+    background: #ddff53;
+    border-color: #000;
+    color: #000;
+}
+
+.play-chord-label {
+    font-size: 0.65rem;
+    font-weight: 400;
+    font-family: "Open Sans", sans-serif;
+    line-height: 1;
 }

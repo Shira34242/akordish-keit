@@ -245,12 +245,6 @@
 .artist-page-container:not(.has-banner) .hero-website-link { color: rgba(0, 0, 0, 0.55); }
 .hero-website-link:hover { opacity: 0.85; }
 
-.hero-website-link span {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.hero-website-link svg { width: 16px; height: 16px; }
 
 /* ========================================
    רשתות חברתיות — שמאל-תחתון בתוך הבאנר
@@ -324,7 +318,8 @@
 .performance-banner-img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 220px;
+  object-fit: cover;
   border-radius: 24px;
   transition: transform 0.3s ease;
 }
@@ -476,10 +471,10 @@
 .g3d-arrow-prev { left: 20px; }
 .g3d-arrow-next { right: 20px; }
 
-/* מחוון נקודות — ממוקם מיד מתחת לתמונות */
+/* מחוון נקודות — ממוקם בתחתית הגלריה */
 .g3d-dots {
   position: absolute;
-  top: 65%; /* מתחת לתחתית הכרטיסים */
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -1063,11 +1058,15 @@
   .articles-banners-grid { grid-template-columns: 1fr; }
 
   :host ::ng-deep .g3d-card {
-    width: min(68vw, 260px);
+    width: min(78vw, 300px);
   }
 
   .g3d-section {
-    height: 48vh;
+    height: 56vh;
+  }
+
+  .g3d-dots {
+    bottom: 14px;
   }
 }
 

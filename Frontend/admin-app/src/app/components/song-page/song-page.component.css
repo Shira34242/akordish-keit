@@ -57,7 +57,7 @@
     margin: 0 auto;
     margin-top: 0;
     margin-bottom: var(--space-md);
-    padding: calc(2vh + var(--space-base)) var(--space-xl) var(--space-base);
+    padding: 80px var(--space-xl) var(--space-md);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
@@ -67,7 +67,7 @@
 
 /* Image Section */
 .header-image-section {
-    flex: 0 0 200px; /* קטן יותר */
+    flex: 0 0 260px;
     position: relative;
 }
 
@@ -101,7 +101,7 @@
     position: absolute;
     bottom: 10px;
     left: 10px;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -111,16 +111,17 @@
     cursor: pointer;
     transition: background 0.2s;
     z-index: 10;
+    border: none;
+    padding: 0;
 }
 
 .youtube-play-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(255, 0, 0, 0.8);
 }
 
 .youtube-play-btn svg {
-    color: #ffffff;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 .spotify-play-btn {
@@ -155,7 +156,7 @@
     display: flex;
     flex-direction: row;
     gap: var(--space-xl);
-    align-items: stretch;
+    align-items: flex-end;
 }
 
 /* Info Section */
@@ -170,14 +171,14 @@
 }
 
 .header-subtitle {
-    font-size: var(--font-sm);
+    font-size: var(--font-md);
     color: rgba(0, 0, 0, 0.55);
     margin: 0;
     font-weight: 300;
 }
 
 .main-title {
-    font-size: var(--font-3xl);
+    font-size: var(--font-4xl);
     font-weight: 800;
     color: #000000;
     line-height: var(--lh-heading);
@@ -185,17 +186,30 @@
     letter-spacing: -0.5px;
 }
 
-.artist-name {
-    font-size: var(--font-lg);
-    color: #000;
-    font-weight: 800;
+.artist-names {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     margin: var(--space-xs) 0 var(--space-sm) 0;
-    cursor: pointer;
 }
 
-.artist-name:hover {
+.artist-name-link {
+    font-size: var(--font-base);
+    color: #000;
+    font-weight: 300;
+    cursor: pointer;
+    display: inline;
+}
+
+.artist-name-link:hover {
     text-decoration: underline;
     color: rgba(0, 0, 0, 0.7);
+}
+
+.artist-separator {
+    font-size: var(--font-base);
+    font-weight: 300;
+    color: #000;
 }
 
 .credits-block {
@@ -206,7 +220,7 @@
 }
 
 .credit-line {
-    font-size: var(--font-xs);
+    font-size: var(--font-sm);
     color: rgba(0, 0, 0, 0.55);
     line-height: var(--lh-small);
 }
@@ -373,13 +387,17 @@
 .controls-group {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     background: #F2F2F2;
     border-radius: 100px;
     padding: var(--space-sm) var(--space-base);
     gap: var(--space-sm);
     flex: 1;
     min-width: 0;
+    font-size: var(--font-sm);
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
 }
 
 .controls-group .toolbar-btn {
@@ -395,6 +413,12 @@
     border-radius: 100px;
 }
 
+/* Key prefix — "סולם: " מוצג רק ב-desktop */
+.key-prefix-text {
+    display: inline;
+    color: rgba(0, 0, 0, 0.6);
+}
+
 /* Transpose Group */
 .transpose-group {
     display: flex;
@@ -402,10 +426,16 @@
     gap: var(--space-xs);
 }
 
+.current-key-label {
+    margin-inline-end: var(--space-sm);
+    font-weight: 800;
+    font-size: var(--font-sm);
+    white-space: nowrap;
+}
+
 .transpose-val {
     font-weight: 800;
-    font-size: var(--font-base);
-    width: 30px;
+    width: 28px;
     text-align: center;
     color: #000000;
 }
@@ -516,6 +546,8 @@
     font-weight: 800;
     font-size: 0.9em;
     display: inline-block;
+    direction: ltr;
+    unicode-bidi: embed;
     position: relative;
     vertical-align: top;
     top: -1.2em;
@@ -543,6 +575,8 @@
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+    direction: ltr;
+    unicode-bidi: embed;
 }
 
 /* Dark Mode Chords */
@@ -734,32 +768,71 @@
         font-size: var(--font-2xl);
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-base);
     }
 
+    /* toolbar — ננעל מתחת לכותרת (לא עליה) */
     .sticky-toolbar {
+        top: 72px;
+        z-index: 896;
+        background: #ddff53;
+        border-radius: 18px;
+        padding: var(--space-xs) var(--space-sm);
+        margin: 0 var(--space-sm);
+        max-width: calc(100% - var(--space-lg));
+        overflow: hidden;
         grid-template-columns: 1fr;
-        padding: 0 var(--space-md);
-        top: 12px;
     }
 
     .toolbar-content {
-        padding: var(--space-md) var(--space-md);
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: var(--space-sm);
+        padding: 0;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: transparent;
     }
 
-    /* Hide some dividers on mobile for cleaner look */
+    .toolbar-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* קבוצות — רקע כהה-שקוף על הצהוב */
+    .instrument-group {
+        flex: 0 0 auto;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .controls-group {
+        flex: 0 0 auto;
+        justify-content: flex-start;
+        background: rgba(0, 0, 0, 0.1);
+        overflow-x: visible;
+    }
+
+    /* Hide dividers */
     .toolbar-divider {
         display: none;
     }
 
     .toolbar-btn {
+        width: 32px;
         min-width: 32px;
         height: 32px;
-        padding: 0 var(--space-sm);
+        flex-shrink: 0;
+        border-radius: 50%;
+    }
+
+    .toolbar-btn.btn-text {
+        width: auto;
+        min-width: auto;
+        height: 32px;
+        border-radius: 100px;
     }
 
     .toolbar-btn svg {
@@ -767,15 +840,25 @@
         height: 18px;
     }
 
-    /* Make text buttons more compact */
+    /* לחצני טקסט */
     .btn-text {
         padding: 0 var(--space-sm);
         font-size: var(--font-xs);
     }
 
-    /* Easy mode button - shorter text on mobile */
+    /* הסתרת "סולם: " */
+    .key-prefix-text {
+        display: none;
+    }
+
+    /* הסתרת מספר מהירות גלילה */
+    .scroll-speed-display {
+        display: none;
+    }
+
     .btn-easy {
         font-size: var(--font-xs);
+        padding: 0 var(--space-sm);
     }
 
     .btn-easy svg {
@@ -784,7 +867,6 @@
         margin-left: 2px;
     }
 
-    /* Transpose group - make it more compact */
     .transpose-group {
         gap: 2px;
     }
@@ -794,19 +876,16 @@
         width: 24px;
     }
 
-    /* Auto scroll controls */
     .autoscroll-controls {
         display: flex;
         gap: var(--space-xs);
     }
 
     .toolbar-btn-sm {
+        width: 28px;
         min-width: 28px;
         height: 28px;
-    }
-
-    .scroll-speed-display {
-        font-size: var(--font-xs);
+        border-radius: 50%;
     }
 
     .main-layout {
@@ -866,7 +945,8 @@
         text-overflow: unset;
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-sm);
     }
 
@@ -886,53 +966,21 @@
         height: 17px;
     }
 
-    /* toolbar — מתחת לheader, רקע צהוב, גלילה אופקית אחידה */
+    /* toolbar — מרווח צמוד יותר בנייד */
     .sticky-toolbar {
-        top: 72px;
-        z-index: 896;
-        background: #ddff53;
-        border-radius: 18px;
-        padding: var(--space-xs) var(--space-sm);
         margin: 0 4px;
         max-width: calc(100% - 8px);
-        overflow: hidden;
     }
 
-    /* toolbar-content — גלילה אחידה על כל הרוחב */
-    .toolbar-content {
-        padding: 0;
-        gap: 6px;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        justify-content: flex-start;
-        align-items: center;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        background: transparent;
-    }
-
-    .toolbar-content::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* instrument-group — גלילה ביחד עם שאר ה-toolbar */
+    /* קבוצות — קומפקטיות יותר */
     .instrument-group {
-        flex: 0 0 auto;
         padding: 3px 4px;
         gap: 1px;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 100px;
     }
 
-    /* controls-group — גלילה ביחד, ללא גלילה פנימית */
     .controls-group {
-        flex: 0 0 auto;
-        padding: 3px 6px;
-        gap: 4px;
-        justify-content: flex-start;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 100px;
-        overflow-x: visible;
+        padding: 3px 10px;
+        gap: 6px;
     }
 
     /* לחצנים — עיגול, 28px */
@@ -940,8 +988,10 @@
         width: 28px;
         height: 28px;
         min-width: 28px;
-        flex-shrink: 0;
-        border-radius: 50%;
+    }
+
+    .toolbar-btn.btn-text {
+        height: 28px;
     }
 
     .toolbar-btn svg {
@@ -949,25 +999,18 @@
         height: 16px;
     }
 
-    /* הסתרת תצוגת סולם ומפרידים */
-    .current-key-label,
-    .toolbar-divider {
-        display: none;
-    }
-
-    /* קבוצת טרנספוז — gap צמוד */
+    /* קבוצת טרנספוז */
     .transpose-group {
         gap: 1px;
     }
 
-    /* ערך טרנספוזיציה */
     .transpose-val {
         font-size: var(--font-xs);
         width: 16px;
         flex: none;
     }
 
-    /* A- ו-A+ צמודים יחד */
+    /* A- ו-A+ */
     .font-size-group {
         display: flex;
         align-items: center;
@@ -975,11 +1018,10 @@
         flex-shrink: 0;
     }
 
-    /* לחצני טקסט (A-, A+, גרסה קלה) */
+    /* לחצני טקסט */
     .btn-text {
-        padding: 0 5px;
+        padding: 0 8px;
         font-size: 11px;
-        white-space: nowrap;
     }
 
     /* כפתור גלילה — אייקון בלבד */
@@ -999,9 +1041,8 @@
     }
 
     .btn-easy {
-        white-space: nowrap;
         font-size: 11px;
-        padding: 0 5px;
+        padding: 0 10px;
     }
 
     /* כפתורי גלילה אוטומטית */
@@ -1009,8 +1050,6 @@
         width: 28px;
         height: 28px;
         min-width: 28px;
-        flex-shrink: 0;
-        border-radius: 50%;
     }
 
     .main-layout {
@@ -1039,7 +1078,8 @@
         font-size: var(--font-lg);
     }
 
-    .artist-name {
+    .artist-name-link,
+    .artist-separator {
         font-size: var(--font-xs);
     }
 }
@@ -1076,5 +1116,108 @@
     stroke: #000;
     stroke-width: 3;
     flex-shrink: 0;
+}
+
+/* Capo Hint */
+.capo-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 5px var(--space-md);
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.65);
+    margin-bottom: var(--space-md);
+}
+
+.capo-hint svg {
+    flex-shrink: 0;
+    opacity: 0.5;
+}
+
+/* Bookmark Saved State */
+.btn-bookmark.saved {
+    color: #e63939;
+}
+.btn-bookmark.saved svg {
+    fill: #e63939;
+    stroke: #e63939;
+}
+
+/* YouTube Modal */
+.youtube-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.youtube-modal-card {
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    max-width: 840px;
+}
+
+.youtube-embed-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+}
+
+.youtube-embed-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0 0 20px 20px;
+}
+
+.youtube-modal-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.youtube-modal-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.youtube-modal-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font-xs);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.youtube-modal-fallback:hover {
+    color: #fff;
 }
 

@@ -1,23 +1,26 @@
 /* ============================================
-   MUSIC NEWS PAGE
+   PAGE — מתחיל מיד תחת ה-header, ללא padding
 ============================================ */
-
-.music-news-page {
-  min-height: 100vh;
-  background: #ffffff;
+.news-page {
   direction: rtl;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  background: #ffffff;
 }
 
-/* --- Loading --- */
-
-.loading-container {
+/* ============================================
+   LOADING
+============================================ */
+.page-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  height: 100svh;
 }
 
-.loading-spinner {
+.spinner {
   border: 3px solid #F2F2F2;
   border-top: 3px solid #ddff53;
   border-radius: 50%;
@@ -26,400 +29,219 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
 }
+
+.sentinel { height: 1px; }
 
 /* ============================================
-   BENTO HERO — מלא מסך
+   CELL BASE — news-banner ממלא את התא
 ============================================ */
-
-.bento-hero {
-  height: calc(100dvh - 56px); /* 56px = גובה ה-navbar */
-  padding: var(--space-base);
-}
-
-.bento-news-grid {
-  display: grid;
-  height: 100%;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: var(--space-base);
-}
-
-/* --- תאי הגריד --- */
-
-.bento-cell {
+.hero-cell,
+.stream-cell {
   position: relative;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 20px;
   background: #F2F2F2;
 }
 
-/* app-news-banner ממלא את התא בשלמות */
-.bento-cell app-news-banner {
+.hero-cell app-news-banner,
+.stream-cell app-news-banner {
   position: absolute;
   inset: 0;
   display: block;
 }
 
-/* עוקף aspect-ratio — הכרטיס ממלא את גובה התא */
-.bento-cell ::ng-deep .news-banner {
+.hero-cell ::ng-deep .news-banner,
+.stream-cell ::ng-deep .news-banner {
   width: 100%;
   height: 100%;
   aspect-ratio: unset;
   border-radius: 0;
 }
 
-/* --- מיקומי הקוביות --- */
-
-/* קובייה 1: גדולה שמאלית — 3 עמודות × 2 שורות */
-.bento-cell-1 {
-  grid-column: 1 / 4;
-  grid-row: 1 / 3;
-}
-
-/* קובייה 2: גדולה ימנית — 3 עמודות × 2 שורות */
-.bento-cell-2 {
-  grid-column: 4 / 7;
-  grid-row: 1 / 3;
-}
-
-/* קובייה 3: תחתונה שמאלית — 2 עמודות */
-.bento-cell-3 {
-  grid-column: 1 / 3;
-  grid-row: 3;
-}
-
-/* קובייה 4: תחתונה אמצעית — 2 עמודות */
-.bento-cell-4 {
-  grid-column: 3 / 5;
-  grid-row: 3;
-}
-
-/* קובייה 5: תחתונה ימנית — 2 עמודות */
-.bento-cell-5 {
-  grid-column: 5 / 7;
-  grid-row: 3;
-}
-
-/* ============================================
-   SKELETON PLACEHOLDERS
-============================================ */
-
-.skeleton-fill {
+.cell-skeleton {
   width: 100%;
   height: 100%;
   background: #F2F2F2;
 }
 
-.skeleton-banner {
-  aspect-ratio: 4 / 2.7;
-  background: #F2F2F2;
-  border-radius: 24px;
-  width: 100%;
-  display: block;
+/* ============================================
+   HERO GRID — פריסה אדיטוריאלית, ללא כותרת
+   ────────────────────────────────────────
+   6 עמודות, 4 שורות
+   גובה: מסך מלא פחות ה-header (56px)
+
+   שורות 1-3: [hc-1 HERO  4col×3] [hc-2 accent 2col×1]
+                                    [hc-3 second 2col×2]
+   שורה 4:    [hc-4 2col×1] [hc-5 2col×1] [hc-6 2col×1]
+
+   hc-1 = כתבה דומיננטית, 2/3 רוחב, 3/4 גובה
+   hc-3 = כתבה משנית, יותר גבוהה מ-hc-2
+   hc-4/5/6 = strip תומכת בתחתית
+============================================ */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: 1fr 1fr 1fr 0.55fr;
+  gap: 8px;
+  padding: 8px;
+  height: calc(100svh - 56px);
+  box-sizing: border-box;
 }
 
-.skeleton-event {
-  height: 80px;
-  background: #F2F2F2;
-  border-radius: 20px;
-}
+.hc-1 { grid-column: 1 / 5; grid-row: 1 / 4; }  /* HERO — 4col × 3row */
+.hc-2 { grid-column: 5 / 7; grid-row: 1;     }  /* accent — 2col × 1row */
+.hc-3 { grid-column: 5 / 7; grid-row: 2 / 4; }  /* secondary — 2col × 2row */
+.hc-4 { grid-column: 1 / 3; grid-row: 4;     }  /* strip — 2col */
+.hc-5 { grid-column: 3 / 5; grid-row: 4;     }  /* strip — 2col */
+.hc-6 { grid-column: 5 / 7; grid-row: 4;     }  /* strip — 2col */
 
 /* ============================================
-   SECTIONS WRAPPER — מקצה לקצה, ללא max-width
+   STREAM GRID — גריד מגזיני רציף
+   ────────────────────────────────────────
+   בסיס: 4px (יחידה קטנה מאוד)
+   spans גדולים ומגוונים → גבהים שונים לחלוטין
+   לא תחושת שורות — כל band גובה שונה
+
+   12 סוגי תאים, 6 bands × 2 = מחזור:
+   Band 1 (~472px): [sc-a 4col×40] [sc-b 2col×40]
+   Band 2 (~340px): [sc-c 3col×29] [sc-d 3col×29]
+   Band 3 (~400px): [sc-e 2col×34] [sc-f 4col×34]  ← הפוך!
+   Band 4 (~304px): [sc-g 3col×26] [sc-h 3col×26]
+   Band 5 (~436px): [sc-i 4col×37] [sc-j 2col×37]
+   Band 6 (~364px): [sc-k 3col×31] [sc-l 3col×31]
+
+   גובה מינימלי: ~304px (band 4)
+   שינוי לפי band: 472→340→400→304→436→364
 ============================================ */
-
-.sections-wrapper {
-  padding-top: var(--space-2xl);
-  padding-bottom: var(--space-2xl);
+.stream-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 4px;
+  grid-auto-flow: row dense;
+  gap: 8px;
+  padding: 0 8px 8px;
 }
 
-/* ============================================
-   NEWS SECTION
-============================================ */
+/* Band 1 (~472px) — נוף רחב + פורטרט */
+.sc-a { grid-column: span 4; grid-row: span 40; }
+.sc-b { grid-column: span 2; grid-row: span 40; }
 
-.news-section {
-  /*
-    padding: 0 28px — החיצים נמצאים ב-position:absolute; [right/left]: -19px
-    מהקצה של carousel-container. עם 28px padding הם יוצגו ב-9px מקצה ה-section.
-    overflow: hidden — מונע overflow אופקי בכל הדף (מבלי לפגוע בגלילה הפנימית של הפס).
-  */
-  padding: 0 var(--space-xl);
-  overflow: hidden;
-  margin-bottom: var(--space-lg);
-}
+/* Band 2 (~340px) — שני ריבועים */
+.sc-c { grid-column: span 3; grid-row: span 29; }
+.sc-d { grid-column: span 3; grid-row: span 29; }
 
-.news-section:last-child {
-  margin-bottom: 0;
-}
+/* Band 3 (~400px) — פורטרט + נוף רחב (הפוך מ-band 1) */
+.sc-e { grid-column: span 2; grid-row: span 34; }
+.sc-f { grid-column: span 4; grid-row: span 34; }
 
-/* ============================================
-   SECTION HEADER — pill + link
-============================================ */
+/* Band 4 (~304px) — שני ריבועים קצרים */
+.sc-g { grid-column: span 3; grid-row: span 26; }
+.sc-h { grid-column: span 3; grid-row: span 26; }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0;
-  margin-bottom: var(--space-base);
-}
+/* Band 5 (~436px) — נוף רחב + פורטרט */
+.sc-i { grid-column: span 4; grid-row: span 37; }
+.sc-j { grid-column: span 2; grid-row: span 37; }
 
-.category-pill {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-base);
-  background: #ddff53;
-  color: #000000;
-  border-radius: 999px;
-  padding: 6px 20px;
-  line-height: 1;
-}
-
-.section-link {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-sm);
-  color: #000000;
-  opacity: 0.45;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-}
-
-.section-link:hover {
-  opacity: 1;
-}
-
-/* ============================================
-   CAROUSEL — מסתיר כותרת פנימית, גדלים
-============================================ */
-
-/* מסתיר את ה-header הפנימי של carousel — יש לנו section-header משלנו */
-.news-section ::ng-deep .carousel-header {
-  display: none;
-}
-
-/* מסיר margin-bottom פנימי */
-.news-section ::ng-deep .carousel-section {
-  margin-bottom: 0;
-}
-
-/* מצמצם padding פנימי של scroll-content — ה-section כבר מרווח מהצד */
-.news-section ::ng-deep .scroll-content {
-  padding-right: 0;
-  padding-left: 0;
-}
-
-/* גדלי כרטיסים — פרופורציה נכונה לרוחב הדף */
-.scroll-item {
-  min-width: 220px;
-  width: 220px;
-  flex-shrink: 0;
-}
-
-/* ============================================
-   EVENTS LIST — מוגבל לרוחב נוח לקריאה
-============================================ */
-
-.events-section .events-list {
-  max-width: 860px;
-  padding: 0;
-}
-
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-base);
-}
-
-.event-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-base);
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: var(--space-lg);
-  direction: rtl;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.event-card:hover {
-  background: #e8e8e8;
-}
-
-.event-image-wrap {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #e0e0e0;
-}
-
-.event-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.event-info {
-  flex: 1;
-  text-align: right;
-  min-width: 0;
-}
-
-.event-status-badge {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 800;
-  font-size: var(--font-xs);
-  background: #ddff53;
-  color: #000000;
-  padding: 2px 10px;
-  border-radius: 999px;
-  display: inline-block;
-  margin-bottom: var(--space-xs);
-}
-
-.event-status-badge.past {
-  background: #404040;
-  color: #ffffff;
-}
-
-.event-name {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-base);
-  color: #000000;
-  margin: 0 0 var(--space-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.event-artist {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.5);
-  margin: 0;
-}
-
-.event-location {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-xs);
-  color: rgba(0, 0, 0, 0.4);
-  margin: 0;
-}
-
-.event-date-col {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.event-date {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-xl);
-  color: #000000;
-}
-
-.event-ticket-btn {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 800;
-  font-size: var(--font-sm);
-  background: #000000;
-  color: #ddff53;
-  border-radius: 999px;
-  padding: var(--space-sm) var(--space-lg);
-  white-space: nowrap;
-}
+/* Band 6 (~364px) — שני ריבועים בינוניים */
+.sc-k { grid-column: span 3; grid-row: span 31; }
+.sc-l { grid-column: span 3; grid-row: span 31; }
 
 /* ============================================
    RESPONSIVE — TABLET ≤1024px
-   3 עמודות, 3 שורות, מלא מסך
+   4 עמודות, כל פריט 2 עמודות
+   ────────────────────────────────────────
+   sc-a ו-sc-b: גבהים שונים → יוצרים stagger
+   sc-i ו-sc-j: גבהים שונים → stagger שני
+   תוצאה: עמודות מסוחררות ← masonry feeling
 ============================================ */
-
 @media (max-width: 1024px) {
-  .scroll-item {
-    min-width: 200px;
-    width: 200px;
+  .hero-grid {
+    grid-template-rows: 1fr 1fr 1fr 0.55fr;
   }
+
+  .hero-cell,
+  .stream-cell {
+    border-radius: 16px;
+  }
+
+  .stream-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 0 6px 6px;
+  }
+
+  .sc-a { grid-column: span 2; grid-row: span 36; }  /* ~424px */
+  .sc-b { grid-column: span 2; grid-row: span 42; }  /* ~496px — stagger! */
+  .sc-c { grid-column: span 2; grid-row: span 28; }  /* ~328px */
+  .sc-d { grid-column: span 2; grid-row: span 28; }
+  .sc-e { grid-column: span 2; grid-row: span 32; }  /* ~376px */
+  .sc-f { grid-column: span 2; grid-row: span 32; }
+  .sc-g { grid-column: span 2; grid-row: span 24; }  /* ~280px */
+  .sc-h { grid-column: span 2; grid-row: span 24; }
+  .sc-i { grid-column: span 2; grid-row: span 34; }  /* ~400px */
+  .sc-j { grid-column: span 2; grid-row: span 38; }  /* ~448px — stagger! */
+  .sc-k { grid-column: span 2; grid-row: span 29; }  /* ~340px */
+  .sc-l { grid-column: span 2; grid-row: span 29; }
 }
 
 /* ============================================
    RESPONSIVE — MOBILE ≤640px
-   2 עמודות, גובה טבעי, scroll אנכי
+   2 עמודות
 ============================================ */
-
 @media (max-width: 640px) {
-  .bento-hero {
-    height: auto;
-    padding: var(--space-base);
-  }
-
-  .bento-news-grid {
+  /* Hero mobile */
+  .hero-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: none;
+    grid-template-rows: unset;
+    grid-auto-rows: minmax(150px, auto);
     height: auto;
+    padding: 6px;
+    gap: 6px;
   }
 
-  /* כרטיס 1: רוחב מלא */
-  .bento-cell-1 { grid-column: 1 / 3; grid-row: auto; }
-  .bento-cell-2 { grid-column: auto;  grid-row: auto; }
-  .bento-cell-3 { grid-column: auto;  grid-row: auto; }
-  .bento-cell-4 { grid-column: auto;  grid-row: auto; }
-  .bento-cell-5 { grid-column: auto;  grid-row: auto; }
-
-  /* מחזירים מצב טבעי — גובה מ-aspect-ratio */
-  .bento-cell {
-    height: auto;
-    overflow: visible;
-    border-radius: 16px;
+  .hc-1, .hc-2, .hc-3,
+  .hc-4, .hc-5, .hc-6 {
+    grid-column: unset;
+    grid-row: unset;
   }
 
-  .bento-cell app-news-banner {
-    position: static;
-    inset: unset;
+  .hc-1 { grid-column: 1 / 3; }
+  .hc-2 { grid-column: 1 / 2; }
+  .hc-3 { grid-column: 2 / 3; }
+  .hc-4 { grid-column: 1 / 3; }
+  .hc-5 { grid-column: 1 / 2; }
+  .hc-6 { grid-column: 2 / 3; }
+
+  .hero-cell,
+  .stream-cell {
+    border-radius: 14px;
   }
 
-  .bento-cell ::ng-deep .news-banner {
-    height: auto;
-    aspect-ratio: 4 / 2.7;
-    border-radius: 16px;
+  /* Stream mobile — 2 עמודות, כל פריט עמודה אחת */
+  .stream-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 0 6px 6px;
   }
 
-  .news-section {
-    padding: 0 var(--space-base);
-    margin-bottom: var(--space-base);
-  }
-
-  .scroll-item {
-    min-width: 180px;
-    width: 180px;
-  }
-
-  .event-card {
-    flex-wrap: wrap;
-    padding: var(--space-base);
-  }
-
-  .event-date-col {
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-  }
+  .sc-a { grid-column: span 1; grid-row: span 26; }  /* ~304px */
+  .sc-b { grid-column: span 1; grid-row: span 30; }  /* ~352px */
+  .sc-c { grid-column: span 1; grid-row: span 24; }  /* ~280px */
+  .sc-d { grid-column: span 1; grid-row: span 24; }
+  .sc-e { grid-column: span 1; grid-row: span 26; }
+  .sc-f { grid-column: span 1; grid-row: span 26; }
+  .sc-g { grid-column: span 1; grid-row: span 22; }  /* ~256px */
+  .sc-h { grid-column: span 1; grid-row: span 22; }
+  .sc-i { grid-column: span 1; grid-row: span 28; }  /* ~328px */
+  .sc-j { grid-column: span 1; grid-row: span 28; }
+  .sc-k { grid-column: span 1; grid-row: span 25; }  /* ~292px */
+  .sc-l { grid-column: span 1; grid-row: span 25; }
 }

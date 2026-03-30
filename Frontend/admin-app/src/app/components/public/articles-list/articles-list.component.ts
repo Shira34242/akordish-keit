@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, NewsBannerComponent],
   templateUrl: './articles-list.component.html',
   styleUrl: './articles-list.component.css'
 })

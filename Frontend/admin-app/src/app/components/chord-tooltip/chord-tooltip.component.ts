@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GUITAR_CHORDS, PIANO_CHORDS, GuitarChord } from '../../utils/chord-data';
-import { simplifyChord, parseChord } from '../../utils/music-utils';
+import { GUITAR_CHORDS, PIANO_CHORDS, UKULELE_CHORDS, GuitarChord, UkuleleChord } from '../../utils/chord-data';
+import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
+import { ChordPlayerService } from '../../services/chord-player.service';
 
 @Component({
     selector: 'app-chord-tooltip',
@@ -12,14 +13,60 @@ import { simplifyChord, parseChord } from '../../utils/music-utils';
 })
 export class ChordTooltipComponent implements OnChanges {
     @Input() chordName: string = '';
-    @Input() instrument: 'guitar' | 'piano' = 'guitar';
+    @Input() instrument: 'guitar' | 'piano' | 'ukulele' = 'guitar';
+    @Input() isPinned: boolean = false;
+    @Output() closePinned = new EventEmitter<void>();
+    @Output() playBtnHoverChange = new EventEmitter<boolean>();
+
+    isPlaying = false;
+    private playTimer: any = null;
+
+    constructor(private chordPlayer: ChordPlayerService) {}
+
+    async playChord(event: Event): Promise<void> {
+        event.stopPropagation();
+        if (this.isPlaying) {
+            this.chordPlayer.stopAll();
+            this.isPlaying = false;
+            clearTimeout(this.playTimer);
+            return;
+        }
+
+        this.isPlaying = true;
+        clearTimeout(this.playTimer);
+
+        if (this.instrument === 'guitar' && this.guitarChord) {
+            await this.chordPlayer.playGuitar(this.guitarChord.frets);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 1500);
+        } else if (this.instrument === 'ukulele' && this.ukuleleChord) {
+            await this.chordPlayer.playUkulele(this.ukuleleChord.frets);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 1800);
+        } else if (this.instrument === 'piano' && this.pianoKeys) {
+            await this.chordPlayer.playPiano(this.activeAbsoluteNotes, this.bassAbsoluteNote);
+            this.playTimer = setTimeout(() => (this.isPlaying = false), 2500);
+        } else {
+            this.isPlaying = false;
+        }
+    }
 
     guitarChord: GuitarChord | null = null;
+    ukuleleChord: UkuleleChord | null = null;
     pianoKeys: number[] | null = null;
     displayChordName: string = ''; // The chord name we're actually displaying
 
+    // Slash chord fallback: bass note that's not part of the root diagram
+    parsedBass: string | null = null;
+    bassAbsoluteNote: number | null = null;
+
     // Piano: absolute note positions (computed from pianoKeys)
     activeAbsoluteNotes: Set<number> = new Set();
+
+    // Note name → semitone (0–11) lookup for bass detection
+    private readonly noteToSemitone: Record<string, number> = {
+        'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+        'E': 4, 'Fb': 4, 'F': 5, 'E#': 5, 'F#': 6, 'Gb': 6,
+        'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11
+    };
 
     // Dynamic piano display keys (computed per chord)
     pianoWhiteKeys: { note: number }[] = [];
@@ -54,37 +101,65 @@ export class ChordTooltipComponent implements OnChanges {
     updateChordData() {
         if (!this.chordName) return;
 
-        // Try to find the chord with progressive simplification
+        // Parse original chord once — used to detect slash-chord fallback
+        const originalParsed = parseChord(this.chordName);
+        const originalBass = originalParsed?.bass ?? null;
+
         const chordVariations = this.getChordVariations(this.chordName);
 
         if (this.instrument === 'guitar') {
             this.pianoKeys = null;
+            this.ukuleleChord = null;
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
             this.pianoBlackKeys = [];
-            // Try each variation until we find a match
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
             for (const variation of chordVariations) {
                 if (GUITAR_CHORDS[variation]) {
                     this.guitarChord = GUITAR_CHORDS[variation];
                     this.displayChordName = variation;
+                    if (originalBass && !variation.includes('/')) {
+                        this.parsedBass = originalBass;
+                    }
                     return;
                 }
             }
-            // No match found
             this.guitarChord = null;
+            this.displayChordName = this.chordName;
+        } else if (this.instrument === 'ukulele') {
+            this.guitarChord = null;
+            this.pianoKeys = null;
+            this.activeAbsoluteNotes = new Set();
+            this.pianoWhiteKeys = [];
+            this.pianoBlackKeys = [];
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
+            for (const variation of chordVariations) {
+                if (UKULELE_CHORDS[variation]) {
+                    this.ukuleleChord = UKULELE_CHORDS[variation];
+                    this.displayChordName = variation;
+                    return;
+                }
+            }
+            this.ukuleleChord = null;
             this.displayChordName = this.chordName;
         } else {
             this.guitarChord = null;
-            // Try each variation until we find a match
+            this.ukuleleChord = null;
+            this.parsedBass = null;
+            this.bassAbsoluteNote = null;
             for (const variation of chordVariations) {
                 if (PIANO_CHORDS[variation]) {
                     this.pianoKeys = PIANO_CHORDS[variation];
                     this.displayChordName = variation;
+                    if (originalBass && !variation.includes('/')) {
+                        this.parsedBass = originalBass;
+                    }
                     this.computeAbsoluteNotes();
                     return;
                 }
             }
-            // No match found
             this.pianoKeys = null;
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
@@ -154,6 +229,18 @@ export class ChordTooltipComponent implements OnChanges {
 
         // Set display width based on number of white keys
         this.pianoDisplayWidth = this.pianoWhiteKeys.length * 20;
+
+        // Compute which absolute note corresponds to the bass note (for slash chord fallback)
+        this.bassAbsoluteNote = null;
+        if (this.parsedBass) {
+            const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+            if (bassSemitone >= 0) {
+                const bassAbsolute = bassSemitone >= root ? bassSemitone : bassSemitone + 12;
+                if (this.activeAbsoluteNotes.has(bassAbsolute)) {
+                    this.bassAbsoluteNote = bassAbsolute;
+                }
+            }
+        }
     }
 
     /**
@@ -168,58 +255,65 @@ export class ChordTooltipComponent implements OnChanges {
     }
 
     /**
-     * Generate variations of the chord name to try matching
-     * Returns array in order of preference (exact match -> simplified versions)
+     * Generate variations of the chord name to try matching against the DB.
+     * Returns array in order of preference: exact → normalized → simplified extensions → root only.
      */
     private getChordVariations(chord: string): string[] {
         const variations: string[] = [];
 
-        // 1. Exact match
+        // 1. Exact match (as received, e.g. "Am7b5", "CΔ7", "G7(b9)")
         variations.push(chord);
 
-        // 2. Normalize common variations (min -> m, maj7 -> maj7, etc.)
-        const normalized = chord
-            .replace(/min(?!or)/gi, 'm')  // min -> m (but not "minor")
-            .replace(/major/gi, 'maj')     // major -> maj
-            .replace(/Maj/g, 'maj')        // Maj -> maj
-            .replace(/M7/g, 'maj7')        // M7 -> maj7
-            .replace(/M(?!aj)/g, 'maj');   // M -> maj (but not Maj)
-
-        if (normalized !== chord) {
-            variations.push(normalized);
+        // 2. Normalized name via parser — handles Δ, °, ø, +, parentheses, min→m, M7→maj7 …
+        //    e.g. "CΔ7" → "Cmaj7",  "G7(b9)" → "G7b9",  "Cmin7" → "Cm7"
+        const parsed = parseChord(chord);
+        if (parsed?.normalizedName && !variations.includes(parsed.normalizedName)) {
+            variations.push(parsed.normalizedName);
         }
 
-        // 3. Try with simplified extensions
-        // For complex chords like Cm7b5, try Cm7, then Cm
-        const parsed = parseChord(chord);
+        // 3. Try progressive simplifications (strip extensions one by one)
         if (parsed) {
-            const root = parsed.root;
-            const suffix = parsed.suffix;
-            const bass = parsed.bass;
+            const { root, suffix, bass } = parsed;
 
-            // Try without bass note
+            // Without bass note (e.g. "Am7/C" → "Am7")
             if (bass) {
                 const withoutBass = root + suffix;
-                variations.push(withoutBass);
+                if (!variations.includes(withoutBass)) variations.push(withoutBass);
             }
 
-            // Try common simplifications of the suffix
-            if (suffix) {
-                // Remove numbers after certain patterns
-                const simplifiedSuffixes = this.simplifySuffix(suffix);
-                for (const simpleSuffix of simplifiedSuffixes) {
-                    const simpleChord = root + simpleSuffix + (bass ? '/' + bass : '');
-                    if (!variations.includes(simpleChord)) {
-                        variations.push(simpleChord);
+            // Enharmonic equivalent (e.g. G#m7 → Abm7, Fm/Ab → Fm/G#)
+            const altRoot = enharmonicRoot(root);
+            if (altRoot) {
+                const enharmonicName = altRoot + suffix + (bass ? '/' + bass : '');
+                if (!variations.includes(enharmonicName)) variations.push(enharmonicName);
+                if (bass) {
+                    const altBass = enharmonicRoot(bass);
+                    if (altBass) {
+                        const bothAlt = altRoot + suffix + '/' + altBass;
+                        if (!variations.includes(bothAlt)) variations.push(bothAlt);
+                        const origWithAltBass = root + suffix + '/' + altBass;
+                        if (!variations.includes(origWithAltBass)) variations.push(origWithAltBass);
                     }
+                }
+            } else if (bass) {
+                const altBass = enharmonicRoot(bass);
+                if (altBass) {
+                    const origWithAltBass = root + suffix + '/' + altBass;
+                    if (!variations.includes(origWithAltBass)) variations.push(origWithAltBass);
                 }
             }
 
-            // 4. Ultimate fallback: just root + m if minor, or just root
-            const basicSimple = simplifyChord(chord);
-            if (!variations.includes(basicSimple)) {
-                variations.push(basicSimple);
+            // Simplified suffixes (e.g. "m7b5" → ["m7b5","m7","m",""])
+            if (suffix) {
+                for (const simpleSuffix of this.simplifySuffix(suffix)) {
+                    const candidate = root + simpleSuffix + (bass ? '/' + bass : '');
+                    if (!variations.includes(candidate)) variations.push(candidate);
+                }
             }
+
+            // 4. Ultimate fallback: root + m (if minor quality) or just root
+            const basicSimple = simplifyChord(chord);
+            if (!variations.includes(basicSimple)) variations.push(basicSimple);
         }
 
         return variations;
@@ -276,6 +370,13 @@ export class ChordTooltipComponent implements OnChanges {
         return results;
     }
 
+    // Returns the lowest active fret (> 0) in the chord — used for position label
+    getMinActiveFret(): number {
+        if (!this.guitarChord) return 1;
+        const active = this.guitarChord.frets.filter(f => f > 0);
+        return active.length > 0 ? Math.min(...active) : 1;
+    }
+
     // Helpers for Guitar SVG
     getStringX(stringIndex: number): number {
         return 10 + stringIndex * 10;
@@ -304,7 +405,28 @@ export class ChordTooltipComponent implements OnChanges {
         return this.activeAbsoluteNotes.has(note);
     }
 
-    // Helpers for Barre
+    getPianoKeyFill(note: number, isBlack: boolean): string {
+        if (!this.isKeyActiveAbsolute(note)) return isBlack ? 'black' : 'white';
+        return '#ddff53'; // all active notes (including bass) get accent yellow
+    }
+
+    /**
+     * Returns the string index (0=low E … 5=high e) that produces the bass note,
+     * or null if the bass note is not found in the current guitar voicing.
+     */
+    getBassStringIndex(): number | null {
+        if (!this.guitarChord || !this.parsedBass) return null;
+        const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+        if (bassSemitone < 0) return null;
+        const openStrings = [4, 9, 2, 7, 11, 4]; // E A D G B e
+        for (let i = 0; i < 6; i++) {
+            if (this.guitarChord.frets[i] < 0) continue; // muted
+            if ((openStrings[i] + this.guitarChord.frets[i]) % 12 === bassSemitone) return i;
+        }
+        return null;
+    }
+
+    // Helpers for Barre (guitar)
     getBarreX(barre: any): number {
         const minString = Math.min(barre.fromString, barre.toString);
         return 10 + minString * 10 - 4;
@@ -313,5 +435,25 @@ export class ChordTooltipComponent implements OnChanges {
     getBarreWidth(barre: any): number {
         const diff = Math.abs(barre.fromString - barre.toString);
         return diff * 10 + 8;
+    }
+
+    // Helpers for Ukulele SVG (4 strings, spacing 14px, start x=10)
+    getUkuStringX(i: number): number { return 10 + i * 14; }
+    getUkuFretY(fret: number): number { return 10 + fret * 12; }
+
+    getUkuBarreX(barre: any): number {
+        const minS = Math.min(barre.fromString, barre.toString);
+        return 10 + minS * 14 - 4;
+    }
+
+    getUkuBarreWidth(barre: any): number {
+        const diff = Math.abs(barre.fromString - barre.toString);
+        return diff * 14 + 8;
+    }
+
+    getUkuMinActiveFret(): number {
+        if (!this.ukuleleChord) return 1;
+        const active = this.ukuleleChord.frets.filter(f => f > 0);
+        return active.length > 0 ? Math.min(...active) : 1;
     }
 }

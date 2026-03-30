@@ -1,106 +1,50 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
-import { CarouselComponent } from '../../shared/carousel/carousel.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
-import { EventService } from '../../../services/admin/event.service';
-import { NewsPageSectionService } from '../../../services/news-page-section.service';
+import { ArticleService } from '../../../services/admin/article.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
-import { Article } from '../../../models/article.model';
-import { NewsPageSection } from '../../../models/news-page-section.model';
-import { UpcomingEventDto } from '../../../models/event.model';
+import { Article, ArticleContentType } from '../../../models/article.model';
 
 @Component({
   selector: 'app-music-news',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent, CarouselComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent],
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })
 export class MusicNewsComponent implements OnInit, OnDestroy {
-  @ViewChild('pageHero', { static: false }) pageHeroRef!: ElementRef;
+  @ViewChild('sentinel', { static: false }) sentinelRef!: ElementRef;
 
   private readonly featuredContentService = inject(FeaturedContentService);
-  private readonly eventService = inject(EventService);
-  private readonly newsPageSectionService = inject(NewsPageSectionService);
-  private readonly router = inject(Router);
+  private readonly articleService = inject(ArticleService);
   private readonly destroyRef = inject(DestroyRef);
 
-  // שורה ראשונה - 4 כתבות מרכזיות
   featuredArticles: FeaturedContent[] = [];
-
-  // פסים דינמיים מה-API
-  sections: NewsPageSection[] = [];
-
-  // הופעות קרובות
-  upcomingEvents: UpcomingEventDto[] = [];
-
+  newsArticles: Article[] = [];
   isLoading = true;
+  isLoadingMore = false;
 
-  private fullHeroHeight = 0;
-  private scrollListener?: () => void;
+  private currentPage = 1;
+  private readonly pageSize = 12;
+  private hasMore = true;
+  private observer?: IntersectionObserver;
 
   ngOnInit(): void {
-    this.loadAllContent();
-  }
-
-  ngOnDestroy(): void {
-    if (this.scrollListener) {
-      window.removeEventListener('scroll', this.scrollListener);
-    }
-  }
-
-  private initHero(): void {
-    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
-    if (!hero) return;
-    this.fullHeroHeight = Math.round(window.innerHeight * 0.48);
-    hero.style.height = this.fullHeroHeight + 'px';
-    this.scrollListener = () => this.shrinkHero();
-    window.addEventListener('scroll', this.scrollListener, { passive: true });
-  }
-
-  private shrinkHero(): void {
-    const hero = this.pageHeroRef?.nativeElement as HTMLElement | null;
-    if (!hero) return;
-
-    const minHeight = Math.round(window.innerHeight * 0.02 + 60);
-    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
-    hero.style.height = newHeight + 'px';
-
-    const progress = Math.min(1, window.scrollY / 160);
-    const inner = hero.querySelector('.hero-inner') as HTMLElement | null;
-    if (inner) inner.style.opacity = String(1 - progress);
-
-    const overlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
-    if (overlay) {
-      const collapseRange = this.fullHeroHeight - minHeight;
-      const collapseProgress = collapseRange > 0
-        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
-        : 0;
-      overlay.style.opacity = String(collapseProgress);
-    }
-  }
-
-  private loadAllContent(): void {
-    this.isLoading = true;
-
-    Promise.all([
-      this.loadFeaturedContent(),
-      this.loadSections(),
-      this.loadUpcomingEvents()
-    ]).then(() => {
+    this.loadFeaturedContent().then(() => this.loadNewsArticles()).then(() => {
       this.isLoading = false;
-      setTimeout(() => this.initHero(), 0);
-    }).catch(error => {
-      console.error('Error loading content:', error);
-      this.isLoading = false;
+      setTimeout(() => this.setupObserver(), 100);
     });
   }
 
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
+
   private loadFeaturedContent(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.featuredContentService.getActiveFeaturedContent()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -108,89 +52,74 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
             this.featuredArticles = content.sort((a, b) => a.displayOrder - b.displayOrder);
             resolve();
           },
-          error: (error) => {
-            console.error('Error loading featured content:', error);
-            reject(error);
-          }
+          error: () => resolve()
         });
     });
   }
 
-  /**
-   * טוען את הפסים הדינמיים מה-API — כולל הכתבות של כל פס
-   */
-  private loadSections(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.newsPageSectionService.getActiveSections()
+  private loadNewsArticles(): Promise<void> {
+    if (!this.hasMore || this.isLoadingMore) return Promise.resolve();
+    this.isLoadingMore = true;
+    return new Promise((resolve) => {
+      this.articleService.getArticles(
+        this.currentPage, this.pageSize,
+        undefined, undefined, ArticleContentType.News
+      )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: (sections) => {
-            this.sections = sections;
+          next: (result) => {
+            const featuredIds = new Set(this.featuredArticles.map(f => f.article.id));
+            const newItems = result.items.filter(a => !featuredIds.has(a.id));
+            this.newsArticles = [...this.newsArticles, ...newItems];
+            this.hasMore = result.hasNextPage;
+            this.currentPage++;
+            this.isLoadingMore = false;
             resolve();
           },
-          error: (error) => {
-            console.error('Error loading news page sections:', error);
-            reject(error);
+          error: () => {
+            this.isLoadingMore = false;
+            resolve();
           }
         });
     });
   }
 
-  private loadUpcomingEvents(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.eventService.getUpcomingEvents(10)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (events) => {
-            this.upcomingEvents = this.sortEventsByPriority(events);
-            resolve();
-          },
-          error: (error) => {
-            console.error('Error loading upcoming events:', error);
-            reject(error);
-          }
-        });
-    });
+  private setupObserver(): void {
+    if (!this.sentinelRef?.nativeElement) return;
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && this.hasMore && !this.isLoadingMore) {
+          this.loadNewsArticles();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    this.observer.observe(this.sentinelRef.nativeElement);
   }
 
-  private sortEventsByPriority(events: UpcomingEventDto[]): UpcomingEventDto[] {
-    return events.sort((a, b) => {
-      const priorityA = this.getEventPriority(a);
-      const priorityB = this.getEventPriority(b);
-      if (priorityA === priorityB) {
-        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-      }
-      return priorityA - priorityB;
-    });
-  }
-
-  private getEventPriority(event: UpcomingEventDto): number {
-    if (event.eventStatus === 'היום') return 1;
-    if (event.eventStatus === 'אירוע שחלף') return 3;
-    return 2;
-  }
-
-  navigateToArticle(article: Article): void {
-    const route = article.contentType === 0 ? '/news' : '/blog';
-    this.router.navigate([route, article.slug]);
-  }
-
-  navigateToFeaturedArticle(featured: FeaturedContent): void {
-    this.navigateToArticle(featured.article);
-  }
-
-  openTicketLink(event: UpcomingEventDto): void {
-    window.open(event.ticketUrl, '_blank');
-  }
-
-  /**
-   * ניווט ל"כל הכתבות" של פס — לפי קטגוריה או סוג תוכן
-   */
-  navigateToSection(section: NewsPageSection): void {
-    if (section.sectionType === 0 && section.categoryId !== undefined) {
-      this.router.navigate(['/articles'], { queryParams: { category: section.categoryId } });
-    } else if (section.sectionType === 1 && section.contentTypeId !== undefined) {
-      this.router.navigate(['/articles'], { queryParams: { contentType: section.contentTypeId } });
-    }
+  getCellClass(index: number): string {
+    // מחזור 12 פריטים — ממלא 6 עמודות ללא חורים
+    // כל band גובה שונה → אין תחושת שורות אחידות
+    // Band 1 (~472px): [sc-a 4col×40] [sc-b 2col×40]  → 4+2=6 ✓
+    // Band 2 (~340px): [sc-c 3col×29] [sc-d 3col×29]  → 3+3=6 ✓
+    // Band 3 (~400px): [sc-e 2col×34] [sc-f 4col×34]  → 2+4=6 ✓ הפוך!
+    // Band 4 (~304px): [sc-g 3col×26] [sc-h 3col×26]  → 3+3=6 ✓
+    // Band 5 (~436px): [sc-i 4col×37] [sc-j 2col×37]  → 4+2=6 ✓
+    // Band 6 (~364px): [sc-k 3col×31] [sc-l 3col×31]  → 3+3=6 ✓
+    const patterns = [
+      'sc-a',  //  0 — נוף רחב גדול    (4col, ~472px)
+      'sc-b',  //  1 — פורטרט גדול     (2col, ~472px)
+      'sc-c',  //  2 — ריבועי          (3col, ~340px)
+      'sc-d',  //  3 — ריבועי          (3col, ~340px)
+      'sc-e',  //  4 — פורטרט בינוני   (2col, ~400px)
+      'sc-f',  //  5 — נוף רחב הפוך    (4col, ~400px)
+      'sc-g',  //  6 — ריבועי קצר      (3col, ~304px)
+      'sc-h',  //  7 — ריבועי קצר      (3col, ~304px)
+      'sc-i',  //  8 — נוף רחב         (4col, ~436px)
+      'sc-j',  //  9 — פורטרט          (2col, ~436px)
+      'sc-k',  // 10 — ריבועי בינוני   (3col, ~364px)
+      'sc-l',  // 11 — ריבועי בינוני   (3col, ~364px)
+    ];
+    return patterns[index % patterns.length];
   }
 }
