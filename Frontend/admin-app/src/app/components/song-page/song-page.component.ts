@@ -19,11 +19,12 @@ import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component'
 import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
+import { PrintPanelComponent } from './print-panel/print-panel.component';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent],
+    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
@@ -69,6 +70,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     tooltipHovered = false;
     private tooltipCloseTimer: any = null;
 
+    // Print Panel State
+    isPrintPanelOpen: boolean = false;
+
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
@@ -108,13 +112,20 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
         });
+
+        // חסימת העתקה מדף השיר
+        document.addEventListener('copy', this.preventCopy);
     }
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
+        document.removeEventListener('copy', this.preventCopy);
         this.stopAutoScroll();
         this.isAutoScroll = false;
     }
+
+    // חסימת העתקה
+    private preventCopy = (e: ClipboardEvent) => e.preventDefault();
 
     // Arrow function preserves `this` when used as a callback
     private nativeDocumentClick = (event: MouseEvent) => {
@@ -567,68 +578,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     handlePrint() {
         if (!this.song) return;
+        this.isPrintPanelOpen = true;
+    }
 
-        const artistName = this.song.artists && this.song.artists.length > 0
-            ? this.song.artists.map((a: any) => a.name).join(', ')
-            : (this.song.artistName || '');
-
-        const originalKey = this.song.originalKeyName || '';
-
-        // Process lyrics for print
-        const lines = this.song.lyricsWithChords.split('\n');
-        const processedLyrics = lines.map((line: string) => {
-            // Block Chords
-            if (isChordLine(line)) {
-                return line.replace(/\S+/g, (token) =>
-                    isChord(token) ? `<span class="chord">${token}</span>` : token
-                );
-            }
-
-            // Inline Chords [Am] — only real chords; [Verse] etc. pass through
-            return line.replace(/\[(.*?)\]/g, (match, chord) =>
-                isChord(chord) ? `<span class="chord">${chord}</span>` : match
-            );
-        }).join('\n');
-
-        const printContent = `
-      <html dir="rtl">
-        <head>
-          <title>${this.song.title} - ${artistName}</title>
-          <style>
-            body { font-family: 'Heebo', Arial, sans-serif; margin: 20px; direction: rtl; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-            .artist { font-size: 18px; color: #666; }
-            .key { font-size: 14px; color: #888; }
-            .lyrics { white-space: pre-wrap; font-family: 'Heebo', sans-serif; font-size: 14px; line-height: 2.2; }
-            .chord { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-weight: bold; color: #0066cc; margin: 0 2px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">${this.song.title}</div>
-            <div class="artist">${artistName}</div>
-            ${originalKey ? `<div class="key">סולם: ${originalKey}</div>` : ''}
-          </div>
-          <div class="lyrics">${processedLyrics}</div>
-          <div class="footer">
-            מודפס מאתר אקורדישקייט - ${window.location.origin}
-          </div>
-        </body>
-      </html>
-    `;
-
-        const printWindow = window.open('', '', 'height=600,width=800');
-        if (printWindow) {
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
-        }
+    closePrintPanel() {
+        this.isPrintPanelOpen = false;
     }
 
     handleImageError(event: any) {

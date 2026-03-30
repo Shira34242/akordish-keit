@@ -531,6 +531,8 @@
 .lyrics-content {
     direction: rtl;
     color: #000000;
+    user-select: none;
+    -webkit-user-select: none;
     white-space: pre-wrap;
     line-height: 2.2;
     font-size: var(--lyrics-font-size, 1.1rem);

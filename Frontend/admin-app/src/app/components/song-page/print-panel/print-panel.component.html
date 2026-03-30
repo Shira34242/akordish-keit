@@ -1,0 +1,153 @@
+<div class="print-panel-backdrop" (click)="onBackdropClick($event)">
+    <div class="print-panel">
+
+        <!-- כותרת -->
+        <div class="panel-header">
+            <span class="panel-title">הדפסה</span>
+            <button class="close-btn" (click)="close.emit()" title="סגור">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- גוף -->
+        <div class="panel-body">
+
+            <!-- עמודת הגדרות -->
+            <div class="settings-col">
+
+                <!-- כרטיס פריסה -->
+                <div class="settings-card">
+
+                    <div class="setting-group">
+                        <div class="setting-label">עמודות</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="columns === 1" (click)="columns = 1">1</button>
+                            <button class="seg-btn" [class.active]="columns === 2" (click)="columns = 2">2</button>
+                            <button class="seg-btn" [class.active]="columns === 3" (click)="columns = 3">3</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>גודל פונט</span>
+                            <span class="setting-value">{{ fontSize }}px</span>
+                        </div>
+                        <input class="range-slider" type="range" min="10" max="24" step="1" [(ngModel)]="fontSize">
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">אקורדים</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="showChords" (click)="showChords = true">מוצגים</button>
+                            <button class="seg-btn" [class.active]="!showChords" (click)="showChords = false">מוסתרים</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- כרטיס צבעים -->
+                <div class="settings-card">
+
+                    <div class="setting-group" *ngIf="showChords">
+                        <div class="setting-label">צבע אקורדים</div>
+                        <div class="color-row">
+                            <label class="color-swatch-label">
+                                <input type="color" [(ngModel)]="chordColor">
+                                <span class="color-swatch" [style.background]="chordColor"></span>
+                            </label>
+                            <span class="color-hex">{{ chordColor }}</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">צבע מילים</div>
+                        <div class="color-row">
+                            <label class="color-swatch-label">
+                                <input type="color" [(ngModel)]="lyricsColor">
+                                <span class="color-swatch" [style.background]="lyricsColor"></span>
+                            </label>
+                            <span class="color-hex">{{ lyricsColor }}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- כרטיס מוזיקה -->
+                <div class="settings-card">
+
+                    <div class="setting-group" *ngIf="song?.easyKeyId">
+                        <div class="setting-label">גרסה</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="!isEasyMode" (click)="setVersion(false)">מקורית</button>
+                            <button class="seg-btn" [class.active]="isEasyMode" (click)="setVersion(true)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                    fill="currentColor" stroke="none">
+                                    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+                                </svg>
+                                קלה
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>סולם</span>
+                            <span class="setting-value">{{ currentKey }}</span>
+                        </div>
+                        <div class="transpose-row">
+                            <button class="transpose-btn" (click)="transpose(-1)">−</button>
+                            <span class="transpose-val" dir="ltr">{{ transposeDisplay }}</span>
+                            <button class="transpose-btn" (click)="transpose(1)">+</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- כפתורי פעולה -->
+                <div class="action-area">
+                    <button class="action-btn btn-print" (click)="print()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                            <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+                            <rect x="6" y="14" width="12" height="8" rx="1"/>
+                        </svg>
+                        הדפס
+                    </button>
+                    <button class="action-btn btn-pdf" (click)="exportPdf()" [disabled]="isExporting">
+                        <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" x2="12" y1="15" y2="3"/>
+                        </svg>
+                        <span class="spinner-sm" *ngIf="isExporting"></span>
+                        {{ isExporting ? 'מייצא...' : 'ייצא PDF' }}
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- תצוגה מקדימה -->
+            <div class="preview-col">
+                <div class="preview-inner">
+                    <div class="preview-header">
+                        <div class="preview-title">{{ song?.title }}</div>
+                        <div class="preview-artist">{{ artistName }}</div>
+                        <div class="preview-key" *ngIf="song?.originalKeyName">סולם: {{ currentKey }}</div>
+                    </div>
+                    <div
+                        class="preview-lyrics"
+                        [style.fontSize.px]="fontSize"
+                        [style.columnCount]="columns"
+                        [innerHTML]="printLyricsHtml">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

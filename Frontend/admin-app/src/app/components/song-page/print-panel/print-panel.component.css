@@ -1,0 +1,423 @@
+/* ===== Backdrop ===== */
+.print-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(64, 64, 64, 0.85);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    direction: rtl;
+}
+
+/* ===== Panel ===== */
+.print-panel {
+    background: #F2F2F2;
+    border-radius: 28px;
+    width: min(1160px, 96vw);
+    height: min(90vh, 840px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===== Header ===== */
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 0 20px;
+    height: 52px;
+    flex-shrink: 0;
+    background: #F2F2F2;
+}
+
+.panel-title {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+}
+
+.close-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    color: #000;
+}
+.close-btn:hover {
+    background: #ffffff;
+}
+
+/* ===== Body ===== */
+.panel-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 8px;
+    padding: 0 8px 8px 8px;
+}
+
+/* ===== Settings Column ===== */
+.settings-col {
+    width: 268px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+/* ===== Settings Card ===== */
+.settings-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===== Setting Groups ===== */
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-label {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-value {
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #000;
+}
+
+/* ===== Segmented Toggle Group ===== */
+.btn-group {
+    display: flex;
+    background: #F2F2F2;
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.seg-btn {
+    flex: 1;
+    padding: 7px 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    font-size: 12px;
+    transition: background 0.15s;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    gap: 3px;
+}
+.seg-btn.active {
+    background: #ddff53;
+    font-weight: 800;
+}
+.seg-btn:not(.active):hover {
+    background: #ffffff;
+}
+
+/* ===== Range Slider ===== */
+.range-slider {
+    width: 100%;
+    accent-color: #000000;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: #F2F2F2;
+    border-radius: 999px;
+    outline: none;
+}
+.range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* ===== Color Picker ===== */
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-swatch-label {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+}
+.color-swatch-label:hover {
+    transform: scale(1.1);
+}
+.color-swatch-label input[type=color] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    border-radius: 50%;
+}
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: block;
+    pointer-events: none;
+}
+
+.color-hex {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    font-size: 11px;
+    color: #404040;
+    direction: ltr;
+}
+
+/* ===== Transpose Row ===== */
+.transpose-row {
+    display: flex;
+    align-items: center;
+    background: #F2F2F2;
+    border-radius: 999px;
+    padding: 3px;
+    gap: 0;
+}
+
+.transpose-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+.transpose-btn:hover {
+    background: #ddff53;
+}
+
+.transpose-val {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 13px;
+    min-width: 32px;
+    text-align: center;
+    flex: 1;
+}
+
+/* ===== Action Buttons ===== */
+.action-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 999px;
+    border: none;
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.btn-print {
+    background: #ddff53;
+    color: #000;
+}
+.btn-print:hover {
+    opacity: 0.85;
+}
+
+.btn-pdf {
+    background: #000;
+    color: #fff;
+}
+.btn-pdf:hover {
+    background: #404040;
+}
+.btn-pdf:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* ===== Spinner ===== */
+.spinner-sm {
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255,255,255,0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Preview Column ===== */
+.preview-col {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow-y: auto;
+    padding: 32px 36px;
+}
+
+/* ===== Preview Content ===== */
+.preview-inner {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.preview-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #F2F2F2;
+}
+
+.preview-title {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.preview-artist {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    font-size: 14px;
+    color: #404040;
+    margin-top: 4px;
+}
+
+.preview-key {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* ===== Preview Lyrics ===== */
+.preview-lyrics {
+    font-family: 'Open Sans', sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    font-weight: 300;
+    line-height: 2;
+    white-space: pre-wrap;
+    direction: rtl;
+    text-align: right;
+    column-gap: 32px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 720px) {
+    .print-panel {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+    .panel-body {
+        flex-direction: column;
+        padding: 0 0 0 0;
+        gap: 0;
+    }
+    .settings-col {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        max-height: 200px;
+        padding: 8px;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .settings-card {
+        min-width: 160px;
+        flex: 1;
+        padding: 12px;
+        gap: 10px;
+    }
+    .preview-col {
+        border-radius: 0;
+        padding: 20px 16px;
+    }
+    .action-area {
+        flex-direction: row;
+        margin-top: 0;
+    }
+}
