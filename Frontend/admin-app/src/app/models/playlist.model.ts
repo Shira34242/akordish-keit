@@ -5,6 +5,7 @@ export interface Playlist {
   imageUrl?: string;
   isPublic: boolean;
   isAdopted: boolean;
+  isDefault: boolean;
   songCount: number;
   createdAt: Date;
   updatedAt?: Date;
@@ -18,6 +19,7 @@ export interface PlaylistDetail {
   imageUrl?: string;
   isPublic: boolean;
   isAdopted: boolean;
+  isDefault: boolean;
   songs: PlaylistSong[];
   createdAt: Date;
   updatedAt?: Date;

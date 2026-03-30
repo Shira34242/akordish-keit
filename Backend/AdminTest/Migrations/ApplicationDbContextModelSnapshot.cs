@@ -2175,6 +2175,11 @@ namespace AkordishKeit.Migrations
                     b.Property<bool>("IsAdopted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsPublic")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

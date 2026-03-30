@@ -120,6 +120,64 @@
   to { transform: rotate(360deg); }
 }
 
+/* Quick Save Section */
+.quick-save-section {
+  margin-bottom: 16px;
+}
+
+.btn-quick-save {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #000000;
+  color: #ddff53;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.btn-quick-save:hover:not(:disabled) {
+  background: #1a1a1a;
+  transform: translateY(-1px);
+}
+
+.btn-quick-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Section Label */
+.section-label {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0 0 8px 0;
+  padding-right: 4px;
+}
+
+/* Default Badge */
+.default-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #ddff53;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.playlist-item--default {
+  border-color: #ddff53;
+  background: rgba(221, 255, 83, 0.06);
+}
+
 /* Playlists List */
 .playlists-list {
   max-height: 260px;

@@ -16,9 +16,11 @@ public class PlaylistService : IPlaylistService
 
     public async Task<List<PlaylistDto>> GetUserPlaylistsAsync(int userId)
     {
-        return await _context.Playlists
+        // מוודא שרשימת ברירת המחדל קיימת (יוצר אותה בפעם הראשונה)
+        await EnsureDefaultPlaylistAsync(userId);
+
+        var playlists = await _context.Playlists
             .Where(p => p.UserId == userId)
-            .OrderByDescending(p => p.CreatedAt)
             .Select(p => new PlaylistDto
             {
                 Id = p.Id,
@@ -27,11 +29,18 @@ public class PlaylistService : IPlaylistService
                 ImageUrl = p.ImageUrl,
                 IsPublic = p.IsPublic,
                 IsAdopted = p.IsAdopted,
+                IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })
             .ToListAsync();
+
+        // רשימת ברירת המחדל תמיד ראשונה
+        return playlists
+            .OrderByDescending(p => p.IsDefault)
+            .ThenByDescending(p => p.CreatedAt)
+            .ToList();
     }
 
     public async Task<PlaylistDetailDto?> GetPlaylistByIdAsync(int playlistId, int userId)
@@ -54,6 +63,7 @@ public class PlaylistService : IPlaylistService
             ImageUrl = playlist.ImageUrl,
             IsPublic = playlist.IsPublic,
             IsAdopted = playlist.IsAdopted,
+            IsDefault = playlist.IsDefault,
             Songs = playlist.PlaylistSongs
                 .OrderBy(ps => ps.Order)
                 .Select(ps => new PlaylistSongDto
@@ -74,10 +84,12 @@ public class PlaylistService : IPlaylistService
 
     public async Task<List<PlaylistDto>> GetRecentPlaylistsAsync(int userId, int count = 2)
     {
-        return await _context.Playlists
+        // מוודא שרשימת ברירת המחדל קיימת
+        await EnsureDefaultPlaylistAsync(userId);
+
+        // קבלת הרשימות: ברירת המחדל תמיד ראשונה, ואחריה האחרונות לפי זמן
+        var allPlaylists = await _context.Playlists
             .Where(p => p.UserId == userId)
-            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
-            .Take(count)
             .Select(p => new PlaylistDto
             {
                 Id = p.Id,
@@ -86,11 +98,21 @@ public class PlaylistService : IPlaylistService
                 ImageUrl = p.ImageUrl,
                 IsPublic = p.IsPublic,
                 IsAdopted = p.IsAdopted,
+                IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })
             .ToListAsync();
+
+        var defaultPlaylist = allPlaylists.Where(p => p.IsDefault).ToList();
+        var others = allPlaylists
+            .Where(p => !p.IsDefault)
+            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+            .Take(count - defaultPlaylist.Count)
+            .ToList();
+
+        return defaultPlaylist.Concat(others).ToList();
     }
 
     public async Task<List<PlaylistDto>> GetPublicPlaylistsAsync()
@@ -106,6 +128,7 @@ public class PlaylistService : IPlaylistService
                 ImageUrl = p.ImageUrl,
                 IsPublic = p.IsPublic,
                 IsAdopted = p.IsAdopted,
+                IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
@@ -136,6 +159,7 @@ public class PlaylistService : IPlaylistService
             ImageUrl = playlist.ImageUrl,
             IsPublic = playlist.IsPublic,
             IsAdopted = false,
+            IsDefault = false,
             SongCount = 0,
             CreatedAt = playlist.CreatedAt,
             UpdatedAt = playlist.UpdatedAt
@@ -173,6 +197,7 @@ public class PlaylistService : IPlaylistService
             ImageUrl = playlist.ImageUrl,
             IsPublic = playlist.IsPublic,
             IsAdopted = playlist.IsAdopted,
+            IsDefault = playlist.IsDefault,
             SongCount = await _context.PlaylistSongs.CountAsync(ps => ps.PlaylistId == playlistId),
             CreatedAt = playlist.CreatedAt,
             UpdatedAt = playlist.UpdatedAt
@@ -185,6 +210,9 @@ public class PlaylistService : IPlaylistService
             .FirstOrDefaultAsync(p => p.Id == playlistId && p.UserId == userId);
 
         if (playlist == null) return false;
+
+        // רשימת ברירת המחדל מוגנת — לא ניתן למחוק
+        if (playlist.IsDefault) return false;
 
         // Cascade Delete יסיר את כל PlaylistSongs אוטומטית
         _context.Playlists.Remove(playlist);
@@ -352,6 +380,7 @@ public class PlaylistService : IPlaylistService
             SongCount = originalPlaylist.PlaylistSongs.Count,
             IsPublic = adoptedPlaylist.IsPublic,
             IsAdopted = true,
+            IsDefault = false,
             CreatedAt = adoptedPlaylist.CreatedAt
         };
     }
@@ -406,7 +435,43 @@ public class PlaylistService : IPlaylistService
             SongCount = originalPlaylist.PlaylistSongs.Count,
             IsPublic = duplicatedPlaylist.IsPublic,
             IsAdopted = duplicatedPlaylist.IsAdopted,
+            IsDefault = false,
             CreatedAt = duplicatedPlaylist.CreatedAt
         };
+    }
+
+    // ════════════════════════════════════════════════════════
+    //   DEFAULT PLAYLIST — "השמורים שלי"
+    // ════════════════════════════════════════════════════════
+
+    public async Task<Playlist> EnsureDefaultPlaylistAsync(int userId)
+    {
+        var existing = await _context.Playlists
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.IsDefault);
+
+        if (existing != null) return existing;
+
+        // יוצר את רשימת ברירת המחדל בפעם הראשונה
+        var defaultPlaylist = new Playlist
+        {
+            UserId = userId,
+            Name = "השמורים שלי",
+            Description = "רשימת ברירת המחדל שלי",
+            IsPublic = false,
+            IsAdopted = false,
+            IsDefault = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Playlists.Add(defaultPlaylist);
+        await _context.SaveChangesAsync();
+
+        return defaultPlaylist;
+    }
+
+    public async Task<bool> SaveToDefaultPlaylistAsync(int songId, int userId)
+    {
+        var defaultPlaylist = await EnsureDefaultPlaylistAsync(userId);
+        return await AddSongToPlaylistAsync(defaultPlaylist.Id, songId, userId);
     }
 }

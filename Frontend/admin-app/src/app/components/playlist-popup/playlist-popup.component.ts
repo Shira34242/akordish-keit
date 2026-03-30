@@ -18,6 +18,7 @@ export class PlaylistPopupComponent implements OnInit {
 
   recentPlaylists: Playlist[] = [];
   isLoading = false;
+  isSavingToDefault = false;
   isCreatingNew = false;
   newPlaylistName = '';
   newPlaylistIsPublic = true;  // ברירת מחדל: ציבורי
@@ -98,6 +99,30 @@ export class PlaylistPopupComponent implements OnInit {
       error: (err) => {
         console.error('Error creating playlist:', err);
         this.error = 'שגיאה ביצירת הרשימה';
+      }
+    });
+  }
+
+  saveToDefault(): void {
+    this.error = null;
+    this.successMessage = null;
+    this.isSavingToDefault = true;
+
+    this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
+      next: () => {
+        this.successMessage = 'השיר נשמר ב"השמורים שלי"!';
+        this.isSavingToDefault = false;
+        setTimeout(() => {
+          this.closePopup();
+        }, 1500);
+      },
+      error: (err) => {
+        this.isSavingToDefault = false;
+        if (err.status === 400) {
+          this.error = 'השיר כבר קיים ב"השמורים שלי"';
+        } else {
+          this.error = 'שגיאה בשמירת השיר';
+        }
       }
     });
   }

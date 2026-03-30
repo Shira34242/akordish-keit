@@ -644,6 +644,79 @@
 }
 
 /* Category Section */
+/* Default Playlist Section — "השמורים שלי" */
+.default-playlist-section {
+  margin-bottom: 40px;
+}
+
+.default-playlist-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.default-badge-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #ddff53;
+  color: #000;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.default-playlist-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #000000;
+  border-radius: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 560px;
+}
+
+.default-playlist-card:hover {
+  background: #1a1a1a;
+  transform: translateX(-3px);
+}
+
+.default-playlist-icon {
+  background: #ddff53;
+  color: #000;
+  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.default-playlist-info {
+  flex: 1;
+}
+
+.default-playlist-info h3 {
+  font-family: 'Karantina', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.default-playlist-info p {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
+}
+
+.arrow-icon {
+  color: #ddff53;
+  flex-shrink: 0;
+}
+
 .category-section {
   margin-bottom: 48px;
 }

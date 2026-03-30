@@ -40,6 +40,11 @@ public class Playlist
     /// </summary>
     public bool IsAdopted { get; set; } = false;
 
+    /// <summary>
+    /// האם זו רשימת ברירת המחדל של המשתמש ("השמורים שלי") — לא ניתן למחוק
+    /// </summary>
+    public bool IsDefault { get; set; } = false;
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
