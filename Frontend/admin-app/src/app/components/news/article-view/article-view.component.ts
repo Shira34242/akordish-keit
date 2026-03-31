@@ -8,6 +8,7 @@ import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
 import { ArticleCardComponent } from '../../shared/article-card/article-card.component';
 import { LikedContentService } from '../../../services/liked-content.service';
+import { AuthService } from '../../../services/auth.service';
 import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
 import { ContentPageService } from '../../../services/content-page.service';
 import { ArticleFeedbackService } from '../../../services/article-feedback.service';
@@ -29,6 +30,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly contentPageService = inject(ContentPageService);
   private readonly feedbackService = inject(ArticleFeedbackService);
+  private readonly authService = inject(AuthService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -262,6 +264,10 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   // Toggle favorite
   toggleFavorite(): void {
     if (!this.article) return;
+    if (!this.authService.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
 
     const wasLiked = this.isFavorite;
     this.isFavorite = !this.isFavorite;

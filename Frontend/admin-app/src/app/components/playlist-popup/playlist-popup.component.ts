@@ -114,6 +114,7 @@ export class PlaylistPopupComponent implements OnInit {
       next: () => {
         this.successMessage = 'השיר נשמר ב"השמורים שלי"!';
         this.isSavingToDefault = false;
+        this.songSaved.emit();
         setTimeout(() => {
           this.closePopup();
         }, 1500);
