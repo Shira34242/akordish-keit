@@ -5,7 +5,7 @@
         <div class="panel-header">
             <span class="panel-title">הדפסה</span>
             <button class="close-btn" (click)="close.emit()" title="סגור">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
@@ -18,7 +18,7 @@
             <!-- עמודת הגדרות -->
             <div class="settings-col">
 
-                <!-- כרטיס פריסה -->
+                <!-- כרטיס: פריסה -->
                 <div class="settings-card">
 
                     <div class="setting-group">
@@ -32,7 +32,7 @@
 
                     <div class="setting-group">
                         <div class="setting-label">
-                            <span>גודל פונט</span>
+                            <span>פונט</span>
                             <span class="setting-value">{{ fontSize }}px</span>
                         </div>
                         <input class="range-slider" type="range" min="10" max="24" step="1" [(ngModel)]="fontSize">
@@ -48,34 +48,35 @@
 
                 </div>
 
-                <!-- כרטיס צבעים -->
+                <!-- כרטיס: צבעים -->
                 <div class="settings-card">
 
-                    <div class="setting-group" *ngIf="showChords">
-                        <div class="setting-label">צבע אקורדים</div>
-                        <div class="color-row">
-                            <label class="color-swatch-label">
-                                <input type="color" [(ngModel)]="chordColor">
-                                <span class="color-swatch" [style.background]="chordColor"></span>
-                            </label>
-                            <span class="color-hex">{{ chordColor }}</span>
-                        </div>
-                    </div>
-
                     <div class="setting-group">
-                        <div class="setting-label">צבע מילים</div>
-                        <div class="color-row">
-                            <label class="color-swatch-label">
-                                <input type="color" [(ngModel)]="lyricsColor">
-                                <span class="color-swatch" [style.background]="lyricsColor"></span>
-                            </label>
-                            <span class="color-hex">{{ lyricsColor }}</span>
+                        <div class="setting-label">צבעים</div>
+                        <div class="color-pairs-row">
+
+                            <div class="color-pair" *ngIf="showChords">
+                                <label class="color-swatch-label">
+                                    <input type="color" [(ngModel)]="chordColor">
+                                    <span class="color-swatch" [style.background]="chordColor"></span>
+                                </label>
+                                <span class="color-pair-label">אקורד</span>
+                            </div>
+
+                            <div class="color-pair">
+                                <label class="color-swatch-label">
+                                    <input type="color" [(ngModel)]="lyricsColor">
+                                    <span class="color-swatch" [style.background]="lyricsColor"></span>
+                                </label>
+                                <span class="color-pair-label">מילים</span>
+                            </div>
+
                         </div>
                     </div>
 
                 </div>
 
-                <!-- כרטיס מוזיקה -->
+                <!-- כרטיס: מוזיקה -->
                 <div class="settings-card">
 
                     <div class="setting-group" *ngIf="song?.easyKeyId">
@@ -83,7 +84,7 @@
                         <div class="btn-group">
                             <button class="seg-btn" [class.active]="!isEasyMode" (click)="setVersion(false)">מקורית</button>
                             <button class="seg-btn" [class.active]="isEasyMode" (click)="setVersion(true)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
                                     fill="currentColor" stroke="none">
                                     <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
                                 </svg>
@@ -109,7 +110,7 @@
                 <!-- כפתורי פעולה -->
                 <div class="action-area">
                     <button class="action-btn btn-print" (click)="print()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
                             <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
@@ -118,14 +119,14 @@
                         הדפס
                     </button>
                     <button class="action-btn btn-pdf" (click)="exportPdf()" [disabled]="isExporting">
-                        <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="7 10 12 15 17 10"/>
                             <line x1="12" x2="12" y1="15" y2="3"/>
                         </svg>
                         <span class="spinner-sm" *ngIf="isExporting"></span>
-                        {{ isExporting ? 'מייצא...' : 'ייצא PDF' }}
+                        {{ isExporting ? 'מכין...' : 'ייצא PDF' }}
                     </button>
                 </div>
 
@@ -133,19 +134,75 @@
 
             <!-- תצוגה מקדימה -->
             <div class="preview-col">
-                <div class="preview-inner">
-                    <div class="preview-header">
-                        <div class="preview-title">{{ song?.title }}</div>
-                        <div class="preview-artist">{{ artistName }}</div>
-                        <div class="preview-key" *ngIf="song?.originalKeyName">סולם: {{ currentKey }}</div>
-                    </div>
-                    <div
-                        class="preview-lyrics"
-                        [style.fontSize.px]="fontSize"
-                        [style.columnCount]="columns"
-                        [innerHTML]="printLyricsHtml">
+
+                <!-- סרגל תצוגה מקדימה -->
+                <div class="preview-toolbar">
+                    <span class="preview-toolbar-label">תצוגה מקדימה</span>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" (click)="zoomOut()" [disabled]="previewZoom <= 0.4" title="הקטן">−</button>
+                        <span class="zoom-val">{{ zoomPercent }}%</span>
+                        <button class="zoom-btn" (click)="zoomIn()" [disabled]="previewZoom >= 2" title="הגדל">+</button>
                     </div>
                 </div>
+
+                <!-- אזור גלילה -->
+                <div class="preview-viewport">
+                    <div class="preview-pages" [style.zoom]="previewZoom">
+
+                        <!-- עמוד אחד לכל גיליון A4 -->
+                        <ng-container *ngFor="let i of pageIndices">
+                            <div class="page-gap" *ngIf="i > 0"></div>
+
+                            <!-- כרטיס עמוד A4 -->
+                            <div class="preview-page-card" [style.height.px]="pageCardH">
+
+                                <!-- פס brand — למעלה -->
+                                <div class="page-brand-strip">
+                                    הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית
+                                </div>
+
+                                <!-- אזור קליפ — הלב של העמוד -->
+                                <div class="page-clip" [style.height.px]="pageClipH">
+
+                                    <!-- watermark אלכסוני -->
+                                    <div class="page-watermark">אקורדישקייט</div>
+
+                                    <!-- חלון תוכן עם offset שלילי לחשיפת הפרוסה הנכונה -->
+                                    <div class="page-content-window"
+                                         [style.marginTop.px]="getContentOffset(i)">
+
+                                        <!-- כותרת שיר (נראית בעמוד 0, נחתכת בעמודים הבאים) -->
+                                        <div class="preview-header">
+                                            <div class="preview-title">{{ song?.title }}</div>
+                                            <div class="preview-artist">{{ artistName }}</div>
+                                            <div class="preview-key" *ngIf="song?.originalKeyName">סולם: {{ currentKey }}</div>
+                                        </div>
+
+                                        <!-- מילים -->
+                                        <div
+                                            class="preview-lyrics"
+                                            [style.fontSize.px]="fontSize"
+                                            [style.columnCount]="columns > 1 ? columns : null"
+                                            [innerHTML]="printLyricsHtml">
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- פס brand — למטה -->
+                                <div class="page-brand-strip">
+                                    הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית
+                                </div>
+
+                                <!-- מספר עמוד -->
+                                <div class="page-num-badge">{{ i + 1 }}</div>
+
+                            </div>
+                        </ng-container>
+
+                    </div>
+                </div>
+
             </div>
 
         </div>

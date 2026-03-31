@@ -113,19 +113,25 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             document.addEventListener('click', this.nativeDocumentClick);
         });
 
-        // חסימת העתקה מדף השיר
+        // חסימת העתקה וקליק ימני בדף השיר
         document.addEventListener('copy', this.preventCopy);
+        document.addEventListener('contextmenu', this.preventContextMenu);
+        document.addEventListener('selectstart', this.preventSelect);
     }
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
         document.removeEventListener('copy', this.preventCopy);
+        document.removeEventListener('contextmenu', this.preventContextMenu);
+        document.removeEventListener('selectstart', this.preventSelect);
         this.stopAutoScroll();
         this.isAutoScroll = false;
     }
 
-    // חסימת העתקה
+    // חסימת העתקה, קליק ימני, סימון טקסט
     private preventCopy = (e: ClipboardEvent) => e.preventDefault();
+    private preventContextMenu = (e: MouseEvent) => e.preventDefault();
+    private preventSelect = (e: Event) => e.preventDefault();
 
     // Arrow function preserves `this` when used as a callback
     private nativeDocumentClick = (event: MouseEvent) => {

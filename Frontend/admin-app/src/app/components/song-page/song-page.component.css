@@ -1,3 +1,9 @@
+/* חסימת סימון טקסט בכל דף השיר */
+:host {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 /* מסכה לבנה - מכסה את אזור השוליים הלבן מעל התיבה הצהובה */
 .top-scroll-mask {
     position: fixed;
