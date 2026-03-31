@@ -278,6 +278,31 @@
                 </svg>
             </button>
 
+            <div class="toolbar-divider" *ngIf="selectedInstrument !== 'lyrics'"></div>
+
+            <!-- תרשים אקורדים inline -->
+            <button *ngIf="selectedInstrument !== 'lyrics'"
+                    class="toolbar-btn"
+                    [class.active]="showInlineChordDiagrams"
+                    (click)="toggleInlineChordDiagrams()"
+                    title="הצג תרשימי אקורדים">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- מיתרים אנכיים -->
+                    <line x1="7"  y1="2" x2="7"  y2="22"/>
+                    <line x1="12" y1="2" x2="12" y2="22"/>
+                    <line x1="17" y1="2" x2="17" y2="22"/>
+                    <!-- סריגים אופקיים -->
+                    <line x1="5" y1="5"  x2="19" y2="5"/>
+                    <line x1="5" y1="10" x2="19" y2="10"/>
+                    <line x1="5" y1="15" x2="19" y2="15"/>
+                    <!-- נקודות אקורד -->
+                    <circle cx="7"  cy="10" r="2" fill="currentColor" stroke="none"/>
+                    <circle cx="12" cy="5"  r="2" fill="currentColor" stroke="none"/>
+                    <circle cx="17" cy="10" r="2" fill="currentColor" stroke="none"/>
+                </svg>
+            </button>
+
             </div><!-- end controls-group -->
 
         </div>
@@ -289,6 +314,17 @@
         <!-- Right Column: Lyrics -->
         <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
+            <!-- תרשימי אקורדים inline -->
+            <div class="chord-diagrams-bar" *ngIf="showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
+                <app-chord-tooltip
+                    *ngFor="let chord of uniqueTransposedChords"
+                    [chordName]="chord"
+                    [instrument]="selectedInstrument"
+                    [isPinned]="false"
+                    class="inline-diagram">
+                </app-chord-tooltip>
+            </div>
+
             <!-- Capo Hint -->
             <div class="capo-hint" *ngIf="capoFret !== null && selectedInstrument === 'guitar'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"

@@ -50,11 +50,9 @@
 
                 <!-- כרטיס: צבעים -->
                 <div class="settings-card">
-
                     <div class="setting-group">
                         <div class="setting-label">צבעים</div>
                         <div class="color-pairs-row">
-
                             <div class="color-pair" *ngIf="showChords">
                                 <label class="color-swatch-label">
                                     <input type="color" [(ngModel)]="chordColor">
@@ -62,7 +60,6 @@
                                 </label>
                                 <span class="color-pair-label">אקורד</span>
                             </div>
-
                             <div class="color-pair">
                                 <label class="color-swatch-label">
                                     <input type="color" [(ngModel)]="lyricsColor">
@@ -70,7 +67,37 @@
                                 </label>
                                 <span class="color-pair-label">מילים</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- כרטיס: תרשים אקורדים -->
+                <div class="settings-card">
+
+                    <div class="setting-group">
+                        <div class="setting-label">תרשים אקורדים</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="showDiagrams" (click)="showDiagrams = true">מוצג</button>
+                            <button class="seg-btn" [class.active]="!showDiagrams" (click)="showDiagrams = false">מוסתר</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group" *ngIf="showDiagrams">
+                        <div class="setting-label">כלי נגינה</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="diagramInstrument === 'guitar'" (click)="diagramInstrument = 'guitar'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                    <path d="M19.5 2a.5.5 0 0 0-.35.15l-2.44 2.44A7.3 7.3 0 0 0 14 4a7 7 0 0 0-5.3 11.57L2.15 22.13a.5.5 0 0 0 .7.7l6.57-6.54A7 7 0 1 0 19.5 2zM14 16a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+                                </svg>
+                                גיטרה
+                            </button>
+                            <button class="seg-btn" [class.active]="diagramInstrument === 'piano'" (click)="diagramInstrument = 'piano'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                    <path d="M21 2H3a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM8 20H4V4h4v7H6v2h2v7zm4 0h-2v-7h2v-2h-2V4h2v7h-2v2h2v7zm5 0h-3v-7h2v-2h-2V4h3v16z"/>
+                                </svg>
+                                קלידים
+                            </button>
+                            <button class="seg-btn" [class.active]="diagramInstrument === 'ukulele'" (click)="diagramInstrument = 'ukulele'">יוקלל</button>
                         </div>
                     </div>
 
@@ -84,8 +111,7 @@
                         <div class="btn-group">
                             <button class="seg-btn" [class.active]="!isEasyMode" (click)="setVersion(false)">מקורית</button>
                             <button class="seg-btn" [class.active]="isEasyMode" (click)="setVersion(true)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
-                                    fill="currentColor" stroke="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                                     <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
                                 </svg>
                                 קלה
@@ -135,25 +161,21 @@
             <!-- תצוגה מקדימה -->
             <div class="preview-col">
 
-                <!-- סרגל תצוגה מקדימה -->
                 <div class="preview-toolbar">
                     <span class="preview-toolbar-label">תצוגה מקדימה</span>
                     <div class="zoom-controls">
-                        <button class="zoom-btn" (click)="zoomOut()" [disabled]="previewZoom <= 0.4" title="הקטן">−</button>
+                        <button class="zoom-btn" (click)="zoomOut()" [disabled]="previewZoom <= 0.4">−</button>
                         <span class="zoom-val">{{ zoomPercent }}%</span>
-                        <button class="zoom-btn" (click)="zoomIn()" [disabled]="previewZoom >= 2" title="הגדל">+</button>
+                        <button class="zoom-btn" (click)="zoomIn()" [disabled]="previewZoom >= 2">+</button>
                     </div>
                 </div>
 
-                <!-- אזור גלילה -->
                 <div class="preview-viewport">
                     <div class="preview-pages" [style.zoom]="previewZoom">
 
-                        <!-- עמוד אחד לכל גיליון A4 -->
                         <ng-container *ngFor="let i of pageIndices">
                             <div class="page-gap" *ngIf="i > 0"></div>
 
-                            <!-- כרטיס עמוד A4 -->
                             <div class="preview-page-card" [style.height.px]="pageCardH">
 
                                 <!-- פס brand — למעלה -->
@@ -161,29 +183,101 @@
                                     הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית
                                 </div>
 
-                                <!-- אזור קליפ — הלב של העמוד -->
+                                <!-- חלון קליפ -->
                                 <div class="page-clip" [style.height.px]="pageClipH">
-
-                                    <!-- watermark אלכסוני -->
                                     <div class="page-watermark">אקורדישקייט</div>
 
-                                    <!-- חלון תוכן עם offset שלילי לחשיפת הפרוסה הנכונה -->
-                                    <div class="page-content-window"
-                                         [style.marginTop.px]="getContentOffset(i)">
+                                    <div class="page-content-window" [style.marginTop.px]="getContentOffset(i)">
 
-                                        <!-- כותרת שיר (נראית בעמוד 0, נחתכת בעמודים הבאים) -->
+                                        <!-- כותרת שיר עם תמונה -->
                                         <div class="preview-header">
-                                            <div class="preview-title">{{ song?.title }}</div>
-                                            <div class="preview-artist">{{ artistName }}</div>
-                                            <div class="preview-key" *ngIf="song?.originalKeyName">סולם: {{ currentKey }}</div>
+                                            <img *ngIf="song?.imageUrl" [src]="song.imageUrl" class="preview-cover" alt="">
+                                            <div class="preview-meta">
+                                                <div class="preview-title">{{ song?.title }}</div>
+                                                <div class="preview-artist">{{ artistName }}</div>
+                                                <div class="preview-key" *ngIf="song?.originalKeyName">סולם: {{ currentKey }}</div>
+                                                <div class="preview-genres" *ngIf="genreNames.length > 0">
+                                                    <span class="genre-pill" *ngFor="let g of genreNames">{{ g }}</span>
+                                                </div>
+                                                <div class="preview-composer" *ngIf="composerLine">{{ composerLine }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- תרשימי אקורדים -->
+                                        <div class="diagrams-section" *ngIf="showDiagrams && chordDiagrams.length > 0">
+                                            <div class="diagrams-label">תרשימי אקורדים</div>
+                                            <div class="diagrams-row">
+                                                <ng-container *ngFor="let item of chordDiagrams">
+
+                                                    <!-- גיטרה -->
+                                                    <div class="diagram-card" *ngIf="diagramInstrument === 'guitar' && item.guitarChord">
+                                                        <div class="diagram-chord-name" dir="ltr">{{ item.name }}</div>
+                                                        <svg viewBox="0 0 80 80" width="62" height="70">
+                                                            <line x1="10" y1="10" x2="60" y2="10" stroke="black" stroke-width="2"/>
+                                                            <line *ngFor="let f of [1,2,3,4,5]" [attr.x1]="10" [attr.y1]="10+f*12" [attr.x2]="60" [attr.y2]="10+f*12" stroke="#999" stroke-width="1"/>
+                                                            <line *ngFor="let s of [0,1,2,3,4,5]" [attr.x1]="10+s*10" y1="10" [attr.x2]="10+s*10" y2="70" stroke="black" stroke-width="1"/>
+                                                            <ng-container *ngFor="let fret of item.guitarChord.frets; let si = index">
+                                                                <text *ngIf="fret === -1" [attr.x]="10+si*10" y="6" text-anchor="middle" font-size="8" font-family="Arial">x</text>
+                                                                <circle *ngIf="fret === 0" [attr.cx]="10+si*10" cy="5" r="2" fill="none" stroke="black" stroke-width="1"/>
+                                                                <circle *ngIf="fret > 0" [attr.cx]="10+si*10" [attr.cy]="10+fret*12-6" r="3.5" fill="#1a1a1a"/>
+                                                            </ng-container>
+                                                            <ng-container *ngIf="item.guitarChord.barres">
+                                                                <rect *ngFor="let b of item.guitarChord.barres"
+                                                                    [attr.x]="10+b.fromString*10-4" [attr.y]="10+b.fret*12-9"
+                                                                    [attr.width]="(b.toString - b.fromString)*10+8" height="6" rx="3"
+                                                                    fill="#1a1a1a" opacity="0.2"/>
+                                                            </ng-container>
+                                                            <text *ngIf="item.minActiveFret > 1"
+                                                                x="65" [attr.y]="10+item.minActiveFret*12-2"
+                                                                text-anchor="start" font-size="7" font-family="Arial" fill="#555">{{ item.minActiveFret }}fr</text>
+                                                        </svg>
+                                                    </div>
+
+                                                    <!-- יוקלילי -->
+                                                    <div class="diagram-card" *ngIf="diagramInstrument === 'ukulele' && item.ukuleleChord">
+                                                        <div class="diagram-chord-name" dir="ltr">{{ item.name }}</div>
+                                                        <svg viewBox="0 0 56 84" width="50" height="74">
+                                                            <line x1="10" y1="10" x2="52" y2="10" stroke="black" stroke-width="2"/>
+                                                            <line *ngFor="let f of [1,2,3,4,5]" [attr.x1]="10" [attr.y1]="10+f*12" [attr.x2]="52" [attr.y2]="10+f*12" stroke="#999" stroke-width="1"/>
+                                                            <line *ngFor="let s of [0,1,2,3]" [attr.x1]="10+s*14" y1="10" [attr.x2]="10+s*14" y2="70" stroke="black" stroke-width="1"/>
+                                                            <text *ngFor="let lbl of ['G','C','E','A']; let si = index" [attr.x]="10+si*14" y="79" text-anchor="middle" font-size="6" font-family="Arial" fill="#555">{{ lbl }}</text>
+                                                            <ng-container *ngFor="let fret of item.ukuleleChord.frets; let si = index">
+                                                                <text *ngIf="fret === -1" [attr.x]="10+si*14" y="6" text-anchor="middle" font-size="8" font-family="Arial">x</text>
+                                                                <circle *ngIf="fret === 0" [attr.cx]="10+si*14" cy="5" r="2" fill="none" stroke="black" stroke-width="1"/>
+                                                                <circle *ngIf="fret > 0" [attr.cx]="10+si*14" [attr.cy]="10+fret*12-6" r="3.5" fill="#1a1a1a"/>
+                                                            </ng-container>
+                                                            <text *ngIf="item.ukuMinActiveFret > 1"
+                                                                x="56" [attr.y]="10+item.ukuMinActiveFret*12-2"
+                                                                text-anchor="start" font-size="7" font-family="Arial" fill="#555">{{ item.ukuMinActiveFret }}fr</text>
+                                                        </svg>
+                                                    </div>
+
+                                                    <!-- פסנתר -->
+                                                    <div class="diagram-card" *ngIf="diagramInstrument === 'piano' && item.pianoKeys">
+                                                        <div class="diagram-chord-name" dir="ltr">{{ item.name }}</div>
+                                                        <svg [attr.viewBox]="'0 0 ' + item.pianoDisplayWidth + ' 50'"
+                                                             [attr.width]="item.pianoDisplayWidth"
+                                                             height="50" style="display:block">
+                                                            <ng-container *ngFor="let key of item.pianoWhiteKeys; let ki = index">
+                                                                <rect [attr.x]="ki*20" y="0" width="20" height="50" stroke="black" stroke-width="1"
+                                                                    [attr.fill]="pianoKeyFill(item, key.note)"/>
+                                                            </ng-container>
+                                                            <ng-container *ngFor="let key of item.pianoBlackKeys">
+                                                                <rect [attr.x]="key.x" y="0" width="12" height="30"
+                                                                    [attr.fill]="pianoBlackFill(item, key.note)"/>
+                                                            </ng-container>
+                                                        </svg>
+                                                    </div>
+
+                                                </ng-container>
+                                            </div>
                                         </div>
 
                                         <!-- מילים -->
-                                        <div
-                                            class="preview-lyrics"
-                                            [style.fontSize.px]="fontSize"
-                                            [style.columnCount]="columns > 1 ? columns : null"
-                                            [innerHTML]="printLyricsHtml">
+                                        <div class="preview-lyrics"
+                                             [style.fontSize.px]="fontSize"
+                                             [style.columnCount]="columns > 1 ? columns : null"
+                                             [innerHTML]="printLyricsHtml">
                                         </div>
 
                                     </div>
@@ -194,9 +288,7 @@
                                     הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית
                                 </div>
 
-                                <!-- מספר עמוד -->
                                 <div class="page-num-badge">{{ i + 1 }}</div>
-
                             </div>
                         </ng-container>
 
@@ -204,7 +296,6 @@
                 </div>
 
             </div>
-
         </div>
     </div>
 </div>

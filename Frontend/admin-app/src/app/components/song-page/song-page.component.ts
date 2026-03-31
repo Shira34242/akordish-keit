@@ -12,8 +12,12 @@ import {
     analyzePreferFlat,
     preferFlatForKey,
     isChord,
-    isChordLine
+    isChordLine,
+    parseChord,
+    enharmonicRoot
 } from '../../utils/music-utils';
+
+import { GUITAR_CHORDS, UKULELE_CHORDS, PIANO_CHORDS } from '../../utils/chord-data';
 
 import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
 import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.component';
@@ -55,6 +59,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isToolbarSticky: boolean = false;
     preferFlat: boolean = false;
     isEasyMode: boolean = false;
+    showInlineChordDiagrams: boolean = false;
 
     // Tooltip State
     hoveredChord: string | null = null;
@@ -418,6 +423,64 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         return key ? preferFlatForKey(key) : this.preferFlat;
     }
 
+
+    /** בדיקה אם לאקורד יש נתונים במאגר עבור הכלי הנוכחי */
+    private hasChordData(chord: string): boolean {
+        const variations = this.getChordVariations(chord);
+        const map = this.selectedInstrument === 'ukulele' ? UKULELE_CHORDS
+                  : this.selectedInstrument === 'piano'   ? PIANO_CHORDS
+                  : GUITAR_CHORDS;
+        for (const v of variations) if (map[v]) return true;
+        return false;
+    }
+
+    private getChordVariations(chord: string): string[] {
+        const variations: string[] = [chord];
+        const parsed = parseChord(chord);
+        if (parsed?.normalizedName && !variations.includes(parsed.normalizedName)) {
+            variations.push(parsed.normalizedName);
+        }
+        if (parsed) {
+            const { root, suffix } = parsed;
+            const altRoot = enharmonicRoot(root);
+            if (altRoot) {
+                const alt = altRoot + suffix;
+                if (!variations.includes(alt)) variations.push(alt);
+            }
+            const basic = simplifyChord(chord);
+            if (!variations.includes(basic)) variations.push(basic);
+        }
+        return variations;
+    }
+
+    /** רשימת אקורדים ייחודיים אחרי טרנספוזיציה — לתרשימים inline */
+    get uniqueTransposedChords(): string[] {
+        if (!this.song?.lyricsWithChords) return [];
+        const seen = new Set<string>();
+        const result: string[] = [];
+        for (const line of this.song.lyricsWithChords.split('\n')) {
+            const rawChords: string[] = [];
+            if (isChordLine(line)) {
+                rawChords.push(...line.trim().split(/\s+/).filter((t: string) => isChord(t)));
+            } else {
+                const matches = [...line.matchAll(/\[([^\]]+)\]/g)];
+                rawChords.push(...matches.map((m: any) => m[1]).filter((c: string) => isChord(c)));
+            }
+            for (const raw of rawChords) {
+                let c = this.transposeStep !== 0
+                    ? transposeChord(raw, this.transposeStep, { preferFlat: this.activePreferFlat })
+                    : raw;
+                if (this.isEasyMode) c = simplifyChord(c);
+                const key = simplifyChord(c);
+                if (!seen.has(key) && this.hasChordData(c)) { seen.add(key); result.push(c); }
+            }
+        }
+        return result;
+    }
+
+    toggleInlineChordDiagrams() {
+        this.showInlineChordDiagrams = !this.showInlineChordDiagrams;
+    }
 
     // Get transpose display value in tones (half-steps / 2)
     get transposeDisplay(): string {
