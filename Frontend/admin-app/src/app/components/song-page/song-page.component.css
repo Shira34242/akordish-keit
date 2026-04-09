@@ -1,3 +1,9 @@
+/* חסימת סימון טקסט בכל דף השיר */
+:host {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 /* מסכה לבנה - מכסה את אזור השוליים הלבן מעל התיבה הצהובה */
 .top-scroll-mask {
     position: fixed;
@@ -513,6 +519,69 @@
     align-items: start; /* חשוב - מיישר את הסיידבר לראש */
 }
 
+/* ===== Chord Diagrams Bar ===== */
+.chord-diagrams-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    gap: 8px;
+    direction: rtl;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: #ffffff;
+    border-radius: 16px;
+    min-width: 0;
+}
+
+/* מאפס את עיצוב ה-tooltip להצגה inline */
+.inline-diagram {
+    display: block;
+    zoom: 0.75;
+    flex-shrink: 0;
+}
+
+.inline-diagram ::ng-deep .tooltip-container {
+    position: static !important;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: #F2F2F2;
+    border-radius: 12px;
+    padding: 8px 10px;
+    box-shadow: none !important;
+    min-width: 0;
+    cursor: default;
+}
+
+.inline-diagram ::ng-deep .tooltip-close-btn {
+    display: none !important;
+}
+
+.inline-diagram ::ng-deep .chord-name {
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    direction: ltr;
+    text-align: center;
+}
+
+.inline-diagram ::ng-deep .play-chord-btn {
+    margin-top: 4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+}
+
+.inline-diagram ::ng-deep .play-chord-label {
+    display: none;
+}
+
 /* Lyrics Column */
 .lyrics-column {
     background: #F2F2F2;
@@ -522,6 +591,7 @@
     border-radius: 24px;
     width: 100%;
     box-sizing: border-box;
+    min-width: 0; /* מונע CSS Grid blowout — מאפשר ל-chord-diagrams-bar לגלול */
 }
 
 .lyrics-column.dark-mode {
@@ -531,6 +601,8 @@
 .lyrics-content {
     direction: rtl;
     color: #000000;
+    user-select: none;
+    -webkit-user-select: none;
     white-space: pre-wrap;
     line-height: 2.2;
     font-size: var(--lyrics-font-size, 1.1rem);

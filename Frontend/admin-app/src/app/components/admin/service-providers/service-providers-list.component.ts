@@ -6,12 +6,10 @@ import { MusicServiceProviderService } from '../../../services/music-service-pro
 import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
-import { ProfessionalProfileModalComponent } from '../../public/music-service-provider-page/professional-profile-modal.component';
-
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfessionalProfileModalComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
@@ -32,7 +30,6 @@ export class ServiceProvidersListComponent implements OnInit {
   filterCityId: number | null = null;
 
   cities: City[] = [];
-  viewingProviderId: number | null = null;
 
   statusOptions = [
     { value: null, label: 'כל הסטטוסים' },
@@ -123,7 +120,7 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   viewProvider(id: number): void {
-    this.viewingProviderId = id;
+    window.open('/professional/' + id, '_blank');
   }
 
   approveProvider(id: number): void {

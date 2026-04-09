@@ -130,9 +130,8 @@ export class ArticlesListComponent implements OnInit {
   }
 
   viewArticle(article: Article): void {
-    // Navigate to appropriate view based on content type
     const path = article.contentType === ArticleContentType.News ? '/news' : '/blog';
-    this.router.navigate([path, article.slug]);
+    window.open(path + '/' + article.slug, '_blank');
   }
 
 

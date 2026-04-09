@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, F
 import { SongService } from '../../services/song.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
-import { AddSongRequest, AutocompleteResult, MusicalKey, SongBasicDto, YouTubeMetadata } from '../../models/song.model';
+import { AddSongRequest, AutocompleteResult, MusicalKey, SongBasicDto, YouTubeMetadata, YouTubeSearchResult } from '../../models/song.model';
 import { UserWithProfileDto } from '../../models/user.model';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import { of, Subject } from 'rxjs';
+import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { extractChords, parseChord } from '../../utils/music-utils';
 
 @Component({
     selector: 'app-add-song-modal',
@@ -18,6 +19,55 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     styleUrls: ['./add-song-modal.component.css']
 })
 export class AddSongModalComponent implements OnInit {
+    private readonly noteToSemitone: Record<string, number> = {
+        'C': 0, 'B#': 0,
+        'C#': 1, 'Db': 1,
+        'D': 2,
+        'D#': 3, 'Eb': 3,
+        'E': 4, 'Fb': 4,
+        'F': 5, 'E#': 5,
+        'F#': 6, 'Gb': 6,
+        'G': 7,
+        'G#': 8, 'Ab': 8,
+        'A': 9,
+        'A#': 10, 'Bb': 10,
+        'B': 11, 'Cb': 11
+    };
+
+    private readonly allKeys: Array<{ id: number; semitone: number; isMinor: boolean }> = [
+        { id: 1, semitone: 0, isMinor: false },
+        { id: 2, semitone: 1, isMinor: false },
+        { id: 3, semitone: 2, isMinor: false },
+        { id: 4, semitone: 3, isMinor: false },
+        { id: 5, semitone: 4, isMinor: false },
+        { id: 6, semitone: 5, isMinor: false },
+        { id: 7, semitone: 6, isMinor: false },
+        { id: 8, semitone: 7, isMinor: false },
+        { id: 9, semitone: 8, isMinor: false },
+        { id: 10, semitone: 9, isMinor: false },
+        { id: 11, semitone: 10, isMinor: false },
+        { id: 12, semitone: 11, isMinor: false },
+        { id: 13, semitone: 9, isMinor: true },
+        { id: 14, semitone: 10, isMinor: true },
+        { id: 15, semitone: 11, isMinor: true },
+        { id: 16, semitone: 0, isMinor: true },
+        { id: 17, semitone: 1, isMinor: true },
+        { id: 18, semitone: 2, isMinor: true },
+        { id: 19, semitone: 3, isMinor: true },
+        { id: 20, semitone: 4, isMinor: true },
+        { id: 21, semitone: 5, isMinor: true },
+        { id: 22, semitone: 6, isMinor: true },
+        { id: 23, semitone: 7, isMinor: true },
+        { id: 24, semitone: 8, isMinor: true }
+    ];
+
+    private readonly majorIntervals = [0, 2, 4, 5, 7, 9, 11];
+    private readonly majorQualities = [false, true, true, false, false, true, true];
+    private readonly majorWeights = [4, 2, 2, 3, 3, 2, 1];
+    private readonly minorIntervals = [0, 2, 3, 5, 7, 8, 10];
+    private readonly minorQualities = [true, true, false, true, true, false, false];
+    private readonly minorWeights = [4, 1, 2, 3, 3, 2, 2];
+
     @Output() close = new EventEmitter<void>();
     @Output() songAdded = new EventEmitter<void>();
 
@@ -25,7 +75,7 @@ export class AddSongModalComponent implements OnInit {
     @Input() songToEdit: any = null;
 
     currentStep: number = 1;
-    totalSteps = 3;
+    isManualAddMode: boolean = false;
 
     isSubmitting: boolean = false;
 
@@ -38,15 +88,28 @@ export class AddSongModalComponent implements OnInit {
     tagSuggestions: AutocompleteResult[] = [];
     genreSuggestions: AutocompleteResult[] = [];
     similarSongs: SongBasicDto[] = [];
+    youtubeSearchResults: YouTubeSearchResult[] = [];
+    artistMatchSuggestions: AutocompleteResult[] = [];
 
     // Loading states
     isLoadingKeys = false;
     isCheckingDuplicate = false;
     isLoadingMetadata = false;
+    isDetectingOriginalKey = false;
+    isDetectingEasyKey = false;
+    isSearchingYouTube = false;
+
+    // אם המשתמש שינה ידנית — לא לדרוס
+    userChangedOriginalKey = false;
+    userChangedEasyKey = false;
+    autoDetectedOriginalKeyName: string | null = null;
+    autoDetectedEasyKeyName: string | null = null;
 
     // Metadata
     youtubeMetadata: YouTubeMetadata | null = null;
-    selectedComposer: { id?: number; name: string } | null = null; 
+    selectedComposer: { id?: number; name: string } | null = null;
+    selectedYouTubeResult: YouTubeSearchResult | null = null;
+    pendingSuggestedArtistName: string | null = null;
 
     // Uploader profile search state
     profileSearchQuery = '';
@@ -59,6 +122,14 @@ export class AddSongModalComponent implements OnInit {
 
     get isAdminUser(): boolean {
         return Number(this.authService.currentUserValue?.role) >= 3;
+    }
+
+    get isLegacyFlow(): boolean {
+        return this.editMode || this.isManualAddMode;
+    }
+
+    get totalSteps(): number {
+        return this.isLegacyFlow ? 3 : 5;
     }
 
     get isProfessionalNonAdmin(): boolean {
@@ -110,20 +181,24 @@ export class AddSongModalComponent implements OnInit {
     ngOnInit(): void {
         this.loadMusicalKeys();
         this.setupAutocomplete();
+        this.setupKeyAutoDetect();
         this.initProfileSearch();
-        
+        this.setupYouTubeSearch();
+
         // Only setup duplicate check for new songs
         if (!this.editMode) {
             this.setupDuplicateCheck();
             this.autoFillUploaderFromCurrentUser();
         }
 
-        // If edit mode, populate form with existing data
+        // If edit mode, populate form with existing data — and mark keys as user-set
         if (this.editMode && this.songToEdit) {
+            this.userChangedOriginalKey = true;
+            this.userChangedEasyKey = true;
             this.populateFormForEdit();
         }
     }
-     populateFormForEdit(): void {
+    populateFormForEdit(): void {
         if (!this.songToEdit) return;
 
         // Basic fields
@@ -133,8 +208,8 @@ export class AddSongModalComponent implements OnInit {
             spotifyUrl: this.songToEdit.spotifyUrl || '',
             imageUrl: this.songToEdit.imageUrl || '',
             lyricsWithChords: this.songToEdit.lyricsWithChords,
-            originalKeyId: this.songToEdit.originalKeyId,
-            easyKeyId: this.songToEdit.easyKeyId || null,
+            originalKeyId: this.normalizeKeyValue(this.songToEdit.originalKeyId),
+            easyKeyId: this.normalizeKeyValue(this.songToEdit.easyKeyId),
             lyricistId: this.songToEdit.lyricist?.id || null,
             arrangerId: this.songToEdit.arranger?.id || null
         });
@@ -215,7 +290,11 @@ export class AddSongModalComponent implements OnInit {
         this.isLoadingKeys = true;
         this.songService.getMusicalKeys().subscribe({
             next: (keys) => {
-                this.musicalKeys = keys;
+                this.musicalKeys = keys.map(key => ({
+                    ...key,
+                    id: this.normalizeKeyId(key.id) ?? 0
+                }));
+                this.syncSelectedKeysWithOptions();
                 this.isLoadingKeys = false;
             },
             error: (err) => {
@@ -264,6 +343,29 @@ export class AddSongModalComponent implements OnInit {
                 return this.songService.autocompleteGenres(query).pipe(catchError(() => of([])));
             })
         ).subscribe(results => this.genreSuggestions = results);
+    }
+
+    setupYouTubeSearch() {
+        this.songForm.get('title')?.valueChanges.pipe(
+            debounceTime(650),
+            distinctUntilChanged(),
+            switchMap(title => {
+                const query = (title || '').trim();
+
+                if (this.editMode || query.length < 2) {
+                    this.isSearchingYouTube = false;
+                    return of([]);
+                }
+
+                this.isSearchingYouTube = true;
+                return this.songService.searchYouTubeSongs(query, 5).pipe(
+                    catchError(() => of([]))
+                );
+            })
+        ).subscribe(results => {
+            this.youtubeSearchResults = results;
+            this.isSearchingYouTube = false;
+        });
     }
 
     autoFillUploaderFromCurrentUser(): void {
@@ -361,6 +463,226 @@ export class AddSongModalComponent implements OnInit {
         this.composerSuggestions = [];
     }
 
+    setupKeyAutoDetect() {
+        // מעקב אחרי שינוי ידני בסולמות
+        this.songForm.get('originalKeyId')?.valueChanges.subscribe(() => {
+            this.userChangedOriginalKey = true;
+            this.autoDetectedOriginalKeyName = null;
+        });
+        this.songForm.get('easyKeyId')?.valueChanges.subscribe(() => {
+            this.userChangedEasyKey = true;
+            this.autoDetectedEasyKeyName = null;
+        });
+
+        // זיהוי אוטומטי בעת הקלדה
+        this.songForm.get('lyricsWithChords')?.valueChanges.pipe(
+            debounceTime(800),
+            distinctUntilChanged()
+        ).subscribe(lyrics => {
+            if (!lyrics || lyrics.length < 10) return;
+            this.triggerDetection(lyrics, 'both');
+        });
+    }
+
+    onLyricsPaste(event: ClipboardEvent): void {
+        const pasted = event.clipboardData?.getData('text') ?? '';
+        if (!pasted || pasted.length < 10) return;
+        // מחכים ל-Angular לעדכן את ה-formControl, ואז קוראים את הערך המלא
+        setTimeout(() => {
+            const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+            if (lyrics.length >= 10) this.triggerDetection(lyrics, 'both');
+        }, 100);
+    }
+
+    runOriginalKeyDetection(): void {
+        const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+        if (!lyrics || lyrics.length < 10) return;
+        this.userChangedOriginalKey = false;
+        this.triggerDetection(lyrics, 'original');
+    }
+
+    runEasyKeyDetection(): void {
+        const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+        if (!lyrics || lyrics.length < 10) return;
+        this.userChangedEasyKey = false;
+        this.triggerDetection(lyrics, 'easy');
+    }
+
+    private triggerDetection(lyrics: string, target: 'original' | 'easy' | 'both'): void {
+        if (target === 'original' || target === 'both') this.isDetectingOriginalKey = true;
+        if (target === 'easy'     || target === 'both') this.isDetectingEasyKey     = true;
+
+        this.songService.detectKey(lyrics).pipe(
+            catchError(err => { console.error('[KeyDetect] API error:', err); return of(null); })
+        ).subscribe(result => {
+            if (target === 'original' || target === 'both') this.isDetectingOriginalKey = false;
+            if (target === 'easy'     || target === 'both') this.isDetectingEasyKey     = false;
+
+            const fallbackResult = this.detectKeyLocally(lyrics);
+            const effectiveResult = result ?? fallbackResult;
+
+            if (!effectiveResult) return;
+
+            let detectedOriginalKeyId = this.readDetectedKeyId(effectiveResult, 'original');
+            let detectedEasyKeyId = this.readDetectedKeyId(effectiveResult, 'easy');
+
+            if (detectedOriginalKeyId === null && detectedEasyKeyId === null && fallbackResult) {
+                detectedOriginalKeyId = fallbackResult.originalKeyId;
+                detectedEasyKeyId = fallbackResult.easyKeyId;
+            }
+
+            if ((target === 'original' || target === 'both') && !this.userChangedOriginalKey && detectedOriginalKeyId !== null) {
+                this.songForm.get('originalKeyId')?.setValue(String(detectedOriginalKeyId), { emitEvent: false });
+                this.autoDetectedOriginalKeyName = this.getKeyNameById(detectedOriginalKeyId);
+            }
+
+            if ((target === 'easy' || target === 'both') && !this.userChangedEasyKey && detectedEasyKeyId !== null) {
+                this.songForm.get('easyKeyId')?.setValue(String(detectedEasyKeyId), { emitEvent: false });
+                this.autoDetectedEasyKeyName = this.getKeyNameById(detectedEasyKeyId);
+            }
+        });
+    }
+
+    private readDetectedKeyId(result: unknown, target: 'original' | 'easy'): number | null {
+        if (!result || typeof result !== 'object') {
+            return null;
+        }
+
+        const record = result as Record<string, unknown>;
+
+        return this.normalizeKeyId(
+            target === 'original'
+                ? (record['originalKeyId'] ?? record['OriginalKeyId'])
+                : (record['easyKeyId'] ?? record['EasyKeyId'])
+        );
+    }
+
+    private detectKeyLocally(lyrics: string): { originalKeyId: number | null; easyKeyId: number | null } | null {
+        const chordCounts = new Map<string, number>();
+
+        for (const chordText of this.extractChordCandidates(lyrics)) {
+            const parsed = parseChord(chordText);
+            if (!parsed) continue;
+
+            const semitone = this.noteToSemitone[parsed.root];
+            if (semitone === undefined) continue;
+
+            const isMinor = parsed.quality === 'minor'
+                || parsed.quality === 'minor7'
+                || parsed.quality === 'dim'
+                || parsed.quality === 'dim7'
+                || parsed.quality === 'halfDim';
+
+            const mapKey = `${semitone}|${isMinor}`;
+            chordCounts.set(mapKey, (chordCounts.get(mapKey) ?? 0) + 1);
+        }
+
+        if (chordCounts.size === 0) {
+            return null;
+        }
+
+        let bestKey: { id: number; semitone: number; isMinor: boolean } | null = null;
+        let bestScore = -1;
+
+        for (const candidate of this.allKeys) {
+            const score = this.scoreLocalKey(candidate.semitone, candidate.isMinor, chordCounts);
+            if (score > bestScore) {
+                bestScore = score;
+                bestKey = candidate;
+            }
+        }
+
+        if (!bestKey) {
+            return null;
+        }
+
+        return {
+            originalKeyId: bestKey.id,
+            easyKeyId: bestKey.isMinor ? 13 : 1
+        };
+    }
+
+    private extractChordCandidates(lyrics: string): string[] {
+        const chords: string[] = [];
+        const bracketRegex = /\[([^[\]\r\n]+)\]/g;
+
+        for (const match of lyrics.matchAll(bracketRegex)) {
+            const chord = match[1]?.trim();
+            if (chord) {
+                chords.push(chord);
+            }
+        }
+
+        if (chords.length > 0) {
+            return chords;
+        }
+
+        for (const line of lyrics.split(/\r?\n/)) {
+            chords.push(...extractChords(line));
+        }
+
+        return chords;
+    }
+
+    private scoreLocalKey(
+        rootSemitone: number,
+        isMinor: boolean,
+        chordCounts: Map<string, number>
+    ): number {
+        const intervals = isMinor ? this.minorIntervals : this.majorIntervals;
+        const qualities = isMinor ? this.minorQualities : this.majorQualities;
+        const weights = isMinor ? this.minorWeights : this.majorWeights;
+
+        let score = 0;
+
+        for (let degree = 0; degree < 7; degree++) {
+            const chordRoot = (rootSemitone + intervals[degree]) % 12;
+            const expectedMinor = qualities[degree];
+
+            score += (chordCounts.get(`${chordRoot}|${expectedMinor}`) ?? 0) * weights[degree];
+            score += (chordCounts.get(`${chordRoot}|${!expectedMinor}`) ?? 0) * weights[degree] * 0.3;
+        }
+
+        if (isMinor) {
+            const dominantRoot = (rootSemitone + 7) % 12;
+            score += (chordCounts.get(`${dominantRoot}|false`) ?? 0) * 2.5;
+        }
+
+        return score;
+    }
+
+    private normalizeKeyId(value: unknown): number | null {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
+    }
+
+    private normalizeKeyValue(value: unknown): string | null {
+        const keyId = this.normalizeKeyId(value);
+        return keyId === null ? null : String(keyId);
+    }
+
+    private getKeyNameById(keyId: number): string | null {
+        const key = this.musicalKeys.find(item => this.normalizeKeyId(item.id) === keyId);
+        return key?.name ?? null;
+    }
+
+    private syncSelectedKeysWithOptions(): void {
+        const originalKeyId = this.normalizeKeyId(this.songForm.get('originalKeyId')?.value);
+        const easyKeyId = this.normalizeKeyId(this.songForm.get('easyKeyId')?.value);
+
+        if (originalKeyId !== null) {
+            this.songForm.get('originalKeyId')?.setValue(String(originalKeyId), { emitEvent: false });
+        }
+
+        if (easyKeyId !== null) {
+            this.songForm.get('easyKeyId')?.setValue(String(easyKeyId), { emitEvent: false });
+        }
+    }
+
     setupDuplicateCheck() {
         this.songForm.get('title')?.valueChanges.pipe(
             debounceTime(500),
@@ -398,10 +720,8 @@ export class AddSongModalComponent implements OnInit {
     }
 
     selectArtist(artist: AutocompleteResult) {
-        const exists = this.artistsArray.controls.some(ctrl => ctrl.value.id === artist.id);
-        if (!exists) {
-            this.artistsArray.push(this.fb.control({ id: artist.id, name: artist.value }));
-        }
+        this.ensureArtistSelected(artist);
+        this.clearPendingArtistSuggestion();
         this.songForm.get('artistInput')?.setValue('');
         this.artistSuggestions = [];
     }
@@ -427,6 +747,7 @@ export class AddSongModalComponent implements OnInit {
                 name: trimmedName
             }));
 
+            this.clearPendingArtistSuggestion();
             this.songForm.get('artistInput')?.setValue('');
             this.artistSuggestions = [];
         }
@@ -519,25 +840,346 @@ export class AddSongModalComponent implements OnInit {
         }
     }
 
-    nextStep() {
-        if (this.currentStep < this.totalSteps) {
-            // Validate current step
-            if (this.currentStep === 1) {
-                const titleValid = this.songForm.get('title')?.valid;
-                const artistsValid = this.artistsArray.length > 0;
-                const youtubeValid = this.songForm.get('youtubeUrl')?.valid;
+    selectYouTubeSuggestion(result: YouTubeSearchResult) {
+        this.selectedYouTubeResult = result;
+        this.youtubeSearchResults = [];
 
-                if (!titleValid || !artistsValid || !youtubeValid) {
-                    this.songForm.markAllAsTouched();
+        this.songForm.patchValue({
+            youtubeUrl: result.youtubeUrl,
+            imageUrl: this.songForm.get('imageUrl')?.value || result.thumbnailUrl || ''
+        });
+
+        this.youtubeMetadata = {
+            success: true,
+            title: result.title,
+            channelTitle: result.channelTitle,
+            thumbnailUrl: result.thumbnailUrl,
+            durationSeconds: result.durationSeconds,
+            description: result.description,
+            publishedAt: result.publishedAt
+        };
+
+        if (this.artistsArray.length === 0 && result.suggestedArtistName) {
+            this.applySuggestedArtists(result.suggestedArtistName);
+        } else {
+            this.clearPendingArtistSuggestion();
+        }
+    }
+
+    private applySuggestedArtists(artistName: string) {
+        const trimmedName = artistName.trim();
+        if (trimmedName.length < 2) {
+            return;
+        }
+
+        this.pendingSuggestedArtistName = trimmedName;
+        this.artistMatchSuggestions = [];
+
+        const candidateNames = this.extractSuggestedArtistCandidates(trimmedName);
+        const candidateRequests = candidateNames.map(candidate =>
+            this.resolveArtistMatches(candidate)
+        );
+
+        forkJoin(candidateRequests).subscribe(candidateMatches => {
+            const fallbackMatches = this.rankArtistMatches(trimmedName, []);
+            const suggestionMap = new Map<number, AutocompleteResult>();
+            let addedStrongMatch = false;
+
+            candidateMatches.forEach(matches => {
+                const bestMatch = matches[0];
+
+                if (bestMatch && (bestMatch.score >= 100 || (matches.length === 1 && bestMatch.score >= 70))) {
+                    this.ensureArtistSelected(bestMatch.result);
+                    addedStrongMatch = true;
                     return;
                 }
-            } else if (this.currentStep === 2) {
-                const lyricsValid = this.songForm.get('lyricsWithChords')?.valid;
-                const keyValid = this.songForm.get('originalKeyId')?.valid;
 
-                if (!lyricsValid || !keyValid) {
-                    this.songForm.markAllAsTouched();
-                    return;
+                matches
+                    .filter(match => match.score >= 35)
+                    .slice(0, 5)
+                    .forEach(match => {
+                        if (match.result.id) {
+                            suggestionMap.set(match.result.id, match.result);
+                        }
+                    });
+            });
+
+            const fallbackSuggestions = fallbackMatches
+                .filter(match => match.score >= 35)
+                .slice(0, 5)
+                .map(match => match.result);
+
+            fallbackSuggestions.forEach(result => {
+                if (result.id) {
+                    suggestionMap.set(result.id, result);
+                }
+            });
+
+            const selectedIds = new Set(
+                this.artistsArray.controls
+                    .map(ctrl => ctrl.value.id)
+                    .filter((id: number | undefined) => !!id)
+            );
+
+            this.artistMatchSuggestions = Array.from(suggestionMap.values())
+                .filter(artist => artist.id && !selectedIds.has(artist.id))
+                .slice(0, 5);
+
+            if (addedStrongMatch && this.artistMatchSuggestions.length === 0) {
+                this.clearPendingArtistSuggestion();
+            }
+        });
+    }
+
+    selectSuggestedArtistMatch(artist: AutocompleteResult) {
+        this.selectArtist(artist);
+    }
+
+    createSuggestedArtist() {
+        if (!this.pendingSuggestedArtistName) {
+            return;
+        }
+
+        this.addNewArtist(this.pendingSuggestedArtistName);
+    }
+
+    private clearPendingArtistSuggestion() {
+        this.pendingSuggestedArtistName = null;
+        this.artistMatchSuggestions = [];
+    }
+
+    private ensureArtistSelected(artist: AutocompleteResult) {
+        const exists = this.artistsArray.controls.some(ctrl => ctrl.value.id === artist.id);
+        if (!exists && this.artistsArray.length < 5) {
+            this.artistsArray.push(this.fb.control({ id: artist.id, name: artist.value }));
+        }
+    }
+
+    private resolveArtistMatches(artistName: string) {
+        const searchTerms = this.buildArtistSearchTerms(artistName);
+        const searchRequests = searchTerms.map(term =>
+            this.songService.autocompleteArtists(term).pipe(catchError(() => of([])))
+        );
+
+        return forkJoin(searchRequests).pipe(
+            switchMap(resultsGroups => {
+                const mergedResults = this.mergeArtistMatches(resultsGroups.flat());
+                return of(this.rankArtistMatches(artistName, mergedResults));
+            })
+        );
+    }
+
+    private rankArtistMatches(artistName: string, results: AutocompleteResult[]): Array<{ result: AutocompleteResult; score: number }> {
+        const normalizedParts = this.extractArtistMatchParts(artistName);
+
+        return results
+            .map(result => ({
+                result,
+                score: this.scoreArtistMatch(normalizedParts, result)
+            }))
+            .filter(match => match.score > 0)
+            .sort((a, b) => b.score - a.score || a.result.displayText.localeCompare(b.result.displayText, 'he'));
+    }
+
+    private scoreArtistMatch(normalizedParts: string[], result: AutocompleteResult): number {
+        const normalizedOptions = [
+            this.normalizeArtistText(result.value),
+            this.normalizeArtistText(result.displayText),
+            this.normalizeArtistText(result.secondaryText)
+        ].filter(Boolean);
+
+        let bestScore = 0;
+
+        for (const option of normalizedOptions) {
+            const optionWords = this.splitArtistWords(option);
+
+            for (const part of normalizedParts) {
+                if (!part) {
+                    continue;
+                }
+
+                if (option === part) {
+                    bestScore = Math.max(bestScore, 110);
+                    continue;
+                }
+
+                if (option.startsWith(part) || part.startsWith(option)) {
+                    bestScore = Math.max(bestScore, 92);
+                }
+
+                if (option.includes(part) || part.includes(option)) {
+                    bestScore = Math.max(bestScore, 78);
+                }
+
+                const partWords = this.splitArtistWords(part);
+                const commonWords = partWords.filter(word => optionWords.includes(word));
+
+                if (commonWords.length > 0) {
+                    const coverageScore = Math.round((commonWords.length / partWords.length) * 70);
+                    const wordBonus = commonWords.length * 8;
+                    bestScore = Math.max(bestScore, coverageScore + wordBonus);
+                }
+            }
+        }
+
+        return bestScore;
+    }
+
+    private buildArtistSearchTerms(artistName: string): string[] {
+        const normalizedParts = this.extractArtistMatchParts(artistName);
+        const terms = new Set<string>([artistName.trim()]);
+
+        normalizedParts.forEach(part => {
+            if (part.length >= 2) {
+                terms.add(part);
+            }
+        });
+
+        return Array.from(terms).slice(0, 6);
+    }
+
+    private extractSuggestedArtistCandidates(value: string): string[] {
+        const cleanedValue = value
+            .replace(/\s+\bfeat\.?\b/gi, ' feat ')
+            .replace(/\s+\bft\.?\b/gi, ' feat ')
+            .replace(/\s+\bwith\b/gi, ' עם ')
+            .replace(/\s+\bx\b/gi, ' x ');
+
+        const rawCandidates = cleanedValue
+            .split(/\s+\bfeat\b\s+|\s+\bעם\b\s+|\s+\bx\b\s+|,|&|\//gi)
+            .map(candidate => candidate.trim())
+            .filter(candidate => candidate.length >= 2);
+
+        return Array.from(new Set(rawCandidates)).slice(0, 5);
+    }
+
+    private extractArtistMatchParts(value: string): string[] {
+        const normalizedValue = this.normalizeArtistText(value);
+        const rawParts = normalizedValue
+            .split(/\s+\b(?:feat|ft|official|topic|with)\b\s+|\||,|\/|&|\+|\bx\b/gi)
+            .map(part => part.trim())
+            .filter(part => part.length >= 2);
+
+        const parts = new Set<string>();
+
+        if (normalizedValue.length >= 2) {
+            parts.add(normalizedValue);
+        }
+
+        rawParts.forEach(part => {
+            parts.add(part);
+
+            const words = this.splitArtistWords(part);
+            if (words.length >= 2) {
+                parts.add(words.slice(0, 2).join(' '));
+            }
+        });
+
+        return Array.from(parts);
+    }
+
+    private splitArtistWords(value: string): string[] {
+        return value
+            .split(' ')
+            .map(word => word.trim())
+            .filter(word => word.length >= 2);
+    }
+
+    private mergeArtistMatches(results: AutocompleteResult[]): AutocompleteResult[] {
+        const uniqueResults = new Map<string, AutocompleteResult>();
+
+        results.forEach(result => {
+            const key = result.id ? `id-${result.id}` : this.normalizeArtistText(`${result.displayText} ${result.secondaryText ?? ''}`);
+            if (!uniqueResults.has(key)) {
+                uniqueResults.set(key, result);
+            }
+        });
+
+        return Array.from(uniqueResults.values());
+    }
+
+    private normalizeArtistText(value?: string): string {
+        return (value || '')
+            .toLowerCase()
+            .replace(/\(official.*?\)|\[official.*?\]/gi, ' ')
+            .replace(/\bofficial\b/gi, ' ')
+            .replace(/\bvideo\b/gi, ' ')
+            .replace(/\baudio\b/gi, ' ')
+            .replace(/\blyrics?\b/gi, ' ')
+            .replace(/- topic$/gi, ' ')
+            .replace(/[|]+/g, ' | ')
+            .replace(/[^\p{L}\p{N}|]+/gu, ' ')
+            .trim()
+            .replace(/\s+/g, ' ');
+    }
+
+    formatDuration(durationSeconds?: number): string {
+        if (!durationSeconds || durationSeconds < 1) {
+            return '';
+        }
+
+        const minutes = Math.floor(durationSeconds / 60);
+        const seconds = durationSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    useManualAddMode() {
+        this.isManualAddMode = true;
+        this.currentStep = 1;
+        this.youtubeSearchResults = [];
+    }
+
+    returnToSmartFlow() {
+        this.isManualAddMode = false;
+        this.currentStep = 1;
+    }
+
+    openFullDetailsEditor() {
+        this.useManualAddMode();
+    }
+
+    nextStep() {
+        if (this.currentStep < this.totalSteps) {
+            if (this.isLegacyFlow) {
+                if (this.currentStep === 1) {
+                    const titleValid = this.songForm.get('title')?.valid;
+                    const artistsValid = this.artistsArray.length > 0;
+                    const youtubeValid = this.songForm.get('youtubeUrl')?.valid;
+
+                    if (!titleValid || !artistsValid || !youtubeValid) {
+                        this.songForm.markAllAsTouched();
+                        return;
+                    }
+                } else if (this.currentStep === 2) {
+                    const lyricsValid = this.songForm.get('lyricsWithChords')?.valid;
+                    const keyValid = this.songForm.get('originalKeyId')?.valid;
+
+                    if (!lyricsValid || !keyValid) {
+                        this.songForm.markAllAsTouched();
+                        return;
+                    }
+                }
+            } else {
+                if (this.currentStep === 1) {
+                    const titleValid = this.songForm.get('title')?.valid;
+                    if (!titleValid || !this.selectedYouTubeResult) {
+                        this.songForm.get('title')?.markAsTouched();
+                        return;
+                    }
+                } else if (this.currentStep === 2) {
+                    if (this.artistsArray.length === 0) {
+                        this.songForm.get('artistInput')?.markAsTouched();
+                        return;
+                    }
+                } else if (this.currentStep === 3) {
+                    const lyricsValid = this.songForm.get('lyricsWithChords')?.valid;
+                    const keyValid = this.songForm.get('originalKeyId')?.valid;
+
+                    if (!lyricsValid || !keyValid) {
+                        this.songForm.get('lyricsWithChords')?.markAsTouched();
+                        this.songForm.get('originalKeyId')?.markAsTouched();
+                        return;
+                    }
                 }
             }
 
@@ -574,8 +1216,8 @@ export class AddSongModalComponent implements OnInit {
                     name: g.name
                 })),
                 lyricsWithChords: formValue.lyricsWithChords,
-                originalKeyId: formValue.originalKeyId,
-                easyKeyId: formValue.easyKeyId,
+                originalKeyId: Number(formValue.originalKeyId),
+                easyKeyId: this.normalizeKeyId(formValue.easyKeyId) ?? undefined,
                 composer: this.selectedComposer ? {
                     id: this.selectedComposer.id || undefined,
                     name: this.selectedComposer.name

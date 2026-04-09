@@ -1326,10 +1326,17 @@ public class SongService : ISongService
 
     private async Task<List<AutocompleteResultDto>> AutocompleteArtistsAsync(string query, int maxResults)
     {
+        var normalizedQuery = query.Trim().ToLower();
+
         return await _context.Artists
             .Where(a => !a.IsDeleted)
             .Where(a => a.Name.Contains(query) ||
                        (a.EnglishName != null && a.EnglishName.Contains(query)))
+            .OrderBy(a => a.Name.ToLower() == normalizedQuery ? 0 :
+                (a.EnglishName != null && a.EnglishName.ToLower() == normalizedQuery ? 1 :
+                (a.Name.ToLower().StartsWith(normalizedQuery) ? 2 :
+                (a.EnglishName != null && a.EnglishName.ToLower().StartsWith(normalizedQuery) ? 3 : 4))))
+            .ThenBy(a => a.Name)
             .Take(maxResults)
             .Select(a => new AutocompleteResultDto
             {

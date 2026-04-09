@@ -14,7 +14,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   TOP SCROLL MASK — white 8px strip at very top
+   TOP SCROLL MASK
 ════════════════════════════════════════════════════ */
 .top-scroll-mask {
   position: fixed;
@@ -28,7 +28,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   HERO BANNER — compact dark, fixed, 300px, collapses
+   HERO BANNER — fixed, dark, collapses on scroll
 ════════════════════════════════════════════════════ */
 .teacher-hero-bg {
   position: fixed;
@@ -36,7 +36,7 @@
   left: 8px;
   right: 8px;
   border-radius: 28px;
-  height: 300px; /* set by JS on init, this is fallback */
+  height: 300px;
   z-index: 895;
   background-color: #000000;
   background-size: cover;
@@ -45,7 +45,6 @@
   will-change: height;
 }
 
-/* רקע מטושטש */
 .hero-bg-photo {
   position: absolute;
   inset: 0;
@@ -58,7 +57,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center top;
-  filter: blur(30px) brightness(0.25);
+  filter: blur(30px) brightness(0.2);
   transform: scale(1.2);
   display: block;
 }
@@ -66,7 +65,7 @@
 .hero-dark-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1;
   pointer-events: none;
 }
@@ -85,31 +84,56 @@
   transform: translateZ(0);
 }
 
-/* ── תוכן ה-Banner (fade ב-JS) ── */
+/* ════════════════════════════════════════════════════
+   HERO CONTENT
+════════════════════════════════════════════════════ */
 .hero-content {
   position: absolute;
   inset: 0;
   z-index: 3;
-  padding: var(--space-xl) var(--space-xl) var(--space-lg);
-}
-
-/* ── ימין (RTL start): Badge + שם + מטה ── */
-.hero-info-block {
-  position: absolute;
-  top: 50%;
-  right: var(--space-xl);
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+}
+
+/* ── שורה ראשית: תמונה + פרטים ── */
+.hero-main-row {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-lg) var(--space-sm);
+}
+
+/* ── תמונה — צד ימין (ראשון ב-RTL) ── */
+.hero-image-section {
+  flex: 0 0 auto;
+}
+
+.hero-photo-square {
+  width: 150px;
+  height: 150px;
+  border-radius: 20px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── פרטי מורה — צד שמאל ── */
+.hero-info-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+  padding-bottom: var(--space-xl);
   text-align: right;
-  max-width: 55%;
+  min-width: 0;
 }
 
 /* Badge */
 .badge-featured {
   display: inline-block;
-  align-self: flex-start;
+  align-self: flex-end;
   background: #000000;
   color: #ddff53;
   padding: 5px var(--space-base);
@@ -127,29 +151,23 @@
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-weight: 800;
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
   line-height: 1.05;
   margin: 0;
   color: #ffffff;
   text-align: right;
 }
 
-/* תפקיד + עיר */
-.hero-meta-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
+/* תפקיד */
 .hero-role {
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-sm);
   font-weight: 300;
   color: rgba(255, 255, 255, 0.75);
+  margin: 0;
 }
 
+/* עיר */
 .hero-city {
   display: inline-flex;
   align-items: center;
@@ -164,25 +182,25 @@
   font-size: 15px;
 }
 
-/* ── שמאל-תחתון: "עקבו אחרי" + אייקוני קשר ── */
+/* ── Social Strip — תחתית שמאל ── */
 .hero-social-strip {
   position: absolute;
-  bottom: var(--space-lg);
-  left: var(--space-xl);
+  bottom: var(--space-md);
+  left: var(--space-md);
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--space-sm);
-  direction: ltr; /* local LTR so icons flow left-to-right */
+  gap: var(--space-xs);
+  direction: ltr;
 }
 
 .hero-follow-pill {
   display: inline-flex;
   align-items: center;
   padding: 5px var(--space-md);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.65);
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
   font-weight: 300;
@@ -193,17 +211,17 @@
 .hero-social-icons {
   display: flex;
   flex-direction: row;
-  gap: var(--space-xs);
+  gap: 6px;
 }
 
 .hero-social-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   text-decoration: none;
   transition: background 0.2s;
@@ -211,11 +229,11 @@
 }
 
 .hero-social-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .hero-social-btn .material-icons {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .hero-social-btn svg {
@@ -224,65 +242,46 @@
 }
 
 /* ════════════════════════════════════════════════════
-   SCROLL SPACER
-   גובה = hero_height - half_avatar
-   (220px = 300px - 60px - 20px padding)
+   SCROLL SPACER — height = hero height
 ════════════════════════════════════════════════════ */
 .hero-scroll-spacer {
   margin-top: 8px;
-  height: 240px;
+  height: 300px;
   pointer-events: none;
 }
 
 /* ════════════════════════════════════════════════════
-   PROFILE OVERLAP ZONE
-   חוצה את הגבול dark/white — z-index: 896
+   CTA ZONE — מתחת לתיבה הראשית
 ════════════════════════════════════════════════════ */
-.profile-overlap-zone {
+.hero-cta-zone {
   position: relative;
   z-index: 896;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* LEFT side — physical left, RTL flex-end */
-  padding: 0 var(--space-xl);
-  /* margin-top: -60px pulls element UP into the dark banner */
-  margin-top: -60px;
-  margin-bottom: var(--space-xl);
-}
-
-.hero-avatar-wrap {
-  /* just a wrapper */
-}
-
-.hero-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-  background: #000000;
-  border: 5px solid #ffffff;
-}
-
-/* כפתורי CTA */
-.hero-cta-buttons {
+  padding: var(--space-md) var(--space-lg);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  margin-top: var(--space-md);
+  align-items: flex-end;
+  margin-bottom: var(--space-lg);
+}
+
+.contact-btn-wrap {
+  position: relative;
   width: 260px;
 }
 
+/* ── כפתורי CTA ── */
 .btn-cta-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   height: 50px;
   width: 100%;
   background: #ddff53;
   color: #000000;
   border-radius: 999px;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
@@ -296,13 +295,17 @@
   opacity: 0.85;
 }
 
+.btn-cta-primary .material-icons {
+  font-size: 18px;
+}
+
 .btn-cta-whatsapp {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
   height: 50px;
-  width: 100%;
+  width: 260px;
   background: #404040;
   color: #ddff53;
   border-radius: 999px;
@@ -325,7 +328,66 @@
 }
 
 /* ════════════════════════════════════════════════════
-   PAGE CONTENT — max-width 900px
+   CONTACT PANEL — dark, minimalist
+════════════════════════════════════════════════════ */
+.contact-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: #000000;
+  border-radius: 20px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  z-index: 1000;
+  pointer-events: none;
+  transition: max-height 0.32s ease, opacity 0.22s ease;
+}
+
+.contact-panel.open {
+  max-height: 400px;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  text-decoration: none;
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  font-weight: 300;
+  font-size: var(--font-sm);
+  direction: rtl;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.15s;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+}
+
+.contact-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.contact-item-nolink {
+  cursor: default;
+}
+
+.contact-item .material-icons {
+  font-size: 17px;
+  color: #ddff53;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════
+   PAGE CONTENT
 ════════════════════════════════════════════════════ */
 .page-content {
   max-width: 900px;
@@ -337,24 +399,28 @@
 }
 
 /* ════════════════════════════════════════════════════
-   ABOUT BLOCK — bio + divider + audience tags
+   DETAILS LINE — שורת פרטים בולטת
 ════════════════════════════════════════════════════ */
-.about-block {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  text-align: right;
-}
-
-.short-bio-text {
+.details-line {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-weight: 800;
   font-size: var(--font-base);
   color: #000000;
-  margin: 0;
   line-height: var(--lh-body);
+  margin: 0;
+  text-align: right;
+}
+
+/* ════════════════════════════════════════════════════
+   ABOUT BLOCK
+════════════════════════════════════════════════════ */
+.about-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  text-align: right;
 }
 
 .full-desc-text {
@@ -417,45 +483,10 @@
   border-radius: 999px;
 }
 
-/* ════════════════════════════════════════════════════
-   BIO CARD (פרטים, התמחויות)
-════════════════════════════════════════════════════ */
-.bio-card {
-  background: #F2F2F2;
-  border-radius: 24px;
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.info-rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-base);
-  flex-wrap: wrap;
-}
-
-.info-label {
-  font-family: 'Open Sans', sans-serif;
-  font-size: var(--font-xs);
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.38);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 96px;
-  padding-top: 4px;
-  flex-shrink: 0;
-  text-align: right;
-}
-
 .pill-tag-secondary {
   display: inline-block;
   padding: 4px var(--space-base);
-  background: #ffffff;
+  background: #F2F2F2;
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-sm);
@@ -463,14 +494,8 @@
   color: #000000;
 }
 
-.tags-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
-
 /* ════════════════════════════════════════════════════
-   SONGS ROW — גלילה אופקית, כרטיסים אנכיים
+   SONGS ROW
 ════════════════════════════════════════════════════ */
 .songs-row {
   display: flex;
@@ -486,8 +511,6 @@
   display: none;
 }
 
-/* Override song-card to portrait style: image top, yellow bottom */
-.songs-row :host ::ng-deep .song-card,
 :host ::ng-deep .songs-row .song-card {
   flex-direction: column !important;
   aspect-ratio: 3 / 4 !important;
@@ -521,7 +544,6 @@
 }
 
 :host ::ng-deep .songs-row .song-card-label {
-  font-family: 'Open Sans', sans-serif !important;
   font-size: 11px !important;
   font-weight: 800 !important;
   color: rgba(0, 0, 0, 0.5) !important;
@@ -551,58 +573,72 @@
 }
 
 /* ════════════════════════════════════════════════════
-   PHOTO GRID — masonry-like, תמונות + וידאו
+   GALLERY — כמו גלריה בפוסט חדשות
 ════════════════════════════════════════════════════ */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 140px;
-  gap: 8px;
+.gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
-.photo-grid-video {
-  grid-column: span 2;
-  grid-row: span 2;
+.gallery-video-wrap {
   border-radius: 16px;
   overflow: hidden;
+  aspect-ratio: 16 / 9;
   background: #000000;
-  position: relative;
 }
 
-.photo-grid-iframe {
+.gallery-video-iframe {
   width: 100%;
   height: 100%;
   border: none;
   display: block;
 }
 
-.photo-grid-item {
-  border-radius: 16px;
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-sm);
+}
+
+.gallery-item {
+  position: relative;
   overflow: hidden;
+  border-radius: 12px;
+  aspect-ratio: 4 / 3;
   cursor: pointer;
   background: #F2F2F2;
-  position: relative;
 }
 
-/* כל פריט רביעי — גבוה יותר */
-.photo-grid-item:nth-child(4n+1) {
-  grid-row: span 2;
-}
-
-.photo-grid-img {
+.gallery-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.25s;
+  transition: transform 0.25s ease;
 }
 
-.photo-grid-item:hover .photo-grid-img {
+.gallery-item:hover .gallery-img {
   transform: scale(1.04);
 }
 
+.gallery-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  padding: 4px 10px;
+  margin: 0;
+  text-align: right;
+}
+
 /* ════════════════════════════════════════════════════
-   TESTIMONIALS — 2 עמודות, גרשיים צהובים
+   TESTIMONIALS
 ════════════════════════════════════════════════════ */
 .testimonials-grid {
   display: grid;
@@ -664,49 +700,79 @@
 }
 
 /* ════════════════════════════════════════════════════
-   IMAGE LIGHTBOX
+   LIGHTBOX
 ════════════════════════════════════════════════════ */
 .image-lightbox {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.88);
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-md);
 }
 
-.image-lightbox-inner {
+.lightbox-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-base);
-  max-width: min(92vw, 1200px);
+  max-width: min(90vw, 1100px);
 }
 
 .image-lightbox-img {
   max-width: 100%;
-  max-height: 85vh;
+  max-height: 80vh;
   object-fit: contain;
-  border-radius: 24px;
+  border-radius: 16px;
   display: block;
 }
 
 .image-lightbox-caption {
   color: #ffffff;
   font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
   font-weight: 300;
-  font-size: var(--font-base);
+  font-size: var(--font-sm);
   text-align: center;
   margin: 0;
+  opacity: 0.7;
+}
+
+.lightbox-counter {
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
 }
 
 .lightbox-close-btn {
   position: fixed;
-  top: 28px;
-  left: 28px;
+  top: 24px;
+  left: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 10000;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-close-btn .material-icons {
+  font-size: 20px;
+}
+
+.lightbox-nav {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -717,15 +783,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: background 0.2s;
 }
 
-.lightbox-close-btn:hover {
+.lightbox-nav:hover {
   background: rgba(255, 255, 255, 0.22);
 }
 
-.lightbox-close-btn .material-icons {
-  font-size: 20px;
+.lightbox-nav .material-icons {
+  font-size: 24px;
 }
 
 /* ════════════════════════════════════════════════════
@@ -761,21 +828,22 @@
    RESPONSIVE
 ════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .hero-info-block {
-    max-width: 70%;
-    right: var(--space-md);
+  .hero-photo-square {
+    width: 120px;
+    height: 120px;
   }
 
-  .hero-social-strip {
-    left: var(--space-md);
+  .hero-info-section {
+    padding-bottom: var(--space-lg);
   }
 
-  .profile-overlap-zone {
-    padding: 0 var(--space-md);
+  .hero-main-row {
+    padding: var(--space-md) var(--space-md) var(--space-xs);
+    gap: var(--space-sm);
   }
 
-  .hero-cta-buttons {
-    width: 230px;
+  .hero-cta-zone {
+    padding: var(--space-md) var(--space-md);
   }
 
   .page-content {
@@ -786,13 +854,8 @@
     grid-template-columns: 1fr;
   }
 
-  .photo-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .photo-grid-video {
-    grid-column: span 2;
-    grid-row: span 1;
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 }
 
@@ -804,31 +867,36 @@
   }
 
   .hero-name {
-    font-size: 1.7rem;
+    font-size: 1.6rem;
   }
 
-  .hero-info-block {
-    max-width: 75%;
-    right: var(--space-sm);
-    top: 50%;
+  .hero-photo-square {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+  }
+
+  .hero-main-row {
+    padding: var(--space-sm) var(--space-sm) var(--space-xs);
+    gap: var(--space-sm);
   }
 
   .hero-social-strip {
     left: var(--space-sm);
-    bottom: var(--space-md);
+    bottom: var(--space-sm);
   }
 
-  .profile-overlap-zone {
-    padding: 0 var(--space-sm);
+  .hero-cta-zone {
+    padding: var(--space-sm) var(--space-sm);
   }
 
-  .hero-avatar {
-    width: 100px;
-    height: 100px;
+  .contact-btn-wrap,
+  .btn-cta-whatsapp {
+    width: 230px;
   }
 
-  .hero-cta-buttons {
-    width: 210px;
+  .contact-panel {
+    width: 230px;
   }
 
   .btn-cta-primary,
@@ -838,7 +906,7 @@
   }
 
   .hero-scroll-spacer {
-    height: 210px;
+    height: 270px;
   }
 
   .page-content {
@@ -850,9 +918,8 @@
     min-width: 190px !important;
   }
 
-  .photo-grid {
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 110px;
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .articles-grid {

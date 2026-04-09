@@ -29,24 +29,36 @@
     <!-- תוכן Banner (fade ב-JS) -->
     <div class="hero-content">
 
-      <!-- ימין (RTL): Badge + שם + תפקיד + עיר -->
-      <div class="hero-info-block">
-        <span *ngIf="teacher.isFeatured" class="badge-featured">★ מומלץ</span>
-        <h1 class="hero-name">{{ teacher.displayName }}</h1>
-        <div class="hero-meta-row">
-          <span class="hero-role"
-                *ngIf="teacher.instruments && teacher.instruments.length > 0">
+      <!-- שורה ראשית: תמונה (ימין) + פרטים (שמאל) -->
+      <div class="hero-main-row">
+
+        <!-- תמונה — צד ימין (ראשון ב-RTL flex row) -->
+        <div class="hero-image-section">
+          <img [src]="teacher.profileImageUrl || '/logo.png'"
+               alt="{{ teacher.displayName }}"
+               class="hero-photo-square"
+               onerror="this.onerror=null; this.src='/logo.png'" />
+        </div>
+
+        <!-- פרטים — צד שמאל -->
+        <div class="hero-info-section">
+          <span *ngIf="teacher.isFeatured" class="badge-featured">★ מומלץ</span>
+          <h1 class="hero-name">{{ teacher.displayName }}</h1>
+          <p class="hero-role"
+             *ngIf="teacher.instruments && teacher.instruments.length > 0">
             מורה ל{{ teacher.instruments[0].instrumentName }}
-          </span>
-          <span class="hero-city" *ngIf="teacher.cityId">
+          </p>
+          <div class="hero-city" *ngIf="teacher.cityId">
             <span class="material-icons">location_on</span>
             {{ getCityName(teacher.cityId) }}
-          </span>
+          </div>
         </div>
+
       </div>
 
-      <!-- שמאל-תחתון: "עקבו אחרי" + אייקוני קשר -->
-      <div class="hero-social-strip">
+      <!-- שמאל-תחתון: "עקבו אחרי" + אייקוני קשר מהיר -->
+      <div class="hero-social-strip"
+           *ngIf="teacher.phoneNumber || teacher.email || teacher.websiteUrl">
         <span class="hero-follow-pill">עקבו אחרי</span>
         <div class="hero-social-icons">
           <a *ngIf="teacher.phoneNumber"
@@ -81,50 +93,75 @@
   </div>
 
   <!-- ════════════════════════════════════════
-       SCROLL SPACER (גובה = banner height)
+       SCROLL SPACER (גובה = hero height)
   ════════════════════════════════════════ -->
   <div class="hero-scroll-spacer"></div>
 
   <!-- ════════════════════════════════════════
-       PROFILE OVERLAP ZONE
-       חוצה את הגבול dark/white — z-index > hero
+       CTA ZONE — מתחת לתמונה, מחוץ לתיבה
   ════════════════════════════════════════ -->
-  <div class="profile-overlap-zone">
+  <div class="hero-cta-zone">
 
-    <!-- תמונת פרופיל — מרכזה בדיוק על הגבול -->
-    <div class="hero-avatar-wrap">
-      <img [src]="teacher.profileImageUrl || '/logo.png'"
-           alt="{{ teacher.displayName }}"
-           class="hero-avatar"
-           onerror="this.onerror=null; this.src='/logo.png'" />
+    <!-- ליצירת קשר + פאנל -->
+    <div class="contact-btn-wrap">
+      <button class="btn-cta-primary" (click)="toggleContact()">
+        <span class="material-icons">contact_phone</span>
+        ליצירת קשר
+      </button>
+      <div class="contact-panel" [class.open]="contactOpen">
+        <a *ngIf="teacher.phoneNumber"
+           [href]="'tel:' + teacher.phoneNumber"
+           class="contact-item">
+          <span class="material-icons">phone</span>
+          <span>{{ teacher.phoneNumber }}</span>
+        </a>
+        <a *ngIf="teacher.whatsAppNumber"
+           [href]="'https://wa.me/' + teacher.whatsAppNumber"
+           target="_blank"
+           class="contact-item">
+          <span class="material-icons">chat</span>
+          <span>{{ teacher.whatsAppNumber }}</span>
+        </a>
+        <a *ngIf="teacher.email"
+           [href]="'mailto:' + teacher.email"
+           class="contact-item">
+          <span class="material-icons">email</span>
+          <span>{{ teacher.email }}</span>
+        </a>
+        <a *ngIf="teacher.websiteUrl"
+           [href]="teacher.websiteUrl" target="_blank"
+           class="contact-item">
+          <span class="material-icons">language</span>
+          <span>{{ teacher.websiteUrl }}</span>
+        </a>
+        <div *ngIf="teacher.cityId || teacher.location" class="contact-item contact-item-nolink">
+          <span class="material-icons">location_on</span>
+          <span>{{ getCityName(teacher.cityId) }}{{ teacher.location ? '، ' + teacher.location : '' }}</span>
+        </div>
+      </div>
     </div>
 
-    <!-- כפתורי CTA — מתחת לתמונה -->
-    <div class="hero-cta-buttons">
-      <a class="btn-cta-primary"
-         [href]="teacher.phoneNumber ? 'tel:' + teacher.phoneNumber : (teacher.email ? 'mailto:' + teacher.email : '#')">
-        פרטים ליצירת קשר
-      </a>
-      <a *ngIf="teacher.tier === 1 && teacher.whatsAppNumber"
-         [href]="'https://wa.me/' + teacher.whatsAppNumber"
-         target="_blank"
-         class="btn-cta-whatsapp">
-        <span class="material-icons">chat</span>
-        לשליחת הודעה מהירה
-      </a>
-    </div>
+    <a *ngIf="teacher.tier === 1 && teacher.whatsAppNumber"
+       [href]="'https://wa.me/' + teacher.whatsAppNumber"
+       target="_blank"
+       class="btn-cta-whatsapp">
+      <span class="material-icons">chat</span>
+      הודעה מהירה
+    </a>
 
   </div>
-  <!-- /profile-overlap-zone -->
+  <!-- /hero-cta-zone -->
 
   <!-- ════════════════════════════════════════
        PAGE CONTENT
   ════════════════════════════════════════ -->
   <div class="page-content">
 
-    <!-- אודות + מפריד + קהל יעד -->
-    <div class="about-block" *ngIf="teacher.shortBio || teacher.fullDescription || teacher.targetAudience">
-      <p *ngIf="teacher.shortBio" class="short-bio-text">{{ teacher.shortBio }}</p>
+    <!-- שורת תיאור ראשית — shortBio + פרטים בולדים -->
+    <p class="details-line" *ngIf="detailsLine">{{ detailsLine }}</p>
+
+    <!-- תיאור מלא + קהל יעד -->
+    <div class="about-block" *ngIf="teacher.fullDescription || teacher.targetAudience">
       <p *ngIf="teacher.fullDescription" class="full-desc-text">{{ teacher.fullDescription }}</p>
       <a *ngIf="teacher.websiteUrl"
          [href]="teacher.websiteUrl"
@@ -137,41 +174,6 @@
       <div class="tags-row" *ngIf="teacher.targetAudience">
         <span class="pill-tag-secondary"
               *ngFor="let a of getTargetAudienceList(teacher.targetAudience)">{{ a }}</span>
-      </div>
-    </div>
-
-    <!-- פרטים -->
-    <div class="bio-card" *ngIf="hasDetails">
-      <span class="card-section-label">פרטים</span>
-      <div class="info-rows">
-        <div class="info-row" *ngIf="teacher.yearsOfExperience">
-          <span class="info-label">ניסיון</span>
-          <span class="pill-tag-secondary">{{ teacher.yearsOfExperience }} שנים</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.education">
-          <span class="info-label">השכלה</span>
-          <span class="pill-tag-secondary">{{ teacher.education }}</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.languages">
-          <span class="info-label">שפות הוראה</span>
-          <span class="pill-tag-secondary">{{ getLanguagesDisplay(teacher.languages) }}</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.lessonTypes">
-          <span class="info-label">סוגי שיעורים</span>
-          <span class="pill-tag-secondary">{{ teacher.lessonTypes }}</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.availability">
-          <span class="info-label">זמינות</span>
-          <span class="pill-tag-secondary">{{ teacher.availability }}</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.workingHours">
-          <span class="info-label">שעות פעילות</span>
-          <span class="pill-tag-secondary">{{ teacher.workingHours }}</span>
-        </div>
-        <div class="info-row" *ngIf="teacher.priceList">
-          <span class="info-label">מחירון</span>
-          <span class="pill-tag-secondary">{{ teacher.priceList }}</span>
-        </div>
       </div>
     </div>
 
@@ -197,27 +199,28 @@
     </div>
 
     <!-- גלריה + וידאו -->
-    <div *ngIf="galleryItems.length > 0 || teacher.videoUrl">
-      <div class="photo-grid">
+    <div class="gallery-section" *ngIf="galleryItems.length > 0 || teacher.videoUrl">
 
-        <!-- תא וידאו — אם קיים -->
-        <div class="photo-grid-video" *ngIf="teacher.videoUrl">
-          <iframe [src]="getSafeVideoUrl(teacher.videoUrl)"
-                  frameborder="0"
-                  allowfullscreen
-                  class="photo-grid-iframe"></iframe>
-        </div>
+      <!-- וידאו -->
+      <div class="gallery-video-wrap" *ngIf="teacher.videoUrl">
+        <iframe [src]="getSafeVideoUrl(teacher.videoUrl)"
+                frameborder="0"
+                allowfullscreen
+                class="gallery-video-iframe"></iframe>
+      </div>
 
-        <!-- תמונות גלריה -->
-        <div class="photo-grid-item"
+      <!-- גריד תמונות -->
+      <div class="gallery-grid" *ngIf="galleryItems.length > 0">
+        <div class="gallery-item"
              *ngFor="let img of galleryItems; let i = index"
-             (click)="openImageLightbox(img.imageUrl, img.caption || null)">
+             (click)="openLightbox(i)">
           <img [src]="img.imageUrl"
                [alt]="img.caption || ''"
-               class="photo-grid-img" />
+               class="gallery-img" />
+          <p class="gallery-caption" *ngIf="img.caption">{{ img.caption }}</p>
         </div>
-
       </div>
+
     </div>
 
     <!-- המלצות תלמידים -->
@@ -247,17 +250,39 @@
   </div>
   <!-- /page-content -->
 
-  <!-- Image Lightbox -->
-  <div class="image-lightbox" *ngIf="imageLightboxUrl" (click)="closeImageLightbox()">
-    <div class="image-lightbox-inner" (click)="$event.stopPropagation()">
-      <img [src]="imageLightboxUrl"
-           [alt]="imageLightboxCaption || ''"
-           class="image-lightbox-img" />
-      <p *ngIf="imageLightboxCaption" class="image-lightbox-caption">{{ imageLightboxCaption }}</p>
-    </div>
-    <button class="lightbox-close-btn" (click)="closeImageLightbox()">
+  <!-- ════════════════════════════════════════
+       LIGHTBOX
+  ════════════════════════════════════════ -->
+  <div class="image-lightbox" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">
+
+    <button class="lightbox-close-btn" (click)="closeLightbox()">
       <span class="material-icons">close</span>
     </button>
+
+    <button class="lightbox-nav lightbox-prev"
+            (click)="$event.stopPropagation(); lightboxStep(-1)"
+            *ngIf="galleryItems.length > 1">
+      <span class="material-icons">chevron_right</span>
+    </button>
+
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <img [src]="galleryItems[lightboxIndex!].imageUrl"
+           [alt]="galleryItems[lightboxIndex!].caption || ''"
+           class="image-lightbox-img" />
+      <p *ngIf="galleryItems[lightboxIndex!].caption" class="image-lightbox-caption">
+        {{ galleryItems[lightboxIndex!].caption }}
+      </p>
+      <span class="lightbox-counter" *ngIf="galleryItems.length > 1">
+        {{ lightboxIndex! + 1 }} / {{ galleryItems.length }}
+      </span>
+    </div>
+
+    <button class="lightbox-nav lightbox-next"
+            (click)="$event.stopPropagation(); lightboxStep(1)"
+            *ngIf="galleryItems.length > 1">
+      <span class="material-icons">chevron_left</span>
+    </button>
+
   </div>
 
 </div>

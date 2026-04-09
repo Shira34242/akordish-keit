@@ -344,6 +344,22 @@ public class YouTubeMetadataDto
 }
 
 /// <summary>
+/// תוצאת חיפוש שיר מ-YouTube
+/// </summary>
+public class YouTubeSearchResultDto
+{
+    public string VideoId { get; set; } = string.Empty;
+    public string YoutubeUrl { get; set; } = string.Empty;
+    public string? Title { get; set; }
+    public string? ChannelTitle { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public int? DurationSeconds { get; set; }
+    public string? Description { get; set; }
+    public DateTime? PublishedAt { get; set; }
+    public string? SuggestedArtistName { get; set; }
+}
+
+/// <summary>
 /// DTO לסולם מוזיקלי
 /// </summary>
 public class MusicalKeyDto
@@ -361,4 +377,22 @@ public class ToggleApprovalDto
 {
     [Required(ErrorMessage = "יש לציין את סטטוס האישור")]
     public bool IsApproved { get; set; }
+}
+
+/// <summary>
+/// בקשת זיהוי סולם
+/// </summary>
+public class DetectKeyRequestDto
+{
+    [Required]
+    public string LyricsWithChords { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// תוצאת זיהוי סולם
+/// </summary>
+public class DetectKeyResponseDto
+{
+    public int? OriginalKeyId { get; set; }
+    public int? EasyKeyId { get; set; }
 }

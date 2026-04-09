@@ -12,18 +12,23 @@ import {
     analyzePreferFlat,
     preferFlatForKey,
     isChord,
-    isChordLine
+    isChordLine,
+    parseChord,
+    enharmonicRoot
 } from '../../utils/music-utils';
+
+import { GUITAR_CHORDS, UKULELE_CHORDS, PIANO_CHORDS } from '../../utils/chord-data';
 
 import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
 import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
+import { PrintPanelComponent } from './print-panel/print-panel.component';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent],
+    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
@@ -54,6 +59,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isToolbarSticky: boolean = false;
     preferFlat: boolean = false;
     isEasyMode: boolean = false;
+    showInlineChordDiagrams: boolean = false;
 
     // Tooltip State
     hoveredChord: string | null = null;
@@ -68,6 +74,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // Tooltip hover-sticky state
     tooltipHovered = false;
     private tooltipCloseTimer: any = null;
+
+    // Print Panel State
+    isPrintPanelOpen: boolean = false;
 
     // YouTube Modal State
     showYoutubeModal: boolean = false;
@@ -108,13 +117,26 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
         });
+
+        // חסימת העתקה וקליק ימני בדף השיר
+        document.addEventListener('copy', this.preventCopy);
+        document.addEventListener('contextmenu', this.preventContextMenu);
+        document.addEventListener('selectstart', this.preventSelect);
     }
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
+        document.removeEventListener('copy', this.preventCopy);
+        document.removeEventListener('contextmenu', this.preventContextMenu);
+        document.removeEventListener('selectstart', this.preventSelect);
         this.stopAutoScroll();
         this.isAutoScroll = false;
     }
+
+    // חסימת העתקה, קליק ימני, סימון טקסט
+    private preventCopy = (e: ClipboardEvent) => e.preventDefault();
+    private preventContextMenu = (e: MouseEvent) => e.preventDefault();
+    private preventSelect = (e: Event) => e.preventDefault();
 
     // Arrow function preserves `this` when used as a callback
     private nativeDocumentClick = (event: MouseEvent) => {
@@ -402,6 +424,64 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
 
+    /** בדיקה אם לאקורד יש נתונים במאגר עבור הכלי הנוכחי */
+    private hasChordData(chord: string): boolean {
+        const variations = this.getChordVariations(chord);
+        const map = this.selectedInstrument === 'ukulele' ? UKULELE_CHORDS
+                  : this.selectedInstrument === 'piano'   ? PIANO_CHORDS
+                  : GUITAR_CHORDS;
+        for (const v of variations) if (map[v]) return true;
+        return false;
+    }
+
+    private getChordVariations(chord: string): string[] {
+        const variations: string[] = [chord];
+        const parsed = parseChord(chord);
+        if (parsed?.normalizedName && !variations.includes(parsed.normalizedName)) {
+            variations.push(parsed.normalizedName);
+        }
+        if (parsed) {
+            const { root, suffix } = parsed;
+            const altRoot = enharmonicRoot(root);
+            if (altRoot) {
+                const alt = altRoot + suffix;
+                if (!variations.includes(alt)) variations.push(alt);
+            }
+            const basic = simplifyChord(chord);
+            if (!variations.includes(basic)) variations.push(basic);
+        }
+        return variations;
+    }
+
+    /** רשימת אקורדים ייחודיים אחרי טרנספוזיציה — לתרשימים inline */
+    get uniqueTransposedChords(): string[] {
+        if (!this.song?.lyricsWithChords) return [];
+        const seen = new Set<string>();
+        const result: string[] = [];
+        for (const line of this.song.lyricsWithChords.split('\n')) {
+            const rawChords: string[] = [];
+            if (isChordLine(line)) {
+                rawChords.push(...line.trim().split(/\s+/).filter((t: string) => isChord(t)));
+            } else {
+                const matches = [...line.matchAll(/\[([^\]]+)\]/g)];
+                rawChords.push(...matches.map((m: any) => m[1]).filter((c: string) => isChord(c)));
+            }
+            for (const raw of rawChords) {
+                let c = this.transposeStep !== 0
+                    ? transposeChord(raw, this.transposeStep, { preferFlat: this.activePreferFlat })
+                    : raw;
+                if (this.isEasyMode) c = simplifyChord(c);
+                const key = simplifyChord(c);
+                if (!seen.has(key) && this.hasChordData(c)) { seen.add(key); result.push(c); }
+            }
+        }
+        return result;
+    }
+
+    toggleInlineChordDiagrams() {
+        this.showInlineChordDiagrams = !this.showInlineChordDiagrams;
+    }
+
     // Get transpose display value in tones (half-steps / 2)
     get transposeDisplay(): string {
         if (this.transposeStep === 0) return '0';
@@ -567,68 +647,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     handlePrint() {
         if (!this.song) return;
+        this.isPrintPanelOpen = true;
+    }
 
-        const artistName = this.song.artists && this.song.artists.length > 0
-            ? this.song.artists.map((a: any) => a.name).join(', ')
-            : (this.song.artistName || '');
-
-        const originalKey = this.song.originalKeyName || '';
-
-        // Process lyrics for print
-        const lines = this.song.lyricsWithChords.split('\n');
-        const processedLyrics = lines.map((line: string) => {
-            // Block Chords
-            if (isChordLine(line)) {
-                return line.replace(/\S+/g, (token) =>
-                    isChord(token) ? `<span class="chord">${token}</span>` : token
-                );
-            }
-
-            // Inline Chords [Am] — only real chords; [Verse] etc. pass through
-            return line.replace(/\[(.*?)\]/g, (match, chord) =>
-                isChord(chord) ? `<span class="chord">${chord}</span>` : match
-            );
-        }).join('\n');
-
-        const printContent = `
-      <html dir="rtl">
-        <head>
-          <title>${this.song.title} - ${artistName}</title>
-          <style>
-            body { font-family: 'Heebo', Arial, sans-serif; margin: 20px; direction: rtl; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-            .artist { font-size: 18px; color: #666; }
-            .key { font-size: 14px; color: #888; }
-            .lyrics { white-space: pre-wrap; font-family: 'Heebo', sans-serif; font-size: 14px; line-height: 2.2; }
-            .chord { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-weight: bold; color: #0066cc; margin: 0 2px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #ccc; padding-top: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">${this.song.title}</div>
-            <div class="artist">${artistName}</div>
-            ${originalKey ? `<div class="key">סולם: ${originalKey}</div>` : ''}
-          </div>
-          <div class="lyrics">${processedLyrics}</div>
-          <div class="footer">
-            מודפס מאתר אקורדישקייט - ${window.location.origin}
-          </div>
-        </body>
-      </html>
-    `;
-
-        const printWindow = window.open('', '', 'height=600,width=800');
-        if (printWindow) {
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
-        }
+    closePrintPanel() {
+        this.isPrintPanelOpen = false;
     }
 
     handleImageError(event: any) {
