@@ -137,3 +137,8 @@ export interface MusicalKey {
     displayName: string;
     isMinor: boolean;
 }
+
+export interface DetectKeyResponse {
+    originalKeyId: number | null;
+    easyKeyId: number | null;
+}

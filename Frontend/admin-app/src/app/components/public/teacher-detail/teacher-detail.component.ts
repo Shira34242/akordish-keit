@@ -41,9 +41,11 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   // ⚠️ ממתין לחיבור בקאנד: המלצות תלמידים (דורש הוספת שדה testimonials למודל)
   teacherTestimonials: { text: string; studentName: string }[] = [];
 
-  // Image Lightbox
-  imageLightboxUrl: string | null = null;
-  imageLightboxCaption: string | null = null;
+  // Lightbox
+  lightboxIndex: number | null = null;
+
+  // Contact panel
+  contactOpen = false;
 
   // ========== Hero ==========
   private fullHeroHeight = 0;
@@ -112,6 +114,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   loadTeacher(id: number): void {
     this.loading = true;
+    window.scrollTo(0, 0);
     this.teacherService.getTeacherById(id).subscribe({
       next: teacher => {
         this.teacher = teacher;
@@ -119,7 +122,6 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
         setTimeout(() => {
           this.cdr.detectChanges();
           this.initHeroHeight();
-          this.initGallery3D();
         }, 0);
       },
       error: () => {
@@ -154,7 +156,6 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   @HostListener('window:resize')
   onResize(): void {
     this.initHeroHeight();
-    this.g3dHandleResize();
   }
 
   private shrinkHero(): void {
@@ -275,9 +276,8 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
         card.appendChild(cap);
       }
 
-      const imageUrl = item.imageUrl;
-      const caption  = item.caption || null;
-      card.addEventListener('click', () => this.openImageLightbox(imageUrl, caption));
+      const itemIndex = baseItems.indexOf(item);
+      card.addEventListener('click', () => this.openLightbox(itemIndex % this.g3dBaseCount));
       card.style.cursor = 'pointer';
 
       card.addEventListener('mouseenter', () => {
@@ -338,18 +338,40 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     }));
   }
 
+  toggleContact(): void {
+    this.contactOpen = !this.contactOpen;
+  }
+
+  get detailsLine(): string {
+    if (!this.teacher) return '';
+    const parts: string[] = [];
+    if (this.teacher.shortBio) parts.push(this.teacher.shortBio);
+    if (this.teacher.yearsOfExperience) parts.push(`מעל ${this.teacher.yearsOfExperience} שנות ניסיון`);
+    if (this.teacher.education) parts.push(this.teacher.education);
+    if (this.teacher.languages) parts.push(this.getLanguagesDisplay(this.teacher.languages));
+    if (this.teacher.lessonTypes) parts.push(this.teacher.lessonTypes);
+    if (this.teacher.availability) parts.push(this.teacher.availability);
+    if (this.teacher.workingHours) parts.push(this.teacher.workingHours);
+    if (this.teacher.priceList) parts.push(this.teacher.priceList);
+    return parts.join(' · ');
+  }
+
   // ============================================================
   // Lightbox
   // ============================================================
 
-  openImageLightbox(imageUrl: string, caption: string | null): void {
-    this.imageLightboxUrl = imageUrl;
-    this.imageLightboxCaption = caption;
+  openLightbox(index: number): void {
+    this.lightboxIndex = index;
   }
 
-  closeImageLightbox(): void {
-    this.imageLightboxUrl = null;
-    this.imageLightboxCaption = null;
+  closeLightbox(): void {
+    this.lightboxIndex = null;
+  }
+
+  lightboxStep(delta: number): void {
+    if (this.lightboxIndex === null || this.galleryItems.length === 0) return;
+    const n = this.galleryItems.length;
+    this.lightboxIndex = ((this.lightboxIndex + delta) % n + n) % n;
   }
 
   // ============================================================

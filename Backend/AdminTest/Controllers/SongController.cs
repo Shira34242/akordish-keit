@@ -450,6 +450,29 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // POST: api/Songs/detect-key
+    // זיהוי סולם אוטומטי מתוך מילים ואקורדים
+    // ============================================
+    [HttpPost("detect-key")]
+    [AllowAnonymous]
+    public ActionResult<DetectKeyResponseDto> DetectKey([FromBody] DetectKeyRequestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.LyricsWithChords))
+            return BadRequest("יש לספק מילים ואקורדים");
+
+        var result = KeyDetectionService.Detect(dto.LyricsWithChords);
+
+        if (result == null)
+            return Ok(new DetectKeyResponseDto()); // לא נמצאו אקורדים — שדות null
+
+        return Ok(new DetectKeyResponseDto
+        {
+            OriginalKeyId = result.OriginalKeyId,
+            EasyKeyId = result.EasyKeyId
+        });
+    }
+
+    // ============================================
     // GET: api/Songs/popular
     // Get popular songs by view count
     // ============================================

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
-import { AddSongRequest, AutocompleteResult, DuplicateCheckResponse, MusicalKey, SongDto, YouTubeMetadata } from '../models/song.model';
+import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongDto, YouTubeMetadata } from '../models/song.model';
 
 @Injectable({
     providedIn: 'root'
@@ -44,6 +44,10 @@ export class SongService {
         return this.http.post<YouTubeMetadata>(`${this.apiUrl}/youtube-metadata`, JSON.stringify(url), {
             headers: { 'Content-Type': 'application/json' }
         });
+    }
+
+    detectKey(lyricsWithChords: string): Observable<DetectKeyResponse> {
+        return this.http.post<DetectKeyResponse>(`${this.apiUrl}/detect-key`, { lyricsWithChords });
     }
 
     getMusicalKeys(): Observable<MusicalKey[]> {

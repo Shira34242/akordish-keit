@@ -107,6 +107,15 @@ Rebuild: build desktop first, then adapt for mobile. Do not create a different d
 
 ---
 
+### Backend restart reminder
+After every session in which a backend file was changed (anything under `Backend/AdminTest` — `.cs`, `.csproj`, etc.), add this line at the end of the response:
+
+```
+🔄 שינית קבצי בקאנד — צריך להריץ מחדש את הבקאנד (dotnet run)
+```
+
+---
+
 ### Git commits
 End every commit message with a plain-language summary for the developer:
 

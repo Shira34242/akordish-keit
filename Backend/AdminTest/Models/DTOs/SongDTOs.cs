@@ -361,3 +361,21 @@ public class ToggleApprovalDto
     [Required(ErrorMessage = "יש לציין את סטטוס האישור")]
     public bool IsApproved { get; set; }
 }
+
+/// <summary>
+/// בקשת זיהוי סולם
+/// </summary>
+public class DetectKeyRequestDto
+{
+    [Required]
+    public string LyricsWithChords { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// תוצאת זיהוי סולם
+/// </summary>
+public class DetectKeyResponseDto
+{
+    public int? OriginalKeyId { get; set; }
+    public int? EasyKeyId { get; set; }
+}
