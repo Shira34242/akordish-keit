@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
-import { UserListDto, UserRole } from '../../../models/user.model';
+import { UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
 
 @Component({
@@ -28,6 +28,14 @@ export class UsersListComponent implements OnInit {
   searchTerm = '';
   filterRole: number | null = null;
   filterIsActive: boolean | null = null;
+  filterContentTag: number | null = null;
+
+  tagOptions = [
+    { value: null, label: 'כל התגים' },
+    { value: 1, label: 'חבר מתחיל' },
+    { value: 2, label: 'תורם' },
+    { value: 3, label: 'תורם מוביל' }
+  ];
 
   // Role enum for dropdown
   roleOptions = [
@@ -41,6 +49,7 @@ export class UsersListComponent implements OnInit {
 
   // UserRole enum reference for template
   UserRole = UserRole;
+  UserContentTag = UserContentTag;
 
   constructor(
     private userService: UserService,
@@ -60,7 +69,8 @@ export class UsersListComponent implements OnInit {
       this.filterRole ?? undefined,
       this.filterIsActive ?? undefined,
       this.currentPage,
-      this.pageSize
+      this.pageSize,
+      this.filterContentTag ?? undefined
     ).subscribe({
       next: (result: PagedResult<UserListDto>) => {
         this.users = result.items;
@@ -90,6 +100,7 @@ export class UsersListComponent implements OnInit {
     this.searchTerm = '';
     this.filterRole = null;
     this.filterIsActive = null;
+    this.filterContentTag = null;
     this.currentPage = 1;
     this.loadUsers();
   }
@@ -155,6 +166,24 @@ export class UsersListComponent implements OnInit {
       case UserRole.Artist: return 'אמן';
       case UserRole.Regular: return 'משתמש רגיל';
       default: return 'לא ידוע';
+    }
+  }
+
+  getContentTagLabel(tag: UserContentTag): string {
+    switch (tag) {
+      case UserContentTag.Beginner:           return 'חבר מתחיל';
+      case UserContentTag.Contributor:        return 'תורם';
+      case UserContentTag.LeadingContributor: return 'תורם מוביל';
+      default: return '';
+    }
+  }
+
+  getContentTagClass(tag: UserContentTag): string {
+    switch (tag) {
+      case UserContentTag.Beginner:           return 'tag-beginner';
+      case UserContentTag.Contributor:        return 'tag-contributor';
+      case UserContentTag.LeadingContributor: return 'tag-leading';
+      default: return '';
     }
   }
 

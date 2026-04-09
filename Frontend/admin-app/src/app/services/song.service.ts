@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
-import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
+import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
 
 @Injectable({
     providedIn: 'root'
@@ -90,6 +90,10 @@ export class SongService {
         }
 
         return this.http.get<any>(this.apiUrl, { params });
+    }
+
+    getMySongs(): Observable<SongBasicDto[]> {
+        return this.http.get<SongBasicDto[]>(`${this.apiUrl}/my`);
     }
 
     getSongById(id: number): Observable<any> {

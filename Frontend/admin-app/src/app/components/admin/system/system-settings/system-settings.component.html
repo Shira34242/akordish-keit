@@ -1,0 +1,74 @@
+<div class="settings-container">
+  <div class="page-header">
+    <h2>הגדרות כלליות</h2>
+    <p class="subtitle">שליטה בפיצ'רים והגבלות המערכת</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <span class="material-symbols-outlined spinning">progress_activity</span>
+    <span>טוען הגדרות...</span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-error">
+    <span class="material-symbols-outlined">error</span>
+    {{ error }}
+  </div>
+
+  <!-- Settings List -->
+  <div *ngIf="!loading" class="settings-list">
+    <div *ngFor="let setting of settings" class="setting-card">
+      <div class="setting-info">
+        <div class="setting-label">{{ getKeyLabel(setting.key) }}</div>
+        <div class="setting-description">{{ setting.description }}</div>
+        <div class="setting-meta">
+          <span class="setting-key">{{ setting.key }}</span>
+          <span class="setting-updated">עודכן: {{ setting.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <div class="setting-control">
+        <!-- Toggle for boolean settings -->
+        <div *ngIf="isBooleanSetting(setting)" class="toggle-wrapper">
+          <span class="toggle-label" [class.active]="getBoolValue(setting)">
+            {{ getBoolValue(setting) ? 'פעיל' : 'כבוי' }}
+          </span>
+          <button
+            class="toggle-btn"
+            [class.on]="getBoolValue(setting)"
+            [disabled]="savingKey === setting.key"
+            (click)="toggleSetting(setting)"
+            [attr.aria-label]="'הפעל/כבה ' + getKeyLabel(setting.key)">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+
+        <!-- Text input for non-boolean settings -->
+        <div *ngIf="!isBooleanSetting(setting)" class="text-control">
+          <input
+            type="text"
+            [(ngModel)]="setting.value"
+            class="setting-input"
+            [disabled]="savingKey === setting.key" />
+          <button
+            class="btn-save"
+            [disabled]="savingKey === setting.key"
+            (click)="saveSetting(setting)">
+            שמור
+          </button>
+        </div>
+
+        <!-- Feedback icons -->
+        <span *ngIf="savingKey === setting.key" class="icon-saving material-symbols-outlined spinning">sync</span>
+        <span *ngIf="successKey === setting.key" class="icon-success material-symbols-outlined">check_circle</span>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="settings.length === 0" class="empty-state">
+      <span class="material-symbols-outlined">settings</span>
+      <p>אין הגדרות מוגדרות</p>
+    </div>
+  </div>
+</div>

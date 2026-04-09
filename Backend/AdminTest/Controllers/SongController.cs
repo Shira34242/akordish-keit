@@ -12,11 +12,16 @@ public class SongsController : ControllerBase
 {
     private readonly ISongService _songService;
     private readonly IYouTubeService _youTubeService;
+    private readonly IUserTagService _userTagService;
 
-    public SongsController(ISongService songService, IYouTubeService youTubeService)
+    public SongsController(
+        ISongService songService,
+        IYouTubeService youTubeService,
+        IUserTagService userTagService)
     {
         _songService = songService;
         _youTubeService = youTubeService;
+        _userTagService = userTagService;
     }
 
     // ============================================
@@ -57,6 +62,9 @@ public class SongsController : ControllerBase
             {
                 return BadRequest(result);
             }
+
+            // עדכון תג תרומת תוכן לאחר הוספת שיר מוצלחת
+            await _userTagService.RecalculateTagAsync(userId.Value);
 
             return Ok(result);
         }
@@ -626,6 +634,30 @@ public class SongsController : ControllerBase
         {
             Console.WriteLine($"Error duplicating song: {ex.Message}");
             return StatusCode(500, new { message = "שגיאה בשכפול השיר" });
+        }
+    }
+
+    // ============================================
+    // GET: api/Songs/my
+    // Get songs uploaded by the current user
+    // ============================================
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<ActionResult<List<SongBasicDto>>> GetMySongs()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized();
+
+            var songs = await _songService.GetMySongsAsync(userId.Value);
+            return Ok(songs);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting my songs: {ex.Message}");
+            return StatusCode(500, "אירעה שגיאה בטעינת השירים");
         }
     }
 

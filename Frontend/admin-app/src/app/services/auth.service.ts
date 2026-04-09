@@ -12,6 +12,9 @@ export interface User {
     points: number;
     preferredInstrumentId?: number | null;
     hasProfessionalProfile?: boolean;
+    phone?: string | null;
+    address?: string | null;
+    birthDate?: string | null;
 }
 
 export interface AuthResponse {
@@ -131,6 +134,11 @@ export class AuthService {
 
     get currentUserValue(): User | null {
         return this.currentUserSubject.value;
+    }
+
+    updateCurrentUser(user: User) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.currentUserSubject.next(user);
     }
 
     get isLoggedIn(): boolean {

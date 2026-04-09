@@ -13,11 +13,16 @@ public class ArticlesController : ControllerBase
 {
     private readonly IArticleService _articleService;
     private readonly IYouTubeService _youTubeService;
+    private readonly IUserTagService _userTagService;
 
-    public ArticlesController(IArticleService articleService, IYouTubeService youTubeService)
+    public ArticlesController(
+        IArticleService articleService,
+        IYouTubeService youTubeService,
+        IUserTagService userTagService)
     {
         _articleService = articleService;
         _youTubeService = youTubeService;
+        _userTagService = userTagService;
     }
 
     // GET: api/Articles
@@ -87,6 +92,17 @@ public class ArticlesController : ControllerBase
         return Ok(stats);
     }
 
+    // GET: api/Articles/my
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<ActionResult<List<ArticleDto>>> GetMyArticles()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+        var articles = await _articleService.GetMyArticlesAsync(userId.Value);
+        return Ok(articles);
+    }
+
     // POST: api/Articles
     [HttpPost]
     public async Task<ActionResult<ArticleDto>> CreateArticle([FromBody] CreateArticleDto dto)
@@ -121,7 +137,13 @@ public class ArticlesController : ControllerBase
             if (dto.CategoryIds == null || dto.CategoryIds.Count == 0)
                 dto.CategoryIds = new List<int> { 1 };
 
-            var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
+            var userId = GetCurrentUserId();
+            var article = await _articleService.CreateArticleAsync(dto, userId);
+
+            // עדכון תג תרומת תוכן לאחר הגשת כתבה מוצלחת
+            if (userId.HasValue)
+                await _userTagService.RecalculateTagAsync(userId.Value);
+
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
         catch (InvalidOperationException ex)

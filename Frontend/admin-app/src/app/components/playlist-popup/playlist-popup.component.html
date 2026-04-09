@@ -25,16 +25,28 @@
       {{ error }}
     </div>
 
+    <!-- Quick Save to Default ("השמורים שלי") -->
+    <div class="quick-save-section" *ngIf="!isCreatingNew && !successMessage">
+      <button class="btn-quick-save" (click)="saveToDefault()" [disabled]="isSavingToDefault">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+        </svg>
+        <span>{{ isSavingToDefault ? 'שומר...' : 'שמור ב"השמורים שלי"' }}</span>
+      </button>
+    </div>
+
     <!-- Loading -->
     <div class="loading-state" *ngIf="isLoading">
       <div class="spinner"></div>
       <p>טוען רשימות...</p>
     </div>
 
-    <!-- Recent Playlists -->
+    <!-- Recent Playlists (other playlists) -->
     <div class="playlists-list" *ngIf="!isLoading && !isCreatingNew">
+      <p class="section-label" *ngIf="recentPlaylists.length > 0">או הוסף לרשימה אחרת:</p>
       <div
         class="playlist-item"
+        [class.playlist-item--default]="playlist.isDefault"
         *ngFor="let playlist of recentPlaylists"
         (click)="addToPlaylist(playlist.id)">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -45,16 +57,7 @@
           <span class="playlist-name">{{ playlist.name }}</span>
           <span class="playlist-count">{{ playlist.songCount }} שירים</span>
         </div>
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="recentPlaylists.length === 0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
-        </svg>
-        <p>עדיין אין לך רשימות</p>
-        <p class="empty-hint">צור רשימה חדשה כדי להתחיל</p>
+        <span class="default-badge" *ngIf="playlist.isDefault">ברירת מחדל</span>
       </div>
     </div>
 

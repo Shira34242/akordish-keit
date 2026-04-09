@@ -46,6 +46,11 @@ public interface ISongService
     /// </summary>
     Task<bool> CanUserEditSongAsync(int songId, int userId);
 
+    /// <summary>
+    /// Get all songs uploaded by a specific user (including unapproved)
+    /// </summary>
+    Task<List<SongBasicDto>> GetMySongsAsync(int userId);
+
     // ============================================
     // MEDIUM PRIORITY - Search & Discovery
     // ============================================

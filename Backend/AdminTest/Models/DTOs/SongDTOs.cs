@@ -321,6 +321,7 @@ public class SongBasicDto
     public string ArtistNames { get; set; } = string.Empty; // "אמן 1, אמן 2"
     public string? ImageUrl { get; set; }
     public int ViewCount { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 // ============================================

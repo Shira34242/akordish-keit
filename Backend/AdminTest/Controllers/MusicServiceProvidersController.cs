@@ -167,6 +167,7 @@ public class MusicServiceProvidersController : ControllerBase
                 WhatsAppNumber = dto.WhatsAppNumber,
                 Email = dto.Email,
                 WebsiteUrl = dto.WebsiteUrl,
+                BannerImageUrl = dto.BannerImageUrl,
                 VideoUrl = dto.VideoUrl,
                 YearsOfExperience = dto.YearsOfExperience,
                 WorkingHours = dto.WorkingHours,
@@ -216,6 +217,19 @@ public class MusicServiceProvidersController : ControllerBase
                         ImageUrl = img.ImageUrl,
                         Caption = img.Caption,
                         Order = img.Order
+                    });
+                }
+            }
+
+            if (dto.SocialLinks != null && dto.SocialLinks.Any())
+            {
+                foreach (var link in dto.SocialLinks.Where(link => !string.IsNullOrWhiteSpace(link.Url)))
+                {
+                    _context.ServiceProviderSocialLinks.Add(new MusicServiceProviderSocialLink
+                    {
+                        ServiceProviderId = serviceProvider.Id,
+                        Platform = link.Platform,
+                        Url = link.Url
                     });
                 }
             }

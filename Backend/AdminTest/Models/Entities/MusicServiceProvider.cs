@@ -106,6 +106,11 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public string? WebsiteUrl { get; set; }
 
+        /// <summary>
+        /// תמונת באנר לדף הפרופיל
+        /// </summary>
+        public string? BannerImageUrl { get; set; }
+
         // ════════════════════════════════════
         //          מדיה
         // ════════════════════════════════════
@@ -185,6 +190,11 @@ namespace AkordishKeit.Models.Entities
         /// גלריית תמונות
         /// </summary>
         public virtual ICollection<MusicServiceProviderGalleryImage> GalleryImages { get; set; } = new List<MusicServiceProviderGalleryImage>();
+
+        /// <summary>
+        /// קישורי רשתות חברתיות
+        /// </summary>
+        public virtual ICollection<MusicServiceProviderSocialLink> SocialLinks { get; set; } = new List<MusicServiceProviderSocialLink>();
 
         /// <summary>
         /// הרחבה למורה (1:0..1) - קיימת רק אם IsTeacher = true

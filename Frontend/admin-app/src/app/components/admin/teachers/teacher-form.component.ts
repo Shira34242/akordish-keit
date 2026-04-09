@@ -7,7 +7,7 @@ import { SystemTablesService, SystemItem } from '../../../services/system-tables
 import { UserService } from '../../../services/user.service';
 import { CitiesService, City } from '../../../services/cities.service';
 import { CreateTeacherDto, UpdateTeacherDto, TeacherDto, CreateTeacherInstrumentDto } from '../../../models/teacher.model';
-import { ProfileStatus, CreateGalleryImageDto } from '../../../models/music-service-provider.model';
+import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
 import { TeachingLanguage, getTeachingLanguageOptions, hasLanguage, toggleLanguage } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions, hasAudience, toggleAudience } from '../../../models/target-audience.enum';
@@ -46,6 +46,7 @@ export class TeacherFormComponent implements OnInit {
   whatsAppNumber: string = '';
   email: string = '';
   websiteUrl: string = '';
+  bannerImageUrl: string = '';
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -65,6 +66,17 @@ export class TeacherFormComponent implements OnInit {
   selectedAudiences: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  socialLinks: SocialLinkDto[] = [];
+
+  readonly SOCIAL_PLATFORMS = [
+    { value: SocialPlatform.Instagram, label: 'Instagram' },
+    { value: SocialPlatform.Facebook, label: 'Facebook' },
+    { value: SocialPlatform.YouTube, label: 'YouTube' },
+    { value: SocialPlatform.TikTok, label: 'TikTok' },
+    { value: SocialPlatform.Twitter, label: 'Twitter / X' },
+    { value: SocialPlatform.Spotify, label: 'Spotify' },
+    { value: SocialPlatform.Zing, label: 'Zing' }
+  ];
 
   // Available instruments, cities, and users loaded from API
   availableInstruments: SystemItem[] = [];
@@ -282,6 +294,7 @@ export class TeacherFormComponent implements OnInit {
         this.whatsAppNumber = teacher.whatsAppNumber || '';
         this.email = teacher.email || '';
         this.websiteUrl = teacher.websiteUrl || '';
+        this.bannerImageUrl = teacher.bannerImageUrl || '';
         this.profileImageUrl = teacher.profileImageUrl || '';
         this.videoUrl = teacher.videoUrl || '';
         this.yearsOfExperience = teacher.yearsOfExperience || 0;
@@ -302,6 +315,11 @@ export class TeacherFormComponent implements OnInit {
           imageUrl: img.imageUrl,
           caption: img.caption,
           order: img.order
+        })) || [];
+        this.socialLinks = teacher.socialLinks?.map(link => ({
+          id: link.id,
+          platform: link.platform,
+          url: link.url
         })) || [];
         this.loading = false;
       },
@@ -332,6 +350,7 @@ export class TeacherFormComponent implements OnInit {
         whatsAppNumber: this.whatsAppNumber,
         email: this.email,
         websiteUrl: this.websiteUrl?.trim() || undefined,
+        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
         profileImageUrl: this.profileImageUrl,
         videoUrl: this.videoUrl,
         yearsOfExperience: this.yearsOfExperience,
@@ -346,7 +365,8 @@ export class TeacherFormComponent implements OnInit {
         lessonTypes: this.lessonTypes,
         specializations: this.specializations,
         instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
-        galleryImages: this.galleryImages
+        galleryImages: this.galleryImages,
+        socialLinks: this.socialLinks.filter(link => link.url?.trim())
       };
 
       this.teacherService.updateTeacher(this.teacherId, dto).subscribe({
@@ -382,6 +402,7 @@ export class TeacherFormComponent implements OnInit {
         whatsAppNumber: this.whatsAppNumber,
         email: this.email,
         websiteUrl: this.websiteUrl?.trim() || undefined,
+        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
         profileImageUrl: this.profileImageUrl,
         videoUrl: this.videoUrl,
         yearsOfExperience: this.yearsOfExperience,
@@ -396,7 +417,8 @@ export class TeacherFormComponent implements OnInit {
         lessonTypes: this.lessonTypes,
         specializations: this.specializations,
         instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
-        galleryImages: this.galleryImages
+        galleryImages: this.galleryImages,
+        socialLinks: this.socialLinks.filter(link => link.url?.trim())
       };
 
       this.teacherService.createTeacher(dto).subscribe({
@@ -600,6 +622,14 @@ export class TeacherFormComponent implements OnInit {
     this.galleryImages.forEach((img, idx) => {
       img.order = idx;
     });
+  }
+
+  addSocialLink(): void {
+    this.socialLinks.push({ platform: SocialPlatform.Instagram, url: '' });
+  }
+
+  removeSocialLink(index: number): void {
+    this.socialLinks.splice(index, 1);
   }
 
   goBack(): void {

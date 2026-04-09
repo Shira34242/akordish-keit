@@ -101,4 +101,11 @@ export class PlaylistService {
   duplicatePlaylist(playlistId: number): Observable<Playlist> {
     return this.http.post<Playlist>(`${this.apiUrl}/${playlistId}/duplicate`, {});
   }
+
+  /**
+   * שמירת שיר ישירות ל"השמורים שלי" (ברירת מחדל)
+   */
+  saveToDefaultPlaylist(songId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/save-to-default/${songId}`, {});
+  }
 }

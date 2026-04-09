@@ -148,6 +148,13 @@
 .badge-secondary{ background: #F2F2F2; color: #000000; }
 .badge-star     { background: #ddff53; color: #000000; }
 
+/* Content Tag Badges */
+.content-tag-badge { font-size: 11px; }
+.tag-beginner    { background: #F2F2F2; color: #404040; }
+.tag-contributor { background: #000000; color: #ddff53; }
+.tag-leading     { background: #ddff53; color: #000000; font-weight: 700; }
+.no-tag          { color: #ccc; }
+
 /* Action Buttons */
 .actions-cell { white-space: nowrap; }
 

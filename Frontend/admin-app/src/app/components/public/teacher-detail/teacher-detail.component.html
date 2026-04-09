@@ -5,17 +5,22 @@
 </div>
 
 <!-- Teacher Page -->
-<div class="teacher-page" *ngIf="!loading && teacher" dir="rtl">
+<div class="teacher-page"
+     [class.has-banner]="!!heroBannerSrc"
+     *ngIf="!loading && teacher"
+     dir="rtl">
 
   <div class="top-scroll-mask"></div>
 
   <!-- ════════════════════════════════════════
        HERO BANNER — קומפקטי, כהה, fixed, מתכווץ
   ════════════════════════════════════════ -->
-  <div class="teacher-hero-bg" #teacherHeroBg>
+  <div class="teacher-hero-bg"
+       #teacherHeroBg
+       [style.backgroundImage]="heroBannerSrc ? 'url(' + heroBannerSrc + ')' : null">
 
     <!-- רקע מטושטש -->
-    <div class="hero-bg-photo" *ngIf="teacher.profileImageUrl">
+    <div class="hero-bg-photo" *ngIf="teacher.profileImageUrl && !heroBannerSrc">
       <img [src]="teacher.profileImageUrl" alt="" class="hero-bg-img" aria-hidden="true" />
     </div>
     <div class="hero-dark-overlay"></div>
@@ -70,6 +75,14 @@
              [href]="teacher.websiteUrl" target="_blank"
              class="hero-social-btn" title="אתר">
             <span class="material-icons">language</span>
+          </a>
+          <a *ngFor="let link of socialLinks"
+             [href]="link.url"
+             target="_blank"
+             rel="noopener"
+             class="hero-social-btn"
+             [title]="getSocialPlatformName(link.platform)"
+             [innerHTML]="getSocialIconSvg(link.platform)">
           </a>
         </div>
       </div>
@@ -150,6 +163,13 @@
     <!-- תיאור מלא + קהל יעד -->
     <div class="about-block" *ngIf="teacher.fullDescription || teacher.targetAudience">
       <p *ngIf="teacher.fullDescription" class="full-desc-text">{{ teacher.fullDescription }}</p>
+      <a *ngIf="teacher.websiteUrl"
+         [href]="teacher.websiteUrl"
+         target="_blank"
+         rel="noopener"
+         class="teacher-website-link">
+        {{ getShortUrl(teacher.websiteUrl) }}
+      </a>
       <div class="section-divider" *ngIf="teacher.targetAudience"></div>
       <div class="tags-row" *ngIf="teacher.targetAudience">
         <span class="pill-tag-secondary"

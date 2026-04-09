@@ -106,7 +106,7 @@ namespace AkordishKeit.Services
             });
         }
 
-        public async Task<EventDto> CreateEventAsync(CreateEventDto dto)
+        public async Task<EventDto> CreateEventAsync(CreateEventDto dto, int? submittedByUserId = null)
         {
             var eventEntity = new Event
             {
@@ -120,7 +120,8 @@ namespace AkordishKeit.Services
                 Price = dto.Price,
                 DisplayOrder = dto.DisplayOrder,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                SubmittedByUserId = submittedByUserId
             };
 
             _context.Events.Add(eventEntity);
@@ -219,6 +220,18 @@ namespace AkordishKeit.Services
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<List<EventDto>> GetMyEventsAsync(int userId)
+        {
+            var events = await _context.Events
+                .Include(e => e.EventArtists)
+                    .ThenInclude(ea => ea.Artist)
+                .Where(e => e.SubmittedByUserId == userId && !e.IsDeleted)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
+            return events.Select(MapToDto).ToList();
         }
 
         // Helper methods

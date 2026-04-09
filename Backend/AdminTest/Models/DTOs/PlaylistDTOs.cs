@@ -15,6 +15,7 @@ public class PlaylistDto
     public string? ImageUrl { get; set; }
     public bool IsPublic { get; set; }
     public bool IsAdopted { get; set; }
+    public bool IsDefault { get; set; }
     public int SongCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -32,6 +33,7 @@ public class PlaylistDetailDto
     public string? ImageUrl { get; set; }
     public bool IsPublic { get; set; }
     public bool IsAdopted { get; set; }
+    public bool IsDefault { get; set; }
     public List<PlaylistSongDto> Songs { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

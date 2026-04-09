@@ -979,6 +979,33 @@ public class SongService : ISongService
         }
     }
 
+    public async Task<List<SongBasicDto>> GetMySongsAsync(int userId)
+    {
+        try
+        {
+            return await _context.Songs
+                .Where(s => s.UploadedByUserId == userId && !s.IsDeleted)
+                .OrderByDescending(s => s.CreatedAt)
+                .Select(s => new SongBasicDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    ArtistNames = string.Join(", ", s.SongArtists
+                        .OrderBy(sa => sa.Order)
+                        .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "")),
+                    ImageUrl = s.ImageUrl,
+                    ViewCount = s.ViewCount,
+                    CreatedAt = s.CreatedAt
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting user songs: {ex.Message}");
+            throw;
+        }
+    }
+
     // ============================================
     // MEDIUM PRIORITY - Search & Discovery
     // ============================================

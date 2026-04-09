@@ -29,6 +29,10 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(p => p.IsDefault)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(p => p.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

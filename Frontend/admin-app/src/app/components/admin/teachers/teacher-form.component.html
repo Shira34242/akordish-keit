@@ -215,6 +215,14 @@
           placeholder="https://..."
         />
       </div>
+      <div class="form-group">
+        <label class="form-label">תמונת באנר</label>
+        <app-file-upload-input
+          [(url)]="bannerImageUrl"
+          placeholder="https://..."
+        />
+        <small class="form-hint">אם קיים, יוצג כרקע הראשי בדף המורה.</small>
+      </div>
     </div>
 
     <!-- Professional Information -->
@@ -467,6 +475,39 @@
           placeholder="https://youtube.com/..."
         />
         <small class="form-hint">קישור לסרטון YouTube או Vimeo</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">רשתות חברתיות</label>
+        <div class="gallery-list" *ngIf="socialLinks.length > 0">
+          <div *ngFor="let link of socialLinks; let i = index" class="gallery-item">
+            <div class="gallery-item-info">
+              <select [(ngModel)]="link.platform" [name]="'teacher_social_platform_' + i" class="form-input">
+                <option *ngFor="let platform of SOCIAL_PLATFORMS" [ngValue]="platform.value">{{ platform.label }}</option>
+              </select>
+              <input
+                type="url"
+                [(ngModel)]="link.url"
+                [name]="'teacher_social_url_' + i"
+                class="form-input"
+                placeholder="https://..."
+              />
+            </div>
+            <div class="gallery-item-actions">
+              <button
+                type="button"
+                class="btn-gallery-action btn-delete"
+                (click)="removeSocialLink(i)"
+                title="מחק"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-add-gallery" (click)="addSocialLink()">
+          <span class="material-icons">add_link</span>
+          הוסף רשת חברתית
+        </button>
       </div>
     </div>
 

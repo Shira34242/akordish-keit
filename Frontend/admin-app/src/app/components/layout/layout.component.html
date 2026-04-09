@@ -30,18 +30,13 @@
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>ניהול</span>
                             </li>
-                            <li class="user-menu-item disabled">
-                                <span class="material-icons menu-icon">upload_file</span>
-                                <span>תכנים שהעליתי</span>
+                            <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">person</span>
+                                <span>הפרופיל שלי</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>הרשימות שלי</span>
-                            </li>
-                            <div class="user-menu-divider"></div>
-                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
-                                <span class="material-icons menu-icon">card_membership</span>
-                                <span>המנוי שלי / הפרופיל שלי</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">
@@ -82,18 +77,13 @@
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>ניהול</span>
                             </li>
-                            <li class="user-menu-item disabled">
-                                <span class="material-icons menu-icon">upload_file</span>
-                                <span>תכנים שהעליתי</span>
+                            <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">person</span>
+                                <span>הפרופיל שלי</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>הרשימות שלי</span>
-                            </li>
-                            <div class="user-menu-divider"></div>
-                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
-                                <span class="material-icons menu-icon">card_membership</span>
-                                <span>המנוי שלי / הפרופיל שלי</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">
@@ -148,18 +138,13 @@
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>ניהול</span>
                             </li>
-                            <li class="user-menu-item disabled">
-                                <span class="material-icons menu-icon">upload_file</span>
-                                <span>תכנים שהעליתי</span>
+                            <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
+                                <span class="material-icons menu-icon">person</span>
+                                <span>הפרופיל שלי</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>הרשימות שלי</span>
-                            </li>
-                            <div class="user-menu-divider"></div>
-                            <li class="user-menu-item" *ngIf="user.hasProfessionalProfile" routerLink="/subscription/status" (click)="closeUserMenu()">
-                                <span class="material-icons menu-icon">card_membership</span>
-                                <span>המנוי שלי / הפרופיל שלי</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">

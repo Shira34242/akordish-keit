@@ -43,4 +43,7 @@ public interface IArticleService
 
     // ─── Top Content (Admin) ──────────────────────────────────
     Task<List<ArticleRankDto>> GetTopContentAsync(int limit = 20);
+
+    // ─── My Content ───────────────────────────────────────────
+    Task<List<ArticleDto>> GetMyArticlesAsync(int userId);
 }

@@ -110,6 +110,13 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/public/music-service-provider-page/professional-profile-modal.component').then(m => m.ProfessionalProfileModalComponent),
                 title: 'בעל מקצוע - אקורדישקייט'
             },
+            // ===== פרופיל משתמש =====
+            {
+                path: 'my-profile',
+                loadComponent: () => import('./components/my-profile/my-profile.component').then(m => m.MyProfileComponent),
+                canActivate: [authGuard],
+                title: 'הפרופיל שלי - אקורדישקייט'
+            },
             // ===== מנויים ותשלומים =====
             {
                 path: 'subscription/select',
@@ -265,8 +272,7 @@ export const routes: Routes = [
                     },
                     {
                         path: 'settings',
-                        // Placeholder, using same component or simple message for now
-                        loadComponent: () => import('./components/admin/system/value-tables/value-tables.component').then(m => m.ValueTablesComponent),
+                        loadComponent: () => import('./components/admin/system/system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
                         title: 'הגדרות מערכת - אקורדישקייט'
                     }
                 ]

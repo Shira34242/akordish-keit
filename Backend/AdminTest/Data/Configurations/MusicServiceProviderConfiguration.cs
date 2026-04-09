@@ -48,6 +48,9 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(sp => sp.WebsiteUrl)
                 .HasMaxLength(500);
 
+            builder.Property(sp => sp.BannerImageUrl)
+                .HasMaxLength(500);
+
             builder.Property(sp => sp.VideoUrl)
                 .HasMaxLength(500);
 
@@ -102,6 +105,11 @@ namespace AkordishKeit.Data.Configurations
             builder.HasMany(sp => sp.GalleryImages)
                 .WithOne(g => g.ServiceProvider)
                 .HasForeignKey(g => g.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(sp => sp.SocialLinks)
+                .WithOne(sl => sl.ServiceProvider)
+                .HasForeignKey(sl => sl.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Subscription (Many-to-One)

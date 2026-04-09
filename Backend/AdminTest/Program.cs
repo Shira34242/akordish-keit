@@ -22,7 +22,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 
+// Add Memory Cache (לשימוש ב-SystemSettingsService)
+builder.Services.AddMemoryCache();
+
 // Add Services
+builder.Services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+builder.Services.AddScoped<IUserTagService, UserTagService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddScoped<IEventService, EventService>();

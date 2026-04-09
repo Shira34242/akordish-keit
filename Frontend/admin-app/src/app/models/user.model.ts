@@ -7,6 +7,13 @@ export interface UserWithProfileDto {
   profileUrl: string;
 }
 
+export enum UserContentTag {
+  None               = 0,
+  Beginner           = 1,
+  Contributor        = 2,
+  LeadingContributor = 3
+}
+
 export interface UserListDto {
   id: number;
   username: string;
@@ -21,6 +28,8 @@ export interface UserListDto {
   emailConfirmed: boolean;
   createdAt: string;
   lastLoginAt?: string;
+  contentTag: UserContentTag;
+  uploadCount: number;
 }
 
 export enum UserRole {

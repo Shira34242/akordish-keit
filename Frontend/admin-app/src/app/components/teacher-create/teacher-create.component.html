@@ -344,6 +344,33 @@
           </div>
 
           <div class="form-group">
+            <label for="bannerImageUrl">תמונת באנר</label>
+            <app-file-upload-input
+              [(url)]="bannerImageUrl"
+              placeholder="https://example.com/banner.jpg"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>רשתות חברתיות</label>
+            <div class="gallery-manager">
+              <div *ngFor="let link of socialLinks; let i = index" class="gallery-add">
+                <select [(ngModel)]="link.platform" [name]="'teacher_create_social_platform_' + i">
+                  <option *ngFor="let platform of SOCIAL_PLATFORMS" [ngValue]="platform.value">{{ platform.label }}</option>
+                </select>
+                <input
+                  type="url"
+                  [(ngModel)]="link.url"
+                  [name]="'teacher_create_social_url_' + i"
+                  placeholder="https://..."
+                />
+                <button type="button" (click)="removeSocialLink(i)">מחק</button>
+              </div>
+              <button type="button" (click)="addSocialLink()">הוסף רשת חברתית</button>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label>׳’׳׳¨׳™׳™׳× ׳×׳׳•׳ ׳•׳×</label>
             <div class="gallery-manager">
               <div class="gallery-add">

@@ -159,9 +159,28 @@ public class PlaylistsController : ControllerBase
         var success = await _playlistService.DeletePlaylistAsync(id, userId.Value);
 
         if (!success)
-            return NotFound(new { message = "רשימת ההשמעה לא נמצאה" });
+            return BadRequest(new { message = "לא ניתן למחוק רשימה זו" });
 
         return Ok(new { message = "הרשימה נמחקה בהצלחה" });
+    }
+
+    // ============================================
+    // POST: api/Playlists/save-to-default/{songId}
+    // שמירת שיר ישירות ל"השמורים שלי"
+    // ============================================
+    [HttpPost("save-to-default/{songId}")]
+    public async Task<ActionResult> SaveToDefault(int songId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
+
+        var success = await _playlistService.SaveToDefaultPlaylistAsync(songId, userId.Value);
+
+        if (!success)
+            return BadRequest(new { message = "השיר כבר קיים ברשימה או שלא נמצא" });
+
+        return Ok(new { message = "השיר נשמר ב\"השמורים שלי\"" });
     }
 
     // ============================================

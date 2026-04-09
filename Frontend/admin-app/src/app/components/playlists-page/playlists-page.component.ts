@@ -15,6 +15,7 @@ import { LikedContent } from '../../models/liked-content.model';
 })
 export class PlaylistsPageComponent implements OnInit {
   playlists: Playlist[] = [];
+  defaultPlaylist: Playlist | null = null;
   myPlaylists: Playlist[] = [];
   adoptedPlaylists: Playlist[] = [];
   likedContent: LikedContent[] = [];
@@ -43,8 +44,9 @@ export class PlaylistsPageComponent implements OnInit {
     this.playlistService.getMyPlaylists().subscribe({
       next: (playlists) => {
         this.playlists = playlists;
-        // הפרדת רשימות רגילות מרשימות מאומצות
-        this.myPlaylists = playlists.filter(p => !p.isAdopted);
+        // הפרדה: ברירת מחדל, רגילות, מאומצות
+        this.defaultPlaylist = playlists.find(p => p.isDefault) || null;
+        this.myPlaylists = playlists.filter(p => !p.isAdopted && !p.isDefault);
         this.adoptedPlaylists = playlists.filter(p => p.isAdopted);
         this.isLoading = false;
       },
@@ -77,6 +79,9 @@ export class PlaylistsPageComponent implements OnInit {
 
   deletePlaylist(id: number, event: Event): void {
     event.stopPropagation();
+
+    const playlist = this.playlists.find(p => p.id === id);
+    if (playlist?.isDefault) return;
 
     if (confirm('האם אתה בטוח שברצונך למחוק רשימה זו?')) {
       this.playlistService.deletePlaylist(id).subscribe({
@@ -161,11 +166,11 @@ export class PlaylistsPageComponent implements OnInit {
   }
 
   getTotalCount(): number {
-    return this.myPlaylists.length + this.adoptedPlaylists.length + this.likedContent.length;
+    return (this.defaultPlaylist ? 1 : 0) + this.myPlaylists.length + this.adoptedPlaylists.length + this.likedContent.length;
   }
 
   getMyPlaylistsCount(): number {
-    return this.myPlaylists.length;
+    return (this.defaultPlaylist ? 1 : 0) + this.myPlaylists.length;
   }
 
   getAdoptedPlaylistsCount(): number {

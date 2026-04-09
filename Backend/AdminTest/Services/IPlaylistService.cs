@@ -1,4 +1,5 @@
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Entities;
 
 namespace AkordishKeit.Services;
 
@@ -63,4 +64,14 @@ public interface IPlaylistService
     /// שכפול רשימה קיימת של המשתמש - יצירת עותק זהה
     /// </summary>
     Task<PlaylistDto?> DuplicatePlaylistAsync(int playlistId, int userId);
+
+    /// <summary>
+    /// מוודא שרשימת "השמורים שלי" קיימת למשתמש — יוצר אותה אם לא קיימת
+    /// </summary>
+    Task<Playlist> EnsureDefaultPlaylistAsync(int userId);
+
+    /// <summary>
+    /// שמירת שיר ישירות ל"השמורים שלי" של המשתמש
+    /// </summary>
+    Task<bool> SaveToDefaultPlaylistAsync(int songId, int userId);
 }

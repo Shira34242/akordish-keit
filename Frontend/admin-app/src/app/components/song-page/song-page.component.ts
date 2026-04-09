@@ -741,6 +741,10 @@ private getKeyIndex(keyName: string): number {
     }
 
     togglePlaylistPopup(): void {
+        if (!this.authService.isLoggedIn) {
+            this.router.navigate(['/login']);
+            return;
+        }
         this.isPlaylistPopupOpen = !this.isPlaylistPopupOpen;
     }
 

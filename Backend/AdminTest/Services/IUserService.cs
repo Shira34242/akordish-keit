@@ -8,6 +8,7 @@ public interface IUserService
         string? search,
         int? role,
         bool? isActive,
+        int? contentTag,
         int pageNumber,
         int pageSize);
 
@@ -20,4 +21,7 @@ public interface IUserService
     /// מחזיר את פרופיל המעלה של משתמש לפי ה-UserId שלו (אמן / בעל מקצוע / מורה)
     /// </summary>
     Task<UserWithProfileDto?> GetUploaderProfileByUserIdAsync(int userId);
+
+    Task<MyProfileDto?> GetMyProfileAsync(int userId);
+    Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto);
 }

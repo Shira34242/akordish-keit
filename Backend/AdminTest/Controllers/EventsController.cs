@@ -2,6 +2,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AkordishKeit.Controllers
 {
@@ -83,11 +84,30 @@ namespace AkordishKeit.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
+
             dto.IsActive = false;
             dto.DisplayOrder = 0;
 
-            var eventDto = await _eventService.CreateEventAsync(dto);
+            var eventDto = await _eventService.CreateEventAsync(dto, userId);
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
+        }
+
+        /// <summary>
+        /// קבלת ההופעות שהמשתמש המחובר הגיש
+        /// </summary>
+        [HttpGet("my")]
+        [Authorize]
+        public async Task<ActionResult<List<EventDto>>> GetMyEvents()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
+
+            var events = await _eventService.GetMyEventsAsync(userId);
+            return Ok(events);
         }
 
         /// <summary>
