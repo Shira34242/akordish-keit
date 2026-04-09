@@ -15,6 +15,8 @@ export interface User {
     phone?: string | null;
     address?: string | null;
     birthDate?: string | null;
+    contentTag?: number;   // 0=None, 1=מתחיל, 2=תורם, 3=תורם מוביל
+    uploadCount?: number;
 }
 
 export interface AuthResponse {

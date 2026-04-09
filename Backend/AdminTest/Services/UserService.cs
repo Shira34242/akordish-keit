@@ -172,7 +172,9 @@ public class UserService : IUserService
             Phone = user.Phone,
             Address = user.Address,
             BirthDate = user.BirthDate,
-            ProfileImageUrl = user.ProfileImageUrl
+            ProfileImageUrl = user.ProfileImageUrl,
+            ContentTag = (int)user.ContentTag,
+            UploadCount = user.UploadCount
         };
     }
 
@@ -196,7 +198,9 @@ public class UserService : IUserService
             Phone = user.Phone,
             Address = user.Address,
             BirthDate = user.BirthDate,
-            ProfileImageUrl = user.ProfileImageUrl
+            ProfileImageUrl = user.ProfileImageUrl,
+            ContentTag = (int)user.ContentTag,
+            UploadCount = user.UploadCount
         };
     }
 

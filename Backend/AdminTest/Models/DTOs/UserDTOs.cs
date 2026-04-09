@@ -9,6 +9,8 @@ public class MyProfileDto
     public string? Address { get; set; }
     public DateTime? BirthDate { get; set; }
     public string? ProfileImageUrl { get; set; }
+    public int ContentTag { get; set; }
+    public int UploadCount { get; set; }
 }
 
 public class UpdateMyProfileDto

@@ -91,7 +91,8 @@ export class MyProfileComponent implements OnInit {
     this.userService.getMyProfile().subscribe({
       next: (data) => {
         if (this.user) {
-          this.user = { ...this.user, phone: data.phone, address: data.address, birthDate: data.birthDate };
+          this.user = { ...this.user, phone: data.phone, address: data.address, birthDate: data.birthDate, contentTag: data.contentTag ?? this.user.contentTag, uploadCount: data.uploadCount ?? this.user.uploadCount };
+          this.authService.updateCurrentUser(this.user);
         }
       },
       error: () => {}
@@ -143,19 +144,22 @@ export class MyProfileComponent implements OnInit {
   }
 
   getLevelNumber(): number {
-    const level = this.user?.level ?? 1;
-    if (level >= 3) return 3;
-    if (level >= 2) return 2;
-    return 1;
+    const tag = this.user?.contentTag ?? 0;
+    if (tag >= 3) return 3;
+    if (tag >= 2) return 2;
+    if (tag >= 1) return 1;
+    return 0;
   }
 
   getLevelName(): string {
-    const names: Record<number, string> = { 1: 'מתחיל', 2: 'תורם', 3: 'תורם מוביל' };
+    const names: Record<number, string> = { 0: 'משתמש רשום', 1: 'מתחיל', 2: 'תורם', 3: 'תורם מוביל' };
     return names[this.getLevelNumber()];
   }
 
   getDashOffset(): number {
-    const progress = this.getLevelNumber() / 3;
+    const tag = this.user?.contentTag ?? 0;
+    // tag 0 = 5%, 1 = 33%, 2 = 66%, 3 = 100%
+    const progress = tag === 0 ? 0.05 : tag / 3;
     return this.CIRCUMFERENCE * (1 - progress);
   }
 

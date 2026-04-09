@@ -56,8 +56,8 @@ export class UserService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string }> {
-    return this.http.get<{ phone?: string; address?: string; birthDate?: string }>(
+  getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number }> {
+    return this.http.get<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number }>(
       `${this.apiUrl}/me`, { withCredentials: true }
     );
   }
