@@ -117,6 +117,12 @@
           <!-- Actions -->
           <td class="actions-cell">
             <button
+              class="btn-action btn-view"
+              (click)="viewSong(song.id)"
+              title="צפה באתר">
+              <span class="material-icons">visibility</span>
+            </button>
+            <button
               class="btn-action btn-toggle"
               (click)="toggleApproval(song)"
               [title]="song.isApproved ? 'ביטול אישור' : 'אישור'">

@@ -347,6 +347,32 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // GET: api/Songs/youtube-search
+    // Search YouTube videos by song title
+    // ============================================
+    [HttpGet("youtube-search")]
+    public async Task<ActionResult<List<YouTubeSearchResultDto>>> SearchYouTubeVideos(
+        [FromQuery] string query,
+        [FromQuery] int maxResults = 5)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+            {
+                return Ok(new List<YouTubeSearchResultDto>());
+            }
+
+            var results = await _youTubeService.SearchVideosAsync(query, maxResults);
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching YouTube videos: {ex.Message}");
+            return Ok(new List<YouTubeSearchResultDto>());
+        }
+    }
+
+    // ============================================
     // GET: api/Songs/autocomplete/artists
     // Autocomplete for artists
     // ============================================

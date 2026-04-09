@@ -126,7 +126,7 @@ export class ArtistsAdminListComponent implements OnInit {
   }
 
   viewArtist(id: number): void {
-    this.router.navigate(['/artist', id]);
+    window.open('/artist/' + id, '_blank');
   }
 
   approveArtist(id: number): void {

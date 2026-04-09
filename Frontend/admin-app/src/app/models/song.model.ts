@@ -131,6 +131,18 @@ export interface YouTubeMetadata {
     errorMessage?: string;
 }
 
+export interface YouTubeSearchResult {
+    videoId: string;
+    youtubeUrl: string;
+    title?: string;
+    channelTitle?: string;
+    thumbnailUrl?: string;
+    durationSeconds?: number;
+    description?: string;
+    publishedAt?: Date;
+    suggestedArtistName?: string;
+}
+
 export interface MusicalKey {
     id: number;
     name: string;

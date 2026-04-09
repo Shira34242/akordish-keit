@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -11,6 +12,7 @@ namespace AkordishKeit.Services;
 public interface IYouTubeService
 {
     Task<YouTubeMetadataDto> GetVideoMetadataAsync(string youtubeUrl);
+    Task<List<YouTubeSearchResultDto>> SearchVideosAsync(string query, int maxResults = 5);
     string? ExtractVideoId(string youtubeUrl);
 }
 
@@ -123,6 +125,103 @@ public class YouTubeService : IYouTubeService
     }
 
     /// <summary>
+    /// חיפוש סרטונים ב-YouTube לפי שם שיר
+    /// </summary>
+    public async Task<List<YouTubeSearchResultDto>> SearchVideosAsync(string query, int maxResults = 5)
+    {
+        if (string.IsNullOrWhiteSpace(query) || string.IsNullOrWhiteSpace(_apiKey))
+        {
+            return new List<YouTubeSearchResultDto>();
+        }
+
+        try
+        {
+            var safeMaxResults = Math.Clamp(maxResults, 1, 8);
+            var encodedQuery = Uri.EscapeDataString(query.Trim());
+            var searchUrl =
+                $"https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults={safeMaxResults}&q={encodedQuery}&key={_apiKey}";
+
+            var searchResponse = await _httpClient.GetAsync(searchUrl);
+            if (!searchResponse.IsSuccessStatusCode)
+            {
+                return new List<YouTubeSearchResultDto>();
+            }
+
+            var searchJson = await searchResponse.Content.ReadAsStringAsync();
+            var searchResult = JsonSerializer.Deserialize<YouTubeSearchApiResponse>(searchJson, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var videoIds = searchResult?.Items?
+                .Select(item => item.Id?.VideoId)
+                .Where(videoId => !string.IsNullOrWhiteSpace(videoId))
+                .Distinct()
+                .ToList();
+
+            if (videoIds == null || videoIds.Count == 0)
+            {
+                return new List<YouTubeSearchResultDto>();
+            }
+
+            var videosUrl =
+                $"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id={string.Join(",", videoIds)}&key={_apiKey}";
+
+            var videosResponse = await _httpClient.GetAsync(videosUrl);
+            if (!videosResponse.IsSuccessStatusCode)
+            {
+                return new List<YouTubeSearchResultDto>();
+            }
+
+            var videosJson = await videosResponse.Content.ReadAsStringAsync();
+            var videosResult = JsonSerializer.Deserialize<YouTubeApiResponse>(videosJson, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var videosById = videosResult?.Items?
+                .Where(item => !string.IsNullOrWhiteSpace(item.Id))
+                .ToDictionary(item => item.Id!, item => item)
+                ?? new Dictionary<string, YouTubeVideoItem>();
+
+            var results = new List<YouTubeSearchResultDto>();
+
+            foreach (var videoId in videoIds)
+            {
+                if (string.IsNullOrWhiteSpace(videoId) || !videosById.TryGetValue(videoId, out var item))
+                {
+                    continue;
+                }
+
+                var snippet = item.Snippet;
+
+                results.Add(new YouTubeSearchResultDto
+                {
+                    VideoId = videoId,
+                    YoutubeUrl = $"https://www.youtube.com/watch?v={videoId}",
+                    Title = snippet?.Title,
+                    ChannelTitle = snippet?.ChannelTitle,
+                    ThumbnailUrl = snippet?.Thumbnails?.High?.Url
+                        ?? snippet?.Thumbnails?.Medium?.Url
+                        ?? snippet?.Thumbnails?.Default?.Url
+                        ?? $"https://img.youtube.com/vi/{videoId}/hqdefault.jpg",
+                    DurationSeconds = ParseIsoDuration(item.ContentDetails?.Duration),
+                    Description = snippet?.Description,
+                    PublishedAt = snippet?.PublishedAt,
+                    SuggestedArtistName = ExtractSuggestedArtistName(snippet?.ChannelTitle, snippet?.Title)
+                });
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching YouTube videos: {ex.Message}");
+            return new List<YouTubeSearchResultDto>();
+        }
+    }
+
+    /// <summary>
     /// חילוץ Video ID מכתובת YouTube
     /// </summary>
     public string? ExtractVideoId(string youtubeUrl)
@@ -183,6 +282,29 @@ public class YouTubeService : IYouTubeService
         }
     }
 
+    private string? ExtractSuggestedArtistName(string? channelTitle, string? videoTitle)
+    {
+        var candidate = channelTitle?.Trim();
+
+        if (string.IsNullOrWhiteSpace(candidate) && !string.IsNullOrWhiteSpace(videoTitle))
+        {
+            candidate = videoTitle
+                .Split(new[] { " - ", " – ", " — " }, StringSplitOptions.None)
+                .FirstOrDefault()?.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return null;
+        }
+
+        candidate = Regex.Replace(candidate, @"\s*-\s*Topic$", string.Empty, RegexOptions.IgnoreCase).Trim();
+        candidate = Regex.Replace(candidate, @"\s*\(Official.*?\)$", string.Empty, RegexOptions.IgnoreCase).Trim();
+        candidate = Regex.Replace(candidate, @"\s*\[Official.*?\]$", string.Empty, RegexOptions.IgnoreCase).Trim();
+
+        return string.IsNullOrWhiteSpace(candidate) ? null : candidate;
+    }
+
     // ============================================
     // YouTube API Response Classes
     // ============================================
@@ -194,8 +316,24 @@ public class YouTubeService : IYouTubeService
 
     private class YouTubeVideoItem
     {
+        public string? Id { get; set; }
         public VideoSnippet? Snippet { get; set; }
         public VideoContentDetails? ContentDetails { get; set; }
+    }
+
+    private class YouTubeSearchApiResponse
+    {
+        public List<YouTubeSearchItem>? Items { get; set; }
+    }
+
+    private class YouTubeSearchItem
+    {
+        public SearchResourceId? Id { get; set; }
+    }
+
+    private class SearchResourceId
+    {
+        public string? VideoId { get; set; }
     }
 
     private class VideoSnippet
