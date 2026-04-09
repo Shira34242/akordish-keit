@@ -485,9 +485,10 @@
    =========================== */
 
 .completion-banner {
+  display: block;
   background: #ddff53;
   border-radius: 20px;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: 32px 40px;
   text-align: center;
   cursor: pointer;
   transition: filter 0.2s;
@@ -498,15 +499,17 @@
 }
 
 .completion-banner-text p {
-  margin: 0 0 var(--space-xs);
-  font-size: var(--font-base);
+  margin: 0 0 8px;
+  font-size: 16px;
   font-weight: 400;
   color: #000000;
-  line-height: var(--lh-base);
+  line-height: 1.5;
 }
 
 .completion-banner-cta {
-  font-size: var(--font-base);
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 16px;
   font-weight: 800;
   color: #000000;
 }

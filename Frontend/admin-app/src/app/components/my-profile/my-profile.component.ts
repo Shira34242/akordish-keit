@@ -93,7 +93,8 @@ export class MyProfileComponent implements OnInit {
         if (this.user) {
           this.user = { ...this.user, phone: data.phone, address: data.address, birthDate: data.birthDate };
         }
-      }
+      },
+      error: () => {}
     });
   }
 
