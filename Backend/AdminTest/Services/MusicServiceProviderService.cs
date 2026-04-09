@@ -96,6 +96,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)
             .Include(sp => sp.GalleryImages)
+            .Include(sp => sp.SocialLinks)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -108,6 +109,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)
             .Include(sp => sp.GalleryImages)
+            .Include(sp => sp.SocialLinks)
             .FirstOrDefaultAsync(sp => sp.UserId == userId && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -144,6 +146,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             PhoneNumber = dto.PhoneNumber,
             Email = dto.Email,
             WebsiteUrl = dto.WebsiteUrl,
+            BannerImageUrl = dto.BannerImageUrl,
             VideoUrl = dto.VideoUrl,
             IsFeatured = dto.IsFeatured,
             Status = (ProfileStatus)dto.Status,
@@ -178,6 +181,18 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             }
         }
 
+        if (dto.SocialLinks != null && dto.SocialLinks.Any())
+        {
+            foreach (var linkDto in dto.SocialLinks.Where(link => !string.IsNullOrWhiteSpace(link.Url)))
+            {
+                serviceProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+                {
+                    Platform = linkDto.Platform,
+                    Url = linkDto.Url
+                });
+            }
+        }
+
         _context.ServiceProviders.Add(serviceProvider);
         await _context.SaveChangesAsync();
 
@@ -189,6 +204,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         var serviceProvider = await _context.ServiceProviders
             .Include(sp => sp.Categories)
             .Include(sp => sp.GalleryImages)
+            .Include(sp => sp.SocialLinks)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (serviceProvider == null)
@@ -209,6 +225,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         serviceProvider.PhoneNumber = dto.PhoneNumber;
         serviceProvider.Email = dto.Email;
         serviceProvider.WebsiteUrl = dto.WebsiteUrl;
+        serviceProvider.BannerImageUrl = dto.BannerImageUrl;
         serviceProvider.VideoUrl = dto.VideoUrl;
         serviceProvider.IsFeatured = dto.IsFeatured;
         serviceProvider.Status = (ProfileStatus)dto.Status;
@@ -242,6 +259,20 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                     Caption = imageDto.Caption,
                     Order = imageDto.Order,
                     CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        serviceProvider.SocialLinks.Clear();
+        if (dto.SocialLinks != null && dto.SocialLinks.Any())
+        {
+            foreach (var linkDto in dto.SocialLinks.Where(link => !string.IsNullOrWhiteSpace(link.Url)))
+            {
+                serviceProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+                {
+                    ServiceProviderId = serviceProvider.Id,
+                    Platform = linkDto.Platform,
+                    Url = linkDto.Url
                 });
             }
         }
@@ -370,6 +401,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         var original = await _context.ServiceProviders
             .Include(sp => sp.Categories)
             .Include(sp => sp.GalleryImages)
+            .Include(sp => sp.SocialLinks)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (original == null)
@@ -391,6 +423,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             PhoneNumber = original.PhoneNumber,
             Email = original.Email,
             WebsiteUrl = original.WebsiteUrl,
+            BannerImageUrl = original.BannerImageUrl,
             VideoUrl = original.VideoUrl,
             IsFeatured = false,
             Status = ProfileStatus.Pending,
@@ -419,6 +452,15 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 Caption = img.Caption,
                 Order = img.Order,
                 CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        foreach (var link in original.SocialLinks)
+        {
+            newProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+            {
+                Platform = link.Platform,
+                Url = link.Url
             });
         }
 
@@ -454,6 +496,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             PhoneNumber = entity.PhoneNumber,
             Email = entity.Email,
             WebsiteUrl = entity.WebsiteUrl,
+            BannerImageUrl = entity.BannerImageUrl,
             VideoUrl = entity.VideoUrl,
             IsFeatured = entity.IsFeatured,
             Status = (int)entity.Status,
@@ -473,6 +516,12 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 ImageUrl = g.ImageUrl,
                 Caption = g.Caption,
                 Order = g.Order
+            }).ToList(),
+            SocialLinks = entity.SocialLinks.Select(sl => new SocialLinkDto
+            {
+                Id = sl.Id,
+                Platform = sl.Platform,
+                Url = sl.Url
             }).ToList()
         };
     }

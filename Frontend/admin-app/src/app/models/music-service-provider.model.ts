@@ -17,6 +17,7 @@ export interface MusicServiceProviderDto {
   phoneNumber?: string;
   email?: string;
   websiteUrl?: string;
+  bannerImageUrl?: string;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;
@@ -28,6 +29,7 @@ export interface MusicServiceProviderDto {
   updatedAt?: string;
   categories: ServiceProviderCategoryDto[];
   galleryImages: GalleryImageDto[];
+  socialLinks: SocialLinkDto[];
 }
 
 export interface MusicServiceProviderListDto {
@@ -67,11 +69,13 @@ export interface CreateMusicServiceProviderDto {
   phoneNumber?: string;
   email?: string;
   websiteUrl?: string;
+  bannerImageUrl?: string;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;
   categories?: CreateServiceProviderCategoryDto[];
   galleryImages?: CreateGalleryImageDto[];
+  socialLinks?: SocialLinkDto[];
 }
 
 export interface UpdateMusicServiceProviderDto {
@@ -87,11 +91,19 @@ export interface UpdateMusicServiceProviderDto {
   phoneNumber?: string;
   email?: string;
   websiteUrl?: string;
+  bannerImageUrl?: string;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;
   categories?: CreateServiceProviderCategoryDto[];
   galleryImages?: CreateGalleryImageDto[];
+  socialLinks?: SocialLinkDto[];
+}
+
+export interface SocialLinkDto {
+  id?: number;
+  platform: SocialPlatform;
+  url: string;
 }
 
 export interface ServiceProviderCategoryDto {
@@ -123,4 +135,15 @@ export enum ProfileStatus {
   Pending = 0,
   Active = 1,
   Suspended = 2
+}
+
+export enum SocialPlatform {
+  Instagram = 1,
+  Facebook = 2,
+  YouTube = 3,
+  TikTok = 4,
+  Website = 5,
+  Twitter = 6,
+  Spotify = 7,
+  Zing = 8
 }

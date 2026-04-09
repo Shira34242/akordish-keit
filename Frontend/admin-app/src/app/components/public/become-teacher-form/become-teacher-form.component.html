@@ -199,8 +199,33 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">תמונת באנר</label>
+          <app-file-upload-input [(url)]="bannerImageUrl" placeholder="https://..." />
+        </div>
+
+        <div class="form-group">
           <label class="form-label">וידאו (URL)</label>
           <input type="url" class="form-input" [(ngModel)]="videoUrl" placeholder="YouTube/Vimeo URL">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">רשתות חברתיות</label>
+          <div class="gallery-manager">
+            <div class="add-image-form" *ngFor="let link of socialLinks; let i = index">
+              <select class="form-input" [(ngModel)]="link.platform" [name]="'become_teacher_social_platform_' + i">
+                <option *ngFor="let platform of SOCIAL_PLATFORMS" [ngValue]="platform.value">{{ platform.label }}</option>
+              </select>
+              <input
+                type="url"
+                class="form-input"
+                [(ngModel)]="link.url"
+                [name]="'become_teacher_social_url_' + i"
+                placeholder="https://..."
+              >
+              <button type="button" class="btn-add-image" (click)="removeSocialLink(i)">מחק</button>
+            </div>
+            <button type="button" class="btn-add-image" (click)="addSocialLink()">הוסף רשת חברתית</button>
+          </div>
         </div>
 
         <div class="form-group">

@@ -85,7 +85,13 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public bool IsDeleted { get; set; } = false;
 
+        /// <summary>
+        /// המשתמש שהגיש את ההופעה דרך הטופס הציבורי
+        /// </summary>
+        public int? SubmittedByUserId { get; set; }
+
         // Navigation Properties
         public virtual ICollection<EventArtist> EventArtists { get; set; }
+        public virtual User? SubmittedByUser { get; set; }
     }
 }

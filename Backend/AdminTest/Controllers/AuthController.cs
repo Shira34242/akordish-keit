@@ -201,7 +201,9 @@ namespace AkordishKeit.Controllers
                     Level = user.Level,
                     Points = user.Points,
                     PreferredInstrumentId = user.PreferredInstrumentId,
-                    HasProfessionalProfile = hasProfessionalProfile
+                    HasProfessionalProfile = hasProfessionalProfile,
+                    ContentTag = (int)user.ContentTag,
+                    UploadCount = user.UploadCount
                 },
                 RequiresProfileCompletion = isNewRegistration
             };
@@ -338,7 +340,9 @@ namespace AkordishKeit.Controllers
                 Role = user.Role.ToString(),
                 Level = user.Level,
                 Points = user.Points,
-                PreferredInstrumentId = user.PreferredInstrumentId
+                PreferredInstrumentId = user.PreferredInstrumentId,
+                ContentTag = (int)user.ContentTag,
+                UploadCount = user.UploadCount
             });
         }
 

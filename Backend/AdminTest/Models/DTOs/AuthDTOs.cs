@@ -123,5 +123,11 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("hasProfessionalProfile")]
         public bool HasProfessionalProfile { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("contentTag")]
+        public int ContentTag { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("uploadCount")]
+        public int UploadCount { get; set; }
     }
 }

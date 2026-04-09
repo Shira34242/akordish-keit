@@ -27,6 +27,7 @@ public class MusicServiceProviderDto
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
     public string? WebsiteUrl { get; set; }
+    public string? BannerImageUrl { get; set; }
     public string? VideoUrl { get; set; }
     public bool IsFeatured { get; set; }
     public int Status { get; set; }
@@ -37,6 +38,7 @@ public class MusicServiceProviderDto
     // Collections
     public List<ServiceProviderCategoryDto> Categories { get; set; } = new();
     public List<GalleryImageDto> GalleryImages { get; set; } = new();
+    public List<SocialLinkDto> SocialLinks { get; set; } = new();
 }
 
 public class TeacherDto : MusicServiceProviderDto
@@ -123,6 +125,10 @@ public class CreateMusicServiceProviderDto
     public string? WebsiteUrl { get; set; }
 
     [StringLength(500)]
+    [Url]
+    public string? BannerImageUrl { get; set; }
+
+    [StringLength(500)]
     public string? VideoUrl { get; set; }
 
     public bool IsFeatured { get; set; }
@@ -133,6 +139,7 @@ public class CreateMusicServiceProviderDto
     // Collections
     public List<CreateServiceProviderCategoryDto>? Categories { get; set; }
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
+    public List<SocialLinkDto>? SocialLinks { get; set; }
 }
 
 public class CreateTeacherDto : CreateMusicServiceProviderDto
@@ -235,6 +242,10 @@ public class UpdateMusicServiceProviderDto
     public string? WebsiteUrl { get; set; }
 
     [StringLength(500)]
+    [Url]
+    public string? BannerImageUrl { get; set; }
+
+    [StringLength(500)]
     public string? VideoUrl { get; set; }
 
     public bool IsFeatured { get; set; }
@@ -245,6 +256,7 @@ public class UpdateMusicServiceProviderDto
     // Collections
     public List<CreateServiceProviderCategoryDto>? Categories { get; set; }
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
+    public List<SocialLinkDto>? SocialLinks { get; set; }
 }
 
 public class UpdateTeacherDto : UpdateMusicServiceProviderDto

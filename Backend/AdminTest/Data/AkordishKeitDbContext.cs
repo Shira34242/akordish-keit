@@ -85,12 +85,16 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<MusicServiceProviderCategoryMapping> ServiceProviderCategoryMappings { get; set; }
     public DbSet<TeacherInstrument> TeacherInstruments { get; set; }
     public DbSet<MusicServiceProviderGalleryImage> ServiceProviderGalleryImages { get; set; }
+    public DbSet<MusicServiceProviderSocialLink> ServiceProviderSocialLinks { get; set; }
 
     // Subscriptions (חדש!)
     public DbSet<Subscription> Subscriptions { get; set; }
 
     // Boosts (חדש!)
     public DbSet<Boost> Boosts { get; set; }
+
+    // System Settings — Feature Flags
+    public DbSet<SystemSetting> SystemSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -157,6 +161,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new MusicServiceProviderCategoryMappingConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherInstrumentConfiguration());
         modelBuilder.ApplyConfiguration(new MusicServiceProviderGalleryImageConfiguration());
+        modelBuilder.ApplyConfiguration(new MusicServiceProviderSocialLinkConfiguration());
 
         // Subscription Configuration (חדש!)
         modelBuilder.ApplyConfiguration(new SubscriptionConfiguration());
@@ -166,6 +171,9 @@ public class AkordishKeitDbContext : DbContext
 
         // News Page Sections Configuration
         modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());
+
+        // System Settings Configuration
+        modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

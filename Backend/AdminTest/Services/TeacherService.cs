@@ -94,6 +94,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.Categories)
                 .ThenInclude(c => c.Category)
             .Include(t => t.ServiceProvider.GalleryImages)
+            .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
@@ -109,6 +110,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.Categories)
                 .ThenInclude(c => c.Category)
             .Include(t => t.ServiceProvider.GalleryImages)
+            .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
             .FirstOrDefaultAsync(t => t.ServiceProvider.UserId == userId && !t.ServiceProvider.IsDeleted);
@@ -146,6 +148,7 @@ public class TeacherService : ITeacherService
             PhoneNumber = dto.PhoneNumber,
             Email = dto.Email,
             WebsiteUrl = dto.WebsiteUrl,
+            BannerImageUrl = dto.BannerImageUrl,
             VideoUrl = dto.VideoUrl,
             IsFeatured = dto.IsFeatured,
             Status = (ProfileStatus)dto.Status,
@@ -176,6 +179,18 @@ public class TeacherService : ITeacherService
                     Caption = imageDto.Caption,
                     Order = imageDto.Order,
                     CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        if (dto.SocialLinks != null && dto.SocialLinks.Any())
+        {
+            foreach (var linkDto in dto.SocialLinks.Where(link => !string.IsNullOrWhiteSpace(link.Url)))
+            {
+                serviceProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+                {
+                    Platform = linkDto.Platform,
+                    Url = linkDto.Url
                 });
             }
         }
@@ -218,6 +233,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider)
                 .ThenInclude(sp => sp.Categories)
             .Include(t => t.ServiceProvider.GalleryImages)
+            .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
@@ -239,6 +255,7 @@ public class TeacherService : ITeacherService
         teacher.ServiceProvider.PhoneNumber = dto.PhoneNumber;
         teacher.ServiceProvider.Email = dto.Email;
         teacher.ServiceProvider.WebsiteUrl = dto.WebsiteUrl;
+        teacher.ServiceProvider.BannerImageUrl = dto.BannerImageUrl;
         teacher.ServiceProvider.VideoUrl = dto.VideoUrl;
         teacher.ServiceProvider.IsFeatured = dto.IsFeatured;
         teacher.ServiceProvider.Status = (ProfileStatus)dto.Status;
@@ -272,6 +289,20 @@ public class TeacherService : ITeacherService
                     Caption = imageDto.Caption,
                     Order = imageDto.Order,
                     CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        teacher.ServiceProvider.SocialLinks.Clear();
+        if (dto.SocialLinks != null && dto.SocialLinks.Any())
+        {
+            foreach (var linkDto in dto.SocialLinks.Where(link => !string.IsNullOrWhiteSpace(link.Url)))
+            {
+                teacher.ServiceProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+                {
+                    ServiceProviderId = teacher.ServiceProvider.Id,
+                    Platform = linkDto.Platform,
+                    Url = linkDto.Url
                 });
             }
         }
@@ -416,6 +447,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider)
                 .ThenInclude(sp => sp.Categories)
             .Include(t => t.ServiceProvider.GalleryImages)
+            .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
@@ -439,6 +471,7 @@ public class TeacherService : ITeacherService
             PhoneNumber = original.ServiceProvider.PhoneNumber,
             Email = original.ServiceProvider.Email,
             WebsiteUrl = original.ServiceProvider.WebsiteUrl,
+            BannerImageUrl = original.ServiceProvider.BannerImageUrl,
             VideoUrl = original.ServiceProvider.VideoUrl,
             IsFeatured = false,
             Status = ProfileStatus.Pending,
@@ -467,6 +500,15 @@ public class TeacherService : ITeacherService
                 Caption = img.Caption,
                 Order = img.Order,
                 CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        foreach (var link in original.ServiceProvider.SocialLinks)
+        {
+            newServiceProvider.SocialLinks.Add(new MusicServiceProviderSocialLink
+            {
+                Platform = link.Platform,
+                Url = link.Url
             });
         }
 
@@ -528,6 +570,7 @@ public class TeacherService : ITeacherService
             PhoneNumber = entity.ServiceProvider.PhoneNumber,
             Email = entity.ServiceProvider.Email,
             WebsiteUrl = entity.ServiceProvider.WebsiteUrl,
+            BannerImageUrl = entity.ServiceProvider.BannerImageUrl,
             VideoUrl = entity.ServiceProvider.VideoUrl,
             IsFeatured = entity.ServiceProvider.IsFeatured,
             Status = (int)entity.ServiceProvider.Status,
@@ -547,6 +590,12 @@ public class TeacherService : ITeacherService
                 ImageUrl = g.ImageUrl,
                 Caption = g.Caption,
                 Order = g.Order
+            }).ToList(),
+            SocialLinks = entity.ServiceProvider.SocialLinks.Select(sl => new SocialLinkDto
+            {
+                Id = sl.Id,
+                Platform = sl.Platform,
+                Url = sl.Url
             }).ToList(),
             PriceList = entity.PriceList,
             Languages = entity.Languages,

@@ -5,7 +5,7 @@ import { TeacherService } from '../../../services/teacher.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { CitiesService, City } from '../../../services/cities.service';
 import { CreateTeacherDto, CreateTeacherInstrumentDto } from '../../../models/teacher.model';
-import { ProfileStatus, CreateGalleryImageDto } from '../../../models/music-service-provider.model';
+import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../../models/music-service-provider.model';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { AuthService } from '../../../services/auth.service';
@@ -40,6 +40,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   whatsAppNumber: string = '';
   email: string = '';
   websiteUrl: string = '';
+  bannerImageUrl: string = '';
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -54,6 +55,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   selectedInstrumentIds: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  socialLinks: SocialLinkDto[] = [];
 
   // Available data
   availableInstruments: SystemItem[] = [];
@@ -63,6 +65,15 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   // Options
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
+  readonly SOCIAL_PLATFORMS = [
+    { value: SocialPlatform.Instagram, label: 'Instagram' },
+    { value: SocialPlatform.Facebook, label: 'Facebook' },
+    { value: SocialPlatform.YouTube, label: 'YouTube' },
+    { value: SocialPlatform.TikTok, label: 'TikTok' },
+    { value: SocialPlatform.Twitter, label: 'Twitter / X' },
+    { value: SocialPlatform.Spotify, label: 'Spotify' },
+    { value: SocialPlatform.Zing, label: 'Zing' }
+  ];
 
   // UI state
   cityDropdownOpen = false;
@@ -266,6 +277,17 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  addSocialLink(): void {
+    this.socialLinks.push({
+      platform: SocialPlatform.Instagram,
+      url: ''
+    });
+  }
+
+  removeSocialLink(index: number): void {
+    this.socialLinks.splice(index, 1);
+  }
+
   // Navigation methods
   nextStep(): void {
     if (this.currentStep === 1 && !this.validateStep1()) return;
@@ -325,6 +347,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       whatsAppNumber: this.whatsAppNumber,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
+      bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl,
       videoUrl: this.videoUrl,
       yearsOfExperience: this.yearsOfExperience,
@@ -338,6 +361,12 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       education: this.education,
       lessonTypes: this.lessonTypes,
       specializations: this.specializations,
+      socialLinks: this.socialLinks
+        .filter(link => !!link.url?.trim())
+        .map(link => ({
+          platform: link.platform,
+          url: link.url.trim()
+        })),
       instruments: this.selectedInstrumentIds.map(id => ({
         instrumentId: id,
         isPrimary: false

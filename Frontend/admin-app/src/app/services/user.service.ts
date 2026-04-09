@@ -17,7 +17,8 @@ export class UserService {
     role?: number,
     isActive?: boolean,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = 10,
+    contentTag?: number
   ): Observable<PagedResult<UserListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -31,6 +32,9 @@ export class UserService {
     }
     if (isActive !== undefined && isActive !== null) {
       params = params.set('isActive', isActive.toString());
+    }
+    if (contentTag !== undefined && contentTag !== null) {
+      params = params.set('contentTag', contentTag.toString());
     }
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params });
@@ -50,5 +54,15 @@ export class UserService {
 
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string }> {
+    return this.http.get<{ phone?: string; address?: string; birthDate?: string }>(
+      `${this.apiUrl}/me`, { withCredentials: true }
+    );
+  }
+
+  updateMyProfile(data: { phone?: string; address?: string; birthDate?: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/me`, data, { withCredentials: true });
   }
 }

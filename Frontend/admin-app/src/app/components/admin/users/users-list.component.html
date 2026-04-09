@@ -41,6 +41,18 @@
         </select>
       </div>
 
+      <div class="filter-group">
+        <select
+          class="form-control"
+          [(ngModel)]="filterContentTag"
+          (change)="onFilterChange()"
+        >
+          <option *ngFor="let option of tagOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
       <button class="btn btn-primary" (click)="onSearch()">חפש</button>
       <button class="btn btn-light" (click)="clearFilters()">נקה</button>
     </div>
@@ -71,6 +83,7 @@
           <th>אימייל</th>
           <th>טלפון</th>
           <th>תפקיד</th>
+          <th>תג תרומה</th>
           <th>סטטוס</th>
           <th>תאריך יצירה</th>
           <th>פעולות</th>
@@ -85,6 +98,16 @@
             <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
               {{ getRoleLabel(user.role) }}
             </span>
+          </td>
+          <td>
+            <span
+              *ngIf="user.contentTag !== UserContentTag.None"
+              class="badge content-tag-badge"
+              [ngClass]="getContentTagClass(user.contentTag)"
+              [title]="user.uploadCount + ' העלאות'">
+              {{ getContentTagLabel(user.contentTag) }}
+            </span>
+            <span *ngIf="user.contentTag === UserContentTag.None" class="no-tag">—</span>
           </td>
           <td>
             <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">

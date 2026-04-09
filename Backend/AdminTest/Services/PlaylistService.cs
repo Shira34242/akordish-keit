@@ -8,10 +8,17 @@ namespace AkordishKeit.Services;
 public class PlaylistService : IPlaylistService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly ISystemSettingsService _systemSettings;
+    private readonly IUserTagService _userTagService;
 
-    public PlaylistService(AkordishKeitDbContext context)
+    public PlaylistService(
+        AkordishKeitDbContext context,
+        ISystemSettingsService systemSettings,
+        IUserTagService userTagService)
     {
         _context = context;
+        _systemSettings = systemSettings;
+        _userTagService = userTagService;
     }
 
     public async Task<List<PlaylistDto>> GetUserPlaylistsAsync(int userId)
@@ -138,6 +145,23 @@ public class PlaylistService : IPlaylistService
 
     public async Task<PlaylistDto> CreatePlaylistAsync(CreatePlaylistDto dto, int userId)
     {
+        // בדיקת מגבלת רשימות לפי תג תרומת תוכן (פעיל רק כשמנויים מופעלים)
+        var subscriptionsEnabled = await _systemSettings.GetBoolAsync("regular_user_subscriptions_enabled");
+        if (subscriptionsEnabled)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                var maxPlaylists = _userTagService.GetPlaylistLimit(user.ContentTag);
+                var existingCount = await _context.Playlists
+                    .CountAsync(p => p.UserId == userId && !p.IsDefault);
+
+                if (existingCount >= maxPlaylists)
+                    throw new InvalidOperationException(
+                        $"הגעת למגבלת הרשימות שלך ({maxPlaylists} רשימות). שדרג את חברותך להוספת רשימות נוספות.");
+            }
+        }
+
         var playlist = new Playlist
         {
             UserId = userId,

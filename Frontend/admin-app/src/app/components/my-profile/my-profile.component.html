@@ -1,0 +1,226 @@
+<div class="profile-page" dir="rtl">
+
+  <!-- ===== PROFILE HERO ===== -->
+  <div class="profile-hero">
+    <h1 class="profile-title">הפרופיל שלי</h1>
+    <p class="profile-subtitle">פרטים אישיים לניהול החשבון — אינם מוצגים בפרופיל הציבורי</p>
+
+    <!-- Avatar + ring -->
+    <div class="avatar-wrapper">
+      <svg class="progress-ring" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#404040" stroke-width="6"/>
+        <circle
+          cx="60" cy="60" r="52"
+          fill="none"
+          stroke="#ddff53"
+          stroke-width="6"
+          stroke-linecap="round"
+          [attr.stroke-dasharray]="CIRCUMFERENCE"
+          [attr.stroke-dashoffset]="getDashOffset()"
+          transform="rotate(-90 60 60)"/>
+      </svg>
+      <img
+        class="profile-avatar"
+        [src]="user?.profileImageUrl || '/logo.png'"
+        alt="תמונת פרופיל"
+        onerror="this.src='/logo.png'"/>
+      <button class="edit-avatar-btn" title="שינוי תמונה">
+        <span class="material-icons">edit</span>
+      </button>
+    </div>
+
+    <!-- Level + badges row -->
+    <div class="level-badges-row">
+      <span class="level-label">
+        דרגה {{ getLevelNumber() }}
+        <span class="material-icons info-icon">info</span>
+      </span>
+      <div class="badges">
+        @if (user?.hasProfessionalProfile) {
+          <span class="badge badge-pro">PRO</span>
+        }
+        <span class="badge badge-level">{{ getLevelName() }}</span>
+      </div>
+    </div>
+
+    <!-- User info -->
+    <h2 class="profile-name">{{ user?.username }}</h2>
+    <p class="profile-email">{{ user?.email }}</p>
+  </div>
+
+  <!-- ===== PAGE CONTENT ===== -->
+  <div class="profile-content">
+
+    <!-- ===== PROFILE COMPLETION BANNER ===== -->
+    @if (profileIncomplete) {
+      <div class="completion-banner" (click)="openProfileModal()">
+        <div class="completion-banner-text">
+          <p>עוד כמה פרטים קטנים להשלמת הפרופיל</p>
+          <p>כדי שנוכל להציג לכם תוצאות מדויקות יותר</p>
+          <span class="completion-banner-cta">להשלמת הפרטים &lt;</span>
+        </div>
+      </div>
+    }
+
+    <!-- ===== MY UPLOADED CONTENT ===== -->
+    <section class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">תכנים שהעליתי:</h3>
+      </div>
+
+      <!-- Row: אקורדים -->
+      <div class="content-row">
+        <div class="row-label-strip">אקורדים</div>
+        <div class="row-cards-wrap">
+          @if (mySongs.length > 0) {
+            @for (song of mySongs; track song.id) {
+              <a class="song-card" [routerLink]="['/song', song.id]">
+                <div class="song-card-img">
+                  <img [src]="song.imageUrl || ''" alt="" onerror="this.style.display='none'"/>
+                </div>
+                <div class="song-card-text">
+                  <span class="song-label">אקורדים לשיר</span>
+                  <span class="song-title">{{ song.title }}</span>
+                  <span class="song-artist">{{ song.artistNames }}</span>
+                  @if (song.createdAt) {
+                    <span class="song-date">{{ getRelativeTime(song.createdAt) }}</span>
+                  }
+                </div>
+              </a>
+            }
+          } @else {
+            <div class="empty-row-state">
+              <span class="material-icons empty-icon">music_note</span>
+              <span>עוד לא העלית אקורדים</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Row: כתבות ובלוג -->
+      <div class="content-row">
+        <div class="row-label-strip">כתבות ובלוג</div>
+        <div class="row-cards-wrap">
+          @if (myArticles.length > 0) {
+            @for (article of myArticles; track article.id) {
+              <a class="news-card" [routerLink]="['/news', article.slug]">
+                <div class="news-card-bg" [style.background-image]="'url(' + article.imageUrl + ')'">
+                  <div class="news-card-overlay"></div>
+                  <div class="news-card-body">
+                    <span class="news-card-title">{{ article.title }}</span>
+                  </div>
+                </div>
+              </a>
+            }
+          } @else {
+            <div class="empty-row-state">
+              <span class="material-icons empty-icon">article</span>
+              <span>עוד לא העלית כתבות</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Row: הופעות -->
+      <div class="content-row">
+        <div class="row-label-strip">הופעות</div>
+        <div class="row-cards-wrap">
+          @if (myEvents.length > 0) {
+            @for (event of myEvents; track event.id) {
+              <a class="event-card">
+                <div class="event-date-badge">
+                  <span class="event-day">{{ event.day }}</span>
+                  <span class="event-month">{{ event.month }}</span>
+                </div>
+                <div class="event-info">
+                  <span class="event-title">{{ event.title }}</span>
+                  <span class="event-venue">{{ event.venue }}</span>
+                </div>
+              </a>
+            }
+          } @else {
+            <div class="empty-row-state">
+              <span class="material-icons empty-icon">event</span>
+              <span>עוד לא העלית הופעות</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LIKED SONGS ===== -->
+    <section class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">אקורדים שאהבתי:</h3>
+      </div>
+
+      <div class="content-row">
+        <div class="row-cards-wrap">
+          @if (likedSongs.length > 0) {
+            @for (item of likedSongs; track item.id) {
+              <a class="news-card" [routerLink]="getLikedPath(item)">
+                <div class="news-card-bg"
+                  [style.background-image]="item.imageUrl ? 'url(' + item.imageUrl + ')' : 'none'">
+                  <div class="news-card-overlay"></div>
+                  <div class="news-card-body">
+                    <span class="news-card-title">{{ item.title }}</span>
+                  </div>
+                </div>
+              </a>
+            }
+          } @else {
+            <div class="empty-row-state">
+              <span class="material-icons empty-icon">favorite_border</span>
+              <span>עוד לא שמרת תכנים</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SAVED LISTS LINK ===== -->
+    <div class="saved-lists-row">
+      <a routerLink="/my-playlists" class="saved-lists-link">
+        למעבר לרשימות שמורות
+        <span class="material-icons arrow-icon">chevron_left</span>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== PROFILE MODAL ===== -->
+@if (showProfileModal) {
+  <div class="modal-backdrop" (click)="closeProfileModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeProfileModal()">
+        <span class="material-icons">close</span>
+      </button>
+      <h2 class="modal-title">השלמת פרטים אישיים</h2>
+      <p class="modal-subtitle">הפרטים לא יוצגו בפרופיל הציבורי</p>
+
+      <div class="modal-form">
+        <div class="form-group">
+          <label>מייל</label>
+          <input type="email" [value]="user?.email" disabled class="form-input form-input--disabled"/>
+        </div>
+        <div class="form-group">
+          <label>טלפון</label>
+          <input type="tel" [(ngModel)]="profileForm.phone" placeholder="050-0000000" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label>כתובת</label>
+          <input type="text" [(ngModel)]="profileForm.address" placeholder="עיר, רחוב ומספר" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label>תאריך לידה</label>
+          <input type="date" [(ngModel)]="profileForm.birthDate" class="form-input"/>
+        </div>
+      </div>
+
+      <button class="modal-save-btn" (click)="saveProfile()" [disabled]="profileSaving">
+        {{ profileSaving ? 'שומר...' : 'שמור' }}
+      </button>
+    </div>
+  </div>
+}

@@ -37,10 +37,17 @@ public class Article
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; } // "artist" | "serviceProvider"
 
+    /// <summary>
+    /// המשתמש הרגיל שהגיש את הכתבה דרך טופס ההגשה.
+    /// נפרד מ-UploaderUserId שמיועד לפרופיל מקצועי ציבורי.
+    /// </summary>
+    public int? SubmittedByUserId { get; set; }
+
     // Navigation Properties
     public virtual ICollection<ArticleTag> ArticleTags { get; set; }
     public virtual ICollection<ArticleGalleryImage> GalleryImages { get; set; }
     public virtual ICollection<ArticleArticleCategory> ArticleCategories { get; set; }
     public virtual ICollection<ArticleArtist> ArticleArtists { get; set; }
     public virtual User? UploaderUser { get; set; }
+    public virtual User? SubmittedByUser { get; set; }
 }

@@ -28,7 +28,7 @@ namespace AkordishKeit.Services
         /// <summary>
         /// יצירת הופעה חדשה
         /// </summary>
-        Task<EventDto> CreateEventAsync(CreateEventDto dto);
+        Task<EventDto> CreateEventAsync(CreateEventDto dto, int? submittedByUserId = null);
 
         /// <summary>
         /// עדכון הופעה
@@ -39,5 +39,10 @@ namespace AkordishKeit.Services
         /// מחיקה רכה של הופעה
         /// </summary>
         Task<bool> DeleteEventAsync(int id);
+
+        /// <summary>
+        /// הופעות שהמשתמש הגיש
+        /// </summary>
+        Task<List<EventDto>> GetMyEventsAsync(int userId);
     }
 }

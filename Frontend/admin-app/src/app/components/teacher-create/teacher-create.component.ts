@@ -12,7 +12,7 @@ import {
   CreateTeacherDto,
   CreateTeacherInstrumentDto
 } from '../../models/teacher.model';
-import { ProfileStatus, CreateGalleryImageDto } from '../../models/music-service-provider.model';
+import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../models/music-service-provider.model';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../models/target-audience.enum';
 import {
@@ -43,6 +43,7 @@ export class TeacherCreateComponent implements OnInit {
   whatsAppNumber: string = '';
   email: string = '';
   websiteUrl: string = '';
+  bannerImageUrl: string = '';
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -57,6 +58,7 @@ export class TeacherCreateComponent implements OnInit {
   selectedInstrumentIds: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  socialLinks: SocialLinkDto[] = [];
 
   // Available data
   availableInstruments: SystemItem[] = [];
@@ -66,6 +68,15 @@ export class TeacherCreateComponent implements OnInit {
   // Options
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
+  readonly SOCIAL_PLATFORMS = [
+    { value: SocialPlatform.Instagram, label: 'Instagram' },
+    { value: SocialPlatform.Facebook, label: 'Facebook' },
+    { value: SocialPlatform.YouTube, label: 'YouTube' },
+    { value: SocialPlatform.TikTok, label: 'TikTok' },
+    { value: SocialPlatform.Twitter, label: 'Twitter / X' },
+    { value: SocialPlatform.Spotify, label: 'Spotify' },
+    { value: SocialPlatform.Zing, label: 'Zing' }
+  ];
 
   // UI state
   cityDropdownOpen = false;
@@ -321,6 +332,14 @@ export class TeacherCreateComponent implements OnInit {
     }
   }
 
+  addSocialLink() {
+    this.socialLinks.push({ platform: SocialPlatform.Instagram, url: '' });
+  }
+
+  removeSocialLink(index: number) {
+    this.socialLinks.splice(index, 1);
+  }
+
   private arrayToFlags(selectedValues: number[]): number {
     if (!selectedValues || selectedValues.length === 0) return 0;
     return selectedValues.reduce((acc, val) => acc | val, 0);
@@ -348,6 +367,7 @@ export class TeacherCreateComponent implements OnInit {
       whatsAppNumber: this.whatsAppNumber,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
+      bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl,
       videoUrl: this.videoUrl,
       yearsOfExperience: this.yearsOfExperience,
@@ -365,7 +385,8 @@ export class TeacherCreateComponent implements OnInit {
         instrumentId: id,
         isPrimary: false
       } as CreateTeacherInstrumentDto)),
-      galleryImages: this.galleryImages
+      galleryImages: this.galleryImages,
+      socialLinks: this.socialLinks.filter(link => link.url?.trim())
     };
 
     this.teacherService.createTeacherProfile(dto).subscribe({

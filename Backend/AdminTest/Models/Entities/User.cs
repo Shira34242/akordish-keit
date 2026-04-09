@@ -18,7 +18,9 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string? GoogleId { get; set; }
     public string? PasswordHash { get; set; }
-    public string? Phone { get; set; }  // טלפון אישי (חדש!)
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
+    public DateTime? BirthDate { get; set; }
 
     // ════════════════════════════════════
     //          פרופיל אישי
@@ -44,6 +46,19 @@ public class User
     //          העדxxxxxxxxxxx/ ════════════════════════════════════
 
     public int? PreferredInstrumentId { get; set; }
+
+    // ════════════════════════════════════
+    //          תג תרומת תוכן
+    // ════════════════════════════════════
+
+    /// <summary>תג נוכחי לפי כמות תכנים שהועלו</summary>
+    public UserContentTag ContentTag { get; set; } = UserContentTag.None;
+
+    /// <summary>כמות תכנים שנספרו בתקופה הנוכחית (שירים + כתבות)</summary>
+    public int UploadCount { get; set; } = 0;
+
+    /// <summary>תאריך ההעלאה האחרונה — לחישוב איפוס כל 4 חודשים</summary>
+    public DateTime? LastUploadDate { get; set; }
 
     // ════════════════════════════════════
     //          Navigation Properties

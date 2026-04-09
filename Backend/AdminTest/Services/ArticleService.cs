@@ -181,6 +181,7 @@ public class ArticleService : IArticleService
             ReadTimeMinutes = dto.ReadTimeMinutes,
             UploaderUserId = dto.UploaderUserId ?? callerUserId,
             UploaderProfileType = dto.UploaderProfileType,
+            SubmittedByUserId = callerUserId,
             ViewCount = 0,
             LikeCount = 0,
             IsDeleted = false
@@ -463,6 +464,23 @@ public class ArticleService : IArticleService
             HasVoted = userVote != null,
             UserChoice = userVote?.IsPositive
         };
+    }
+
+    // ─── My Content ────────────────────────────────────────────────────────────
+
+    public async Task<List<ArticleDto>> GetMyArticlesAsync(int userId)
+    {
+        var articles = await _context.Articles
+            .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser)
+            .Where(a => a.SubmittedByUserId == userId && !a.IsDeleted)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        return articles.Select(MapToDto).ToList();
     }
 
     // ─── Top Content (Admin) ───────────────────────────────────────────────────

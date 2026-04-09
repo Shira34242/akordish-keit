@@ -20,6 +20,7 @@ public class UserService : IUserService
         string? search,
         int? role,
         bool? isActive,
+        int? contentTag,
         int pageNumber,
         int pageSize)
     {
@@ -44,6 +45,11 @@ public class UserService : IUserService
         if (isActive.HasValue)
         {
             query = query.Where(u => u.IsActive == isActive.Value);
+        }
+
+        if (contentTag.HasValue)
+        {
+            query = query.Where(u => (int)u.ContentTag == contentTag.Value);
         }
 
         // Order by CreatedAt
@@ -154,6 +160,46 @@ public class UserService : IUserService
         return provider;
     }
 
+    public async Task<MyProfileDto?> GetMyProfileAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return null;
+        return new MyProfileDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Phone = user.Phone,
+            Address = user.Address,
+            BirthDate = user.BirthDate,
+            ProfileImageUrl = user.ProfileImageUrl
+        };
+    }
+
+    public async Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return null;
+
+        user.Phone = dto.Phone;
+        user.Address = dto.Address;
+        user.BirthDate = dto.BirthDate;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new MyProfileDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Phone = user.Phone,
+            Address = user.Address,
+            BirthDate = user.BirthDate,
+            ProfileImageUrl = user.ProfileImageUrl
+        };
+    }
+
     // ═══════════════════════════════════════════════════════════
     //                    Mapping Methods
     // ═══════════════════════════════════════════════════════════
@@ -174,7 +220,9 @@ public class UserService : IUserService
             IsActive = entity.IsActive,
             EmailConfirmed = entity.EmailConfirmed,
             CreatedAt = entity.CreatedAt,
-            LastLoginAt = entity.LastLoginAt
+            LastLoginAt = entity.LastLoginAt,
+            ContentTag = (int)entity.ContentTag,
+            UploadCount = entity.UploadCount
         };
     }
 }

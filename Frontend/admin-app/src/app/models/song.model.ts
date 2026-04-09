@@ -118,6 +118,7 @@ export interface SongBasicDto {
     artistNames: string;
     imageUrl?: string;
     viewCount: number;
+    createdAt?: string;
 }
 
 export interface YouTubeMetadata {

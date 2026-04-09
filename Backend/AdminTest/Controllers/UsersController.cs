@@ -27,6 +27,30 @@ public class UsersController : ControllerBase
         return Ok(results);
     }
 
+    // GET: api/Users/me
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<MyProfileDto>> GetMyProfile()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+        var profile = await _service.GetMyProfileAsync(userId.Value);
+        if (profile == null) return NotFound();
+        return Ok(profile);
+    }
+
+    // PUT: api/Users/me
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<ActionResult<MyProfileDto>> UpdateMyProfile([FromBody] UpdateMyProfileDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+        var profile = await _service.UpdateMyProfileAsync(userId.Value, dto);
+        if (profile == null) return NotFound();
+        return Ok(profile);
+    }
+
     // GET: api/Users/me/uploader-profile
     // מחזיר את פרופיל המעלה של המשתמש המחובר (אמן / מורה / בעל מקצוע) — או 204 אם אין
     [HttpGet("me/uploader-profile")]
@@ -57,11 +81,12 @@ public class UsersController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] int? role = null,
         [FromQuery] bool? isActive = null,
+        [FromQuery] int? contentTag = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var result = await _service.GetUsersAsync(
-            search, role, isActive, pageNumber, pageSize);
+            search, role, isActive, contentTag, pageNumber, pageSize);
 
         return Ok(result);
     }
