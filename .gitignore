@@ -40,6 +40,10 @@ logs/
 # Published output
 **/publish/
 **/PublishOutput/
+Backend/**/build-verify/
+
+# Uploaded media files
+Backend/**/wwwroot/uploads/
 
 # Backup and temp files
 *.backup
