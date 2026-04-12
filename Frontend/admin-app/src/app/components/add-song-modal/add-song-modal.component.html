@@ -1,10 +1,11 @@
-<div class="modal-overlay" (click)="closeModal()">
+﻿<div class="modal-overlay" (click)="closeModal()">
     <div class="modal-container" (click)="$event.stopPropagation()">
 
         <!-- Header -->
       <div class="modal-header">
         <button class="close-btn" (click)="closeModal()">&times;</button>
-        <h2>{{ editMode ? 'עריכת שיר' : 'הוספת שיר חדש' }}</h2>
+        <h2 *ngIf="isLegacyFlow || editMode">{{ editMode ? 'עריכת שיר' : 'הוספת שיר חדש' }}</h2>
+        <div class="header-title-placeholder" *ngIf="!isLegacyFlow && !editMode"></div>
         <div class="header-spacer"></div>
       </div>
 
@@ -24,7 +25,7 @@
             </div>
         </div>
 
-        <div class="stepper smart-stepper" *ngIf="!isLegacyFlow">
+        <div class="stepper smart-stepper" *ngIf="false">
             <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1"><div class="step-circle">1</div></div>
             <div class="line" [class.active]="currentStep >= 2"></div>
             <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2"><div class="step-circle">2</div></div>
@@ -37,317 +38,187 @@
         </div>
 
         <!-- Content -->
-        <div class="modal-content" [formGroup]="songForm">
-            <ng-container *ngIf="!isLegacyFlow">
-                <div *ngIf="currentStep === 1" class="step-content">
-                    <div class="smart-hero">
-                        <h3 class="smart-title">איזה שיר תרצו להוסיף?</h3>
-                        <p class="smart-subtitle">כתבו שם שיר ובחרו תוצאה אחת מיוטיוב.</p>
-                    </div>
+        <div #modalContent class="modal-content" [formGroup]="songForm">
+            <div class="inline-success-card" *ngIf="showInlineSuccess">
+                <div class="inline-success-icon">
+                    <span class="material-icons">check</span>
+                </div>
+                <h3>{{ successMessage }}</h3>
+                <p>אפשר לסגור את החלון או להמשיך משם.</p>
+                <button type="button" class="btn-primary btn-secondary-compact" (click)="closeModal()">סגירה</button>
+            </div>
 
-                    <div class="form-group form-group-centered">
-                        <input
-                            type="text"
-                            formControlName="title"
-                            class="smart-search-input"
-                            placeholder="שם השיר"
-                            [class.invalid]="songForm.get('title')?.invalid && songForm.get('title')?.touched">
+            <ng-container *ngIf="!showInlineSuccess && !isLegacyFlow">
 
-                        <div class="youtube-search-helper smart-helper" *ngIf="songForm.get('title')?.value?.length >= 2">
-                            <span *ngIf="isSearchingYouTube">מחפש התאמות מיוטיוב...</span>
-                            <span *ngIf="!isSearchingYouTube && youtubeSearchResults.length === 0">בחרו תוצאה אחת כדי שנמלא את הפרטים הבסיסיים.</span>
+                <div *ngIf="currentStep === 1" class="step-content smart-step-panel">
+                    <div class="smart-chat-stream">
+                        <div class="smart-message-row">
+                            <div class="smart-bot-icon"><span class="material-icons">auto_awesome</span></div>
+                            <div class="smart-bubble smart-bubble-question">
+                                איזה שיר תרצה להוסיף?
+                            </div>
                         </div>
 
-                        <div class="youtube-results smart-youtube-results" *ngIf="youtubeSearchResults.length > 0">
-                            <button type="button" class="youtube-result-card" *ngFor="let result of youtubeSearchResults" (click)="selectYouTubeSuggestion(result)">
-                                <img [src]="result.thumbnailUrl || 'assets/default-song.png'" [alt]="result.title || 'תוצאת YouTube'" class="youtube-result-thumb">
-                                <div class="youtube-result-content">
-                                    <span class="youtube-result-title">{{ result.title }}</span>
-                                    <span class="youtube-result-meta" *ngIf="result.durationSeconds">{{ formatDuration(result.durationSeconds) }}</span>
+                        <div class="smart-selected-song" *ngIf="hasSelectedVideo">
+                            <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" [alt]="songForm.get('title')?.value" class="smart-selected-song-image">
+                            <div class="smart-selected-song-text">
+                                <h3>{{ songForm.get('title')?.value }}</h3>
+                                <p class="smart-selected-song-note" *ngIf="selectedArtistsLabel">{{ selectedArtistsLabel }}</p>
+                                <p class="smart-selected-song-note" *ngIf="!selectedArtistsLabel">השם והתמונה מוכנים, נמשיך למילים ולאקורדים.</p>
+                            </div>
+                            <button type="button" class="btn-secondary btn-secondary-compact" (click)="clearSelectedVideoChoice()">לבחור שיר אחר</button>
+                        </div>
+
+                        <div class="smart-results-list" *ngIf="showDuplicateSuggestion && primarySimilarSong">
+                            <div class="smart-result-item smart-result-item-manual">
+                                <img [src]="primarySimilarSong.imageUrl || 'assets/default-song.png'" [alt]="primarySimilarSong.title" class="smart-result-image">
+                                <div class="smart-result-text">
+                                    <span class="smart-result-title">השיר כבר קיים במערכת</span>
+                                    <span class="smart-result-meta">{{ primarySimilarSong.title }}{{ primarySimilarSong.artistNames ? ' · ' + primarySimilarSong.artistNames : '' }}</span>
                                 </div>
-                                <span class="youtube-result-action">לבחור</span>
+                            </div>
+                            <div class="smart-footer-actions">
+                                <a class="btn-secondary btn-secondary-compact" [routerLink]="['/song', primarySimilarSong.id]" (click)="closeModal()">לעבור לדף השיר</a>
+                                <button type="button" class="btn-secondary btn-secondary-compact" (click)="continueAfterDuplicatePrompt()">זה לא השיר שהתכוונתי</button>
+                            </div>
+                        </div>
+
+                        <div class="smart-results-list" *ngIf="youtubeSearchResults.length > 0 && !hasSelectedVideo && !showDuplicateSuggestion">
+                            <button type="button" class="smart-result-item" *ngFor="let result of youtubeSearchResults" (click)="selectYouTubeSuggestion(result)">
+                                <img [src]="result.thumbnailUrl || 'assets/default-song.png'" [alt]="result.title || 'תוצאת YouTube'" class="smart-result-image">
+                                <div class="smart-result-text">
+                                    <span class="smart-result-title">{{ result.title }}</span>
+                                    <span class="smart-result-meta" *ngIf="result.durationSeconds">{{ formatDuration(result.durationSeconds) }}</span>
+                                </div>
+                            </button>
+                            <button type="button" class="smart-result-item smart-result-item-manual" *ngIf="!showManualYoutubeInput" (click)="showManualYoutubeStep()">
+                                <div class="smart-result-manual-icon">
+                                    <span class="material-icons">link</span>
+                                </div>
+                                <div class="smart-result-text">
+                                    <span class="smart-result-title">לא מצאת ברשימה?</span>
+                                    <span class="smart-result-meta">להדביק קישור ליוטיוב ידנית</span>
+                                </div>
+                            </button>
+                            <button type="button" class="smart-result-item smart-result-item-manual" (click)="useManualAddMode()">
+                                <div class="smart-result-manual-icon">
+                                    <span class="material-icons">edit_note</span>
+                                </div>
+                                <div class="smart-result-text">
+                                    <span class="smart-result-title">הוספה ידנית מלאה</span>
+                                    <span class="smart-result-meta">לעבור לטופס הישן בלי קישור ליוטיוב</span>
+                                </div>
                             </button>
                         </div>
 
-                        <button type="button" class="btn-link-subtle" (click)="useManualAddMode()">מעדיפים למלא ידנית?</button>
+                        <div class="smart-message-row" *ngIf="showManualYoutubeInput">
+                            <div class="smart-bot-icon"><span class="material-icons">auto_awesome</span></div>
+                            <div class="smart-bubble smart-bubble-answer">
+                                אין בעיה, אפשר להדביק כאן קישור ליוטיוב ונמשיך משם.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="smart-composer smart-composer-sticky">
+                        <div class="smart-search-row" *ngIf="!hasSearchedYouTube && !showManualYoutubeInput">
+                            <input
+                                type="text"
+                                #titleInput
+                                formControlName="title"
+                                class="smart-search-input"
+                                placeholder="הכנס כאן שם שיר"
+                                [class.invalid]="songForm.get('title')?.invalid && songForm.get('title')?.touched"
+                                (keydown.enter)="searchYouTubeByTitle(); $event.preventDefault()">
+                            <button type="button" class="smart-send-button" (click)="searchYouTubeByTitle()" [disabled]="isSearchingYouTube || !!hasSelectedVideo">
+                                <span class="material-icons">{{ isSearchingYouTube ? 'hourglass_top' : 'arrow_upward' }}</span>
+                            </button>
+                        </div>
+
+                        <div class="smart-helper" *ngIf="stepOneHelperText">
+                            <span>{{ stepOneHelperText }}</span>
+                        </div>
+
+                        <div class="smart-manual-panel" *ngIf="showManualYoutubeInput">
+                            <div class="smart-search-row">
+                                <input
+                                    type="url"
+                                    #manualYoutubeInput
+                                    formControlName="youtubeUrl"
+                                    class="smart-search-input"
+                                    placeholder="הדבק כאן קישור ליוטיוב"
+                                    (keydown.enter)="fetchManualYoutubeMetadata(); $event.preventDefault()">
+                                <button type="button" class="smart-send-button" (click)="fetchManualYoutubeMetadata()" [disabled]="isLoadingMetadata">
+                                    <span class="material-icons">{{ isLoadingMetadata ? 'hourglass_top' : 'arrow_upward' }}</span>
+                                </button>
+                            </div>
+
+                            <div class="error" *ngIf="songForm.get('youtubeUrl')?.invalid && songForm.get('youtubeUrl')?.touched">
+                                צריך להדביק קישור תקין ליוטיוב
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div *ngIf="currentStep === 2" class="step-content">
-                    <div class="smart-selected-song" *ngIf="selectedYouTubeResult">
-                        <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" [alt]="songForm.get('title')?.value" class="smart-selected-song-image">
-                        <div class="smart-selected-song-text">
+                <div *ngIf="currentStep === 2" class="step-content smart-step-panel">
+                    <div class="smart-summary-card" *ngIf="songForm.get('youtubeUrl')?.value">
+                        <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" [alt]="songForm.get('title')?.value" class="smart-summary-image">
+                        <div class="smart-summary-text">
+                            <span class="smart-summary-label">נבחר לזיהוי אוטומטי</span>
                             <h3>{{ songForm.get('title')?.value }}</h3>
+                            <p *ngIf="artistsArray.length > 0">
+                                <span *ngFor="let a of artistsArray.value; let last = last">{{ a.name }}{{ !last ? ', ' : '' }}</span>
+                            </p>
                         </div>
                     </div>
 
-                    <div class="step-header">
-                        <p class="step-subtitle">בחרו את האמנים של השיר. אפשר לסמן הצעות או להוסיף ידנית.</p>
-                    </div>
-
-                    <div class="smart-chip-list" *ngIf="artistsArray.length > 0">
-                        <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index" [class.temporary]="!artist.value.id">
-                            {{ artist.value.name }}
-                            <span class="temp-badge" *ngIf="!artist.value.id">חדש</span>
-                            <span class="remove-chip" (click)="removeArtist(i)">&times;</span>
-                        </div>
-                    </div>
-
-                    <div class="artist-match-helper" *ngIf="artistMatchSuggestions.length > 0">
-                        <p class="artist-match-title">מצאנו אמנים דומים באתר. אפשר לבחור אחד או כמה.</p>
-                        <div class="artist-match-actions">
-                            <button type="button" class="artist-match-option" *ngFor="let artist of artistMatchSuggestions" (click)="selectSuggestedArtistMatch(artist)">
-                                <span class="artist-match-name">{{ artist.displayText }}</span>
-                                <span class="artist-match-secondary" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>להוסיף אמן ידנית</label>
-                        <div class="input-with-chips" [class.disabled]="artistsArray.length >= 5">
-                            <input type="text" formControlName="artistInput" (input)="onArtistInput($event)" placeholder="שם אמן..." [disabled]="artistsArray.length >= 5">
-                        </div>
-
-                        <div class="autocomplete-dropdown" *ngIf="artistSuggestions.length > 0 || artistInputValue.length >= 2">
-                            <div class="suggestion" *ngFor="let artist of artistSuggestions" (click)="selectArtist(artist)">
-                                <img [src]="artist.imageUrl || 'assets/default-artist.png'" class="artist-thumb">
-                                <div class="artist-info">
-                                    <span class="main-text">{{ artist.displayText }}</span>
-                                    <span class="sub-text" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
-                                </div>
+                    <div class="smart-chat-stream">
+                        <div class="smart-message-row">
+                            <div class="smart-bot-icon"><span class="material-icons">auto_awesome</span></div>
+                            <div class="smart-bubble smart-bubble-question">
+                                מעולה. עכשיו נשאר רק להוסיף מילים ואקורדים.
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="suggestion new-artist-option" *ngIf="artistInputValue.length >= 2" (click)="addNewArtist(artistInputValue)">
-                                <span class="icon">+</span>
-                                <div class="artist-info">
-                                    <span class="main-text">להוסיף אמן חדש: "{{ artistInputValue }}"</span>
-                                    <span class="sub-text warning">יישלח לאישור מנהל</span>
-                                </div>
+                    <div class="smart-composer smart-composer-large smart-composer-sticky">
+                        <div class="form-group smart-lyrics-group">
+                            <textarea #lyricsInput formControlName="lyricsWithChords" rows="15" placeholder="הדבק כאן את המילים והאקורדים של השיר..." (paste)="onLyricsPaste($event)"></textarea>
+                            <div class="error" *ngIf="songForm.get('lyricsWithChords')?.invalid && songForm.get('lyricsWithChords')?.touched">
+                                צריך להוסיף מילים ואקורדים כדי להמשיך
                             </div>
                         </div>
 
-                        <div class="error" *ngIf="artistsArray.length === 0 && songForm.get('artistInput')?.touched">
-                            צריך לבחור לפחות אמן אחד
+                        <div class="smart-detect-note">
+                            <span>{{ lyricsHelperText }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div *ngIf="currentStep === 3" class="step-content">
-                    <div class="step-header">
-                        <h2>מילים ואקורדים</h2>
-                        <p class="step-subtitle">הדביקו את המילים עם האקורדים ואנחנו נזהה את הסולמות אוטומטית.</p>
-                    </div>
-
-                    <div class="form-group">
-                        <textarea formControlName="lyricsWithChords" rows="12" placeholder="כתבו כאן את המילים והאקורדים..." (paste)="onLyricsPaste($event)"></textarea>
-                        <div class="error" *ngIf="songForm.get('lyricsWithChords')?.invalid && songForm.get('lyricsWithChords')?.touched">
-                            שדה חובה (מינימום 10 תווים)
-                        </div>
-                    </div>
-
-                    <div class="keys-row">
-                        <div class="key-field">
-                            <label class="key-label">סולם מקורי *</label>
-                            <div class="key-input-group">
-                                <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
-                                    <option [ngValue]="null">בחר סולם</option>
-                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
-                                </select>
-                                <button type="button" class="detect-btn" (click)="runOriginalKeyDetection()" [disabled]="isDetectingOriginalKey">
-                                    <span class="detect-icon">{{ isDetectingOriginalKey ? '...' : '♪' }}</span>
-                                    <span class="detect-label">זיהוי אוטומטי</span>
-                                </button>
-                            </div>
-                            <div class="key-detected-note" *ngIf="autoDetectedOriginalKeyName">זוהה אוטומטית: {{ autoDetectedOriginalKeyName }}</div>
-                        </div>
-
-                        <div class="key-field">
-                            <label class="key-label">סולם קל לנגינה</label>
-                            <div class="key-input-group">
-                                <select formControlName="easyKeyId" (change)="userChangedEasyKey = true">
-                                    <option [ngValue]="null">בחר סולם קל</option>
-                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
-                                </select>
-                                <button type="button" class="detect-btn" (click)="runEasyKeyDetection()" [disabled]="isDetectingEasyKey">
-                                    <span class="detect-icon">{{ isDetectingEasyKey ? '...' : '♪' }}</span>
-                                    <span class="detect-label">זיהוי אוטומטי</span>
-                                </button>
-                            </div>
-                            <div class="key-detected-note" *ngIf="autoDetectedEasyKeyName">זוהה אוטומטית: {{ autoDetectedEasyKeyName }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div *ngIf="currentStep === 4" class="step-content">
-                    <div class="step-header">
-                        <h2>רוצים להוסיף עוד כמה פרטים?</h2>
-                        <p class="step-subtitle">לא חובה. אפשר להמשיך מכאן ישר לתצוגה מקדימה.</p>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group half">
-                            <label>מלחין</label>
-                            <div class="input-with-chips" [class.has-selection]="selectedComposer">
-                                <div class="chip" *ngIf="selectedComposer" [class.temporary]="!selectedComposer.id">
-                                    {{ selectedComposer.name }}
-                                    <span class="temp-badge" *ngIf="!selectedComposer.id">חדש</span>
-                                    <span class="remove-chip" (click)="removeComposer()">&times;</span>
-                                </div>
-                                <input type="text" formControlName="composerInput" (input)="onComposerInput($event)" placeholder="להוסיף מלחין..." [disabled]="!!selectedComposer">
-                            </div>
-
-                            <div class="autocomplete-dropdown" *ngIf="composerSuggestions.length > 0 || composerInputValue.length >= 2">
-                                <div class="suggestion" *ngFor="let composer of composerSuggestions" (click)="selectComposer(composer)">
-                                    <div class="artist-info">
-                                        <span class="main-text">{{ composer.displayText }}</span>
-                                        <span class="sub-text" *ngIf="composer.secondaryText">{{ composer.secondaryText }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="suggestion new-artist-option" *ngIf="composerInputValue.length >= 2" (click)="addNewComposer(composerInputValue)">
-                                    <span class="icon">+</span>
-                                    <div class="artist-info">
-                                        <span class="main-text">להוסיף מלחין חדש: "{{ composerInputValue }}"</span>
-                                        <span class="sub-text warning">יישלח לאישור מנהל</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group half">
-                            <label>קישור Spotify</label>
-                            <input type="text" formControlName="spotifyUrl" placeholder="https://open.spotify.com/track/...">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>תמונה</label>
-                        <div class="image-input-wrapper">
-                            <input type="text" formControlName="imageUrl" placeholder="הדבק קישור לתמונה">
-                            <img *ngIf="songForm.get('imageUrl')?.value" [src]="songForm.get('imageUrl')?.value" class="preview-thumb">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group half">
-                            <label>תגיות</label>
-                            <div class="input-with-chips">
-                                <div class="chip" *ngFor="let tag of tagsArray.controls; let i = index" [class.temporary]="!tag.value.id">
-                                    {{ tag.value.name }}
-                                    <span class="temp-badge" *ngIf="!tag.value.id">חדש</span>
-                                    <span class="remove-chip" (click)="removeTag(i)">&times;</span>
-                                </div>
-                                <input type="text" formControlName="tagInput" (input)="onTagInput($event)" placeholder="להוסיף תגית...">
-                            </div>
-
-                            <div class="autocomplete-dropdown" *ngIf="tagSuggestions.length > 0 || songForm.get('tagInput')?.value?.length >= 2">
-                                <div class="suggestion" *ngFor="let tag of tagSuggestions" (click)="selectTag(tag)">{{ tag.displayText }}</div>
-                                <div class="suggestion new-artist-option" *ngIf="songForm.get('tagInput')?.value?.length >= 2" (click)="addNewTag(songForm.get('tagInput')?.value)">
-                                    <span class="icon">+</span>
-                                    <div class="artist-info">
-                                        <span class="main-text">להוסיף תגית חדשה: "{{ songForm.get('tagInput')?.value }}"</span>
-                                        <span class="sub-text warning">יישלח לבדיקה</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group half">
-                            <label>ז'אנרים</label>
-                            <div class="input-with-chips">
-                                <div class="chip" *ngFor="let genre of genresArray.controls; let i = index" [class.temporary]="!genre.value.id">
-                                    {{ genre.value.name }}
-                                    <span class="temp-badge" *ngIf="!genre.value.id">חדש</span>
-                                    <span class="remove-chip" (click)="removeGenre(i)">&times;</span>
-                                </div>
-                                <input type="text" formControlName="genreInput" (input)="onGenreInput($event)" placeholder="להוסיף ז'אנר...">
-                            </div>
-
-                            <div class="autocomplete-dropdown" *ngIf="genreSuggestions.length > 0 || songForm.get('genreInput')?.value?.length >= 2">
-                                <div class="suggestion" *ngFor="let genre of genreSuggestions" (click)="selectGenre(genre)">{{ genre.displayText }}</div>
-                                <div class="suggestion new-artist-option" *ngIf="songForm.get('genreInput')?.value?.length >= 2" (click)="addNewGenre(songForm.get('genreInput')?.value)">
-                                    <span class="icon">+</span>
-                                    <div class="artist-info">
-                                        <span class="main-text">להוסיף ז'אנר חדש: "{{ songForm.get('genreInput')?.value }}"</span>
-                                        <span class="sub-text warning">יישלח לבדיקה</span>
-                                    </div>
-                                </div>
+                <div *ngIf="currentStep === 3" class="step-content smart-step-panel preview-step">
+                    <div class="smart-chat-stream preview-chat-stream">
+                        <div class="smart-message-row">
+                            <div class="smart-bot-icon"><span class="material-icons">auto_awesome</span></div>
+                            <div class="smart-bubble smart-bubble-question">
+                                הכול מוכן כמעט.
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group uploader-group" *ngIf="isProfessionalNonAdmin || isAdminUser">
-                        <label class="form-label">תיוג תוכן לפרופיל</label>
-
-                        <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
-                            <label class="checkbox-label-modal">
-                                <input type="checkbox" [(ngModel)]="tagAsMyself" [ngModelOptions]="{standalone: true}" (change)="onTagAsMyselfChange()">
-                                <span>לתייג את התוכן על שמי</span>
-                            </label>
-                            <div *ngIf="tagAsMyself && selectedUploaderProfile" class="selected-profile-tag" style="margin-top: 8px;">
-                                <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
-                                <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
-                                <div class="profile-tag-info">
-                                    <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div *ngIf="isAdminUser">
-                            <div *ngIf="selectedUploaderProfile" class="selected-profile-tag">
-                                <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
-                                <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
-                                <div class="profile-tag-info">
-                                    <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
-                                </div>
-                                <button type="button" class="btn-clear-profile" (click)="clearUploaderProfile()">
-                                    <span class="material-icons">close</span>
-                                </button>
-                            </div>
-                            <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
-                                <input type="text" class="form-input" [(ngModel)]="profileSearchQuery" [ngModelOptions]="{standalone: true}" (input)="onProfileSearchInput()" (focus)="onProfileSearchInput()" placeholder="חפש לפי שם אמן / מורה / בעל מקצוע..." autocomplete="off">
-                                <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
-                                    <div *ngFor="let p of profileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(p)">
-                                        <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
-                                        <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
-                                        <div class="profile-dropdown-info">
-                                            <span class="profile-dropdown-name">{{ p.displayName }}</span>
-                                            <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
-                                    <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group checkbox-group" *ngIf="isAdminUser">
-                        <label>
-                            <input type="checkbox" formControlName="isApproved">
-                            לפרסם מיד ללא המתנה
-                        </label>
-                    </div>
-                </div>
-
-                <div *ngIf="currentStep === 5" class="step-content preview-step">
                     <div class="preview-header">
-                        <h2>תצוגה מקדימה</h2>
-                        <p class="preview-subtitle">בדקו את כל הפרטים לפני שליחה</p>
+                        <h2>לפני שליחה</h2>
+                        <p class="preview-note">בדיקה קצרה, ואם צריך אפשר לעדכן.</p>
                     </div>
 
-                    <div class="preview-card">
+                    <div class="preview-card" *ngIf="!isPreviewEditing">
                         <div class="preview-card-header">
                             <div class="song-info">
-                                <h3 class="song-title">{{ songForm.get('title')?.value }}</h3>
+                                <p class="song-artist"><strong>שם השיר:</strong> <span>{{ songForm.get('title')?.value }}</span></p>
                                 <p class="song-artist">
+                                    <strong>אמן:</strong>
                                     <span *ngFor="let a of artistsArray.value; let last = last">{{ a.name }}{{ !last ? ', ' : '' }}</span>
                                 </p>
-                                <p class="song-composer" *ngIf="selectedComposer">לחן: {{ selectedComposer.name }}</p>
+                                <p class="song-composer" *ngIf="autoDetectedOriginalKeyName">סולם מקורי: {{ autoDetectedOriginalKeyName }} <span>(זוהה אוטומטית)</span></p>
+                                <p class="song-composer" *ngIf="autoDetectedEasyKeyName">סולם קל: {{ autoDetectedEasyKeyName }} <span>(זוהה אוטומטית)</span></p>
                             </div>
                             <div class="song-image">
                                 <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" alt="תמונת שיר">
@@ -359,13 +230,87 @@
                         </div>
                     </div>
 
-                    <div class="preview-actions-secondary">
-                        <button type="button" class="btn-secondary" (click)="openFullDetailsEditor()">עריכת כל הפרטים</button>
+                    <div class="preview-inline-editor" *ngIf="isPreviewEditing">
+                        <div class="form-group">
+                            <label>שם השיר</label>
+                            <input type="text" formControlName="title" placeholder="שם השיר">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label>קישור יוטיוב</label>
+                                <input type="text" formControlName="youtubeUrl" placeholder="קישור יוטיוב" (blur)="onYoutubeUrlBlur()">
+                            </div>
+                            <div class="form-group half">
+                                <label>תמונה</label>
+                                <input type="text" formControlName="imageUrl" placeholder="קישור לתמונה">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>אמנים</label>
+                            <div class="smart-chip-list" *ngIf="artistsArray.length > 0">
+                                <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index" [class.temporary]="!artist.value.id">
+                                    {{ artist.value.name }}
+                                    <span class="temp-badge" *ngIf="!artist.value.id">חדש</span>
+                                    <span class="remove-chip" (click)="removeArtist(i)">&times;</span>
+                                </div>
+                            </div>
+
+                            <div class="artist-match-helper preview-artist-suggestions" *ngIf="artistMatchSuggestions.length > 0">
+                                <p class="artist-match-title">מצאנו אמנים דומים. אפשר ללחוץ כדי להחליף.</p>
+                                <div class="artist-match-actions">
+                                    <button type="button" class="artist-match-option" *ngFor="let artist of artistMatchSuggestions" (click)="selectSuggestedArtistMatch(artist)">
+                                        <span class="artist-match-name">{{ artist.displayText }}</span>
+                                        <span class="artist-match-secondary" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="input-with-chips" [class.disabled]="artistsArray.length >= 5">
+                                <input type="text" formControlName="artistInput" (input)="onArtistInput($event)" placeholder="להוסיף אמן" [disabled]="artistsArray.length >= 5">
+                            </div>
+
+                            <div class="autocomplete-dropdown" *ngIf="artistSuggestions.length > 0 || artistInputValue.length >= 2">
+                                <div class="suggestion" *ngFor="let artist of artistSuggestions" (click)="selectArtist(artist)">
+                                    <img [src]="artist.imageUrl || 'assets/default-artist.png'" class="artist-thumb">
+                                    <div class="artist-info">
+                                        <span class="main-text">{{ artist.displayText }}</span>
+                                        <span class="sub-text" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="suggestion new-artist-option" *ngIf="artistInputValue.length >= 2" (click)="addNewArtist(artistInputValue)">
+                                    <span class="icon">+</span>
+                                    <div class="artist-info">
+                                        <span class="main-text">להוסיף אמן חדש: "{{ artistInputValue }}"</span>
+                                        <span class="sub-text warning">יישלח לאישור מנהל</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label>סולם מקורי</label>
+                                <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
+                                    <option [ngValue]="null">בחר סולם</option>
+                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group half">
+                                <label>סולם קל</label>
+                                <select formControlName="easyKeyId" (change)="userChangedEasyKey = true">
+                                    <option [ngValue]="null">בחר סולם קל</option>
+                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ng-container>
 
-            <ng-container *ngIf="isLegacyFlow">
+            <ng-container *ngIf="!showInlineSuccess && isLegacyFlow">
 
             <!-- STEP 1: Basic Info -->
             <div *ngIf="currentStep === 1" class="step-content">
@@ -787,24 +732,33 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer" *ngIf="!isLegacyFlow">
-            <div class="left-buttons">
-                <button class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()">חזור</button>
-                <button class="btn-secondary" *ngIf="currentStep === 1" (click)="closeModal()">ביטול</button>
-            </div>
-
-            <div class="right-buttons">
-                <button class="btn-primary" *ngIf="currentStep < 4" (click)="nextStep()">המשך</button>
-                <button class="btn-primary btn-large" *ngIf="currentStep === 4" (click)="nextStep()">מעבר לתצוגה מקדימה</button>
-                <button class="btn-primary btn-submit" *ngIf="currentStep === 5" (click)="submit()" [disabled]="isSubmitting">
+        <div class="modal-footer" *ngIf="!showInlineSuccess && !isLegacyFlow">
+            <div class="smart-footer-actions">
+                <button class="btn-secondary btn-icon-text" *ngIf="currentStep > 1" (click)="prevStep()">
+                    <span class="material-icons">arrow_forward</span>
+                    <span>חזרה</span>
+                </button>
+                <button class="btn-primary" *ngIf="currentStep === 1 && showManualYoutubeInput" (click)="nextStep()">המשך</button>
+                <button class="btn-primary btn-icon-text" *ngIf="currentStep === 2" (click)="nextStep()">
+                    <span>הבא</span>
+                    <span class="material-icons">arrow_back</span>
+                </button>
+                <button class="btn-secondary btn-icon-text" *ngIf="currentStep === 3 && !isPreviewEditing" (click)="togglePreviewEdit()">
+                    <span class="material-icons">edit</span>
+                    <span>עריכה</span>
+                </button>
+                <button class="btn-secondary btn-icon-text" *ngIf="currentStep === 3 && isPreviewEditing" (click)="confirmPreviewEdit()">
+                    <span class="material-icons">check</span>
+                    <span>שמירת שינויים</span>
+                </button>
+                <button class="btn-primary btn-submit" *ngIf="currentStep === 3 && !isPreviewEditing" (click)="submit()" [disabled]="isSubmitting">
                     <span *ngIf="isSubmitting">שומר...</span>
-                    <span *ngIf="!isSubmitting && !songForm.get('isApproved')?.value">שליחה לפרסום</span>
-                    <span *ngIf="!isSubmitting && songForm.get('isApproved')?.value">פרסום מיידי</span>
+                    <span *ngIf="!isSubmitting">שליחה לאישור</span>
                 </button>
             </div>
         </div>
 
-        <div class="modal-footer" *ngIf="isLegacyFlow">
+        <div class="modal-footer" *ngIf="!showInlineSuccess && isLegacyFlow">
             <div class="left-buttons">
                 <button class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()">חזור</button>
                 <button class="btn-secondary" *ngIf="currentStep === 1" (click)="closeModal()">ביטול</button>
@@ -825,3 +779,4 @@
 
     </div>
 </div>
+

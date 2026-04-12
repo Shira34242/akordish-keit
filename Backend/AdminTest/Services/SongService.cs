@@ -1023,12 +1023,30 @@ public class SongService : ISongService
                 };
             }
 
-            var similarSongs = await _context.Songs
-                .Where(s => !s.IsDeleted)
-                .Where(s => EF.Functions.Like(s.Title, $"%{title}%"))
+            var normalizedTitle = NormalizeDuplicateTitle(title);
+            var queryTokens = ExtractDuplicateTokens(normalizedTitle);
+            var longestToken = queryTokens
+                .OrderByDescending(token => token.Length)
+                .FirstOrDefault();
+
+            IQueryable<Song> candidateQuery = _context.Songs
+                .Where(s => !s.IsDeleted && s.IsApproved)
                 .Include(s => s.SongArtists)
-                    .ThenInclude(sa => sa.Artist)
-                .Take(5)
+                    .ThenInclude(sa => sa.Artist);
+
+            if (!string.IsNullOrWhiteSpace(longestToken))
+            {
+                candidateQuery = candidateQuery.Where(s =>
+                    EF.Functions.Like(s.Title, $"%{title}%") ||
+                    EF.Functions.Like(s.Title, $"%{longestToken}%"));
+            }
+            else
+            {
+                candidateQuery = candidateQuery.Where(s => EF.Functions.Like(s.Title, $"%{title}%"));
+            }
+
+            var candidates = await candidateQuery
+                .Take(40)
                 .Select(s => new SongBasicDto
                 {
                     Id = s.Id,
@@ -1040,6 +1058,19 @@ public class SongService : ISongService
                     ViewCount = s.ViewCount
                 })
                 .ToListAsync();
+
+            var similarSongs = candidates
+                .Select(song => new
+                {
+                    Song = song,
+                    Score = ScoreDuplicateTitle(normalizedTitle, NormalizeDuplicateTitle(song.Title))
+                })
+                .Where(item => item.Score >= 45)
+                .OrderByDescending(item => item.Score)
+                .ThenBy(item => item.Song.Title)
+                .Take(5)
+                .Select(item => item.Song)
+                .ToList();
 
             return new DuplicateCheckResponseDto
             {
@@ -1057,6 +1088,73 @@ public class SongService : ISongService
                 SimilarSongs = new List<SongBasicDto>()
             };
         }
+    }
+
+    private static string NormalizeDuplicateTitle(string value)
+    {
+        var cleanedChars = value
+            .Trim()
+            .ToLowerInvariant()
+            .Select(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch) ? ch : ' ')
+            .ToArray();
+
+        return string.Join(" ", new string(cleanedChars)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private static List<string> ExtractDuplicateTokens(string normalizedValue)
+    {
+        return normalizedValue
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(token => token.Length >= 2)
+            .Distinct()
+            .ToList();
+    }
+
+    private static int ScoreDuplicateTitle(string query, string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(query) || string.IsNullOrWhiteSpace(candidate))
+        {
+            return 0;
+        }
+
+        if (query == candidate)
+        {
+            return 100;
+        }
+
+        if (candidate.StartsWith(query) || query.StartsWith(candidate))
+        {
+            return 88;
+        }
+
+        if (candidate.Contains(query) || query.Contains(candidate))
+        {
+            return 76;
+        }
+
+        var queryTokens = ExtractDuplicateTokens(query);
+        var candidateTokens = ExtractDuplicateTokens(candidate);
+
+        if (queryTokens.Count == 0 || candidateTokens.Count == 0)
+        {
+            return 0;
+        }
+
+        var commonTokens = queryTokens.Intersect(candidateTokens).Count();
+        if (commonTokens == 0)
+        {
+            return 0;
+        }
+
+        var coverage = (int)Math.Round((double)commonTokens / queryTokens.Count * 70);
+        var closenessBonus = queryTokens.Any(token =>
+            candidateTokens.Any(candidateToken =>
+                candidateToken.StartsWith(token) || token.StartsWith(candidateToken)))
+            ? 14
+            : 0;
+
+        return coverage + closenessBonus;
     }
 
     public async Task<List<AutocompleteResultDto>> AutocompleteAsync(string entityType, string query, int maxResults = 10)

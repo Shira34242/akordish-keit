@@ -10,15 +10,13 @@ namespace AkordishKeit.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "Address",
-                table: "Users",
-                type: "nvarchar(max)",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(300)",
-                oldMaxLength: 300,
-                oldNullable: true);
+            // אם עמודה קיימת — שנה אותה. אם לא — צור אותה.
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'Address')
+                    ALTER TABLE [Users] ALTER COLUMN [Address] nvarchar(max) NULL;
+                ELSE
+                    ALTER TABLE [Users] ADD [Address] nvarchar(max) NULL;
+            ");
 
             migrationBuilder.AddColumn<string>(
                 name: "BannerImageUrl",
