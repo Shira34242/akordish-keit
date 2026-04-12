@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SongService } from '../../../../services/song.service';
 import { SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
@@ -15,6 +16,7 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
 })
 export class SongsListComponent implements OnInit {
   private readonly songService = inject(SongService);
+  private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
 
   // State
@@ -156,7 +158,7 @@ export class SongsListComponent implements OnInit {
   }
 
   viewSong(id: number): void {
-    window.open('/song/' + id, '_blank');
+    this.router.navigate(['/song', id]);
   }
 
   formatArtists(song: SongDto): string {

@@ -120,7 +120,7 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   viewProvider(id: number): void {
-    window.open('/professional/' + id, '_blank');
+    this.router.navigate(['/professional', id]);
   }
 
   approveProvider(id: number): void {

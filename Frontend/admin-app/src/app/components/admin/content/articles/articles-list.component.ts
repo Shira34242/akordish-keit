@@ -130,8 +130,8 @@ export class ArticlesListComponent implements OnInit {
   }
 
   viewArticle(article: Article): void {
-    const path = article.contentType === ArticleContentType.News ? '/news' : '/blog';
-    window.open(path + '/' + article.slug, '_blank');
+    const path = article.contentType === ArticleContentType.News ? 'news' : 'blog';
+    this.router.navigate([path, article.slug]);
   }
 
 

@@ -1,12 +1,13 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormArray } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { AddSongRequest, AutocompleteResult, MusicalKey, SongBasicDto, YouTubeMetadata, YouTubeSearchResult } from '../../models/song.model';
 import { UserWithProfileDto } from '../../models/user.model';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { extractChords, parseChord } from '../../utils/music-utils';
@@ -14,11 +15,16 @@ import { extractChords, parseChord } from '../../utils/music-utils';
 @Component({
     selector: 'app-add-song-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule],
     templateUrl: './add-song-modal.component.html',
     styleUrls: ['./add-song-modal.component.css']
 })
-export class AddSongModalComponent implements OnInit {
+export class AddSongModalComponent implements OnInit, AfterViewInit {
+    @ViewChild('modalContent') modalContent?: ElementRef<HTMLDivElement>;
+    @ViewChild('titleInput') titleInput?: ElementRef<HTMLInputElement>;
+    @ViewChild('manualYoutubeInput') manualYoutubeInput?: ElementRef<HTMLInputElement>;
+    @ViewChild('lyricsInput') lyricsInput?: ElementRef<HTMLTextAreaElement>;
+
     private readonly noteToSemitone: Record<string, number> = {
         'C': 0, 'B#': 0,
         'C#': 1, 'Db': 1,
@@ -76,8 +82,12 @@ export class AddSongModalComponent implements OnInit {
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
+    showManualYoutubeInput: boolean = false;
+    isPreviewEditing: boolean = false;
 
     isSubmitting: boolean = false;
+    showInlineSuccess = false;
+    successMessage = '';
 
     songForm: FormGroup;
 
@@ -98,6 +108,9 @@ export class AddSongModalComponent implements OnInit {
     isDetectingOriginalKey = false;
     isDetectingEasyKey = false;
     isSearchingYouTube = false;
+    hasSearchedYouTube = false;
+    lastSearchQuery = '';
+    dismissedDuplicatePrompt = false;
 
     // אם המשתמש שינה ידנית — לא לדרוס
     userChangedOriginalKey = false;
@@ -128,8 +141,106 @@ export class AddSongModalComponent implements OnInit {
         return this.editMode || this.isManualAddMode;
     }
 
+    get isSmartFlow(): boolean {
+        return !this.isLegacyFlow;
+    }
+
     get totalSteps(): number {
-        return this.isLegacyFlow ? 3 : 5;
+        return 3;
+    }
+
+    get hasSelectedVideo(): boolean {
+        return !!this.songForm.get('youtubeUrl')?.value && (!!this.selectedYouTubeResult || this.showManualYoutubeInput);
+    }
+
+    get smartStepLabel(): string {
+        return `שלב ${this.currentStep} מתוך ${this.totalSteps}`;
+    }
+
+    get smartHeaderTitle(): string {
+        switch (this.currentStep) {
+            case 1:
+                return 'מתחילים מבחירת השיר';
+            case 2:
+                return 'מוסיפים מילים ואקורדים';
+            case 3:
+                return 'בודקים לפני שליחה';
+            default:
+                return 'הוספת שיר';
+        }
+    }
+
+    get smartHeaderDescription(): string {
+        switch (this.currentStep) {
+            case 1:
+                return 'כותבים שם שיר או מדביקים קישור, ואני מסדר את הפתיחה.';
+            case 2:
+                return 'מדביקים את התוכן, ואני מזהה סולם ומכין תצוגה.';
+            case 3:
+                return 'עוברים על הפרטים פעם אחרונה ושולחים.';
+            default:
+                return '';
+        }
+    }
+
+    get stepOneHelperText(): string {
+        if (this.hasSelectedVideo) {
+            return 'אם זה לא השיר הנכון, אפשר לבחור שיר אחר.';
+        }
+
+        if (this.isSearchingYouTube) {
+            return 'מחפש עכשיו תוצאות ביוטיוב...';
+        }
+
+        if (this.showManualYoutubeInput) {
+            return this.isLoadingMetadata ? 'שולף עכשיו את התמונה והפרטים מהקישור.' : '';
+        }
+
+        if (this.hasSearchedYouTube && this.youtubeSearchResults.length === 0) {
+            return 'לא נמצאה התאמה טובה. אפשר לנסות ניסוח אחר או לבחור בהדבקת קישור ידנית.';
+        }
+
+        return '';
+    }
+
+    get lyricsHelperText(): string {
+        if (this.isDetectingOriginalKey || this.isDetectingEasyKey) {
+            return 'מזהה עכשיו סולם מקורי וסולם קל.';
+        }
+
+        return '';
+    }
+
+    get smartPreviewMessage(): string {
+        const title = this.songForm.get('title')?.value;
+        return title ? `הכול כמעט מוכן. בודקים את "${title}" ושולחים לאישור.` : 'הכול כמעט מוכן. בודקים את הפרטים ושולחים לאישור.';
+    }
+
+    get selectedArtistsLabel(): string {
+        return this.artistsArray.controls
+            .map(control => control.value?.name)
+            .filter((name: string | undefined): name is string => !!name)
+            .join(', ');
+    }
+
+    get showDuplicateSuggestion(): boolean {
+        return this.hasSearchedYouTube && this.similarSongs.length > 0 && !this.dismissedDuplicatePrompt && !this.hasSelectedVideo;
+    }
+
+    get primarySimilarSong(): SongBasicDto | null {
+        return this.similarSongs[0] ?? null;
+    }
+
+    get smartPrimaryActionLabel(): string {
+        if (this.currentStep === 2) {
+            return 'בדיקה ותצוגה';
+        }
+
+        if (this.currentStep === 3) {
+            return this.isSubmitting ? 'שומר...' : 'שליחה לאישור';
+        }
+
+        return 'המשך';
     }
 
     get isProfessionalNonAdmin(): boolean {
@@ -197,6 +308,10 @@ export class AddSongModalComponent implements OnInit {
             this.userChangedEasyKey = true;
             this.populateFormForEdit();
         }
+    }
+
+    ngAfterViewInit(): void {
+        this.scrollModalToTop();
     }
     populateFormForEdit(): void {
         if (!this.songToEdit) return;
@@ -347,24 +462,62 @@ export class AddSongModalComponent implements OnInit {
 
     setupYouTubeSearch() {
         this.songForm.get('title')?.valueChanges.pipe(
-            debounceTime(650),
+            debounceTime(200),
             distinctUntilChanged(),
             switchMap(title => {
                 const query = (title || '').trim();
 
-                if (this.editMode || query.length < 2) {
-                    this.isSearchingYouTube = false;
-                    return of([]);
+                if (this.editMode) {
+                    return of(title);
                 }
 
-                this.isSearchingYouTube = true;
-                return this.songService.searchYouTubeSongs(query, 5).pipe(
-                    catchError(() => of([]))
-                );
+                if (this.lastSearchQuery && query !== this.lastSearchQuery) {
+                    this.youtubeSearchResults = [];
+                    this.hasSearchedYouTube = false;
+                    if (!this.showManualYoutubeInput) {
+                        this.selectedYouTubeResult = null;
+                    }
+                }
+
+                return of(title);
             })
+        ).subscribe(() => {
+            this.isSearchingYouTube = false;
+        });
+    }
+
+    searchYouTubeByTitle(): void {
+        const query = (this.songForm.get('title')?.value || '').trim();
+
+        this.songForm.get('title')?.markAsTouched();
+
+        if (this.editMode || query.length < 2 || this.isSearchingYouTube) {
+            return;
+        }
+
+        if (this.similarSongs.length > 0 && !this.dismissedDuplicatePrompt) {
+            this.hasSearchedYouTube = true;
+            this.youtubeSearchResults = [];
+            this.showManualYoutubeInput = false;
+            this.selectedYouTubeResult = null;
+            this.scrollModalToTop();
+            return;
+        }
+
+        this.isSearchingYouTube = true;
+        this.hasSearchedYouTube = true;
+        this.lastSearchQuery = query;
+        this.youtubeSearchResults = [];
+        this.showManualYoutubeInput = false;
+        this.selectedYouTubeResult = null;
+
+        this.songService.searchYouTubeSongs(query, 5).pipe(
+            map(results => this.refineYouTubeResults(query, results)),
+            catchError(() => of([]))
         ).subscribe(results => {
             this.youtubeSearchResults = results;
             this.isSearchingYouTube = false;
+            this.scrollModalToTop();
         });
     }
 
@@ -698,8 +851,10 @@ export class AddSongModalComponent implements OnInit {
             this.isCheckingDuplicate = false;
             if (response && response.isPotentialDuplicate) {
                 this.similarSongs = response.similarSongs;
+                this.dismissedDuplicatePrompt = false;
             } else {
                 this.similarSongs = [];
+                this.dismissedDuplicatePrompt = false;
             }
         });
     }
@@ -830,9 +985,16 @@ export class AddSongModalComponent implements OnInit {
                     this.isLoadingMetadata = false;
                     this.youtubeMetadata = metadata;
                     if (metadata.success) {
-                        if (metadata.thumbnailUrl && !this.songForm.get('imageUrl')?.value) {
-                            this.songForm.patchValue({ imageUrl: metadata.thumbnailUrl });
-                        }
+                        this.applySelectedVideo({
+                            title: metadata.title || this.songForm.get('title')?.value || '',
+                            youtubeUrl: url,
+                            thumbnailUrl: metadata.thumbnailUrl,
+                            channelTitle: metadata.channelTitle,
+                            durationSeconds: metadata.durationSeconds,
+                            description: metadata.description,
+                            publishedAt: metadata.publishedAt,
+                            suggestedArtistName: metadata.channelTitle
+                        });
                     }
                 },
                 error: () => this.isLoadingMetadata = false
@@ -840,18 +1002,63 @@ export class AddSongModalComponent implements OnInit {
         }
     }
 
+    fetchManualYoutubeMetadata(): void {
+        this.songForm.get('youtubeUrl')?.markAsTouched();
+        if (this.songForm.get('youtubeUrl')?.invalid || this.isLoadingMetadata) {
+            return;
+        }
+
+        this.onYoutubeUrlBlur();
+    }
+
     selectYouTubeSuggestion(result: YouTubeSearchResult) {
-        this.selectedYouTubeResult = result;
+        this.applySelectedVideo(result);
+    }
+
+    clearSelectedVideoChoice(): void {
+        this.selectedYouTubeResult = null;
+        this.youtubeMetadata = null;
+        this.youtubeSearchResults = [];
+        this.showManualYoutubeInput = false;
+        this.hasSearchedYouTube = false;
+        this.lastSearchQuery = '';
+        this.songForm.patchValue({
+            youtubeUrl: '',
+            imageUrl: ''
+        });
+        this.scrollModalToTop();
+    }
+
+    continueAfterDuplicatePrompt(): void {
+        this.dismissedDuplicatePrompt = true;
+        this.searchYouTubeByTitle();
+    }
+
+    private applySelectedVideo(result: Partial<YouTubeSearchResult>) {
+        const smartTitle = this.pickSmartSongTitle(this.songForm.get('title')?.value || '', result.title, result.channelTitle);
+
+        this.selectedYouTubeResult = {
+            videoId: result.videoId ?? '',
+            youtubeUrl: result.youtubeUrl ?? '',
+            title: smartTitle,
+            channelTitle: result.channelTitle,
+            thumbnailUrl: result.thumbnailUrl,
+            durationSeconds: result.durationSeconds,
+            description: result.description,
+            publishedAt: result.publishedAt,
+            suggestedArtistName: result.suggestedArtistName
+        };
         this.youtubeSearchResults = [];
 
         this.songForm.patchValue({
-            youtubeUrl: result.youtubeUrl,
-            imageUrl: this.songForm.get('imageUrl')?.value || result.thumbnailUrl || ''
+            title: smartTitle,
+            youtubeUrl: result.youtubeUrl ?? this.songForm.get('youtubeUrl')?.value ?? '',
+            imageUrl: result.thumbnailUrl || this.songForm.get('imageUrl')?.value || ''
         });
 
         this.youtubeMetadata = {
             success: true,
-            title: result.title,
+            title: smartTitle,
             channelTitle: result.channelTitle,
             thumbnailUrl: result.thumbnailUrl,
             durationSeconds: result.durationSeconds,
@@ -859,10 +1066,16 @@ export class AddSongModalComponent implements OnInit {
             publishedAt: result.publishedAt
         };
 
-        if (this.artistsArray.length === 0 && result.suggestedArtistName) {
-            this.applySuggestedArtists(result.suggestedArtistName);
-        } else {
-            this.clearPendingArtistSuggestion();
+        this.artistsArray.clear();
+        this.applySuggestedArtists(result.suggestedArtistName || result.channelTitle || result.title?.split('-')[0] || '');
+
+        this.showManualYoutubeInput = false;
+        this.hasSearchedYouTube = false;
+        this.lastSearchQuery = '';
+
+        if (!this.isLegacyFlow && this.currentStep === 1) {
+            this.currentStep = 2;
+            this.scrollModalToTop();
         }
     }
 
@@ -872,62 +1085,24 @@ export class AddSongModalComponent implements OnInit {
             return;
         }
 
-        this.pendingSuggestedArtistName = trimmedName;
+        const primaryCandidate = this.extractSuggestedArtistCandidates(trimmedName)[0] || trimmedName;
+        this.pendingSuggestedArtistName = primaryCandidate;
         this.artistMatchSuggestions = [];
+        this.resolveArtistMatches(primaryCandidate).subscribe(matches => {
+            const bestMatch = matches[0];
 
-        const candidateNames = this.extractSuggestedArtistCandidates(trimmedName);
-        const candidateRequests = candidateNames.map(candidate =>
-            this.resolveArtistMatches(candidate)
-        );
-
-        forkJoin(candidateRequests).subscribe(candidateMatches => {
-            const fallbackMatches = this.rankArtistMatches(trimmedName, []);
-            const suggestionMap = new Map<number, AutocompleteResult>();
-            let addedStrongMatch = false;
-
-            candidateMatches.forEach(matches => {
-                const bestMatch = matches[0];
-
-                if (bestMatch && (bestMatch.score >= 100 || (matches.length === 1 && bestMatch.score >= 70))) {
-                    this.ensureArtistSelected(bestMatch.result);
-                    addedStrongMatch = true;
-                    return;
-                }
-
-                matches
-                    .filter(match => match.score >= 35)
+            if (bestMatch && bestMatch.score >= 70) {
+                this.artistsArray.clear();
+                this.artistsArray.push(this.fb.control({ id: bestMatch.result.id, name: bestMatch.result.value }));
+                this.artistMatchSuggestions = matches
+                    .filter(match => match.result.id && match.result.id !== bestMatch.result.id && match.score >= 35)
                     .slice(0, 5)
-                    .forEach(match => {
-                        if (match.result.id) {
-                            suggestionMap.set(match.result.id, match.result);
-                        }
-                    });
-            });
-
-            const fallbackSuggestions = fallbackMatches
-                .filter(match => match.score >= 35)
-                .slice(0, 5)
-                .map(match => match.result);
-
-            fallbackSuggestions.forEach(result => {
-                if (result.id) {
-                    suggestionMap.set(result.id, result);
-                }
-            });
-
-            const selectedIds = new Set(
-                this.artistsArray.controls
-                    .map(ctrl => ctrl.value.id)
-                    .filter((id: number | undefined) => !!id)
-            );
-
-            this.artistMatchSuggestions = Array.from(suggestionMap.values())
-                .filter(artist => artist.id && !selectedIds.has(artist.id))
-                .slice(0, 5);
-
-            if (addedStrongMatch && this.artistMatchSuggestions.length === 0) {
-                this.clearPendingArtistSuggestion();
+                    .map(match => match.result);
+                return;
             }
+
+            this.artistsArray.clear();
+            this.addNewArtist(primaryCandidate);
         });
     }
 
@@ -949,9 +1124,39 @@ export class AddSongModalComponent implements OnInit {
     }
 
     private ensureArtistSelected(artist: AutocompleteResult) {
-        const exists = this.artistsArray.controls.some(ctrl => ctrl.value.id === artist.id);
-        if (!exists && this.artistsArray.length < 5) {
+        const normalizedArtist = this.normalizeArtistText(artist.value);
+        const existingIndex = this.artistsArray.controls.findIndex(ctrl =>
+            (artist.id && ctrl.value.id === artist.id) ||
+            this.normalizeArtistText(ctrl.value.name) === normalizedArtist
+        );
+
+        if (existingIndex >= 0) {
+            if (artist.id && !this.artistsArray.at(existingIndex).value.id) {
+                this.artistsArray.at(existingIndex).setValue({ id: artist.id, name: artist.value });
+            }
+            return;
+        }
+
+        if (this.artistsArray.length < 5) {
             this.artistsArray.push(this.fb.control({ id: artist.id, name: artist.value }));
+        }
+    }
+
+    private populateFallbackArtists(result: Partial<YouTubeSearchResult>): void {
+        const candidatePool = [
+            result.suggestedArtistName,
+            result.channelTitle,
+            result.title?.split('-')[0]
+        ]
+            .filter((value): value is string => !!value && value.trim().length >= 2)
+            .flatMap(value => this.extractSuggestedArtistCandidates(value))
+            .slice(0, 3);
+
+        for (const artistName of candidatePool) {
+            this.addNewArtist(artistName);
+            if (this.artistsArray.length >= 3) {
+                break;
+            }
         }
     }
 
@@ -1123,19 +1328,235 @@ export class AddSongModalComponent implements OnInit {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
+    private refineYouTubeResults(query: string, results: YouTubeSearchResult[]): YouTubeSearchResult[] {
+        const rankedResults = results
+            .map(result => ({
+                result,
+                score: this.scoreYouTubeResult(query, result)
+            }))
+            .filter(item => item.score >= 20)
+            .sort((a, b) => b.score - a.score);
+
+        return rankedResults.slice(0, 5).map(item => item.result);
+    }
+
+    private scoreYouTubeResult(query: string, result: YouTubeSearchResult): number {
+        const normalizedQuery = this.normalizeSearchText(query);
+        const queryWords = this.extractSearchWords(normalizedQuery);
+        const normalizedTitle = this.normalizeSearchText(result.title);
+        const normalizedChannel = this.normalizeSearchText(result.channelTitle);
+
+        if (!normalizedTitle || queryWords.length === 0) {
+            return 0;
+        }
+
+        let score = 0;
+
+        if (normalizedTitle.includes(normalizedQuery)) {
+            score += 100;
+        }
+
+        const titleWords = this.extractSearchWords(normalizedTitle);
+        const channelWords = this.extractSearchWords(normalizedChannel);
+        const commonTitleWords = queryWords.filter(word => titleWords.includes(word)).length;
+        const commonChannelWords = queryWords.filter(word => channelWords.includes(word)).length;
+
+        score += commonTitleWords * 28;
+        score += commonChannelWords * 10;
+
+        if (commonTitleWords === 0 && commonChannelWords === 0) {
+            score -= 40;
+        }
+
+        if (/podcast|interview|ראיון|shorts|vlog|פרק|episode/i.test(result.title || '')) {
+            score -= 35;
+        }
+
+        if (/song|lyrics|audio|official|מילים|שיר|אקוסטי|live/i.test(result.title || '')) {
+            score += 8;
+        }
+
+        return score;
+    }
+
+    private normalizeSearchText(value?: string): string {
+        return (value || '')
+            .toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    private extractSearchWords(value: string): string[] {
+        return value
+            .split(' ')
+            .map(word => word.trim())
+            .filter(word => word.length >= 2);
+    }
+
+    private pickSmartSongTitle(query: string, youtubeTitle?: string, channelTitle?: string): string {
+        const cleanQuery = query.trim();
+        const cleanYoutubeTitle = this.cleanVideoTitle(youtubeTitle, channelTitle);
+
+        if (!cleanYoutubeTitle) {
+            return cleanQuery;
+        }
+
+        if (!cleanQuery) {
+            return cleanYoutubeTitle;
+        }
+
+        const parts = cleanYoutubeTitle
+            .split(/\s+-\s+|\s+\|\s+/)
+            .map(part => part.trim())
+            .filter(part => part.length >= 2);
+
+        const bestPart = parts
+            .map(part => ({ part, score: this.scoreSongTitle(part, cleanQuery) }))
+            .sort((a, b) => b.score - a.score)[0];
+
+        return bestPart && bestPart.score >= 45 ? bestPart.part : cleanQuery;
+    }
+
+    private cleanVideoTitle(value?: string, channelTitle?: string): string {
+        return (value || '')
+            .replace(new RegExp(this.escapeRegExp(channelTitle || ''), 'gi'), ' ')
+            .replace(/\[(.*?)\]|\((.*?)\)/g, ' ')
+            .replace(/\b(official|video|audio|lyrics?|live|topic|hd|4k)\b/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .replace(/^[\-|:/\s]+|[\-|:/\s]+$/g, '')
+            .trim();
+    }
+
+    private scoreSongTitle(candidate: string, query: string): number {
+        const normalizedCandidate = this.normalizeSearchText(candidate);
+        const normalizedQuery = this.normalizeSearchText(query);
+
+        if (!normalizedCandidate || !normalizedQuery) {
+            return 0;
+        }
+
+        if (normalizedCandidate === normalizedQuery) {
+            return 100;
+        }
+
+        if (normalizedCandidate.startsWith(normalizedQuery) || normalizedQuery.startsWith(normalizedCandidate)) {
+            return 80;
+        }
+
+        const queryWords = this.extractSearchWords(normalizedQuery);
+        const candidateWords = this.extractSearchWords(normalizedCandidate);
+        const commonWords = queryWords.filter(word => candidateWords.includes(word)).length;
+
+        return commonWords > 0 ? commonWords * 30 : 0;
+    }
+
+    private escapeRegExp(value: string): string {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    showManualYoutubeStep() {
+        this.showManualYoutubeInput = true;
+        this.youtubeSearchResults = [];
+        this.hasSearchedYouTube = true;
+        this.showInlineSuccess = false;
+        this.scrollModalToTop();
+    }
+
     useManualAddMode() {
         this.isManualAddMode = true;
+        this.isPreviewEditing = false;
         this.currentStep = 1;
         this.youtubeSearchResults = [];
+        this.scrollModalToTop();
     }
 
     returnToSmartFlow() {
         this.isManualAddMode = false;
+        this.isPreviewEditing = false;
         this.currentStep = 1;
+        this.showManualYoutubeInput = false;
+        this.showInlineSuccess = false;
+        this.scrollModalToTop();
     }
 
     openFullDetailsEditor() {
-        this.useManualAddMode();
+        this.togglePreviewEdit();
+    }
+
+    togglePreviewEdit() {
+        this.isPreviewEditing = !this.isPreviewEditing;
+    }
+
+    confirmPreviewEdit() {
+        this.isPreviewEditing = false;
+    }
+
+    private scrollModalToTop(): void {
+        setTimeout(() => {
+            const modalContent = this.modalContent?.nativeElement;
+            if (modalContent) {
+                modalContent.scrollTop = 0;
+            }
+            this.focusCurrentInput();
+        });
+    }
+
+    private focusCurrentInput(): void {
+        if (this.showInlineSuccess) {
+            return;
+        }
+
+        if (!this.isLegacyFlow && this.currentStep === 1) {
+            const target = this.showManualYoutubeInput ? this.manualYoutubeInput?.nativeElement : this.titleInput?.nativeElement;
+            target?.focus();
+            target?.select();
+            return;
+        }
+
+        if (!this.isLegacyFlow && this.currentStep === 2) {
+            this.lyricsInput?.nativeElement.focus();
+        }
+    }
+
+    private moveToPreview(): void {
+        const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+        const fallbackResult = this.detectKeyLocally(lyrics);
+
+        this.isDetectingOriginalKey = true;
+        this.isDetectingEasyKey = true;
+
+        this.songService.detectKey(lyrics).pipe(
+            catchError(() => of(null))
+        ).subscribe(result => {
+            this.isDetectingOriginalKey = false;
+            this.isDetectingEasyKey = false;
+
+            const effectiveResult = result ?? fallbackResult;
+
+            if (effectiveResult) {
+                const detectedOriginalKeyId = this.readDetectedKeyId(effectiveResult, 'original') ?? fallbackResult?.originalKeyId ?? null;
+                const detectedEasyKeyId = this.readDetectedKeyId(effectiveResult, 'easy') ?? fallbackResult?.easyKeyId ?? null;
+
+                if (detectedOriginalKeyId !== null) {
+                    this.songForm.get('originalKeyId')?.setValue(String(detectedOriginalKeyId), { emitEvent: false });
+                    this.autoDetectedOriginalKeyName = this.getKeyNameById(detectedOriginalKeyId);
+                }
+
+                if (detectedEasyKeyId !== null) {
+                    this.songForm.get('easyKeyId')?.setValue(String(detectedEasyKeyId), { emitEvent: false });
+                    this.autoDetectedEasyKeyName = this.getKeyNameById(detectedEasyKeyId);
+                }
+            }
+
+            if (this.songForm.get('originalKeyId')?.value) {
+                this.currentStep = 3;
+                this.scrollModalToTop();
+                return;
+            }
+
+            this.songForm.get('originalKeyId')?.markAsTouched();
+        });
     }
 
     nextStep() {
@@ -1161,35 +1582,52 @@ export class AddSongModalComponent implements OnInit {
                 }
             } else {
                 if (this.currentStep === 1) {
-                    const titleValid = this.songForm.get('title')?.valid;
-                    if (!titleValid || !this.selectedYouTubeResult) {
-                        this.songForm.get('title')?.markAsTouched();
+                    const hasVideoSelection = !!this.songForm.get('youtubeUrl')?.value && (!!this.selectedYouTubeResult || this.showManualYoutubeInput);
+                    if (!hasVideoSelection) {
+                        this.songForm.get('youtubeUrl')?.markAsTouched();
                         return;
+                    }
+
+                    if (this.artistsArray.length === 0) {
+                        this.populateFallbackArtists({
+                            suggestedArtistName: this.youtubeMetadata?.channelTitle,
+                            channelTitle: this.youtubeMetadata?.channelTitle,
+                            title: this.songForm.get('title')?.value
+                        });
                     }
                 } else if (this.currentStep === 2) {
-                    if (this.artistsArray.length === 0) {
-                        this.songForm.get('artistInput')?.markAsTouched();
-                        return;
-                    }
-                } else if (this.currentStep === 3) {
                     const lyricsValid = this.songForm.get('lyricsWithChords')?.valid;
-                    const keyValid = this.songForm.get('originalKeyId')?.valid;
 
-                    if (!lyricsValid || !keyValid) {
+                    if (!lyricsValid) {
                         this.songForm.get('lyricsWithChords')?.markAsTouched();
-                        this.songForm.get('originalKeyId')?.markAsTouched();
                         return;
                     }
+
+                    this.moveToPreview();
+                    return;
                 }
             }
 
             this.currentStep++;
+            this.scrollModalToTop();
         }
     }
 
     prevStep() {
+        if (!this.isLegacyFlow && this.currentStep === 3 && this.isPreviewEditing) {
+            this.isPreviewEditing = false;
+            return;
+        }
+
         if (this.currentStep > 1) {
+            if (!this.isLegacyFlow && this.currentStep === 3) {
+                this.currentStep = 2;
+                this.scrollModalToTop();
+                return;
+            }
+
             this.currentStep--;
+            this.scrollModalToTop();
         }
     }
 
@@ -1238,10 +1676,11 @@ export class AddSongModalComponent implements OnInit {
                 next: (res) => {
                     this.isSubmitting = false;
                     if (res.success) {
-                        const message = this.editMode ? 'השיר עודכן בהצלחה!' : 'השיר נוסף בהצלחה!';
-                        alert(message);
+                        const message = this.editMode ? 'השיר עודכן בהצלחה!' : 'נשלח לאישור מנהל. תודה.';
+                        this.successMessage = this.editMode ? 'השיר עודכן בהצלחה' : 'נשלח לבדיקת מנהל';
+                        this.showInlineSuccess = true;
+                        this.scrollModalToTop();
                         this.songAdded.emit();
-                        this.close.emit();
                     } else {
                         alert('שגיאה: ' + res.message);
                     }

@@ -556,6 +556,20 @@
     flex: 1;
 }
 
+.fab-menu-item--song {
+    background: #F2F2F2;
+    font-weight: 700;
+}
+
+.fab-menu-item--song:hover {
+    background: #ddff53;
+    color: #000;
+}
+
+.fab-menu-item--song:hover .fab-menu-icon {
+    color: #000;
+}
+
 .fab-menu-item--expandable {
     position: relative;
 }
