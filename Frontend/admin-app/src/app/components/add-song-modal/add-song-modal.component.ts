@@ -376,7 +376,10 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 imageUrl: this.songToEdit.uploaderProfile.imageUrl,
                 profileType: this.songToEdit.uploaderProfile.type,
                 profileId: 0,
-                profileUrl: this.songToEdit.uploaderProfile.profileUrl
+                profileUrl: this.songToEdit.uploaderProfile.profileUrl,
+                isTeacher: false,
+                status: 'None',
+                categories: []
             };
             this.profileSearchQuery = this.songToEdit.uploaderProfile.name;
         }

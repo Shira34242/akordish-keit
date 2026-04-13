@@ -112,7 +112,9 @@ public class UserService : IUserService
                 ImageUrl = p.ProfileImageUrl,
                 ProfileType = "serviceProvider",
                 ProfileId = p.Id,
-                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}"
+                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}",
+                IsTeacher = p.IsTeacher,
+                Status = p.Status.ToString()
             })
             .ToListAsync();
 
@@ -126,38 +128,53 @@ public class UserService : IUserService
 
     public async Task<UserWithProfileDto?> GetUploaderProfileByUserIdAsync(int userId)
     {
-        // בדוק קודם אם יש פרופיל אמן פעיל
-        var artist = await _context.Artists
-            .Where(a => !a.IsDeleted && a.UserId == userId && a.Status == ArtistStatus.Active)
-            .Select(a => new UserWithProfileDto
+        // בדוק קודם אם יש פרופיל אמן (כולל ממתין — לא רק פעיל)
+        var artistEntity = await _context.Artists
+            .Where(a => !a.IsDeleted && a.UserId == userId)
+            .OrderByDescending(a => a.Status == ArtistStatus.Active)
+            .FirstOrDefaultAsync();
+
+        if (artistEntity != null)
+        {
+            return new UserWithProfileDto
             {
                 UserId = userId,
-                DisplayName = a.Name,
-                ImageUrl = a.ImageUrl,
+                DisplayName = artistEntity.Name,
+                ImageUrl = artistEntity.ImageUrl,
                 ProfileType = "artist",
-                ProfileId = a.Id,
-                ProfileUrl = $"/artist/{a.Id}"
-            })
-            .FirstOrDefaultAsync();
+                ProfileId = artistEntity.Id,
+                ProfileUrl = $"/artist/{artistEntity.Id}",
+                IsTeacher = false,
+                Status = artistEntity.Status.ToString(),
+                Categories = new List<string>()
+            };
+        }
 
-        if (artist != null) return artist;
-
-        // אחרת בדוק אם יש פרופיל בעל מקצוע / מורה פעיל
-        var provider = await _context.ServiceProviders
-            .Where(p => !p.IsDeleted && p.UserId == userId && p.Status == ProfileStatus.Active)
+        // אחרת בדוק אם יש פרופיל בעל מקצוע / מורה (כולל ממתין)
+        var providerEntity = await _context.ServiceProviders
+            .Include(p => p.Categories)
+            .ThenInclude(c => c.Category)
+            .Where(p => !p.IsDeleted && p.UserId == userId)
             .OrderByDescending(p => p.IsPrimaryProfile)
-            .Select(p => new UserWithProfileDto
-            {
-                UserId = userId,
-                DisplayName = p.DisplayName,
-                ImageUrl = p.ProfileImageUrl,
-                ProfileType = "serviceProvider",
-                ProfileId = p.Id,
-                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}"
-            })
+            .ThenByDescending(p => p.Status == ProfileStatus.Active)
             .FirstOrDefaultAsync();
 
-        return provider;
+        if (providerEntity == null) return null;
+
+        return new UserWithProfileDto
+        {
+            UserId = userId,
+            DisplayName = providerEntity.DisplayName,
+            ImageUrl = providerEntity.ProfileImageUrl,
+            ProfileType = "serviceProvider",
+            ProfileId = providerEntity.Id,
+            ProfileUrl = providerEntity.IsTeacher ? $"/teacher/{providerEntity.Id}" : $"/provider/{providerEntity.Id}",
+            IsTeacher = providerEntity.IsTeacher,
+            Status = providerEntity.Status.ToString(),
+            Categories = providerEntity.Categories
+                .Select(c => c.Category.Name)
+                .ToList()
+        };
     }
 
     public async Task<MyProfileDto?> GetMyProfileAsync(int userId)
@@ -202,6 +219,83 @@ public class UserService : IUserService
             ContentTag = (int)user.ContentTag,
             UploadCount = user.UploadCount
         };
+    }
+
+    public async Task<List<UserWithProfileDto>> GetMyAllPagesAsync(int userId)
+    {
+        var results = new List<UserWithProfileDto>();
+
+        // --- אמן ---
+        var artist = await _context.Artists
+            .Where(a => !a.IsDeleted && a.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (artist != null)
+        {
+            results.Add(new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = artist.Name,
+                ImageUrl = artist.ImageUrl,
+                ProfileType = "artist",
+                ProfileId = artist.Id,
+                ProfileUrl = $"/artist/{artist.Id}",
+                IsTeacher = false,
+                Status = artist.Status.ToString(),
+                Categories = new List<string>()
+            });
+        }
+
+        // --- כל ה-ServiceProviders ---
+        var providers = await _context.ServiceProviders
+            .Include(p => p.Categories)
+            .ThenInclude(c => c.Category)
+            .Where(p => !p.IsDeleted && p.UserId == userId)
+            .OrderByDescending(p => p.IsPrimaryProfile)
+            .ToListAsync();
+
+        foreach (var p in providers)
+        {
+            results.Add(new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = p.DisplayName,
+                ImageUrl = p.ProfileImageUrl,
+                ProfileType = "serviceProvider",
+                ProfileId = p.Id,
+                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/provider/{p.Id}",
+                IsTeacher = p.IsTeacher,
+                Status = p.Status.ToString(),
+                Categories = p.Categories.Select(c => c.Category.Name).ToList()
+            });
+        }
+
+        return results;
+    }
+
+    public async Task<bool> RevokePageAsync(int userId, RevokePageDto dto)
+    {
+        if (dto.ProfileType == "artist")
+        {
+            var artist = await _context.Artists
+                .FirstOrDefaultAsync(a => a.Id == dto.ProfileId && a.UserId == userId && !a.IsDeleted);
+            if (artist == null) return false;
+            artist.UserId = null;
+        }
+        else if (dto.ProfileType == "serviceProvider")
+        {
+            var provider = await _context.ServiceProviders
+                .FirstOrDefaultAsync(p => p.Id == dto.ProfileId && p.UserId == userId && !p.IsDeleted);
+            if (provider == null) return false;
+            provider.UserId = null;
+        }
+        else
+        {
+            return false;
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════

@@ -5,6 +5,9 @@ export interface UserWithProfileDto {
   profileType: 'artist' | 'serviceProvider';
   profileId: number;
   profileUrl: string;
+  isTeacher: boolean;
+  status: 'Active' | 'Pending' | 'Suspended' | 'Hidden' | 'None';
+  categories: string[];
 }
 
 export enum UserContentTag {

@@ -32,6 +32,22 @@ public class UserWithProfileDto
     public string ProfileType { get; set; } = string.Empty;
     public int ProfileId { get; set; }
     public string ProfileUrl { get; set; } = string.Empty;
+    /// <summary>רלוונטי רק ל-serviceProvider — האם זה מורה</summary>
+    public bool IsTeacher { get; set; }
+    /// <summary>Active | Pending | Suspended | Hidden</summary>
+    public string Status { get; set; } = "None";
+    /// <summary>שמות קטגוריות (רק ל-serviceProvider)</summary>
+    public List<string> Categories { get; set; } = new();
+}
+
+/// <summary>
+/// בקשת עזיבת דף — המשתמש מנתק את עצמו מהדף (לא מוחק)
+/// </summary>
+public class RevokePageDto
+{
+    /// <summary>"artist" | "serviceProvider"</summary>
+    public string ProfileType { get; set; } = string.Empty;
+    public int ProfileId { get; set; }
 }
 
 public class UserListDto

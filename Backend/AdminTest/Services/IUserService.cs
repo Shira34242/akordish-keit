@@ -24,4 +24,14 @@ public interface IUserService
 
     Task<MyProfileDto?> GetMyProfileAsync(int userId);
     Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto);
+
+    /// <summary>
+    /// מחזיר את כל הדפים של המשתמש (אמן + כל בעלי המקצוע)
+    /// </summary>
+    Task<List<UserWithProfileDto>> GetMyAllPagesAsync(int userId);
+
+    /// <summary>
+    /// מנתק את המשתמש מהדף (UserId = null) — הדף עצמו נשאר ועובר לניהול המערכת
+    /// </summary>
+    Task<bool> RevokePageAsync(int userId, RevokePageDto dto);
 }

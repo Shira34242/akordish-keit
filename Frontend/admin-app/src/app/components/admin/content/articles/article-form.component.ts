@@ -257,7 +257,10 @@ export class ArticleFormComponent implements OnInit {
             imageUrl: data.uploaderProfile.imageUrl,
             profileType: data.uploaderProfile.type,
             profileId: 0,
-            profileUrl: data.uploaderProfile.profileUrl
+            profileUrl: data.uploaderProfile.profileUrl,
+            isTeacher: false,
+            status: 'None',
+            categories: []
           };
           this.profileSearchQuery = data.uploaderProfile.name;
         }

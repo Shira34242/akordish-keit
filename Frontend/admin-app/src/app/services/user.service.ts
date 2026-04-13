@@ -52,6 +52,19 @@ export class UserService {
     );
   }
 
+  getMyAllPages(): Observable<UserWithProfileDto[]> {
+    return this.http.get<UserWithProfileDto[]>(`${this.apiUrl}/me/all-pages`, { withCredentials: true }).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  revokePage(profileType: string, profileId: number): Observable<boolean> {
+    return this.http.post(`${this.apiUrl}/me/pages/revoke`, { profileType, profileId }, { withCredentials: true }).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
+  }
+
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

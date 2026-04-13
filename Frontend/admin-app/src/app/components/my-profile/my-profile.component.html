@@ -46,6 +46,9 @@
     <!-- User info -->
     <h2 class="profile-name">{{ user?.username }}</h2>
     <p class="profile-email">{{ user?.email }}</p>
+    @if (user?.phone) {
+      <p class="profile-phone">{{ user?.phone }}</p>
+    }
   </div>
 
   <!-- ===== PAGE CONTENT ===== -->
@@ -58,6 +61,42 @@
           <p>עוד כמה פרטים קטנים להשלמת הפרופיל</p>
           <p>כדי שנוכל להציג לכם תוצאות מדויקות יותר</p>
           <span class="completion-banner-cta">להשלמת הפרטים &lt;</span>
+        </div>
+      </div>
+    }
+
+    <!-- ===== PAGE MANAGEMENT CARDS ===== -->
+    @if (myPages.length === 0) {
+      <div class="manage-card manage-card--empty">
+        <p class="manage-empty-text">עדיין אין לך דף באתר</p>
+        <button class="manage-account-link" (click)="openAccountTypeModal()">הוסף דף +</button>
+      </div>
+    }
+
+    @for (page of myPages; track page.profileId) {
+      <div class="manage-card">
+        <div class="manage-card-col">
+          <div>
+            <h3 class="manage-card-title">ניהול הדף שלך באתר</h3>
+            <p class="manage-card-subtitle">העמוד שמוצג לחברי האתר</p>
+          </div>
+          <div class="manage-card-actions">
+            <a class="manage-btn" [routerLink]="getEditPageUrl(page)">ערוך דף</a>
+            <a class="manage-btn" [routerLink]="getViewPageUrl(page)">צפה בדף</a>
+          </div>
+        </div>
+        <div class="manage-card-col manage-card-col--info">
+          <div class="manage-info-list">
+            <div class="manage-info-item">
+              <span class="manage-info-label">סוג דף:</span>
+              <span class="manage-info-value">{{ getPageLabel(page) }}</span>
+            </div>
+            <div class="manage-info-item">
+              <span class="manage-info-label">סטטוס:</span>
+              <span class="status-dot" [ngClass]="getPageStatusClass(page)"></span>
+            </div>
+          </div>
+          <button class="manage-account-link" (click)="openAccountTypeModal()">לשינוי סוג חשבון ></button>
         </div>
       </div>
     }
@@ -221,6 +260,69 @@
       <button class="modal-save-btn" (click)="saveProfile()" [disabled]="profileSaving">
         {{ profileSaving ? 'שומר...' : 'שמור' }}
       </button>
+    </div>
+  </div>
+}
+
+<!-- ===== ACCOUNT TYPE MODAL ===== -->
+@if (showAccountTypeModal) {
+  <div class="modal-backdrop" (click)="closeAccountTypeModal()">
+    <div class="modal-box modal-box--wide" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeAccountTypeModal()">
+        <span class="material-icons">close</span>
+      </button>
+      <h2 class="modal-title">שינוי סוג חשבון</h2>
+
+      <!-- אזור: הוסף דף חדש -->
+      <p class="modal-subtitle">הוסף דף חדש לחשבון שלך:</p>
+      <div class="account-type-options">
+        <a class="account-type-btn" routerLink="/artist/create" (click)="closeAccountTypeModal()">
+          <span class="material-icons">music_note</span>
+          אמן
+        </a>
+        <a class="account-type-btn" routerLink="/service-provider/create" [queryParams]="{teacher: true}" (click)="closeAccountTypeModal()">
+          <span class="material-icons">school</span>
+          מורה למוזיקה
+        </a>
+        <a class="account-type-btn" routerLink="/service-provider/create" (click)="closeAccountTypeModal()">
+          <span class="material-icons">work</span>
+          בעל מקצוע
+        </a>
+      </div>
+
+      <!-- אזור: עזוב דף קיים -->
+      @if (myPages.length > 0) {
+        <div class="modal-divider"></div>
+        <p class="modal-subtitle">עזוב דף קיים:</p>
+        <div class="revoke-list">
+          @for (page of myPages; track page.profileId) {
+            <div class="revoke-item">
+              <div class="revoke-item-info">
+                @if (page.imageUrl) {
+                  <img class="revoke-item-img" [src]="page.imageUrl" alt="" onerror="this.style.display='none'"/>
+                }
+                <div>
+                  <span class="revoke-item-name">{{ page.displayName }}</span>
+                  <span class="revoke-item-type">{{ getPageLabel(page) }}</span>
+                </div>
+              </div>
+
+              @if (revokeConfirmPage?.profileId === page.profileId && revokeConfirmPage?.profileType === page.profileType) {
+                <div class="revoke-confirm">
+                  <span class="revoke-confirm-text">לעזוב את הדף? הוא יעבור לניהול האתר.</span>
+                  <button class="revoke-confirm-btn revoke-confirm-btn--yes" (click)="confirmRevoke()" [disabled]="revoking">
+                    {{ revoking ? '...' : 'כן, עזוב' }}
+                  </button>
+                  <button class="revoke-confirm-btn" (click)="cancelRevoke()">ביטול</button>
+                </div>
+              } @else {
+                <button class="revoke-btn" (click)="askRevokeConfirm(page)">עזוב דף</button>
+              }
+            </div>
+          }
+        </div>
+        <p class="revoke-notice">הדף לא יימחק — יעבור לניהול הצוות</p>
+      }
     </div>
   </div>
 }

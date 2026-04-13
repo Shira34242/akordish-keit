@@ -66,6 +66,31 @@ public class UsersController : ControllerBase
         return Ok(profile);
     }
 
+    // GET: api/Users/me/all-pages
+    // מחזיר את כל הדפים של המשתמש המחובר (אמן + בעלי מקצוע)
+    [HttpGet("me/all-pages")]
+    [Authorize]
+    public async Task<ActionResult<List<UserWithProfileDto>>> GetMyAllPages()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+        var pages = await _service.GetMyAllPagesAsync(userId.Value);
+        return Ok(pages);
+    }
+
+    // POST: api/Users/me/pages/revoke
+    // מנתק את המשתמש מהדף — הדף עובר לניהול המערכת, לא נמחק
+    [HttpPost("me/pages/revoke")]
+    [Authorize]
+    public async Task<ActionResult> RevokePage([FromBody] RevokePageDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+        var success = await _service.RevokePageAsync(userId.Value, dto);
+        if (!success) return NotFound();
+        return Ok();
+    }
+
     // ─── Helper ──────────────────────────────────────────────────────────────────
 
     private int? GetCurrentUserId()

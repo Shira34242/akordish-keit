@@ -10,6 +10,7 @@ import { SongBasicDto } from '../../models/song.model';
 import { EventService } from '../../services/event.service';
 import { ArticleService } from '../../services/article.service';
 import { UserService } from '../../services/user.service';
+import { UserWithProfileDto } from '../../models/user.model';
 
 @Component({
   selector: 'app-my-profile',
@@ -20,6 +21,8 @@ import { UserService } from '../../services/user.service';
 })
 export class MyProfileComponent implements OnInit {
   user: User | null = null;
+  myPageInfo: UserWithProfileDto | null = null;
+  myPages: UserWithProfileDto[] = [];
 
   mySongs: SongBasicDto[] = [];
   myArticles: any[] = [];
@@ -30,6 +33,11 @@ export class MyProfileComponent implements OnInit {
   showProfileModal = false;
   profileForm = { phone: '', address: '', birthDate: '' };
   profileSaving = false;
+
+  // מודל שינוי סוג חשבון
+  showAccountTypeModal = false;
+  revokeConfirmPage: UserWithProfileDto | null = null;
+  revoking = false;
 
   readonly CIRCUMFERENCE = 2 * Math.PI * 52;
 
@@ -49,6 +57,8 @@ export class MyProfileComponent implements OnInit {
     this.loadMyEvents();
     this.loadLikedSongs();
     this.loadMyProfileDetails();
+    this.loadMyPageInfo();
+    this.loadMyAllPages();
   }
 
   get profileIncomplete(): boolean {
@@ -143,6 +153,94 @@ export class MyProfileComponent implements OnInit {
     });
   }
 
+  private loadMyPageInfo() {
+    this.userService.getMyUploaderProfile().subscribe({
+      next: (info) => { this.myPageInfo = info; },
+      error: () => {}
+    });
+  }
+
+  private loadMyAllPages() {
+    this.userService.getMyAllPages().subscribe({
+      next: (pages) => { this.myPages = pages; },
+      error: () => { this.myPages = []; }
+    });
+  }
+
+  // ── מודאל שינוי סוג חשבון ──
+
+  openAccountTypeModal() {
+    this.revokeConfirmPage = null;
+    this.showAccountTypeModal = true;
+  }
+
+  closeAccountTypeModal() {
+    this.showAccountTypeModal = false;
+    this.revokeConfirmPage = null;
+  }
+
+  askRevokeConfirm(page: UserWithProfileDto) {
+    this.revokeConfirmPage = page;
+  }
+
+  cancelRevoke() {
+    this.revokeConfirmPage = null;
+  }
+
+  confirmRevoke() {
+    if (!this.revokeConfirmPage || this.revoking) return;
+    this.revoking = true;
+    const page = this.revokeConfirmPage;
+    this.userService.revokePage(page.profileType, page.profileId).subscribe({
+      next: (ok) => {
+        this.revoking = false;
+        if (ok) {
+          this.myPages = this.myPages.filter(p => !(p.profileType === page.profileType && p.profileId === page.profileId));
+          if (this.myPageInfo?.profileType === page.profileType && this.myPageInfo?.profileId === page.profileId) {
+            this.myPageInfo = this.myPages[0] ?? null;
+          }
+          this.revokeConfirmPage = null;
+          if (this.myPages.length === 0) this.closeAccountTypeModal();
+        }
+      },
+      error: () => { this.revoking = false; }
+    });
+  }
+
+  getPageLabel(page: UserWithProfileDto): string {
+    if (page.profileType === 'artist') return 'אמן';
+    if (page.isTeacher) return 'מורה למוזיקה';
+    if (page.categories?.length > 0) return page.categories[0];
+    return 'בעל מקצוע';
+  }
+
+  getPageStatusClass(page?: UserWithProfileDto): string {
+    const s = (page ?? this.myPageInfo)?.status;
+    if (s === 'Active') return 'status-dot--active';
+    if (s === 'Pending') return 'status-dot--pending';
+    return 'status-dot--inactive';
+  }
+
+  getAddPageUrl(type: 'artist' | 'teacher' | 'provider'): string {
+    if (type === 'artist') return '/artist/create';
+    return '/service-provider/create';
+  }
+
+  getPageTypeName(): string {
+    return this.myPageInfo ? this.getPageLabel(this.myPageInfo) : 'משתמש רגיל';
+  }
+
+  getEditPageUrl(page?: UserWithProfileDto): string {
+    const p = page ?? this.myPageInfo;
+    if (!p) return '/service-provider/create';
+    if (p.profileType === 'artist') return '/artist/create';
+    return '/service-provider/create';
+  }
+
+  getViewPageUrl(page?: UserWithProfileDto): string {
+    return (page ?? this.myPageInfo)?.profileUrl || '/professionals';
+  }
+
   getLevelNumber(): number {
     const tag = this.user?.contentTag ?? 0;
     if (tag >= 3) return 3;
@@ -158,8 +256,8 @@ export class MyProfileComponent implements OnInit {
 
   getDashOffset(): number {
     const tag = this.user?.contentTag ?? 0;
-    // tag 0 = 5%, 1 = 33%, 2 = 66%, 3 = 100%
-    const progress = tag === 0 ? 0.05 : tag / 3;
+    // tag 0 = 0%, 1 = 25%, 2 = 50%, 3 = 75%
+    const progress = tag / 4;
     return this.CIRCUMFERENCE * (1 - progress);
   }
 

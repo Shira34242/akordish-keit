@@ -640,6 +640,330 @@
 }
 
 /* ===========================
+   PAGE MANAGEMENT CARD
+   =========================== */
+
+.manage-card {
+  border: 1.5px solid #F2F2F2;
+  border-radius: 20px;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-xl);
+}
+
+.manage-card-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.manage-card-col--info {
+  border-right: 1.5px solid #F2F2F2;
+  padding-right: var(--space-xl);
+  align-items: flex-start;
+}
+
+.manage-card-title {
+  font-size: var(--font-lg);
+  font-weight: 800;
+  color: #000000;
+  margin: 0 0 var(--space-xs);
+}
+
+.manage-card-subtitle {
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+  margin: 0;
+}
+
+.manage-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.manage-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 var(--space-lg);
+  border: 1.5px solid #000000;
+  border-radius: 999px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #000000;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.manage-btn:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.manage-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.manage-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.manage-info-label {
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0,0,0,0.5);
+}
+
+.manage-info-value {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #404040;
+  flex-shrink: 0;
+}
+
+.status-dot--active {
+  background: #22c55e;
+}
+
+.status-dot--pending {
+  background: #ddff53;
+}
+
+.status-dot--inactive {
+  background: #404040;
+}
+
+.manage-account-link {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.4);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.manage-account-link:hover {
+  color: #000000;
+}
+
+/* ===========================
+   MANAGE CARD — EMPTY
+   =========================== */
+
+.manage-card--empty {
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: var(--space-xl);
+  background: #F2F2F2;
+  border: none;
+}
+
+.manage-empty-text {
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+  margin: 0;
+}
+
+/* ===========================
+   ACCOUNT TYPE MODAL
+   =========================== */
+
+.modal-box--wide {
+  max-width: 520px;
+}
+
+.modal-divider {
+  height: 1px;
+  background: #F2F2F2;
+  margin: var(--space-xl) 0;
+}
+
+.account-type-options {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+}
+
+.account-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-lg) var(--space-base);
+  border: 1.5px solid #F2F2F2;
+  border-radius: 16px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #000000;
+  text-decoration: none;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.account-type-btn:hover {
+  border-color: #ddff53;
+  background: #F2F2F2;
+}
+
+.account-type-btn .material-icons {
+  font-size: 24px;
+  color: #000000;
+}
+
+/* ── רשימת דפים לעזיבה ── */
+
+.revoke-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+}
+
+.revoke-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  padding: var(--space-base) var(--space-lg);
+  background: #F2F2F2;
+  border-radius: 14px;
+}
+
+.revoke-item-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-base);
+  flex: 1;
+  min-width: 0;
+}
+
+.revoke-item-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #404040;
+}
+
+.revoke-item-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.revoke-item-name {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.revoke-item-type {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+}
+
+.revoke-btn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--space-base);
+  border: 1.5px solid rgba(0,0,0,0.2);
+  border-radius: 999px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: rgba(0,0,0,0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  font-family: inherit;
+}
+
+.revoke-btn:hover {
+  border-color: #000000;
+  color: #000000;
+}
+
+.revoke-confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.revoke-confirm-text {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.6);
+}
+
+.revoke-confirm-btn {
+  height: 30px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  border: 1.5px solid #000000;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  font-family: inherit;
+  background: transparent;
+  color: #000000;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.revoke-confirm-btn--yes {
+  background: #000000;
+  color: #ffffff;
+}
+
+.revoke-confirm-btn--yes:hover:not(:disabled) {
+  background: #404040;
+}
+
+.revoke-confirm-btn:not(.revoke-confirm-btn--yes):hover {
+  background: #F2F2F2;
+}
+
+.revoke-notice {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.35);
+  text-align: center;
+  margin: 0;
+}
+
+/* ===========================
    RESPONSIVE
    =========================== */
 
@@ -651,6 +975,17 @@
   .profile-content {
     padding: var(--space-xl) var(--space-base);
     gap: var(--space-xl);
+  }
+
+  .manage-card {
+    flex-direction: column-reverse;
+  }
+
+  .manage-card-col--info {
+    border-right: none;
+    border-bottom: 1.5px solid #F2F2F2;
+    padding-right: 0;
+    padding-bottom: var(--space-lg);
   }
 
   .song-card {
