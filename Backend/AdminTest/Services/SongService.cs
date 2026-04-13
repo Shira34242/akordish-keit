@@ -1029,23 +1029,15 @@ public class SongService : ISongService
                 .OrderByDescending(token => token.Length)
                 .FirstOrDefault();
 
-            IQueryable<Song> candidateQuery = _context.Songs
+            // Build the FreeText search term — use all tokens joined by spaces
+            // FreeText uses Full-Text Index (no table scan), so it scales to any size
+            var freeTextTerm = string.Join(" ", queryTokens.Any() ? queryTokens : new List<string> { title });
+
+            var candidates = await _context.Songs
                 .Where(s => !s.IsDeleted && s.IsApproved)
+                .Where(s => EF.Functions.FreeText(s.Title, freeTextTerm))
                 .Include(s => s.SongArtists)
-                    .ThenInclude(sa => sa.Artist);
-
-            if (!string.IsNullOrWhiteSpace(longestToken))
-            {
-                candidateQuery = candidateQuery.Where(s =>
-                    EF.Functions.Like(s.Title, $"%{title}%") ||
-                    EF.Functions.Like(s.Title, $"%{longestToken}%"));
-            }
-            else
-            {
-                candidateQuery = candidateQuery.Where(s => EF.Functions.Like(s.Title, $"%{title}%"));
-            }
-
-            var candidates = await candidateQuery
+                    .ThenInclude(sa => sa.Artist)
                 .Take(40)
                 .Select(s => new SongBasicDto
                 {
