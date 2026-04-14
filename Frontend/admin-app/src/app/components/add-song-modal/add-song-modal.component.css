@@ -1,7 +1,3 @@
-/* =============================================
-   Add Song Modal – Lime Design System
-   ============================================= */
-
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -20,7 +16,6 @@
     to   { opacity: 1; }
 }
 
-/* ── Container ───────────────────────────────── */
 .modal-container {
     background: #ddff53;
     width: min(520px, calc(100vw - 32px));
@@ -37,7 +32,6 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header ─────────────────────────────────── */
 .modal-header {
     padding: 18px 20px 12px;
     display: flex;
@@ -78,7 +72,6 @@
     justify-content: center;
     border-radius: 50%;
     transition: color 0.2s, background 0.2s;
-    line-height: 1;
 }
 
 .close-btn:hover {
@@ -86,7 +79,6 @@
     background: rgba(0, 0, 0, 0.08);
 }
 
-/* ── Stepper ─────────────────────────────────── */
 .stepper {
     display: flex;
     align-items: center;
@@ -144,30 +136,18 @@
     background: #000;
 }
 
-/* ── Content Area ────────────────────────────── */
 .modal-content {
     flex: 1;
     padding: 16px 16px 12px;
     overflow-y: auto;
     background: #ddff53;
     overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .modal-content::-webkit-scrollbar {
-    width: 5px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.4);
+    display: none;
 }
 
 .step-content {
@@ -213,7 +193,6 @@
     flex-shrink: 0;
 }
 
-/* ── Step Headers ─────────────────────────────── */
 .step-header {
     margin-bottom: 24px;
 }
@@ -236,7 +215,6 @@
     font-weight: 500;
 }
 
-/* ── Form Elements ───────────────────────────── */
 .form-group {
     margin-bottom: 20px;
     position: relative;
@@ -276,6 +254,7 @@ select {
     direction: rtl;
     text-align: right;
     outline: none;
+    resize: none;
 }
 
 input:focus,
@@ -325,7 +304,6 @@ select option {
     to   { opacity: 1; }
 }
 
-/* ── Keys Row ────────────────────────────────── */
 .keys-row {
     display: flex;
     gap: 16px;
@@ -350,7 +328,7 @@ select option {
 .key-input-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap:8px;
     border: 1px solid #000;
     border-radius: 999px;
     padding: 0 6px 0 10px;
@@ -424,12 +402,11 @@ select option {
     padding-right: 12px;
 }
 
-/* ── Chips Input ─────────────────────────────── */
 .input-with-chips {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap:8px;
     padding: 10px 14px;
     border-radius: 14px;
     background: #fff;
@@ -464,7 +441,6 @@ select option {
     color: #aaa;
 }
 
-/* ── Chips ───────────────────────────────────── */
 .chip {
     background: #000;
     padding: 5px 12px;
@@ -506,7 +482,6 @@ select option {
     color: #fff;
 }
 
-/* ── Autocomplete Dropdown ───────────────────── */
 .autocomplete-dropdown {
     position: absolute;
     top: calc(100% + 4px);
@@ -588,7 +563,6 @@ select option {
     color: #777;
 }
 
-/* ── Image Preview ───────────────────────────── */
 .image-input-wrapper {
     display: flex;
     gap: 12px;
@@ -604,7 +578,6 @@ select option {
     flex-shrink: 0;
 }
 
-/* ── Duplicate Warning ───────────────────────── */
 .duplicate-warning {
     background: rgba(255, 255, 255, 0.7);
     border: 2px solid rgba(0, 0, 0, 0.15);
@@ -627,7 +600,6 @@ select option {
     padding-right: 18px;
 }
 
-/* ── Footer ──────────────────────────────────── */
 .youtube-search-helper,
 .youtube-selected-note {
     margin-top: 8px;
@@ -639,7 +611,7 @@ select option {
 .youtube-results {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap:8px;
     margin-top: 12px;
 }
 
@@ -724,7 +696,7 @@ select option {
 .artist-match-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap:8px;
     margin-bottom: 10px;
 }
 
@@ -782,7 +754,6 @@ select option {
     gap:10px;
 }
 
-/* ── Buttons ─────────────────────────────────── */
 .btn-primary,
 .btn-secondary {
     padding: 12px 28px;
@@ -831,11 +802,10 @@ select option {
     background: rgba(0, 0, 0, 0.06);
 }
 
-/* ── Checkbox ────────────────────────────────── */
 .checkbox-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     margin-top: 16px;
 }
 
@@ -852,12 +822,11 @@ select option {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     font-weight: 600;
     color: #000;
 }
 
-/* ── Preview Step ────────────────────────────── */
 .preview-step {
     max-width: 680px;
     margin: 0 auto;
@@ -870,7 +839,6 @@ select option {
     margin: 0;
 }
 
-/* ── Preview Card ────────────────────────────── */
 .preview-card {
     background: #fff;
     border-radius: 20px;
@@ -928,13 +896,14 @@ select option {
     border: 2px solid #eee;
 }
 
-/* ── Preview Lyrics ──────────────────────────── */
 .preview-lyrics-box {
     background: #f7f7f7;
     padding: 20px;
     border-radius: 12px;
     max-height: 260px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     font-size: 0.95rem;
     line-height: 2.5;
     white-space: pre-wrap;
@@ -942,12 +911,15 @@ select option {
     text-align: right;
 }
 
+.preview-lyrics-box::-webkit-scrollbar {
+    display: none;
+}
+
 .lyrics-content {
     font-family: 'Open Sans', sans-serif;
     color: #222;
 }
 
-/* ── Chords ──────────────────────────────────── */
 ::ng-deep .chord {
     color: #000;
     font-weight: 700;
@@ -968,7 +940,6 @@ select option {
     line-height: 1.4;
 }
 
-/* ── Responsive ──────────────────────────────── */
 @media (max-width: 600px) {
     .modal-container {
         width: 95%;
@@ -1002,16 +973,14 @@ select option {
         text-align: right !important;
     }
 }
-
-/* Uploader Profile Search */
 .uploader-group { margin-top: 16px; }
 
-.tag-myself-wrapper { display: flex; flex-direction: column; gap: 8px; }
+.tag-myself-wrapper { display: flex; flex-direction: column; gap:8px; }
 
 .checkbox-label-modal {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap:8px;
     font-family: 'Open Sans', sans-serif;
     font-size: 14px;
     cursor: pointer;
@@ -1037,7 +1006,7 @@ select option {
 .profile-dropdown-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     padding: 10px 14px;
     cursor: pointer;
     transition: background 0.1s ease;
@@ -1099,7 +1068,7 @@ select option {
 .selected-profile-tag {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     padding: 10px 14px;
     background: #F2F2F2;
     border: 1.5px solid #000000;
@@ -1122,7 +1091,6 @@ select option {
 .btn-clear-profile:hover { background: #ddff53; color: #000000; }
 .btn-clear-profile .material-icons { font-size: 16px; }
 
-/* Smart Flow Refresh */
 .modal-header:has(.header-title-placeholder) {
     padding-bottom: 0;
 }
@@ -1138,14 +1106,14 @@ select option {
 .smart-chat-stream {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap:10px;
     padding-bottom: var(--space-base);
 }
 
 .smart-message-row {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap:10px;
     direction: rtl;
     justify-content: flex-start;
 }
@@ -1190,7 +1158,7 @@ select option {
 .smart-manual-panel {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap:10px;
     margin-bottom: 16px;
 }
 
@@ -1203,7 +1171,7 @@ select option {
 .smart-composer-large {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap:10px;
 }
 
 .smart-composer-sticky {
@@ -1273,7 +1241,7 @@ select option {
 .smart-results-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap:8px;
     margin-bottom: 10px;
     padding-right: 42px;
 }
@@ -1282,7 +1250,7 @@ select option {
 .smart-result-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     width: 100%;
     padding: 8px 10px;
     border: none;
@@ -1352,7 +1320,7 @@ select option {
 .smart-summary-card {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:10px;
     padding: 10px;
     border-radius: 18px;
     background: #ffffff;
@@ -1404,13 +1372,13 @@ select option {
 }
 
 .modal-footer {
-    padding: 10px 20px 16px;
+    padding:10px 20px 16px;
     justify-content: center;
 }
 
 .btn-primary,
 .btn-secondary {
-    padding: 0 16px;
+    padding:0 16px;
     min-height: 34px;
     font-size: var(--font-sm);
 }
@@ -1547,4 +1515,7 @@ select option {
         min-height: 220px;
     }
 }
+
+
+
 

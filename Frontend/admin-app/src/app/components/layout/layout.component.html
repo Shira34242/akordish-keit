@@ -2,7 +2,6 @@
 <header class="main-header">
     <div class="header-inner">
 
-        <!-- Right Side: המבורגר (נעול תמיד בימין) + bell+profile (דסקטופ בלבד) -->
         <div class="header-right">
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
@@ -52,7 +51,6 @@
             </ng-template>
         </div>
 
-        <!-- מובייל — bell+profile בשמאל כשסגור -->
         <div class="header-mobile-actions" *ngIf="!showMobileMenu">
             <button class="btn-bell">
                 <span class="material-icons">notifications</span>
@@ -99,9 +97,7 @@
             </ng-template>
         </div>
 
-        <!-- מובייל — שורה נגללת כשפתוח (RTL: בית→אקורדים→חדשות→אינדקס→bell→profile) -->
         <div class="mobile-nav-scroll" *ngIf="showMobileMenu">
-            <!-- nav-pills: בית, אקורדים, חדשות (RTL: בית בימין) -->
             <div class="nav-pills">
                 <ul class="main-nav mobile-main-nav">
                     <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
@@ -109,12 +105,10 @@
                     <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
                 </ul>
             </div>
-            <!-- אינדקס — כפתור נפרד, טקסט קצר במובייל -->
             <a class="btn-music-index" routerLink="/professionals">
                 <span class="material-icons index-search-icon">search</span>
                 <span class="btn-music-index-text">אינדקס</span>
             </a>
-            <!-- bell + profile בסוף הגלילה (שמאל) -->
             <button class="btn-bell">
                 <span class="material-icons">notifications</span>
             </button>
@@ -160,7 +154,6 @@
             </ng-container>
         </div>
 
-        <!-- Left Group: Music Index + Nav Links -->
         <div class="header-left-group">
              <nav class="desktop-nav">
                 <div class="nav-pills">
@@ -175,94 +168,57 @@
                 <span class="material-icons index-search-icon">search</span>
                 <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
             </a>
-
         </div>
 
     </div>
 </header>
 
-
 <main class="main-content">
     <router-outlet></router-outlet>
 </main>
 
-<!-- FAB Menu -->
-<div class="fab-menu-backdrop" *ngIf="showFabMenu" (click)="closeFabMenu()"></div>
+<button class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)">
+    <span class="material-icons fab-add-icon" [class.rotated]="showQuickAddAssistant">add</span>
+</button>
 
-<div class="fab-menu" *ngIf="showFabMenu" (click)="$event.stopPropagation()">
-    <!-- עריכת הדף - למנהלים ובעלי הדף -->
-    <ng-container *ngIf="canEditArtistPage">
-        <div class="fab-menu-item fab-menu-item--admin" (click)="fabAdminEdit()">
-            <span class="material-icons fab-menu-icon">edit</span>
-            <span class="fab-menu-label">{{ adminEditTarget!.label }}</span>
-        </div>
-        <div class="fab-admin-divider"></div>
-    </ng-container>
+<app-quick-add-assistant-modal
+    *ngIf="showQuickAddAssistant"
+    [adminEditLabel]="canEditArtistPage ? adminEditTarget?.label ?? null : null"
+    (close)="closeFabMenu()"
+    (actionSelected)="handleQuickAddAction($event)">
+</app-quick-add-assistant-modal>
 
-    <!-- חדשות -->
-    <div class="fab-menu-item" (click)="fabAddNews()">
-        <span class="material-icons fab-menu-icon">feed</span>
-        <span class="fab-menu-label">חדשות</span>
-    </div>
-
-    <!-- תוכן -->
-    <div class="fab-menu-item" (click)="fabAddContent()">
-        <span class="material-icons fab-menu-icon">article</span>
-        <span class="fab-menu-label">תוכן</span>
-    </div>
-
-    <!-- אקורדים -->
-    <div class="fab-menu-item fab-menu-item--song" (click)="fabAddChords()">
-        <span class="material-icons fab-menu-icon">music_note</span>
-        <span class="fab-menu-label">אקורדים</span>
-    </div>
-
-    <!-- הופעות -->
-    <div class="fab-menu-item" (click)="fabAddEvent()">
-        <span class="material-icons fab-menu-icon">event</span>
-        <span class="fab-menu-label">הופעות</span>
-    </div>
-
-    <!-- מורה -->
-    <div class="fab-menu-item" (click)="fabUpgradeToTeacher()">
-        <span class="material-icons fab-menu-icon">school</span>
-        <span class="fab-menu-label">מורה</span>
-    </div>
-
-    <!-- אמן -->
-    <div class="fab-menu-item fab-menu-item--expandable" (click)="toggleArtistSubMenu($event)">
-        <span class="material-icons fab-menu-icon">mic</span>
-        <span class="fab-menu-label">אמן</span>
-        <span class="material-icons fab-menu-expand-icon" [class.rotated]="showArtistSubMenu">expand_more</span>
-    </div>
-    <div class="fab-sub-menu" *ngIf="showArtistSubMenu">
-        <div class="fab-menu-item fab-menu-item--sub" (click)="fabAddArtist()">
-            <span class="material-icons fab-menu-icon">person_add</span>
-            <span class="fab-menu-label">הוספת אמן ללא בעלות על הדף</span>
-        </div>
-        <div class="fab-menu-item fab-menu-item--sub" (click)="fabUpgradeToArtist()">
-            <span class="material-icons fab-menu-icon">verified_user</span>
-            <span class="fab-menu-label">שדרוג לחשבון אמן</span>
-        </div>
-    </div>
-
-    <!-- יצירת רשימת שירים -->
-    <div class="fab-menu-item" (click)="fabCreatePlaylist()">
-        <span class="material-icons fab-menu-icon">playlist_add</span>
-        <span class="fab-menu-label">יצירת רשימת שירים</span>
+<div class="guided-profile-modal-overlay" *ngIf="showTeacherCreateModal" (click)="closeTeacherCreateModal()">
+    <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">
+        <button type="button" class="guided-profile-modal-close" (click)="closeTeacherCreateModal()" aria-label="Close">
+            <span class="material-icons">close</span>
+        </button>
+        <app-teacher-create [embedded]="true" (close)="closeTeacherCreateModal()"></app-teacher-create>
     </div>
 </div>
 
-<!-- FAB Button -->
-<button class="fab-add-song" [class.fab-active]="showFabMenu" [class.fab-hidden]="isScrolled && !showFabMenu" [class.fab-on-yellow]="fabOnYellow && !showFabMenu" (click)="toggleFabMenu($event)">
-    <span class="material-icons fab-add-icon" [class.rotated]="showFabMenu">add</span>
-</button>
+<div class="guided-profile-modal-overlay" *ngIf="showServiceProviderCreateModal" (click)="closeServiceProviderCreateModal()">
+    <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">
+        <button type="button" class="guided-profile-modal-close" (click)="closeServiceProviderCreateModal()" aria-label="Close">
+            <span class="material-icons">close</span>
+        </button>
+        <app-service-provider-create [embedded]="true" (close)="closeServiceProviderCreateModal()"></app-service-provider-create>
+    </div>
+</div>
 
-<!-- Footer -->
+<div class="guided-profile-modal-overlay" *ngIf="showArtistCreateModal" (click)="closeArtistCreateModal()">
+    <div class="guided-profile-modal-shell guided-profile-modal-shell--wide" (click)="$event.stopPropagation()">
+        <button type="button" class="guided-profile-modal-close" (click)="closeArtistCreateModal()" aria-label="Close">
+            <span class="material-icons">close</span>
+        </button>
+        <app-artist-create [embedded]="true" (close)="closeArtistCreateModal()"></app-artist-create>
+    </div>
+</div>
+
 <footer class="main-footer">
     <div class="footer-inner">
         <div class="footer-right">
-            <img src="logo.png" alt="אקורדישקייט" class="footer-logo-img" (click)="handleLogoClick()">
+            <img src="logo.png" alt="אקורדישקיית" class="footer-logo-img" (click)="handleLogoClick()">
         </div>
         <div class="footer-left">
             <ul class="footer-links">
@@ -279,7 +235,6 @@
 <app-add-song-modal *ngIf="showAddSongModal" (close)="closeAddSongModal()" (songAdded)="onSongAdded()">
 </app-add-song-modal>
 
-<!-- Auth Modal -->
 <app-auth-modal
     *ngIf="showAuthModal"
     (close)="closeAuthModal()"
@@ -287,21 +242,18 @@
     (forgotPassword)="onForgotPassword()">
 </app-auth-modal>
 
-<!-- Additional Details Modal -->
 <app-additional-details-modal
     *ngIf="showAdditionalDetailsModal"
     (close)="closeAdditionalDetailsModal()"
     (complete)="onProfileComplete($event)">
 </app-additional-details-modal>
 
-<!-- Forgot Password Modal -->
 <app-forgot-password-modal
     *ngIf="showForgotPasswordModal"
     (close)="closeForgotPasswordModal()"
     (success)="onPasswordResetSuccess()">
 </app-forgot-password-modal>
 
-<!-- Report Modal -->
 <app-report-modal
     [isOpen]="showReportModal"
     [contentType]="'General'"

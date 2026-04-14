@@ -1,12 +1,24 @@
-﻿<div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
+﻿<div class="modal-overlay"
+    [style.position]="embedded ? 'static' : null"
+    [style.background]="embedded ? 'transparent' : null"
+    [style.padding]="embedded ? '0' : null"
+    [style.display]="embedded ? 'block' : null"
+    [style.animation]="embedded ? 'none' : null"
+    (click)="!embedded && closeModal()">
+    <div class="modal-container"
+        [style.width]="embedded ? '100%' : null"
+        [style.height]="embedded ? 'auto' : null"
+        [style.min-height]="embedded ? '100%' : null"
+        [style.border-radius]="embedded ? '0' : null"
+        [style.animation]="embedded ? 'none' : null"
+        (click)="$event.stopPropagation()">
 
         <!-- Header -->
       <div class="modal-header">
-        <button class="close-btn" (click)="closeModal()">&times;</button>
+        <button class="close-btn" *ngIf="!embedded || isLegacyFlow || editMode" (click)="closeModal()">&times;</button>
         <h2 *ngIf="isLegacyFlow || editMode">{{ editMode ? 'עריכת שיר' : 'הוספת שיר חדש' }}</h2>
         <div class="header-title-placeholder" *ngIf="!isLegacyFlow && !editMode"></div>
-        <div class="header-spacer"></div>
+        <div class="header-spacer" *ngIf="!embedded || isLegacyFlow || editMode"></div>
       </div>
 
 
@@ -663,13 +675,13 @@
 
                 <!-- Uploader Profile -->
                 <div class="form-group uploader-group" *ngIf="isProfessionalNonAdmin || isAdminUser">
-                    <label class="form-label">תיוג תוכן</label>
+                    <label class="form-label">האם לתייג את התוכן על שמך</label>
 
                     <!-- Professional (non-admin): checkbox -->
                     <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
                         <label class="checkbox-label-modal">
                             <input type="checkbox" [(ngModel)]="tagAsMyself" [ngModelOptions]="{standalone: true}" (change)="onTagAsMyselfChange()">
-                            <span>תייג תוכן על שמי</span>
+                            <span>כן, לתייג על שמי</span>
                         </label>
                         <div *ngIf="tagAsMyself && selectedUploaderProfile" class="selected-profile-tag" style="margin-top: 8px;">
                             <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
@@ -779,4 +791,5 @@
 
     </div>
 </div>
+
 

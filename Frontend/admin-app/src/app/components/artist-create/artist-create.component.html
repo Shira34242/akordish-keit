@@ -1,7 +1,8 @@
 <div class="artist-create">
   <div class="header">
-    <h1>צור פרופיל אומן</h1>
-    <p class="subtitle">מלא את הפרטים כדי להציג את הפרופיל שלך באתר</p>
+    <div class="guided-badge">דף אמן</div>
+    <h1>בוא נבנה דף אמן שמרגיש שלם מההתחלה</h1>
+    <p class="subtitle">נתחיל מהזהות והסיפור שלך, נמשיך למדיה ולקישורים, ואז נשלים את כל מה שיהפוך את הדף שלך לחי ומרשים.</p>
   </div>
 
   <!-- Loading State -->
@@ -16,13 +17,49 @@
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="artist-form">
+    <div class="submission-note" *ngIf="!loading && !submitted && !subscription">
+    אפשר למלא עכשיו את כל פרטי דף האמן, כולל תמונות, קישורים ומדיה. אחרי השליחה תהיה אפשרות להמשיך לבחירת מנוי, אם תרצה.
+  </div>
+
+  <div class="success-state" *ngIf="!loading && submitted">
+    <h2>דף האמן נשלח לבדיקה</h2>
+    <p>הפרטים הועברו למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות בדף.</p>
+    <div class="success-actions">
+      <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">בחירת מנוי</button>
+      <button type="button" class="btn-cancel" (click)="finishFlow()">סיום</button>
+    </div>
+  </div>
+
+  <form *ngIf="!loading && !submitted" (ngSubmit)="onSubmit()" class="artist-form">
+    <div class="progress-banner">
+      <div class="progress-banner-top">
+        <span class="progress-label">שלב {{ currentStep }} מתוך {{ totalSteps }}</span>
+        <span class="progress-caption" *ngIf="currentStep < totalSteps">נשארו עוד {{ totalSteps - currentStep }} שלבים קצרים</span>
+        <span class="progress-caption" *ngIf="currentStep === totalSteps">השלב האחרון לפני שמירה</span>
+      </div>
+      <div class="progress-track" aria-hidden="true">
+        <span class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></span>
+      </div>
+    </div>
+
+    <div class="stepper-shell">
+      <button type="button" class="step-chip" [class.active]="currentStep === 1" (click)="goToStep(1)">בסיס</button>
+      <button type="button" class="step-chip" [class.active]="currentStep === 2" (click)="goToStep(2)">מדיה</button>
+      <button type="button" class="step-chip" [class.active]="currentStep === 3" (click)="goToStep(3)">קישורים</button>
+      <button type="button" class="step-chip" [class.active]="currentStep === 4" (click)="goToStep(4)">הופעה וגלריה</button>
+      <button type="button" class="step-chip" [class.active]="currentStep === 5" (click)="goToStep(5)">סרטונים</button>
+    </div>
+
     <!-- Basic Information -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <span class="material-icons">person</span>
-        מידע בסיסי
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 1">
+      <div class="section-head">
+        <span class="section-kicker">שלב 1</span>
+        <h2 class="section-title">
+          <span class="material-icons">person</span>
+          מידע בסיסי
+        </h2>
+        <p class="section-description">השם, התיאור והביוגרפיה שבונים את הנוכחות שלך באתר.</p>
+      </div>
 
       <div class="form-group">
         <label class="form-label required">שם האומן</label>
@@ -79,11 +116,15 @@
     </div>
 
     <!-- Media -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <span class="material-icons">image</span>
-        תמונות וקישורים
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 2">
+      <div class="section-head">
+        <span class="section-kicker">שלב 2</span>
+        <h2 class="section-title">
+          <span class="material-icons">image</span>
+          תמונות וקישורים
+        </h2>
+        <p class="section-description">המדיה הראשית שמציגה אותך מיד בצורה חזקה וברורה.</p>
+      </div>
 
       <div class="form-group">
         <label class="form-label">תמונת פרופיל</label>
@@ -108,17 +149,20 @@
     </div>
 
     <!-- Banner - Soft Lock -->
-    <div class="form-section premium-section">
-      <h2 class="section-title">
-        <span class="material-icons">image</span>
-        באנר
-        <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 2">
+      <div class="section-head">
+        <span class="section-kicker">שלב 3</span>
+        <h2 class="section-title">
+          <span class="material-icons">image</span>
+          באנר
+        </h2>
+        <p class="section-description">אזור פתיחה רחב שיכול לתת לדף שלך נוכחות מיידית.</p>
+      </div>
 
       <div class="form-group">
         <label class="form-label">
           תמונת באנר
-          <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+          
         </label>
         <app-file-upload-input
           [(url)]="artistForm.bannerImageUrl"
@@ -130,7 +174,7 @@
       <div class="form-group">
         <label class="form-label">
           באנר GIF/אנימציה
-          <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
+          
         </label>
         <app-file-upload-input
           [(url)]="artistForm.bannerGifUrl"
@@ -143,11 +187,15 @@
     </div>
 
     <!-- Social Links -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <span class="material-icons">share</span>
-        רשתות חברתיות
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 3">
+      <div class="section-head">
+        <span class="section-kicker">שלב 4</span>
+        <h2 class="section-title">
+          <span class="material-icons">share</span>
+          רשתות חברתיות
+        </h2>
+        <p class="section-description">הקישורים שמחברים את מי שמגיע לדף שלך לעולם שלך מחוץ לאתר.</p>
+      </div>
 
       <div *ngFor="let link of artistForm.socialLinks; let i = index" class="social-link-item">
         <div class="form-row">
@@ -180,11 +228,15 @@
     </div>
 
     <!-- Music Platform Links -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <span class="material-icons">music_note</span>
-        פלטפורמות מוזיקה
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 3">
+      <div class="section-head">
+        <span class="section-kicker">שלב 5</span>
+        <h2 class="section-title">
+          <span class="material-icons">music_note</span>
+          פלטפורמות מוזיקה
+        </h2>
+        <p class="section-description">כדי שיהיה קל להגיע ישר לשירים, לערוץ או לפלטפורמה המרכזית שלך.</p>
+      </div>
 
       <div *ngFor="let link of artistForm.musicLinks; let i = index" class="social-link-item">
         <div class="form-row">
@@ -215,11 +267,15 @@
     </div>
 
     <!-- Performance Banner -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <span class="material-icons">campaign</span>
-        באנר הופעה
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 4">
+      <div class="section-head">
+        <span class="section-kicker">שלב 6</span>
+        <h2 class="section-title">
+          <span class="material-icons">campaign</span>
+          באנר הופעה
+        </h2>
+        <p class="section-description">אם יש הופעה לקדם, זה המקום לשים אותה בצורה בולטת ועדינה.</p>
+      </div>
       <p class="section-desc">תמונת פרסומת להופעה שתוצג מעל הביוגרפיה בדף האומן</p>
 
       <div class="form-group">
@@ -255,12 +311,15 @@
     </div>
 
     <!-- Gallery - Soft Lock -->
-    <div class="form-section premium-section">
-      <h2 class="section-title">
-        <span class="material-icons">photo_library</span>
-        גלריית תמונות
-        <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 4">
+      <div class="section-head">
+        <span class="section-kicker">שלב 7</span>
+        <h2 class="section-title">
+          <span class="material-icons">photo_library</span>
+          גלריית תמונות
+        </h2>
+        <p class="section-description">אוסף תמונות שמרחיב את הסיפור הוויזואלי שלך מעבר לתמונה הראשית.</p>
+      </div>
 
       <div *ngFor="let image of artistForm.galleryImages; let i = index" class="gallery-item">
         <div class="form-row">
@@ -298,12 +357,15 @@
     </div>
 
     <!-- Videos - Soft Lock -->
-    <div class="form-section premium-section">
-      <h2 class="section-title">
-        <span class="material-icons">videocam</span>
-        סרטונים
-        <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-      </h2>
+    <div class="form-section" *ngIf="currentStep === 5">
+      <div class="section-head">
+        <span class="section-kicker">שלב 8</span>
+        <h2 class="section-title">
+          <span class="material-icons">videocam</span>
+          סרטונים
+        </h2>
+        <p class="section-description">קליפים, הופעות או תוכן וידאו שנותנים לעמוד שלך חיים ותנועה.</p>
+      </div>
 
       <div *ngFor="let video of artistForm.videos; let i = index" class="video-item">
         <div class="form-row">
@@ -344,10 +406,16 @@
 
     <!-- Form Actions -->
     <div class="form-actions">
+      <button type="button" class="btn-cancel" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
+        חזרה
+      </button>
+      <button type="button" class="btn-cancel" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
+        המשך
+      </button>
       <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
         ביטול
       </button>
-      <button type="submit" class="btn-submit" [disabled]="saving">
+      <button type="submit" class="btn-submit" *ngIf="currentStep === totalSteps" [disabled]="saving">
         <span class="material-icons" *ngIf="!saving">save</span>
         <span *ngIf="saving">שומר...</span>
         <span *ngIf="!saving">צור פרופיל</span>
@@ -355,3 +423,4 @@
     </div>
   </form>
 </div>
+

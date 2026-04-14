@@ -79,6 +79,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     @Input() editMode: boolean = false;
     @Input() songToEdit: any = null;
+    @Input() embedded: boolean = false;
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -514,7 +515,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         this.showManualYoutubeInput = false;
         this.selectedYouTubeResult = null;
 
-        this.songService.searchYouTubeSongs(query, 5).pipe(
+        this.songService.searchYouTubeSongs(query, 3).pipe(
             map(results => this.refineYouTubeResults(query, results)),
             catchError(() => of([]))
         ).subscribe(results => {
@@ -1340,7 +1341,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             .filter(item => item.score >= 20)
             .sort((a, b) => b.score - a.score);
 
-        return rankedResults.slice(0, 5).map(item => item.result);
+        return rankedResults.slice(0, 3).map(item => item.result);
     }
 
     private scoreYouTubeResult(query: string, result: YouTubeSearchResult): number {

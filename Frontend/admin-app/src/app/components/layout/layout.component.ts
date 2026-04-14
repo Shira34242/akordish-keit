@@ -1,20 +1,22 @@
-import { Component, OnInit, AfterViewInit, HostListener } from '@angular/core';
-import { NavigationEnd } from '@angular/router';
+import { AfterViewInit, Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { RouterModule } from '@angular/router';
-import { SocialAuthService, GoogleLoginProvider, SocialUser, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
-import { AuthService, User, AuthResponse } from '../../services/auth.service';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { GoogleSigninButtonModule, SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
+import { AuthResponse, AuthService, User } from '../../services/auth.service';
 import { SongService } from '../../services/song.service';
 import { ModalService } from '../../services/modal.service';
 import { SessionTimeoutService } from '../../services/session-timeout.service';
 import { ArtistPageService } from '../../services/artist-page.service';
 import { ContentPageService } from '../../services/content-page.service';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
+import { QuickAddAction, QuickAddAssistantModalComponent } from '../quick-add-assistant-modal/quick-add-assistant-modal.component';
 import { AuthModalComponent } from '../auth/auth-modal.component';
 import { AdditionalDetailsModalComponent, UserType } from '../auth/additional-details-modal.component';
 import { ForgotPasswordModalComponent } from '../auth/forgot-password-modal.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
+import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
+import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
+import { ArtistCreateComponent } from '../artist-create/artist-create.component';
 
 @Component({
   selector: 'app-layout',
@@ -23,10 +25,14 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
     CommonModule,
     GoogleSigninButtonModule,
     AddSongModalComponent,
+    QuickAddAssistantModalComponent,
     AuthModalComponent,
     AdditionalDetailsModalComponent,
     ForgotPasswordModalComponent,
     ReportModalComponent,
+    TeacherCreateComponent,
+    ServiceProviderCreateComponent,
+    ArtistCreateComponent,
     RouterModule
   ],
   templateUrl: './layout.component.html',
@@ -35,53 +41,27 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
 export class LayoutComponent implements OnInit, AfterViewInit {
   user: User | null = null;
   socialUser: SocialUser | null = null;
-  loggedIn: boolean = false;
-  showUserMenu: boolean = false;
-  showAddSongModal: boolean = false;
-  showMobileMenu: boolean = false;
-  showFabMenu: boolean = false;
-  showArtistSubMenu: boolean = false;
-  isScrolled: boolean = false;
-  fabOnYellow: boolean = false;
+  loggedIn = false;
+  showUserMenu = false;
+  showAddSongModal = false;
+  showMobileMenu = false;
+  showQuickAddAssistant = false;
+  isScrolled = false;
+  fabOnYellow = false;
   adminEditTarget: { label: string; url: string } | null = null;
   isArtistPage = false;
   isArticlePage = false;
+
+  showAuthModal = false;
+  showAdditionalDetailsModal = false;
+  showForgotPasswordModal = false;
+  showReportModal = false;
+  showTeacherCreateModal = false;
+  showServiceProviderCreateModal = false;
+  showArtistCreateModal = false;
+
   private currentArticleId: number | null = null;
-  private lastScrollY: number = 0;
-
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    const current = window.scrollY;
-    if (current > this.lastScrollY && current > 80) {
-      this.isScrolled = true;
-    } else if (current < this.lastScrollY) {
-      this.isScrolled = false;
-    }
-    this.lastScrollY = current;
-    this.checkFabBackground();
-  }
-
-  private checkFabBackground(): void {
-    const fab = document.querySelector('.fab-add-song') as HTMLElement;
-    if (!fab) return;
-    const rect = fab.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const elements = document.elementsFromPoint(cx, cy);
-    for (const el of elements) {
-      if (fab === el || fab.contains(el as Node)) continue;
-      const bg = getComputedStyle(el as Element).backgroundColor;
-      if (bg === 'rgb(221, 255, 83)') { this.fabOnYellow = true; return; }
-      if (bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') { this.fabOnYellow = false; return; }
-    }
-    this.fabOnYellow = false;
-  }
-
-  // New modals
-  showAuthModal: boolean = false;
-  showAdditionalDetailsModal: boolean = false;
-  showForgotPasswordModal: boolean = false;
-  showReportModal: boolean = false;
+  private lastScrollY = 0;
 
   constructor(
     private router: Router,
@@ -92,32 +72,45 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private sessionTimeoutService: SessionTimeoutService,
     private artistPageService: ArtistPageService,
     private contentPageService: ContentPageService
-  ) { }
+  ) {}
 
-  ngOnInit() {
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    const current = window.scrollY;
+    if (current > this.lastScrollY && current > 80) {
+      this.isScrolled = true;
+    } else if (current < this.lastScrollY) {
+      this.isScrolled = false;
+    }
+
+    this.lastScrollY = current;
+    this.checkFabBackground();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showUserMenu = false;
+  }
+
+  ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       this.user = user;
       this.loggedIn = !!user;
     });
 
-    // Subscribe to modal state
     this.modalService.modalState$.subscribe(state => {
       this.showAddSongModal = state.isOpen;
     });
 
-    // 🔒 הקשבה לבקשות לוגין מה-Guards
-    // כשמישהו מנסה להגיע לדף מוגן בלי להיות מחובר, ה-Guard מבקש לוגין
     this.authService.loginRequest$.subscribe(shouldShowLogin => {
       if (shouldShowLogin && !this.showAuthModal) {
         this.openAuthModal();
-        this.authService.clearLoginRequest(); // מנקה את הבקשה
+        this.authService.clearLoginRequest();
       }
     });
 
-    // ⏱️ הפעלת Session Timeout - ניתוק אוטומטי אחרי 30 דקות של חוסר פעילות
     this.sessionTimeoutService.startWatching();
 
-    // זיהוי צבע FAB + עדכון כפתור עריכה למנהל אחרי כל ניווט
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         setTimeout(() => this.checkFabBackground(), 200);
@@ -126,10 +119,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       }
     });
 
-    // עדכון כפתור עריכה גם בטעינה הראשונית
     this.updateAdminEditTarget(this.router.url);
 
-    // מעקב אחרי מזהה כתבה נוכחית
     this.contentPageService.currentArticleId$.subscribe(id => {
       this.currentArticleId = id;
     });
@@ -140,25 +131,61 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.checkFabBackground(), 800);
   }
 
-  handleLogoClick() {
+  get isAdmin(): boolean {
+    return !!(this.user && (this.user.role === 'Admin' || this.user.role === 4));
+  }
+
+  get canEditArtistPage(): boolean {
+    return this.isAdmin && !!this.adminEditTarget;
+  }
+
+  handleLogoClick(): void {
     this.router.navigate(['/']);
   }
-    handleImageError(event: any) {
-        event.target.src = 'public/logo.png';
+
+  handleImageError(event: Event): void {
+    const target = event.target as HTMLImageElement | null;
+    if (target) {
+      target.src = 'public/logo.png';
     }
-  handleRandomSongClick() {
+  }
+
+  handleRandomSongClick(): void {
     this.songService.getRandomSong().subscribe({
-      next: (song) => {
+      next: song => {
         if (song?.id) {
           this.router.navigate(['/song', song.id]);
         }
       },
-      error: (err) => console.error('Failed to get random song', err)
+      error: err => console.error('Failed to get random song', err)
     });
   }
 
-  get isAdmin(): boolean {
-    return !!(this.user && (this.user.role === 'Admin' || this.user.role === 4));
+  private checkFabBackground(): void {
+    const fab = document.querySelector('.fab-add-song') as HTMLElement | null;
+    if (!fab) return;
+
+    const rect = fab.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const elements = document.elementsFromPoint(centerX, centerY);
+
+    for (const el of elements) {
+      if (fab === el || fab.contains(el as Node)) continue;
+
+      const background = getComputedStyle(el as Element).backgroundColor;
+      if (background === 'rgb(221, 255, 83)') {
+        this.fabOnYellow = true;
+        return;
+      }
+
+      if (background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent') {
+        this.fabOnYellow = false;
+        return;
+      }
+    }
+
+    this.fabOnYellow = false;
   }
 
   private updateAdminEditTarget(url: string): void {
@@ -174,57 +201,106 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     if (artistMatch) {
       this.isArtistPage = true;
-      this.adminEditTarget = { label: 'עריכת דף אמן', url: '' };
-    } else if (teacherMatch) {
-      this.adminEditTarget = { label: 'עריכת דף מורה', url: `/admin/teachers/edit/${teacherMatch[1]}` };
-    } else if (cleanUrl === '/professionals') {
-      this.adminEditTarget = { label: 'ניהול בעלי מקצוע', url: '/admin/service-providers' };
-    } else if (newsMatch) {
-      this.isArticlePage = true;
-      this.adminEditTarget = { label: 'עריכת כתבה', url: '' };
-    } else if (blogMatch) {
-      this.isArticlePage = true;
-      this.adminEditTarget = { label: 'עריכת תוכן', url: '' };
-    } else if (cleanUrl === '/music-news') {
-      this.adminEditTarget = { label: 'ניהול חדשות', url: '/admin/content/articles' };
-    } else if (cleanUrl === '/articles') {
-      this.adminEditTarget = { label: 'ניהול תוכן', url: '/admin/content/articles' };
-    } else if (cleanUrl === '/teachers') {
-      this.adminEditTarget = { label: 'ניהול מורים', url: '/admin/teachers' };
-    } else if (songMatch) {
-      this.adminEditTarget = { label: 'עריכת שיר', url: '/admin/content/songs' };
-    } else {
-      this.adminEditTarget = null;
+      this.adminEditTarget = { label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05d3\u05e3 \u05d0\u05de\u05df', url: '' };
+      return;
     }
-  }
 
-  get canEditArtistPage(): boolean {
-    return this.isAdmin && !!this.adminEditTarget;
+    if (teacherMatch) {
+      this.adminEditTarget = {
+        label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05d3\u05e3 \u05de\u05d5\u05e8\u05d4',
+        url: `/admin/teachers/edit/${teacherMatch[1]}`
+      };
+      return;
+    }
+
+    if (cleanUrl === '/professionals') {
+      this.adminEditTarget = {
+        label: '\u05e0\u05d9\u05d4\u05d5\u05dc \u05d1\u05e2\u05dc\u05d9 \u05de\u05e7\u05e6\u05d5\u05e2',
+        url: '/admin/service-providers'
+      };
+      return;
+    }
+
+    if (newsMatch) {
+      this.isArticlePage = true;
+      this.adminEditTarget = { label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05db\u05ea\u05d1\u05d4', url: '' };
+      return;
+    }
+
+    if (blogMatch) {
+      this.isArticlePage = true;
+      this.adminEditTarget = { label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05ea\u05d5\u05db\u05df', url: '' };
+      return;
+    }
+
+    if (cleanUrl === '/music-news') {
+      this.adminEditTarget = {
+        label: '\u05e0\u05d9\u05d4\u05d5\u05dc \u05d7\u05d3\u05e9\u05d5\u05ea',
+        url: '/admin/content/articles'
+      };
+      return;
+    }
+
+    if (cleanUrl === '/articles') {
+      this.adminEditTarget = {
+        label: '\u05e0\u05d9\u05d4\u05d5\u05dc \u05ea\u05d5\u05db\u05df',
+        url: '/admin/content/articles'
+      };
+      return;
+    }
+
+    if (cleanUrl === '/teachers') {
+      this.adminEditTarget = {
+        label: '\u05e0\u05d9\u05d4\u05d5\u05dc \u05de\u05d5\u05e8\u05d9\u05dd',
+        url: '/admin/teachers'
+      };
+      return;
+    }
+
+    if (songMatch) {
+      this.adminEditTarget = {
+        label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05e9\u05d9\u05e8',
+        url: '/admin/content/songs'
+      };
+      return;
+    }
+
+    this.adminEditTarget = null;
   }
 
   fabAdminEdit(): void {
     if (!this.adminEditTarget) return;
+
     this.closeFabMenu();
+
     if (this.isArtistPage) {
       this.artistPageService.triggerEdit();
-    } else if (this.isArticlePage) {
+      return;
+    }
+
+    if (this.isArticlePage) {
       if (this.currentArticleId) {
         this.router.navigate([`/admin/content/articles/edit/${this.currentArticleId}`]);
       } else {
         this.router.navigate(['/admin/content/articles']);
       }
-    } else {
-      this.router.navigate([this.adminEditTarget.url]);
+      return;
     }
+
+    this.router.navigate([this.adminEditTarget.url]);
   }
 
-  goToAdmin() {
+  goToAdmin(): void {
     this.router.navigate(['/admin']);
   }
 
   toggleUserMenu(event: Event): void {
     event.stopPropagation();
     this.showUserMenu = !this.showUserMenu;
+  }
+
+  closeUserMenu(): void {
+    this.showUserMenu = false;
   }
 
   toggleMobileMenu(): void {
@@ -235,17 +311,6 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showMobileMenu = false;
   }
 
-  closeUserMenu(): void {
-    this.showUserMenu = false;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    this.showUserMenu = false;
-    this.showFabMenu = false;
-    this.showArtistSubMenu = false;
-  }
-
   signOut(): void {
     this.showUserMenu = false;
     this.authService.logout();
@@ -253,7 +318,6 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     window.location.reload();
   }
 
-  // Auth Modal Functions
   openAuthModal(): void {
     this.showAuthModal = true;
   }
@@ -266,15 +330,14 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     console.log('Auth successful', response);
     this.closeAuthModal();
 
-    // If user needs to complete profile, show the additional details modal
     if (response.requiresProfileCompletion) {
       this.showAdditionalDetailsModal = true;
-    } else {
-      // ✅ לוגין הצליח! עכשיו מנתבים את המשתמש לדף שהוא ביקש
-      const returnUrl = this.authService.getAndClearReturnUrl();
-      if (returnUrl && returnUrl !== '/') {
-        this.router.navigate([returnUrl]);
-      }
+      return;
+    }
+
+    const returnUrl = this.authService.getAndClearReturnUrl();
+    if (returnUrl && returnUrl !== '/') {
+      this.router.navigate([returnUrl]);
     }
   }
 
@@ -286,31 +349,29 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     console.log('Profile completed as:', userType);
     this.closeAdditionalDetailsModal();
 
-    // Handle different user types
     if (userType === UserType.Regular) {
-      // משתמש רגיל - מופנה ישירות לאתר
       window.location.reload();
-    } else {
-      // משתמש מקצועי - קודם ממלא פרופיל, אחר כך בוחר חבילה
-      localStorage.setItem('pendingProfessionalType', userType);
+      return;
+    }
 
-      switch (userType) {
-        case UserType.Artist:
-          this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
-          break;
-        case UserType.Teacher:
-          this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
-          break;
-        case UserType.ServiceProvider:
-          this.router.navigate(['/service-provider/create'], { queryParams: { from: 'registration' } });
-          break;
-        default:
-          this.router.navigate(['/subscription/select'], { queryParams: { from: 'registration' } });
-      }
+    localStorage.setItem('pendingProfessionalType', userType);
+
+    switch (userType) {
+      case UserType.Artist:
+        this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
+        break;
+      case UserType.Teacher:
+        this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
+        break;
+      case UserType.ServiceProvider:
+        this.router.navigate(['/service-provider/create'], { queryParams: { from: 'registration' } });
+        break;
+      default:
+        this.router.navigate(['/subscription/select'], { queryParams: { from: 'registration' } });
+        break;
     }
   }
 
-  // Forgot Password Modal Functions
   onForgotPassword(): void {
     this.closeAuthModal();
     this.showForgotPasswordModal = true;
@@ -327,83 +388,64 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   toggleFabMenu(event: Event): void {
     event.stopPropagation();
-    this.showFabMenu = !this.showFabMenu;
-    if (!this.showFabMenu) {
-      this.showArtistSubMenu = false;
+
+    if (!this.loggedIn) {
+      this.authService.requestLogin(this.router.url);
+      return;
     }
+
+    this.showQuickAddAssistant = !this.showQuickAddAssistant;
   }
 
   closeFabMenu(): void {
-    this.showFabMenu = false;
-    this.showArtistSubMenu = false;
+    this.showQuickAddAssistant = false;
   }
 
-  toggleArtistSubMenu(event: Event): void {
-    event.stopPropagation();
-    this.showArtistSubMenu = !this.showArtistSubMenu;
-  }
-
-  fabAddChords(): void {
+  handleQuickAddAction(action: QuickAddAction): void {
     this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
+
+    if (action === 'contact') {
+      this.openReportModal();
+      return;
+    }
+
+    if (action === 'admin-edit') {
+      this.fabAdminEdit();
+      return;
+    }
+
+    if (!this.loggedIn) {
+      this.authService.requestLogin(this.router.url);
+      return;
+    }
+
+    switch (action) {
+      case 'index-teacher':
+        this.showTeacherCreateModal = true;
+        break;
+      case 'index-service-provider':
+        this.showServiceProviderCreateModal = true;
+        break;
+      case 'artist-community':
+        this.showArtistCreateModal = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  goToAddSong(): void {
     this.modalService.openAddSongModal();
   }
 
-  fabAddNews(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/submit/article'], { queryParams: { type: 'news' } });
-  }
-
-  fabAddContent(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/submit/article'], { queryParams: { type: 'content' } });
-  }
-
-  fabAddEvent(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/submit/event']);
-  }
-
-  fabCreatePlaylist(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/my-playlists']);
-  }
-
-  fabAddArtist(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/artist/create'], { queryParams: { mode: 'community' } });
-  }
-
-  fabUpgradeToArtist(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/subscription/select'], { queryParams: { type: 'artist' } });
-  }
-
-  fabUpgradeToTeacher(): void {
-    this.closeFabMenu();
-    if (!this.loggedIn) { this.openAuthModal(); return; }
-    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
-  }
-
-  goToAddSong() {
-    this.modalService.openAddSongModal();
-  }
-
-  closeAddSongModal() {
+  closeAddSongModal(): void {
     this.modalService.closeModal();
   }
 
-  onSongAdded() {
+  onSongAdded(): void {
     this.modalService.closeModal();
   }
 
-  // Report Modal Functions
   openReportModal(): void {
     this.showReportModal = true;
   }
@@ -412,17 +454,26 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showReportModal = false;
   }
 
+  closeTeacherCreateModal(): void {
+    this.showTeacherCreateModal = false;
+  }
+
+  closeServiceProviderCreateModal(): void {
+    this.showServiceProviderCreateModal = false;
+  }
+
+  closeArtistCreateModal(): void {
+    this.showArtistCreateModal = false;
+  }
+
   upgradeSubscription(): void {
-    // נקה localStorage מבחירה קודמת כדי לאפשר בחירה חדשה
     localStorage.removeItem('selectedSubscriptionPlan');
     localStorage.removeItem('selectedBillingCycle');
     localStorage.removeItem('pendingProfessionalType');
 
-    // סגור תפריטים פתוחים
     this.closeUserMenu();
     this.closeMobileMenu();
 
-    // נווט לדף בחירת מנוי
     this.router.navigate(['/subscription/select']);
   }
 }

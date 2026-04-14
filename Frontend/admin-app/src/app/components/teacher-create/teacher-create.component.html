@@ -1,6 +1,10 @@
 <div class="teacher-create-container" (click)="closeDropdowns($event)">
   <div class="teacher-create-card">
-    <h1 class="page-title">צור פרופיל מורה</h1>
+    <div class="guided-hero">
+      <div class="guided-badge">פרופיל לאינדקס</div>
+      <h1 class="page-title">בוא נבנה דף מורה בצורה נעימה ופשוטה</h1>
+      <p class="page-subtitle">נתחיל מהפרטים החשובים, אחר כך נוסיף את החלק המקצועי, ובסוף נשלים מדיה וקישורים שיתנו לדף תחושה מלאה.</p>
+    </div>
 
     <div *ngIf="loading" class="loading">
       <div class="spinner"></div>
@@ -14,60 +18,62 @@
         <span>מנוי {{ subscription.planName }}</span>
       </div>
 
-      <form (ngSubmit)="onSubmit()" #teacherForm="ngForm">
-        <!-- Basic Info Section -->
-        <section class="form-section">
-          <h2>מידע בסיסי</h2>
+      <div class="submission-note" *ngIf="!submitted && !subscription">
+        אפשר למלא עכשיו את כל פרטי הדף, התמונות והמדיה. אחרי השליחה תהיה אפשרות להמשיך לבחירת מנוי, אם תרצה.
+      </div>
+
+      <div class="success-state" *ngIf="submitted">
+        <h2>הדף נשלח לבדיקה</h2>
+        <p>פרופיל המורה שלך הועבר למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות לדף.</p>
+        <div class="success-actions">
+          <button type="button" class="btn-primary" *ngIf="!subscription" (click)="goToSubscriptionSelection()">בחירת מנוי</button>
+          <button type="button" class="btn-secondary" (click)="finishFlow()">סיום</button>
+        </div>
+      </div>
+
+      <form *ngIf="!submitted" (ngSubmit)="onSubmit()" #teacherForm="ngForm">
+        <div class="progress-banner">
+          <div class="progress-banner-top">
+            <span class="progress-label">שלב {{ currentStep }} מתוך {{ totalSteps }}</span>
+            <span class="progress-caption" *ngIf="currentStep < totalSteps">נשארו עוד {{ totalSteps - currentStep }} שלבים קצרים</span>
+            <span class="progress-caption" *ngIf="currentStep === totalSteps">השלב האחרון לפני שליחה</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></span>
+          </div>
+        </div>
+
+        <div class="stepper-shell">
+          <button type="button" class="step-chip" [class.active]="currentStep === 1" (click)="goToStep(1)">בסיס</button>
+          <button type="button" class="step-chip" [class.active]="currentStep === 2" (click)="goToStep(2)">מקצועי</button>
+          <button type="button" class="step-chip" [class.active]="currentStep === 3" (click)="goToStep(3)">מדיה</button>
+        </div>
+
+        <section class="form-section" *ngIf="currentStep === 1">
+          <div class="section-head">
+            <span class="section-kicker">שלב 1</span>
+            <h2>מידע בסיסי</h2>
+            <p class="section-description">הפרטים הראשונים שמספרים מי אתה, איפה אתה מלמד ואיך הכי נוח ליצור איתך קשר.</p>
+          </div>
 
           <div class="form-group">
             <label for="displayName">שם תצוגה *</label>
-            <input
-              type="text"
-              id="displayName"
-              [(ngModel)]="displayName"
-              name="displayName"
-              required
-              placeholder="שם המורה"
-            />
+            <input type="text" id="displayName" [(ngModel)]="displayName" name="displayName" required placeholder="שם המורה" />
           </div>
 
           <div class="form-group">
             <label for="email">אימייל *</label>
-            <input
-              type="email"
-              id="email"
-              [(ngModel)]="email"
-              name="email"
-              required
-              placeholder="your@email.com"
-            />
+            <input type="email" id="email" [(ngModel)]="email" name="email" required placeholder="your@email.com" />
           </div>
 
           <div class="form-group">
             <label for="phoneNumber">טלפון *</label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              [(ngModel)]="phoneNumber"
-              name="phoneNumber"
-              required
-              placeholder="050-1234567"
-            />
+            <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" required placeholder="050-1234567" />
           </div>
 
-          <!-- WhatsApp - Soft Lock -->
           <div class="form-group">
-            <label for="whatsAppNumber">
-              WhatsApp
-              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-            </label>
-            <input
-              type="tel"
-              id="whatsAppNumber"
-              [(ngModel)]="whatsAppNumber"
-              name="whatsAppNumber"
-              placeholder="050-1234567"
-            />
+            <label for="whatsAppNumber">WhatsApp</label>
+            <input type="tel" id="whatsAppNumber" [(ngModel)]="whatsAppNumber" name="whatsAppNumber" placeholder="050-1234567" />
           </div>
 
           <div class="form-group">
@@ -86,11 +92,7 @@
                   placeholder="חפש עיר..."
                 />
                 <div class="dropdown-options">
-                  <div
-                    *ngFor="let city of filteredCities"
-                    class="dropdown-option"
-                    (click)="selectCity(city.id)"
-                  >
+                  <div *ngFor="let city of filteredCities" class="dropdown-option" (click)="selectCity(city.id)">
                     {{ city.name }}
                   </div>
                 </div>
@@ -100,13 +102,7 @@
 
           <div class="form-group">
             <label for="location">כתובת / אזור פעילות</label>
-            <input
-              type="text"
-              id="location"
-              [(ngModel)]="location"
-              name="location"
-              placeholder="רח' הרצל 123, תל אביב"
-            />
+            <input type="text" id="location" [(ngModel)]="location" name="location" placeholder="רח' הרצל 123, תל אביב" />
           </div>
 
           <div class="form-group">
@@ -125,16 +121,8 @@
                   placeholder="חפש כלי נגינה..."
                 />
                 <div class="dropdown-options">
-                  <div
-                    *ngFor="let instrument of filteredInstruments"
-                    class="dropdown-option-checkbox"
-                    (click)="toggleInstrument(instrument.id)"
-                  >
-                    <input
-                      type="checkbox"
-                      [checked]="isInstrumentSelected(instrument.id)"
-                      (click)="$event.stopPropagation()"
-                    />
+                  <div *ngFor="let instrument of filteredInstruments" class="dropdown-option-checkbox" (click)="toggleInstrument(instrument.id)">
+                    <input type="checkbox" [checked]="isInstrumentSelected(instrument.id)" (click)="$event.stopPropagation()" />
                     <span>{{ instrument.name }}</span>
                   </div>
                 </div>
@@ -144,56 +132,30 @@
 
           <div class="form-group">
             <label for="shortBio">תיאור קצר</label>
-            <textarea
-              id="shortBio"
-              [(ngModel)]="shortBio"
-              name="shortBio"
-              rows="2"
-              placeholder="תיאור קצר של המורה (2-3 שורות)"
-            ></textarea>
+            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" rows="2" placeholder="תיאור קצר של המורה, 2–3 שורות"></textarea>
           </div>
 
-          <!-- תיאור מורחב - Soft Lock -->
           <div class="form-group">
-            <label for="fullDescription">
-              תיאור מורחב
-              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-            </label>
-            <textarea
-              id="fullDescription"
-              [(ngModel)]="fullDescription"
-              name="fullDescription"
-              rows="5"
-              placeholder="תיאור מפורט על הניסיון, השיטה, וכו'"
-            ></textarea>
+            <label for="fullDescription">תיאור מורחב</label>
+            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" rows="5" placeholder="ספר קצת על הניסיון, הגישה והייחוד שלך"></textarea>
           </div>
         </section>
 
-        <!-- Professional Details Section -->
-        <section class="form-section">
-          <h2>פרטים מקצועיים</h2>
+        <section class="form-section" *ngIf="currentStep === 2">
+          <div class="section-head">
+            <span class="section-kicker">שלב 2</span>
+            <h2>פרטים מקצועיים</h2>
+            <p class="section-description">כאן מוסיפים את הניסיון, אופי השיעורים וכל מה שעוזר להבין את הערך שאתה מביא.</p>
+          </div>
 
           <div class="form-group">
             <label for="yearsOfExperience">שנות ניסיון</label>
-            <input
-              type="number"
-              id="yearsOfExperience"
-              [(ngModel)]="yearsOfExperience"
-              name="yearsOfExperience"
-              min="0"
-              placeholder="0"
-            />
+            <input type="number" id="yearsOfExperience" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" placeholder="0" />
           </div>
 
           <div class="form-group">
             <label for="education">השכלה / תעודות</label>
-            <textarea
-              id="education"
-              [(ngModel)]="education"
-              name="education"
-              rows="3"
-              placeholder="תואר ראשון במוזיקה, תעודות וכו'"
-            ></textarea>
+            <textarea id="education" [(ngModel)]="education" name="education" rows="3" placeholder="תארים, הכשרות, מסלולי לימוד או תעודות"></textarea>
           </div>
 
           <div class="form-group">
@@ -204,16 +166,8 @@
               </div>
               <div *ngIf="languageDropdownOpen" class="dropdown-menu">
                 <div class="dropdown-options">
-                  <div
-                    *ngFor="let option of languageOptions"
-                    class="dropdown-option-checkbox"
-                    (click)="toggleLanguage(option.value)"
-                  >
-                    <input
-                      type="checkbox"
-                      [checked]="isLanguageChecked(option.value)"
-                      (click)="$event.stopPropagation()"
-                    />
+                  <div *ngFor="let option of languageOptions" class="dropdown-option-checkbox" (click)="toggleLanguage(option.value)">
+                    <input type="checkbox" [checked]="isLanguageChecked(option.value)" (click)="$event.stopPropagation()" />
                     <span>{{ option.label }}</span>
                   </div>
                 </div>
@@ -229,16 +183,8 @@
               </div>
               <div *ngIf="audienceDropdownOpen" class="dropdown-menu">
                 <div class="dropdown-options">
-                  <div
-                    *ngFor="let option of audienceOptions"
-                    class="dropdown-option-checkbox"
-                    (click)="toggleAudience(option.value)"
-                  >
-                    <input
-                      type="checkbox"
-                      [checked]="isAudienceChecked(option.value)"
-                      (click)="$event.stopPropagation()"
-                    />
+                  <div *ngFor="let option of audienceOptions" class="dropdown-option-checkbox" (click)="toggleAudience(option.value)">
+                    <input type="checkbox" [checked]="isAudienceChecked(option.value)" (click)="$event.stopPropagation()" />
                     <span>{{ option.label }}</span>
                   </div>
                 </div>
@@ -248,125 +194,68 @@
 
           <div class="form-group">
             <label for="lessonTypes">סוגי שיעורים</label>
-            <input
-              type="text"
-              id="lessonTypes"
-              [(ngModel)]="lessonTypes"
-              name="lessonTypes"
-              placeholder="פרטי, קבוצתי, אונליין"
-            />
+            <input type="text" id="lessonTypes" [(ngModel)]="lessonTypes" name="lessonTypes" placeholder="פרטי, קבוצתי, אונליין" />
           </div>
 
           <div class="form-group">
             <label for="specializations">התמחויות מיוחדות</label>
-            <textarea
-              id="specializations"
-              [(ngModel)]="specializations"
-              name="specializations"
-              rows="3"
-              placeholder="התמחות בילדים עם צרכים מיוחדים, הכנה לבחינות וכו'"
-            ></textarea>
+            <textarea id="specializations" [(ngModel)]="specializations" name="specializations" rows="3" placeholder="הכנה לבחינות, עבודה עם ילדים, ליווי מתקדם ועוד"></textarea>
           </div>
 
           <div class="form-group">
             <label for="priceList">מחירון</label>
-            <textarea
-              id="priceList"
-              [(ngModel)]="priceList"
-              name="priceList"
-              rows="3"
-              placeholder="שיעור פרטי - 150 ש״ח&#10;שיעור אונליין - 120 ש״ח"
-            ></textarea>
+            <textarea id="priceList" [(ngModel)]="priceList" name="priceList" rows="3" placeholder="שיעור פרטי - 150 ש&quot;ח&#10;שיעור אונליין - 120 ש&quot;ח"></textarea>
           </div>
 
           <div class="form-group">
             <label for="availability">זמינות</label>
-            <input
-              type="text"
-              id="availability"
-              [(ngModel)]="availability"
-              name="availability"
-              placeholder="ימים א'-ה' בערב, שישי בבוקר"
-            />
+            <input type="text" id="availability" [(ngModel)]="availability" name="availability" placeholder="ימים א'-ה' בערב, שישי בבוקר" />
           </div>
 
-          <!-- שעות פעילות - Soft Lock -->
           <div class="form-group">
-            <label for="workingHours">
-              שעות פעילות
-              <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-            </label>
-            <input
-              type="text"
-              id="workingHours"
-              [(ngModel)]="workingHours"
-              name="workingHours"
-              placeholder="א'-ה' 10:00-19:00, ו' 9:00-13:00"
-            />
+            <label for="workingHours">שעות פעילות</label>
+            <input type="text" id="workingHours" [(ngModel)]="workingHours" name="workingHours" placeholder="א'-ה' 10:00-19:00, ו' 9:00-13:00" />
           </div>
         </section>
 
-        <!-- Media Section - Soft Lock -->
-        <section class="form-section premium-section">
-          <h2>
-            מדיה ותמונות
-            <span class="premium-lock-badge">👑<span class="premium-tooltip">יוצג רק בחשבון + / PRO</span></span>
-          </h2>
-
-          <div class="form-group">
-            <label for="profileImageUrl">תמונת פרופיל (URL)</label>
-            <app-file-upload-input
-              [(url)]="profileImageUrl"
-              placeholder="https://example.com/image.jpg"
-            />
+        <section class="form-section" *ngIf="currentStep === 3">
+          <div class="section-head">
+            <span class="section-kicker">שלב 3</span>
+            <h2>מדיה ותמונות</h2>
+            <p class="section-description">תמונה טובה, וידאו וקישורים מדויקים יעזרו לדף להרגיש חי, אמין וברור.</p>
           </div>
 
           <div class="form-group">
-            <label for="videoUrl">וידאו (YouTube/Vimeo URL)</label>
-            <input
-              type="url"
-              id="videoUrl"
-              [(ngModel)]="videoUrl"
-              name="videoUrl"
-              placeholder="https://youtube.com/watch?v=..."
-            />
+            <label for="profileImageUrl">תמונת פרופיל</label>
+            <app-file-upload-input [(url)]="profileImageUrl" placeholder="https://example.com/image.jpg" />
+          </div>
+
+          <div class="form-group">
+            <label for="videoUrl">וידאו</label>
+            <input type="url" id="videoUrl" [(ngModel)]="videoUrl" name="videoUrl" placeholder="https://youtube.com/watch?v=..." />
           </div>
 
           <div class="form-group">
             <label for="websiteUrl">אתר אינטרנט</label>
-            <input
-              type="url"
-              id="websiteUrl"
-              [(ngModel)]="websiteUrl"
-              name="websiteUrl"
-              placeholder="https://yourwebsite.com"
-            />
+            <input type="url" id="websiteUrl" [(ngModel)]="websiteUrl" name="websiteUrl" placeholder="https://yourwebsite.com" />
           </div>
 
           <div class="form-group">
-            <label for="bannerImageUrl">����� ����</label>
-            <app-file-upload-input
-              [(url)]="bannerImageUrl"
-              placeholder="https://example.com/banner.jpg"
-            />
+            <label for="bannerImageUrl">תמונת באנר</label>
+            <app-file-upload-input [(url)]="bannerImageUrl" placeholder="https://example.com/banner.jpg" />
           </div>
 
           <div class="form-group">
-            <label>����� �������</label>
+            <label>רשתות חברתיות</label>
             <div class="gallery-manager">
               <div *ngFor="let link of socialLinks; let i = index" class="gallery-add">
                 <select [(ngModel)]="link.platform" [name]="'teacher_create_social_platform_' + i">
                   <option *ngFor="let platform of SOCIAL_PLATFORMS" [ngValue]="platform.value">{{ platform.label }}</option>
                 </select>
-                <input
-                  type="url"
-                  [(ngModel)]="link.url"
-                  [name]="'teacher_create_social_url_' + i"
-                  placeholder="https://..."
-                />
-                <button type="button" (click)="removeSocialLink(i)">���</button>
+                <input type="url" [(ngModel)]="link.url" [name]="'teacher_create_social_url_' + i" placeholder="https://..." />
+                <button type="button" (click)="removeSocialLink(i)">הסר</button>
               </div>
-              <button type="button" (click)="addSocialLink()">���� ��� ������</button>
+              <button type="button" (click)="addSocialLink()">הוסף רשת חברתית</button>
             </div>
           </div>
 
@@ -374,17 +263,8 @@
             <label>גלריית תמונות</label>
             <div class="gallery-manager">
               <div class="gallery-add">
-                <app-file-upload-input
-                  [(url)]="newGalleryImage.imageUrl"
-                  placeholder="URL של תמונה"
-                  [showPreview]="false"
-                />
-                <input
-                  type="text"
-                  [(ngModel)]="newGalleryImage.caption"
-                  [ngModelOptions]="{standalone: true}"
-                  placeholder="כיתוב (אופציונלי)"
-                />
+                <app-file-upload-input [(url)]="newGalleryImage.imageUrl" placeholder="קישור לתמונה" [showPreview]="false" />
+                <input type="text" [(ngModel)]="newGalleryImage.caption" [ngModelOptions]="{standalone: true}" placeholder="כיתוב, לא חובה" />
                 <button type="button" (click)="addGalleryImage()">הוסף</button>
               </div>
               <div *ngIf="galleryImages.length > 0" class="gallery-list">
@@ -398,14 +278,13 @@
           </div>
         </section>
 
-        <!-- Submit Section -->
         <div class="form-actions">
-          <button type="submit" class="btn-primary" [disabled]="saving">
+          <button type="button" class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">חזרה</button>
+          <button type="button" class="btn-secondary" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">המשך</button>
+          <button type="submit" class="btn-primary" *ngIf="currentStep === totalSteps" [disabled]="saving">
             {{ saving ? 'שולח...' : 'שלח לאישור' }}
           </button>
-          <button type="button" class="btn-secondary" (click)="router.navigate(['/teachers'])" [disabled]="saving">
-            ביטול
-          </button>
+          <button type="button" class="btn-secondary" (click)="cancelFlow()" [disabled]="saving">ביטול</button>
         </div>
       </form>
     </div>

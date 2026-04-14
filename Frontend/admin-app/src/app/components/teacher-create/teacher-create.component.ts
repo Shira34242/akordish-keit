@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -28,10 +28,16 @@ import {
   styleUrls: ['./teacher-create.component.css']
 })
 export class TeacherCreateComponent implements OnInit {
+  @Input() embedded = false;
+  @Output() close = new EventEmitter<void>();
+
+  currentStep = 1;
+  readonly totalSteps = 3;
   subscription?: SubscriptionDto;
   isPremium = false;
   loading = true;
   saving = false;
+  submitted = false;
   error = '';
 
   // Form fields
@@ -104,31 +110,52 @@ export class TeacherCreateComponent implements OnInit {
     this.prefillUserData();
   }
 
+  nextStep(): void {
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+      this.scrollToTop();
+    }
+  }
+
+  prevStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      this.scrollToTop();
+    }
+  }
+
+  goToStep(step: number): void {
+    if (step >= 1 && step <= this.totalSteps) {
+      this.currentStep = step;
+      this.scrollToTop();
+    }
+  }
+
   loadSubscriptionStatus() {
     const user = this.authService.currentUserValue;
     if (!user) {
-      this.router.navigate(['/login']);
+      this.authService.requestLogin(this.router.url);
       return;
     }
 
-    // בודקים אם יש מנוי קיים במערכת
+    // ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ© ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³ײ³ג€”
     this.subscriptionService.getUserActiveSubscription(user.id).subscribe({
       next: (subscription) => {
         this.loading = false;
 
-        // אם יש מנוי פעיל במערכת - משתמשים בו (עדיפות ראשונה)
+        // ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ© ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ ׳³ֲ³׳’ג€ֳ—׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³ײ³ג€” - ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ©׳³ֲ³ײ³ג€”׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ֲ¢ (׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג€ֳ—׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ³ג€” ׳³ֲ³ײ²ֲ¨׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ)
         if (subscription) {
           this.subscription = subscription;
           this.isPremium = subscription.plan === SubscriptionPlan.Premium;
 
-          // ניקוי localStorage - המנוי כבר קיים במערכת
+          // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage - ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ ׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ¨ ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³ײ³ג€”
           localStorage.removeItem('selectedSubscriptionPlan');
           localStorage.removeItem('selectedBillingCycle');
           localStorage.removeItem('pendingProfessionalType');
 
           console.log('User has active subscription:', subscription.plan);
         } else {
-          // אין מנוי קיים - בודקים אם יש בחירה שמורה מתהליך ההרשמה
+          // ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ - ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ© ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ׳³ֲ³ײ³ג€”׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ¨׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ
           const selectedPlan = localStorage.getItem('selectedSubscriptionPlan');
           const billingCycle = localStorage.getItem('selectedBillingCycle');
 
@@ -136,14 +163,14 @@ export class TeacherCreateComponent implements OnInit {
             console.log('Using localStorage subscription selection:', selectedPlan, billingCycle);
             this.isPremium = selectedPlan === SubscriptionPlan.Premium.toString();
 
-            // כרגע המנוי לא קיים במערכת - יווצר בשליחת הטופס
+            // ׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ²ֲ¢ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³ײ³ג€” - ׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ¦׳³ֲ³ײ²ֲ¨ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³׳’ג‚¬ג€׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ»ֲ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֳ—׳³ֲ³ײ²ֲ¡
           }
         }
       },
       error: (err) => {
         this.loading = false;
         console.error('Error loading subscription:', err);
-        // אם יש שגיאה בטעינת המנוי, נבדוק localStorage
+        // ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ© ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ»ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢, ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ§ localStorage
         const selectedPlan = localStorage.getItem('selectedSubscriptionPlan');
         if (selectedPlan) {
           this.isPremium = selectedPlan === SubscriptionPlan.Premium.toString();
@@ -195,9 +222,9 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedCityName(): string {
-    if (!this.cityId) return 'בחר עיר...';
+    if (!this.cityId) return '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
     const city = this.availableCities.find(c => c.id === this.cityId);
-    return city ? city.name : 'בחר עיר...';
+    return city ? city.name : '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
   }
 
   onCitySearchChange() {
@@ -222,12 +249,12 @@ export class TeacherCreateComponent implements OnInit {
 
   getSelectedInstrumentsText(): string {
     if (this.selectedInstrumentIds.length === 0) {
-      return 'בחר כלי נגינה...';
+      return '\u05d1\u05d7\u05e8 \u05db\u05dc\u05d9 \u05e0\u05d2\u05d9\u05e0\u05d4...';
     }
     const names = this.selectedInstrumentIds
       .map(id => this.availableInstruments.find(inst => inst.id === id)?.name)
       .filter(name => name);
-    if (names.length === 1) return names[0]!;
+    if (names.length === 1) return names[0] ?? '';
     if (names.length === 2) return names.join(', ');
     return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
   }
@@ -262,7 +289,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedLanguagesText(): string {
-    if (this.selectedLanguages.length === 0) return 'בחר שפות...';
+    if (this.selectedLanguages.length === 0) return '\u05d1\u05d7\u05e8 \u05e9\u05e4\u05d4...';
     const names = this.selectedLanguages
       .map(val => this.languageOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -289,7 +316,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedAudiencesText(): string {
-    if (this.selectedAudiences.length === 0) return 'בחר קהל יעד...';
+    if (this.selectedAudiences.length === 0) return '\u05d1\u05d7\u05e8 \u05e7\u05d4\u05dc \u05d9\u05e2\u05d3...';
     const names = this.selectedAudiences
       .map(val => this.audienceOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -313,7 +340,7 @@ export class TeacherCreateComponent implements OnInit {
   // Gallery methods
   addGalleryImage() {
     if (!this.newGalleryImage.imageUrl.trim()) {
-      alert('נא להזין URL לתמונה');
+      alert('\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e7\u05d9\u05e9\u05d5\u05e8 \u05dc\u05ea\u05de\u05d5\u05e0\u05d4');
       return;
     }
     const order = this.galleryImages.length;
@@ -326,7 +353,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   removeGalleryImage(index: number) {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+    if (confirm('\u05d4\u05d0\u05dd \u05dc\u05de\u05d7\u05d5\u05e7 \u05d0\u05ea \u05d4\u05ea\u05de\u05d5\u05e0\u05d4 \u05d4\u05d6\u05d5 \u05de\u05d4\u05d2\u05dc\u05e8\u05d9\u05d4?')) {
       this.galleryImages.splice(index, 1);
       this.galleryImages.forEach((img, idx) => img.order = idx);
     }
@@ -393,23 +420,24 @@ export class TeacherCreateComponent implements OnInit {
       next: (teacher) => {
         this.saving = false;
 
-        // ניקוי localStorage לאחר הצלחה
+        // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ג€׳³ֲ³ײ²ֲ¨ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ¦׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג‚¬ֲ
         localStorage.removeItem('selectedSubscriptionPlan');
         localStorage.removeItem('selectedBillingCycle');
         localStorage.removeItem('pendingProfessionalType');
 
-        // סימון המשתמש כבעל פרופיל מקצועי (מונע הצגת הפופאפ "עוד פרטים" בהתחברות הבאה)
+        // ׳³ֲ³ײ²ֲ¡׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ©׳³ֲ³ײ³ג€”׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ© ׳³ֲ³׳’ג‚¬ֳ·׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֳ—׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֳ—׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ§׳³ֲ³ײ²ֲ¦׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג€ֲ¢ (׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ¢ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ¦׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג€ֳ—׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֳ—׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֳ— "׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³׳’ג€ֳ—׳³ֲ³ײ²ֲ¨׳³ֲ³ײ»ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ" ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ³ג€”׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ)
         this.authService.markAsProfessional();
 
-        // מעבר לבחירת חבילה (שלב 2 בתהליך ההרשמה)
-        this.router.navigate(['/subscription/select'], { queryParams: { from: 'profile-complete', type: 'teacher' } });
+        // ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ¨ ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ (׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֻ 2 ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ³ג€”׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ¨׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ)
+        this.submitted = true;
+        this.scrollToTop();
       },
       error: (err) => {
         console.error('Error creating teacher profile:', err);
-        this.error = err.error?.message || 'שגיאה ביצירת פרופיל המורה';
+        this.error = err.error?.message || '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05d9\u05e6\u05d9\u05e8\u05ea \u05e4\u05e8\u05d5\u05e4\u05d9\u05dc \u05de\u05d5\u05e8\u05d4';
         this.saving = false;
 
-        // ניקוי localStorage גם במקרה של שגיאה
+        // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage ׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ§׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ
         localStorage.removeItem('selectedSubscriptionPlan');
         localStorage.removeItem('selectedBillingCycle');
         localStorage.removeItem('pendingProfessionalType');
@@ -419,22 +447,22 @@ export class TeacherCreateComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.displayName.trim()) {
-      this.error = 'נא להזין שם תצוגה';
+      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e9\u05dd \u05ea\u05e6\u05d5\u05d2\u05d4';
       return false;
     }
 
     if (!this.email || !this.email.trim()) {
-      this.error = 'נא להזין אימייל';
+      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d0\u05d9\u05de\u05d9\u05d9\u05dc';
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
-      this.error = 'נא להזין טלפון';
+      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d8\u05dc\u05e4\u05d5\u05df';
       return false;
     }
 
     if (this.selectedInstrumentIds.length === 0) {
-      this.error = 'נא לבחור לפחות כלי נגינה אחד';
+      this.error = '\u05e0\u05d0 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05dc\u05e4\u05d7\u05d5\u05ea \u05db\u05dc\u05d9 \u05e0\u05d2\u05d9\u05e0\u05d4 \u05d0\u05d7\u05d3';
       return false;
     }
 
@@ -450,4 +478,35 @@ export class TeacherCreateComponent implements OnInit {
       this.audienceDropdownOpen = false;
     }
   }
+
+
+  goToSubscriptionSelection(): void {
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
+  }
+
+  finishFlow(): void {
+    if (this.embedded) {
+      this.close.emit();
+      return;
+    }
+
+    this.router.navigate(['/professionals']);
+  }
+
+  cancelFlow(): void {
+    if (this.embedded) {
+      this.close.emit();
+      return;
+    }
+
+    this.router.navigate(['/teachers']);
+  }
+
+  private scrollToTop(): void {
+    if (!this.embedded) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
 }
+
+

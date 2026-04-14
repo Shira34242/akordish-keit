@@ -1,0 +1,311 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
+      <div class="header-title-placeholder"></div>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="modal-content">
+      <div class="smart-chat-stream">
+        <div
+          class="smart-message-row"
+          *ngFor="let message of messages; trackBy: trackByMessage"
+          [class.smart-message-row-user]="message.tone === 'user'">
+          <ng-container *ngIf="message.tone !== 'user'">
+            <div class="smart-bot-icon" [class.smart-bot-icon-helper]="message.tone === 'helper'">
+              <span class="material-icons">{{ message.tone === 'helper' ? 'workspace_premium' : 'auto_awesome' }}</span>
+            </div>
+          </ng-container>
+
+          <div
+            class="smart-bubble"
+            [class.smart-bubble-question]="message.tone === 'question'"
+            [class.smart-bubble-helper]="message.tone === 'helper'"
+            [class.smart-bubble-user]="message.tone === 'user'">
+            {{ message.text }}
+          </div>
+        </div>
+
+        <div class="assistant-chip-row" *ngIf="currentMode === 'choices'">
+          <button
+            type="button"
+            class="assistant-chip"
+            *ngFor="let option of currentOptions; trackBy: trackByOption"
+            (click)="selectOption(option, $event)">
+            {{ option.label }}
+          </button>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'song'">
+          <app-add-song-modal
+            [embedded]="true"
+            (close)="closeModal()"
+            (songAdded)="onSongAdded()">
+          </app-add-song-modal>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'article'">
+          <div class="smart-form">
+            <label class="smart-label">כותרת</label>
+            <input class="smart-input" [(ngModel)]="article.title" placeholder="כתוב כותרת קצרה וברורה">
+
+            <label class="smart-label">תוכן</label>
+            <textarea class="smart-textarea" [(ngModel)]="article.content" rows="10" placeholder="כתוב כאן את התוכן"></textarea>
+
+            <div class="smart-media-grid">
+              <div class="smart-media-card">
+                <div class="smart-media-head">
+                  <label class="smart-label smart-media-label">וידאו מיוטיוב</label>
+                  <span class="smart-media-note">אפשר לצרף קישור לוידאו</span>
+                </div>
+                <input class="smart-input" [(ngModel)]="article.videoEmbedUrl" placeholder="https://youtube.com/...">
+              </div>
+
+              <div class="smart-media-card">
+                <div class="smart-media-head">
+                  <label class="smart-label smart-media-label">תמונה</label>
+                  <span class="smart-media-note">אפשר להעלות, להדביק קישור או לקחת מהוידאו</span>
+                </div>
+
+                <div class="smart-media-actions">
+                  <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="isUploadingArticleImage">
+                    <input type="file" accept="image/*" hidden (change)="onArticleImageSelected($event)">
+                    <span class="material-icons">{{ isUploadingArticleImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+                    <span>{{ isUploadingArticleImage ? 'מעלה...' : 'העלאת תמונה' }}</span>
+                  </label>
+
+                  <button type="button" class="assistant-chip assistant-chip-muted" (click)="showArticleImageLinkInput = !showArticleImageLinkInput">
+                    קישור לתמונה
+                  </button>
+
+                  <button type="button" class="assistant-chip assistant-chip-muted" *ngIf="canUseVideoThumbnail" (click)="useVideoThumbnail()">
+                    לקחת מהוידאו
+                  </button>
+                </div>
+
+                <input *ngIf="showArticleImageLinkInput" class="smart-input smart-media-link-input" [(ngModel)]="article.featuredImageUrl" placeholder="https://...">
+
+                <div class="smart-image-preview" *ngIf="article.featuredImageUrl">
+                  <img [src]="article.featuredImageUrl" alt="תמונה לתוכן">
+                  <button type="button" class="smart-image-clear" (click)="clearArticleImage()">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="smart-tag-block" *ngIf="isProfessionalNonAdmin || isAdminUser">
+              <label class="smart-label">האם לתייג את התוכן על שמך</label>
+
+              <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
+                <label class="smart-checkbox-row">
+                  <input type="checkbox" [(ngModel)]="tagAsMyself" (change)="onTagAsMyselfChange()">
+                  <span>כן, לתייג על שמי</span>
+                </label>
+
+                <div *ngIf="tagAsMyself && selectedUploaderProfile" class="selected-profile-tag">
+                  <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
+                  <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
+                  <div class="profile-tag-info">
+                    <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
+                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="isAdminUser" class="smart-admin-tagging">
+                <div *ngIf="selectedUploaderProfile" class="selected-profile-tag">
+                  <img *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName" class="profile-tag-avatar">
+                  <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
+                  <div class="profile-tag-info">
+                    <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
+                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                  </div>
+                  <button type="button" class="btn-clear-profile" (click)="clearUploaderProfile()">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+
+                <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
+                  <input
+                    type="text"
+                    class="smart-input"
+                    [(ngModel)]="profileSearchQuery"
+                    (input)="onProfileSearchInput()"
+                    (focus)="onProfileSearchInput()"
+                    placeholder="חפש אמן, מורה או נותן שירות">
+
+                  <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
+                    <div *ngFor="let profile of profileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(profile)">
+                      <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName" class="profile-dropdown-avatar">
+                      <span *ngIf="!profile.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ profile.displayName.charAt(0) }}</span>
+                      <div class="profile-dropdown-info">
+                        <span class="profile-dropdown-name">{{ profile.displayName }}</span>
+                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(profile.profileType) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
+                    <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showArticleOptional" (click)="showArticleOptional = true">
+              {{ articleOptionalLabel }}
+            </button>
+
+            <div class="smart-optional-grid" *ngIf="showArticleOptional">
+              <div>
+                <label class="smart-label">כותרת משנה</label>
+                <input class="smart-input" [(ngModel)]="article.subtitle" placeholder="לא חובה">
+              </div>
+              <div>
+                <label class="smart-label">שם הכותב</label>
+                <input class="smart-input" [(ngModel)]="article.authorName" placeholder="לא חובה">
+              </div>
+              <div>
+                <label class="smart-label">תקציר קצר</label>
+                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="article.shortDescription" rows="3" placeholder="לא חובה"></textarea>
+              </div>
+            </div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="smart-submit" (click)="submitArticle()" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'שולח...' : 'שליחה לאישור' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'event'">
+          <div class="smart-form">
+            <div class="smart-media-card">
+              <div class="smart-media-head">
+                <label class="smart-label smart-media-label">תמונה</label>
+                <span class="smart-media-note">אפשר להעלות תמונה או להדביק קישור</span>
+              </div>
+
+              <div class="smart-media-actions">
+                <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="isUploadingEventImage">
+                  <input type="file" accept="image/*" hidden (change)="onEventImageSelected($event)">
+                  <span class="material-icons">{{ isUploadingEventImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+                  <span>{{ isUploadingEventImage ? 'מעלה...' : 'העלאת תמונה' }}</span>
+                </label>
+
+                <button type="button" class="assistant-chip assistant-chip-muted" (click)="showEventImageLinkInput = !showEventImageLinkInput">
+                  קישור לתמונה
+                </button>
+              </div>
+
+              <input *ngIf="showEventImageLinkInput" class="smart-input smart-media-link-input" [(ngModel)]="event.imageUrl" placeholder="https://...">
+
+              <div class="smart-image-preview" *ngIf="event.imageUrl">
+                <img [src]="event.imageUrl" alt="תמונת הופעה">
+                <button type="button" class="smart-image-clear" (click)="clearEventImage()">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
+
+            <label class="smart-label">לינק לכרטיסים</label>
+            <input class="smart-input" [(ngModel)]="event.ticketUrl" placeholder="https://...">
+
+            <label class="smart-label">תאריך</label>
+            <input class="smart-input" type="datetime-local" [(ngModel)]="event.eventDate">
+
+            <div class="smart-tag-block">
+              <label class="smart-label">תיוג אמן מהאתר</label>
+
+              <div class="smart-tag-selection" *ngIf="selectedEventArtistIds.length > 0">
+                <div class="selected-profile-tag" *ngFor="let artistId of selectedEventArtistIds">
+                  <img *ngIf="getEventArtistImage(artistId)" [src]="getEventArtistImage(artistId)" [alt]="getEventArtistName(artistId)" class="profile-tag-avatar">
+                  <span *ngIf="!getEventArtistImage(artistId)" class="profile-tag-avatar profile-tag-initial">{{ getEventArtistName(artistId).charAt(0) }}</span>
+                  <div class="profile-tag-info">
+                    <span class="profile-tag-name">{{ getEventArtistName(artistId) }}</span>
+                    <span class="profile-tag-type">אמן</span>
+                  </div>
+                  <button type="button" class="btn-clear-profile" (click)="removeEventArtist(artistId)">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="profile-search-wrapper">
+                <input
+                  type="text"
+                  class="smart-input"
+                  [(ngModel)]="eventArtistSearchQuery"
+                  (focus)="onEventArtistSearchFocus()"
+                  placeholder="חפש אמן לתיוג">
+
+                <div *ngIf="showEventArtistDropdown && filteredEventArtists.length > 0" class="profile-dropdown">
+                  <div *ngFor="let artist of filteredEventArtists" class="profile-dropdown-item" (click)="selectEventArtist(artist)">
+                    <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.name" class="profile-dropdown-avatar">
+                    <span *ngIf="!artist.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ artist.name.charAt(0) }}</span>
+                    <div class="profile-dropdown-info">
+                      <span class="profile-dropdown-name">{{ artist.name }}</span>
+                      <span class="profile-dropdown-type">אמן</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="showEventArtistDropdown && !isLoadingEventArtists && filteredEventArtists.length === 0 && eventArtistSearchQuery" class="profile-dropdown">
+                  <div class="profile-dropdown-empty">לא נמצאו אמנים</div>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showEventOptional" (click)="showEventOptional = true">
+              {{ eventOptionalLabel }}
+            </button>
+
+            <div class="smart-optional-grid" *ngIf="showEventOptional">
+              <div>
+                <label class="smart-label">כותרת ההופעה</label>
+                <input class="smart-input" [(ngModel)]="event.name" placeholder="לא חובה">
+              </div>
+              <div>
+                <label class="smart-label">שם אמן</label>
+                <input class="smart-input" [(ngModel)]="event.artistName" placeholder="לא חובה">
+              </div>
+              <div>
+                <label class="smart-label">מיקום</label>
+                <input class="smart-input" [(ngModel)]="event.location" placeholder="לא חובה">
+              </div>
+              <div>
+                <label class="smart-label">מחיר</label>
+                <input class="smart-input" type="number" [(ngModel)]="event.price" placeholder="לא חובה">
+              </div>
+              <div class="smart-optional-full">
+                <label class="smart-label">תיאור קצר</label>
+                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="event.description" rows="3" placeholder="לא חובה"></textarea>
+              </div>
+            </div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="smart-submit" (click)="submitEvent()" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'שולח...' : 'שליחה לאישור' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'success'">
+          <div class="smart-message-row">
+            <div class="smart-bot-icon"><span class="material-icons">check</span></div>
+            <div class="smart-bubble smart-bubble-question">{{ submittedMessage }}</div>
+          </div>
+          <div class="smart-actions smart-actions-success">
+            <button type="button" class="smart-submit" (click)="closeModal()">סגירה</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
