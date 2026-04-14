@@ -150,6 +150,15 @@
                             <span>{{ stepOneHelperText }}</span>
                         </div>
 
+                        <div class="smart-footer-actions" *ngIf="hasSearchedYouTube && youtubeSearchResults.length === 0 && !hasSelectedVideo && !showManualYoutubeInput">
+                            <button type="button" class="btn-secondary btn-secondary-compact" (click)="showManualYoutubeStep()">
+                                להדביק קישור ידני
+                            </button>
+                            <button type="button" class="btn-secondary btn-secondary-compact" (click)="useManualAddMode()">
+                                להמשיך בלי לינק
+                            </button>
+                        </div>
+
                         <div class="smart-manual-panel" *ngIf="showManualYoutubeInput">
                             <div class="smart-search-row">
                                 <input

@@ -20,6 +20,13 @@ import {
   SubscriptionDto
 } from '../../models/subscription.model';
 
+interface PlatformLinkOption {
+  platform: SocialPlatform;
+  label: string;
+  icon: string;
+  placeholder: string;
+}
+
 @Component({
   selector: 'app-teacher-create',
   standalone: true,
@@ -30,6 +37,7 @@ import {
 export class TeacherCreateComponent implements OnInit {
   @Input() embedded = false;
   @Output() close = new EventEmitter<void>();
+  @Output() backToChat = new EventEmitter<void>();
 
   currentStep = 1;
   readonly totalSteps = 3;
@@ -74,14 +82,14 @@ export class TeacherCreateComponent implements OnInit {
   // Options
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
-  readonly SOCIAL_PLATFORMS = [
-    { value: SocialPlatform.Instagram, label: 'Instagram' },
-    { value: SocialPlatform.Facebook, label: 'Facebook' },
-    { value: SocialPlatform.YouTube, label: 'YouTube' },
-    { value: SocialPlatform.TikTok, label: 'TikTok' },
-    { value: SocialPlatform.Twitter, label: 'Twitter / X' },
-    { value: SocialPlatform.Spotify, label: 'Spotify' },
-    { value: SocialPlatform.Zing, label: 'Zing' }
+  readonly socialPlatformOptions: PlatformLinkOption[] = [
+    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
+    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
+    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: 'הדבק קישור ליוטיוב' },
+    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'הדבק קישור לטיקטוק' },
+    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'הדבק קישור ל-X / Twitter' },
+    { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'album', placeholder: 'הדבק קישור לספוטיפיי' },
+    { platform: SocialPlatform.Zing, label: 'Zing', icon: 'library_music', placeholder: 'הדבק קישור לזינג' }
   ];
 
   // UI state
@@ -367,6 +375,31 @@ export class TeacherCreateComponent implements OnInit {
     this.socialLinks.splice(index, 1);
   }
 
+  getPlatformLink(platform: SocialPlatform): string {
+    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+  }
+
+  setPlatformLink(platform: SocialPlatform, url: string): void {
+    const normalizedUrl = url.trim();
+    const existingLink = this.socialLinks.find(link => link.platform === platform);
+
+    if (!normalizedUrl) {
+      this.socialLinks = this.socialLinks.filter(link => link.platform !== platform);
+      return;
+    }
+
+    if (existingLink) {
+      existingLink.url = normalizedUrl;
+      return;
+    }
+
+    this.socialLinks = [...this.socialLinks, { platform, url: normalizedUrl }];
+  }
+
+  trackByPlatform(_index: number, option: PlatformLinkOption): number {
+    return option.platform;
+  }
+
   private arrayToFlags(selectedValues: number[]): number {
     if (!selectedValues || selectedValues.length === 0) return 0;
     return selectedValues.reduce((acc, val) => acc | val, 0);
@@ -500,6 +533,12 @@ export class TeacherCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/teachers']);
+  }
+
+  returnToChat(): void {
+    if (this.embedded) {
+      this.backToChat.emit();
+    }
   }
 
   private scrollToTop(): void {

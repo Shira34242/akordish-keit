@@ -490,25 +490,41 @@
 .guided-profile-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.32);
+    background: rgba(0, 0, 0, 0.65);
     z-index: 1300;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-lg);
+    padding: var(--space-base);
     box-sizing: border-box;
+    animation: guidedProfileFadeIn 0.2s ease-out;
 }
 
 .guided-profile-modal-shell {
     position: relative;
-    width: min(820px, 100%);
-    max-height: calc(100dvh - var(--space-3xl));
-    overflow-y: auto;
-    background: #ffffff;
-    border-radius: 28px;
-    padding: var(--space-xl);
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    width: min(980px, calc(100vw - 32px));
+    max-width: 100%;
+    max-height: min(90vh, 900px);
+    height: min(90vh, 900px);
+    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
     box-sizing: border-box;
     scrollbar-width: none;
+    animation: guidedProfileSlideUp 0.3s ease-out;
+}
+
+.guided-profile-modal-shell > app-teacher-create,
+.guided-profile-modal-shell > app-service-provider-create,
+.guided-profile-modal-shell > app-artist-create {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
 }
 
 .guided-profile-modal-shell::-webkit-scrollbar {
@@ -516,28 +532,17 @@
 }
 
 .guided-profile-modal-shell--wide {
-    width: min(980px, 100%);
+    width: min(980px, calc(100vw - 32px));
 }
 
-.guided-profile-modal-close {
-    position: sticky;
-    top: 0;
-    margin-inline-start: auto;
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 50%;
-    background: #ffffff;
-    color: #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 2;
+@keyframes guidedProfileFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.guided-profile-modal-close .material-icons {
-    font-size: 18px;
+@keyframes guidedProfileSlideUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================
@@ -654,16 +659,17 @@
     }
 
     .guided-profile-modal-overlay {
-        padding: var(--space-md);
-        align-items: flex-end;
+        padding: 12px;
+        align-items: center;
     }
 
     .guided-profile-modal-shell,
     .guided-profile-modal-shell--wide {
         width: 100%;
-        max-height: calc(100dvh - var(--space-xl));
-        border-radius: 24px;
-        padding: var(--space-lg);
+        max-height: min(92vh, 860px);
+        height: min(92vh, 860px);
+        border-radius: 0;
+        padding: 0;
     }
 
     .footer-inner {
@@ -724,7 +730,10 @@
 
     .guided-profile-modal-shell,
     .guided-profile-modal-shell--wide {
-        border-radius: 20px;
-        padding: var(--space-base);
+        width: calc(100vw - 20px);
+        max-height: min(94vh, 860px);
+        height: min(94vh, 860px);
+        border-radius: 0;
+        padding: 0;
     }
 }

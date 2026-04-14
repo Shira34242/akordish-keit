@@ -30,6 +30,13 @@ interface ArtistFormData {
   videos?: { videoUrl: string; title: string; displayOrder: number }[];
 }
 
+interface PlatformLinkOption {
+  platform: number;
+  label: string;
+  icon: string;
+  placeholder: string;
+}
+
 @Component({
   selector: 'app-artist-create',
   standalone: true,
@@ -40,15 +47,30 @@ interface ArtistFormData {
 export class ArtistCreateComponent implements OnInit {
   @Input() embedded = false;
   @Output() close = new EventEmitter<void>();
+  @Output() backToChat = new EventEmitter<void>();
 
   currentStep = 1;
-  readonly totalSteps = 5;
+  readonly totalSteps = 3;
   loading = false;
   saving = false;
   submitted = false;
   error = '';
   subscription?: SubscriptionDto;
   isPremium = false;
+  bannerMediaMode: 'image' | 'gif' = 'image';
+
+  readonly socialPlatformOptions: PlatformLinkOption[] = [
+    { platform: 1, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
+    { platform: 2, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
+    { platform: 4, label: 'TikTok', icon: 'music_note', placeholder: 'הדבק קישור לטיקטוק' },
+    { platform: 6, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'הדבק קישור ל-X / Twitter' }
+  ];
+
+  readonly musicPlatformOptions: PlatformLinkOption[] = [
+    { platform: 3, label: 'YouTube', icon: 'smart_display', placeholder: 'הדבק קישור ליוטיוב' },
+    { platform: 7, label: 'Spotify', icon: 'album', placeholder: 'הדבק קישור לספוטיפיי' },
+    { platform: 8, label: 'Zing', icon: 'library_music', placeholder: 'הדבק קישור לזינג' }
+  ];
 
   artistForm: ArtistFormData = {
     userId: 0,
@@ -83,6 +105,7 @@ export class ArtistCreateComponent implements OnInit {
 
     this.artistForm.userId = user.id;
     this.loadSubscriptionStatus();
+    this.syncBannerMediaMode();
   }
 
   nextStep(): void {
@@ -187,6 +210,7 @@ export class ArtistCreateComponent implements OnInit {
 
   removeGalleryImage(index: number) {
     this.artistForm.galleryImages?.splice(index, 1);
+    this.artistForm.galleryImages?.forEach((image, order) => image.displayOrder = order);
   }
 
   addVideo() {
@@ -202,6 +226,47 @@ export class ArtistCreateComponent implements OnInit {
 
   removeVideo(index: number) {
     this.artistForm.videos?.splice(index, 1);
+    this.artistForm.videos?.forEach((video, order) => video.displayOrder = order);
+  }
+
+  setBannerMediaMode(mode: 'image' | 'gif'): void {
+    this.bannerMediaMode = mode;
+  }
+
+  getPlatformLink(links: { platform: number; url: string }[], platform: number): string {
+    return links.find(link => Number(link.platform) === platform)?.url || '';
+  }
+
+  setPlatformLink(
+    links: { platform: number; url: string }[],
+    platform: number,
+    url: string
+  ): void {
+    const trimmedUrl = url.trim();
+    const existingLink = links.find(link => Number(link.platform) === platform);
+
+    if (!trimmedUrl) {
+      if (existingLink) {
+        const index = links.indexOf(existingLink);
+        links.splice(index, 1);
+      }
+      return;
+    }
+
+    if (existingLink) {
+      existingLink.url = url;
+      return;
+    }
+
+    links.push({ platform, url });
+  }
+
+  trackByPlatform(_: number, option: PlatformLinkOption): number {
+    return option.platform;
+  }
+
+  private syncBannerMediaMode(): void {
+    this.bannerMediaMode = this.artistForm.bannerGifUrl ? 'gif' : 'image';
   }
 
   getSocialPlatformName(platform: number): string {
@@ -315,6 +380,12 @@ export class ArtistCreateComponent implements OnInit {
 
     if (confirm('\u05d4\u05d0\u05dd \u05dc\u05d1\u05d8\u05dc \u05d0\u05ea \u05d4\u05ea\u05d4\u05dc\u05d9\u05da? \u05d4\u05e9\u05d9\u05e0\u05d5\u05d9\u05d9\u05dd \u05e2\u05d3\u05d9\u05d9\u05df \u05dc\u05d0 \u05d9\u05d9\u05e9\u05de\u05e8\u05d5.')) {
       this.router.navigate(['/']);
+    }
+  }
+
+  returnToChat(): void {
+    if (this.embedded) {
+      this.backToChat.emit();
     }
   }
   selectSubscription() {

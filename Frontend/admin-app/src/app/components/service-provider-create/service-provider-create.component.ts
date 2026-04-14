@@ -18,10 +18,18 @@ import {
   SubscriptionPlan,
   SubscriptionDto
 } from '../../models/subscription.model';
+import { SocialLinkDto, SocialPlatform } from '../../models/music-service-provider.model';
 
 interface Category {
   id: number;
   name: string;
+}
+
+interface PlatformLinkOption {
+  platform: SocialPlatform;
+  label: string;
+  icon: string;
+  placeholder: string;
 }
 
 @Component({
@@ -34,6 +42,7 @@ interface Category {
 export class ServiceProviderCreateComponent implements OnInit {
   @Input() embedded = false;
   @Output() close = new EventEmitter<void>();
+  @Output() backToChat = new EventEmitter<void>();
 
   currentStep = 1;
   readonly totalSteps = 3;
@@ -53,6 +62,7 @@ export class ServiceProviderCreateComponent implements OnInit {
   whatsAppNumber: string = '';
   email: string = '';
   websiteUrl: string = '';
+  bannerImageUrl: string = '';
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -60,6 +70,7 @@ export class ServiceProviderCreateComponent implements OnInit {
   selectedCategoryId: number | undefined = undefined;
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  socialLinks: SocialLinkDto[] = [];
 
   // Available data
   availableCategories: Category[] = [];
@@ -73,6 +84,13 @@ export class ServiceProviderCreateComponent implements OnInit {
   categorySearchText = '';
   filteredCities: City[] = [];
   filteredCategories: Category[] = [];
+  readonly socialPlatformOptions: PlatformLinkOption[] = [
+    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
+    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
+    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: 'הדבק קישור ליוטיוב' },
+    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'הדבק קישור לטיקטוק' },
+    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'הדבק קישור ל-X / Twitter' }
+  ];
 
   constructor(
     private serviceProviderService: MusicServiceProviderService,
@@ -273,6 +291,31 @@ export class ServiceProviderCreateComponent implements OnInit {
     }
   }
 
+  getPlatformLink(platform: SocialPlatform): string {
+    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+  }
+
+  setPlatformLink(platform: SocialPlatform, url: string): void {
+    const normalizedUrl = url.trim();
+    const existingLink = this.socialLinks.find(link => link.platform === platform);
+
+    if (!normalizedUrl) {
+      this.socialLinks = this.socialLinks.filter(link => link.platform !== platform);
+      return;
+    }
+
+    if (existingLink) {
+      existingLink.url = normalizedUrl;
+      return;
+    }
+
+    this.socialLinks = [...this.socialLinks, { platform, url: normalizedUrl }];
+  }
+
+  trackByPlatform(_index: number, option: PlatformLinkOption): number {
+    return option.platform;
+  }
+
   onSubmit() {
     if (!this.validateForm()) {
       return;
@@ -295,6 +338,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       whatsAppNumber: this.whatsAppNumber,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
+      bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl,
       videoUrl: this.videoUrl,
       yearsOfExperience: this.yearsOfExperience,
@@ -305,7 +349,8 @@ export class ServiceProviderCreateComponent implements OnInit {
         categoryId: this.selectedCategoryId,
         subCategory: undefined
       } as CreateServiceProviderCategoryDto] : [],
-      galleryImages: this.galleryImages
+      galleryImages: this.galleryImages,
+      socialLinks: this.socialLinks.filter(link => link.url?.trim())
     };
 
     this.serviceProviderService.createServiceProviderProfile(dto).subscribe({
@@ -390,6 +435,12 @@ export class ServiceProviderCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/professionals']);
+  }
+
+  returnToChat(): void {
+    if (this.embedded) {
+      this.backToChat.emit();
+    }
   }
 
   private scrollToTop(): void {

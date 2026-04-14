@@ -1,213 +1,328 @@
-<div class="service-provider-create-container" (click)="closeDropdowns($event)">
+﻿<div class="service-provider-create-container" [class.embedded-mode]="embedded" (click)="closeDropdowns($event)">
   <div class="service-provider-create-card">
-    <div class="guided-hero">
-      <div class="guided-badge">פרופיל לאינדקס</div>
-      <h1 class="page-title">בוא נבנה דף נותן שירות בצורה ברורה ונעימה</h1>
-      <p class="page-subtitle">נמלא קודם את הבסיס, אחר כך את הפרטים המקצועיים, ובסוף נוסיף מדיה שתיתן לדף תחושה מלאה ואמינה.</p>
-    </div>
-
     <div *ngIf="loading" class="loading">
       <div class="spinner"></div>
       <p>טוען...</p>
     </div>
 
     <div *ngIf="!loading" class="form-container">
-      <div *ngIf="error" class="error-message">{{ error }}</div>
-
-      <div *ngIf="subscription" class="subscription-badge">
-        <span>מנוי {{ subscription.planName }}</span>
-      </div>
-
-      <div class="submission-note" *ngIf="!submitted && !subscription">
-        אפשר למלא עכשיו את כל פרטי הדף, התמונות והמדיה. אחרי השליחה תהיה אפשרות להמשיך לבחירת מנוי, אם תרצה.
-      </div>
-
-      <div class="success-state" *ngIf="submitted">
-        <h2>הדף נשלח לבדיקה</h2>
-        <p>פרופיל נותן השירות שלך הועבר למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות לדף.</p>
-        <div class="success-actions">
-          <button type="button" class="btn-primary" *ngIf="!subscription" (click)="goToSubscriptionSelection()">בחירת מנוי</button>
-          <button type="button" class="btn-secondary" (click)="finishFlow()">סיום</button>
-        </div>
-      </div>
-
-      <form *ngIf="!submitted" (ngSubmit)="onSubmit()" #providerForm="ngForm">
-        <div class="progress-banner">
-          <div class="progress-banner-top">
-            <span class="progress-label">שלב {{ currentStep }} מתוך {{ totalSteps }}</span>
-            <span class="progress-caption" *ngIf="currentStep < totalSteps">נשארו עוד {{ totalSteps - currentStep }} שלבים קצרים</span>
-            <span class="progress-caption" *ngIf="currentStep === totalSteps">השלב האחרון לפני שליחה</span>
-          </div>
-          <div class="progress-track" aria-hidden="true">
-            <span class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></span>
-          </div>
-        </div>
-
-        <div class="stepper-shell">
-          <button type="button" class="step-chip" [class.active]="currentStep === 1" (click)="goToStep(1)">בסיס</button>
-          <button type="button" class="step-chip" [class.active]="currentStep === 2" (click)="goToStep(2)">מקצועי</button>
-          <button type="button" class="step-chip" [class.active]="currentStep === 3" (click)="goToStep(3)">מדיה</button>
-        </div>
-
-        <section class="form-section" *ngIf="currentStep === 1">
-          <div class="section-head">
-            <span class="section-kicker">שלב 1</span>
-            <h2>מידע בסיסי</h2>
-            <p class="section-description">מי אתה, איפה אתה פועל ואיך הכי נוח להגיע אליך.</p>
-          </div>
-
-          <div class="form-group">
-            <label for="displayName">שם תצוגה *</label>
-            <input type="text" id="displayName" [(ngModel)]="displayName" name="displayName" required placeholder="שם העסק או נותן השירות" />
-          </div>
-
-          <div class="form-group">
-            <label for="email">אימייל *</label>
-            <input type="email" id="email" [(ngModel)]="email" name="email" required placeholder="your@email.com" />
-          </div>
-
-          <div class="form-group">
-            <label for="phoneNumber">טלפון *</label>
-            <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" required placeholder="050-1234567" />
-          </div>
-
-          <div class="form-group">
-            <label for="whatsAppNumber">WhatsApp</label>
-            <input type="tel" id="whatsAppNumber" [(ngModel)]="whatsAppNumber" name="whatsAppNumber" placeholder="050-1234567" />
-          </div>
-
-          <div class="form-group">
-            <label>עיר</label>
-            <div class="custom-dropdown">
-              <div class="dropdown-trigger" (click)="toggleCityDropdown()">
-                {{ getSelectedCityName() }}
-              </div>
-              <div *ngIf="cityDropdownOpen" class="dropdown-menu">
-                <input
-                  type="text"
-                  class="dropdown-search"
-                  [(ngModel)]="citySearchText"
-                  (ngModelChange)="onCitySearchChange()"
-                  [ngModelOptions]="{standalone: true}"
-                  placeholder="חפש עיר..."
-                />
-                <div class="dropdown-options">
-                  <div *ngFor="let city of filteredCities" class="dropdown-option" (click)="selectCity(city.id)">
-                    {{ city.name }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="location">כתובת / אזור פעילות</label>
-            <input type="text" id="location" [(ngModel)]="location" name="location" placeholder="רח' הרצל 123, תל אביב" />
-          </div>
-
-          <div class="form-group">
-            <label>קטגוריה *</label>
-            <div class="custom-dropdown">
-              <div class="dropdown-trigger" (click)="toggleCategoriesDropdown()">
-                {{ getSelectedCategoryText() }}
-              </div>
-              <div *ngIf="categoriesDropdownOpen" class="dropdown-menu">
-                <input
-                  type="text"
-                  class="dropdown-search"
-                  [(ngModel)]="categorySearchText"
-                  (ngModelChange)="onCategorySearchChange()"
-                  [ngModelOptions]="{standalone: true}"
-                  placeholder="חפש קטגוריה..."
-                />
-                <div class="dropdown-options">
-                  <div *ngFor="let category of filteredCategories" class="dropdown-option" (click)="selectCategory(category.id)">
-                    {{ category.name }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="shortBio">תיאור קצר</label>
-            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" rows="2" placeholder="תיאור קצר של העסק או השירות, 2–3 שורות"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="fullDescription">תיאור מורחב</label>
-            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" rows="5" placeholder="ספר על השירותים, הניסיון והייחוד שלך"></textarea>
-          </div>
-        </section>
-
-        <section class="form-section" *ngIf="currentStep === 2">
-          <div class="section-head">
-            <span class="section-kicker">שלב 2</span>
-            <h2>פרטים מקצועיים</h2>
-            <p class="section-description">הניסיון שלך, שעות הפעילות וכל מה שעוזר להבין את סוג השירות שאתה נותן.</p>
-          </div>
-
-          <div class="form-group">
-            <label for="yearsOfExperience">שנות ניסיון</label>
-            <input type="number" id="yearsOfExperience" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" placeholder="0" />
-          </div>
-
-          <div class="form-group">
-            <label for="workingHours">שעות פעילות</label>
-            <input type="text" id="workingHours" [(ngModel)]="workingHours" name="workingHours" placeholder="א'-ה' 10:00-19:00, ו' 9:00-13:00" />
-          </div>
-        </section>
-
-        <section class="form-section" *ngIf="currentStep === 3">
-          <div class="section-head">
-            <span class="section-kicker">שלב 3</span>
-            <h2>מדיה ותמונות</h2>
-            <p class="section-description">נוסיף תמונה, וידאו וגלריה כדי שהדף ירגיש אמין, מקצועי ונעים לעין.</p>
-          </div>
-
-          <div class="form-group">
-            <label for="profileImageUrl">תמונת פרופיל</label>
-            <app-file-upload-input [(url)]="profileImageUrl" placeholder="https://example.com/image.jpg" />
-          </div>
-
-          <div class="form-group">
-            <label for="videoUrl">וידאו</label>
-            <input type="url" id="videoUrl" [(ngModel)]="videoUrl" name="videoUrl" placeholder="https://youtube.com/watch?v=..." />
-          </div>
-
-          <div class="form-group">
-            <label for="websiteUrl">אתר אינטרנט</label>
-            <input type="url" id="websiteUrl" [(ngModel)]="websiteUrl" name="websiteUrl" placeholder="https://yourwebsite.com" />
-          </div>
-
-          <div class="form-group">
-            <label>גלריית תמונות</label>
-            <div class="gallery-manager">
-              <div class="gallery-add">
-                <app-file-upload-input [(url)]="newGalleryImage.imageUrl" placeholder="קישור לתמונה" [showPreview]="false" />
-                <input type="text" [(ngModel)]="newGalleryImage.caption" [ngModelOptions]="{standalone: true}" placeholder="כיתוב, לא חובה" />
-                <button type="button" (click)="addGalleryImage()">הוסף</button>
-              </div>
-              <div *ngIf="galleryImages.length > 0" class="gallery-list">
-                <div *ngFor="let img of galleryImages; let i = index" class="gallery-item">
-                  <img [src]="img.imageUrl" alt="Gallery image" />
-                  <span>{{ img.caption || 'ללא כיתוב' }}</span>
-                  <button type="button" (click)="removeGalleryImage(i)">מחק</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">חזרה</button>
-          <button type="button" class="btn-secondary" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">המשך</button>
-          <button type="submit" class="btn-primary" *ngIf="currentStep === totalSteps" [disabled]="saving">
-            {{ saving ? 'שולח...' : 'שלח לאישור' }}
+      <div class="floating-nav floating-nav--top" *ngIf="!submitted">
+        <div class="step-dots-nav" aria-label="שלבי הטופס">
+          <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" aria-label="פרופיל">
+            <span class="step-dot-core"></span>
+            <span class="step-dot-label" *ngIf="currentStep === 1">פרופיל</span>
           </button>
-          <button type="button" class="btn-secondary" (click)="cancelFlow()" [disabled]="saving">ביטול</button>
+          <button type="button" class="step-dot" [class.active]="currentStep === 2" (click)="goToStep(2)" aria-label="קישורים">
+            <span class="step-dot-core"></span>
+            <span class="step-dot-label" *ngIf="currentStep === 2">קישורים</span>
+          </button>
+          <button type="button" class="step-dot" [class.active]="currentStep === 3" (click)="goToStep(3)" aria-label="מדיה">
+            <span class="step-dot-core"></span>
+            <span class="step-dot-label" *ngIf="currentStep === 3">מדיה</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="guided-scroll-region">
+        <div *ngIf="error" class="error-message">{{ error }}</div>
+
+        <div *ngIf="subscription" class="subscription-badge">
+          <span>מנוי {{ subscription.planName }}</span>
+        </div>
+
+        <div class="success-state" *ngIf="submitted">
+          <h2>הדף נשלח לבדיקה</h2>
+          <p>פרופיל נותן השירות שלך הועבר למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות לדף.</p>
+          <div class="success-actions">
+            <button type="button" class="btn-primary" *ngIf="!subscription" (click)="goToSubscriptionSelection()">בחירת מנוי</button>
+            <button type="button" class="btn-secondary" (click)="finishFlow()">סיום</button>
+          </div>
+        </div>
+
+      <form *ngIf="!submitted" (ngSubmit)="onSubmit()" #providerForm="ngForm" id="serviceProviderCreateForm" class="guided-form">
+        <div class="guided-form-body">
+          <section class="form-section" *ngIf="currentStep === 1">
+            <div class="section-head">
+              <div class="step-intro">
+                <div class="guided-badge">נותן שירות</div>
+                <p class="section-intro-text">נבנה פתיחה שמרגישה כמו עסק אמיתי: תמונה, שם ותיאור מדויק.</p>
+              </div>
+              <h2>פרופיל</h2>
+              <p class="section-description">החלק הראשון שמציג מי אתה, באיזה תחום אתה פועל ואיך הדף שלך מרגיש כלפי חוץ.</p>
+            </div>
+
+            <div class="artist-profile-hero">
+              <div class="artist-profile-photo">
+                <div class="upload-shell upload-shell--square">
+                  <div class="upload-shell-head">
+                    <span class="material-icons">add_photo_alternate</span>
+                    <div>
+                      <strong>תמונת פרופיל</strong>
+                      <p>תמונה נקייה וברורה שתיתן לעמוד תחושה מקצועית ואישית.</p>
+                    </div>
+                  </div>
+                  <app-file-upload-input
+                    [(url)]="profileImageUrl"
+                    placeholder="הדבק כאן קישור לתמונת פרופיל"
+                    [showPreview]="true"
+                  />
+                </div>
+              </div>
+
+              <div class="artist-profile-fields">
+                <div class="form-group">
+                  <label class="form-label form-label--inline" for="displayName">שם העסק או נותן השירות</label>
+                  <label class="form-label form-label--sr-only" for="displayName">שם העסק או נותן השירות</label>
+                  <input type="text" id="displayName" [(ngModel)]="displayName" name="displayName" class="form-input" required placeholder="שם העסק או נותן השירות *" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label form-label--inline">קטגוריה</label>
+                  <label class="form-label form-label--sr-only">קטגוריה</label>
+                  <div class="custom-dropdown">
+                    <div class="dropdown-trigger" (click)="toggleCategoriesDropdown()">
+                      {{ getSelectedCategoryText() }}
+                    </div>
+                    <div *ngIf="categoriesDropdownOpen" class="dropdown-menu">
+                      <input
+                        type="text"
+                        class="dropdown-search"
+                        [(ngModel)]="categorySearchText"
+                        (ngModelChange)="onCategorySearchChange()"
+                        [ngModelOptions]="{standalone: true}"
+                        placeholder="חפש קטגוריה..."
+                      />
+                      <div class="dropdown-options">
+                        <div *ngFor="let category of filteredCategories" class="dropdown-option" (click)="selectCategory(category.id)">
+                          {{ category.name }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="upload-shell upload-shell--banner">
+              <div class="upload-shell-head upload-shell-head--banner">
+                <span class="material-icons">panorama</span>
+                <div>
+                  <strong>תמונת פתיחה</strong>
+                  <p>רקע רחב לראש הדף. מומלץ להעלות תמונה אופקית רחבה, למשל 1920x400.</p>
+                </div>
+              </div>
+
+              <app-file-upload-input
+                [(url)]="bannerImageUrl"
+                placeholder="הדבק כאן קישור לתמונה רחבה"
+                [showPreview]="true"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label--inline" for="shortBio">תיאור קצר</label>
+              <label class="form-label form-label--sr-only" for="shortBio">תיאור קצר</label>
+              <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" class="form-textarea" rows="3" placeholder="תיאור קצר: משפט או שניים שמסבירים מה אתה מציע ולמי זה מתאים"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label--inline" for="fullDescription">תיאור מורחב</label>
+              <label class="form-label form-label--sr-only" for="fullDescription">תיאור מורחב</label>
+              <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="form-textarea form-textarea--bio" rows="6" placeholder="ספר על השירות, צורת העבודה, הניסיון והדברים שחשוב שידעו כבר מהרגע הראשון"></textarea>
+            </div>
+
+            <div class="form-grid form-grid--double">
+              <div class="form-group">
+                <label class="form-label form-label--inline">עיר</label>
+                <label class="form-label form-label--sr-only">עיר</label>
+                <div class="custom-dropdown">
+                  <div class="dropdown-trigger" (click)="toggleCityDropdown()">
+                    {{ getSelectedCityName() }}
+                  </div>
+                  <div *ngIf="cityDropdownOpen" class="dropdown-menu">
+                    <input
+                      type="text"
+                      class="dropdown-search"
+                      [(ngModel)]="citySearchText"
+                      (ngModelChange)="onCitySearchChange()"
+                      [ngModelOptions]="{standalone: true}"
+                      placeholder="חפש עיר..."
+                    />
+                    <div class="dropdown-options">
+                      <div *ngFor="let city of filteredCities" class="dropdown-option" (click)="selectCity(city.id)">
+                        {{ city.name }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="location">כתובת או אזור פעילות</label>
+                <input type="text" id="location" [(ngModel)]="location" name="location" class="form-input" placeholder="כתובת או אזור פעילות" />
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" *ngIf="currentStep === 2">
+            <div class="section-head">
+              <h2>קישורים ופרטים</h2>
+              <p class="section-description">קודם דרכי קשר, אחר כך הרשתות, ובסוף המידע המקצועי שמחזק את האמון.</p>
+            </div>
+
+            <div class="form-grid form-grid--contact">
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="email">אימייל</label>
+                <input type="email" id="email" [(ngModel)]="email" name="email" class="form-input" required placeholder="אימייל *" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="phoneNumber">טלפון</label>
+                <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" class="form-input" required placeholder="טלפון *" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="whatsAppNumber">WhatsApp</label>
+                <input type="tel" id="whatsAppNumber" [(ngModel)]="whatsAppNumber" name="whatsAppNumber" class="form-input" placeholder="WhatsApp" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label--sr-only" for="websiteUrl">אתר אישי</label>
+              <input type="url" id="websiteUrl" [(ngModel)]="websiteUrl" name="websiteUrl" class="form-input" placeholder="אתר אישי - https://example.com" />
+            </div>
+
+            <div class="section-kicker">רשתות חברתיות</div>
+            <p class="section-description section-description--compact">אייקון, שם וקישור בכל שורה, כדי לשמור על סדר קל וברור.</p>
+
+            <div class="link-list">
+              <div class="link-row" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform">
+                <div class="link-row-icon">
+                  <span class="material-icons">{{ option.icon }}</span>
+                </div>
+                <div class="link-row-content">
+                  <span class="link-row-label">{{ option.label }}</span>
+                  <input
+                    type="url"
+                    class="form-input"
+                    [name]="'social_' + option.platform"
+                    [placeholder]="option.placeholder"
+                    [ngModel]="getPlatformLink(option.platform)"
+                    (ngModelChange)="setPlatformLink(option.platform, $event)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="section-kicker section-kicker--spaced">פרטים מקצועיים</div>
+
+            <div class="form-grid form-grid--double">
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="yearsOfExperience">שנות ניסיון</label>
+                <input type="number" id="yearsOfExperience" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="form-input" placeholder="שנות ניסיון" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--sr-only" for="workingHours">שעות פעילות</label>
+                <input type="text" id="workingHours" [(ngModel)]="workingHours" name="workingHours" class="form-input" placeholder="שעות פעילות" />
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section" *ngIf="currentStep === 3">
+            <div class="section-head">
+              <h2>מדיה</h2>
+              <p class="section-description">גלריה נקייה קודם, ואז וידאו, כדי שהעמוד יישאר אלגנטי ונוח להוספה.</p>
+            </div>
+
+            <div class="section-kicker">גלריה</div>
+            <p class="section-description section-description--compact">תמונות שמרחיבות את ההיכרות עם העסק, השירות או סביבת העבודה.</p>
+
+            <div class="media-grid">
+              <button type="button" class="media-add-card" (click)="addGalleryImage()">
+                <span class="material-icons">add_photo_alternate</span>
+                <strong>הוסף תמונה</strong>
+                <span>קובייה חדשה לגלריה</span>
+              </button>
+
+              <div class="media-card media-card--draft">
+                <div class="media-card-preview">
+                  <span class="material-icons">image</span>
+                </div>
+
+                <app-file-upload-input
+                  [(url)]="newGalleryImage.imageUrl"
+                  placeholder="הדבק כאן קישור לתמונה"
+                  [showPreview]="false"
+                />
+
+                <input
+                  type="text"
+                  [(ngModel)]="newGalleryImage.caption"
+                  [ngModelOptions]="{standalone: true}"
+                  class="form-input"
+                  placeholder="כיתוב קצר, אם צריך"
+                />
+              </div>
+
+              <div *ngFor="let img of galleryImages; let i = index" class="media-card">
+                <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" aria-label="מחיקת תמונה">
+                  <span class="material-icons">close</span>
+                </button>
+
+                <div class="media-card-preview" [class.has-image]="img.imageUrl">
+                  <img *ngIf="img.imageUrl" [src]="img.imageUrl" [alt]="img.caption || 'תמונה בגלריה'" />
+                  <span *ngIf="!img.imageUrl" class="material-icons">image</span>
+                </div>
+
+                <div class="media-card-caption">{{ img.caption || 'ללא כיתוב' }}</div>
+              </div>
+            </div>
+
+            <div class="section-kicker section-kicker--spaced">וידאו</div>
+            <p class="section-description section-description--compact">קישור אחד ברור לסרטון היכרות, תהליך עבודה או הצגה קצרה של השירות.</p>
+
+            <div class="media-grid media-grid--single">
+              <div class="media-card media-card--video">
+                <div class="media-card-preview media-card-preview--video">
+                  <span class="material-icons">smart_display</span>
+                </div>
+
+                <input type="url" id="videoUrl" [(ngModel)]="videoUrl" name="videoUrl" class="form-input" placeholder="הדבק כאן קישור לסרטון" />
+              </div>
+            </div>
+          </section>
         </div>
       </form>
+      </div>
+
+      <div class="floating-nav floating-nav--bottom" *ngIf="!submitted">
+        <div class="form-actions">
+          <button type="button" class="btn-secondary btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
+            <span class="material-icons">arrow_forward</span>
+          </button>
+          <button type="button" class="btn-secondary btn-action" *ngIf="embedded" (click)="cancelFlow()" [disabled]="saving">
+            <span class="material-icons">close</span>
+            <span>סגירה</span>
+          </button>
+          <button type="button" class="btn-secondary btn-action" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
+            <span class="material-icons">arrow_forward</span>
+            <span>חזרה</span>
+          </button>
+          <button type="button" class="btn-secondary btn-action" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
+            <span class="material-icons">arrow_back</span>
+            <span>המשך</span>
+          </button>
+          <button type="submit" class="btn-primary btn-action" *ngIf="currentStep === totalSteps" [disabled]="saving" form="serviceProviderCreateForm">
+            <span class="material-icons" *ngIf="!saving">north_east</span>
+            <span>{{ saving ? 'שולח...' : 'שליחה' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+
+
+

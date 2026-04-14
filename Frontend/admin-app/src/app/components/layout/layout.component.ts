@@ -426,6 +426,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       case 'index-service-provider':
         this.showServiceProviderCreateModal = true;
         break;
+      case 'artist-account':
+        localStorage.setItem('pendingProfessionalType', 'artist');
+        this.showArtistCreateModal = true;
+        break;
       case 'artist-community':
         this.showArtistCreateModal = true;
         break;
@@ -458,12 +462,27 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showTeacherCreateModal = false;
   }
 
+  backTeacherCreateModalToChat(): void {
+    this.showTeacherCreateModal = false;
+    this.showQuickAddAssistant = true;
+  }
+
   closeServiceProviderCreateModal(): void {
     this.showServiceProviderCreateModal = false;
   }
 
+  backServiceProviderCreateModalToChat(): void {
+    this.showServiceProviderCreateModal = false;
+    this.showQuickAddAssistant = true;
+  }
+
   closeArtistCreateModal(): void {
     this.showArtistCreateModal = false;
+  }
+
+  backArtistCreateModalToChat(): void {
+    this.showArtistCreateModal = false;
+    this.showQuickAddAssistant = true;
   }
 
   upgradeSubscription(): void {

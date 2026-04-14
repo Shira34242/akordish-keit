@@ -190,28 +190,19 @@
 
 <div class="guided-profile-modal-overlay" *ngIf="showTeacherCreateModal" (click)="closeTeacherCreateModal()">
     <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">
-        <button type="button" class="guided-profile-modal-close" (click)="closeTeacherCreateModal()" aria-label="Close">
-            <span class="material-icons">close</span>
-        </button>
-        <app-teacher-create [embedded]="true" (close)="closeTeacherCreateModal()"></app-teacher-create>
+        <app-teacher-create [embedded]="true" (close)="closeTeacherCreateModal()" (backToChat)="backTeacherCreateModalToChat()"></app-teacher-create>
     </div>
 </div>
 
 <div class="guided-profile-modal-overlay" *ngIf="showServiceProviderCreateModal" (click)="closeServiceProviderCreateModal()">
     <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">
-        <button type="button" class="guided-profile-modal-close" (click)="closeServiceProviderCreateModal()" aria-label="Close">
-            <span class="material-icons">close</span>
-        </button>
-        <app-service-provider-create [embedded]="true" (close)="closeServiceProviderCreateModal()"></app-service-provider-create>
+        <app-service-provider-create [embedded]="true" (close)="closeServiceProviderCreateModal()" (backToChat)="backServiceProviderCreateModalToChat()"></app-service-provider-create>
     </div>
 </div>
 
 <div class="guided-profile-modal-overlay" *ngIf="showArtistCreateModal" (click)="closeArtistCreateModal()">
     <div class="guided-profile-modal-shell guided-profile-modal-shell--wide" (click)="$event.stopPropagation()">
-        <button type="button" class="guided-profile-modal-close" (click)="closeArtistCreateModal()" aria-label="Close">
-            <span class="material-icons">close</span>
-        </button>
-        <app-artist-create [embedded]="true" (close)="closeArtistCreateModal()"></app-artist-create>
+        <app-artist-create [embedded]="true" (close)="closeArtistCreateModal()" (backToChat)="backArtistCreateModalToChat()"></app-artist-create>
     </div>
 </div>
 

@@ -1,426 +1,379 @@
-<div class="artist-create">
-  <div class="header">
-    <div class="guided-badge">דף אמן</div>
-    <h1>בוא נבנה דף אמן שמרגיש שלם מההתחלה</h1>
-    <p class="subtitle">נתחיל מהזהות והסיפור שלך, נמשיך למדיה ולקישורים, ואז נשלים את כל מה שיהפוך את הדף שלך לחי ומרשים.</p>
-  </div>
-
-  <!-- Loading State -->
+<div class="artist-create" [class.embedded-mode]="embedded">
   <div class="loading" *ngIf="loading">
     <div class="spinner"></div>
-    <p>טוען נתונים...</p>
+    <p>טוען...</p>
   </div>
 
-  <!-- Error Message -->
-  <div class="error-message" *ngIf="error && !loading">
-    {{ error }}
-  </div>
-
-  <!-- Form -->
-    <div class="submission-note" *ngIf="!loading && !submitted && !subscription">
-    אפשר למלא עכשיו את כל פרטי דף האמן, כולל תמונות, קישורים ומדיה. אחרי השליחה תהיה אפשרות להמשיך לבחירת מנוי, אם תרצה.
-  </div>
-
-  <div class="success-state" *ngIf="!loading && submitted">
-    <h2>דף האמן נשלח לבדיקה</h2>
-    <p>הפרטים הועברו למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות בדף.</p>
-    <div class="success-actions">
-      <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">בחירת מנוי</button>
-      <button type="button" class="btn-cancel" (click)="finishFlow()">סיום</button>
-    </div>
-  </div>
-
-  <form *ngIf="!loading && !submitted" (ngSubmit)="onSubmit()" class="artist-form">
-    <div class="progress-banner">
-      <div class="progress-banner-top">
-        <span class="progress-label">שלב {{ currentStep }} מתוך {{ totalSteps }}</span>
-        <span class="progress-caption" *ngIf="currentStep < totalSteps">נשארו עוד {{ totalSteps - currentStep }} שלבים קצרים</span>
-        <span class="progress-caption" *ngIf="currentStep === totalSteps">השלב האחרון לפני שמירה</span>
-      </div>
-      <div class="progress-track" aria-hidden="true">
-        <span class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></span>
-      </div>
-    </div>
-
-    <div class="stepper-shell">
-      <button type="button" class="step-chip" [class.active]="currentStep === 1" (click)="goToStep(1)">בסיס</button>
-      <button type="button" class="step-chip" [class.active]="currentStep === 2" (click)="goToStep(2)">מדיה</button>
-      <button type="button" class="step-chip" [class.active]="currentStep === 3" (click)="goToStep(3)">קישורים</button>
-      <button type="button" class="step-chip" [class.active]="currentStep === 4" (click)="goToStep(4)">הופעה וגלריה</button>
-      <button type="button" class="step-chip" [class.active]="currentStep === 5" (click)="goToStep(5)">סרטונים</button>
-    </div>
-
-    <!-- Basic Information -->
-    <div class="form-section" *ngIf="currentStep === 1">
-      <div class="section-head">
-        <span class="section-kicker">שלב 1</span>
-        <h2 class="section-title">
-          <span class="material-icons">person</span>
-          מידע בסיסי
-        </h2>
-        <p class="section-description">השם, התיאור והביוגרפיה שבונים את הנוכחות שלך באתר.</p>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label required">שם האומן</label>
-        <input
-          type="text"
-          [(ngModel)]="artistForm.name"
-          name="name"
-          class="form-input"
-          placeholder="שם האומן בעברית"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">שם באנגלית</label>
-        <input
-          type="text"
-          [(ngModel)]="artistForm.englishName"
-          name="englishName"
-          class="form-input"
-          placeholder="Artist Name in English"
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">תיאור קצר</label>
-        <textarea
-          [(ngModel)]="artistForm.shortBio"
-          name="shortBio"
-          class="form-textarea"
-          rows="3"
-          maxlength="300"
-          placeholder="תיאור קצר על האומן (1-3 שורות)..."
-        ></textarea>
-        <span class="char-counter" [class.warning]="getCharCount(artistForm.shortBio) > 250">
-          {{ getCharCount(artistForm.shortBio) }}/300
-        </span>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">ביוגרפיה מלאה</label>
-        <textarea
-          [(ngModel)]="artistForm.biography"
-          name="biography"
-          class="form-textarea"
-          rows="6"
-          maxlength="3000"
-          placeholder="ביוגרפיה מפורטת על האומן, קריירה, השפעות..."
-        ></textarea>
-        <span class="char-counter" [class.warning]="getCharCount(artistForm.biography) > 2700">
-          {{ getCharCount(artistForm.biography) }}/3000
-        </span>
-      </div>
-    </div>
-
-    <!-- Media -->
-    <div class="form-section" *ngIf="currentStep === 2">
-      <div class="section-head">
-        <span class="section-kicker">שלב 2</span>
-        <h2 class="section-title">
-          <span class="material-icons">image</span>
-          תמונות וקישורים
-        </h2>
-        <p class="section-description">המדיה הראשית שמציגה אותך מיד בצורה חזקה וברורה.</p>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">תמונת פרופיל</label>
-        <app-file-upload-input
-          [(url)]="artistForm.imageUrl"
-          placeholder="https://example.com/image.jpg"
-        />
-        <small class="form-hint">העלה קובץ או הזן קישור</small>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">אתר אישי</label>
-        <input
-          type="url"
-          [(ngModel)]="artistForm.websiteUrl"
-          name="websiteUrl"
-          class="form-input"
-          placeholder="https://example.com"
-        />
-        <small class="form-hint">קישור לאתר האישי שלך</small>
-      </div>
-    </div>
-
-    <!-- Banner - Soft Lock -->
-    <div class="form-section" *ngIf="currentStep === 2">
-      <div class="section-head">
-        <span class="section-kicker">שלב 3</span>
-        <h2 class="section-title">
-          <span class="material-icons">image</span>
-          באנר
-        </h2>
-        <p class="section-description">אזור פתיחה רחב שיכול לתת לדף שלך נוכחות מיידית.</p>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">
-          תמונת באנר
-          
-        </label>
-        <app-file-upload-input
-          [(url)]="artistForm.bannerImageUrl"
-          placeholder="https://example.com/banner.jpg"
-        />
-        <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">
-          באנר GIF/אנימציה
-          
-        </label>
-        <app-file-upload-input
-          [(url)]="artistForm.bannerGifUrl"
-          accept="image/*,video/mp4,video/webm"
-          placeholder="https://example.com/banner.gif"
-          [showPreview]="false"
-        />
-        <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
-      </div>
-    </div>
-
-    <!-- Social Links -->
-    <div class="form-section" *ngIf="currentStep === 3">
-      <div class="section-head">
-        <span class="section-kicker">שלב 4</span>
-        <h2 class="section-title">
-          <span class="material-icons">share</span>
-          רשתות חברתיות
-        </h2>
-        <p class="section-description">הקישורים שמחברים את מי שמגיע לדף שלך לעולם שלך מחוץ לאתר.</p>
-      </div>
-
-      <div *ngFor="let link of artistForm.socialLinks; let i = index" class="social-link-item">
-        <div class="form-row">
-          <div class="form-group" style="flex: 1;">
-            <label class="form-label">פלטפורמה</label>
-            <select [(ngModel)]="link.platform" [name]="'social_platform_' + i" class="form-select">
-              <option [value]="1">Instagram</option>
-              <option [value]="2">Facebook</option>
-              <option [value]="4">TikTok</option>
-              <option [value]="5">אתר אינטרנט</option>
-              <option [value]="6">Twitter / X</option>
-            </select>
-          </div>
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">קישור</label>
-            <div class="input-with-button">
-              <input type="url" [(ngModel)]="link.url" [name]="'social_url_' + i" class="form-input" placeholder="https://..." />
-              <button type="button" class="btn-remove" (click)="removeSocialLink(i)">
-                <span class="material-icons">delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button type="button" class="btn-add" (click)="addSocialLink()">
-        <span class="material-icons">add</span>
-        הוסף רשת חברתית
+  <div class="floating-nav floating-nav--top" *ngIf="!loading && !submitted">
+    <div class="step-dots-nav" aria-label="שלבי הטופס">
+      <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" aria-label="פרופיל">
+        <span class="step-dot-core"></span>
+        <span class="step-dot-label" *ngIf="currentStep === 1">פרופיל</span>
+      </button>
+      <button type="button" class="step-dot" [class.active]="currentStep === 2" (click)="goToStep(2)" aria-label="קישורים">
+        <span class="step-dot-core"></span>
+        <span class="step-dot-label" *ngIf="currentStep === 2">קישורים</span>
+      </button>
+      <button type="button" class="step-dot" [class.active]="currentStep === 3" (click)="goToStep(3)" aria-label="מדיה">
+        <span class="step-dot-core"></span>
+        <span class="step-dot-label" *ngIf="currentStep === 3">מדיה</span>
       </button>
     </div>
+  </div>
 
-    <!-- Music Platform Links -->
-    <div class="form-section" *ngIf="currentStep === 3">
-      <div class="section-head">
-        <span class="section-kicker">שלב 5</span>
-        <h2 class="section-title">
-          <span class="material-icons">music_note</span>
-          פלטפורמות מוזיקה
-        </h2>
-        <p class="section-description">כדי שיהיה קל להגיע ישר לשירים, לערוץ או לפלטפורמה המרכזית שלך.</p>
+  <div class="guided-scroll-region" *ngIf="!loading">
+    <div class="error-message" *ngIf="error">
+      {{ error }}
+    </div>
+
+    <div class="success-state" *ngIf="submitted">
+      <h2>דף האמן נשלח לבדיקה</h2>
+      <p>הפרטים הועברו למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות בדף.</p>
+      <div class="success-actions">
+        <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">בחירת מנוי</button>
+        <button type="button" class="btn-cancel" (click)="finishFlow()">סיום</button>
       </div>
+    </div>
 
-      <div *ngFor="let link of artistForm.musicLinks; let i = index" class="social-link-item">
-        <div class="form-row">
-          <div class="form-group" style="flex: 1;">
-            <label class="form-label">פלטפורמה</label>
-            <select [(ngModel)]="link.platform" [name]="'music_platform_' + i" class="form-select">
-              <option [value]="3">YouTube</option>
-              <option [value]="7">Spotify</option>
-              <option [value]="8">Zing</option>
-            </select>
+    <form *ngIf="!submitted" (ngSubmit)="onSubmit()" class="artist-form" id="artistCreateForm">
+      <div class="guided-form-body">
+        <div class="form-section" *ngIf="currentStep === 1">
+          <div class="section-head">
+            <div class="step-intro">
+              <div class="guided-badge">דף אמן</div>
+              <p class="section-intro-text">נתחיל מהלב של הפרופיל, כמו שהוא ירגיש בדף.</p>
+            </div>
+            <h2>פרופיל ראשוני</h2>
+            <p class="section-description">תמונה, שמות ותוכן פתיחה שמייצרים רושם חי, נקי ומדויק כבר מההתחלה.</p>
           </div>
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">קישור לדף שלך</label>
-            <div class="input-with-button">
-              <input type="url" [(ngModel)]="link.url" [name]="'music_url_' + i" class="form-input" placeholder="https://..." />
-              <button type="button" class="btn-remove" (click)="removeMusicLink(i)">
-                <span class="material-icons">delete</span>
-              </button>
+
+          <div class="artist-profile-hero">
+            <div class="artist-profile-photo">
+              <div class="upload-shell upload-shell--square">
+                <div class="upload-shell-head">
+                  <span class="material-icons">add_photo_alternate</span>
+                  <div>
+                    <strong>תמונת פרופיל</strong>
+                    <p>תמונה נקייה וברורה שתהיה הפנים של הדף.</p>
+                  </div>
+                </div>
+                <app-file-upload-input
+                  [(url)]="artistForm.imageUrl"
+                  placeholder="הדבק כאן קישור לתמונה"
+                  [showPreview]="true"
+                />
+              </div>
+            </div>
+
+            <div class="artist-profile-fields">
+              <div class="form-group">
+                <label class="form-label form-label--inline" for="artistName">שם בעברית</label>
+                <label class="form-label form-label--sr-only" for="artistName">שם האמן</label>
+                <input
+                  id="artistName"
+                  type="text"
+                  [(ngModel)]="artistForm.name"
+                  name="name"
+                  class="form-input"
+                  placeholder="שם האמן בעברית *"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--inline" for="artistEnglishName">שם באנגלית</label>
+                <label class="form-label form-label--sr-only" for="artistEnglishName">שם באנגלית</label>
+                <input
+                  id="artistEnglishName"
+                  type="text"
+                  [(ngModel)]="artistForm.englishName"
+                  name="englishName"
+                  class="form-input"
+                  placeholder="Artist name in English"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <button type="button" class="btn-add" (click)="addMusicLink()">
-        <span class="material-icons">add</span>
-        הוסף פלטפורמת מוזיקה
-      </button>
-    </div>
+          <div class="upload-shell upload-shell--banner">
+            <div class="upload-shell-head upload-shell-head--banner">
+              <span class="material-icons">panorama</span>
+              <div>
+                <strong>תמונת פתיחה</strong>
+                <p>הרקע הרחב שמופיע בראש הדף. מומלץ יחס רוחב רחב, למשל 1920x400.</p>
+              </div>
+            </div>
 
-    <!-- Performance Banner -->
-    <div class="form-section" *ngIf="currentStep === 4">
-      <div class="section-head">
-        <span class="section-kicker">שלב 6</span>
-        <h2 class="section-title">
-          <span class="material-icons">campaign</span>
-          באנר הופעה
-        </h2>
-        <p class="section-description">אם יש הופעה לקדם, זה המקום לשים אותה בצורה בולטת ועדינה.</p>
-      </div>
-      <p class="section-desc">תמונת פרסומת להופעה שתוצג מעל הביוגרפיה בדף האומן</p>
+            <div class="media-toggle" role="tablist" aria-label="סוג מדיה לבאנר">
+              <button
+                type="button"
+                class="media-toggle-btn"
+                [class.active]="bannerMediaMode === 'image'"
+                (click)="setBannerMediaMode('image')">
+                תמונה רגילה
+              </button>
+              <button
+                type="button"
+                class="media-toggle-btn"
+                [class.active]="bannerMediaMode === 'gif'"
+                (click)="setBannerMediaMode('gif')">
+                GIF / אנימציה
+              </button>
+            </div>
 
-      <div class="form-group">
-        <label class="form-label">תמונת הבאנר</label>
-        <app-file-upload-input
-          [(url)]="artistForm.performanceImageUrl"
-          placeholder="https://example.com/show.jpg"
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">קישור לרכישת כרטיסים</label>
-        <input
-          type="url"
-          [(ngModel)]="artistForm.performanceTicketUrl"
-          name="performanceTicketUrl"
-          class="form-input"
-          placeholder="https://tickets.example.com/..."
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label toggle-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="artistForm.performanceIsActive"
-            name="performanceIsActive"
-            class="form-checkbox"
-          />
-          הצג באנר בדף האומן
-        </label>
-      </div>
-    </div>
-
-    <!-- Gallery - Soft Lock -->
-    <div class="form-section" *ngIf="currentStep === 4">
-      <div class="section-head">
-        <span class="section-kicker">שלב 7</span>
-        <h2 class="section-title">
-          <span class="material-icons">photo_library</span>
-          גלריית תמונות
-        </h2>
-        <p class="section-description">אוסף תמונות שמרחיב את הסיפור הוויזואלי שלך מעבר לתמונה הראשית.</p>
-      </div>
-
-      <div *ngFor="let image of artistForm.galleryImages; let i = index" class="gallery-item">
-        <div class="form-row">
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">קישור לתמונה</label>
             <app-file-upload-input
-              [(url)]="image.imageUrl"
-              placeholder="https://..."
+              *ngIf="bannerMediaMode === 'image'"
+              [(url)]="artistForm.bannerImageUrl"
+              placeholder="הדבק כאן קישור לבאנר"
+              [showPreview]="true"
+            />
+
+            <app-file-upload-input
+              *ngIf="bannerMediaMode === 'gif'"
+              [(url)]="artistForm.bannerGifUrl"
+              accept="image/*,video/mp4,video/webm"
+              placeholder="הדבק כאן קישור ל-GIF או וידאו קצר"
               [showPreview]="false"
             />
           </div>
 
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">כיתוב</label>
-            <div class="input-with-button">
+          <div class="form-group">
+            <label class="form-label form-label--inline" for="artistShortBio">תיאור קצר</label>
+            <label class="form-label form-label--sr-only" for="artistShortBio">תיאור קצר</label>
+            <textarea
+              id="artistShortBio"
+              [(ngModel)]="artistForm.shortBio"
+              name="shortBio"
+              class="form-textarea"
+              rows="3"
+              maxlength="300"
+              placeholder="תיאור קצר: משפט או שניים שמספרים מי אתה ומה הסאונד או הסיפור שלך."
+            ></textarea>
+            <span class="char-counter" [class.warning]="getCharCount(artistForm.shortBio) > 250">
+              {{ getCharCount(artistForm.shortBio) }}/300
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label--inline" for="artistBiography">ביוגרפיה</label>
+            <label class="form-label form-label--sr-only" for="artistBiography">ביוגרפיה</label>
+            <textarea
+              id="artistBiography"
+              [(ngModel)]="artistForm.biography"
+              name="biography"
+              class="form-textarea form-textarea--bio"
+              rows="6"
+              maxlength="3000"
+              placeholder="ביוגרפיה: אפשר לספר כאן על הדרך, ההשפעות, היצירה והנקודות שחשוב לך שיכירו."
+            ></textarea>
+            <span class="char-counter" [class.warning]="getCharCount(artistForm.biography) > 2700">
+              {{ getCharCount(artistForm.biography) }}/3000
+            </span>
+          </div>
+        </div>
+
+        <div class="form-section" *ngIf="currentStep === 2">
+          <div class="section-head">
+            <h2>קישורים</h2>
+            <p class="section-description">כאן מחברים את הדף שלך לעולם שממשיך מחוץ לאתר, בצורה ברורה ולא עמוסה.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label--sr-only" for="artistWebsite">אתר אישי</label>
+            <input
+              id="artistWebsite"
+              type="url"
+              [(ngModel)]="artistForm.websiteUrl"
+              name="websiteUrl"
+              class="form-input"
+              placeholder="אתר אישי - https://example.com"
+            />
+          </div>
+
+          <div class="section-kicker">רשתות חברתיות</div>
+          <p class="section-description section-description--compact">הקישורים שמובילים ישר לעמודים החיים והיומיומיים שלך.</p>
+
+          <div class="link-list">
+            <div class="link-row" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform">
+              <div class="link-row-icon">
+                <span class="material-icons">{{ option.icon }}</span>
+              </div>
+              <div class="link-row-content">
+                <span class="link-row-label">{{ option.label }}</span>
+                <input
+                  type="url"
+                  class="form-input"
+                  [name]="'social_' + option.platform"
+                  [placeholder]="option.placeholder"
+                  [ngModel]="getPlatformLink(artistForm.socialLinks, option.platform)"
+                  (ngModelChange)="setPlatformLink(artistForm.socialLinks, option.platform, $event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="section-kicker section-kicker--spaced">פלטפורמות מוזיקה</div>
+          <p class="section-description section-description--compact">קישורים ישירים להאזנה, צפייה ומעבר מהיר למקומות החשובים.</p>
+
+          <div class="link-list">
+            <div class="link-row" *ngFor="let option of musicPlatformOptions; trackBy: trackByPlatform">
+              <div class="link-row-icon">
+                <span class="material-icons">{{ option.icon }}</span>
+              </div>
+              <div class="link-row-content">
+                <span class="link-row-label">{{ option.label }}</span>
+                <input
+                  type="url"
+                  class="form-input"
+                  [name]="'music_' + option.platform"
+                  [placeholder]="option.placeholder"
+                  [ngModel]="getPlatformLink(artistForm.musicLinks, option.platform)"
+                  (ngModelChange)="setPlatformLink(artistForm.musicLinks, option.platform, $event)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section" *ngIf="currentStep === 3">
+          <div class="section-head">
+            <h2>מדיה</h2>
+            <p class="section-description">גלריה חיה, סרטונים ותוכן קידומי מסודר בצורה קלילה ומזמינה.</p>
+          </div>
+
+          <div class="section-kicker">גלריית מדיה</div>
+          <p class="section-description section-description--compact">אוסף תמונות שמרחיב את הסיפור הוויזואלי שלך מעבר לתמונה הראשית.</p>
+
+          <div class="media-grid">
+            <button type="button" class="media-add-card" (click)="addGalleryImage()">
+              <span class="material-icons">add_photo_alternate</span>
+              <strong>הוסף תמונה</strong>
+              <span>קוביה חדשה לגלריה</span>
+            </button>
+
+            <button type="button" class="media-add-card media-add-card--video" (click)="addVideo()">
+              <span class="material-icons">smart_display</span>
+              <strong>הוסף סרטון</strong>
+              <span>כחלק מהגלריה המורחבת</span>
+            </button>
+
+            <div *ngFor="let image of artistForm.galleryImages; let i = index" class="media-card">
+              <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" aria-label="מחיקת תמונה">
+                <span class="material-icons">close</span>
+              </button>
+
+              <div class="media-card-preview" [class.has-image]="image.imageUrl">
+                <img *ngIf="image.imageUrl" [src]="image.imageUrl" [alt]="image.caption || 'תמונה בגלריה'" />
+                <span *ngIf="!image.imageUrl" class="material-icons">image</span>
+              </div>
+
+              <app-file-upload-input
+                [(url)]="image.imageUrl"
+                placeholder="הדבק כאן קישור לתמונה"
+                [showPreview]="false"
+              />
+
               <input
                 type="text"
                 [(ngModel)]="image.caption"
                 [name]="'gallery_caption_' + i"
                 class="form-input"
-                placeholder="תיאור התמונה..."
+                placeholder="כיתוב קצר, אם צריך"
               />
-              <button type="button" class="btn-remove" (click)="removeGalleryImage(i)">
-                <span class="material-icons">delete</span>
-              </button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <button type="button" class="btn-add" (click)="addGalleryImage()">
-        <span class="material-icons">add</span>
-        הוסף תמונה לגלריה
-      </button>
-    </div>
+            <div *ngFor="let video of artistForm.videos; let i = index" class="media-card media-card--video">
+              <button type="button" class="media-card-remove" (click)="removeVideo(i)" aria-label="מחיקת סרטון">
+                <span class="material-icons">close</span>
+              </button>
 
-    <!-- Videos - Soft Lock -->
-    <div class="form-section" *ngIf="currentStep === 5">
-      <div class="section-head">
-        <span class="section-kicker">שלב 8</span>
-        <h2 class="section-title">
-          <span class="material-icons">videocam</span>
-          סרטונים
-        </h2>
-        <p class="section-description">קליפים, הופעות או תוכן וידאו שנותנים לעמוד שלך חיים ותנועה.</p>
-      </div>
+              <div class="media-card-preview media-card-preview--video">
+                <span class="material-icons">smart_display</span>
+              </div>
 
-      <div *ngFor="let video of artistForm.videos; let i = index" class="video-item">
-        <div class="form-row">
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">קישור לסרטון</label>
-            <input
-              type="url"
-              [(ngModel)]="video.videoUrl"
-              [name]="'video_url_' + i"
-              class="form-input"
-              placeholder="https://youtube.com/..."
-            />
-          </div>
-
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label">כותרת</label>
-            <div class="input-with-button">
               <input
                 type="text"
                 [(ngModel)]="video.title"
                 [name]="'video_title_' + i"
                 class="form-input"
-                placeholder="שם הסרטון..."
+                placeholder="כותרת הסרטון"
               />
-              <button type="button" class="btn-remove" (click)="removeVideo(i)">
-                <span class="material-icons">delete</span>
-              </button>
+
+              <input
+                type="url"
+                [(ngModel)]="video.videoUrl"
+                [name]="'video_url_' + i"
+                class="form-input"
+                placeholder="הדבק כאן קישור לסרטון"
+              />
+            </div>
+          </div>
+
+          <div class="section-kicker section-kicker--spaced">הופעה</div>
+          <p class="section-description section-description--compact">אם יש הופעה לקדם, אפשר להוסיף כאן בלוק בולט ועדין אחרי הגלריה.</p>
+
+          <div class="performance-card">
+            <div class="upload-shell upload-shell--performance">
+              <div class="upload-shell-head upload-shell-head--banner">
+                <span class="material-icons">campaign</span>
+                <div>
+                  <strong>באנר הופעה</strong>
+                  <p>מומלץ להעלות תמונה רחבה שמציגה את המופע בצורה ברורה.</p>
+                </div>
+              </div>
+
+              <app-file-upload-input
+                [(url)]="artistForm.performanceImageUrl"
+                placeholder="הדבק כאן קישור לבאנר ההופעה"
+                [showPreview]="true"
+              />
+
+              <input
+                type="url"
+                [(ngModel)]="artistForm.performanceTicketUrl"
+                name="performanceTicketUrl"
+                class="form-input"
+                placeholder="קישור לרכישת כרטיסים"
+              />
+
+              <label class="toggle-row">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="artistForm.performanceIsActive"
+                  name="performanceIsActive"
+                  class="form-checkbox"
+                />
+                <span>להציג את באנר ההופעה בדף האמן</span>
+              </label>
             </div>
           </div>
         </div>
       </div>
+    </form>
+  </div>
 
-      <button type="button" class="btn-add" (click)="addVideo()">
-        <span class="material-icons">add</span>
-        הוסף סרטון
-      </button>
-    </div>
-
-    <!-- Form Actions -->
+  <div class="floating-nav floating-nav--bottom" *ngIf="!loading && !submitted">
     <div class="form-actions">
-      <button type="button" class="btn-cancel" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
-        חזרה
+      <button type="button" class="btn-cancel btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
+        <span class="material-icons">arrow_forward</span>
       </button>
-      <button type="button" class="btn-cancel" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
-        המשך
+      <button type="button" class="btn-cancel btn-action" *ngIf="embedded" (click)="cancel()" [disabled]="saving">
+        <span class="material-icons">close</span>
+        <span>סגירה</span>
       </button>
-      <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
-        ביטול
+      <button type="button" class="btn-cancel btn-action" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
+        <span class="material-icons">arrow_forward</span>
+        <span>חזרה</span>
       </button>
-      <button type="submit" class="btn-submit" *ngIf="currentStep === totalSteps" [disabled]="saving">
-        <span class="material-icons" *ngIf="!saving">save</span>
-        <span *ngIf="saving">שומר...</span>
-        <span *ngIf="!saving">צור פרופיל</span>
+      <button type="button" class="btn-cancel btn-action" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
+        <span class="material-icons">arrow_back</span>
+        <span>המשך</span>
+      </button>
+      <button type="submit" class="btn-submit btn-action" *ngIf="currentStep === totalSteps" [disabled]="saving" form="artistCreateForm">
+        <span class="material-icons" *ngIf="!saving">north_east</span>
+        <span *ngIf="saving">שולח...</span>
+        <span *ngIf="!saving">שליחה</span>
       </button>
     </div>
-  </form>
+  </div>
 </div>
-

@@ -17,11 +17,12 @@ import { ArtistListDto } from '../../models/artist.model';
 export type QuickAddAction =
   | 'index-teacher'
   | 'index-service-provider'
+  | 'artist-account'
   | 'artist-community'
   | 'contact'
   | 'admin-edit';
 
-type AssistantStep = 'root' | 'content' | 'index';
+type AssistantStep = 'root' | 'content' | 'index' | 'artist';
 type AssistantMode = 'choices' | 'song' | 'article' | 'event' | 'success';
 type MessageTone = 'question' | 'helper' | 'user';
 
@@ -178,6 +179,7 @@ export class QuickAddAssistantModalComponent {
         break;
       case 'index-teacher':
       case 'index-service-provider':
+      case 'artist-account':
       case 'artist-community':
       case 'contact':
       case 'admin-edit':
@@ -499,6 +501,14 @@ export class QuickAddAssistantModalComponent {
             { id: 'index-service-provider', label: 'נותן שירות', action: 'index-service-provider' }
           ]
         };
+      case 'artist':
+        return {
+          question: 'איך תרצה להוסיף את האמן?',
+          options: [
+            { id: 'artist-account', label: 'להפוך לחשבון אמן', action: 'artist-account' },
+            { id: 'artist-community', label: 'להוסיף אמן ללא בעלות חשבון', action: 'artist-community' }
+          ]
+        };
       default: {
         const options: AssistantOption[] = [];
 
@@ -515,7 +525,7 @@ export class QuickAddAssistantModalComponent {
           { id: 'content', label: 'תוכן', nextStep: 'content' },
           { id: 'event', label: 'הופעה', action: 'event' },
           { id: 'index', label: 'פרופיל לאינדקס', nextStep: 'index' },
-          { id: 'artist', label: 'אמן', action: 'artist-community' },
+          { id: 'artist', label: 'אמן', nextStep: 'artist' },
           { id: 'contact', label: 'יצירת קשר', action: 'contact' }
         );
 
