@@ -11,11 +11,13 @@ import { EventService } from '../../services/event.service';
 import { ArticleService } from '../../services/article.service';
 import { UserService } from '../../services/user.service';
 import { UserWithProfileDto } from '../../models/user.model';
+import { ArtistCreateComponent } from '../artist-create/artist-create.component';
+import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, ArtistCreateComponent, ServiceProviderCreateComponent],
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
 })
@@ -33,6 +35,10 @@ export class MyProfileComponent implements OnInit {
   showProfileModal = false;
   profileForm = { phone: '', address: '', birthDate: '' };
   profileSaving = false;
+
+  // מודל עריכת דף
+  showEditPageModal = false;
+  editPageType: 'artist' | 'provider' | null = null;
 
   // מודל שינוי סוג חשבון
   showAccountTypeModal = false;
@@ -165,6 +171,19 @@ export class MyProfileComponent implements OnInit {
       next: (pages) => { this.myPages = pages; },
       error: () => { this.myPages = []; }
     });
+  }
+
+  // ── מודאל עריכת דף ──
+
+  openEditPageModal(page: UserWithProfileDto) {
+    this.editPageType = page.profileType === 'artist' ? 'artist' : 'provider';
+    this.showEditPageModal = true;
+  }
+
+  closeEditPageModal() {
+    this.showEditPageModal = false;
+    this.editPageType = null;
+    this.loadMyAllPages();
   }
 
   // ── מודאל שינוי סוג חשבון ──

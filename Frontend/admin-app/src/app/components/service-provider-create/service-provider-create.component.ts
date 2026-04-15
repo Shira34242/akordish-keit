@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { AuthService } from '../../services/auth.service';
@@ -41,6 +41,8 @@ interface PlatformLinkOption {
 })
 export class ServiceProviderCreateComponent implements OnInit {
   @Input() embedded = false;
+  @Input() presetCategoryId?: number;
+  @Input() allowUncategorized = false;
   @Output() close = new EventEmitter<void>();
   @Output() backToChat = new EventEmitter<void>();
 
@@ -59,7 +61,7 @@ export class ServiceProviderCreateComponent implements OnInit {
   fullDescription: string = '';
   location: string = '';
   phoneNumber: string = '';
-  whatsAppNumber: string = '';
+  hasWhatsAppOnPhone = false;
   email: string = '';
   websiteUrl: string = '';
   bannerImageUrl: string = '';
@@ -84,6 +86,8 @@ export class ServiceProviderCreateComponent implements OnInit {
   categorySearchText = '';
   filteredCities: City[] = [];
   filteredCategories: Category[] = [];
+  private initialCategoryId?: number;
+  private initialAllowUncategorized = false;
   readonly socialPlatformOptions: PlatformLinkOption[] = [
     { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
     { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
@@ -98,14 +102,18 @@ export class ServiceProviderCreateComponent implements OnInit {
     private subscriptionService: SubscriptionService,
     private systemTablesService: SystemTablesService,
     private citiesService: CitiesService,
-    public router: Router
+    private route: ActivatedRoute,
+    public router: Router,
+    private host: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit() {
+    this.initializeIncomingCategoryState();
     this.loadSubscriptionStatus();
     this.loadCategories();
     this.loadCities();
     this.prefillUserData();
+    setTimeout(() => this.scrollToTop(false));
   }
 
   nextStep(): void {
@@ -200,6 +208,10 @@ export class ServiceProviderCreateComponent implements OnInit {
       next: (result) => {
         this.availableCategories = result.items;
         this.filteredCategories = this.availableCategories;
+        if (this.initialCategoryId) {
+          const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
+          this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
+        }
       },
       error: (error) => console.error('Error loading categories:', error)
     });
@@ -247,7 +259,7 @@ export class ServiceProviderCreateComponent implements OnInit {
 
   getSelectedCategoryText(): string {
     if (!this.selectedCategoryId) {
-      return '\u05d1\u05d7\u05e8 \u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d4...';
+      return this.allowUncategorized ? 'נותן שירות כללי' : '\u05d1\u05d7\u05e8 \u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d4...';
     }
     const category = this.availableCategories.find(cat => cat.id === this.selectedCategoryId);
     return category ? category.name : '\u05d1\u05d7\u05e8 \u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d4...';
@@ -266,6 +278,7 @@ export class ServiceProviderCreateComponent implements OnInit {
 
   selectCategory(categoryId: number) {
     this.selectedCategoryId = categoryId;
+    this.allowUncategorized = false;
     this.categoriesDropdownOpen = false;
   }
 
@@ -335,7 +348,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       cityId: this.cityId,
       location: this.location,
       phoneNumber: this.phoneNumber,
-      whatsAppNumber: this.whatsAppNumber,
+      whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
@@ -398,7 +411,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       return false;
     }
 
-    if (!this.selectedCategoryId) {
+    if (!this.selectedCategoryId && !this.allowUncategorized) {
       this.error = '\u05e0\u05d0 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d4';
       return false;
     }
@@ -443,9 +456,26 @@ export class ServiceProviderCreateComponent implements OnInit {
     }
   }
 
-  private scrollToTop(): void {
-    if (!this.embedded) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  private initializeIncomingCategoryState(): void {
+    const categoryIdFromQuery = Number(this.route.snapshot.queryParamMap.get('categoryId'));
+    const allowUncategorizedFromQuery = this.route.snapshot.queryParamMap.get('general') === 'true';
+
+    this.initialCategoryId = this.presetCategoryId ?? (Number.isFinite(categoryIdFromQuery) && categoryIdFromQuery > 0 ? categoryIdFromQuery : undefined);
+    this.initialAllowUncategorized = !this.initialCategoryId && (this.allowUncategorized || allowUncategorizedFromQuery);
+    this.allowUncategorized = this.initialAllowUncategorized;
+  }
+
+  private scrollToTop(smooth = true): void {
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
+
+    if (this.embedded) {
+      const scrollRegion = this.host.nativeElement.querySelector('.guided-scroll-region');
+      scrollRegion?.scrollTo({ top: 0, behavior });
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior });
     }
   }
 }

@@ -36,6 +36,14 @@
   direction: rtl;
 }
 
+.guided-scroll-region {
+  padding-bottom: calc(var(--space-3xl) + var(--space-lg));
+}
+
+.guided-form-body {
+  padding-bottom: calc(var(--space-2xl) + var(--space-sm));
+}
+
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar {
   width: 5px;
 }

@@ -81,7 +81,7 @@
             <p class="manage-card-subtitle">העמוד שמוצג לחברי האתר</p>
           </div>
           <div class="manage-card-actions">
-            <a class="manage-btn" [routerLink]="getEditPageUrl(page)">ערוך דף</a>
+            <button class="manage-btn" (click)="openEditPageModal(page)">ערוך דף</button>
             <a class="manage-btn" [routerLink]="getViewPageUrl(page)">צפה בדף</a>
           </div>
         </div>
@@ -227,6 +227,22 @@
 
   </div>
 </div>
+
+<!-- ===== EDIT PAGE MODAL ===== -->
+@if (showEditPageModal) {
+  <div class="modal-backdrop modal-backdrop--full" (click)="closeEditPageModal()">
+    <div class="modal-box modal-box--edit-page" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeEditPageModal()">
+        <span class="material-icons">close</span>
+      </button>
+      @if (editPageType === 'artist') {
+        <app-artist-create [embedded]="true" (close)="closeEditPageModal()"></app-artist-create>
+      } @else {
+        <app-service-provider-create [embedded]="true" (close)="closeEditPageModal()"></app-service-provider-create>
+      }
+    </div>
+  </div>
+}
 
 <!-- ===== PROFILE MODAL ===== -->
 @if (showProfileModal) {

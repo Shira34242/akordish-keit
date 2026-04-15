@@ -76,31 +76,60 @@
                     <input type="text" id="displayName" [(ngModel)]="displayName" name="displayName" class="form-input" required placeholder="שם המורה *" />
                   </div>
 
-                  <div class="form-group">
-                    <label class="form-label form-label--inline">כלי נגינה</label>
-                    <label class="form-label form-label--sr-only">כלי נגינה</label>
-                    <div class="custom-dropdown">
-                      <div class="dropdown-trigger" (click)="toggleInstrumentsDropdown()">
-                        {{ getSelectedInstrumentsText() }}
-                      </div>
-                      <div *ngIf="instrumentsDropdownOpen" class="dropdown-menu">
-                        <input
-                          type="text"
-                          class="dropdown-search"
-                          [(ngModel)]="instrumentSearchText"
-                          (ngModelChange)="onInstrumentSearchChange()"
-                          [ngModelOptions]="{standalone: true}"
-                          placeholder="חפש כלי נגינה..."
-                        />
-                        <div class="dropdown-options">
-                          <div *ngFor="let instrument of filteredInstruments" class="dropdown-option-checkbox" (click)="toggleInstrument(instrument.id)">
-                            <input type="checkbox" [checked]="isInstrumentSelected(instrument.id)" (click)="$event.stopPropagation()" />
-                            <span>{{ instrument.name }}</span>
+                  <div class="form-grid form-grid--double form-grid--hero">
+                    <div class="form-group">
+                      <label class="form-label form-label--inline">עיר</label>
+                      <label class="form-label form-label--sr-only">עיר</label>
+                      <div class="custom-dropdown">
+                        <div class="dropdown-trigger" (click)="toggleCityDropdown()">
+                          {{ getSelectedCityName() }}
+                        </div>
+                        <div *ngIf="cityDropdownOpen" class="dropdown-menu">
+                          <input
+                            type="text"
+                            class="dropdown-search"
+                            [(ngModel)]="citySearchText"
+                            (ngModelChange)="onCitySearchChange()"
+                            [ngModelOptions]="{standalone: true}"
+                            placeholder="חפש עיר..."
+                          />
+                          <div class="dropdown-options">
+                            <div *ngFor="let city of filteredCities" class="dropdown-option" (click)="selectCity(city.id)">
+                              {{ city.name }}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    <div class="form-group">
+                      <label class="form-label form-label--inline" for="location">כתובת או אזור פעילות</label>
+                      <label class="form-label form-label--sr-only" for="location">כתובת או אזור פעילות</label>
+                      <input type="text" id="location" [(ngModel)]="location" name="location" class="form-input" placeholder="כתובת או אזור פעילות" />
+                    </div>
                   </div>
+                </div>
+              </div>
+
+              <div class="instrument-picker">
+                <div class="section-head section-head--tight">
+                  <div class="section-kicker">כלי נגינה</div>
+                  <p class="section-description section-description--compact">על איזה כלי אתה מלמד? אפשר לבחור כמה כלים יחד.</p>
+                </div>
+
+                <div class="instrument-strip" role="list" aria-label="כלי נגינה">
+                  <button
+                    type="button"
+                    class="instrument-card"
+                    *ngFor="let instrument of availableInstruments"
+                    [class.is-selected]="isInstrumentSelected(instrument.id)"
+                    (click)="toggleInstrument(instrument.id)">
+                    <div class="instrument-card-thumb" [class.has-image]="getInstrumentImage(instrument)">
+                      <img *ngIf="getInstrumentImage(instrument)" [src]="getInstrumentImage(instrument)" [alt]="instrument.name" />
+                      <span *ngIf="!getInstrumentImage(instrument)" class="material-icons">piano</span>
+                    </div>
+                    <span class="instrument-card-name">{{ instrument.name }}</span>
+                  </button>
                 </div>
               </div>
 
@@ -132,37 +161,6 @@
                 <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="form-textarea form-textarea--bio" rows="6" placeholder="ספר על הגישה, הניסיון, שיטת הלימוד והתחושה שהתלמיד מקבל אצלך"></textarea>
               </div>
 
-              <div class="form-grid form-grid--double">
-                <div class="form-group">
-                  <label class="form-label form-label--inline">עיר</label>
-                  <label class="form-label form-label--sr-only">עיר</label>
-                  <div class="custom-dropdown">
-                    <div class="dropdown-trigger" (click)="toggleCityDropdown()">
-                      {{ getSelectedCityName() }}
-                    </div>
-                    <div *ngIf="cityDropdownOpen" class="dropdown-menu">
-                      <input
-                        type="text"
-                        class="dropdown-search"
-                        [(ngModel)]="citySearchText"
-                        (ngModelChange)="onCitySearchChange()"
-                        [ngModelOptions]="{standalone: true}"
-                        placeholder="חפש עיר..."
-                      />
-                      <div class="dropdown-options">
-                        <div *ngFor="let city of filteredCities" class="dropdown-option" (click)="selectCity(city.id)">
-                          {{ city.name }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="location">כתובת או אזור פעילות</label>
-                  <input type="text" id="location" [(ngModel)]="location" name="location" class="form-input" placeholder="כתובת או אזור פעילות" />
-                </div>
-              </div>
             </section>
 
             <section class="form-section" *ngIf="currentStep === 2">
@@ -173,24 +171,29 @@
 
               <div class="form-grid form-grid--contact">
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="email">אימייל</label>
+                  <label class="form-label form-label--inline" for="email">אימייל</label>
                   <input type="email" id="email" [(ngModel)]="email" name="email" class="form-input" required placeholder="אימייל *" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="phoneNumber">טלפון</label>
+                  <label class="form-label form-label--inline" for="phoneNumber">טלפון</label>
                   <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" class="form-input" required placeholder="טלפון *" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="whatsAppNumber">WhatsApp</label>
-                  <input type="tel" id="whatsAppNumber" [(ngModel)]="whatsAppNumber" name="whatsAppNumber" class="form-input" placeholder="WhatsApp" />
                 </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label form-label--sr-only" for="websiteUrl">אתר אישי</label>
+                <label class="form-label form-label--inline" for="websiteUrl">אתר אישי</label>
                 <input type="url" id="websiteUrl" [(ngModel)]="websiteUrl" name="websiteUrl" class="form-input" placeholder="אתר אישי - https://example.com" />
+              </div>
+
+              <div class="toggle-panel">
+                <label class="toggle-row" for="hasWhatsAppOnPhone">
+                  <div class="toggle-copy">
+                    <strong>יש וואטסאפ על המספר הזה?</strong>
+                    <span>אם כן, נציג בדף כפתור מהיר לפתיחת שיחה ישירות למספר הראשי.</span>
+                  </div>
+                  <input type="checkbox" id="hasWhatsAppOnPhone" [(ngModel)]="hasWhatsAppOnPhone" name="hasWhatsAppOnPhone" />
+                </label>
               </div>
 
               <div class="section-kicker">רשתות חברתיות</div>
@@ -219,22 +222,22 @@
 
               <div class="form-grid form-grid--double">
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="yearsOfExperience">שנות ניסיון</label>
+                  <label class="form-label form-label--inline" for="yearsOfExperience">שנות ניסיון</label>
                   <input type="number" id="yearsOfExperience" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="form-input" placeholder="שנות ניסיון" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="lessonTypes">סוגי שיעורים</label>
+                  <label class="form-label form-label--inline" for="lessonTypes">סוגי שיעורים</label>
                   <input type="text" id="lessonTypes" [(ngModel)]="lessonTypes" name="lessonTypes" class="form-input" placeholder="סוגי שיעורים: פרטי, קבוצתי, אונליין" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="availability">זמינות</label>
+                  <label class="form-label form-label--inline" for="availability">זמינות</label>
                   <input type="text" id="availability" [(ngModel)]="availability" name="availability" class="form-input" placeholder="זמינות" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label form-label--sr-only" for="workingHours">שעות פעילות</label>
+                  <label class="form-label form-label--inline" for="workingHours">שעות פעילות</label>
                   <input type="text" id="workingHours" [(ngModel)]="workingHours" name="workingHours" class="form-input" placeholder="שעות פעילות" />
                 </div>
               </div>
@@ -306,13 +309,13 @@
               <p class="section-description section-description--compact">תמונות נוספות שמרחיבות את התחושה מהשיעורים, הסטודיו או סביבת העבודה.</p>
 
               <div class="media-grid">
-                <button type="button" class="media-add-card" (click)="addGalleryImage()">
-                  <span class="material-icons">add_photo_alternate</span>
-                  <strong>הוסף תמונה</strong>
-                  <span>קובייה חדשה לגלריה</span>
-                </button>
-
                 <div class="media-card media-card--draft">
+                  <button type="button" class="media-add-card media-add-card--inline" (click)="addGalleryImage()">
+                    <span class="material-icons">add_photo_alternate</span>
+                    <strong>הוסף תמונה</strong>
+                    <span>קובייה חדשה לגלריה</span>
+                  </button>
+
                   <div class="media-card-preview">
                     <span class="material-icons">image</span>
                   </div>
@@ -350,7 +353,13 @@
               <p class="section-description section-description--compact">קישור אחד ברור לסרטון היכרות, נגינה או דוגמת שיעור.</p>
 
               <div class="media-grid media-grid--single">
-                <div class="media-card media-card--video">
+                <div class="media-add-card media-add-card--video-shell">
+                  <span class="material-icons">smart_display</span>
+                  <strong>הוסף סרטון</strong>
+                  <span>כרטיס וידאו באותה שפה של הגלריה</span>
+                </div>
+
+                <div class="media-card media-card--video media-card--video-entry">
                   <div class="media-card-preview media-card-preview--video">
                     <span class="material-icons">smart_display</span>
                   </div>

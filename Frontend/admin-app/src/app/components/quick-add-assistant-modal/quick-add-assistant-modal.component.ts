@@ -9,6 +9,7 @@ import { MediaService } from '../../services/admin/media.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistService } from '../../services/artist.service';
+import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { CreateArticleDto, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { CreateEventDto } from '../../models/event.model';
 import { UserWithProfileDto } from '../../models/user.model';
@@ -17,6 +18,8 @@ import { ArtistListDto } from '../../models/artist.model';
 export type QuickAddAction =
   | 'index-teacher'
   | 'index-service-provider'
+  | 'index-service-provider-general'
+  | `index-service-provider-category:${number}`
   | 'artist-account'
   | 'artist-community'
   | 'contact'
@@ -59,6 +62,7 @@ export class QuickAddAssistantModalComponent {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly artistService = inject(ArtistService);
+  private readonly systemTablesService = inject(SystemTablesService);
 
   @Input() adminEditLabel: string | null = null;
 
@@ -89,6 +93,7 @@ export class QuickAddAssistantModalComponent {
   tagAsMyself = true;
   private readonly profileSearch$ = new Subject<string>();
   eventArtists: ArtistListDto[] = [];
+  professionalCategories: SystemItem[] = [];
   selectedEventArtistIds: number[] = [];
   eventArtistSearchQuery = '';
   isLoadingEventArtists = false;
@@ -98,6 +103,7 @@ export class QuickAddAssistantModalComponent {
     this.initProfileSearch();
     this.autoFillUploaderFromCurrentUser();
     this.loadEventArtists();
+    this.loadProfessionalCategories();
     this.resetConversation();
   }
 
@@ -151,6 +157,11 @@ export class QuickAddAssistantModalComponent {
       return;
     }
 
+    if (typeof option.action === 'string' && option.action.startsWith('index-service-provider-category:')) {
+      this.actionSelected.emit(option.action as QuickAddAction);
+      return;
+    }
+
     switch (option.action) {
       case 'song':
         this.modeOriginStep = this.currentStep;
@@ -179,6 +190,7 @@ export class QuickAddAssistantModalComponent {
         break;
       case 'index-teacher':
       case 'index-service-provider':
+      case 'index-service-provider-general':
       case 'artist-account':
       case 'artist-community':
       case 'contact':
@@ -427,6 +439,19 @@ export class QuickAddAssistantModalComponent {
     });
   }
 
+  private loadProfessionalCategories(): void {
+    this.systemTablesService.getItems('music-service-provider-categories', 1, 100).pipe(
+      catchError(() => of({ items: [] as SystemItem[] }))
+    ).subscribe({
+      next: (result) => {
+        this.professionalCategories = result.items ?? [];
+      },
+      error: () => {
+        this.professionalCategories = [];
+      }
+    });
+  }
+
   trackByMessage(_: number, message: AssistantMessage): string {
     return message.id;
   }
@@ -493,14 +518,22 @@ export class QuickAddAssistantModalComponent {
             { id: 'content-article', label: 'תוכן אחר', action: 'content-article' }
           ]
         };
-      case 'index':
+      case 'index': {
+        const professionalOptions: AssistantOption[] = this.professionalCategories.map(category => ({
+          id: `index-service-provider-category-${category.id}`,
+          label: category.name,
+          action: `index-service-provider-category:${category.id}`
+        }));
+
         return {
           question: 'הבנתי, איזה פרופיל תרצה לאינדקס?',
           options: [
-            { id: 'index-teacher', label: 'מורה', action: 'index-teacher' },
-            { id: 'index-service-provider', label: 'נותן שירות', action: 'index-service-provider' }
+            { id: 'index-teacher', label: 'מורה למוזיקה', action: 'index-teacher' },
+            ...professionalOptions,
+            { id: 'index-service-provider-general', label: 'אחר', action: 'index-service-provider-general' }
           ]
         };
+      }
       case 'artist':
         return {
           question: 'איך תרצה להוסיף את האמן?',

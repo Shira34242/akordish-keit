@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -93,7 +93,8 @@ export class ArtistCreateComponent implements OnInit {
     private authService: AuthService,
     private subscriptionService: SubscriptionService,
     private artistService: ArtistService,
-    private router: Router
+    private router: Router,
+    private host: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit() {
@@ -106,6 +107,7 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.userId = user.id;
     this.loadSubscriptionStatus();
     this.syncBannerMediaMode();
+    setTimeout(() => this.scrollToTop(false));
   }
 
   nextStep(): void {
@@ -402,9 +404,17 @@ export class ArtistCreateComponent implements OnInit {
     this.router.navigate(['/artists']);
   }
 
-  private scrollToTop(): void {
-    if (!this.embedded) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  private scrollToTop(smooth = true): void {
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
+
+    if (this.embedded) {
+      const scrollRegion = this.host.nativeElement.querySelector('.guided-scroll-region');
+      scrollRegion?.scrollTo({ top: 0, behavior });
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior });
     }
   }
 }

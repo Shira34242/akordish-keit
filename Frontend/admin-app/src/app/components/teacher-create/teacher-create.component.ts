@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -54,7 +54,7 @@ export class TeacherCreateComponent implements OnInit {
   fullDescription: string = '';
   location: string = '';
   phoneNumber: string = '';
-  whatsAppNumber: string = '';
+  hasWhatsAppOnPhone = false;
   email: string = '';
   websiteUrl: string = '';
   bannerImageUrl: string = '';
@@ -108,7 +108,8 @@ export class TeacherCreateComponent implements OnInit {
     private subscriptionService: SubscriptionService,
     private systemTablesService: SystemTablesService,
     private citiesService: CitiesService,
-    public router: Router
+    public router: Router,
+    private host: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit() {
@@ -116,6 +117,7 @@ export class TeacherCreateComponent implements OnInit {
     this.loadInstruments();
     this.loadCities();
     this.prefillUserData();
+    setTimeout(() => this.scrollToTop(false));
   }
 
   nextStep(): void {
@@ -291,6 +293,19 @@ export class TeacherCreateComponent implements OnInit {
     return this.selectedInstrumentIds.includes(instrumentId);
   }
 
+  getInstrumentImage(instrument: SystemItem): string {
+    const possibleImage = [
+      instrument['imageUrl'],
+      instrument['iconUrl'],
+      instrument['thumbnailUrl'],
+      instrument['pictureUrl'],
+      instrument['image'],
+      instrument['icon']
+    ].find(value => typeof value === 'string' && value.trim().length > 0);
+
+    return typeof possibleImage === 'string' ? possibleImage.trim() : '';
+  }
+
   // Language dropdown methods
   toggleLanguageDropdown() {
     this.languageDropdownOpen = !this.languageDropdownOpen;
@@ -424,7 +439,7 @@ export class TeacherCreateComponent implements OnInit {
       cityId: this.cityId,
       location: this.location,
       phoneNumber: this.phoneNumber,
-      whatsAppNumber: this.whatsAppNumber,
+      whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
@@ -541,9 +556,17 @@ export class TeacherCreateComponent implements OnInit {
     }
   }
 
-  private scrollToTop(): void {
-    if (!this.embedded) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  private scrollToTop(smooth = true): void {
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
+
+    if (this.embedded) {
+      const scrollRegion = this.host.nativeElement.querySelector('.guided-scroll-region');
+      scrollRegion?.scrollTo({ top: 0, behavior });
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior });
     }
   }
 }

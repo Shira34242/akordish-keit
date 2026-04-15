@@ -1000,3 +1000,34 @@
     flex: 0 0 180px;
   }
 }
+
+/* ===========================
+   EDIT PAGE MODAL
+   =========================== */
+
+.modal-backdrop--full {
+  align-items: flex-start;
+  padding: 0;
+}
+
+.modal-box--edit-page {
+  max-width: 860px;
+  width: 100%;
+  max-height: 100vh;
+  overflow-y: auto;
+  border-radius: 0;
+  padding: var(--space-2xl) var(--space-xl);
+  margin: auto;
+}
+
+@media (min-width: 768px) {
+  .modal-backdrop--full {
+    align-items: center;
+    padding: var(--space-lg);
+  }
+
+  .modal-box--edit-page {
+    border-radius: 24px;
+    max-height: 90vh;
+  }
+}

@@ -59,6 +59,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showTeacherCreateModal = false;
   showServiceProviderCreateModal = false;
   showArtistCreateModal = false;
+  serviceProviderPresetCategoryId?: number;
+  allowGeneralServiceProvider = false;
 
   private currentArticleId: number | null = null;
   private lastScrollY = 0;
@@ -424,6 +426,13 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.showTeacherCreateModal = true;
         break;
       case 'index-service-provider':
+        this.serviceProviderPresetCategoryId = undefined;
+        this.allowGeneralServiceProvider = false;
+        this.showServiceProviderCreateModal = true;
+        break;
+      case 'index-service-provider-general':
+        this.serviceProviderPresetCategoryId = undefined;
+        this.allowGeneralServiceProvider = true;
         this.showServiceProviderCreateModal = true;
         break;
       case 'artist-account':
@@ -434,6 +443,11 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.showArtistCreateModal = true;
         break;
       default:
+        if (action.startsWith('index-service-provider-category:')) {
+          this.serviceProviderPresetCategoryId = Number(action.split(':')[1]);
+          this.allowGeneralServiceProvider = false;
+          this.showServiceProviderCreateModal = true;
+        }
         break;
     }
   }
@@ -469,10 +483,14 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   closeServiceProviderCreateModal(): void {
     this.showServiceProviderCreateModal = false;
+    this.serviceProviderPresetCategoryId = undefined;
+    this.allowGeneralServiceProvider = false;
   }
 
   backServiceProviderCreateModalToChat(): void {
     this.showServiceProviderCreateModal = false;
+    this.serviceProviderPresetCategoryId = undefined;
+    this.allowGeneralServiceProvider = false;
     this.showQuickAddAssistant = true;
   }
 
