@@ -121,7 +121,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    this.cityDropdownOpen = !this.cityDropdownOpen;
+    const nextState = !this.cityDropdownOpen;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
       this.citySearchText = '';
       this.filteredCities = this.availableCities;
@@ -152,7 +154,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   // Instruments dropdown methods
   toggleInstrumentsDropdown(): void {
-    this.instrumentsDropdownOpen = !this.instrumentsDropdownOpen;
+    const nextState = !this.instrumentsDropdownOpen;
+    this.closeAllDropdowns();
+    this.instrumentsDropdownOpen = nextState;
     if (this.instrumentsDropdownOpen) {
       this.instrumentSearchText = '';
       this.filteredInstruments = this.availableInstruments;
@@ -197,7 +201,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   // Language dropdown methods
   toggleLanguageDropdown(): void {
-    this.languageDropdownOpen = !this.languageDropdownOpen;
+    const nextState = !this.languageDropdownOpen;
+    this.closeAllDropdowns();
+    this.languageDropdownOpen = nextState;
     if (this.languageDropdownOpen) {
       this.filteredLanguageOptions = this.languageOptions;
     }
@@ -227,7 +233,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   // Audience dropdown methods
   toggleAudienceDropdown(): void {
-    this.audienceDropdownOpen = !this.audienceDropdownOpen;
+    const nextState = !this.audienceDropdownOpen;
+    this.closeAllDropdowns();
+    this.audienceDropdownOpen = nextState;
     if (this.audienceDropdownOpen) {
       this.filteredAudienceOptions = this.audienceOptions;
     }
@@ -415,11 +423,15 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
-      this.cityDropdownOpen = false;
-      this.instrumentsDropdownOpen = false;
-      this.languageDropdownOpen = false;
-      this.audienceDropdownOpen = false;
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.cityDropdownOpen = false;
+    this.instrumentsDropdownOpen = false;
+    this.languageDropdownOpen = false;
+    this.audienceDropdownOpen = false;
   }
 
   ngOnDestroy(): void {

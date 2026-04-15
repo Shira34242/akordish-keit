@@ -291,34 +291,25 @@
   overflow-x: auto;
   padding-bottom: 10px;
   scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
 }
 
-/* Hide scrollbar by default */
 .teachers-grid::-webkit-scrollbar {
-  height: 8px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-/* Show scrollbar on hover */
-.teachers-grid:hover::-webkit-scrollbar {
-  opacity: 1;
+  height: var(--site-scrollbar-size);
 }
 
 .teachers-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: var(--site-scrollbar-track);
 }
 
 .teachers-grid::-webkit-scrollbar-thumb {
-  background: #FFD700;
-  border-radius: 10px;
+  background: var(--site-scrollbar-thumb);
+  border-radius: 999px;
 }
 
 .teachers-grid::-webkit-scrollbar-thumb:hover {
-  background: #FFC700;
+  background: var(--site-scrollbar-thumb-hover);
 }
 
 /* Filtered results grid - normal wrapping layout */

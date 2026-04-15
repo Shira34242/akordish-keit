@@ -12,12 +12,12 @@
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
                     <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         onerror="this.onerror=null; this.src='/logo.png'">
+                         imgFallback>
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
                             <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                onerror="this.onerror=null; this.src='/logo.png'">
+                                imgFallback>
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -58,12 +58,12 @@
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
                     <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         onerror="this.onerror=null; this.src='/logo.png'">
+                         imgFallback>
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
                             <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                onerror="this.onerror=null; this.src='/logo.png'">
+                                imgFallback>
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -115,12 +115,12 @@
             <ng-container *ngIf="loggedIn && user">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
                     <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         onerror="this.onerror=null; this.src='/logo.png'">
+                         imgFallback>
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
                             <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                onerror="this.onerror=null; this.src='/logo.png'">
+                                imgFallback>
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -214,7 +214,7 @@
 <footer class="main-footer">
     <div class="footer-inner">
         <div class="footer-right">
-            <img src="logo.png" alt="אקורדישקיית" class="footer-logo-img" (click)="handleLogoClick()">
+            <img src="/logo.png" alt="אקורדישקיית" class="footer-logo-img" (click)="handleLogoClick()">
         </div>
         <div class="footer-left">
             <ul class="footer-links">

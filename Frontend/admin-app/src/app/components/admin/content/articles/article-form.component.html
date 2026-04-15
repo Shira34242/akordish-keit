@@ -379,7 +379,9 @@
           <input type="text" class="form-input slug-input" [(ngModel)]="article.slug" name="slug"
             placeholder="article-slug" required>
           <div class="field-hint">
-            הכתבה תהיה זמינה ב: /articles/{{ article.slug || 'slug' }}
+            הכתבה תהיה זמינה ב:
+            <ng-container *ngIf="article.contentType === ArticleContentType.Blog">/blog/{{ article.slug || 'slug' }}</ng-container>
+            <ng-container *ngIf="article.contentType !== ArticleContentType.Blog">/news/{{ article.slug || 'slug' }}</ng-container>
           </div>
         </div>
       </div>

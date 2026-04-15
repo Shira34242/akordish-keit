@@ -124,7 +124,7 @@ export class BlogPostViewComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/blog']);
+    this.router.navigate(['/articles']);
   }
 
   // Share article
@@ -163,7 +163,7 @@ export class BlogPostViewComponent implements OnInit {
   toggleFavorite(): void {
     if (!this.article) return;
     if (!this.authService.isLoggedIn) {
-      this.router.navigate(['/login']);
+      this.authService.requestLogin(this.router.url);
       return;
     }
 

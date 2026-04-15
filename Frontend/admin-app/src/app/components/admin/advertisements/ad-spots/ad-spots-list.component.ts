@@ -28,7 +28,7 @@ export class AdSpotsListComponent implements OnInit {
   // Pagination
   totalCount = 0;
   pageNumber = 1;
-  pageSize = 10;
+  pageSize = 25;
   totalPages = 0;
   hasPreviousPage = false;
   hasNextPage = false;
@@ -61,12 +61,6 @@ export class AdSpotsListComponent implements OnInit {
 
   onPageChange(page: number): void {
     this.pageNumber = page;
-    this.loadAdSpots();
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.pageNumber = 1;
     this.loadAdSpots();
   }
 

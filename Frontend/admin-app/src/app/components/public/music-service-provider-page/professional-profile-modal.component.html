@@ -51,10 +51,10 @@
       <!-- תמונת פרופיל — בולטת מחוץ לתיבה -->
       <div class="profile-bubble">
         <img
-          [src]="professional.profileImageUrl || '/logo.png'"
+          [src]="professional.profileImageUrl"
           alt="{{ professional.displayName }}"
           class="profile-img"
-          onerror="this.onerror=null; this.src='/logo.png'" />
+          imgFallback />
         <span *ngIf="professional.isFeatured" class="star-badge">
           <span class="material-icons">star</span>
         </span>
@@ -159,7 +159,7 @@
           <div class="gallery-scroll">
             <div *ngFor="let img of professional.galleryImages" class="gallery-item">
               <img [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"
-                   loading="lazy" onerror="this.onerror=null; this.src='/logo.png'" />
+                   loading="lazy" imgFallback />
             </div>
           </div>
         </div>

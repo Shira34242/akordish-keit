@@ -297,6 +297,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     onArtistSearch(event: Event): void {
         const query = (event.target as HTMLInputElement).value.toLowerCase();
+        this.closeAllFilterDropdowns();
         this.showArtistDropdown = true;
         this.selectedFilterArtistId = null;
         this.filteredArtists = query
@@ -323,6 +324,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     onGenreSearch(event: Event): void {
         const query = (event.target as HTMLInputElement).value.toLowerCase();
+        this.closeAllFilterDropdowns();
         this.showGenreDropdown = true;
         this.filteredGenres = query
             ? this.genres.filter(g => g.name.toLowerCase().includes(query)).slice(0, 10)
@@ -343,6 +345,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     onKeySearch(event: Event): void {
         const query = (event.target as HTMLInputElement).value.toLowerCase();
+        this.closeAllFilterDropdowns();
         this.showKeyDropdown = true;
         this.filteredKeys = query
             ? this.musicalKeys.filter(k =>
@@ -403,12 +406,16 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     onDocumentClick(event: Event): void {
         const target = event.target as HTMLElement;
         if (!target.closest('.filter-autocomplete')) {
-            this.showArtistDropdown = false;
-            this.showGenreDropdown = false;
-            this.showKeyDropdown = false;
+            this.closeAllFilterDropdowns();
         }
         if (!target.closest('.sort-btn-wrap')) {
             this.showSortDropdown = false;
         }
+    }
+
+    private closeAllFilterDropdowns(): void {
+        this.showArtistDropdown = false;
+        this.showGenreDropdown = false;
+        this.showKeyDropdown = false;
     }
 }

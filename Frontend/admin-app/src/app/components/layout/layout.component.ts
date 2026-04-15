@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, HostListener, OnInit } from '@angular/core';
+import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { GoogleSigninButtonModule, SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
@@ -33,7 +34,8 @@ import { ArtistCreateComponent } from '../artist-create/artist-create.component'
     TeacherCreateComponent,
     ServiceProviderCreateComponent,
     ArtistCreateComponent,
-    RouterModule
+    RouterModule,
+    ImgFallbackDirective
   ],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.css']
@@ -148,7 +150,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   handleImageError(event: Event): void {
     const target = event.target as HTMLImageElement | null;
     if (target) {
-      target.src = 'public/logo.png';
+      target.src = '/logo.png';
     }
   }
 
@@ -316,8 +318,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   signOut(): void {
     this.showUserMenu = false;
     this.authService.logout();
-    this.socialAuthService.signOut();
-    window.location.reload();
+    this.socialAuthService.signOut().catch(() => {});
+    this.router.navigate(['/']);
   }
 
   openAuthModal(): void {
@@ -352,7 +354,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.closeAdditionalDetailsModal();
 
     if (userType === UserType.Regular) {
-      window.location.reload();
+      this.router.navigate(['/my-profile']);
       return;
     }
 

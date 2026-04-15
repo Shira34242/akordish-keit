@@ -23,7 +23,7 @@ export class EventsListComponent implements OnInit {
 
   // Pagination
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 25;
   totalItems = 0;
   totalPages = 0;
 

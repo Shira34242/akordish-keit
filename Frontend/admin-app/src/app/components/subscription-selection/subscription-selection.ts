@@ -144,7 +144,10 @@ export class SubscriptionSelectionComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.fromProfileComplete = params['from'] === 'profile-complete';
-      this.profileType = (params['type'] as ProfileType) || null;
+      // Use query param as source of truth; fall back to localStorage if missing
+      this.profileType = (params['type'] as ProfileType)
+        || (localStorage.getItem('pendingProfessionalType') as ProfileType)
+        || null;
       this.buildPlanOptions();
     });
 

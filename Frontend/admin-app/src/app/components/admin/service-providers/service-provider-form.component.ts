@@ -361,7 +361,9 @@ export class ServiceProviderFormComponent implements OnInit {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    this.cityDropdownOpen = !this.cityDropdownOpen;
+    const nextState = !this.cityDropdownOpen;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
       this.citySearchText = '';
       this.filteredCities = this.availableCities;
@@ -389,7 +391,9 @@ export class ServiceProviderFormComponent implements OnInit {
 
   // Category dropdown methods
   toggleCategoryDropdown(): void {
-    this.categoryDropdownOpen = !this.categoryDropdownOpen;
+    const nextState = !this.categoryDropdownOpen;
+    this.closeAllDropdowns();
+    this.categoryDropdownOpen = nextState;
     if (this.categoryDropdownOpen) {
       this.categorySearchText = '';
       this.filteredCategories = this.availableCategories;
@@ -415,9 +419,13 @@ export class ServiceProviderFormComponent implements OnInit {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
-      this.cityDropdownOpen = false;
-      this.categoryDropdownOpen = false;
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.cityDropdownOpen = false;
+    this.categoryDropdownOpen = false;
   }
 
   goBack(): void {

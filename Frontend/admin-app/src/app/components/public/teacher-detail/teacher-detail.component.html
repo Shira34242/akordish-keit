@@ -34,10 +34,10 @@
 
         <!-- תמונה — צד ימין (ראשון ב-RTL flex row) -->
         <div class="hero-image-section">
-          <img [src]="teacher.profileImageUrl || '/logo.png'"
+          <img [src]="teacher.profileImageUrl"
                alt="{{ teacher.displayName }}"
                class="hero-photo-square"
-               onerror="this.onerror=null; this.src='/logo.png'" />
+               imgFallback />
         </div>
 
         <!-- פרטים — צד שמאל -->

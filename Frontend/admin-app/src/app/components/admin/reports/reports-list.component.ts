@@ -23,7 +23,7 @@ export class ReportsListComponent implements OnInit {
 
   // Pagination
   currentPage = 1;
-  pageSize = 20;
+  pageSize = 25;
   totalItems = 0;
   totalPages = 0;
 
@@ -172,7 +172,9 @@ export class ReportsListComponent implements OnInit {
 
   get pages(): number[] {
     const pages: number[] = [];
-    for (let i = 1; i <= this.totalPages; i++) {
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(this.totalPages, this.currentPage + 2);
+    for (let i = start; i <= end; i++) {
       pages.push(i);
     }
     return pages;

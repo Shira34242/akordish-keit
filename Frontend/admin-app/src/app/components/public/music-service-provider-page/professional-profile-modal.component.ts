@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, AfterViewInit, OnDestroy, OnChanges, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -9,7 +10,7 @@ import { CitiesService, City } from '../../../services/cities.service';
 @Component({
   selector: 'app-professional-profile-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ImgFallbackDirective],
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })

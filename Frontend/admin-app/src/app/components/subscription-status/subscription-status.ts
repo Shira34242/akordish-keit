@@ -40,7 +40,7 @@ export class SubscriptionStatusComponent implements OnInit {
   loadSubscription() {
     const user = this.authService.currentUserValue;
     if (!user) {
-      this.router.navigate(['/login']);
+      this.authService.requestLogin('/subscription/status');
       return;
     }
 

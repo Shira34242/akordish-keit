@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -219,7 +219,9 @@ export class TeacherCreateComponent implements OnInit {
 
   // City dropdown methods
   toggleCityDropdown() {
-    this.cityDropdownOpen = !this.cityDropdownOpen;
+    const nextState = !this.cityDropdownOpen;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
       this.citySearchText = '';
       this.filteredCities = this.availableCities;
@@ -250,7 +252,9 @@ export class TeacherCreateComponent implements OnInit {
 
   // Instruments dropdown methods
   toggleInstrumentsDropdown() {
-    this.instrumentsDropdownOpen = !this.instrumentsDropdownOpen;
+    const nextState = !this.instrumentsDropdownOpen;
+    this.closeAllDropdowns();
+    this.instrumentsDropdownOpen = nextState;
     if (this.instrumentsDropdownOpen) {
       this.instrumentSearchText = '';
       this.filteredInstruments = this.availableInstruments;
@@ -308,7 +312,9 @@ export class TeacherCreateComponent implements OnInit {
 
   // Language dropdown methods
   toggleLanguageDropdown() {
-    this.languageDropdownOpen = !this.languageDropdownOpen;
+    const nextState = !this.languageDropdownOpen;
+    this.closeAllDropdowns();
+    this.languageDropdownOpen = nextState;
   }
 
   getSelectedLanguagesText(): string {
@@ -335,7 +341,9 @@ export class TeacherCreateComponent implements OnInit {
 
   // Audience dropdown methods
   toggleAudienceDropdown() {
-    this.audienceDropdownOpen = !this.audienceDropdownOpen;
+    const nextState = !this.audienceDropdownOpen;
+    this.closeAllDropdowns();
+    this.audienceDropdownOpen = nextState;
   }
 
   getSelectedAudiencesText(): string {
@@ -517,14 +525,19 @@ export class TeacherCreateComponent implements OnInit {
     return true;
   }
 
+  @HostListener('document:click', ['$event'])
   closeDropdowns(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
-      this.cityDropdownOpen = false;
-      this.instrumentsDropdownOpen = false;
-      this.languageDropdownOpen = false;
-      this.audienceDropdownOpen = false;
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.cityDropdownOpen = false;
+    this.instrumentsDropdownOpen = false;
+    this.languageDropdownOpen = false;
+    this.audienceDropdownOpen = false;
   }
 
 

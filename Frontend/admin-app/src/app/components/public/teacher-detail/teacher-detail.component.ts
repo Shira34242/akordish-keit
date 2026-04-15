@@ -2,6 +2,7 @@ import {
   Component, OnInit, AfterViewInit, OnDestroy,
   HostListener, ViewChild, ElementRef, ChangeDetectorRef
 } from '@angular/core';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -18,7 +19,7 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 @Component({
   selector: 'app-teacher-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective],
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })

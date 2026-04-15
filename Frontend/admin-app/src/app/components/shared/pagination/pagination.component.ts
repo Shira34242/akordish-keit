@@ -17,9 +17,6 @@ export class PaginationComponent {
   @Input() hasNextPage: boolean = false;
 
   @Output() pageChange = new EventEmitter<number>();
-  @Output() pageSizeChange = new EventEmitter<number>();
-
-  pageSizeOptions = [5, 10, 20, 30, 50, 100];
 
   get startItem(): number {
     return this.totalCount === 0 ? 0 : (this.pageNumber - 1) * this.pageSize + 1;
@@ -69,12 +66,6 @@ export class PaginationComponent {
     if (page >= 1 && page <= this.totalPages && page !== this.pageNumber) {
       this.pageChange.emit(page);
     }
-  }
-
-  onPageSizeChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const newSize = parseInt(select.value, 10);
-    this.pageSizeChange.emit(newSize);
   }
 
   onFirstPage(): void {

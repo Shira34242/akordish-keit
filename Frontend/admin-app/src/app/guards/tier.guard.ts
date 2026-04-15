@@ -33,11 +33,9 @@ export const subscribedTierGuard: CanActivateFn = (route: ActivatedRouteSnapshot
 
   const user = authService.currentUserValue;
 
-  // If not logged in, redirect to login
+  // If not logged in, trigger login modal
   if (!user) {
-    router.navigate(['/login'], {
-      queryParams: { returnUrl: route.url.join('/') }
-    });
+    authService.requestLogin(route.url.join('/'));
     return false;
   }
 
@@ -107,9 +105,7 @@ export const anySubscribedProfileGuard: CanActivateFn = (route: ActivatedRouteSn
   const user = authService.currentUserValue;
 
   if (!user) {
-    router.navigate(['/login'], {
-      queryParams: { returnUrl: route.url.join('/') }
-    });
+    authService.requestLogin(route.url.join('/'));
     return false;
   }
 
@@ -161,7 +157,7 @@ export const planGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const user = authService.currentUserValue;
 
   if (!user) {
-    router.navigate(['/login']);
+    authService.requestLogin('/');
     return false;
   }
 

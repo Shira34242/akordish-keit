@@ -153,42 +153,51 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadContent() {
-    this.songService.getSongs(undefined, 1, 8).subscribe((res: any) => {
-      this.recentSongs = res.songs || [];
+    this.songService.getSongs(undefined, 1, 8).subscribe({
+      next: (res: any) => { this.recentSongs = res.songs || []; },
+      error: (err) => console.error('loadContent: songs', err)
     });
 
-    this.songService.getPopularSongs(8).subscribe((songs: any[]) => {
-      this.popularSongs = songs;
+    this.songService.getPopularSongs(8).subscribe({
+      next: (songs: any[]) => { this.popularSongs = songs; },
+      error: (err) => console.error('loadContent: popular songs', err)
     });
 
-    this.artistService.getTopArtists(12).subscribe((artists: any[]) => {
-      this.topArtists = artists;
+    this.artistService.getTopArtists(12).subscribe({
+      next: (artists: any[]) => { this.topArtists = artists; },
+      error: (err) => console.error('loadContent: top artists', err)
     });
 
-    this.artistService.getFeaturedArtists(12).subscribe((artists: any[]) => {
-      this.featuredArtists = artists;
+    this.artistService.getFeaturedArtists(12).subscribe({
+      next: (artists: any[]) => { this.featuredArtists = artists; },
+      error: (err) => console.error('loadContent: featured artists', err)
     });
 
     this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
-      .subscribe((res: any) => {
-        this.newsArticles = res.items || [];
+      .subscribe({
+        next: (res: any) => { this.newsArticles = res.items || []; },
+        error: (err) => console.error('loadContent: news articles', err)
       });
 
     this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-      .subscribe((res: any) => {
-        this.blogArticles = res.items || [];
+      .subscribe({
+        next: (res: any) => { this.blogArticles = res.items || []; },
+        error: (err) => console.error('loadContent: blog articles', err)
       });
 
-    this.eventService.getUpcomingEvents(6).subscribe((events: UpcomingEventDto[]) => {
-      this.upcomingEvents = events;
+    this.eventService.getUpcomingEvents(6).subscribe({
+      next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
+      error: (err) => console.error('loadContent: events', err)
     });
 
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).subscribe((res: any) => {
-      this.featuredTeachers = res.items || [];
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).subscribe({
+      next: (res: any) => { this.featuredTeachers = res.items || []; },
+      error: (err) => console.error('loadContent: teachers', err)
     });
 
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).subscribe((res: any) => {
-      this.featuredProviders = res.items || [];
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).subscribe({
+      next: (res: any) => { this.featuredProviders = res.items || []; },
+      error: (err) => console.error('loadContent: providers', err)
     });
   }
 
@@ -197,17 +206,30 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToResult(item: SearchItem): void {
+    this.showSearchResults = false;
+
+    if (item.type === 'article') {
+      this.articleService.getArticle(item.id).subscribe({
+        next: article => {
+          const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
+          this.router.navigate([route, article.slug]);
+        },
+        error: () => {
+          alert('לא ניתן לפתוח את הכתבה כרגע. אנא נסה שנית.');
+        }
+      });
+      return;
+    }
+
     const routes: Record<string, string> = {
       song: '/song',
       artist: '/artist',
-      article: '/article',
       teacher: '/teacher',
       professional: '/professional',
       playlist: '/playlist'
     };
     const base = routes[item.type];
     if (base) this.router.navigate([base, item.id]);
-    this.showSearchResults = false;
   }
 
   get hasNoResults(): boolean {

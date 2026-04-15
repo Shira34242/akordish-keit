@@ -97,7 +97,9 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    this.cityDropdownOpen = !this.cityDropdownOpen;
+    const nextState = !this.cityDropdownOpen;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
       this.citySearchText = '';
       this.filteredCities = this.availableCities;
@@ -128,7 +130,9 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   // Categories dropdown methods
   toggleCategoriesDropdown(): void {
-    this.categoriesDropdownOpen = !this.categoriesDropdownOpen;
+    const nextState = !this.categoriesDropdownOpen;
+    this.closeAllDropdowns();
+    this.categoriesDropdownOpen = nextState;
     if (this.categoriesDropdownOpen) {
       this.categorySearchText = '';
       this.filteredCategories = this.availableCategories;
@@ -284,9 +288,13 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
-      this.cityDropdownOpen = false;
-      this.categoriesDropdownOpen = false;
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.cityDropdownOpen = false;
+    this.categoriesDropdownOpen = false;
   }
 
   ngOnDestroy(): void {

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
 
 export interface SystemItem {
     id: number;
@@ -24,7 +23,6 @@ export interface PagedResult<T> {
 })
 export class SystemTablesService {
     private apiUrl = 'https://localhost:44395/api'; // Hardcoded based on existing ArtistService
-    private cache = new Map<string, Observable<PagedResult<SystemItem>>>();
 
     constructor(private http: HttpClient) { }
 
@@ -40,12 +38,7 @@ export class SystemTablesService {
         }
     }
 
-    getItems(tableName: string, pageNumber: number = 1, pageSize: number = 10, search?: string): Observable<PagedResult<SystemItem>> {
-        const cacheKey = `${tableName}-${pageNumber}-${pageSize}-${search || ''}`;
-        if (this.cache.has(cacheKey)) {
-            return this.cache.get(cacheKey)!;
-        }
-
+    getItems(tableName: string, pageNumber: number = 1, pageSize: number = 25, search?: string): Observable<PagedResult<SystemItem>> {
         let params = new HttpParams()
             .set('pageNumber', pageNumber.toString())
             .set('pageSize', pageSize.toString());
@@ -54,11 +47,7 @@ export class SystemTablesService {
             params = params.set('search', search.trim());
         }
 
-        const request$ = this.http.get<PagedResult<SystemItem>>(`${this.apiUrl}/${this.getEndpoint(tableName)}`, { params }).pipe(
-            shareReplay(1)
-        );
-        this.cache.set(cacheKey, request$);
-        return request$;
+        return this.http.get<PagedResult<SystemItem>>(`${this.apiUrl}/${this.getEndpoint(tableName)}`, { params });
     }
 
     addItem(tableName: string, item: Partial<SystemItem>): Observable<SystemItem> {

@@ -14,19 +14,15 @@ import { Article } from '../../../../models/article.model';
   styleUrls: ['./featured-content-management.component.css']
 })
 export class FeaturedContentManagementComponent implements OnInit {
+  private readonly slotCount = 5;
   private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
 
-  // Current featured content
   featuredContent: FeaturedContent[] = [];
-
-  // Available articles for selection
   availableArticles: Article[] = [];
   filteredArticles: Article[] = [];
   searchTerm = '';
-
-  // Selected articles (4 positions)
-  selectedArticles: (Article | null)[] = [null, null, null, null];
+  selectedArticles: (Article | null)[] = Array.from({ length: this.slotCount }, () => null);
 
   loading = false;
   loadingArticles = false;
@@ -42,10 +38,10 @@ export class FeaturedContentManagementComponent implements OnInit {
     this.featuredContentService.getAllFeaturedContent().subscribe({
       next: (content) => {
         this.featuredContent = content.sort((a, b) => a.displayOrder - b.displayOrder);
+        this.selectedArticles = Array.from({ length: this.slotCount }, () => null);
 
-        // Populate selectedArticles array
         this.featuredContent.forEach(fc => {
-          if (fc.displayOrder >= 1 && fc.displayOrder <= 4) {
+          if (fc.displayOrder >= 1 && fc.displayOrder <= this.slotCount) {
             this.selectedArticles[fc.displayOrder - 1] = fc.article;
           }
         });
@@ -62,15 +58,15 @@ export class FeaturedContentManagementComponent implements OnInit {
   loadAvailableArticles(): void {
     this.loadingArticles = true;
     this.articleService.getArticles(
-      1, // page
-      100, // page size - get many articles
-      undefined, // search
-      undefined, // category
-      undefined, // content type
-      1, // status: Published only
-      undefined, // isFeatured
-      undefined, // isPremium
-      undefined // authorName
+      1,
+      100,
+      undefined,
+      undefined,
+      undefined,
+      1,
+      undefined,
+      undefined,
+      undefined
     ).subscribe({
       next: (result) => {
         this.availableArticles = result.items;
@@ -99,10 +95,9 @@ export class FeaturedContentManagementComponent implements OnInit {
   }
 
   selectArticle(article: Article, position: number): void {
-    // Check if article is already selected in another position
     const existingIndex = this.selectedArticles.findIndex(a => a && a.id === article.id);
     if (existingIndex !== -1 && existingIndex !== position) {
-      alert('כתבה זו כבר נבחרה במיקום אחר');
+      alert('הכתבה הזו כבר נבחרה במיקום אחר');
       return;
     }
 
@@ -121,7 +116,7 @@ export class FeaturedContentManagementComponent implements OnInit {
   }
 
   moveDown(position: number): void {
-    if (position === 3) return;
+    if (position === this.slotCount - 1) return;
     const temp = this.selectedArticles[position];
     this.selectedArticles[position] = this.selectedArticles[position + 1];
     this.selectedArticles[position + 1] = temp;
@@ -140,7 +135,6 @@ export class FeaturedContentManagementComponent implements OnInit {
   }
 
   saveFeaturedContent(): void {
-    // Filter out null positions and create DTO
     const items: FeaturedContentItemDto[] = [];
 
     this.selectedArticles.forEach((article, index) => {
@@ -163,7 +157,7 @@ export class FeaturedContentManagementComponent implements OnInit {
     this.featuredContentService.updateFeaturedContentBulk(dto).subscribe({
       next: () => {
         this.saving = false;
-        alert('התוכן המרכזי עודכן בהצלחה!');
+        alert('התוכן המרכזי עודכן בהצלחה');
         this.loadFeaturedContent();
       },
       error: (error) => {
@@ -175,7 +169,7 @@ export class FeaturedContentManagementComponent implements OnInit {
   }
 
   getPositionLabel(position: number): string {
-    const labels = ['ראשון', 'שני', 'שלישי', 'רביעי'];
+    const labels = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'];
     return labels[position];
   }
 }

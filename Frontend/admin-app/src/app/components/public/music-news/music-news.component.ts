@@ -22,10 +22,14 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private readonly articleService = inject(ArticleService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly managedSlots = Array.from({ length: 5 }, (_, index) => index);
+
   featuredArticles: FeaturedContent[] = [];
   newsArticles: Article[] = [];
   isLoading = true;
   isLoadingMore = false;
+  hasError = false;
+  loadFailed = false;
 
   private currentPage = 1;
   private readonly pageSize = 12;
@@ -33,10 +37,18 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private observer?: IntersectionObserver;
 
   ngOnInit(): void {
-    this.loadFeaturedContent().then(() => this.loadNewsArticles()).then(() => {
-      this.isLoading = false;
-      setTimeout(() => this.setupObserver(), 100);
-    });
+    this.loadFeaturedContent()
+      .then(() => this.loadNewsArticles())
+      .then(() => {
+        this.isLoading = false;
+        if (this.loadFailed) {
+          // API call failed — show error message
+        } else if (this.featuredArticles.length === 0 && this.newsArticles.length === 0) {
+          this.hasError = true;
+        } else {
+          setTimeout(() => this.setupObserver(), 100);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -52,32 +64,44 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
             this.featuredArticles = content.sort((a, b) => a.displayOrder - b.displayOrder);
             resolve();
           },
-          error: () => resolve()
+          error: () => {
+            this.loadFailed = true;
+            resolve();
+          }
         });
     });
   }
 
   private loadNewsArticles(): Promise<void> {
-    if (!this.hasMore || this.isLoadingMore) return Promise.resolve();
+    if (!this.hasMore || this.isLoadingMore) {
+      return Promise.resolve();
+    }
+
     this.isLoadingMore = true;
+
     return new Promise((resolve) => {
       this.articleService.getArticles(
-        this.currentPage, this.pageSize,
-        undefined, undefined, ArticleContentType.News
+        this.currentPage,
+        this.pageSize,
+        undefined,
+        undefined,
+        ArticleContentType.News
       )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
-            const featuredIds = new Set(this.featuredArticles.map(f => f.article.id));
-            const newItems = result.items.filter(a => !featuredIds.has(a.id));
+            const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
+            const newItems = result.items.filter(article => !featuredIds.has(article.id));
             this.newsArticles = [...this.newsArticles, ...newItems];
             this.hasMore = result.hasNextPage;
             this.currentPage++;
             this.isLoadingMore = false;
             resolve();
           },
-          error: () => {
+          error: (err) => {
+            console.error('music-news: failed to load articles', err);
             this.isLoadingMore = false;
+            this.loadFailed = true;
             resolve();
           }
         });
@@ -85,7 +109,10 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   }
 
   private setupObserver(): void {
-    if (!this.sentinelRef?.nativeElement) return;
+    if (!this.sentinelRef?.nativeElement) {
+      return;
+    }
+
     this.observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && this.hasMore && !this.isLoadingMore) {
@@ -94,32 +121,26 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       },
       { rootMargin: '300px' }
     );
+
     this.observer.observe(this.sentinelRef.nativeElement);
   }
 
+  getFeaturedArticle(index: number): Article | null {
+    return this.featuredArticles[index]?.article ?? null;
+  }
+
   getCellClass(index: number): string {
-    // מחזור 12 פריטים — ממלא 6 עמודות ללא חורים
-    // כל band גובה שונה → אין תחושת שורות אחידות
-    // Band 1 (~472px): [sc-a 4col×40] [sc-b 2col×40]  → 4+2=6 ✓
-    // Band 2 (~340px): [sc-c 3col×29] [sc-d 3col×29]  → 3+3=6 ✓
-    // Band 3 (~400px): [sc-e 2col×34] [sc-f 4col×34]  → 2+4=6 ✓ הפוך!
-    // Band 4 (~304px): [sc-g 3col×26] [sc-h 3col×26]  → 3+3=6 ✓
-    // Band 5 (~436px): [sc-i 4col×37] [sc-j 2col×37]  → 4+2=6 ✓
-    // Band 6 (~364px): [sc-k 3col×31] [sc-l 3col×31]  → 3+3=6 ✓
     const patterns = [
-      'sc-a',  //  0 — נוף רחב גדול    (4col, ~472px)
-      'sc-b',  //  1 — פורטרט גדול     (2col, ~472px)
-      'sc-c',  //  2 — ריבועי          (3col, ~340px)
-      'sc-d',  //  3 — ריבועי          (3col, ~340px)
-      'sc-e',  //  4 — פורטרט בינוני   (2col, ~400px)
-      'sc-f',  //  5 — נוף רחב הפוך    (4col, ~400px)
-      'sc-g',  //  6 — ריבועי קצר      (3col, ~304px)
-      'sc-h',  //  7 — ריבועי קצר      (3col, ~304px)
-      'sc-i',  //  8 — נוף רחב         (4col, ~436px)
-      'sc-j',  //  9 — פורטרט          (2col, ~436px)
-      'sc-k',  // 10 — ריבועי בינוני   (3col, ~364px)
-      'sc-l',  // 11 — ריבועי בינוני   (3col, ~364px)
+      'sc-third',
+      'sc-third',
+      'sc-third',
+      'sc-duo-narrow',
+      'sc-duo-wide',
+      'sc-third-tall',
+      'sc-third-tall',
+      'sc-third-tall'
     ];
+
     return patterns[index % patterns.length];
   }
 }

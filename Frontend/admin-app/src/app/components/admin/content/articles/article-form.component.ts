@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -187,6 +187,14 @@ export class ArticleFormComponent implements OnInit {
     this.profileSearchQuery = '';
     this.profileSearchResults = [];
     this.showProfileDropdown = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.profile-search-wrapper')) {
+      this.showProfileDropdown = false;
+    }
   }
 
   getProfileTypeLabel(type: string): string {

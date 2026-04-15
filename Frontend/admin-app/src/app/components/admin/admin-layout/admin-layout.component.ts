@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 
@@ -20,7 +20,9 @@ export class AdminLayoutComponent {
     }
 
     toggleContentMenu() {
-        this.contentMenuOpen = !this.contentMenuOpen;
+        const nextState = !this.contentMenuOpen;
+        this.closeAllDropdowns();
+        this.contentMenuOpen = nextState;
     }
 
     closeContentMenu() {
@@ -28,10 +30,25 @@ export class AdminLayoutComponent {
     }
 
     toggleUsersMenu() {
-        this.usersMenuOpen = !this.usersMenuOpen;
+        const nextState = !this.usersMenuOpen;
+        this.closeAllDropdowns();
+        this.usersMenuOpen = nextState;
     }
 
     closeUsersMenu() {
+        this.usersMenuOpen = false;
+    }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent): void {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.nav-item-with-dropdown')) {
+            this.closeAllDropdowns();
+        }
+    }
+
+    private closeAllDropdowns(): void {
+        this.contentMenuOpen = false;
         this.usersMenuOpen = false;
     }
 }

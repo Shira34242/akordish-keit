@@ -93,13 +93,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // הצגת הודעת שגיאה למשתמש (alert זמני - אפשר להחליף ב-Toast/Notification)
-      // TODO: להחליף ב-Toast notification service
-      if (error.status !== 401) { // לא מציגים alert ל-401 כי כבר מציגים מודל לוגין
-        alert(errorMessage);
-      }
-
-      // מחזירים את השגיאה הלאה כדי שקומפוננטות יוכלו גם לטפל בה
+      // לא מציגים alert כאן — כל קומפוננטה מטפלת בהצגת שגיאה בעצמה
+      // מחזירים את השגיאה הלאה כדי שקומפוננטות יוכלו לטפל בה
       return throwError(() => ({
         status: error.status,
         message: errorMessage,

@@ -449,20 +449,20 @@
 
 /* Scrollbar */
 .playlists-list::-webkit-scrollbar {
-  width: 4px;
+  width: var(--site-scrollbar-size);
 }
 
 .playlists-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--site-scrollbar-track);
 }
 
 .playlists-list::-webkit-scrollbar-thumb {
-  background: #d0d0d0;
-  border-radius: 10px;
+  background: var(--site-scrollbar-thumb);
+  border-radius: 999px;
 }
 
 .playlists-list::-webkit-scrollbar-thumb:hover {
-  background: #bbb;
+  background: var(--site-scrollbar-thumb-hover);
 }
 
 /* Responsive */

@@ -1,71 +1,42 @@
 <div class="news-page" dir="rtl">
-
-  <!-- LOADING INITIAL -->
   <div *ngIf="isLoading" class="page-loading">
     <div class="spinner"></div>
   </div>
 
-  <ng-container *ngIf="!isLoading">
+  <div *ngIf="loadFailed" class="page-error">
+    <p>טעינת החדשות נכשלה. אנא בדקו את החיבור ונסו שנית.</p>
+  </div>
 
-    <!-- ══════════════════════════════════════
-         HERO GRID — 6 כתבות מוצגות מהניהול
-         ללא כותרת, ממלא מסך שלם
-    ══════════════════════════════════════ -->
-    <div class="hero-grid">
+  <div *ngIf="hasError && !loadFailed" class="page-error">
+    <p>אין תוכן חדשות להצגה כרגע.</p>
+  </div>
 
-      <div class="hero-cell hc-1">
-        <app-news-banner *ngIf="featuredArticles[0]" [article]="featuredArticles[0].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[0]" class="cell-skeleton"></div>
+  <ng-container *ngIf="!isLoading && !hasError && !loadFailed">
+    <div class="news-layout">
+      <div class="managed-grid">
+        <div
+          *ngFor="let slot of managedSlots"
+          class="managed-cell"
+          [ngClass]="'mc-' + (slot + 1)">
+          <app-news-banner *ngIf="getFeaturedArticle(slot)" [article]="getFeaturedArticle(slot)!"></app-news-banner>
+          <div *ngIf="!getFeaturedArticle(slot)" class="cell-skeleton"></div>
+        </div>
       </div>
 
-      <div class="hero-cell hc-2">
-        <app-news-banner *ngIf="featuredArticles[1]" [article]="featuredArticles[1].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[1]" class="cell-skeleton"></div>
+      <div class="stream-grid">
+        <div
+          class="stream-cell"
+          *ngFor="let article of newsArticles; let i = index"
+          [ngClass]="getCellClass(i)">
+          <app-news-banner [article]="article"></app-news-banner>
+        </div>
       </div>
 
-      <div class="hero-cell hc-3">
-        <app-news-banner *ngIf="featuredArticles[2]" [article]="featuredArticles[2].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[2]" class="cell-skeleton"></div>
-      </div>
+      <div #sentinel class="sentinel"></div>
 
-      <div class="hero-cell hc-4">
-        <app-news-banner *ngIf="featuredArticles[3]" [article]="featuredArticles[3].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[3]" class="cell-skeleton"></div>
-      </div>
-
-      <div class="hero-cell hc-5">
-        <app-news-banner *ngIf="featuredArticles[4]" [article]="featuredArticles[4].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[4]" class="cell-skeleton"></div>
-      </div>
-
-      <div class="hero-cell hc-6">
-        <app-news-banner *ngIf="featuredArticles[5]" [article]="featuredArticles[5].article"></app-news-banner>
-        <div *ngIf="!featuredArticles[5]" class="cell-skeleton"></div>
-      </div>
-
-    </div>
-
-    <!-- ══════════════════════════════════════
-         STREAM GRID — גריד מגזיני רציף
-         שורת בסיס 60px, spans מגוונים
-         dense packing — ללא חורים
-    ══════════════════════════════════════ -->
-    <div class="stream-grid">
-      <div
-        class="stream-cell"
-        *ngFor="let article of newsArticles; let i = index"
-        [ngClass]="getCellClass(i)">
-        <app-news-banner [article]="article"></app-news-banner>
+      <div *ngIf="isLoadingMore" class="loading-more">
+        <div class="spinner"></div>
       </div>
     </div>
-
-    <!-- SENTINEL גלילה אינסופית -->
-    <div #sentinel class="sentinel"></div>
-
-    <div *ngIf="isLoadingMore" class="loading-more">
-      <div class="spinner"></div>
-    </div>
-
   </ng-container>
-
 </div>

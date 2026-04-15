@@ -28,7 +28,7 @@ export class CampaignsListComponent implements OnInit {
   // Pagination
   totalCount = 0;
   pageNumber = 1;
-  pageSize = 10;
+  pageSize = 25;
   totalPages = 0;
   hasPreviousPage = false;
   hasNextPage = false;
@@ -61,12 +61,6 @@ export class CampaignsListComponent implements OnInit {
 
   onPageChange(page: number): void {
     this.pageNumber = page;
-    this.loadCampaigns();
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.pageNumber = 1; // Reset to first page
     this.loadCampaigns();
   }
 

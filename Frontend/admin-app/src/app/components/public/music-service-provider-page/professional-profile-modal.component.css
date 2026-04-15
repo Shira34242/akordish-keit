@@ -473,12 +473,13 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #ddff53 transparent;
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
 }
 
-.gallery-scroll::-webkit-scrollbar { height: 4px; }
-.gallery-scroll::-webkit-scrollbar-track { background: transparent; }
-.gallery-scroll::-webkit-scrollbar-thumb { background: #ddff53; border-radius: 999px; }
+.gallery-scroll::-webkit-scrollbar { height: var(--site-scrollbar-size); }
+.gallery-scroll::-webkit-scrollbar-track { background: var(--site-scrollbar-track); }
+.gallery-scroll::-webkit-scrollbar-thumb { background: var(--site-scrollbar-thumb); border-radius: 999px; }
+.gallery-scroll::-webkit-scrollbar-thumb:hover { background: var(--site-scrollbar-thumb-hover); }
 
 .gallery-item {
   flex-shrink: 0;

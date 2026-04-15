@@ -254,7 +254,7 @@
           <div class="event-info">
             <span class="event-status-badge">{{ event.eventStatus }}</span>
             <h3 class="event-name">{{ event.name }}</h3>
-            <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames?.length ?? 0">
+            <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames?.length">
               {{ event.artistName || event.taggedArtistNames[0] }}
             </p>
             <p class="event-location" *ngIf="event.location">{{ event.location }}</p>

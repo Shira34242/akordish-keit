@@ -655,7 +655,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     handleImageError(event: any) {
-        event.target.src = 'public/logo.png';
+        event.target.src = '/logo.png';
     }
   toggleEasyMode(): void {
     if (!this.song?.easyKeyId || !this.song?.easyKeyName || !this.song?.originalKeyName) return;
@@ -742,7 +742,7 @@ private getKeyIndex(keyName: string): number {
 
     togglePlaylistPopup(): void {
         if (!this.authService.isLoggedIn) {
-            this.router.navigate(['/login']);
+            this.authService.requestLogin(this.router.url);
             return;
         }
         this.isPlaylistPopupOpen = !this.isPlaylistPopupOpen;

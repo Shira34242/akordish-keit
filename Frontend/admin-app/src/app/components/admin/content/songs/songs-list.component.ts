@@ -25,7 +25,7 @@ export class SongsListComponent implements OnInit {
 
   // Pagination
   currentPage = 1;
-  pageSize = 20;
+  pageSize = 25;
   totalItems = 0;
   totalPages = 0;
   totalCount = 0;
@@ -49,12 +49,6 @@ export class SongsListComponent implements OnInit {
     });
   }
   
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.pageNumber = 1; // Reset to first page
-    this.loadSongs();
-  }
-
   loadSongs(): void {
     this.loading = true;
 

@@ -20,7 +20,7 @@ export class UsersListComponent implements OnInit {
 
   // Pagination
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 25;
   totalCount = 0;
   totalPages = 0;
 

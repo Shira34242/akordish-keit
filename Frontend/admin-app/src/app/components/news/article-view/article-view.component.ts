@@ -226,7 +226,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/news']);
+    this.router.navigate(['/music-news']);
   }
 
   // Share article
@@ -265,7 +265,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   toggleFavorite(): void {
     if (!this.article) return;
     if (!this.authService.isLoggedIn) {
-      this.router.navigate(['/login']);
+      this.authService.requestLogin(this.router.url);
       return;
     }
 

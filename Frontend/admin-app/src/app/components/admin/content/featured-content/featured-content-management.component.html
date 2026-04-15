@@ -1,20 +1,15 @@
 <div class="featured-content-container" dir="rtl">
-  <!-- Header -->
   <div class="page-header">
     <h1>ניהול תוכן מרכזי</h1>
-    <p class="subtitle">בחר עד 4 כתבות שיוצגו בראש דף חדשות המוזיקה</p>
+    <p class="subtitle">בחר עד 5 כתבות שיוצגו בראש דף חדשות המוזיקה</p>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="loading" class="loading">
     <div class="spinner"></div>
     <p>טוען תוכן מרכזי...</p>
   </div>
 
-  <!-- Main Content -->
   <div *ngIf="!loading" class="content-grid">
-
-    <!-- Left Side: Selected Articles (4 Positions) -->
     <div class="selected-section">
       <h2 class="section-title">
         <span class="material-icons">star</span>
@@ -32,27 +27,13 @@
               <p class="article-category">{{ article.categoryNames.join(', ') }}</p>
             </div>
             <div class="article-actions">
-              <button
-                class="btn-icon"
-                (click)="moveUp(i)"
-                [disabled]="i === 0"
-                title="הזז למעלה"
-              >
+              <button class="btn-icon" (click)="moveUp(i)" [disabled]="i === 0" title="הזז למעלה">
                 <span class="material-icons">arrow_upward</span>
               </button>
-              <button
-                class="btn-icon"
-                (click)="moveDown(i)"
-                [disabled]="i === 3"
-                title="הזז למטה"
-              >
+              <button class="btn-icon" (click)="moveDown(i)" [disabled]="i === selectedArticles.length - 1" title="הזז למטה">
                 <span class="material-icons">arrow_downward</span>
               </button>
-              <button
-                class="btn-icon btn-remove"
-                (click)="removeArticle(i)"
-                title="הסר"
-              >
+              <button class="btn-icon btn-remove" (click)="removeArticle(i)" title="הסר">
                 <span class="material-icons">close</span>
               </button>
             </div>
@@ -66,25 +47,19 @@
         </div>
       </div>
 
-      <button
-        class="btn-save"
-        (click)="saveFeaturedContent()"
-        [disabled]="saving"
-      >
+      <button class="btn-save" (click)="saveFeaturedContent()" [disabled]="saving">
         <span class="material-icons" *ngIf="!saving">save</span>
         <span class="material-icons spinning" *ngIf="saving">hourglass_empty</span>
         {{ saving ? 'שומר...' : 'שמור שינויים' }}
       </button>
     </div>
 
-    <!-- Right Side: Available Articles -->
     <div class="available-section">
       <h2 class="section-title">
         <span class="material-icons">article</span>
         כתבות זמינות
       </h2>
 
-      <!-- Search -->
       <div class="search-box">
         <span class="material-icons">search</span>
         <input
@@ -96,19 +71,18 @@
         />
       </div>
 
-      <!-- Loading Articles -->
       <div *ngIf="loadingArticles" class="loading-articles">
         <div class="spinner-small"></div>
         <p>טוען כתבות...</p>
       </div>
 
-      <!-- Articles List -->
       <div *ngIf="!loadingArticles" class="articles-list">
         <div
           *ngFor="let article of filteredArticles"
           class="article-item"
-          (click)="selectArticle(article, getFirstEmptyPosition())"
+          (click)="hasEmptyPosition() && selectArticle(article, getFirstEmptyPosition())"
           [class.disabled]="!hasEmptyPosition()"
+          [class.selected]="isArticleSelected(article)"
         >
           <img [src]="article.featuredImageUrl" [alt]="article.title" class="article-thumb">
           <div class="article-info">
@@ -121,7 +95,7 @@
               </span>
             </p>
           </div>
-          <span class="material-icons add-icon">add_circle</span>
+          <span class="material-icons add-icon">{{ isArticleSelected(article) ? 'check_circle' : 'add_circle' }}</span>
         </div>
 
         <div *ngIf="filteredArticles.length === 0" class="no-results">
@@ -130,6 +104,5 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>

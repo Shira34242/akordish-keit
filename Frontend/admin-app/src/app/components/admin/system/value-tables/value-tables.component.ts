@@ -42,7 +42,7 @@ export class ValueTablesComponent implements OnInit {
     // Pagination
     totalCount = 0;
     pageNumber = 1;
-    pageSize = 5;
+    pageSize = 25;
     totalPages = 0;
     hasPreviousPage = false;
     hasNextPage = false;
@@ -100,12 +100,6 @@ export class ValueTablesComponent implements OnInit {
 
     onPageChange(page: number) {
         this.pageNumber = page;
-        this.loadItems();
-    }
-
-    onPageSizeChange(pageSize: number) {
-        this.pageSize = pageSize;
-        this.pageNumber = 1; // Reset to first page when changing page size
         this.loadItems();
     }
 

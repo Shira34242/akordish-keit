@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -28,7 +29,7 @@ interface Instrument {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent],
+  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent, ImgFallbackDirective],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })
@@ -141,6 +142,14 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     this.initHeroHeight();
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.filter-btn-wrap')) {
+      this.closeAllDropdowns();
+    }
+  }
+
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
@@ -161,6 +170,36 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       const progress = range > 0 ? Math.min(1, (this.fullHeroHeight - newHeight) / range) : 0;
       overlay.style.opacity = String(progress);
     }
+  }
+
+  toggleCategoryDropdown(): void {
+    const nextState = !this.showCategoryDropdown;
+    this.closeAllDropdowns();
+    this.showCategoryDropdown = nextState;
+  }
+
+  toggleCityDropdown(): void {
+    const nextState = !this.showCityDropdown;
+    this.closeAllDropdowns();
+    this.showCityDropdown = nextState;
+  }
+
+  toggleInstrumentDropdown(): void {
+    const nextState = !this.showInstrumentDropdown;
+    this.closeAllDropdowns();
+    this.showInstrumentDropdown = nextState;
+  }
+
+  toggleLanguageDropdown(): void {
+    const nextState = !this.showLanguageDropdown;
+    this.closeAllDropdowns();
+    this.showLanguageDropdown = nextState;
+  }
+
+  toggleAudienceDropdown(): void {
+    const nextState = !this.showAudienceDropdown;
+    this.closeAllDropdowns();
+    this.showAudienceDropdown = nextState;
   }
 
   // ─── Top filter (category dropdown) ─────────────
@@ -463,7 +502,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       return;
     }
     localStorage.setItem('pendingProfessionalType', 'service-provider');
-    this.router.navigate(['/subscription/select']);
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'service-provider' } });
   }
 
   openBecomeTeacherForm(): void {
@@ -472,7 +511,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       return;
     }
     localStorage.setItem('pendingProfessionalType', 'teacher');
-    this.router.navigate(['/subscription/select']);
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
   }
 
   closeBecomeProfessionalForm(): void {
@@ -491,8 +530,17 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       .map(id => this.instruments.find(i => i.id === id)?.name)
       .filter((n): n is string => !!n);
     if (names.length === 0) return '';
-    if (names.length === 1) return `מורה ל${names[0]}`;
+    if (names.length === 1) return `׳׳•׳¨׳” ׳${names[0]}`;
     const last = names[names.length - 1];
-    return `מורה ל${names.slice(0, -1).join(', ')} ו${last}`;
+    return `׳׳•׳¨׳” ׳${names.slice(0, -1).join(', ')} ׳•${last}`;
+  }
+
+  private closeAllDropdowns(): void {
+    this.showCategoryDropdown = false;
+    this.showCityDropdown = false;
+    this.showInstrumentDropdown = false;
+    this.showLanguageDropdown = false;
+    this.showAudienceDropdown = false;
   }
 }
+

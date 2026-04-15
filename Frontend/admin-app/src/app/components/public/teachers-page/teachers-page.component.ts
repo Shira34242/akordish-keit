@@ -351,7 +351,7 @@ export class TeachersPageComponent implements OnInit {
     }
     // Route through subscription selection
     localStorage.setItem('pendingProfessionalType', 'teacher');
-    this.router.navigate(['/subscription/select']);
+    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
   }
 
   closeBecomeTeacherForm(): void {

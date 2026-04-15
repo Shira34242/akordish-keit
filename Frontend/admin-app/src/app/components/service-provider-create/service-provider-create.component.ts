@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -219,7 +219,9 @@ export class ServiceProviderCreateComponent implements OnInit {
 
   // City dropdown methods
   toggleCityDropdown() {
-    this.cityDropdownOpen = !this.cityDropdownOpen;
+    const nextState = !this.cityDropdownOpen;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
       this.citySearchText = '';
       this.filteredCities = this.availableCities;
@@ -250,7 +252,9 @@ export class ServiceProviderCreateComponent implements OnInit {
 
   // Categories dropdown methods
   toggleCategoriesDropdown() {
-    this.categoriesDropdownOpen = !this.categoriesDropdownOpen;
+    const nextState = !this.categoriesDropdownOpen;
+    this.closeAllDropdowns();
+    this.categoriesDropdownOpen = nextState;
     if (this.categoriesDropdownOpen) {
       this.categorySearchText = '';
       this.filteredCategories = this.availableCategories;
@@ -419,12 +423,17 @@ export class ServiceProviderCreateComponent implements OnInit {
     return true;
   }
 
+  @HostListener('document:click', ['$event'])
   closeDropdowns(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
-      this.cityDropdownOpen = false;
-      this.categoriesDropdownOpen = false;
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.cityDropdownOpen = false;
+    this.categoriesDropdownOpen = false;
   }
 
 

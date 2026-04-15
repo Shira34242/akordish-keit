@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
@@ -365,6 +365,7 @@ export class QuickAddAssistantModalComponent {
   }
 
   onEventArtistSearchFocus(): void {
+    this.showProfileDropdown = false;
     this.showEventArtistDropdown = true;
   }
 
@@ -401,6 +402,7 @@ export class QuickAddAssistantModalComponent {
   }
 
   onProfileSearchInput(): void {
+    this.showEventArtistDropdown = false;
     this.profileSearch$.next(this.profileSearchQuery);
   }
 
@@ -416,6 +418,15 @@ export class QuickAddAssistantModalComponent {
     this.profileSearchQuery = '';
     this.profileSearchResults = [];
     this.showProfileDropdown = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.profile-search-wrapper')) {
+      this.showProfileDropdown = false;
+      this.showEventArtistDropdown = false;
+    }
   }
 
   getProfileTypeLabel(type: string): string {
@@ -652,6 +663,7 @@ export class QuickAddAssistantModalComponent {
       next: (results) => {
         this.profileSearchResults = results;
         this.profileSearchLoading = false;
+        this.showEventArtistDropdown = false;
         this.showProfileDropdown = true;
       },
       error: () => {

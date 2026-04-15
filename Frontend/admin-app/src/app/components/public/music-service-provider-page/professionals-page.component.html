@@ -25,7 +25,7 @@
         <!-- פילטר קטגוריה — מימין לחיפוש -->
         <div class="filter-btn-wrap filter-btn-category"
              [class.filter-active]="topFilterValue !== 'all'"
-             (click)="showCategoryDropdown = !showCategoryDropdown">
+             (click)="toggleCategoryDropdown()">
           <span class="filter-btn-label">קטגוריות</span>
           <svg class="filter-btn-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="m6 9 6 6 6-6"/>
@@ -57,7 +57,7 @@
         <!-- פילטר עיר -->
         <div class="filter-btn-wrap"
              [class.filter-active]="selectedCityId !== null"
-             (click)="showCityDropdown = !showCityDropdown">
+             (click)="toggleCityDropdown()">
           <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
@@ -76,7 +76,7 @@
           <!-- כלי נגינה -->
           <div class="filter-btn-wrap"
                [class.filter-active]="selectedInstrumentId !== null"
-               (click)="showInstrumentDropdown = !showInstrumentDropdown">
+               (click)="toggleInstrumentDropdown()">
             <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
             </svg>
@@ -92,7 +92,7 @@
           <!-- שפת הוראה -->
           <div class="filter-btn-wrap"
                [class.filter-active]="selectedLanguage !== null"
-               (click)="showLanguageDropdown = !showLanguageDropdown">
+               (click)="toggleLanguageDropdown()">
             <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
             </svg>
@@ -108,7 +108,7 @@
           <!-- קהל יעד -->
           <div class="filter-btn-wrap"
                [class.filter-active]="selectedTargetAudience !== null"
-               (click)="showAudienceDropdown = !showAudienceDropdown">
+               (click)="toggleAudienceDropdown()">
             <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -210,7 +210,7 @@
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
           <div class="prof-card" *ngFor="let p of filteredProfessionals" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -241,7 +241,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of featuredProfessionals" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -265,7 +265,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of featuredTeachers" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -289,7 +289,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of musicStores" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -312,7 +312,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of recordingStudios" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -335,7 +335,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of amplification" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -360,7 +360,7 @@
         <div class="professionals-grid">
           <div class="prof-card" *ngFor="let p of additionalProfessionals" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl || 'logo.png'" [alt]="p.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -373,7 +373,7 @@
           </div>
           <div class="prof-card" *ngFor="let t of additionalTeachers" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
@@ -409,7 +409,7 @@
         <div class="professionals-grid" *ngIf="filteredTeachers.length > 0">
           <div class="prof-card" *ngFor="let t of filteredTeachers" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -440,7 +440,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of featuredTeachers" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -464,7 +464,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of organTeachers" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לאורגן</p>
@@ -487,7 +487,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of soundTeachers" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לסאונד</p>
@@ -510,7 +510,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of vocalTeachers" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לפיתוח קול</p>
@@ -535,7 +535,7 @@
         <div class="professionals-grid">
           <div class="prof-card" *ngFor="let t of additionalTeachers" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl || 'logo.png'" [alt]="t.displayName" loading="lazy" onerror="this.onerror=null; this.src='logo.png'">
+              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>

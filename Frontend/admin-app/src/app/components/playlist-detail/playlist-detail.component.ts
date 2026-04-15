@@ -123,7 +123,7 @@ export class PlaylistDetailComponent implements OnInit {
   }
 
   getDefaultImage(): string {
-    return 'public/logo.png';
+    return '/logo.png';
   }
 
   isOwner(): boolean {

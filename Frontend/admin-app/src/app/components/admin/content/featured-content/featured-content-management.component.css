@@ -315,6 +315,7 @@
 
 .article-item:hover:not(.disabled) { background: #ddff53; }
 .article-item.disabled { opacity: 0.4; cursor: not-allowed; }
+.article-item.selected { background: #ddff53; }
 .article-item .article-thumb { width: 64px; height: 64px; border-radius: 10px; }
 
 .article-info { flex: 1; min-width: 0; }
