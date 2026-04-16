@@ -115,7 +115,7 @@
           <img
             [src]="teacher.profileImageUrl || '/logo.png'"
             [alt]="teacher.displayName"
-            onerror="this.onerror=null; this.src='/logo.png'">
+            imgFallback>
           <span *ngIf="teacher.isFeatured" class="featured-badge">
             <span class="material-icons">star</span>
           </span>
@@ -169,7 +169,7 @@
             <img
               [src]="teacher.profileImageUrl || '/logo.png'"
               [alt]="teacher.displayName"
-              onerror="this.onerror=null; this.src='/logo.png'">
+              imgFallback>
             <span class="featured-badge">
               <span class="material-icons">star</span>
             </span>
@@ -210,7 +210,7 @@
             <img
               [src]="teacher.profileImageUrl || '/logo.png'"
               [alt]="teacher.displayName"
-              onerror="this.onerror=null; this.src='/logo.png'">
+              imgFallback>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -245,7 +245,7 @@
             <img
               [src]="teacher.profileImageUrl || '/logo.png'"
               [alt]="teacher.displayName"
-              onerror="this.onerror=null; this.src='/logo.png'">
+              imgFallback>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -280,7 +280,7 @@
             <img
               [src]="teacher.profileImageUrl || '/logo.png'"
               [alt]="teacher.displayName"
-              onerror="this.onerror=null; this.src='/logo.png'">
+              imgFallback>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -309,7 +309,7 @@
             <img
               [src]="teacher.profileImageUrl || '/logo.png'"
               [alt]="teacher.displayName"
-              onerror="this.onerror=null; this.src='/logo.png'">
+              imgFallback>
           </div>
           <div class="row-info">
             <h3 class="row-name">{{ teacher.displayName }}</h3>

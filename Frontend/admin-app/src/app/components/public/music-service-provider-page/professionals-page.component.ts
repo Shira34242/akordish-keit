@@ -501,7 +501,6 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       this.authService.requestLogin('/professionals');
       return;
     }
-    localStorage.setItem('pendingProfessionalType', 'service-provider');
     this.router.navigate(['/subscription/select'], { queryParams: { type: 'service-provider' } });
   }
 
@@ -510,7 +509,6 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       this.authService.requestLogin('/professionals');
       return;
     }
-    localStorage.setItem('pendingProfessionalType', 'teacher');
     this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
   }
 

@@ -237,6 +237,8 @@
       </button>
       @if (editPageType === 'artist') {
         <app-artist-create [embedded]="true" (close)="closeEditPageModal()"></app-artist-create>
+      } @else if (editPageType === 'teacher') {
+        <app-teacher-create [embedded]="true" (close)="closeEditPageModal()"></app-teacher-create>
       } @else {
         <app-service-provider-create [embedded]="true" (close)="closeEditPageModal()"></app-service-provider-create>
       }

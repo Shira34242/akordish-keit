@@ -41,11 +41,17 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       .then(() => this.loadNewsArticles())
       .then(() => {
         this.isLoading = false;
-        if (this.loadFailed) {
-          // API call failed — show error message
-        } else if (this.featuredArticles.length === 0 && this.newsArticles.length === 0) {
+
+        const hasContent = this.featuredArticles.length > 0 || this.newsArticles.length > 0;
+
+        if (!hasContent && this.loadFailed) {
+          // כל הטעינות נכשלו ואין תוכן — מצב שגיאה
+          this.hasError = true;
+        } else if (!hasContent) {
+          // טעינה הצליחה אבל אין תוכן — empty state
           this.hasError = true;
         } else {
+          // יש תוכן — גם אם featured נכשל, מציגים את מה שיש
           setTimeout(() => this.setupObserver(), 100);
         }
       });

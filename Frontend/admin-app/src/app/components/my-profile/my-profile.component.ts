@@ -13,11 +13,12 @@ import { UserService } from '../../services/user.service';
 import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
 import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
+import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ArtistCreateComponent, ServiceProviderCreateComponent],
+  imports: [CommonModule, RouterModule, FormsModule, ArtistCreateComponent, ServiceProviderCreateComponent, TeacherCreateComponent],
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
 })
@@ -38,7 +39,10 @@ export class MyProfileComponent implements OnInit {
 
   // מודל עריכת דף
   showEditPageModal = false;
-  editPageType: 'artist' | 'provider' | null = null;
+  editPageType: 'artist' | 'teacher' | 'provider' | null = null;
+
+  // שגיאות טעינה
+  pageLoadError = false;
 
   // מודל שינוי סוג חשבון
   showAccountTypeModal = false;
@@ -161,8 +165,8 @@ export class MyProfileComponent implements OnInit {
 
   private loadMyPageInfo() {
     this.userService.getMyUploaderProfile().subscribe({
-      next: (info) => { this.myPageInfo = info; },
-      error: () => {}
+      next: (info) => { this.myPageInfo = info; this.pageLoadError = false; },
+      error: () => { this.pageLoadError = true; }
     });
   }
 
@@ -176,7 +180,13 @@ export class MyProfileComponent implements OnInit {
   // ── מודאל עריכת דף ──
 
   openEditPageModal(page: UserWithProfileDto) {
-    this.editPageType = page.profileType === 'artist' ? 'artist' : 'provider';
+    if (page.profileType === 'artist') {
+      this.editPageType = 'artist';
+    } else if (page.isTeacher) {
+      this.editPageType = 'teacher';
+    } else {
+      this.editPageType = 'provider';
+    }
     this.showEditPageModal = true;
   }
 
@@ -242,6 +252,7 @@ export class MyProfileComponent implements OnInit {
 
   getAddPageUrl(type: 'artist' | 'teacher' | 'provider'): string {
     if (type === 'artist') return '/artist/create';
+    if (type === 'teacher') return '/teacher/create';
     return '/service-provider/create';
   }
 
@@ -253,6 +264,7 @@ export class MyProfileComponent implements OnInit {
     const p = page ?? this.myPageInfo;
     if (!p) return '/service-provider/create';
     if (p.profileType === 'artist') return '/artist/create';
+    if (p.isTeacher) return '/teacher/create';
     return '/service-provider/create';
   }
 

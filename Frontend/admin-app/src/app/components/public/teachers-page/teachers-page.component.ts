@@ -11,6 +11,7 @@ import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/te
 import { TeacherProfileModalComponent } from '../../admin/teachers/teacher-profile-modal.component';
 import { BecomeTeacherFormComponent } from '../become-teacher-form/become-teacher-form.component';
 import { AuthService } from '../../../services/auth.service';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 interface Instrument {
   id: number;
@@ -27,7 +28,7 @@ interface TeacherBanner {
 @Component({
   selector: 'app-teachers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent],
+  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective],
   templateUrl: './teachers-page.component.html',
   styleUrls: ['./teachers-page.component.css']
 })
@@ -349,8 +350,6 @@ export class TeachersPageComponent implements OnInit {
       this.authService.requestLogin('/teachers');
       return;
     }
-    // Route through subscription selection
-    localStorage.setItem('pendingProfessionalType', 'teacher');
     this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
   }
 

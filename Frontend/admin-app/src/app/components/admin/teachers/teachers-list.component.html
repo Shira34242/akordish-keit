@@ -87,7 +87,7 @@
               [src]="teacher.profileImageUrl || '/logo.png'"
               alt="{{ teacher.displayName }}"
               class="teacher-avatar"
-              onerror="this.onerror=null; this.src='/logo.png'"
+              imgFallback
             />
           </td>
           <td>{{ teacher.displayName }}</td>

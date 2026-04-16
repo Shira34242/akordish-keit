@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -174,23 +174,24 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.http.get<AdSpotResponse>(`${this.apiUrl}/Public/GetAd?spotTechnicalId=${this.spotTechnicalId}`)
+    const params = new HttpParams().set('spotTechnicalId', this.spotTechnicalId);
+    this.http.get<AdSpotResponse>(`${this.apiUrl}/Public/GetAd`, { params })
       .subscribe({
         next: (response) => {
           this.loading = false;
           this.campaigns = response.campaigns;
 
-          // Set rotation interval from server response
           if (response.rotationIntervalMs) {
             this.rotationInterval = response.rotationIntervalMs;
           }
 
-          // Parse dimensions (format: "970x250")
+          // תמיכה בפורמטים: "970x250" ו-"970*250"
           if (response.dimensions) {
-            const dimensionParts = response.dimensions.split('*');
+            const sep = response.dimensions.includes('x') ? 'x' : '*';
+            const dimensionParts = response.dimensions.split(sep);
             if (dimensionParts.length === 2) {
-              this.maxWidth = dimensionParts[0] + 'px';
-              this.maxHeight = dimensionParts[1] + 'px';
+              this.maxWidth = dimensionParts[0].trim() + 'px';
+              this.maxHeight = dimensionParts[1].trim() + 'px';
             }
           }
 

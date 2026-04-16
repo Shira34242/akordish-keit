@@ -70,7 +70,6 @@ export class AdCampaignService {
    * Create new campaign
    */
   createCampaign(campaign: CreateAdCampaignRequest): Observable<AdCampaign> {
-    alert('Creating campaign');
     return this.http.post<AdCampaign>(this.apiUrl, campaign);
   }
 

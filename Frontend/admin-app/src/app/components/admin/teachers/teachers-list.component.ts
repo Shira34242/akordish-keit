@@ -6,11 +6,12 @@ import { TeacherService } from '../../../services/teacher.service';
 import { TeacherListDto } from '../../../models/teacher.model';
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-teachers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective],
   templateUrl: './teachers-list.component.html',
   styleUrls: ['./teachers-list.component.css']
 })

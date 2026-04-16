@@ -86,7 +86,7 @@
               [src]="artist.imageUrl || '/logo.png'"
               [alt]="artist.name"
               class="artist-avatar"
-              onerror="this.onerror=null; this.src='/logo.png'"
+              imgFallback
             />
           </td>
           <td>

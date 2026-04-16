@@ -96,7 +96,7 @@
               [src]="provider.profileImageUrl || '/logo.png'"
               alt="{{ provider.displayName }}"
               class="provider-avatar"
-              onerror="this.onerror=null; this.src='/logo.png'"
+              imgFallback
             />
           </td>
           <td>{{ provider.displayName }}</td>

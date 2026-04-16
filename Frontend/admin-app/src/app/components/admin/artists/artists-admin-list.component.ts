@@ -6,11 +6,12 @@ import { ArtistService } from '../../../services/artist.service';
 import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
 import { PagedResult } from '../../../models/user.model';
 import { ArtistEditModalComponent } from './artist-edit-modal.component';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-artists-admin-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArtistEditModalComponent],
+  imports: [CommonModule, FormsModule, ArtistEditModalComponent, ImgFallbackDirective],
   templateUrl: './artists-admin-list.component.html',
   styleUrls: ['./artists-admin-list.component.css']
 })

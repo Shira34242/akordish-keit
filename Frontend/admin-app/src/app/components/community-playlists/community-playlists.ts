@@ -73,6 +73,7 @@ export class CommunityPlaylistsComponent implements OnInit {
     if (confirm('האם לאמץ רשימה זו? תיווצר עותק ברשימות שלך')) {
       this.playlistService.adoptPlaylist(id).subscribe({
         next: (adoptedPlaylist) => {
+          this.router.navigate(['/my-playlists']);
         },
         error: (err) => {
           console.error('Error adopting playlist:', err);

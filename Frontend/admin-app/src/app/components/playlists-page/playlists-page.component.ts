@@ -126,19 +126,16 @@ export class PlaylistsPageComponent implements OnInit {
   }
 
   viewLikedContent(content: LikedContent): void {
-    // Navigate to the appropriate route based on content type
     if (content.contentType === 'Article') {
       if (content.slug) {
         this.router.navigate(['/news', content.slug]);
-      } else {
-        this.router.navigate(['/news', content.contentId]);
       }
+      // אין slug — לא מנווטים ל-id כי המסלול לא קיים
     } else if (content.contentType === 'BlogPost') {
       if (content.slug) {
         this.router.navigate(['/blog', content.slug]);
-      } else {
-        this.router.navigate(['/blog', content.contentId]);
       }
+      // אין slug — לא מנווטים ל-id כי המסלול לא קיים
     }
   }
 

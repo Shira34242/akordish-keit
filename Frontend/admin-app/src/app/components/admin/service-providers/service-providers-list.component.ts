@@ -6,10 +6,12 @@ import { MusicServiceProviderService } from '../../../services/music-service-pro
 import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
