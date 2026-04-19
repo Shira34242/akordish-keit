@@ -57,10 +57,18 @@ export class NotificationsPageComponent implements OnInit {
     });
   }
 
+  deleteAllNotifications(): void {
+    this.notificationService.deleteAllNotifications().subscribe({
+      next: () => {
+        this.notifications = [];
+      }
+    });
+  }
+
   openNotification(notification: NotificationDto): void {
     const openAction = () => {
       if (notification.actionUrl) {
-        this.router.navigateByUrl(notification.actionUrl);
+        this.openActionUrl(notification.actionUrl);
       }
     };
 
@@ -98,5 +106,21 @@ export class NotificationsPageComponent implements OnInit {
       dateStyle: 'short',
       timeStyle: 'short'
     }).format(new Date(dateValue));
+  }
+
+  shouldShowTitle(notification: NotificationDto): boolean {
+    return notification.type !== 3
+      && notification.type !== 6
+      && !!notification.title
+      && notification.title.trim() !== notification.message.trim();
+  }
+
+  private openActionUrl(actionUrl: string): void {
+    if (/^https?:\/\//i.test(actionUrl)) {
+      window.open(actionUrl, '_blank', 'noopener');
+      return;
+    }
+
+    this.router.navigateByUrl(actionUrl);
   }
 }

@@ -13,6 +13,12 @@ public class Notification
     public string? RelatedEntityType { get; set; }
     public int? RelatedEntityId { get; set; }
     public string? ActionUrl { get; set; }
+    public string? MediaUrl { get; set; }
+    public string? MediaType { get; set; }
+    public string? MediaThumbnailUrl { get; set; }
+    public string? MediaAltText { get; set; }
+    public string? CampaignName { get; set; }
+    public string? AudienceLabel { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ReadAt { get; set; }

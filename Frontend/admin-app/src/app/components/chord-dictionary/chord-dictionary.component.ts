@@ -3,7 +3,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ChordTooltipComponent } from '../chord-tooltip/chord-tooltip.component';
 import { GUITAR_CHORDS, PIANO_CHORDS, UKULELE_CHORDS, GuitarChord, UkuleleChord } from '../../utils/chord-data';
 import { ChordPlayerService } from '../../services/chord-player.service';
 
@@ -14,6 +13,7 @@ interface ChordTheory { intervals: number[]; scaleName: string; degrees: string;
 interface FingerLine { text: string; isOpen?: boolean; }
 interface PianoKey { note: number; }
 interface PianoBlackKey { x: number; note: number; }
+interface PianoMiniData { whites: PianoKey[]; blacks: PianoBlackKey[]; active: Set<number>; width: number; }
 
 export interface ChordDetail {
     chordName: string;
@@ -30,28 +30,35 @@ export interface ChordDetail {
 @Component({
     selector: 'app-chord-dictionary',
     standalone: true,
-    imports: [CommonModule, RouterModule, ChordTooltipComponent],
+    imports: [CommonModule, RouterModule],
     templateUrl: './chord-dictionary.component.html',
     styleUrls: ['./chord-dictionary.component.css']
 })
 export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
+
     private fullHeroHeight = 0;
     private rafPending = false;
 
     selectedInstrument: Instrument = 'guitar';
-    selectedRoot = 'A';
+    selectedRoot: string | null = null;
     selectedSuffix: string | null = null;
+    selectedBass: string | null = null;
     selectedChord: string | null = null;
     chordDetail: ChordDetail | null = null;
     isPlayingDetail = false;
     private playTimer: any = null;
 
-    // Piano large display data
+    showRootDrop   = false;
+    showSuffixDrop = false;
+    showBassDrop   = false;
+
+    chordSearch = '';
+
     pianoLargeWhites: PianoKey[] = [];
     pianoLargeBlacks: PianoBlackKey[] = [];
-    pianoLargeWidth = 0;
+    pianoLargeWidth  = 0;
     pianoLargeActive = new Set<number>();
 
     readonly instruments: { key: Instrument; label: string }[] = [
@@ -94,6 +101,22 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         { key: 'm7b5',  label: 'm7b5' },
     ];
 
+    readonly bassNotes = [
+        { key: null,  display: 'ללא בס' },
+        { key: 'A',   display: 'A' },
+        { key: 'A#',  display: 'A# / B♭' },
+        { key: 'B',   display: 'B' },
+        { key: 'C',   display: 'C' },
+        { key: 'C#',  display: 'C# / D♭' },
+        { key: 'D',   display: 'D' },
+        { key: 'D#',  display: 'D# / E♭' },
+        { key: 'E',   display: 'E' },
+        { key: 'F',   display: 'F' },
+        { key: 'F#',  display: 'F# / G♭' },
+        { key: 'G',   display: 'G' },
+        { key: 'G#',  display: 'G# / A♭' },
+    ];
+
     private readonly CHORD_THEORY: { [s: string]: ChordTheory } = {
         '':     { intervals: [0, 4, 7],         scaleName: 'Major',           degrees: '1, 3, 5' },
         'm':    { intervals: [0, 3, 7],         scaleName: 'Minor',           degrees: '1, ♭3, 5' },
@@ -131,15 +154,10 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         1: 'אצבע מורה', 2: 'אמה', 3: 'קמיצה', 4: 'זרת'
     };
 
-    // Guitar: index 0 = string 6 (E, thickest) ... index 5 = string 1 (e, thinnest)
-    private readonly G_STR_NAME   = ['E','A','D','G','B','e'];
-    private readonly G_STR_NUM    = [6, 5, 4, 3, 2, 1];
-    private readonly G_OPEN_SEMI  = [4, 9, 2, 7, 11, 4];
-
-    // Ukulele: index 0=G(4), 1=C(3), 2=E(2), 3=A(1)
-    private readonly U_STR_NAME   = ['G','C','E','A'];
-    private readonly U_STR_NUM    = [4, 3, 2, 1];
-    private readonly U_OPEN_SEMI  = [7, 0, 4, 9];
+    private readonly G_STR_NAME = ['E','A','D','G','B','e'];
+    private readonly G_STR_NUM  = [6, 5, 4, 3, 2, 1];
+    private readonly U_STR_NAME = ['G','C','E','A'];
+    private readonly U_STR_NUM  = [4, 3, 2, 1];
 
     private readonly SHARP_FLAT: { [k: string]: string } = {
         'A#': 'Bb', 'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab'
@@ -147,13 +165,14 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
 
     private readonly WHITE_IN_OCT = [0, 2, 4, 5, 7, 9, 11];
     private readonly BLACK_X_28: { [n: number]: number } = { 1: 20, 3: 48, 6: 104, 8: 132, 10: 160 };
+    private readonly BLACK_X_13: { [n: number]: number } = { 1: 9,  3: 22, 6: 48,  8: 61,  10: 74 };
 
     constructor(private chordPlayer: ChordPlayerService) {}
 
     ngOnInit(): void {}
 
     ngAfterViewInit(): void {
-        setTimeout(() => this.initHeroHeight(), 0);
+        setTimeout(() => this.initHeroHeight(), 50);
     }
 
     ngOnDestroy(): void {}
@@ -168,10 +187,17 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     @HostListener('window:resize')
     onResize(): void { this.initHeroHeight(); }
 
+    @HostListener('document:click', ['$event'])
+    onDocClick(e: Event): void {
+        const t = e.target as HTMLElement;
+        if (!t.closest('.filter-drop'))
+            this.showRootDrop = this.showSuffixDrop = this.showBassDrop = false;
+    }
+
     private initHeroHeight(): void {
         const bg = this.heroBg?.nativeElement;
         if (!bg) return;
-        this.fullHeroHeight = Math.round(window.innerHeight * 0.42);
+        this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
         bg.style.height = this.fullHeroHeight + 'px';
         this.shrinkHero();
     }
@@ -179,34 +205,98 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     private shrinkHero(): void {
         const bg = this.heroBg?.nativeElement;
         if (!bg || this.fullHeroHeight === 0) return;
-        const min = 56;
-        const h = Math.max(min, this.fullHeroHeight - window.scrollY);
-        bg.style.height = h + 'px';
-        const ov = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
-        if (ov) {
-            const range = this.fullHeroHeight - min;
-            ov.style.opacity = String(range > 0 ? Math.min(1, (this.fullHeroHeight - h) / range) : 0);
+        const minHeight = 56;
+        const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+        bg.style.height = newHeight + 'px';
+        const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+        if (collapseOverlay) {
+            const collapseRange = this.fullHeroHeight - minHeight;
+            const collapseProgress = collapseRange > 0
+                ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+                : 0;
+            collapseOverlay.style.opacity = String(collapseProgress);
         }
     }
 
-    // ─── Instrument / Root / Suffix selection ───────────────────────────────
+    // ─── Search ─────────────────────────────────────────────────────────────
+
+    get isSearching(): boolean { return this.chordSearch.trim().length > 0; }
+
+    get searchResults(): string[] {
+        const q = this.chordSearch.trim();
+        if (!q) return [];
+        const db = this.getDB();
+        const upper = q.toUpperCase();
+        return Object.keys(db)
+            .filter(k => k.toUpperCase().startsWith(upper))
+            .sort()
+            .slice(0, 24);
+    }
+
+    get displayedChords(): string[] {
+        return this.isSearching ? this.searchResults : this.getAvailableChords();
+    }
+
+    onChordSearchInput(e: Event): void {
+        this.chordSearch = (e.target as HTMLInputElement).value;
+        this.clearDetail();
+    }
+
+    clearChordSearch(): void {
+        this.chordSearch = '';
+        this.clearDetail();
+    }
+
+    // ─── Display getters ────────────────────────────────────────────────────
+
+    get selectedRootDisplay(): string {
+        if (this.selectedRoot === null) return 'כל השורשים';
+        return this.roots.find(r => r.key === this.selectedRoot)?.display ?? this.selectedRoot;
+    }
+
+    get selectedSuffixDisplay(): string {
+        if (this.selectedSuffix === null) return 'כל הסוגים';
+        return this.suffixes.find(s => s.key === this.selectedSuffix)?.label ?? this.selectedSuffix;
+    }
+
+    get selectedBassDisplay(): string {
+        if (this.selectedBass === null) return 'ללא בס';
+        return this.bassNotes.find(b => b.key === this.selectedBass)?.display ?? this.selectedBass;
+    }
+
+    get detailRoot(): string {
+        if (!this.selectedChord) return '';
+        const suffix = this.extractSuffix(this.selectedChord);
+        const rootPart = this.selectedChord.split('/')[0];
+        return rootPart.slice(0, rootPart.length - suffix.length);
+    }
+
+    // ─── Selection ──────────────────────────────────────────────────────────
 
     selectInstrument(inst: Instrument): void {
         this.selectedInstrument = inst;
         this.clearDetail();
     }
 
-    selectRoot(root: string): void {
+    selectRoot(root: string | null): void {
         this.selectedRoot = root;
+        this.showRootDrop = false;
         this.clearDetail();
     }
 
-    toggleSuffix(suffix: string): void {
-        this.selectedSuffix = this.selectedSuffix === suffix ? null : suffix;
+    selectSuffix(suffix: string | null): void {
+        this.selectedSuffix = suffix;
+        this.showSuffixDrop = false;
         this.clearDetail();
     }
 
-    private clearDetail(): void {
+    selectBass(bass: string | null): void {
+        this.selectedBass = bass;
+        this.showBassDrop = false;
+        this.clearDetail();
+    }
+
+    clearDetail(): void {
         this.selectedChord = null;
         this.chordDetail = null;
         this.isPlayingDetail = false;
@@ -222,39 +312,112 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
 
     getAvailableChords(): string[] {
         const db = this.getDB();
+
+        // No root selected → show all chords (filtered by suffix/bass if set)
+        if (this.selectedRoot === null) {
+            return Object.keys(db)
+                .filter(key => {
+                    if (this.selectedSuffix !== null && this.extractSuffix(key) !== this.selectedSuffix) return false;
+                    if (this.selectedBass !== null) {
+                        const flatBass = this.SHARP_FLAT[this.selectedBass];
+                        return key.includes('/' + this.selectedBass) ||
+                               (flatBass ? key.includes('/' + flatBass) : false);
+                    }
+                    return !key.includes('/');
+                })
+                .sort();
+        }
+
         const flat = this.SHARP_FLAT[this.selectedRoot];
         const result: string[] = [];
 
         for (const s of this.suffixes) {
             if (this.selectedSuffix !== null && s.key !== this.selectedSuffix) continue;
-            const sharp = this.selectedRoot + s.key;
-            if (db[sharp]) { result.push(sharp); continue; }
-            if (flat) {
-                const fb = flat + s.key;
-                if (db[fb]) result.push(fb);
+
+            if (this.selectedBass) {
+                const slashS = this.selectedRoot + s.key + '/' + this.selectedBass;
+                const flatB  = this.SHARP_FLAT[this.selectedBass];
+                const slashF = flatB ? this.selectedRoot + s.key + '/' + flatB : '';
+                if (db[slashS]) { result.push(slashS); continue; }
+                if (slashF && db[slashF]) { result.push(slashF); continue; }
+                if (flat) {
+                    const ff = flat + s.key + '/' + this.selectedBass;
+                    if (db[ff]) result.push(ff);
+                }
+            } else {
+                const name = this.selectedRoot + s.key;
+                if (db[name]) { result.push(name); continue; }
+                if (flat) {
+                    const fb = flat + s.key;
+                    if (db[fb]) result.push(fb);
+                }
             }
         }
         return result;
     }
 
     selectChord(name: string): void {
-        if (this.selectedChord === name) {
-            this.clearDetail();
-            return;
-        }
+        if (this.selectedChord === name) { this.clearDetail(); return; }
         this.selectedChord = name;
         this.chordDetail = this.buildDetail(name);
         if (this.selectedInstrument === 'piano') this.buildPianoLarge(name);
-        setTimeout(() => {
-            document.querySelector('.chord-detail-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 80);
     }
 
-    // ─── Chord detail builder ────────────────────────────────────────────────
+    get heroTitle(): string {
+        const map: Record<Instrument, string> = {
+            guitar:  'מילון אקורדים לגיטרה',
+            piano:   'מילון אקורדים לקלידים',
+            ukulele: 'מילון אקורדים ליוקלילי',
+        };
+        return map[this.selectedInstrument];
+    }
+
+    // ─── Mini diagram helpers ────────────────────────────────────────────────
+
+    getGuitarMini(chord: string): GuitarChord | null {
+        return GUITAR_CHORDS[chord] ?? null;
+    }
+
+    getUkuleleMini(chord: string): UkuleleChord | null {
+        return UKULELE_CHORDS[chord] ?? null;
+    }
+
+    // Mini guitar barre helpers
+    mgBarreX(b: any): number { return 11 + Math.min(b.fromString, b.toString) * 10 - 4; }
+    mgBarreW(b: any): number { return Math.abs(b.fromString - b.toString) * 10 + 8; }
+    muBarreX(b: any): number { return 10 + Math.min(b.fromString, b.toString) * 14 - 4; }
+    muBarreW(b: any): number { return Math.abs(b.fromString - b.toString) * 14 + 8; }
+
+    getPianoMiniData(chord: string): PianoMiniData | null {
+        const keys = PIANO_CHORDS[chord];
+        if (!keys) return null;
+        const rootS = this.selectedRoot ? (this.NOTE_SEMITONE[this.selectedRoot] ?? 0) : 0;
+        const abs = new Set<number>();
+        for (const k of keys) {
+            const s = ((k % 12) + 12) % 12;
+            abs.add(s < rootS ? s + 12 : s);
+        }
+        const maxNote = Math.max(...abs);
+        let end = maxNote + 1;
+        while (!this.WHITE_IN_OCT.includes(end % 12)) end++;
+        const whites: PianoKey[] = [];
+        const blacks: PianoBlackKey[] = [];
+        for (let n = 0; n <= end; n++)
+            if (this.WHITE_IN_OCT.includes(n % 12)) whites.push({ note: n });
+        for (let n = 1; n <= end; n++) {
+            const oct = Math.floor(n / 12), io = n % 12;
+            if (!this.WHITE_IN_OCT.includes(io) && this.BLACK_X_13[io] !== undefined)
+                blacks.push({ x: oct * 91 + this.BLACK_X_13[io], note: n });
+        }
+        return { whites, blacks, active: abs, width: whites.length * 13 };
+    }
+
+    // ─── Detail builder ──────────────────────────────────────────────────────
 
     private buildDetail(name: string): ChordDetail {
         const suffix = this.extractSuffix(name);
-        const root   = name.slice(0, name.length - suffix.length);
+        const rootPart = name.split('/')[0];
+        const root = rootPart.slice(0, rootPart.length - suffix.length);
         const theory = this.CHORD_THEORY[suffix];
         const db     = this.getDB();
         const data   = db[name];
@@ -288,20 +451,21 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     private extractSuffix(name: string): string {
+        const rootPart = name.split('/')[0];
         const sorted = [...this.suffixes].sort((a, b) => b.key.length - a.key.length);
         for (const s of sorted) {
             if (!s.key) continue;
-            if (name.endsWith(s.key)) {
-                const possibleRoot = name.slice(0, name.length - s.key.length);
-                if (this.NOTE_SEMITONE[possibleRoot] !== undefined) return s.key;
+            if (rootPart.endsWith(s.key)) {
+                const possible = rootPart.slice(0, rootPart.length - s.key.length);
+                if (this.NOTE_SEMITONE[possible] !== undefined) return s.key;
             }
         }
         return '';
     }
 
-    private computeNotes(root: string, theory: ChordTheory, _data: any): string[] {
+    private computeNotes(root: string, theory: ChordTheory, data: any): string[] {
         if (this.selectedInstrument === 'piano') {
-            return (_data as number[]).map(n => {
+            return (data as number[]).map((n: number) => {
                 const s = ((n % 12) + 12) % 12;
                 return this.HEBREW_NOTE[this.SEMITONE_NOTE[s]] ?? '';
             });
@@ -311,157 +475,153 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         const out: string[] = [];
         for (const iv of theory.intervals) {
             const s = (rootS + iv) % 12;
-            if (!seen.has(s)) {
-                seen.add(s);
-                out.push(this.HEBREW_NOTE[this.SEMITONE_NOTE[s]] ?? '');
-            }
+            if (!seen.has(s)) { seen.add(s); out.push(this.HEBREW_NOTE[this.SEMITONE_NOTE[s]] ?? ''); }
         }
         return out;
     }
 
-    private guitarLines(chord: GuitarChord): { fingerLines: FingerLine[], startFrom: string } {
+    private autoAssignFingers(frets: number[]): number[] {
+        // Sort active frets ascending → assign fingers 1, 2, 3, 4
+        const active = frets
+            .map((f, i) => ({ f, i }))
+            .filter(x => x.f > 0)
+            .sort((a, b) => a.f - b.f || a.i - b.i);
+        const result = new Array(frets.length).fill(0);
+        active.forEach((x, idx) => { result[x.i] = idx + 1; });
+        return result;
+    }
+
+    private guitarLines(chord: GuitarChord): { fingerLines: FingerLine[]; startFrom: string } {
+        const fingers = chord.fingers?.length
+            ? chord.fingers
+            : this.autoAssignFingers(chord.frets);
         const lines: FingerLine[] = [];
-        let startNum: number | null = null;
-        let startName = '';
+        const mutedNums: number[] = [];
+        let firstPlayable: number | null = null;
 
         for (let i = 0; i < chord.frets.length; i++) {
-            const f  = chord.frets[i];
-            const fn = chord.fingers?.[i] ?? 0;
-            const sn = this.G_STR_NAME[i];
+            const f = chord.frets[i], fn = fingers[i] ?? 0;
             const snum = this.G_STR_NUM[i];
 
-            if (f === -1) {
-                lines.push({ text: `מיתר ${snum} (${sn}) — מושתק, לא מנגנים`, isOpen: true });
-            } else if (f === 0) {
-                lines.push({ text: `מיתר ${snum} (${sn}) — מיתר פתוח`, isOpen: true });
-                if (startNum === null) { startNum = snum; startName = sn; }
+            if (f === -1) { mutedNums.push(snum); continue; }
+            if (firstPlayable === null) firstPlayable = snum;
+
+            const suffix = snum === 1 ? ' (הדק ביותר)' : snum === 6 ? ' (העבה ביותר)' : '';
+            const label  = `במיתר ${snum}${suffix}`;
+
+            if (f === 0) {
+                lines.push({ text: `${label}, על סריג מספר 0 (מיתר פתוח)`, isOpen: true });
             } else {
-                const fname = fn > 0 ? ` — ${this.FINGER_NAME[fn]} (${fn})` : '';
-                lines.push({ text: `מיתר ${snum} (${sn}), סריג ${f}${fname}` });
-                if (startNum === null) { startNum = snum; startName = sn; }
+                const fingerText = fn > 0 ? ` אצבע מספר ${fn} (${this.FINGER_NAME[fn]})` : '';
+                lines.push({ text: `${label}, על סריג מספר ${f}${fingerText}` });
             }
         }
 
-        const startFrom = startNum !== null
-            ? `התחילו לנגן ממיתר ${startNum} (${startName}, העבה)`
-            : '';
+        let startFrom = '';
+        if (firstPlayable !== null) {
+            const mutedNote = mutedNums.length
+                ? ` (שימו לב לא לנגן את מיתר ${mutedNums.join(', ')})`
+                : '';
+            startFrom = `התחילו לפרוט ממיתר ${firstPlayable}${mutedNote}`;
+        }
         return { fingerLines: lines, startFrom };
     }
 
-    private ukuleleLines(chord: UkuleleChord): { fingerLines: FingerLine[], startFrom: string } {
+    private ukuleleLines(chord: UkuleleChord): { fingerLines: FingerLine[]; startFrom: string } {
+        const fingers = chord.fingers?.length
+            ? chord.fingers
+            : this.autoAssignFingers(chord.frets);
         const lines: FingerLine[] = [];
 
         for (let i = 0; i < chord.frets.length; i++) {
-            const f  = chord.frets[i];
-            const fn = chord.fingers?.[i] ?? 0;
-            const sn = this.U_STR_NAME[i];
+            const f = chord.frets[i], fn = fingers[i] ?? 0;
             const snum = this.U_STR_NUM[i];
 
+            const suffix = snum === 1 ? ' (הדק ביותר)' : snum === 4 ? ' (העבה ביותר)' : '';
+            const label  = `במיתר ${snum}${suffix}`;
+
             if (f === -1) {
-                lines.push({ text: `מיתר ${sn} (${snum}) — מושתק`, isOpen: true });
+                lines.push({ text: `${label} — מושתק`, isOpen: true });
             } else if (f === 0) {
-                lines.push({ text: `מיתר ${sn} (${snum}) — מיתר פתוח`, isOpen: true });
+                lines.push({ text: `${label}, על סריג מספר 0 (מיתר פתוח)`, isOpen: true });
             } else {
-                const fname = fn > 0 ? ` — ${this.FINGER_NAME[fn]} (${fn})` : '';
-                lines.push({ text: `מיתר ${sn} (${snum}), סריג ${f}${fname}` });
+                const fingerText = fn > 0 ? ` אצבע מספר ${fn} (${this.FINGER_NAME[fn]})` : '';
+                lines.push({ text: `${label}, על סריג מספר ${f}${fingerText}` });
             }
         }
 
-        return {
-            fingerLines: lines,
-            startFrom: 'פרטו את כל המיתרים יחד ממיתר G (4) עד מיתר A (1)'
-        };
+        return { fingerLines: lines, startFrom: 'התחילו לפרוט את כל המיתרים יחד' };
     }
 
-    // ─── Piano large display ─────────────────────────────────────────────────
+    // ─── Piano large ─────────────────────────────────────────────────────────
 
     private buildPianoLarge(name: string): void {
         const keys: number[] | undefined = PIANO_CHORDS[name];
         if (!keys) { this.pianoLargeWhites = []; this.pianoLargeBlacks = []; return; }
-
-        const rootS = this.NOTE_SEMITONE[this.selectedRoot] ?? 0;
+        const rootS = this.selectedRoot ? (this.NOTE_SEMITONE[this.selectedRoot] ?? 0) : 0;
         const abs = new Set<number>();
         for (const k of keys) {
             const s = ((k % 12) + 12) % 12;
             abs.add(s < rootS ? s + 12 : s);
         }
         this.pianoLargeActive = abs;
-
         const maxNote = Math.max(...abs);
         let end = maxNote + 1;
         while (!this.WHITE_IN_OCT.includes(end % 12)) end++;
-
         const whites: PianoKey[] = [];
         const blacks: PianoBlackKey[] = [];
-
-        for (let n = 0; n <= end; n++) {
+        for (let n = 0; n <= end; n++)
             if (this.WHITE_IN_OCT.includes(n % 12)) whites.push({ note: n });
-        }
-
         for (let n = 1; n <= end; n++) {
-            const oct = Math.floor(n / 12);
-            const io  = n % 12;
-            if (!this.WHITE_IN_OCT.includes(io) && this.BLACK_X_28[io] !== undefined) {
+            const oct = Math.floor(n / 12), io = n % 12;
+            if (!this.WHITE_IN_OCT.includes(io) && this.BLACK_X_28[io] !== undefined)
                 blacks.push({ x: oct * 196 + this.BLACK_X_28[io], note: n });
-            }
         }
-
         this.pianoLargeWhites = whites;
         this.pianoLargeBlacks = blacks;
         this.pianoLargeWidth  = whites.length * 28;
     }
 
     isPianoActive(note: number): boolean { return this.pianoLargeActive.has(note); }
-
     getPianoFill(note: number, isBlack: boolean): string {
         return this.isPianoActive(note) ? '#ddff53' : isBlack ? '#1a1a1a' : 'white';
     }
 
-    // ─── Guitar large SVG helpers ────────────────────────────────────────────
+    // ─── Large Guitar SVG helpers ─────────────────────────────────────────────
 
     getGuitarChord(): GuitarChord | null {
         return this.selectedInstrument === 'guitar' && this.selectedChord
             ? GUITAR_CHORDS[this.selectedChord] ?? null : null;
     }
 
-    gX(i: number)   { return 24 + i * 22; }
-    gY(fret: number){ return 24 + fret * 26; }
-
+    gX(i: number)   { return 30 + i * 24; }
+    gY(f: number)   { return 50 + f * 28; }
     gMinFret(): number {
         const c = this.getGuitarChord(); if (!c) return 1;
         const a = c.frets.filter(f => f > 0);
         return a.length ? Math.min(...a) : 1;
     }
+    gBarreX(b: any) { return this.gX(Math.min(b.fromString, b.toString)) - 9; }
+    gBarreW(b: any) { return Math.abs(b.fromString - b.toString) * 24 + 18; }
 
-    gBarreX(b: any)  { return this.gX(Math.min(b.fromString, b.toString)) - 8; }
-    gBarreW(b: any)  { return Math.abs(b.fromString - b.toString) * 22 + 16; }
-
-    // ─── Ukulele large SVG helpers ────────────────────────────────────────────
+    // ─── Large Ukulele SVG helpers ────────────────────────────────────────────
 
     getUkuleleChord(): UkuleleChord | null {
         return this.selectedInstrument === 'ukulele' && this.selectedChord
             ? UKULELE_CHORDS[this.selectedChord] ?? null : null;
     }
 
-    uX(i: number)   { return 24 + i * 30; }
-    uY(fret: number){ return 24 + fret * 26; }
-
+    uX(i: number)   { return 30 + i * 32; }
+    uY(f: number)   { return 50 + f * 28; }
     uMinFret(): number {
         const c = this.getUkuleleChord(); if (!c) return 1;
         const a = c.frets.filter(f => f > 0);
         return a.length ? Math.min(...a) : 1;
     }
+    uBarreX(b: any) { return this.uX(Math.min(b.fromString, b.toString)) - 9; }
+    uBarreW(b: any) { return Math.abs(b.fromString - b.toString) * 32 + 18; }
 
-    uBarreX(b: any)  { return this.uX(Math.min(b.fromString, b.toString)) - 8; }
-    uBarreW(b: any)  { return Math.abs(b.fromString - b.toString) * 30 + 16; }
-
-    // ─── Play ────────────────────────────────────────────────────────────────
-
-    get detailRoot(): string {
-        if (!this.selectedChord) return '';
-        const suffixLen = this.selectedSuffix?.length ?? 0;
-        return this.selectedChord.slice(0, this.selectedChord.length - suffixLen);
-    }
+    // ─── Play ─────────────────────────────────────────────────────────────────
 
     async playDetail(): Promise<void> {
         if (!this.selectedChord) return;
@@ -472,10 +632,8 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
             return;
         }
         this.isPlayingDetail = true;
-        const db = this.getDB();
-        const data = db[this.selectedChord];
+        const data = this.getDB()[this.selectedChord];
         if (!data) { this.isPlayingDetail = false; return; }
-
         if (this.selectedInstrument === 'guitar') {
             await this.chordPlayer.playGuitar(data.frets);
             this.playTimer = setTimeout(() => this.isPlayingDetail = false, 1500);
@@ -483,7 +641,7 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
             await this.chordPlayer.playUkulele(data.frets);
             this.playTimer = setTimeout(() => this.isPlayingDetail = false, 1800);
         } else {
-            const rootS = this.NOTE_SEMITONE[this.selectedRoot] ?? 0;
+            const rootS = this.selectedRoot ? (this.NOTE_SEMITONE[this.selectedRoot] ?? 0) : 0;
             const abs = new Set<number>((data as number[]).map((n: number) => {
                 const s = ((n % 12) + 12) % 12;
                 return s < rootS ? s + 12 : s;

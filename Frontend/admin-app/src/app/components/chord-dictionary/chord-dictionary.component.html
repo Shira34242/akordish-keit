@@ -1,95 +1,224 @@
 <div class="dict-page">
 
-    <!-- ═══════════════ HERO ═══════════════ -->
+    <!-- ═══ HERO BG — fixed, rounded, collapses on scroll ═══ -->
     <div class="hero-bg" #heroBg>
         <div class="hero-collapse-overlay"></div>
     </div>
 
+    <!-- ═══ HERO CONTENT ═══ -->
     <div class="hero-content-area">
-        <div class="hero-content">
-            <h1 class="hero-title">מילון האקורדים</h1>
-            <p class="hero-subtitle">בחרו כלי, שורש וסוג — וקבלו תרשים מלא עם הסבר</p>
+        <div class="hero-inner">
 
-            <!-- Instrument tabs -->
-            <div class="instrument-tabs">
-                <button *ngFor="let inst of instruments"
-                        class="inst-tab"
-                        [class.active]="selectedInstrument === inst.key"
-                        (click)="selectInstrument(inst.key)">
-                    {{ inst.label }}
-                </button>
+            <!-- #1 Dynamic title per instrument -->
+            <h1 class="hero-title">{{ heroTitle }}</h1>
+
+            <!-- #2 Controls bar — all 3 in one row, uniform height -->
+            <div class="controls-bar">
+
+                <!-- Instrument group -->
+                <div class="instrument-group">
+                    <button class="toolbar-btn instrument-btn"
+                            [class.active]="selectedInstrument === 'piano'"
+                            (click)="selectInstrument('piano')" title="קלידים">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18.5 8c-1.4 0-2.6-.8-3.2-2A6.87 6.87 0 0 0 2 9v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8.5C22 9.6 20.4 8 18.5 8"/>
+                            <path d="M2 14h20"/><path d="M6 14v4"/><path d="M10 14v4"/>
+                            <path d="M14 14v4"/><path d="M18 14v4"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn instrument-btn"
+                            [class.active]="selectedInstrument === 'guitar'"
+                            (click)="selectInstrument('guitar')" title="גיטרה">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="1 -12 511.99887 511" fill="currentColor">
+                            <path d="m458.457031.5-173.089843 173.257812c-3.390626-27.449218 11.734374-58.269531 23.042968-76.867187 6.582032-10.816406 6.21875-24.027344-.945312-34.476563-7.152344-10.429687-19.324219-15.519531-31.765625-13.285156-21.292969 3.824219-51.707031 13.417969-75.683594 37.390625-13.042969 13.042969-21.066406 31.382813-28.148437 47.5625-5.152344 11.773438-10.480469 23.949219-15.734376 29.003907l-.273437.269531c-16.121094 16.121093-37.671875 21.6875-60.484375 27.578125-22.648438 5.847656-46.066406 11.894531-63.402344 29.230468-21.03125 21.019532-32.085937 46.753907-31.972656 74.417969.167969 40.558594 23.269531 84.148438 66.8125 126.082031 40.777344 42.339844 83.589844 65.105469 123.828125 65.832032.644531.011718 1.28125.015625 1.925781.015625 27.9375 0 53.714844-11.03125 74.652344-31.976563 17.210938-17.210937 22.902344-39.980468 28.410156-61.996094 5.726563-22.894531 11.132813-44.515624 28.515625-61.898437l.269531-.273437c2.9375-3.054688 11.523438-7.246094 19.097657-10.941407 18.070312-8.820312 40.554687-19.792969 54.835937-42.164062 5.851563-9.167969 6.195313-20.773438.898438-30.289063-5.308594-9.527344-15.410156-15.371094-26.261719-15.207031-17.613281.222656-42.5625-2.136719-66.660156-22.386719l168.714843-168.878906h36.960938v-40zm-84.9375 271.257812c-.003906 0-.007812 0-.011719 0 .003907.003907.007813 0 .011719 0zm-49.757812-7.203124c9.210937 3.105468 17.960937 4.910156 25.863281 5.941406-7.199219 4.949218-15.503906 9-23.660156 12.980468-11.511719 5.621094-22.390625 10.929688-30.230469 19.003907-25.113281 25.191406-32.765625 55.773437-38.910156 80.351562-4.566407 18.265625-8.511719 34.039063-17.894531 43.417969-13.945313 13.953125-29.523438 20.554688-47.566407 20.25-29.042969-.523438-63.128906-19.644531-95.984375-53.835938l-.5625-.566406c-35.230468-33.847656-54.695312-68.539062-54.816406-97.683594-.066406-16.996093 6.742188-32.460937 20.253906-45.964843 9.621094-9.621094 26.074219-13.867188 45.121094-18.789063 25.703125-6.636718 54.828125-14.15625 78.640625-37.890625 10.894531-10.558593 17.503906-25.664062 24.5-41.652343 5.9375-13.570313 12.078125-27.605469 19.789063-35.316407 10.898437-10.902343 24.167968-17.597656 36.425781-21.714843-21.765625 42.617187-25.710938 81.632812-11.515625 112.855468l-34.304688 34.339844-18.714844-18.867188-28.398437 28.171876 65.007813 65.527343 28.394531-28.171875-18.117188-18.265625 30.886719-30.914062c13.78125 12.175781 29.117188 21.167969 45.792969 26.792969zm-180.5625 13.332031 65.003906 65.527343-28.394531 28.171876-65.007813-65.527344zm0 0"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn instrument-btn"
+                            [class.active]="selectedInstrument === 'ukulele'"
+                            (click)="selectInstrument('ukulele')" title="יוקלילי">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m11.9 12.1 4.514-4.514"/>
+                            <path d="M20.1 2.3a1 1 0 0 0-1.4 0l-1.114 1.114A2 2 0 0 0 17 4.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 17.828 7h1.344a2 2 0 0 0 1.414-.586L21.7 5.3a1 1 0 0 0 0-1.4z"/>
+                            <path d="m6 16 2 2"/>
+                            <path d="M8.2 9.9C8.7 8.8 9.8 8 11 8c2.8 0 5 2.2 5 5 0 1.2-.8 2.3-1.9 2.8l-.9.4A2 2 0 0 0 12 18a4 4 0 0 1-4 4c-3.3 0-6-2.7-6-6a4 4 0 0 1 4-4 2 2 0 0 0 1.8-1.2z"/>
+                            <circle cx="11.5" cy="12.5" r=".5" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- #4 Filter group — no labels, just value + chevron -->
+                <div class="filter-controls-group">
+
+                    <div class="filter-drop" [class.open]="showRootDrop">
+                        <button class="filter-btn"
+                                (click)="showRootDrop = !showRootDrop; showSuffixDrop = false; showBassDrop = false">
+                            <span class="fbtn-val" dir="ltr">{{ selectedRootDisplay }}</span>
+                            <svg class="fbtn-chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="drop-panel" *ngIf="showRootDrop">
+                            <button class="drop-item" [class.active]="selectedRoot === null"
+                                    (click)="selectRoot(null)">כל השורשים</button>
+                            <button *ngFor="let r of roots" class="drop-item"
+                                    [class.active]="selectedRoot === r.key"
+                                    (click)="selectRoot(r.key)" dir="ltr">{{ r.display }}</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-sep"></div>
+
+                    <div class="filter-drop" [class.open]="showSuffixDrop">
+                        <button class="filter-btn"
+                                (click)="showSuffixDrop = !showSuffixDrop; showRootDrop = false; showBassDrop = false">
+                            <span class="fbtn-val">{{ selectedSuffixDisplay }}</span>
+                            <svg class="fbtn-chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="drop-panel" *ngIf="showSuffixDrop">
+                            <button class="drop-item" [class.active]="selectedSuffix === null" (click)="selectSuffix(null)">כל הסוגים</button>
+                            <button *ngFor="let s of suffixes" class="drop-item"
+                                    [class.active]="selectedSuffix === s.key"
+                                    (click)="selectSuffix(s.key)" dir="ltr">{{ s.label }}</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-sep"></div>
+
+                    <div class="filter-drop" [class.open]="showBassDrop">
+                        <button class="filter-btn" [class.has-val]="selectedBass !== null"
+                                (click)="showBassDrop = !showBassDrop; showRootDrop = false; showSuffixDrop = false">
+                            <span class="fbtn-val" dir="ltr">{{ selectedBassDisplay }}</span>
+                            <svg class="fbtn-chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="drop-panel" *ngIf="showBassDrop">
+                            <button *ngFor="let b of bassNotes" class="drop-item"
+                                    [class.active]="selectedBass === b.key"
+                                    (click)="selectBass(b.key)"
+                                    [dir]="b.key ? 'ltr' : 'rtl'">{{ b.display }}</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- #2 Compact search — same height as groups -->
+                <div class="chord-search-wrap">
+                    <svg class="chord-search-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text"
+                           [value]="chordSearch"
+                           (input)="onChordSearchInput($event)"
+                           placeholder="Am7..."
+                           class="chord-search-input"
+                           dir="ltr">
+                    <button *ngIf="isSearching" class="chord-search-clear" (click)="clearChordSearch()">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════ PICKER ═══════════════ -->
-    <div class="picker-section">
-        <div class="picker-inner">
-
-            <!-- Root -->
-            <div class="picker-row">
-                <span class="picker-label">שורש</span>
-                <div class="picker-pills">
-                    <button *ngFor="let r of roots"
-                            class="pill root-pill"
-                            [class.active]="selectedRoot === r.key"
-                            (click)="selectRoot(r.key)">
-                        {{ r.display }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- Suffix -->
-            <div class="picker-row">
-                <span class="picker-label">סוג</span>
-                <div class="picker-pills">
-                    <button class="pill suffix-pill"
-                            [class.active]="selectedSuffix === null"
-                            (click)="toggleSuffix(selectedSuffix ?? '')">
-                        הכל
-                    </button>
-                    <button *ngFor="let s of suffixes"
-                            class="pill suffix-pill"
-                            [class.active]="selectedSuffix === s.key"
-                            (click)="toggleSuffix(s.key)">
-                        {{ s.label }}
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ═══════════════ CHORD GRID ═══════════════ -->
+    <!-- ═══ PAGE CONTENT ═══ -->
     <div class="dict-content">
 
-        <div class="chords-grid" *ngIf="getAvailableChords().length > 0; else noChords">
-            <div *ngFor="let chord of getAvailableChords()"
+        <div class="bass-notice" *ngIf="!isSearching && selectedBass !== null && getAvailableChords().length === 0">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+            אקורדי סלאש עם צליל בס זה לא קיימים במאגר כרגע
+        </div>
+
+        <div class="bass-notice" *ngIf="isSearching && searchResults.length === 0">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+            לא נמצא אקורד "{{ chordSearch }}" במאגר עבור הכלי הנוכחי
+        </div>
+
+        <!-- #3 Chord grid — gray, no border, centered content -->
+        <div class="chords-grid" *ngIf="displayedChords.length > 0">
+            <div *ngFor="let chord of displayedChords"
                  class="chord-card"
                  [class.selected]="selectedChord === chord"
                  (click)="selectChord(chord)">
-                <div class="card-name">{{ chord }}</div>
-                <div class="card-diagram">
-                    <app-chord-tooltip
-                        [chordName]="chord"
-                        [instrument]="selectedInstrument"
-                        [isPinned]="false">
-                    </app-chord-tooltip>
-                </div>
+                <div class="card-name" dir="ltr">{{ chord }}</div>
+
+                <ng-container *ngIf="selectedInstrument === 'guitar'">
+                    <ng-container *ngIf="getGuitarMini(chord) as mc">
+                        <svg class="mini-svg" viewBox="0 0 66 78" width="66" height="78">
+                            <line x1="11" y1="12" x2="61" y2="12" stroke="#000" stroke-width="2"/>
+                            <line *ngFor="let fi of [1,2,3,4,5]" x1="11" [attr.y1]="12+fi*12" x2="61" [attr.y2]="12+fi*12" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+                            <line *ngFor="let si of [0,1,2,3,4,5]" [attr.x1]="11+si*10" y1="12" [attr.x2]="11+si*10" y2="72" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+                            <ng-container *ngFor="let fret of mc.frets; let si = index">
+                                <text *ngIf="fret === -1" [attr.x]="11+si*10" y="8" text-anchor="middle" font-size="8" fill="#999">×</text>
+                                <circle *ngIf="fret === 0" [attr.cx]="11+si*10" cy="7" r="2.5" fill="none" stroke="#000" stroke-width="1"/>
+                                <circle *ngIf="fret > 0" [attr.cx]="11+si*10" [attr.cy]="12+fret*12-6" r="4" fill="#000"/>
+                            </ng-container>
+                            <ng-container *ngIf="mc.barres">
+                                <rect *ngFor="let b of mc.barres"
+                                      [attr.x]="mgBarreX(b)" [attr.y]="12+b.fret*12-9"
+                                      [attr.width]="mgBarreW(b)" height="6" rx="3"
+                                      fill="#000" opacity="0.2"/>
+                            </ng-container>
+                        </svg>
+                    </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="selectedInstrument === 'ukulele'">
+                    <ng-container *ngIf="getUkuleleMini(chord) as mc">
+                        <svg class="mini-svg" viewBox="0 0 54 82" width="54" height="82">
+                            <line x1="10" y1="12" x2="52" y2="12" stroke="#000" stroke-width="2"/>
+                            <line *ngFor="let fi of [1,2,3,4,5]" x1="10" [attr.y1]="12+fi*12" x2="52" [attr.y2]="12+fi*12" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+                            <line *ngFor="let si of [0,1,2,3]" [attr.x1]="10+si*14" y1="12" [attr.x2]="10+si*14" y2="72" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+                            <text *ngFor="let lbl of ['G','C','E','A']; let si = index" [attr.x]="10+si*14" y="80" text-anchor="middle" font-size="6" fill="#888">{{ lbl }}</text>
+                            <ng-container *ngFor="let fret of mc.frets; let si = index">
+                                <text *ngIf="fret === -1" [attr.x]="10+si*14" y="8" text-anchor="middle" font-size="8" fill="#999">×</text>
+                                <circle *ngIf="fret === 0" [attr.cx]="10+si*14" cy="7" r="2.5" fill="none" stroke="#000" stroke-width="1"/>
+                                <circle *ngIf="fret > 0" [attr.cx]="10+si*14" [attr.cy]="12+fret*12-6" r="4" fill="#000"/>
+                            </ng-container>
+                            <ng-container *ngIf="mc.barres">
+                                <rect *ngFor="let b of mc.barres"
+                                      [attr.x]="muBarreX(b)" [attr.y]="12+b.fret*12-9"
+                                      [attr.width]="muBarreW(b)" height="6" rx="3"
+                                      fill="#000" opacity="0.2"/>
+                            </ng-container>
+                        </svg>
+                    </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="selectedInstrument === 'piano'">
+                    <ng-container *ngIf="getPianoMiniData(chord) as pd">
+                        <svg class="mini-svg" [attr.viewBox]="'0 0 ' + pd.width + ' 44'"
+                             [attr.width]="pd.width" height="44" style="max-width:100%">
+                            <ng-container *ngFor="let wk of pd.whites; let wi = index">
+                                <rect [attr.x]="wi*13" y="0" width="13" height="44"
+                                      stroke="#e0e0e0" stroke-width="0.5"
+                                      [attr.fill]="pd.active.has(wk.note) ? '#ddff53' : 'white'"/>
+                            </ng-container>
+                            <ng-container *ngFor="let bk of pd.blacks">
+                                <rect [attr.x]="bk.x" y="0" width="8" height="26"
+                                      [attr.fill]="pd.active.has(bk.note) ? '#ddff53' : '#000'"/>
+                            </ng-container>
+                        </svg>
+                    </ng-container>
+                </ng-container>
+
             </div>
         </div>
 
-        <ng-template #noChords>
-            <div class="no-chords">אין אקורדים זמינים עבור {{ selectedRoot }} ב{{ selectedInstrument === 'guitar' ? 'גיטרה' : selectedInstrument === 'piano' ? 'קלידים' : 'יוקלילי' }}</div>
-        </ng-template>
+    </div>
 
-        <!-- ═══════════════ DETAIL PANEL ═══════════════ -->
-        <div class="chord-detail-panel" *ngIf="chordDetail && selectedChord">
+    <!-- #5 Modal overlay — appears on chord click -->
+    <div class="chord-modal-overlay" *ngIf="chordDetail && selectedChord" (click)="clearDetail()">
+        <div class="chord-modal" (click)="$event.stopPropagation()">
 
             <div class="detail-header">
-                <h2 class="detail-title">{{ chordDetail.hebrewTitle }}</h2>
-                <button class="detail-close" (click)="selectChord(selectedChord)">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                <div class="detail-header-left">
+                    <h2 class="detail-chord-name" dir="ltr">{{ selectedChord }}</h2>
+                    <span class="detail-instr-label">
+                        {{ selectedInstrument === 'guitar' ? 'גיטרה' : selectedInstrument === 'piano' ? 'קלידים' : 'יוקלילי' }}
+                    </span>
+                </div>
+                <button class="detail-close" (click)="clearDetail()" aria-label="סגור">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M18 6 6 18M6 6l12 12"/>
                     </svg>
                 </button>
@@ -97,133 +226,132 @@
 
             <div class="detail-body">
 
-                <!-- Left: Large diagram + play -->
+                <!-- Diagram column -->
                 <div class="detail-diagram-col">
 
-                    <!-- Guitar large SVG -->
+                    <!-- #6 GUITAR — light-colored diagram -->
                     <ng-container *ngIf="selectedInstrument === 'guitar' && getGuitarChord() as gc">
-                        <svg class="large-diagram" [attr.viewBox]="'0 0 ' + (24 + 5*22 + 30) + ' 200'" width="220" height="200">
-                            <!-- Nut -->
-                            <line x1="24" y1="24" [attr.x2]="24 + 5*22" y2="24" stroke="#1a1a1a" stroke-width="3"/>
-                            <!-- Frets -->
-                            <line *ngFor="let fi of [1,2,3,4,5]"
-                                  x1="24" [attr.y1]="24 + fi*26"
-                                  [attr.x2]="24 + 5*22" [attr.y2]="24 + fi*26"
-                                  stroke="#aaa" stroke-width="1"/>
-                            <!-- Strings -->
-                            <line *ngFor="let si of [0,1,2,3,4,5]"
-                                  [attr.x1]="gX(si)" y1="24"
-                                  [attr.x2]="gX(si)" y2="154"
-                                  stroke="#1a1a1a" stroke-width="1.2"/>
-                            <!-- String labels -->
-                            <text *ngFor="let lbl of ['E','A','D','G','B','e']; let si = index"
-                                  [attr.x]="gX(si)" y="172"
-                                  text-anchor="middle" font-size="11" font-family="Arial" fill="#404040">{{ lbl }}</text>
-                            <!-- Barres -->
-                            <ng-container *ngIf="gc.barres">
-                                <rect *ngFor="let b of gc.barres"
-                                      [attr.x]="gBarreX(b)"
-                                      [attr.y]="gY(b.fret) - 11"
-                                      [attr.width]="gBarreW(b)"
-                                      height="10" rx="5"
-                                      fill="#1a1a1a" opacity="0.18"/>
-                            </ng-container>
-                            <!-- Mute / Open / Finger -->
-                            <ng-container *ngFor="let fret of gc.frets; let si = index">
-                                <text *ngIf="fret === -1"
-                                      [attr.x]="gX(si)" y="17"
-                                      text-anchor="middle" font-size="12" font-family="Arial" fill="#999">×</text>
-                                <circle *ngIf="fret === 0"
-                                        [attr.cx]="gX(si)" cy="13" r="5"
-                                        fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
-                                <circle *ngIf="fret > 0"
-                                        [attr.cx]="gX(si)" [attr.cy]="gY(fret) - 6" r="8"
-                                        fill="#1a1a1a"/>
-                                <text *ngIf="fret > 0 && gc.fingers && gc.fingers[si] > 0"
-                                      [attr.x]="gX(si)" [attr.cy]="gY(fret) - 6"
-                                      [attr.y]="gY(fret) - 2"
-                                      text-anchor="middle" font-size="9" font-family="Arial" fill="white">{{ gc.fingers[si] }}</text>
-                            </ng-container>
-                            <!-- Position label -->
-                            <text *ngIf="gMinFret() > 1"
-                                  [attr.x]="24 + 5*22 + 8"
-                                  [attr.y]="gY(gMinFret()) - 2"
-                                  font-size="10" font-family="Arial" fill="#404040">{{ gMinFret() }}fr</text>
-                        </svg>
+                        <div class="diagram-wrap">
+                            <svg viewBox="0 0 182 238" width="182" height="238">
+                                <!-- Fretboard — light -->
+                                <rect x="18" y="42" width="144" height="168" rx="4" fill="#F2F2F2"/>
+                                <!-- Nut — black bar -->
+                                <rect x="18" y="42" width="144" height="5" rx="1" fill="#000"/>
+                                <!-- Frets -->
+                                <line *ngFor="let fi of [1,2,3,4,5]"
+                                      x1="18" [attr.y1]="47+fi*28" x2="162" [attr.y2]="47+fi*28"
+                                      stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+                                <!-- Fret position dot -->
+                                <circle *ngIf="gMinFret() <= 3" cx="90" cy="105" r="3.5" fill="rgba(0,0,0,0.1)"/>
+                                <!-- Strings -->
+                                <line *ngFor="let si of [0,1,2,3,4,5]"
+                                      [attr.x1]="gX(si)" y1="40"
+                                      [attr.x2]="gX(si)" y2="212"
+                                      stroke="rgba(0,0,0,0.28)" [attr.stroke-width]="1.8 - si*0.2"/>
+                                <!-- String labels -->
+                                <text *ngFor="let lbl of ['E','A','D','G','B','e']; let si = index"
+                                      [attr.x]="gX(si)" y="230"
+                                      text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">{{ lbl }}</text>
+                                <!-- Barres -->
+                                <ng-container *ngIf="gc.barres">
+                                    <rect *ngFor="let b of gc.barres"
+                                          [attr.x]="gBarreX(b)" [attr.y]="gY(b.fret)-13"
+                                          [attr.width]="gBarreW(b)" height="13" rx="6.5"
+                                          fill="#000" opacity="0.55"/>
+                                </ng-container>
+                                <!-- Mute / Open / Dots -->
+                                <ng-container *ngFor="let fret of gc.frets; let si = index">
+                                    <text *ngIf="fret === -1" [attr.x]="gX(si)" y="34"
+                                          text-anchor="middle" font-size="14" fill="rgba(0,0,0,0.35)">×</text>
+                                    <circle *ngIf="fret === 0" [attr.cx]="gX(si)" cy="32" r="6"
+                                            fill="none" stroke="#000" stroke-width="1.5"/>
+                                    <circle *ngIf="fret > 0" [attr.cx]="gX(si)" [attr.cy]="gY(fret)-6"
+                                            r="10" fill="#000"/>
+                                    <text *ngIf="fret > 0 && gc.fingers && gc.fingers[si] > 0"
+                                          [attr.x]="gX(si)" [attr.y]="gY(fret)-2"
+                                          text-anchor="middle" font-size="11" font-weight="700"
+                                          font-family="Arial" fill="#ddff53">{{ gc.fingers[si] }}</text>
+                                </ng-container>
+                                <!-- Position label -->
+                                <text *ngIf="gMinFret() > 1"
+                                      [attr.x]="gX(5)+14" [attr.y]="gY(gMinFret())-2"
+                                      font-size="10" font-family="Arial" fill="#404040">{{ gMinFret() }}fr</text>
+                            </svg>
+                        </div>
                     </ng-container>
 
-                    <!-- Ukulele large SVG -->
+                    <!-- #6 UKULELE — light-colored diagram -->
                     <ng-container *ngIf="selectedInstrument === 'ukulele' && getUkuleleChord() as uc">
-                        <svg class="large-diagram" viewBox="0 0 140 210" width="160" height="210">
-                            <!-- Headstock shape -->
-                            <rect x="20" y="4" width="100" height="20" rx="6" fill="#1a1a1a"/>
-                            <!-- Tuning pegs -->
-                            <circle *ngFor="let pi of [0,1,2,3]"
-                                    [attr.cx]="uX(pi)" cy="4" r="5" fill="#404040"/>
-                            <!-- Nut -->
-                            <line x1="20" y1="24" x2="110" y2="24" stroke="#1a1a1a" stroke-width="3"/>
-                            <!-- Frets -->
-                            <line *ngFor="let fi of [1,2,3,4,5]"
-                                  x1="20" [attr.y1]="24 + fi*26"
-                                  x2="110" [attr.y2]="24 + fi*26"
-                                  stroke="#aaa" stroke-width="1"/>
-                            <!-- Strings -->
-                            <line *ngFor="let si of [0,1,2,3]"
-                                  [attr.x1]="uX(si)" y1="24"
-                                  [attr.x2]="uX(si)" y2="154"
-                                  stroke="#1a1a1a" stroke-width="1.2"/>
-                            <!-- Tuning labels -->
-                            <text *ngFor="let lbl of ['G','C','E','A']; let si = index"
-                                  [attr.x]="uX(si)" y="175"
-                                  text-anchor="middle" font-size="12" font-family="Arial" fill="#404040">{{ lbl }}</text>
-                            <!-- Barres -->
-                            <ng-container *ngIf="uc.barres">
-                                <rect *ngFor="let b of uc.barres"
-                                      [attr.x]="uBarreX(b)"
-                                      [attr.y]="uY(b.fret) - 11"
-                                      [attr.width]="uBarreW(b)"
-                                      height="10" rx="5"
-                                      fill="#1a1a1a" opacity="0.18"/>
-                            </ng-container>
-                            <!-- Mute / Open / Finger -->
-                            <ng-container *ngFor="let fret of uc.frets; let si = index">
-                                <text *ngIf="fret === -1"
-                                      [attr.x]="uX(si)" y="18"
-                                      text-anchor="middle" font-size="12" font-family="Arial" fill="#999">×</text>
-                                <circle *ngIf="fret === 0"
-                                        [attr.cx]="uX(si)" cy="14" r="5"
-                                        fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
-                                <circle *ngIf="fret > 0"
-                                        [attr.cx]="uX(si)" [attr.cy]="uY(fret) - 6" r="8"
-                                        fill="#1a1a1a"/>
-                                <text *ngIf="fret > 0 && uc.fingers && uc.fingers[si] > 0"
-                                      [attr.x]="uX(si)"
-                                      [attr.y]="uY(fret) - 2"
-                                      text-anchor="middle" font-size="9" font-family="Arial" fill="white">{{ uc.fingers[si] }}</text>
-                            </ng-container>
-                            <!-- Position label -->
-                            <text *ngIf="uMinFret() > 1"
-                                  x="118"
-                                  [attr.y]="uY(uMinFret()) - 2"
-                                  font-size="10" font-family="Arial" fill="#404040">{{ uMinFret() }}fr</text>
-                        </svg>
+                        <div class="diagram-wrap">
+                            <svg viewBox="0 0 156 252" width="156" height="252">
+                                <!-- Headstock — minimal light -->
+                                <rect x="18" y="4" width="120" height="28" rx="10" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
+                                <!-- Tuning pegs -->
+                                <circle *ngFor="let pi of [0,1,2,3]" [attr.cx]="uX(pi)" cy="10" r="6" fill="#e0e0e0" stroke="#000" stroke-width="1"/>
+                                <circle *ngFor="let pi of [0,1,2,3]" [attr.cx]="uX(pi)" cy="10" r="2.5" fill="#888"/>
+                                <!-- Strings head to nut -->
+                                <line *ngFor="let si of [0,1,2,3]" [attr.x1]="uX(si)" y1="16" [attr.x2]="uX(si)" y2="46" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+                                <!-- Fretboard — light -->
+                                <rect x="18" y="46" width="120" height="168" rx="4" fill="#F2F2F2"/>
+                                <!-- Nut — black bar -->
+                                <rect x="18" y="46" width="120" height="5" rx="1" fill="#000"/>
+                                <!-- Frets -->
+                                <line *ngFor="let fi of [1,2,3,4,5]"
+                                      x1="18" [attr.y1]="51+fi*28" x2="138" [attr.y2]="51+fi*28"
+                                      stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+                                <!-- Fret dot -->
+                                <circle cx="78" cy="121" r="4" fill="rgba(0,0,0,0.1)"/>
+                                <!-- Strings on fretboard -->
+                                <line *ngFor="let si of [0,1,2,3]"
+                                      [attr.x1]="uX(si)" y1="46"
+                                      [attr.x2]="uX(si)" y2="216"
+                                      stroke="rgba(0,0,0,0.28)" stroke-width="1.2"/>
+                                <!-- String labels -->
+                                <text *ngFor="let lbl of ['G','C','E','A']; let si = index"
+                                      [attr.x]="uX(si)" y="236"
+                                      text-anchor="middle" font-size="12" font-family="Arial" fill="#404040">{{ lbl }}</text>
+                                <!-- Barres -->
+                                <ng-container *ngIf="uc.barres">
+                                    <rect *ngFor="let b of uc.barres"
+                                          [attr.x]="uBarreX(b)" [attr.y]="uY(b.fret)-13"
+                                          [attr.width]="uBarreW(b)" height="13" rx="6.5"
+                                          fill="#000" opacity="0.55"/>
+                                </ng-container>
+                                <!-- Mute / Open / Dots -->
+                                <ng-container *ngFor="let fret of uc.frets; let si = index">
+                                    <text *ngIf="fret === -1" [attr.x]="uX(si)" y="38"
+                                          text-anchor="middle" font-size="14" fill="rgba(0,0,0,0.35)">×</text>
+                                    <circle *ngIf="fret === 0" [attr.cx]="uX(si)" cy="36" r="6"
+                                            fill="none" stroke="#000" stroke-width="1.5"/>
+                                    <circle *ngIf="fret > 0" [attr.cx]="uX(si)" [attr.cy]="uY(fret)-6"
+                                            r="11" fill="#000"/>
+                                    <text *ngIf="fret > 0 && uc.fingers && uc.fingers[si] > 0"
+                                          [attr.x]="uX(si)" [attr.y]="uY(fret)-2"
+                                          text-anchor="middle" font-size="11" font-weight="700"
+                                          font-family="Arial" fill="#ddff53">{{ uc.fingers[si] }}</text>
+                                </ng-container>
+                                <!-- Position label -->
+                                <text *ngIf="uMinFret() > 1" x="142" [attr.y]="uY(uMinFret())-2"
+                                      font-size="10" font-family="Arial" fill="#404040">{{ uMinFret() }}fr</text>
+                            </svg>
+                        </div>
                     </ng-container>
 
-                    <!-- Piano large keyboard -->
+                    <!-- PIANO large keyboard -->
                     <ng-container *ngIf="selectedInstrument === 'piano' && pianoLargeWhites.length > 0">
-                        <div class="piano-wrap">
-                            <svg [attr.viewBox]="'0 0 ' + pianoLargeWidth + ' 90'"
-                                 [attr.width]="pianoLargeWidth"
-                                 height="90"
-                                 class="large-diagram piano-svg">
+                        <div class="diagram-wrap piano-wrap">
+                            <svg [attr.viewBox]="'0 0 ' + pianoLargeWidth + ' 100'"
+                                 [attr.width]="pianoLargeWidth" height="100">
                                 <ng-container *ngFor="let wk of pianoLargeWhites; let wi = index">
-                                    <rect [attr.x]="wi*28" y="0" width="28" height="90"
-                                          stroke="#1a1a1a" stroke-width="1"
-                                          [attr.fill]="getPianoFill(wk.note, false)"/>
+                                    <rect [attr.x]="wi*28" y="0" width="28" height="100"
+                                          stroke="#d0d0d0" stroke-width="1"
+                                          [attr.fill]="getPianoFill(wk.note, false)"
+                                          rx="3"/>
                                 </ng-container>
                                 <ng-container *ngFor="let bk of pianoLargeBlacks">
-                                    <rect [attr.x]="bk.x" y="0" width="18" height="54"
-                                          [attr.fill]="getPianoFill(bk.note, true)"/>
+                                    <rect [attr.x]="bk.x" y="0" width="18" height="60"
+                                          [attr.fill]="getPianoFill(bk.note, true)"
+                                          rx="2"/>
                                 </ng-container>
                             </svg>
                         </div>
@@ -231,95 +359,91 @@
 
                     <!-- Play button -->
                     <button class="play-btn" [class.playing]="isPlayingDetail" (click)="playDetail()">
-                        <svg *ngIf="!isPlayingDetail" viewBox="0 0 24 24" width="16" height="16" fill="none"
-                             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <svg *ngIf="!isPlayingDetail" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                             <path d="m15.54 8.46a5 5 0 0 1 0 7.07"/>
                         </svg>
-                        <svg *ngIf="isPlayingDetail" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <svg *ngIf="isPlayingDetail" viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                             <rect x="4" y="4" width="5" height="16"/><rect x="15" y="4" width="5" height="16"/>
                         </svg>
                         {{ isPlayingDetail ? 'מנגן...' : 'השמע אקורד' }}
                     </button>
 
-                    <!-- Hand diagram -->
-                    <div class="hand-diagram">
-                        <div class="hand-title">מספור אצבעות</div>
-                        <svg viewBox="0 0 130 160" width="130" height="160">
-                            <!-- Palm -->
-                            <rect x="16" y="90" width="98" height="60" rx="18" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
-                            <!-- Finger 1 (index) -->
-                            <rect x="16" y="22" width="24" height="76" rx="12" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
-                            <text x="28" y="52" text-anchor="middle" font-size="15" font-weight="800" font-family="Arial" fill="#000">1</text>
-                            <!-- Finger 2 (middle) -->
-                            <rect x="44" y="10" width="24" height="88" rx="12" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
-                            <text x="56" y="45" text-anchor="middle" font-size="15" font-weight="800" font-family="Arial" fill="#000">2</text>
-                            <!-- Finger 3 (ring) -->
-                            <rect x="72" y="15" width="24" height="83" rx="12" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
-                            <text x="84" y="50" text-anchor="middle" font-size="15" font-weight="800" font-family="Arial" fill="#000">3</text>
-                            <!-- Finger 4 (pinky) -->
-                            <rect x="100" y="32" width="14" height="66" rx="7" fill="#F2F2F2" stroke="#000" stroke-width="1.5"/>
-                            <text x="107" y="64" text-anchor="middle" font-size="12" font-weight="800" font-family="Arial" fill="#000">4</text>
-                            <!-- Labels -->
-                            <text x="28" y="155" text-anchor="middle" font-size="9" font-family="Arial" fill="#404040">מורה</text>
-                            <text x="56" y="155" text-anchor="middle" font-size="9" font-family="Arial" fill="#404040">אמה</text>
-                            <text x="84" y="155" text-anchor="middle" font-size="9" font-family="Arial" fill="#404040">קמיצה</text>
-                            <text x="107" y="155" text-anchor="middle" font-size="9" font-family="Arial" fill="#404040">זרת</text>
+                    <!-- #7 Finger legend — clean numbered circles -->
+                    <div class="hand-wrap" *ngIf="selectedInstrument !== 'piano'">
+                        <p class="hand-title">מספור אצבעות</p>
+                        <svg viewBox="0 0 168 62" width="168" height="62" class="hand-svg">
+                            <circle cx="21"  cy="21" r="18" fill="#000"/>
+                            <text x="21"  y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">1</text>
+                            <text x="21"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">אצבע</text>
+
+                            <circle cx="63"  cy="21" r="18" fill="#000"/>
+                            <text x="63"  y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">2</text>
+                            <text x="63"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">אמה</text>
+
+                            <circle cx="105" cy="21" r="18" fill="#000"/>
+                            <text x="105" y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">3</text>
+                            <text x="105" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">קמיצה</text>
+
+                            <circle cx="147" cy="21" r="18" fill="#000"/>
+                            <text x="147" y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">4</text>
+                            <text x="147" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">זרת</text>
                         </svg>
                     </div>
 
                 </div>
 
-                <!-- Right: Text explanation -->
+                <!-- Text column -->
                 <div class="detail-text-col">
 
-                    <!-- Notes -->
-                    <div class="detail-block">
-                        <div class="block-label">צלילים באקורד</div>
-                        <div class="notes-row">
-                            <span class="note-tag" *ngFor="let n of chordDetail.hebrewNotes">{{ n }}</span>
-                        </div>
+                    <h3 class="how-to-title">{{ chordDetail.hebrewTitle }}</h3>
+
+                    <div class="intro-block">
+                        <p class="intro-line" *ngIf="chordDetail.hebrewNotes.length > 0">
+                            האקורד {{ selectedChord }} המוצג כאן מכיל את הצלילים:
+                            <strong>{{ chordDetail.hebrewNotes.join(', ') }}</strong>.
+                        </p>
+                        <p class="intro-line" *ngIf="chordDetail.rootHebrew">
+                            שורש האקורד הינו <strong dir="ltr">{{ detailRoot }}</strong> ({{ chordDetail.rootHebrew }}).
+                        </p>
+                        <p class="intro-line" *ngIf="chordDetail.scaleName">
+                            הסולם ממנו לקוח האקורד הינו <strong>{{ chordDetail.scaleName }}</strong>,
+                            והדרגות מהסולם הן: <span class="mono">{{ chordDetail.degrees }}</span>.
+                        </p>
                     </div>
 
-                    <!-- Root + Scale -->
-                    <div class="detail-block" *ngIf="chordDetail.rootHebrew">
-                        <div class="block-label">שורש האקורד</div>
-                        <div class="block-value">{{ detailRoot }} ({{ chordDetail.rootHebrew }})</div>
-                    </div>
-
-                    <div class="detail-block" *ngIf="chordDetail.scaleName">
-                        <div class="block-label">סולם</div>
-                        <div class="block-value">{{ chordDetail.scaleName }}</div>
-                    </div>
-
-                    <div class="detail-block" *ngIf="chordDetail.degrees">
-                        <div class="block-label">דרגות מהסולם</div>
-                        <div class="block-value degrees">{{ chordDetail.degrees }}</div>
-                    </div>
-
-                    <!-- Finger placement -->
-                    <div class="detail-block" *ngIf="chordDetail.fingerLines.length > 0">
-                        <div class="block-label">הנחת אצבעות</div>
-                        <ul class="finger-list">
+                    <div class="info-block" *ngIf="chordDetail.fingerLines.length > 0">
+                        <div class="info-label">הנחת אצבעות</div>
+                        <p class="finger-intro" *ngIf="selectedInstrument !== 'piano'">
+                            לנגינת האקורד {{ selectedChord }} המוצג למעלה, יש להניח את האצבעות באופן הבא:
+                        </p>
+                        <p class="finger-intro" *ngIf="selectedInstrument === 'piano'">
+                            לחצו בו-זמנית על כל המקשים המסומנים בצהוב.
+                        </p>
+                        <ul class="finger-list" *ngIf="selectedInstrument !== 'piano'">
                             <li *ngFor="let line of chordDetail.fingerLines"
-                                [class.open-string]="line.isOpen">
+                                [class.muted-line]="line.isOpen">
                                 {{ line.text }}
                             </li>
                         </ul>
                     </div>
 
-                    <!-- Start from -->
-                    <div class="detail-block start-from" *ngIf="chordDetail.startFrom">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="5 3 19 12 5 21 5 3"/>
-                        </svg>
+                    <div class="info-block" *ngIf="selectedInstrument === 'piano' && chordDetail.hebrewNotes.length > 0">
+                        <div class="info-label">מקשים לנגינה</div>
+                        <div class="notes-row">
+                            <span class="note-tag" *ngFor="let n of chordDetail.hebrewNotes">{{ n }}</span>
+                        </div>
+                    </div>
+
+                    <div class="start-box" *ngIf="chordDetail.startFrom">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         {{ chordDetail.startFrom }}
                     </div>
 
                 </div>
             </div>
         </div>
-
     </div>
 
 </div>

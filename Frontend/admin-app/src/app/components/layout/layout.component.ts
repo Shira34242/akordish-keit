@@ -51,9 +51,13 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showMobileMenu = false;
   showQuickAddAssistant = false;
   showNotificationsPopup = false;
+  showNotificationsCenterModal = false;
   notificationsPreview: NotificationDto[] = [];
   notificationsPreviewLoading = false;
   notificationsPreviewError = '';
+  notificationsCenter: NotificationDto[] = [];
+  notificationsCenterLoading = false;
+  notificationsCenterError = '';
   isScrolled = false;
   fabOnYellow = false;
   adminEditTarget: { label: string; url: string } | null = null;
@@ -116,6 +120,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.notificationService.clearUnreadCount();
         this.notificationsPreview = [];
         this.showNotificationsPopup = false;
+        this.notificationsCenter = [];
+        this.showNotificationsCenterModal = false;
       }
     });
 
@@ -331,6 +337,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     }
 
     this.showUserMenu = false;
+    this.showNotificationsCenterModal = false;
     this.showNotificationsPopup = !this.showNotificationsPopup;
 
     if (this.showNotificationsPopup) {
@@ -346,7 +353,23 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     event?.stopPropagation();
     this.closeNotificationsPopup();
     this.showMobileMenu = false;
-    this.router.navigate(['/notifications']);
+    this.showNotificationsCenterModal = true;
+    this.loadNotificationsCenter();
+  }
+
+  closeNotificationsCenter(): void {
+    this.showNotificationsCenterModal = false;
+  }
+
+  deleteAllCenterNotifications(event: Event): void {
+    event.stopPropagation();
+
+    this.notificationService.deleteAllNotifications().subscribe({
+      next: () => {
+        this.notificationsCenter = [];
+        this.notificationsPreview = [];
+      }
+    });
   }
 
   openNotificationFromPopup(event: Event, notification: NotificationDto): void {
@@ -356,9 +379,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       this.closeNotificationsPopup();
       this.showMobileMenu = false;
       if (notification.actionUrl) {
-        this.router.navigateByUrl(notification.actionUrl);
+        this.openNotificationAction(notification.actionUrl);
       } else {
-        this.router.navigate(['/notifications']);
+        this.showNotificationsCenterModal = true;
+        this.loadNotificationsCenter();
       }
     };
 
@@ -377,25 +401,59 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     });
   }
 
-  markAllPopupNotificationsAsRead(event: Event): void {
-    event.stopPropagation();
-
-    this.notificationService.markAllAsRead().subscribe({
-      next: () => {
-        this.notificationsPreview = this.notificationsPreview.map(notification => ({
-          ...notification,
-          isRead: true,
-          readAt: notification.readAt ?? new Date().toISOString()
-        }));
+  openNotificationFromCenter(notification: NotificationDto): void {
+    const openAction = () => {
+      if (notification.actionUrl) {
+        this.closeNotificationsCenter();
+        this.closeNotificationsPopup();
+        this.showMobileMenu = false;
+        this.openNotificationAction(notification.actionUrl);
       }
+    };
+
+    if (notification.isRead) {
+      openAction();
+      return;
+    }
+
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        const readAt = new Date().toISOString();
+        notification.isRead = true;
+        notification.readAt = readAt;
+        this.notificationsPreview = this.notificationsPreview.map(item =>
+          item.id === notification.id ? { ...item, isRead: true, readAt } : item
+        );
+        openAction();
+      },
+      error: openAction
     });
   }
 
-  formatNotificationDate(dateValue: string): string {
+  shouldShowNotificationDate(notifications: NotificationDto[], index: number): boolean {
+    if (index === 0) {
+      return true;
+    }
+
+    return this.getNotificationDateKey(notifications[index].createdAt) !== this.getNotificationDateKey(notifications[index - 1].createdAt);
+  }
+
+  formatNotificationDateOnly(dateValue: string): string {
     return new Intl.DateTimeFormat('he-IL', {
-      dateStyle: 'short',
-      timeStyle: 'short'
+      dateStyle: 'medium'
     }).format(new Date(dateValue));
+  }
+
+  shouldShowNotificationTitle(notification: NotificationDto): boolean {
+    return notification.type !== 3
+      && notification.type !== 6
+      && !!notification.title
+      && notification.title.trim() !== notification.message.trim();
+  }
+
+  private getNotificationDateKey(dateValue: string): string {
+    const date = new Date(dateValue);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   }
 
   private loadNotificationsPreview(): void {
@@ -404,12 +462,68 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     this.notificationService.getNotifications().subscribe({
       next: notifications => {
-        this.notificationsPreview = notifications.slice(0, 6);
+        this.notificationsPreview = notifications.filter(notification => !notification.isRead).slice(0, 6);
         this.notificationsPreviewLoading = false;
+        this.markPreviewAsSeen();
       },
       error: () => {
         this.notificationsPreviewError = 'לא הצלחנו לטעון התראות.';
         this.notificationsPreviewLoading = false;
+      }
+    });
+  }
+
+  private markPreviewAsSeen(): void {
+    const unreadPreview = this.notificationsPreview.filter(notification => !notification.isRead);
+    if (unreadPreview.length === 0) {
+      return;
+    }
+
+    let pending = unreadPreview.length;
+    const finishOne = () => {
+      pending--;
+      if (pending === 0) {
+        this.notificationService.refreshUnreadCount();
+      }
+    };
+
+    unreadPreview.forEach(notification => {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          const readAt = new Date().toISOString();
+          this.notificationsPreview = this.notificationsPreview.map(item =>
+            item.id === notification.id
+              ? { ...item, isRead: true, readAt: item.readAt ?? readAt }
+              : item
+          );
+          finishOne();
+        },
+        error: () => finishOne()
+      });
+    });
+  }
+
+  private openNotificationAction(actionUrl: string): void {
+    if (/^https?:\/\//i.test(actionUrl)) {
+      window.open(actionUrl, '_blank', 'noopener');
+      return;
+    }
+
+    this.router.navigateByUrl(actionUrl);
+  }
+
+  private loadNotificationsCenter(): void {
+    this.notificationsCenterLoading = true;
+    this.notificationsCenterError = '';
+
+    this.notificationService.getNotifications().subscribe({
+      next: notifications => {
+        this.notificationsCenter = notifications;
+        this.notificationsCenterLoading = false;
+      },
+      error: () => {
+        this.notificationsCenterError = 'לא הצלחנו לטעון התראות.';
+        this.notificationsCenterLoading = false;
       }
     });
   }

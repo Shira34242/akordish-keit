@@ -1,30 +1,37 @@
 :host {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   direction: rtl;
-  background: #F2F2F2;
   min-height: calc(100vh - 56px);
+  padding: var(--space-2xl) var(--space-base);
+  background: rgba(255, 255, 255, 0.82);
+  box-sizing: border-box;
   font-family: 'Open Sans', sans-serif;
 }
 
 .notifications-page {
-  width: min(980px, calc(100% - 2rem));
-  margin: 0 auto;
-  padding: var(--space-2xl) 0;
+  width: min(540px, 100%);
+  max-height: min(82vh, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: #ffffff;
+  border-radius: 32px;
+  padding: var(--space-base);
+  box-sizing: border-box;
 }
 
 .notifications-hero {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-xl);
-  background: #ffffff;
-  border-radius: 32px;
-  padding: var(--space-2xl);
-  margin-bottom: var(--space-xl);
+  gap: var(--space-base);
+  padding: var(--space-sm) var(--space-xs) var(--space-md);
 }
 
 .eyebrow {
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 var(--space-xs);
   font-size: var(--font-xs);
   font-weight: 800;
   color: #404040;
@@ -37,15 +44,16 @@ p {
 }
 
 h1 {
-  font-size: var(--font-3xl);
+  font-size: var(--font-xl);
   font-weight: 800;
   color: #000;
 }
 
 .hero-text {
-  margin-top: var(--space-md);
-  font-size: var(--font-base);
+  margin-top: var(--space-xs);
+  font-size: var(--font-sm);
   color: #404040;
+  line-height: var(--lh-small);
 }
 
 .mark-all-button,
@@ -56,92 +64,112 @@ h1 {
 }
 
 .mark-all-button {
-  background: #ddff53;
+  background: #F2F2F2;
   color: #000;
   border-radius: 999px;
-  padding: var(--space-md) var(--space-lg);
-  font-weight: 800;
+  padding: var(--space-sm) var(--space-base);
+  font-size: var(--font-xs);
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .notifications-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
+  overflow: auto;
+  padding: var(--space-xs);
+  scrollbar-width: none;
+}
+
+.notifications-list::-webkit-scrollbar {
+  display: none;
 }
 
 .notification-card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: flex-start;
-  gap: var(--space-base);
-  background: #ffffff;
-  border-radius: 28px;
-  padding: var(--space-lg);
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-sm);
+  width: min(88%, 430px);
+  align-self: flex-start;
+  background: #F2F2F2;
+  border-radius: 28px 28px 8px 28px;
+  padding: var(--space-md) var(--space-base);
   cursor: pointer;
-  border: 2px solid transparent;
+  border: none;
 }
 
 .notification-card.unread {
-  border-color: #ddff53;
+  background: #ffffff;
+  outline: 2px solid #F2F2F2;
 }
 
 .notification-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #F2F2F2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #000;
-  flex-shrink: 0;
-}
-
-.notification-card.unread .notification-icon {
-  background: #ddff53;
+  display: none;
 }
 
 .notification-topline {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-base);
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .notification-topline h2 {
-  font-size: var(--font-lg);
-  font-weight: 800;
+  font-size: var(--font-sm);
+  font-weight: 500;
   color: #000;
 }
 
 .notification-topline time {
+  order: -1;
+  align-self: flex-start;
   color: #404040;
   font-size: var(--font-xs);
   white-space: nowrap;
 }
 
 .notification-content p {
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
   color: #404040;
   font-size: var(--font-sm);
-  line-height: 1.7;
+  line-height: var(--lh-small);
 }
 
 .notification-action {
   display: inline-flex;
-  margin-top: var(--space-md);
+  margin-top: var(--space-sm);
   color: #000;
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: 800;
+}
+
+.notification-media {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 18px;
+  margin-top: var(--space-sm);
+}
+
+.notification-media-link {
+  display: inline-flex;
+  margin-top: var(--space-sm);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  font-size: var(--font-xs);
+  padding: var(--space-xs) var(--space-md);
+  text-decoration: none;
 }
 
 .delete-button {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #F2F2F2;
-  color: #000;
+  background: #ffffff;
+  color: #404040;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,58 +181,56 @@ h1 {
 
 .notifications-state,
 .notifications-empty {
-  background: #ffffff;
-  border-radius: 28px;
-  padding: var(--space-2xl);
+  background: #F2F2F2;
+  border-radius: 999px;
+  padding: var(--space-lg);
   text-align: center;
   color: #404040;
+  font-size: var(--font-sm);
 }
 
 .notifications-state.error {
   color: #000;
-  border: 2px solid #ddff53;
+}
+
+.notifications-empty {
+  border-radius: 28px;
 }
 
 .notifications-empty .material-icons {
-  font-size: 42px;
+  font-size: 36px;
   color: #404040;
   margin-bottom: var(--space-md);
 }
 
 .notifications-empty h2 {
-  font-size: var(--font-xl);
+  font-size: var(--font-lg);
   font-weight: 800;
   color: #000;
   margin-bottom: var(--space-sm);
 }
 
 @media (max-width: 768px) {
+  :host {
+    align-items: flex-end;
+    padding: var(--space-base);
+  }
+
   .notifications-page {
-    width: calc(100% - 1.5rem);
-    padding: var(--space-xl) 0;
+    width: 100%;
+    max-height: 82vh;
+    border-radius: 28px 28px 0 0;
   }
 
   .notifications-hero {
     flex-direction: column;
-    border-radius: 24px;
-    padding: var(--space-xl);
   }
 
-  h1 {
-    font-size: var(--font-2xl);
+  .mark-all-button {
+    align-self: flex-start;
   }
 
   .notification-card {
-    grid-template-columns: auto 1fr;
-  }
-
-  .delete-button {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
-
-  .notification-topline {
-    flex-direction: column;
-    gap: var(--space-xs);
+    width: 100%;
   }
 }

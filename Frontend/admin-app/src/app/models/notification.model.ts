@@ -3,7 +3,9 @@ export enum NotificationType {
   Approval = 1,
   Rejection = 2,
   AdminMessage = 3,
-  System = 4
+  System = 4,
+  StatusUpdate = 5,
+  Promotion = 6
 }
 
 export enum NotificationCategory {
@@ -13,7 +15,8 @@ export enum NotificationCategory {
   Teacher = 3,
   ServiceProvider = 4,
   Artist = 5,
-  System = 6
+  System = 6,
+  Promotion = 7
 }
 
 export interface NotificationDto {
@@ -25,6 +28,12 @@ export interface NotificationDto {
   relatedEntityType?: string | null;
   relatedEntityId?: number | null;
   actionUrl?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaThumbnailUrl?: string | null;
+  mediaAltText?: string | null;
+  campaignName?: string | null;
+  audienceLabel?: string | null;
   isRead: boolean;
   createdAt: string;
   readAt?: string | null;
@@ -39,6 +48,12 @@ export interface CreateNotificationDto {
   relatedEntityType?: string | null;
   relatedEntityId?: number | null;
   actionUrl?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaThumbnailUrl?: string | null;
+  mediaAltText?: string | null;
+  campaignName?: string | null;
+  audienceLabel?: string | null;
 }
 
 export interface SendUserNotificationDto {
@@ -46,8 +61,80 @@ export interface SendUserNotificationDto {
   title: string;
   message: string;
   actionUrl?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaThumbnailUrl?: string | null;
+  mediaAltText?: string | null;
+}
+
+export interface SendStatusNotificationDto {
+  userId: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  category: NotificationCategory;
+  relatedEntityType?: string | null;
+  relatedEntityId?: number | null;
+  actionUrl?: string | null;
+}
+
+export interface SendBroadcastNotificationDto {
+  title: string;
+  message: string;
+  actionUrl?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaThumbnailUrl?: string | null;
+  mediaAltText?: string | null;
+  campaignName?: string | null;
+  groupId?: number | null;
+  sendToAll: boolean;
+  userIds?: number[] | null;
+  role?: number | null;
+  isActive?: boolean | null;
+  contentTag?: number | null;
+  preferredInstrumentId?: number | null;
+  joinedFrom?: string | null;
+  joinedTo?: string | null;
+  addressContains?: string | null;
+}
+
+export interface BroadcastNotificationResultDto {
+  sentCount: number;
+  audienceLabel: string;
 }
 
 export interface UnreadNotificationCountDto {
   count: number;
+}
+
+export interface NotificationGroupDto {
+  id: number;
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  sendToAll: boolean;
+  role?: number | null;
+  isActive?: boolean | null;
+  contentTag?: number | null;
+  preferredInstrumentId?: number | null;
+  joinedFrom?: string | null;
+  joinedTo?: string | null;
+  addressContains?: string | null;
+  estimatedUserCount: number;
+  createdAt: string;
+}
+
+export interface SaveNotificationGroupDto {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  sendToAll: boolean;
+  role?: number | null;
+  isActive?: boolean | null;
+  contentTag?: number | null;
+  preferredInstrumentId?: number | null;
+  joinedFrom?: string | null;
+  joinedTo?: string | null;
+  addressContains?: string | null;
 }

@@ -8,5 +8,6 @@ public enum NotificationCategory
     Teacher = 3,
     ServiceProvider = 4,
     Artist = 5,
-    System = 6
+    System = 6,
+    Promotion = 7
 }

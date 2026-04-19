@@ -33,6 +33,12 @@ public class NotificationService : INotificationService
             RelatedEntityType = dto.RelatedEntityType,
             RelatedEntityId = dto.RelatedEntityId,
             ActionUrl = dto.ActionUrl,
+            MediaUrl = NormalizeOptional(dto.MediaUrl),
+            MediaType = NormalizeOptional(dto.MediaType),
+            MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
+            MediaAltText = NormalizeOptional(dto.MediaAltText),
+            CampaignName = NormalizeOptional(dto.CampaignName),
+            AudienceLabel = NormalizeOptional(dto.AudienceLabel),
             CreatedByUserId = dto.CreatedByUserId,
             CreatedAt = DateTime.UtcNow,
             IsRead = false,
@@ -133,16 +139,239 @@ public class NotificationService : INotificationService
         return true;
     }
 
-    public Task<NotificationDto> SendAdminMessageAsync(int userId, string title, string message, string? actionUrl, int createdByUserId)
+    public async Task SoftDeleteAllAsync(int userId)
+    {
+        var now = DateTime.UtcNow;
+        var notifications = await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .ToListAsync();
+
+        foreach (var notification in notifications)
+        {
+            notification.IsDeleted = true;
+            notification.DeletedAt = now;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId)
+    {
+        return CreateAsync(new CreateNotificationDto
+        {
+            UserId = dto.UserId,
+            Title = dto.Title,
+            Message = dto.Message,
+            Type = NotificationType.AdminMessage,
+            Category = NotificationCategory.System,
+            RelatedEntityType = "AdminMessage",
+            ActionUrl = dto.ActionUrl,
+            MediaUrl = dto.MediaUrl,
+            MediaType = dto.MediaType,
+            MediaThumbnailUrl = dto.MediaThumbnailUrl,
+            MediaAltText = dto.MediaAltText,
+            CreatedByUserId = createdByUserId
+        });
+    }
+
+    public async Task<BroadcastNotificationResultDto> SendBroadcastAsync(SendBroadcastNotificationDto dto, int createdByUserId)
+    {
+        if (dto.GroupId.HasValue && dto.GroupId.Value > 0)
+        {
+            var group = await _context.NotificationGroups
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == dto.GroupId.Value && !item.IsDeleted);
+
+            if (group == null)
+            {
+                throw new InvalidOperationException("קבוצת ההתראות לא נמצאה");
+            }
+
+            ApplyGroupToBroadcastDto(dto, group);
+        }
+
+        var query = _context.Users
+            .AsNoTracking()
+            .Where(user => !user.IsDeleted);
+
+        if (dto.UserIds is { Count: > 0 })
+        {
+            var ids = dto.UserIds.Distinct().ToList();
+            query = query.Where(user => ids.Contains(user.Id));
+        }
+        else
+        {
+            if (!dto.SendToAll)
+            {
+                query = ApplyBroadcastFilters(query, dto);
+            }
+        }
+
+        if (!dto.SendToAll && (dto.UserIds == null || dto.UserIds.Count == 0) && !HasBroadcastFilter(dto))
+        {
+            throw new InvalidOperationException("יש לבחור קהל יעד או לסמן שליחה לכולם");
+        }
+
+        var users = await query
+            .Select(user => new { user.Id })
+            .ToListAsync();
+
+        if (users.Count == 0)
+        {
+            throw new InvalidOperationException("לא נמצאו משתמשים שמתאימים לסינון");
+        }
+
+        var now = DateTime.UtcNow;
+        var audienceLabel = BuildAudienceLabel(dto, users.Count);
+        var notifications = users.Select(user => new Notification
+        {
+            UserId = user.Id,
+            Title = dto.Title.Trim(),
+            Message = dto.Message.Trim(),
+            Type = NotificationType.Promotion,
+            Category = NotificationCategory.Promotion,
+            RelatedEntityType = "Broadcast",
+            ActionUrl = NormalizeOptional(dto.ActionUrl),
+            MediaUrl = NormalizeOptional(dto.MediaUrl),
+            MediaType = NormalizeOptional(dto.MediaType),
+            MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
+            MediaAltText = NormalizeOptional(dto.MediaAltText),
+            CampaignName = NormalizeOptional(dto.CampaignName),
+            AudienceLabel = audienceLabel,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = now,
+            IsRead = false,
+            IsDeleted = false
+        }).ToList();
+
+        _context.Notifications.AddRange(notifications);
+        await _context.SaveChangesAsync();
+
+        return new BroadcastNotificationResultDto
+        {
+            SentCount = notifications.Count,
+            AudienceLabel = audienceLabel
+        };
+    }
+
+    public async Task<List<NotificationGroupDto>> GetGroupsAsync()
+    {
+        var groups = await _context.NotificationGroups
+            .AsNoTracking()
+            .Where(group => !group.IsDeleted)
+            .OrderByDescending(group => group.CreatedAt)
+            .ToListAsync();
+
+        var result = new List<NotificationGroupDto>
+        {
+            new()
+            {
+                Id = 0,
+                Name = "כל חברי האתר",
+                Description = "קבוצת ברירת מחדל הכוללת את כל המשתמשים באתר",
+                SendToAll = true,
+                EstimatedUserCount = await _context.Users.CountAsync(user => !user.IsDeleted),
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        foreach (var group in groups)
+        {
+            result.Add(await MapGroupToDtoAsync(group));
+        }
+
+        return result;
+    }
+
+    public async Task<NotificationGroupDto> CreateGroupAsync(SaveNotificationGroupDto dto, int createdByUserId)
+    {
+        var group = new NotificationGroup
+        {
+            Name = NormalizeRequired(dto.Name, "שם קבוצה"),
+            Description = NormalizeOptional(dto.Description),
+            ImageUrl = NormalizeOptional(dto.ImageUrl),
+            SendToAll = dto.SendToAll,
+            Role = dto.Role,
+            IsActive = dto.IsActive,
+            ContentTag = dto.ContentTag,
+            PreferredInstrumentId = dto.PreferredInstrumentId,
+            JoinedFrom = dto.JoinedFrom,
+            JoinedTo = dto.JoinedTo,
+            AddressContains = NormalizeOptional(dto.AddressContains),
+            CreatedAt = DateTime.UtcNow,
+            CreatedByUserId = createdByUserId,
+            IsDeleted = false
+        };
+
+        _context.NotificationGroups.Add(group);
+        await _context.SaveChangesAsync();
+
+        return await MapGroupToDtoAsync(group);
+    }
+
+    public async Task<NotificationGroupDto?> UpdateGroupAsync(int groupId, SaveNotificationGroupDto dto)
+    {
+        var group = await _context.NotificationGroups
+            .FirstOrDefaultAsync(item => item.Id == groupId && !item.IsDeleted);
+
+        if (group == null)
+        {
+            return null;
+        }
+
+        group.Name = NormalizeRequired(dto.Name, "שם קבוצה");
+        group.Description = NormalizeOptional(dto.Description);
+        group.ImageUrl = NormalizeOptional(dto.ImageUrl);
+        group.SendToAll = dto.SendToAll;
+        group.Role = dto.Role;
+        group.IsActive = dto.IsActive;
+        group.ContentTag = dto.ContentTag;
+        group.PreferredInstrumentId = dto.PreferredInstrumentId;
+        group.JoinedFrom = dto.JoinedFrom;
+        group.JoinedTo = dto.JoinedTo;
+        group.AddressContains = NormalizeOptional(dto.AddressContains);
+        group.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return await MapGroupToDtoAsync(group);
+    }
+
+    public async Task<bool> DeleteGroupAsync(int groupId)
+    {
+        var group = await _context.NotificationGroups
+            .FirstOrDefaultAsync(item => item.Id == groupId && !item.IsDeleted);
+
+        if (group == null)
+        {
+            return false;
+        }
+
+        group.IsDeleted = true;
+        group.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public Task<NotificationDto> SendStatusUpdateAsync(
+        int userId,
+        string title,
+        string message,
+        NotificationType type,
+        NotificationCategory category,
+        string? relatedEntityType,
+        int? relatedEntityId,
+        string? actionUrl,
+        int createdByUserId)
     {
         return CreateAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = title,
             Message = message,
-            Type = NotificationType.AdminMessage,
-            Category = NotificationCategory.System,
-            RelatedEntityType = "AdminMessage",
+            Type = type,
+            Category = category,
+            RelatedEntityType = relatedEntityType,
+            RelatedEntityId = relatedEntityId,
             ActionUrl = actionUrl,
             CreatedByUserId = createdByUserId
         });
@@ -336,10 +565,159 @@ public class NotificationService : INotificationService
             RelatedEntityType = notification.RelatedEntityType,
             RelatedEntityId = notification.RelatedEntityId,
             ActionUrl = notification.ActionUrl,
+            MediaUrl = notification.MediaUrl,
+            MediaType = notification.MediaType,
+            MediaThumbnailUrl = notification.MediaThumbnailUrl,
+            MediaAltText = notification.MediaAltText,
+            CampaignName = notification.CampaignName,
+            AudienceLabel = notification.AudienceLabel,
             IsRead = notification.IsRead,
             CreatedAt = notification.CreatedAt,
             ReadAt = notification.ReadAt,
             CreatedByUserId = notification.CreatedByUserId
         };
+    }
+
+    private static IQueryable<User> ApplyBroadcastFilters(IQueryable<User> query, SendBroadcastNotificationDto dto)
+    {
+        if (dto.Role.HasValue)
+        {
+            query = query.Where(user => (int)user.Role == dto.Role.Value);
+        }
+
+        if (dto.IsActive.HasValue)
+        {
+            query = query.Where(user => user.IsActive == dto.IsActive.Value);
+        }
+
+        if (dto.ContentTag.HasValue)
+        {
+            query = query.Where(user => (int)user.ContentTag == dto.ContentTag.Value);
+        }
+
+        if (dto.PreferredInstrumentId.HasValue)
+        {
+            query = query.Where(user => user.PreferredInstrumentId == dto.PreferredInstrumentId.Value);
+        }
+
+        if (dto.JoinedFrom.HasValue)
+        {
+            query = query.Where(user => user.CreatedAt >= dto.JoinedFrom.Value);
+        }
+
+        if (dto.JoinedTo.HasValue)
+        {
+            query = query.Where(user => user.CreatedAt <= dto.JoinedTo.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.AddressContains))
+        {
+            var address = dto.AddressContains.Trim();
+            query = query.Where(user => user.Address != null && user.Address.Contains(address));
+        }
+
+        return query;
+    }
+
+    private static bool HasBroadcastFilter(SendBroadcastNotificationDto dto)
+    {
+        return dto.Role.HasValue
+            || dto.IsActive.HasValue
+            || dto.ContentTag.HasValue
+            || dto.PreferredInstrumentId.HasValue
+            || dto.JoinedFrom.HasValue
+            || dto.JoinedTo.HasValue
+            || dto.GroupId.HasValue
+            || !string.IsNullOrWhiteSpace(dto.AddressContains);
+    }
+
+    private static string BuildAudienceLabel(SendBroadcastNotificationDto dto, int count)
+    {
+        if (dto.UserIds is { Count: > 0 })
+        {
+            return $"משתמשים שנבחרו ידנית ({count})";
+        }
+
+        if (dto.SendToAll)
+        {
+            return $"כל המשתמשים ({count})";
+        }
+
+        var parts = new List<string>();
+        if (dto.Role.HasValue) parts.Add($"תפקיד {dto.Role.Value}");
+        if (dto.IsActive.HasValue) parts.Add(dto.IsActive.Value ? "פעילים" : "לא פעילים");
+        if (dto.ContentTag.HasValue) parts.Add($"רמת תרומה {dto.ContentTag.Value}");
+        if (dto.PreferredInstrumentId.HasValue) parts.Add($"כלי {dto.PreferredInstrumentId.Value}");
+        if (dto.JoinedFrom.HasValue) parts.Add($"הצטרפו מ-{dto.JoinedFrom.Value:dd/MM/yyyy}");
+        if (dto.JoinedTo.HasValue) parts.Add($"הצטרפו עד {dto.JoinedTo.Value:dd/MM/yyyy}");
+        if (!string.IsNullOrWhiteSpace(dto.AddressContains)) parts.Add($"כתובת כוללת {dto.AddressContains.Trim()}");
+
+        return parts.Count > 0 ? $"{string.Join(", ", parts)} ({count})" : $"קהל מסונן ({count})";
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string NormalizeRequired(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException($"{fieldName} הוא שדה חובה");
+        }
+
+        return value.Trim();
+    }
+
+    private async Task<NotificationGroupDto> MapGroupToDtoAsync(NotificationGroup group)
+    {
+        var filter = new SendBroadcastNotificationDto
+        {
+            SendToAll = group.SendToAll,
+            Role = group.Role,
+            IsActive = group.IsActive,
+            ContentTag = group.ContentTag,
+            PreferredInstrumentId = group.PreferredInstrumentId,
+            JoinedFrom = group.JoinedFrom,
+            JoinedTo = group.JoinedTo,
+            AddressContains = group.AddressContains
+        };
+
+        var query = _context.Users.AsNoTracking().Where(user => !user.IsDeleted);
+        if (!filter.SendToAll)
+        {
+            query = ApplyBroadcastFilters(query, filter);
+        }
+
+        return new NotificationGroupDto
+        {
+            Id = group.Id,
+            Name = group.Name,
+            Description = group.Description,
+            ImageUrl = group.ImageUrl,
+            SendToAll = group.SendToAll,
+            Role = group.Role,
+            IsActive = group.IsActive,
+            ContentTag = group.ContentTag,
+            PreferredInstrumentId = group.PreferredInstrumentId,
+            JoinedFrom = group.JoinedFrom,
+            JoinedTo = group.JoinedTo,
+            AddressContains = group.AddressContains,
+            EstimatedUserCount = await query.CountAsync(),
+            CreatedAt = group.CreatedAt
+        };
+    }
+
+    private static void ApplyGroupToBroadcastDto(SendBroadcastNotificationDto dto, NotificationGroup group)
+    {
+        dto.SendToAll = group.SendToAll;
+        dto.Role = group.Role;
+        dto.IsActive = group.IsActive;
+        dto.ContentTag = group.ContentTag;
+        dto.PreferredInstrumentId = group.PreferredInstrumentId;
+        dto.JoinedFrom = group.JoinedFrom;
+        dto.JoinedTo = group.JoinedTo;
+        dto.AddressContains = group.AddressContains;
     }
 }

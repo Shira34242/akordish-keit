@@ -26,6 +26,24 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.ActionUrl)
             .HasMaxLength(500);
 
+        builder.Property(n => n.MediaUrl)
+            .HasMaxLength(1000);
+
+        builder.Property(n => n.MediaType)
+            .HasMaxLength(40);
+
+        builder.Property(n => n.MediaThumbnailUrl)
+            .HasMaxLength(1000);
+
+        builder.Property(n => n.MediaAltText)
+            .HasMaxLength(200);
+
+        builder.Property(n => n.CampaignName)
+            .HasMaxLength(160);
+
+        builder.Property(n => n.AudienceLabel)
+            .HasMaxLength(300);
+
         builder.Property(n => n.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

@@ -6,5 +6,7 @@ public enum NotificationType
     Approval = 1,
     Rejection = 2,
     AdminMessage = 3,
-    System = 4
+    System = 4,
+    StatusUpdate = 5,
+    Promotion = 6
 }

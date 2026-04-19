@@ -6,8 +6,8 @@
       <p class="hero-text">כאן יופיעו אישורים, עדכוני סטטוס והודעות אישיות מהמערכת.</p>
     </div>
 
-    <button class="mark-all-button" type="button" *ngIf="hasUnread" (click)="markAllAsRead()">
-      סמן הכל כנקרא
+    <button class="mark-all-button" type="button" *ngIf="notifications.length > 0" (click)="deleteAllNotifications()">
+      מחיקת כל ההיסטוריה
     </button>
   </header>
 
@@ -32,10 +32,14 @@
 
       <div class="notification-content">
         <div class="notification-topline">
-          <h2>{{ notification.title }}</h2>
+          <h2 *ngIf="shouldShowTitle(notification)">{{ notification.title }}</h2>
           <time>{{ formatDate(notification.createdAt) }}</time>
         </div>
         <p>{{ notification.message }}</p>
+        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image'" [href]="notification.actionUrl || notification.mediaUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+          <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media">
+        </a>
+        <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="notification-media-link" (click)="$event.stopPropagation()">פתיחת קובץ מצורף</a>
         <span class="notification-action" *ngIf="notification.actionUrl">לצפייה בעדכון</span>
       </div>
 

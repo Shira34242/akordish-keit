@@ -98,6 +98,7 @@ public class AkordishKeitDbContext : DbContext
 
     // Notifications
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationGroup> NotificationGroups { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -180,6 +181,7 @@ public class AkordishKeitDbContext : DbContext
 
         // Notifications Configuration
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationGroupConfiguration());
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

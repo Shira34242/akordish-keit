@@ -2,7 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {
+  BroadcastNotificationResultDto,
+  NotificationGroupDto,
   NotificationDto,
+  SaveNotificationGroupDto,
+  SendBroadcastNotificationDto,
+  SendStatusNotificationDto,
   SendUserNotificationDto,
   UnreadNotificationCountDto
 } from '../models/notification.model';
@@ -52,11 +57,41 @@ export class NotificationService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
+  deleteAllNotifications(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/all`, { withCredentials: true }).pipe(
+      tap(() => this.unreadCountSubject.next(0))
+    );
+  }
+
   sendUserMessage(payload: SendUserNotificationDto): Observable<NotificationDto> {
     return this.http.post<NotificationDto>(`${this.apiUrl}/admin/send-user-message`, payload, { withCredentials: true });
   }
 
+  sendStatusUpdate(payload: SendStatusNotificationDto): Observable<NotificationDto> {
+    return this.http.post<NotificationDto>(`${this.apiUrl}/admin/send-status-update`, payload, { withCredentials: true });
+  }
+
+  sendBroadcast(payload: SendBroadcastNotificationDto): Observable<BroadcastNotificationResultDto> {
+    return this.http.post<BroadcastNotificationResultDto>(`${this.apiUrl}/admin/send-broadcast`, payload, { withCredentials: true });
+  }
+
   getUserNotificationsForAdmin(userId: number): Observable<NotificationDto[]> {
     return this.http.get<NotificationDto[]>(`${this.apiUrl}/admin/user/${userId}`, { withCredentials: true });
+  }
+
+  getNotificationGroups(): Observable<NotificationGroupDto[]> {
+    return this.http.get<NotificationGroupDto[]>(`${this.apiUrl}/admin/groups`, { withCredentials: true });
+  }
+
+  createNotificationGroup(payload: SaveNotificationGroupDto): Observable<NotificationGroupDto> {
+    return this.http.post<NotificationGroupDto>(`${this.apiUrl}/admin/groups`, payload, { withCredentials: true });
+  }
+
+  updateNotificationGroup(id: number, payload: SaveNotificationGroupDto): Observable<NotificationGroupDto> {
+    return this.http.put<NotificationGroupDto>(`${this.apiUrl}/admin/groups/${id}`, payload, { withCredentials: true });
+  }
+
+  deleteNotificationGroup(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/admin/groups/${id}`, { withCredentials: true });
   }
 }

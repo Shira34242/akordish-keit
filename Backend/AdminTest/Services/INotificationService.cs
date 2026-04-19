@@ -1,4 +1,5 @@
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Enum;
 
 namespace AkordishKeit.Services;
 
@@ -11,7 +12,14 @@ public interface INotificationService
     Task<bool> MarkAsReadAsync(int notificationId, int userId);
     Task MarkAllAsReadAsync(int userId);
     Task<bool> SoftDeleteAsync(int notificationId, int userId);
-    Task<NotificationDto> SendAdminMessageAsync(int userId, string title, string message, string? actionUrl, int createdByUserId);
+    Task SoftDeleteAllAsync(int userId);
+    Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId);
+    Task<BroadcastNotificationResultDto> SendBroadcastAsync(SendBroadcastNotificationDto dto, int createdByUserId);
+    Task<List<NotificationGroupDto>> GetGroupsAsync();
+    Task<NotificationGroupDto> CreateGroupAsync(SaveNotificationGroupDto dto, int createdByUserId);
+    Task<NotificationGroupDto?> UpdateGroupAsync(int groupId, SaveNotificationGroupDto dto);
+    Task<bool> DeleteGroupAsync(int groupId);
+    Task<NotificationDto> SendStatusUpdateAsync(int userId, string title, string message, NotificationType type, NotificationCategory category, string? relatedEntityType, int? relatedEntityId, string? actionUrl, int createdByUserId);
     Task NotifySongSubmittedAsync(int userId, int songId, string songTitle);
     Task NotifySongApprovedAsync(int userId, int songId, string songTitle);
     Task NotifyArticleSubmittedAsync(int userId, int articleId, string articleTitle);
