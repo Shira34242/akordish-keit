@@ -146,7 +146,7 @@ public class PlaylistService : IPlaylistService
     public async Task<PlaylistDto> CreatePlaylistAsync(CreatePlaylistDto dto, int userId)
     {
         // בדיקת מגבלת רשימות לפי תג תרומת תוכן (פעיל רק כשמנויים מופעלים)
-        var subscriptionsEnabled = await _systemSettings.GetBoolAsync("regular_user_subscriptions_enabled");
+        var subscriptionsEnabled = false;
         if (subscriptionsEnabled)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -196,6 +196,7 @@ public class PlaylistService : IPlaylistService
             .FirstOrDefaultAsync(p => p.Id == playlistId && p.UserId == userId);
 
         if (playlist == null) return null;
+        if (playlist.IsDefault) return null;
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
             playlist.Name = dto.Name;
@@ -475,6 +476,20 @@ public class PlaylistService : IPlaylistService
 
         if (existing != null) return existing;
 
+        var existingSavedPlaylist = await _context.Playlists
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.Name == "השמורים שלי");
+
+        if (existingSavedPlaylist != null)
+        {
+            existingSavedPlaylist.IsDefault = true;
+            existingSavedPlaylist.IsPublic = false;
+            existingSavedPlaylist.IsAdopted = false;
+            existingSavedPlaylist.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return existingSavedPlaylist;
+        }
+
         // יוצר את רשימת ברירת המחדל בפעם הראשונה
         var defaultPlaylist = new Playlist
         {
@@ -497,5 +512,56 @@ public class PlaylistService : IPlaylistService
     {
         var defaultPlaylist = await EnsureDefaultPlaylistAsync(userId);
         return await AddSongToPlaylistAsync(defaultPlaylist.Id, songId, userId);
+    }
+
+    public async Task<SongPlaylistStateDto> GetSongPlaylistStateAsync(int songId, int userId)
+    {
+        var defaultPlaylist = await EnsureDefaultPlaylistAsync(userId);
+
+        var isInDefault = await _context.PlaylistSongs
+            .AnyAsync(ps => ps.PlaylistId == defaultPlaylist.Id && ps.SongId == songId);
+
+        var playlistIds = await _context.PlaylistSongs
+            .Where(ps =>
+                ps.SongId == songId &&
+                ps.Playlist.UserId == userId &&
+                !ps.Playlist.IsDefault &&
+                !ps.Playlist.IsAdopted)
+            .Select(ps => ps.PlaylistId)
+            .ToListAsync();
+
+        return new SongPlaylistStateDto
+        {
+            IsInDefault = isInDefault,
+            PlaylistIds = playlistIds
+        };
+    }
+
+    public async Task<bool> RemoveFromDefaultPlaylistAsync(int songId, int userId, bool removeFromPersonalPlaylists)
+    {
+        var defaultPlaylist = await EnsureDefaultPlaylistAsync(userId);
+        var removed = await RemoveSongFromPlaylistAsync(defaultPlaylist.Id, songId, userId);
+
+        if (!removed)
+        {
+            return false;
+        }
+
+        if (!removeFromPersonalPlaylists)
+        {
+            return true;
+        }
+
+        var personalPlaylistIds = await _context.Playlists
+            .Where(p => p.UserId == userId && !p.IsDefault && !p.IsAdopted)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        foreach (var playlistId in personalPlaylistIds)
+        {
+            await RemoveSongFromPlaylistAsync(playlistId, songId, userId);
+        }
+
+        return true;
     }
 }

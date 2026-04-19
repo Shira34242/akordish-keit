@@ -107,11 +107,12 @@ public class UsersController : ControllerBase
         [FromQuery] int? role = null,
         [FromQuery] bool? isActive = null,
         [FromQuery] int? contentTag = null,
+        [FromQuery] int? preferredInstrumentId = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var result = await _service.GetUsersAsync(
-            search, role, isActive, contentTag, pageNumber, pageSize);
+            search, role, isActive, contentTag, preferredInstrumentId, pageNumber, pageSize);
 
         return Ok(result);
     }

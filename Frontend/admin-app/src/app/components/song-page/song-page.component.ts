@@ -24,6 +24,7 @@ import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.compone
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
+import { PlaylistService } from '../../services/playlist.service';
 
 @Component({
     selector: 'app-song-page',
@@ -84,6 +85,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // Bookmark State
     isSongSaved: boolean = false;
+    shouldAutoSaveOnPopupOpen: boolean = false;
 
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
@@ -102,6 +104,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private authService: AuthService,
         private router: Router,
         private ngZone: NgZone,
+        private playlistService: PlaylistService,
     ) { }
 
     ngOnInit(): void {
@@ -187,11 +190,13 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.transposeStep = 0;
                 this.fontSize = window.innerWidth <= 600 ? 14 : 18;
                 this.isSongSaved = false;
+                this.shouldAutoSaveOnPopupOpen = false;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
                 this.loadArtistSongs();
                 this.loadPopularSongs();
+                this.loadSongSavedState();
 
                 // Increment view count with unique tracking
                 this.songService.incrementView(id).subscribe({
@@ -211,6 +216,22 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 console.error('Error loading song:', err);
                 this.error = 'שגיאה בטעינת השיר';
                 this.isLoading = false;
+            }
+        });
+    }
+
+    loadSongSavedState(): void {
+        if (!this.songId || !this.authService.isLoggedIn) {
+            this.isSongSaved = false;
+            return;
+        }
+
+        this.playlistService.getSongPlaylistState(this.songId).subscribe({
+            next: (state) => {
+                this.isSongSaved = state.isInDefault;
+            },
+            error: () => {
+                this.isSongSaved = false;
             }
         });
     }
@@ -745,11 +766,20 @@ private getKeyIndex(keyName: string): number {
             this.authService.requestLogin(this.router.url);
             return;
         }
-        this.isPlaylistPopupOpen = !this.isPlaylistPopupOpen;
+
+        if (this.isPlaylistPopupOpen) {
+            this.isPlaylistPopupOpen = false;
+            this.shouldAutoSaveOnPopupOpen = false;
+            return;
+        }
+
+        this.shouldAutoSaveOnPopupOpen = !this.isSongSaved;
+        this.isPlaylistPopupOpen = true;
     }
 
     closePlaylistPopup(): void {
         this.isPlaylistPopupOpen = false;
+        this.shouldAutoSaveOnPopupOpen = false;
     }
 
     openReportModal(): void {
@@ -787,7 +817,6 @@ private getKeyIndex(keyName: string): number {
     }
 
     onSongSaved(): void {
-        this.isSongSaved = true;
-        this.isPlaylistPopupOpen = false;
+        this.loadSongSavedState();
     }
 }

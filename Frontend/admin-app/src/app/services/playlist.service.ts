@@ -6,7 +6,9 @@ import {
   PlaylistDetail,
   CreatePlaylistDto,
   UpdatePlaylistDto,
-  ReorderPlaylistDto
+  ReorderPlaylistDto,
+  SongPlaylistState,
+  RemoveFromDefaultPlaylistDto
 } from '../models/playlist.model';
 
 @Injectable({
@@ -107,5 +109,14 @@ export class PlaylistService {
    */
   saveToDefaultPlaylist(songId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/save-to-default/${songId}`, {});
+  }
+
+  getSongPlaylistState(songId: number): Observable<SongPlaylistState> {
+    return this.http.get<SongPlaylistState>(`${this.apiUrl}/song-state/${songId}`);
+  }
+
+  removeFromDefaultPlaylist(songId: number, removeFromPersonalPlaylists: boolean): Observable<any> {
+    const dto: RemoveFromDefaultPlaylistDto = { removeFromPersonalPlaylists };
+    return this.http.delete(`${this.apiUrl}/save-to-default/${songId}`, { body: dto });
   }
 }

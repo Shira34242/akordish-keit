@@ -18,6 +18,8 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
 import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
 import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
+import { NotificationService } from '../../services/notification.service';
+import { NotificationDto } from '../../models/notification.model';
 
 @Component({
   selector: 'app-layout',
@@ -48,9 +50,14 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showAddSongModal = false;
   showMobileMenu = false;
   showQuickAddAssistant = false;
+  showNotificationsPopup = false;
+  notificationsPreview: NotificationDto[] = [];
+  notificationsPreviewLoading = false;
+  notificationsPreviewError = '';
   isScrolled = false;
   fabOnYellow = false;
   adminEditTarget: { label: string; url: string } | null = null;
+  unreadNotificationCount = 0;
   isArtistPage = false;
   isArticlePage = false;
 
@@ -75,7 +82,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private modalService: ModalService,
     private sessionTimeoutService: SessionTimeoutService,
     private artistPageService: ArtistPageService,
-    private contentPageService: ContentPageService
+    private contentPageService: ContentPageService,
+    private notificationService: NotificationService
   ) {}
 
   @HostListener('window:scroll')
@@ -94,12 +102,25 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showUserMenu = false;
+    this.showNotificationsPopup = false;
   }
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       this.user = user;
       this.loggedIn = !!user;
+
+      if (user) {
+        this.notificationService.refreshUnreadCount();
+      } else {
+        this.notificationService.clearUnreadCount();
+        this.notificationsPreview = [];
+        this.showNotificationsPopup = false;
+      }
+    });
+
+    this.notificationService.unreadCount$.subscribe(count => {
+      this.unreadNotificationCount = count;
     });
 
     this.modalService.modalState$.subscribe(state => {
@@ -120,6 +141,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.checkFabBackground(), 200);
         setTimeout(() => this.checkFabBackground(), 800);
         this.updateAdminEditTarget(event.urlAfterRedirects);
+        if (this.loggedIn) {
+          this.notificationService.refreshUnreadCount();
+        }
       }
     });
 
@@ -296,6 +320,98 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   goToAdmin(): void {
     this.router.navigate(['/admin']);
+  }
+
+  toggleNotificationsPopup(event?: Event): void {
+    event?.stopPropagation();
+
+    if (!this.loggedIn) {
+      this.authService.requestLogin('/notifications');
+      return;
+    }
+
+    this.showUserMenu = false;
+    this.showNotificationsPopup = !this.showNotificationsPopup;
+
+    if (this.showNotificationsPopup) {
+      this.loadNotificationsPreview();
+    }
+  }
+
+  closeNotificationsPopup(): void {
+    this.showNotificationsPopup = false;
+  }
+
+  goToNotificationsPage(event?: Event): void {
+    event?.stopPropagation();
+    this.closeNotificationsPopup();
+    this.showMobileMenu = false;
+    this.router.navigate(['/notifications']);
+  }
+
+  openNotificationFromPopup(event: Event, notification: NotificationDto): void {
+    event.stopPropagation();
+
+    const openAction = () => {
+      this.closeNotificationsPopup();
+      this.showMobileMenu = false;
+      if (notification.actionUrl) {
+        this.router.navigateByUrl(notification.actionUrl);
+      } else {
+        this.router.navigate(['/notifications']);
+      }
+    };
+
+    if (notification.isRead) {
+      openAction();
+      return;
+    }
+
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        notification.isRead = true;
+        notification.readAt = new Date().toISOString();
+        openAction();
+      },
+      error: openAction
+    });
+  }
+
+  markAllPopupNotificationsAsRead(event: Event): void {
+    event.stopPropagation();
+
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notificationsPreview = this.notificationsPreview.map(notification => ({
+          ...notification,
+          isRead: true,
+          readAt: notification.readAt ?? new Date().toISOString()
+        }));
+      }
+    });
+  }
+
+  formatNotificationDate(dateValue: string): string {
+    return new Intl.DateTimeFormat('he-IL', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(dateValue));
+  }
+
+  private loadNotificationsPreview(): void {
+    this.notificationsPreviewLoading = true;
+    this.notificationsPreviewError = '';
+
+    this.notificationService.getNotifications().subscribe({
+      next: notifications => {
+        this.notificationsPreview = notifications.slice(0, 6);
+        this.notificationsPreviewLoading = false;
+      },
+      error: () => {
+        this.notificationsPreviewError = 'לא הצלחנו לטעון התראות.';
+        this.notificationsPreviewLoading = false;
+      }
+    });
   }
 
   toggleUserMenu(event: Event): void {

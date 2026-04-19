@@ -1,0 +1,47 @@
+<section class="notifications-page">
+  <header class="notifications-hero">
+    <div>
+      <p class="eyebrow">מרכז התראות</p>
+      <h1>כל העדכונים שלך במקום אחד</h1>
+      <p class="hero-text">כאן יופיעו אישורים, עדכוני סטטוס והודעות אישיות מהמערכת.</p>
+    </div>
+
+    <button class="mark-all-button" type="button" *ngIf="hasUnread" (click)="markAllAsRead()">
+      סמן הכל כנקרא
+    </button>
+  </header>
+
+  <div class="notifications-state" *ngIf="isLoading">טוען התראות...</div>
+  <div class="notifications-state error" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</div>
+
+  <div class="notifications-empty" *ngIf="!isLoading && !errorMessage && notifications.length === 0">
+    <span class="material-icons">notifications_none</span>
+    <h2>אין התראות כרגע</h2>
+    <p>כשיהיה עדכון חדש, הוא יופיע כאן.</p>
+  </div>
+
+  <div class="notifications-list" *ngIf="!isLoading && notifications.length > 0">
+    <article
+      class="notification-card"
+      *ngFor="let notification of notifications"
+      [class.unread]="!notification.isRead"
+      (click)="openNotification(notification)">
+      <div class="notification-icon">
+        <span class="material-icons">{{ notification.isRead ? 'drafts' : 'mark_email_unread' }}</span>
+      </div>
+
+      <div class="notification-content">
+        <div class="notification-topline">
+          <h2>{{ notification.title }}</h2>
+          <time>{{ formatDate(notification.createdAt) }}</time>
+        </div>
+        <p>{{ notification.message }}</p>
+        <span class="notification-action" *ngIf="notification.actionUrl">לצפייה בעדכון</span>
+      </div>
+
+      <button class="delete-button" type="button" aria-label="מחיקת התראה" (click)="deleteNotification($event, notification.id)">
+        <span class="material-icons">close</span>
+      </button>
+    </article>
+  </div>
+</section>

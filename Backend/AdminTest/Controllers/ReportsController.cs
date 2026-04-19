@@ -106,6 +106,30 @@ public class ReportsController : ControllerBase
         }
     }
 
+    // POST: api/Reports/5/approve-artist
+    [HttpPost("{id}/approve-artist")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ApproveNewArtist(int id)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int adminUserId))
+                return Unauthorized(new { message = "משתמש לא מורשה" });
+
+            var (success, message, artistId) = await _reportService.ApproveNewArtistAsync(id, adminUserId);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            return Ok(new { message, artistId });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "שגיאה באישור האמן", error = ex.Message });
+        }
+    }
+
     // DELETE: api/Reports/5
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]

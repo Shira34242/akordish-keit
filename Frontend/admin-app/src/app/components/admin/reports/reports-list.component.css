@@ -72,6 +72,9 @@
 .action-btn .material-icons { font-size: 18px; }
 .action-btn:hover { background: #ddff53; }
 .action-btn.btn-delete:hover { background: #404040; color: #ffffff; }
+.action-btn.btn-approve { background: #ddff53; }
+.action-btn.btn-approve:hover { background: #000000; color: #ffffff; }
+.action-btn.btn-dismiss:hover { background: #404040; color: #ffffff; }
 
 /* Empty / loading */
 .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-3xl) var(--space-lg); gap: var(--space-base); }

@@ -2,6 +2,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
+using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Services;
@@ -141,6 +142,75 @@ public class ReportService : IReportService
         _context.ContentReports.Remove(report);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<(bool Success, string Message, int? ArtistId)> ApproveNewArtistAsync(int reportId, int adminUserId)
+    {
+        var report = await _context.ContentReports.FindAsync(reportId);
+
+        if (report == null)
+            return (false, "דיווח לא נמצא", null);
+
+        if (report.ReportType != "NewArtist")
+            return (false, "דיווח אינו מסוג אמן חדש", null);
+
+        if (report.Status != "Pending")
+            return (false, "הדיווח כבר טופל", null);
+
+        // חילוץ שם האמן מהתיאור: "נוסף שיר עם אמן שלא קיים במערכת: 'ArtistName' בשיר 'SongTitle'"
+        var desc = report.Description;
+        var firstQuote = desc.IndexOf('\'');
+        var secondQuote = firstQuote >= 0 ? desc.IndexOf('\'', firstQuote + 1) : -1;
+
+        if (firstQuote < 0 || secondQuote < 0)
+            return (false, "לא ניתן לחלץ שם אמן מהתיאור", null);
+
+        var artistName = desc.Substring(firstQuote + 1, secondQuote - firstQuote - 1).Trim();
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // יצירת אמן חדש
+            var artist = new Artist
+            {
+                Name = artistName,
+                Status = ArtistStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                IsDeleted = false
+            };
+            _context.Artists.Add(artist);
+            await _context.SaveChangesAsync();
+
+            // מציאת ה-SongArtist הזמני וקישורו לאמן החדש
+            var songArtist = await _context.SongArtists
+                .FirstOrDefaultAsync(sa =>
+                    sa.SongId == report.ContentId &&
+                    sa.IsTemporary == true &&
+                    sa.TempArtistName == artistName);
+
+            if (songArtist != null)
+            {
+                songArtist.ArtistId = artist.Id;
+                songArtist.IsTemporary = false;
+                songArtist.TempArtistName = null;
+            }
+
+            // סגירת הדיווח
+            report.Status = "Resolved";
+            report.ResolvedAt = DateTime.UtcNow;
+            report.ResolvedByUserId = adminUserId;
+            report.AdminNotes = $"אמן '{artistName}' נוצר ואושר על ידי מנהל";
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return (true, $"האמן '{artistName}' נוצר ואושר בהצלחה", artist.Id);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return (false, $"שגיאה ביצירת האמן: {ex.Message}", null);
+        }
     }
 
     // ========================================

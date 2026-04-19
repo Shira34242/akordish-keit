@@ -15,11 +15,16 @@ public class MusicServiceProvidersController : ControllerBase
 {
     private readonly IMusicServiceProviderService _service;
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public MusicServiceProvidersController(IMusicServiceProviderService service, AkordishKeitDbContext context)
+    public MusicServiceProvidersController(
+        IMusicServiceProviderService service,
+        AkordishKeitDbContext context,
+        INotificationService notificationService)
     {
         _service = service;
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: api/MusicServiceProviders
@@ -239,6 +244,8 @@ public class MusicServiceProvidersController : ControllerBase
             // החזרת פרטי בעל המקצוע המלאים
             var result = await _service.GetServiceProviderByIdAsync(serviceProvider.Id);
 
+            await _notificationService.NotifyServiceProviderSubmittedAsync(userId, serviceProvider.Id, serviceProvider.DisplayName);
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -263,6 +270,7 @@ public class MusicServiceProvidersController : ControllerBase
 
     // POST: api/MusicServiceProviders/5/approve
     [HttpPost("{id}/approve")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> ApproveServiceProvider(int id)
     {
         var result = await _service.ApproveServiceProviderAsync(id);
@@ -277,6 +285,7 @@ public class MusicServiceProvidersController : ControllerBase
 
     // POST: api/MusicServiceProviders/5/reject
     [HttpPost("{id}/reject")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> RejectServiceProvider(int id)
     {
         var result = await _service.RejectServiceProviderAsync(id);

@@ -21,10 +21,12 @@ public class UserService : IUserService
         int? role,
         bool? isActive,
         int? contentTag,
+        int? preferredInstrumentId,
         int pageNumber,
         int pageSize)
     {
         var query = _context.Users
+            .Include(u => u.PreferredInstrument)
             .Where(u => !u.IsDeleted)
             .AsQueryable();
 
@@ -50,6 +52,11 @@ public class UserService : IUserService
         if (contentTag.HasValue)
         {
             query = query.Where(u => (int)u.ContentTag == contentTag.Value);
+        }
+
+        if (preferredInstrumentId.HasValue)
+        {
+            query = query.Where(u => u.PreferredInstrumentId == preferredInstrumentId.Value);
         }
 
         // Order by CreatedAt
@@ -319,6 +326,8 @@ public class UserService : IUserService
             EmailConfirmed = entity.EmailConfirmed,
             CreatedAt = entity.CreatedAt,
             LastLoginAt = entity.LastLoginAt,
+            PreferredInstrumentId = entity.PreferredInstrumentId,
+            PreferredInstrumentName = entity.PreferredInstrument?.Name,
             ContentTag = (int)entity.ContentTag,
             UploadCount = entity.UploadCount
         };

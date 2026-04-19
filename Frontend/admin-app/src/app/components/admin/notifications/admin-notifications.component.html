@@ -1,0 +1,118 @@
+<section class="admin-notifications">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">מרכז הודעות</p>
+      <h1>שיחה עם משתמשים</h1>
+      <p>בחירה מהירה של משתמש, צפייה בהתראות קודמות ושליחת הודעה פרטית לתוך האתר.</p>
+    </div>
+    <span class="page-chip">{{ totalUsers }} משתמשים</span>
+  </header>
+
+  <div class="chat-shell">
+    <aside class="users-panel">
+      <div class="panel-title">
+        <h2>משתמשים</h2>
+        <span>{{ pageNumber }}</span>
+      </div>
+
+      <div class="search-row">
+        <input type="search" [(ngModel)]="searchTerm" placeholder="חיפוש שם, אימייל או טלפון">
+        <button type="button" (click)="applyFilters()">חפש</button>
+      </div>
+
+      <div class="filters-grid">
+        <select [(ngModel)]="activityFilter" (change)="applyFilters()">
+          <option value="all">כל הסטטוסים</option>
+          <option value="active">פעילים</option>
+          <option value="inactive">לא פעילים</option>
+        </select>
+
+        <select [(ngModel)]="contentTagFilter" (change)="applyFilters()">
+          <option [ngValue]="null">כל רמות התרומה</option>
+          <option [ngValue]="0">רגיל</option>
+          <option [ngValue]="1">מתחיל</option>
+          <option [ngValue]="2">תורם</option>
+          <option [ngValue]="3">תורם מוביל</option>
+        </select>
+
+        <select [(ngModel)]="instrumentFilter" (change)="applyFilters()">
+          <option [ngValue]="null">כל כלי הנגינה</option>
+          <option *ngFor="let instrument of availableInstruments" [ngValue]="instrument.id">{{ instrument.name }}</option>
+        </select>
+
+        <select [(ngModel)]="sortMode">
+          <option value="newest">הצטרפו לאחרונה</option>
+          <option value="oldest">ותיקים קודם</option>
+        </select>
+      </div>
+
+      <div class="users-state" *ngIf="isLoadingUsers">טוען משתמשים...</div>
+      <div class="users-state error" *ngIf="!isLoadingUsers && errorMessage">{{ errorMessage }}</div>
+
+      <div class="users-list" *ngIf="!isLoadingUsers">
+        <button
+          type="button"
+          class="user-card"
+          *ngFor="let user of visibleUsers"
+          [class.selected]="selectedUserId === user.id"
+          (click)="selectUser(user)">
+          <span class="avatar">{{ user.username.charAt(0) }}</span>
+          <span class="user-copy">
+            <strong>{{ user.username }}</strong>
+            <small>{{ user.email }}</small>
+            <small>{{ user.preferredInstrumentName || 'לא הוגדר כלי' }} · {{ getContentTagLabel(user.contentTag) }}</small>
+          </span>
+          <span class="joined">{{ formatDate(user.createdAt) }}</span>
+        </button>
+      </div>
+
+      <div class="pager">
+        <button type="button" (click)="previousPage()" [disabled]="pageNumber === 1">הקודם</button>
+        <button type="button" (click)="nextPage()" [disabled]="pageNumber * pageSize >= totalUsers">הבא</button>
+      </div>
+    </aside>
+
+    <section class="conversation-panel">
+      <header class="conversation-header">
+        <div>
+          <p class="eyebrow">שיחה פעילה</p>
+          <h2>{{ selectedUserTitle }}</h2>
+          <span *ngIf="selectedUser">{{ selectedUser.email }}</span>
+        </div>
+        <span class="status-pill" *ngIf="selectedUser">{{ selectedUser.isActive ? 'פעיל' : 'לא פעיל' }}</span>
+      </header>
+
+      <div class="conversation-empty" *ngIf="!selectedUser">
+        בחר משתמש מהרשימה כדי לפתוח שיחה.
+      </div>
+
+      <div class="messages-list" *ngIf="selectedUser">
+        <div class="users-state" *ngIf="isLoadingThread">טוען שיחה...</div>
+        <article class="message-bubble" *ngFor="let notification of threadNotifications">
+          <span class="message-title">{{ notification.title }}</span>
+          <p>{{ notification.message }}</p>
+          <time>{{ formatDate(notification.createdAt) }}</time>
+        </article>
+        <div class="conversation-empty" *ngIf="!isLoadingThread && threadNotifications.length === 0">
+          עדיין אין התראות למשתמש הזה.
+        </div>
+      </div>
+
+      <form class="composer" *ngIf="selectedUser" (ngSubmit)="sendMessage()">
+        <input type="text" [(ngModel)]="title" name="title" maxlength="160" placeholder="כותרת קצרה">
+        <textarea [(ngModel)]="message" name="message" maxlength="1000" rows="4" placeholder="כתוב הודעה למשתמש"></textarea>
+        <div class="composer-bottom">
+          <input type="text" [(ngModel)]="actionUrl" name="actionUrl" placeholder="קישור פנימי אופציונלי, למשל /my-profile">
+          <button type="submit" [disabled]="isSending">{{ isSending ? 'שולח...' : 'שלח' }}</button>
+        </div>
+        <div class="form-message success" *ngIf="successMessage">{{ successMessage }}</div>
+        <div class="form-message error" *ngIf="errorMessage && selectedUser">{{ errorMessage }}</div>
+      </form>
+    </section>
+  </div>
+
+  <section class="groups-note">
+    <h2>קבוצות ופילוחים</h2>
+    <p>הבסיס כבר מוכן לסינון לפי תאריך הצטרפות, רמת תרומה וכלי נגינה. יצירת קבוצות שמורות ושליחה לקבוצה תהיה השלב הבא, כדי לא לערבב בין הודעה פרטית לבין קמפיין רחב.</p>
+  </section>
+</section>

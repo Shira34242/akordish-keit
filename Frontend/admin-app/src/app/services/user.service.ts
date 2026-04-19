@@ -18,7 +18,8 @@ export class UserService {
     isActive?: boolean,
     pageNumber: number = 1,
     pageSize: number = 10,
-    contentTag?: number
+    contentTag?: number,
+    preferredInstrumentId?: number
   ): Observable<PagedResult<UserListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -36,8 +37,11 @@ export class UserService {
     if (contentTag !== undefined && contentTag !== null) {
       params = params.set('contentTag', contentTag.toString());
     }
+    if (preferredInstrumentId !== undefined && preferredInstrumentId !== null) {
+      params = params.set('preferredInstrumentId', preferredInstrumentId.toString());
+    }
 
-    return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params });
+    return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params, withCredentials: true });
   }
   searchUsersWithProfiles(q?: string, limit: number = 20): Observable<UserWithProfileDto[]> {
     let params = new HttpParams().set('limit', limit.toString());

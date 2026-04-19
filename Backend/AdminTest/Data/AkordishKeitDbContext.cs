@@ -96,6 +96,9 @@ public class AkordishKeitDbContext : DbContext
     // System Settings — Feature Flags
     public DbSet<SystemSetting> SystemSettings { get; set; }
 
+    // Notifications
+    public DbSet<Notification> Notifications { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -174,6 +177,9 @@ public class AkordishKeitDbContext : DbContext
 
         // System Settings Configuration
         modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());
+
+        // Notifications Configuration
+        modelBuilder.ApplyConfiguration(new NotificationConfiguration());
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

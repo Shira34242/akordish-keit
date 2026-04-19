@@ -15,11 +15,16 @@ public class TeachersController : ControllerBase
 {
     private readonly ITeacherService _service;
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public TeachersController(ITeacherService service, AkordishKeitDbContext context)
+    public TeachersController(
+        ITeacherService service,
+        AkordishKeitDbContext context,
+        INotificationService notificationService)
     {
         _service = service;
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: api/Teachers
@@ -249,6 +254,8 @@ public class TeachersController : ControllerBase
             // החזרת פרטי המורה המלאים
             var result = await _service.GetTeacherByIdAsync(teacher.Id);
 
+            await _notificationService.NotifyTeacherSubmittedAsync(userId, teacher.Id, serviceProvider.DisplayName);
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -273,6 +280,7 @@ public class TeachersController : ControllerBase
 
     // POST: api/Teachers/5/approve
     [HttpPost("{id}/approve")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> ApproveTeacher(int id)
     {
         var result = await _service.ApproveTeacherAsync(id);
@@ -287,6 +295,7 @@ public class TeachersController : ControllerBase
 
     // POST: api/Teachers/5/reject
     [HttpPost("{id}/reject")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> RejectTeacher(int id)
     {
         var result = await _service.RejectTeacherAsync(id);

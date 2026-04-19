@@ -124,13 +124,35 @@
               <button class="action-btn btn-expand" (click)="toggleExpand(report.id)" title="הצג פרטים">
                 <span class="material-icons">{{ expandedReportId === report.id ? 'expand_less' : 'expand_more' }}</span>
               </button>
-              <button class="action-btn btn-link" (click)="goToContent(report)" title="עבור לתוכן">
+              <button class="action-btn btn-link" (click)="goToContent(report)" title="עבור לתוכן"
+                *ngIf="!isNewContentReport(report)">
                 <span class="material-icons">open_in_new</span>
               </button>
+
+              <!-- כפתורי אישור ייעודיים לדיווחי תוכן חדש -->
+              <ng-container *ngIf="isNewContentReport(report) && report.status === 'Pending'">
+                <!-- אמן חדש: יצירת פרופיל -->
+                <button *ngIf="report.reportType === 'NewArtist'"
+                  class="action-btn btn-approve" (click)="approveNewArtist(report)" title="צור פרופיל אמן">
+                  <span class="material-icons">person_add</span>
+                </button>
+                <!-- ז'אנר / תגית / מלחין חדש: אשר -->
+                <button *ngIf="report.reportType !== 'NewArtist'"
+                  class="action-btn btn-approve" (click)="resolveAsPending(report)" title="אשר">
+                  <span class="material-icons">check</span>
+                </button>
+                <!-- דחה -->
+                <button class="action-btn btn-dismiss" (click)="dismissItem(report)" title="דחה">
+                  <span class="material-icons">close</span>
+                </button>
+              </ng-container>
+
+              <!-- עריכת סטטוס לדיווחים רגילים -->
               <button class="action-btn btn-edit" (click)="openStatusModal(report)" title="עדכן סטטוס"
-                *ngIf="report.status === 'Pending'">
+                *ngIf="!isNewContentReport(report) && report.status === 'Pending'">
                 <span class="material-icons">edit</span>
               </button>
+
               <button class="action-btn btn-delete" (click)="deleteReport(report.id)" title="מחק">
                 <span class="material-icons">delete</span>
               </button>

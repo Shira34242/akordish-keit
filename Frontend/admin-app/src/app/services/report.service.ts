@@ -45,4 +45,8 @@ export class ReportService {
   deleteReport(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
   }
+
+  approveArtist(reportId: number): Observable<{ message: string; artistId: number }> {
+    return this.http.post<{ message: string; artistId: number }>(`${this.apiUrl}/${reportId}/approve-artist`, {});
+  }
 }

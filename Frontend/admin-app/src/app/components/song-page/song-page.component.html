@@ -426,6 +426,7 @@
 <app-playlist-popup
     *ngIf="isPlaylistPopupOpen && songId"
     [songId]="songId"
+    [autoSaveToDefault]="shouldAutoSaveOnPopupOpen"
     (close)="closePlaylistPopup()"
     (songSaved)="onSongSaved()">
 </app-playlist-popup>

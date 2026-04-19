@@ -56,3 +56,12 @@ export interface AddSongToPlaylistDto {
 export interface ReorderPlaylistDto {
   songIds: number[];
 }
+
+export interface SongPlaylistState {
+  isInDefault: boolean;
+  playlistIds: number[];
+}
+
+export interface RemoveFromDefaultPlaylistDto {
+  removeFromPersonalPlaylists: boolean;
+}

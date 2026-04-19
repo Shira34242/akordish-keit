@@ -31,6 +31,8 @@ export interface UserListDto {
   emailConfirmed: boolean;
   createdAt: string;
   lastLoginAt?: string;
+  preferredInstrumentId?: number | null;
+  preferredInstrumentName?: string | null;
   contentTag: UserContentTag;
   uploadCount: number;
 }

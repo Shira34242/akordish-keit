@@ -5,6 +5,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Enum;
+using AkordishKeit.Services;
 
 namespace AkordishKeit.Controllers;
 
@@ -13,10 +14,14 @@ namespace AkordishKeit.Controllers;
 public class ArtistsController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public ArtistsController(AkordishKeitDbContext context)
+    public ArtistsController(
+        AkordishKeitDbContext context,
+        INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // ========================================
@@ -394,6 +399,7 @@ public class ArtistsController : ControllerBase
 
             // TODO: בדיקת הרשאות - רק Admin או האומן עצמו
             var isAdmin = User.IsInRole("Admin");
+            var wasActive = artist.Status == ArtistStatus.Active;
 
             // עדכון שדות בסיסיים
             if (!string.IsNullOrWhiteSpace(dto.EnglishName))
@@ -482,6 +488,11 @@ public class ArtistsController : ControllerBase
             }
 
             await _context.SaveChangesAsync();
+
+            if (isAdmin && !wasActive && artist.Status == ArtistStatus.Active && artist.UserId.HasValue)
+            {
+                await _notificationService.NotifyArtistApprovedAsync(artist.UserId.Value, artist.Id, artist.Name);
+            }
 
             return NoContent();
         }
@@ -838,6 +849,8 @@ public class ArtistsController : ControllerBase
             }
 
             await _context.SaveChangesAsync();
+
+            await _notificationService.NotifyArtistSubmittedAsync(userId, artist.Id, artist.Name);
 
             // החזרת פרטי האומן המלאים
             var result = await _context.Artists
@@ -1222,8 +1235,14 @@ public class ArtistsController : ControllerBase
             if (artist == null)
                 return NotFound("אומן לא נמצא");
 
+            var wasActive = artist.Status == ArtistStatus.Active;
             artist.Status = status;
             await _context.SaveChangesAsync();
+
+            if (!wasActive && status == ArtistStatus.Active && artist.UserId.HasValue)
+            {
+                await _notificationService.NotifyArtistApprovedAsync(artist.UserId.Value, artist.Id, artist.Name);
+            }
 
             return NoContent();
         }

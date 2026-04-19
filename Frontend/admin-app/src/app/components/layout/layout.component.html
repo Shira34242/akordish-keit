@@ -6,8 +6,9 @@
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
-            <button class="btn-bell header-desktop-only">
+            <button class="btn-bell header-desktop-only" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
@@ -52,8 +53,9 @@
         </div>
 
         <div class="header-mobile-actions" *ngIf="!showMobileMenu">
-            <button class="btn-bell">
+            <button class="btn-bell" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
@@ -109,8 +111,9 @@
                 <span class="material-icons index-search-icon">search</span>
                 <span class="btn-music-index-text">אינדקס</span>
             </a>
-            <button class="btn-bell">
+            <button class="btn-bell" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
@@ -172,6 +175,50 @@
 
     </div>
 </header>
+
+<section class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
+    <header class="notifications-popup-header">
+        <div>
+            <p>התראות</p>
+            <h2>עדכונים אחרונים</h2>
+        </div>
+        <button type="button" class="popup-close-button" (click)="closeNotificationsPopup()">
+            <span class="material-icons">close</span>
+        </button>
+    </header>
+
+    <div class="notifications-popup-state" *ngIf="notificationsPreviewLoading">טוען התראות...</div>
+    <div class="notifications-popup-state" *ngIf="!notificationsPreviewLoading && notificationsPreviewError">{{ notificationsPreviewError }}</div>
+
+    <div class="notifications-popup-empty" *ngIf="!notificationsPreviewLoading && !notificationsPreviewError && notificationsPreview.length === 0">
+        אין התראות חדשות כרגע.
+    </div>
+
+    <div class="notifications-popup-list" *ngIf="!notificationsPreviewLoading && notificationsPreview.length > 0">
+        <button
+            type="button"
+            class="notifications-popup-item"
+            *ngFor="let notification of notificationsPreview"
+            [class.unread]="!notification.isRead"
+            (click)="openNotificationFromPopup($event, notification)">
+            <span class="popup-item-dot"></span>
+            <span class="popup-item-content">
+                <strong>{{ notification.title }}</strong>
+                <small>{{ notification.message }}</small>
+                <time>{{ formatNotificationDate(notification.createdAt) }}</time>
+            </span>
+        </button>
+    </div>
+
+    <footer class="notifications-popup-actions">
+        <button type="button" class="popup-secondary-button" *ngIf="unreadNotificationCount > 0" (click)="markAllPopupNotificationsAsRead($event)">
+            סמן הכל כנקרא
+        </button>
+        <button type="button" class="popup-primary-button" (click)="goToNotificationsPage($event)">
+            לכל ההתראות
+        </button>
+    </footer>
+</section>
 
 <main class="main-content">
     <router-outlet></router-outlet>

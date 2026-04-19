@@ -154,6 +154,38 @@ export class ReportsListComponent implements OnInit {
     window.open(report.contentUrl, '_blank');
   }
 
+  approveNewArtist(report: Report): void {
+    if (!confirm(`ליצור פרופיל אמן חדש עבור: "${report.contentTitle.split(' - ')[1] || report.description}"?`)) return;
+
+    this.reportService.approveArtist(report.id).subscribe({
+      next: () => this.loadReports(),
+      error: (err) => {
+        console.error('Error approving artist:', err);
+        alert('שגיאה ביצירת האמן');
+      }
+    });
+  }
+
+  resolveAsPending(report: Report): void {
+    const dto: UpdateReportStatusDto = { status: 'Resolved', adminNotes: 'אושר על ידי מנהל' };
+    this.reportService.updateReportStatus(report.id, dto).subscribe({
+      next: () => this.loadReports(),
+      error: () => alert('שגיאה בעדכון הסטטוס')
+    });
+  }
+
+  dismissItem(report: Report): void {
+    const dto: UpdateReportStatusDto = { status: 'Dismissed', adminNotes: 'נדחה על ידי מנהל' };
+    this.reportService.updateReportStatus(report.id, dto).subscribe({
+      next: () => this.loadReports(),
+      error: () => alert('שגיאה בעדכון הסטטוס')
+    });
+  }
+
+  isNewContentReport(report: Report): boolean {
+    return ['NewArtist', 'NewGenre', 'NewTag', 'NewPerson'].includes(report.reportType);
+  }
+
   getStatusClass(status: string): string {
     switch (status) {
       case 'Pending': return 'status-pending';
