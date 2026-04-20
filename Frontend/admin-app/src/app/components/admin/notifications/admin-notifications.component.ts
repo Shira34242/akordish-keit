@@ -11,6 +11,7 @@ type ComposerMode = 'private' | 'group';
 type SidebarMode = 'chats' | 'groups';
 type AttachmentType = 'link' | 'image' | 'video' | 'file';
 type AttachmentInputMode = 'url' | 'upload';
+type MediaDisplaySize = 'small' | 'medium' | 'large';
 
 interface MessageDraft {
   message: string;
@@ -18,6 +19,7 @@ interface MessageDraft {
   mediaUrl: string;
   mediaType: 'image' | 'video' | 'file' | '';
   mediaAltText: string;
+  mediaDisplaySize: MediaDisplaySize;
   attachments: NotificationAttachmentDto[];
   isMarketingContent: boolean;
   campaignName: string;
@@ -51,6 +53,7 @@ export class AdminNotificationsComponent implements OnInit {
   mediaUrl = '';
   mediaType: 'image' | 'video' | 'file' | '' = '';
   mediaAltText = '';
+  mediaDisplaySize: MediaDisplaySize = 'medium';
   attachments: NotificationAttachmentDto[] = [];
   attachmentLabel = '';
   attachmentClickUrl = '';
@@ -151,6 +154,10 @@ export class AdminNotificationsComponent implements OnInit {
 
   get selectedGroupMembersCount(): number {
     return this.groupMemberIds.size;
+  }
+
+  get hasDraftBubble(): boolean {
+    return this.hasNotificationContent();
   }
 
   loadUsers(): void {
@@ -625,6 +632,7 @@ export class AdminNotificationsComponent implements OnInit {
       mediaType: this.mediaType || null,
       mediaThumbnailUrl: null,
       mediaAltText: this.mediaAltText.trim() || null,
+      mediaDisplaySize: this.mediaType === 'image' ? this.mediaDisplaySize : null,
       attachments: this.buildAttachmentsPayload(),
       isMarketingContent: this.isMarketingContent
     }).subscribe({
@@ -645,6 +653,7 @@ export class AdminNotificationsComponent implements OnInit {
       mediaType: this.mediaType || null,
       mediaThumbnailUrl: null,
       mediaAltText: this.mediaAltText.trim() || null,
+      mediaDisplaySize: this.mediaType === 'image' ? this.mediaDisplaySize : null,
       attachments: this.buildAttachmentsPayload(),
       isMarketingContent: this.isMarketingContent,
       campaignName: this.campaignName.trim() || this.selectedGroup?.name || null,
@@ -715,6 +724,26 @@ export class AdminNotificationsComponent implements OnInit {
     }
   }
 
+  setMediaDisplaySize(size: MediaDisplaySize): void {
+    this.mediaDisplaySize = size;
+    this.saveCurrentDraft();
+  }
+
+  getMediaSizeClass(size?: string | null): string {
+    switch (size) {
+      case 'small':
+        return 'message-media--small';
+      case 'large':
+        return 'message-media--large';
+      default:
+        return 'message-media--medium';
+    }
+  }
+
+  getDraftActionUrl(): string | null {
+    return this.buildActionUrl();
+  }
+
   shouldShowTitle(notification: NotificationDto): boolean {
     return notification.type !== 3 && notification.type !== 6 && notification.title !== notification.message;
   }
@@ -739,7 +768,7 @@ export class AdminNotificationsComponent implements OnInit {
     }
   }
 
-  private buildTitle(): string {
+  buildTitle(): string {
     const messageTitle = this.message.trim().replace(/\s+/g, ' ').slice(0, 80);
     if (messageTitle) return messageTitle;
     if (this.mediaType === 'image' || this.attachments.some(item => item.type === 'image')) return 'תמונה מצורפת';
@@ -788,6 +817,7 @@ export class AdminNotificationsComponent implements OnInit {
       mediaUrl: this.mediaUrl,
       mediaType: this.mediaType,
       mediaAltText: this.mediaAltText,
+      mediaDisplaySize: this.mediaDisplaySize,
       attachments: this.attachments,
       isMarketingContent: this.isMarketingContent,
       campaignName: this.campaignName
@@ -801,6 +831,7 @@ export class AdminNotificationsComponent implements OnInit {
     this.mediaUrl = draft?.mediaUrl ?? '';
     this.mediaType = draft?.mediaType ?? '';
     this.mediaAltText = draft?.mediaAltText ?? '';
+    this.mediaDisplaySize = draft?.mediaDisplaySize ?? 'medium';
     this.attachments = draft?.attachments ?? [];
     this.isMarketingContent = draft?.isMarketingContent ?? false;
     this.campaignName = draft?.campaignName ?? '';
@@ -815,6 +846,7 @@ export class AdminNotificationsComponent implements OnInit {
     this.mediaUrl = '';
     this.mediaType = '';
     this.mediaAltText = '';
+    this.mediaDisplaySize = 'medium';
     this.attachments = [];
     this.isMarketingContent = false;
     this.campaignName = '';

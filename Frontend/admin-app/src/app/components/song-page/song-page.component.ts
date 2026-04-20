@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
@@ -29,7 +30,7 @@ import { PlaylistService } from '../../services/playlist.service';
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })

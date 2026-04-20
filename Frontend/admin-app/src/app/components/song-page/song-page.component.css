@@ -792,6 +792,43 @@
 .popular-card h3 {
     margin-bottom: var(--space-base);
 }
+
+/* Chord Dictionary Card */
+.chord-dict-card {
+    background: #ddff53;
+}
+
+.chord-dict-card h3 {
+    color: #000000;
+    margin-bottom: var(--space-sm);
+}
+
+.chord-dict-desc {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: var(--font-xs);
+    color: #000000;
+    margin: 0 0 var(--space-md) 0;
+    line-height: 1.5;
+}
+
+.chord-dict-btn {
+    display: inline-block;
+    background: #000000;
+    color: #ffffff;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: var(--font-xs);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+}
+
+.chord-dict-btn:hover {
+    opacity: 0.8;
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);

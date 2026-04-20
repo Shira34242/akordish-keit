@@ -38,9 +38,9 @@
         </div>
         <p *ngIf="notification.message?.trim()">{{ notification.message }}</p>
         <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
-          <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media">
+          <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media" [class.notification-media--small]="notification.mediaDisplaySize === 'small'" [class.notification-media--large]="notification.mediaDisplaySize === 'large'">
         </a>
-        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media">
+        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media" [class.notification-media--small]="notification.mediaDisplaySize === 'small'" [class.notification-media--large]="notification.mediaDisplaySize === 'large'">
         <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="notification-media-link" (click)="$event.stopPropagation()">פתיחת קובץ מצורף</a>
         <div class="notification-attachments" *ngIf="notification.attachments?.length">
           <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">

@@ -713,11 +713,29 @@ button:disabled {
 
 .message-media {
   display: block;
-  width: 100%;
-  max-height: 220px;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(62vh, 520px);
+  object-fit: contain;
   border-radius: 16px;
   margin-top: var(--space-sm);
+  background: #F2F2F2;
+}
+
+.message-media--small {
+  max-width: min(15rem, 100%);
+  max-height: min(42vh, 320px);
+}
+
+.message-media--medium {
+  max-width: min(24rem, 100%);
+  max-height: min(62vh, 520px);
+}
+
+.message-media--large {
+  max-width: 100%;
+  max-height: min(76vh, 720px);
 }
 
 .message-media-link {
@@ -773,6 +791,11 @@ button:disabled {
   padding: var(--space-base) var(--space-xl) var(--space-xl);
   border-top: 2px solid #F2F2F2;
   background: #ffffff;
+}
+
+.composer-bubble {
+  align-self: flex-start;
+  background: #F2F2F2;
 }
 
 .composer-line {
@@ -888,6 +911,37 @@ button:disabled {
 .attachment-mode button.active {
   background: #F2F2F2;
   color: #000;
+}
+
+.image-size-control {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  width: fit-content;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: var(--space-xs);
+}
+
+.image-size-control span {
+  color: #404040;
+  font-size: var(--font-xs);
+  padding: 0 var(--space-sm);
+}
+
+.image-size-control button {
+  min-height: 28px;
+  background: transparent;
+  color: #404040;
+  font-size: var(--font-xs);
+  padding: 0 var(--space-md);
+}
+
+.image-size-control button.active {
+  background: #ddff53;
+  color: #000;
+  font-weight: 800;
 }
 
 .add-attachment-button {

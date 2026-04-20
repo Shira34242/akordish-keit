@@ -17,6 +17,7 @@ public class Notification
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public string? MediaDisplaySize { get; set; }
     public string? AttachmentsJson { get; set; }
     public string? CampaignName { get; set; }
     public string? AudienceLabel { get; set; }

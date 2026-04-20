@@ -316,12 +316,24 @@
 }
 
 .notification-media-preview {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
+    height: auto;
     display: block;
-    max-height: 150px;
-    object-fit: cover;
+    max-height: min(56vh, 420px);
+    object-fit: contain;
     border-radius: 16px;
     margin-top: var(--space-xs);
+    background: #F2F2F2;
+}
+
+.notification-media-preview--small {
+    max-width: min(12rem, 100%);
+    max-height: min(36vh, 240px);
+}
+
+.notification-media-preview--large {
+    max-height: min(68vh, 620px);
 }
 
 .notification-media-link {

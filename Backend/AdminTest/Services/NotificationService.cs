@@ -38,6 +38,7 @@ public class NotificationService : INotificationService
             MediaType = NormalizeOptional(dto.MediaType),
             MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
             MediaAltText = NormalizeOptional(dto.MediaAltText),
+            MediaDisplaySize = NormalizeMediaDisplaySize(dto.MediaDisplaySize),
             AttachmentsJson = SerializeAttachments(dto.Attachments),
             CampaignName = NormalizeOptional(dto.CampaignName),
             AudienceLabel = NormalizeOptional(dto.AudienceLabel),
@@ -172,6 +173,7 @@ public class NotificationService : INotificationService
             MediaType = dto.MediaType,
             MediaThumbnailUrl = dto.MediaThumbnailUrl,
             MediaAltText = dto.MediaAltText,
+            MediaDisplaySize = dto.MediaDisplaySize,
             Attachments = dto.Attachments,
             CreatedByUserId = createdByUserId
         });
@@ -244,6 +246,7 @@ public class NotificationService : INotificationService
             MediaType = NormalizeOptional(dto.MediaType),
             MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
             MediaAltText = NormalizeOptional(dto.MediaAltText),
+            MediaDisplaySize = NormalizeMediaDisplaySize(dto.MediaDisplaySize),
             AttachmentsJson = SerializeAttachments(dto.Attachments),
             CampaignName = NormalizeOptional(dto.CampaignName),
             AudienceLabel = audienceLabel,
@@ -580,6 +583,7 @@ public class NotificationService : INotificationService
             MediaType = notification.MediaType,
             MediaThumbnailUrl = notification.MediaThumbnailUrl,
             MediaAltText = notification.MediaAltText,
+            MediaDisplaySize = notification.MediaDisplaySize,
             Attachments = DeserializeAttachments(notification.AttachmentsJson),
             CampaignName = notification.CampaignName,
             AudienceLabel = notification.AudienceLabel,
@@ -680,6 +684,16 @@ public class NotificationService : INotificationService
         }
 
         return value.Trim();
+    }
+
+    private static string NormalizeMediaDisplaySize(string? value)
+    {
+        return NormalizeOptional(value)?.ToLowerInvariant() switch
+        {
+            "small" => "small",
+            "large" => "large",
+            _ => "medium"
+        };
     }
 
     private async Task<NotificationGroupDto> MapGroupToDtoAsync(NotificationGroup group)

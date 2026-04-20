@@ -144,9 +144,9 @@
             <span class="message-title" *ngIf="shouldShowTitle(notification)">{{ notification.title }}</span>
             <p *ngIf="notification.message?.trim()">{{ notification.message }}</p>
             <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener">
-              <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media">
+              <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media" [ngClass]="getMediaSizeClass(notification.mediaDisplaySize)">
             </a>
-            <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media">
+            <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media" [ngClass]="getMediaSizeClass(notification.mediaDisplaySize)">
             <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="message-media-link">פתיחת מדיה</a>
             <a *ngIf="notification.actionUrl && !(notification.mediaUrl && notification.mediaType === 'image')" [href]="notification.actionUrl" target="_blank" rel="noopener" class="message-media-link">קישור מצורף</a>
             <div class="attachment-chips" *ngIf="notification.attachments?.length">
@@ -168,6 +168,24 @@
         </div>
 
         <form class="composer" (ngSubmit)="sendMessage()">
+          <article class="message-bubble composer-bubble" *ngIf="hasDraftBubble">
+            <span class="marketing-tag" *ngIf="isMarketingContent">תוכן שיווקי</span>
+            <span class="message-title" *ngIf="message.trim()">{{ buildTitle() }}</span>
+            <p *ngIf="message.trim()">{{ message }}</p>
+            <a *ngIf="mediaUrl && mediaType === 'image' && getDraftActionUrl()" [href]="getDraftActionUrl() || ''" target="_blank" rel="noopener">
+              <img [src]="mediaUrl" [alt]="mediaAltText || message" class="message-media" [ngClass]="getMediaSizeClass(mediaDisplaySize)">
+            </a>
+            <img *ngIf="mediaUrl && mediaType === 'image' && !getDraftActionUrl()" [src]="mediaUrl" [alt]="mediaAltText || message" class="message-media" [ngClass]="getMediaSizeClass(mediaDisplaySize)">
+            <a *ngIf="mediaUrl && mediaType !== 'image'" [href]="mediaUrl" target="_blank" rel="noopener" class="message-media-link">פתיחת מדיה</a>
+            <a *ngIf="getDraftActionUrl() && !(mediaUrl && mediaType === 'image')" [href]="getDraftActionUrl() || ''" target="_blank" rel="noopener" class="message-media-link">קישור מצורף</a>
+            <div class="attachment-chips" *ngIf="attachments.length">
+              <a *ngFor="let item of attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" class="attachment-chip">
+                <span class="material-icons">{{ getAttachmentIcon(item.type) }}</span>
+                <span>{{ item.label || item.type }}</span>
+              </a>
+            </div>
+            <time>עכשיו</time>
+          </article>
           <div class="attachment-panel" *ngIf="showAttachPanel && attachmentType">
             <div class="attachment-head">
               <strong>{{ getAttachmentLabel() }}</strong>
@@ -195,6 +213,12 @@
 
             <input type="text" [(ngModel)]="attachmentLabel" name="attachmentLabel" (ngModelChange)="onDraftChanged()" placeholder="שם קצר לצירוף">
             <input *ngIf="attachmentType === 'image'" type="text" [(ngModel)]="attachmentClickUrl" name="attachmentClickUrl" (ngModelChange)="onDraftChanged()" placeholder="קישור בלחיצה על התמונה">
+            <div class="image-size-control" *ngIf="attachmentType === 'image' || mediaType === 'image'">
+              <span>גודל תמונה</span>
+              <button type="button" [class.active]="mediaDisplaySize === 'small'" (click)="setMediaDisplaySize('small')">קטן</button>
+              <button type="button" [class.active]="mediaDisplaySize === 'medium'" (click)="setMediaDisplaySize('medium')">רגיל</button>
+              <button type="button" [class.active]="mediaDisplaySize === 'large'" (click)="setMediaDisplaySize('large')">גדול</button>
+            </div>
             <button type="button" class="add-attachment-button" (click)="addAttachment()">
               {{ attachmentType === 'image' ? 'הצמד תמונה' : 'הוסף לצ׳אט' }}
             </button>

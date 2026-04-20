@@ -32,6 +32,7 @@ export interface NotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  mediaDisplaySize?: 'small' | 'medium' | 'large' | string | null;
   attachments?: NotificationAttachmentDto[];
   campaignName?: string | null;
   audienceLabel?: string | null;
@@ -60,6 +61,7 @@ export interface CreateNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  mediaDisplaySize?: 'small' | 'medium' | 'large' | string | null;
   attachments?: NotificationAttachmentDto[] | null;
   campaignName?: string | null;
   audienceLabel?: string | null;
@@ -74,6 +76,7 @@ export interface SendUserNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  mediaDisplaySize?: 'small' | 'medium' | 'large' | string | null;
   attachments?: NotificationAttachmentDto[] | null;
   isMarketingContent?: boolean;
 }
@@ -97,6 +100,7 @@ export interface SendBroadcastNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  mediaDisplaySize?: 'small' | 'medium' | 'large' | string | null;
   attachments?: NotificationAttachmentDto[] | null;
   campaignName?: string | null;
   isMarketingContent?: boolean;

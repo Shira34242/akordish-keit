@@ -170,6 +170,7 @@ using (var scope = app.Services.CreateScope())
                 [MediaType] nvarchar(40) NULL,
                 [MediaThumbnailUrl] nvarchar(1000) NULL,
                 [MediaAltText] nvarchar(200) NULL,
+                [MediaDisplaySize] nvarchar(20) NULL,
                 [AttachmentsJson] nvarchar(max) NULL,
                 [CampaignName] nvarchar(160) NULL,
                 [AudienceLabel] nvarchar(300) NULL,
@@ -198,6 +199,9 @@ using (var scope = app.Services.CreateScope())
 
             IF COL_LENGTH(N'[Notifications]', N'MediaAltText') IS NULL
                 ALTER TABLE [Notifications] ADD [MediaAltText] nvarchar(200) NULL;
+
+            IF COL_LENGTH(N'[Notifications]', N'MediaDisplaySize') IS NULL
+                ALTER TABLE [Notifications] ADD [MediaDisplaySize] nvarchar(20) NULL;
 
             IF COL_LENGTH(N'[Notifications]', N'AttachmentsJson') IS NULL
                 ALTER TABLE [Notifications] ADD [AttachmentsJson] nvarchar(max) NULL;

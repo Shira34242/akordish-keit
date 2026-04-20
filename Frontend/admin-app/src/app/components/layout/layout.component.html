@@ -199,9 +199,9 @@
                     <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                     <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
                     <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
-                        <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
+                        <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                     </a>
-                    <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
+                    <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                     <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
                     <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
                         <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
@@ -248,9 +248,9 @@
                         <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                         <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
                         <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
-                            <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
+                            <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                         </a>
-                        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
+                        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                         <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
                         <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
                             <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">

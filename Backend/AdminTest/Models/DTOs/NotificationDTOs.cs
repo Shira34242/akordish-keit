@@ -16,6 +16,7 @@ public class NotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public string? MediaDisplaySize { get; set; }
     public List<NotificationAttachmentDto> Attachments { get; set; } = new();
     public string? CampaignName { get; set; }
     public string? AudienceLabel { get; set; }
@@ -47,6 +48,7 @@ public class CreateNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public string? MediaDisplaySize { get; set; }
     public List<NotificationAttachmentDto>? Attachments { get; set; }
     public string? CampaignName { get; set; }
     public string? AudienceLabel { get; set; }
@@ -63,6 +65,7 @@ public class SendUserNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public string? MediaDisplaySize { get; set; }
     public List<NotificationAttachmentDto>? Attachments { get; set; }
     public bool IsMarketingContent { get; set; }
 }
@@ -88,6 +91,7 @@ public class SendBroadcastNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public string? MediaDisplaySize { get; set; }
     public List<NotificationAttachmentDto>? Attachments { get; set; }
     public string? CampaignName { get; set; }
     public bool IsMarketingContent { get; set; }
