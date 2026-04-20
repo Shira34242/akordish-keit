@@ -38,6 +38,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.MediaAltText)
             .HasMaxLength(200);
 
+        builder.Property(n => n.AttachmentsJson)
+            .HasColumnType("nvarchar(max)");
+
         builder.Property(n => n.CampaignName)
             .HasMaxLength(160);
 

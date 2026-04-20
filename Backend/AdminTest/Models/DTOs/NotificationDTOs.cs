@@ -16,12 +16,21 @@ public class NotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public List<NotificationAttachmentDto> Attachments { get; set; } = new();
     public string? CampaignName { get; set; }
     public string? AudienceLabel { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ReadAt { get; set; }
     public int? CreatedByUserId { get; set; }
+}
+
+public class NotificationAttachmentDto
+{
+    public string Type { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string? Label { get; set; }
+    public string? ClickUrl { get; set; }
 }
 
 public class CreateNotificationDto
@@ -38,6 +47,7 @@ public class CreateNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public List<NotificationAttachmentDto>? Attachments { get; set; }
     public string? CampaignName { get; set; }
     public string? AudienceLabel { get; set; }
     public int? CreatedByUserId { get; set; }
@@ -53,6 +63,8 @@ public class SendUserNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public List<NotificationAttachmentDto>? Attachments { get; set; }
+    public bool IsMarketingContent { get; set; }
 }
 
 public class SendStatusNotificationDto
@@ -76,7 +88,9 @@ public class SendBroadcastNotificationDto
     public string? MediaType { get; set; }
     public string? MediaThumbnailUrl { get; set; }
     public string? MediaAltText { get; set; }
+    public List<NotificationAttachmentDto>? Attachments { get; set; }
     public string? CampaignName { get; set; }
+    public bool IsMarketingContent { get; set; }
     public int? GroupId { get; set; }
     public bool SendToAll { get; set; }
     public List<int>? UserIds { get; set; }
@@ -114,6 +128,7 @@ public class NotificationGroupDto
     public DateTime? JoinedFrom { get; set; }
     public DateTime? JoinedTo { get; set; }
     public string? AddressContains { get; set; }
+    public List<int>? MemberUserIds { get; set; }
     public int EstimatedUserCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -131,4 +146,5 @@ public class SaveNotificationGroupDto
     public DateTime? JoinedFrom { get; set; }
     public DateTime? JoinedTo { get; set; }
     public string? AddressContains { get; set; }
+    public List<int>? MemberUserIds { get; set; }
 }

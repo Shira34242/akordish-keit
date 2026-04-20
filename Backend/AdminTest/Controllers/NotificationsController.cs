@@ -122,9 +122,9 @@ public class NotificationsController : ControllerBase
                 return Unauthorized();
             }
 
-            if (dto.UserId <= 0 || string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Message))
+            if (dto.UserId <= 0 || string.IsNullOrWhiteSpace(dto.Title) || !HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
             {
-                return BadRequest(new { message = "חובה לבחור משתמש, כותרת והודעה" });
+                return BadRequest(new { message = "חובה לבחור משתמש ולהוסיף הודעה, תמונה או צירוף" });
             }
 
             var notification = await _notificationService.SendAdminMessageAsync(dto, adminUserId.Value);
@@ -153,9 +153,9 @@ public class NotificationsController : ControllerBase
                 return Unauthorized();
             }
 
-            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Message))
+            if (string.IsNullOrWhiteSpace(dto.Title) || !HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
             {
-                return BadRequest(new { message = "חובה למלא כותרת והודעה" });
+                return BadRequest(new { message = "חובה להוסיף הודעה, תמונה או צירוף" });
             }
 
             var result = await _notificationService.SendBroadcastAsync(dto, adminUserId.Value);
@@ -274,6 +274,18 @@ public class NotificationsController : ControllerBase
             or NotificationType.Rejection
             or NotificationType.Approval
             or NotificationType.System;
+    }
+
+    private static bool HasNotificationContent(
+        string? message,
+        string? mediaUrl,
+        string? actionUrl,
+        List<NotificationAttachmentDto>? attachments)
+    {
+        return !string.IsNullOrWhiteSpace(message)
+            || !string.IsNullOrWhiteSpace(mediaUrl)
+            || !string.IsNullOrWhiteSpace(actionUrl)
+            || attachments is { Count: > 0 };
     }
 
     private int? GetCurrentUserId()

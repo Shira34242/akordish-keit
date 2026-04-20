@@ -170,6 +170,7 @@ using (var scope = app.Services.CreateScope())
                 [MediaType] nvarchar(40) NULL,
                 [MediaThumbnailUrl] nvarchar(1000) NULL,
                 [MediaAltText] nvarchar(200) NULL,
+                [AttachmentsJson] nvarchar(max) NULL,
                 [CampaignName] nvarchar(160) NULL,
                 [AudienceLabel] nvarchar(300) NULL,
                 [IsRead] bit NOT NULL CONSTRAINT [DF_Notifications_IsRead] DEFAULT CAST(0 AS bit),
@@ -197,6 +198,9 @@ using (var scope = app.Services.CreateScope())
 
             IF COL_LENGTH(N'[Notifications]', N'MediaAltText') IS NULL
                 ALTER TABLE [Notifications] ADD [MediaAltText] nvarchar(200) NULL;
+
+            IF COL_LENGTH(N'[Notifications]', N'AttachmentsJson') IS NULL
+                ALTER TABLE [Notifications] ADD [AttachmentsJson] nvarchar(max) NULL;
 
             IF COL_LENGTH(N'[Notifications]', N'CampaignName') IS NULL
                 ALTER TABLE [Notifications] ADD [CampaignName] nvarchar(160) NULL;
@@ -251,6 +255,24 @@ using (var scope = app.Services.CreateScope())
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NotificationGroups_Deleted_Created' AND object_id = OBJECT_ID(N'[NotificationGroups]'))
         BEGIN
             CREATE INDEX [IX_NotificationGroups_Deleted_Created] ON [NotificationGroups] ([IsDeleted], [CreatedAt]);
+        END
+
+        IF OBJECT_ID(N'[NotificationGroupMembers]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [NotificationGroupMembers] (
+                [NotificationGroupId] int NOT NULL,
+                [UserId] int NOT NULL,
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_NotificationGroupMembers_CreatedAt] DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_NotificationGroupMembers] PRIMARY KEY ([NotificationGroupId], [UserId]),
+                CONSTRAINT [FK_NotificationGroupMembers_NotificationGroups_NotificationGroupId] FOREIGN KEY ([NotificationGroupId]) REFERENCES [NotificationGroups] ([Id]) ON DELETE CASCADE,
+                CONSTRAINT [FK_NotificationGroupMembers_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE NO ACTION
+            );
+        END
+
+        IF OBJECT_ID(N'[NotificationGroupMembers]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NotificationGroupMembers_UserId' AND object_id = OBJECT_ID(N'[NotificationGroupMembers]'))
+        BEGIN
+            CREATE INDEX [IX_NotificationGroupMembers_UserId] ON [NotificationGroupMembers] ([UserId]);
         END
     ");
 }

@@ -94,7 +94,7 @@ h1 {
   width: min(88%, 430px);
   align-self: flex-start;
   background: #F2F2F2;
-  border-radius: 28px 28px 8px 28px;
+  border-radius: 22px;
   padding: var(--space-md) var(--space-base);
   cursor: pointer;
   border: none;
@@ -127,6 +127,16 @@ h1 {
   color: #404040;
   font-size: var(--font-xs);
   white-space: nowrap;
+}
+
+.notification-marketing-tag {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  font-size: var(--font-xs);
+  padding: var(--space-xs) var(--space-sm);
 }
 
 .notification-content p {
@@ -162,6 +172,29 @@ h1 {
   font-size: var(--font-xs);
   padding: var(--space-xs) var(--space-md);
   text-decoration: none;
+}
+
+.notification-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.notification-attachments a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  font-size: var(--font-xs);
+  padding: var(--space-xs) var(--space-sm);
+  text-decoration: none;
+}
+
+.notification-attachments .material-icons {
+  font-size: 15px;
 }
 
 .delete-button {

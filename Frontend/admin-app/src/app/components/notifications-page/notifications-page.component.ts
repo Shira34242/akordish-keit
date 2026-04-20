@@ -115,6 +115,19 @@ export class NotificationsPageComponent implements OnInit {
       && notification.title.trim() !== notification.message.trim();
   }
 
+  getAttachmentIcon(type: string): string {
+    switch (type) {
+      case 'image':
+        return 'image';
+      case 'video':
+        return 'smart_display';
+      case 'file':
+        return 'attach_file';
+      default:
+        return 'link';
+    }
+  }
+
   private openActionUrl(actionUrl: string): void {
     if (/^https?:\/\//i.test(actionUrl)) {
       window.open(actionUrl, '_blank', 'noopener');

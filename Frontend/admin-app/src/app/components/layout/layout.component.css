@@ -174,7 +174,6 @@
 
 .btn-bell-active {
     background: #F2F2F2;
-    transform: scale(1.05);
 }
 
 
@@ -217,30 +216,17 @@
     box-sizing: border-box;
     border: none;
     transform-origin: top right;
-    animation: notificationPopupIn 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.2);
-}
-
-.notifications-popup::before {
-    content: '';
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #ffffff;
-    position: absolute;
-    top: -42px;
-    right: 0;
-    z-index: -1;
-    transform: scale(0.86);
+    animation: notificationPopupIn 0.18s ease-out;
 }
 
 @keyframes notificationPopupIn {
     from {
         opacity: 0;
-        transform: translateY(-18px) scale(0.82);
+        transform: translateY(-8px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
@@ -283,83 +269,22 @@
 .notifications-popup-item {
     width: 100%;
     border: none;
-    border-radius: 22px 22px 6px 22px;
+    border-radius: 20px;
     background: #ffffff;
     color: #000;
     cursor: pointer;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     gap: var(--space-sm);
     padding: var(--space-md) var(--space-base);
     text-align: right;
     font-family: 'Open Sans', sans-serif;
     position: relative;
     isolation: isolate;
-    animation: notificationBubbleIn 0.26s ease-out both;
-}
-
-.notifications-popup-item::before,
-.notifications-popup-bubble::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    right: 18px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: inherit;
-    z-index: -1;
-}
-
-.notifications-popup-item:first-child::before {
-    display: none;
-}
-
-.notifications-popup-item:nth-child(2) {
-    animation-delay: 0.03s;
-}
-
-.notifications-popup-item:nth-child(3) {
-    animation-delay: 0.06s;
-}
-
-.notifications-popup-item:nth-child(4) {
-    animation-delay: 0.09s;
-}
-
-.notifications-popup-item:nth-child(5) {
-    animation-delay: 0.12s;
-}
-
-.notifications-popup-item:nth-child(6) {
-    animation-delay: 0.15s;
 }
 
 .notifications-popup-item.unread {
     background: #F2F2F2;
-}
-
-@keyframes notificationBubbleIn {
-    from {
-        opacity: 0;
-        transform: translateY(-8px) scale(0.92);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.popup-item-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #404040;
-    margin-top: var(--space-xs);
-}
-
-.notifications-popup-item.unread .popup-item-dot {
-    background: #000;
 }
 
 .popup-item-content {
@@ -392,6 +317,7 @@
 
 .notification-media-preview {
     width: 100%;
+    display: block;
     max-height: 150px;
     object-fit: cover;
     border-radius: 16px;
@@ -407,6 +333,39 @@
     font-size: var(--font-xs);
     padding: var(--space-xs) var(--space-md);
     margin-top: var(--space-xs);
+}
+
+.notification-attachment-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+}
+
+.notification-attachment-chips a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #404040;
+    font-size: var(--font-xs);
+    padding: var(--space-xs) var(--space-sm);
+    text-decoration: none;
+}
+
+.notification-attachment-chips .material-icons {
+    font-size: 15px;
+}
+
+.notification-marketing-tag {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #404040;
+    font-size: var(--font-xs);
+    padding: var(--space-xs) var(--space-sm);
 }
 
 .notifications-popup-state,
@@ -542,12 +501,12 @@
 .notifications-chat-bubble {
     width: min(88%, 430px);
     border: none;
-    border-radius: 28px 28px 8px 28px;
+    border-radius: 22px;
     background: #F2F2F2;
     color: #000;
     cursor: pointer;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     gap: var(--space-sm);
     padding: var(--space-md) var(--space-base);
     text-align: right;
@@ -558,19 +517,7 @@
 .notifications-chat-bubble.unread {
     background: #ffffff;
     align-self: flex-start;
-    border-radius: 28px 28px 28px 8px;
-}
-
-.notifications-chat-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #404040;
-    margin-top: var(--space-xs);
-}
-
-.notifications-chat-bubble.unread .notifications-chat-dot {
-    background: #000;
+    border-radius: 22px;
 }
 
 .notifications-chat-content {

@@ -3,6 +3,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace AkordishKeit.Services;
 
@@ -37,6 +38,7 @@ public class NotificationService : INotificationService
             MediaType = NormalizeOptional(dto.MediaType),
             MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
             MediaAltText = NormalizeOptional(dto.MediaAltText),
+            AttachmentsJson = SerializeAttachments(dto.Attachments),
             CampaignName = NormalizeOptional(dto.CampaignName),
             AudienceLabel = NormalizeOptional(dto.AudienceLabel),
             CreatedByUserId = dto.CreatedByUserId,
@@ -162,14 +164,15 @@ public class NotificationService : INotificationService
             UserId = dto.UserId,
             Title = dto.Title,
             Message = dto.Message,
-            Type = NotificationType.AdminMessage,
-            Category = NotificationCategory.System,
+            Type = dto.IsMarketingContent ? NotificationType.Promotion : NotificationType.AdminMessage,
+            Category = dto.IsMarketingContent ? NotificationCategory.Promotion : NotificationCategory.System,
             RelatedEntityType = "AdminMessage",
             ActionUrl = dto.ActionUrl,
             MediaUrl = dto.MediaUrl,
             MediaType = dto.MediaType,
             MediaThumbnailUrl = dto.MediaThumbnailUrl,
             MediaAltText = dto.MediaAltText,
+            Attachments = dto.Attachments,
             CreatedByUserId = createdByUserId
         });
     }
@@ -188,6 +191,11 @@ public class NotificationService : INotificationService
             }
 
             ApplyGroupToBroadcastDto(dto, group);
+            dto.UserIds = await _context.NotificationGroupMembers
+                .AsNoTracking()
+                .Where(member => member.NotificationGroupId == group.Id)
+                .Select(member => member.UserId)
+                .ToListAsync();
         }
 
         var query = _context.Users
@@ -228,14 +236,15 @@ public class NotificationService : INotificationService
             UserId = user.Id,
             Title = dto.Title.Trim(),
             Message = dto.Message.Trim(),
-            Type = NotificationType.Promotion,
-            Category = NotificationCategory.Promotion,
+            Type = dto.IsMarketingContent ? NotificationType.Promotion : NotificationType.AdminMessage,
+            Category = dto.IsMarketingContent ? NotificationCategory.Promotion : NotificationCategory.System,
             RelatedEntityType = "Broadcast",
             ActionUrl = NormalizeOptional(dto.ActionUrl),
             MediaUrl = NormalizeOptional(dto.MediaUrl),
             MediaType = NormalizeOptional(dto.MediaType),
             MediaThumbnailUrl = NormalizeOptional(dto.MediaThumbnailUrl),
             MediaAltText = NormalizeOptional(dto.MediaAltText),
+            AttachmentsJson = SerializeAttachments(dto.Attachments),
             CampaignName = NormalizeOptional(dto.CampaignName),
             AudienceLabel = audienceLabel,
             CreatedByUserId = createdByUserId,
@@ -305,6 +314,7 @@ public class NotificationService : INotificationService
 
         _context.NotificationGroups.Add(group);
         await _context.SaveChangesAsync();
+        await ReplaceGroupMembersAsync(group.Id, dto.MemberUserIds);
 
         return await MapGroupToDtoAsync(group);
     }
@@ -333,6 +343,7 @@ public class NotificationService : INotificationService
         group.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        await ReplaceGroupMembersAsync(group.Id, dto.MemberUserIds);
         return await MapGroupToDtoAsync(group);
     }
 
@@ -569,6 +580,7 @@ public class NotificationService : INotificationService
             MediaType = notification.MediaType,
             MediaThumbnailUrl = notification.MediaThumbnailUrl,
             MediaAltText = notification.MediaAltText,
+            Attachments = DeserializeAttachments(notification.AttachmentsJson),
             CampaignName = notification.CampaignName,
             AudienceLabel = notification.AudienceLabel,
             IsRead = notification.IsRead,
@@ -684,8 +696,18 @@ public class NotificationService : INotificationService
             AddressContains = group.AddressContains
         };
 
+        var memberIds = await _context.NotificationGroupMembers
+            .AsNoTracking()
+            .Where(member => member.NotificationGroupId == group.Id)
+            .Select(member => member.UserId)
+            .ToListAsync();
+
         var query = _context.Users.AsNoTracking().Where(user => !user.IsDeleted);
-        if (!filter.SendToAll)
+        if (memberIds.Count > 0)
+        {
+            query = query.Where(user => memberIds.Contains(user.Id));
+        }
+        else if (!filter.SendToAll)
         {
             query = ApplyBroadcastFilters(query, filter);
         }
@@ -704,6 +726,7 @@ public class NotificationService : INotificationService
             JoinedFrom = group.JoinedFrom,
             JoinedTo = group.JoinedTo,
             AddressContains = group.AddressContains,
+            MemberUserIds = memberIds,
             EstimatedUserCount = await query.CountAsync(),
             CreatedAt = group.CreatedAt
         };
@@ -719,5 +742,76 @@ public class NotificationService : INotificationService
         dto.JoinedFrom = group.JoinedFrom;
         dto.JoinedTo = group.JoinedTo;
         dto.AddressContains = group.AddressContains;
+    }
+
+    private async Task ReplaceGroupMembersAsync(int groupId, List<int>? memberUserIds)
+    {
+        var existing = await _context.NotificationGroupMembers
+            .Where(member => member.NotificationGroupId == groupId)
+            .ToListAsync();
+
+        _context.NotificationGroupMembers.RemoveRange(existing);
+
+        var ids = memberUserIds?
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList() ?? new List<int>();
+
+        if (ids.Count > 0)
+        {
+            var validIds = await _context.Users
+                .AsNoTracking()
+                .Where(user => ids.Contains(user.Id) && !user.IsDeleted)
+                .Select(user => user.Id)
+                .ToListAsync();
+
+            var now = DateTime.UtcNow;
+            _context.NotificationGroupMembers.AddRange(validIds.Select(userId => new NotificationGroupMember
+            {
+                NotificationGroupId = groupId,
+                UserId = userId,
+                CreatedAt = now
+            }));
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private static string? SerializeAttachments(List<NotificationAttachmentDto>? attachments)
+    {
+        var normalized = NormalizeAttachments(attachments);
+        return normalized.Count == 0 ? null : JsonSerializer.Serialize(normalized);
+    }
+
+    private static List<NotificationAttachmentDto> DeserializeAttachments(string? attachmentsJson)
+    {
+        if (string.IsNullOrWhiteSpace(attachmentsJson))
+        {
+            return new List<NotificationAttachmentDto>();
+        }
+
+        try
+        {
+            return NormalizeAttachments(JsonSerializer.Deserialize<List<NotificationAttachmentDto>>(attachmentsJson));
+        }
+        catch (JsonException)
+        {
+            return new List<NotificationAttachmentDto>();
+        }
+    }
+
+    private static List<NotificationAttachmentDto> NormalizeAttachments(List<NotificationAttachmentDto>? attachments)
+    {
+        return attachments?
+            .Where(item => !string.IsNullOrWhiteSpace(item.Type) && !string.IsNullOrWhiteSpace(item.Url))
+            .Take(8)
+            .Select(item => new NotificationAttachmentDto
+            {
+                Type = item.Type.Trim().ToLowerInvariant(),
+                Url = item.Url.Trim(),
+                Label = NormalizeOptional(item.Label),
+                ClickUrl = NormalizeOptional(item.ClickUrl)
+            })
+            .ToList() ?? new List<NotificationAttachmentDto>();
     }
 }

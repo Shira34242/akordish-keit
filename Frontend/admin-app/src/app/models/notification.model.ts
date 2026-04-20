@@ -32,11 +32,19 @@ export interface NotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  attachments?: NotificationAttachmentDto[];
   campaignName?: string | null;
   audienceLabel?: string | null;
   isRead: boolean;
   createdAt: string;
   readAt?: string | null;
+}
+
+export interface NotificationAttachmentDto {
+  type: 'link' | 'image' | 'video' | 'file' | string;
+  url: string;
+  label?: string | null;
+  clickUrl?: string | null;
 }
 
 export interface CreateNotificationDto {
@@ -52,6 +60,7 @@ export interface CreateNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  attachments?: NotificationAttachmentDto[] | null;
   campaignName?: string | null;
   audienceLabel?: string | null;
 }
@@ -65,6 +74,8 @@ export interface SendUserNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  attachments?: NotificationAttachmentDto[] | null;
+  isMarketingContent?: boolean;
 }
 
 export interface SendStatusNotificationDto {
@@ -86,7 +97,9 @@ export interface SendBroadcastNotificationDto {
   mediaType?: string | null;
   mediaThumbnailUrl?: string | null;
   mediaAltText?: string | null;
+  attachments?: NotificationAttachmentDto[] | null;
   campaignName?: string | null;
+  isMarketingContent?: boolean;
   groupId?: number | null;
   sendToAll: boolean;
   userIds?: number[] | null;
@@ -121,6 +134,7 @@ export interface NotificationGroupDto {
   joinedFrom?: string | null;
   joinedTo?: string | null;
   addressContains?: string | null;
+  memberUserIds?: number[] | null;
   estimatedUserCount: number;
   createdAt: string;
 }
@@ -137,4 +151,5 @@ export interface SaveNotificationGroupDto {
   joinedFrom?: string | null;
   joinedTo?: string | null;
   addressContains?: string | null;
+  memberUserIds?: number[] | null;
 }

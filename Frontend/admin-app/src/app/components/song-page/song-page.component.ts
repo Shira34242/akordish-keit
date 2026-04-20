@@ -76,6 +76,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     tooltipHovered = false;
     private tooltipCloseTimer: any = null;
 
+    // Cache for formattedLyricsHtml — prevents DOM replacement on every CD cycle
+    private _lyricsHtmlCache: SafeHtml = '';
+    private _lyricsHtmlCacheKey = '';
+
     // Print Panel State
     isPrintPanelOpen: boolean = false;
 
@@ -116,9 +120,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             }
         });
 
-        // Native listener — guaranteed to fire in DOM bubble order, independent of Angular zone
+        // All native listeners run outside Angular zone — no change detection on scroll/click
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
+            window.addEventListener('scroll', this.nativeWindowScroll, { passive: true });
         });
 
         // חסימת העתקה וקליק ימני בדף השיר
@@ -129,6 +134,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
+        window.removeEventListener('scroll', this.nativeWindowScroll);
         document.removeEventListener('copy', this.preventCopy);
         document.removeEventListener('contextmenu', this.preventContextMenu);
         document.removeEventListener('selectstart', this.preventSelect);
@@ -276,9 +282,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.headerLayoutDone = false;
     }
 
-    @HostListener('window:scroll')
-    onWindowScroll() {
-        this.isToolbarSticky = window.scrollY > 300;
+    // Runs outside Angular zone — no change detection on every scroll event
+    private nativeWindowScroll = () => {
+        const shouldBeSticky = window.scrollY > 300;
+
+        // Bring into zone only when value actually changes
+        if (shouldBeSticky !== this.isToolbarSticky) {
+            this.ngZone.run(() => { this.isToolbarSticky = shouldBeSticky; });
+        }
+
         if (!this.rafPending) {
             this.rafPending = true;
             requestAnimationFrame(() => {
@@ -286,9 +298,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.rafPending = false;
             });
         }
+
         // On mobile, scroll closes the open tooltip
-        if (this.isMobileDevice()) this.hoveredChord = null;
-    }
+        if (this.isMobileDevice() && this.hoveredChord) {
+            this.ngZone.run(() => { this.hoveredChord = null; });
+        }
+    };
 
 
     /** Active chord for the single shared tooltip element */
@@ -518,6 +533,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     get formattedLyricsHtml(): SafeHtml {
         if (!this.song || !this.song.lyricsWithChords) return '';
 
+        // Cache key — recompute only when relevant inputs change
+        const cacheKey = `${this.song.lyricsWithChords}|${this.transposeStep}|${this.showChords}|${this.isEasyMode}|${this.activePreferFlat}`;
+        if (cacheKey === this._lyricsHtmlCacheKey) return this._lyricsHtmlCache;
+
         const lines = this.song.lyricsWithChords.split('\n');
 
         const processedLines = lines.map((line: string) => {
@@ -567,7 +586,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         }).filter((line: any) => line !== null);
 
         // Join lines with newlines (pre-wrap handles the display)
-        return this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
+        this._lyricsHtmlCacheKey = cacheKey;
+        this._lyricsHtmlCache = this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
+        return this._lyricsHtmlCache;
     }
 
     handleLyricsMouseOver(event: MouseEvent) {

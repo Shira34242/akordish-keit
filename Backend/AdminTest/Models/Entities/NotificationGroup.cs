@@ -20,4 +20,5 @@ public class NotificationGroup
     public int CreatedByUserId { get; set; }
 
     public virtual User? CreatedByUser { get; set; }
+    public virtual ICollection<NotificationGroupMember> Members { get; set; } = new List<NotificationGroupMember>();
 }

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NotificationDto, NotificationGroupDto, SaveNotificationGroupDto } from '../../../models/notification.model';
+import { NotificationAttachmentDto, NotificationDto, NotificationGroupDto, SaveNotificationGroupDto } from '../../../models/notification.model';
 import { UserListDto } from '../../../models/user.model';
 import { MediaService } from '../../../services/admin/media.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -18,6 +18,8 @@ interface MessageDraft {
   mediaUrl: string;
   mediaType: 'image' | 'video' | 'file' | '';
   mediaAltText: string;
+  attachments: NotificationAttachmentDto[];
+  isMarketingContent: boolean;
   campaignName: string;
 }
 
@@ -38,15 +40,21 @@ export class AdminNotificationsComponent implements OnInit {
   sidebarMode: SidebarMode = 'chats';
   composerMode: ComposerMode = 'private';
   searchTerm = '';
+  isSearchOpen = false;
   contentTagFilter: number | null = null;
   instrumentFilter: number | null = null;
   activityFilter: 'all' | 'active' | 'inactive' = 'all';
+  roleFilter: number | null = null;
   sortMode: 'newest' | 'oldest' = 'newest';
   message = '';
   actionUrl = '';
   mediaUrl = '';
   mediaType: 'image' | 'video' | 'file' | '' = '';
   mediaAltText = '';
+  attachments: NotificationAttachmentDto[] = [];
+  attachmentLabel = '';
+  attachmentClickUrl = '';
+  isMarketingContent = false;
   campaignName = '';
   totalUsers = 0;
   pageNumber = 1;
@@ -56,14 +64,20 @@ export class AdminNotificationsComponent implements OnInit {
   isLoadingThread = false;
   isSending = false;
   isUploadingAttachment = false;
+  isUploadingGroupImage = false;
+  isSavingGroup = false;
   showAttachMenu = false;
   showAttachPanel = false;
   attachmentType: AttachmentType | null = null;
   attachmentInputMode: AttachmentInputMode = 'url';
   selectedFileName = '';
+  selectedGroupImageFileName = '';
+  showGroupImageOptions = false;
+  groupImageUrlDraft = '';
   showGroupForm = false;
   editingGroupId: number | null = null;
   groupForm: SaveNotificationGroupDto = this.createEmptyGroupForm();
+  groupMemberIds = new Set<number>();
   successMessage = '';
   errorMessage = '';
 
@@ -125,6 +139,20 @@ export class AdminNotificationsComponent implements OnInit {
     return sorted;
   }
 
+  get visibleGroups(): NotificationGroupDto[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return this.groups;
+
+    return this.groups.filter(group =>
+      group.name.toLowerCase().includes(term) ||
+      (group.description || '').toLowerCase().includes(term)
+    );
+  }
+
+  get selectedGroupMembersCount(): number {
+    return this.groupMemberIds.size;
+  }
+
   loadUsers(): void {
     this.isLoadingUsers = true;
     this.errorMessage = '';
@@ -138,7 +166,7 @@ export class AdminNotificationsComponent implements OnInit {
 
     this.userService.getUsers(
       this.searchTerm || undefined,
-      undefined,
+      this.roleFilter ?? undefined,
       isActive,
       this.pageNumber,
       this.pageSize,
@@ -175,8 +203,28 @@ export class AdminNotificationsComponent implements OnInit {
     this.loadUsers();
   }
 
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.activityFilter = 'all';
+    this.instrumentFilter = null;
+    this.roleFilter = null;
+    this.contentTagFilter = null;
+    this.sortMode = 'newest';
+    this.pageNumber = 1;
+    this.loadUsers();
+  }
+
   switchSidebarMode(mode: SidebarMode): void {
     this.sidebarMode = mode;
+    this.closeAttachUi();
+  }
+
+  toggleSearch(): void {
+    this.isSearchOpen = !this.isSearchOpen;
+    if (!this.isSearchOpen && this.searchTerm) {
+      this.searchTerm = '';
+      this.applyFilters();
+    }
   }
 
   selectUser(user: UserListDto): void {
@@ -208,6 +256,12 @@ export class AdminNotificationsComponent implements OnInit {
   startCreateGroup(): void {
     this.editingGroupId = null;
     this.groupForm = this.createEmptyGroupForm();
+    this.groupMemberIds = new Set<number>();
+    this.selectedGroupImageFileName = '';
+    this.showGroupImageOptions = false;
+    this.groupImageUrlDraft = '';
+    this.successMessage = '';
+    this.errorMessage = '';
     this.showGroupForm = true;
     this.sidebarMode = 'groups';
   }
@@ -228,12 +282,38 @@ export class AdminNotificationsComponent implements OnInit {
       preferredInstrumentId: group.preferredInstrumentId ?? null,
       joinedFrom: this.toDateInput(group.joinedFrom),
       joinedTo: this.toDateInput(group.joinedTo),
-      addressContains: group.addressContains ?? ''
+      addressContains: group.addressContains ?? '',
+      memberUserIds: group.memberUserIds ?? []
     };
+    this.groupMemberIds = new Set(group.memberUserIds ?? []);
+    this.selectedGroupImageFileName = '';
+    this.showGroupImageOptions = false;
+    this.groupImageUrlDraft = group.imageUrl ?? '';
+    this.successMessage = '';
+    this.errorMessage = '';
     this.showGroupForm = true;
   }
 
   saveGroup(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    if (!this.groupForm.name.trim()) {
+      this.errorMessage = 'צריך לכתוב שם לקבוצה.';
+      return;
+    }
+
+    if (this.isUploadingGroupImage) {
+      this.errorMessage = 'תמונת הקבוצה עדיין עולה. חכה רגע ואז שמור.';
+      return;
+    }
+
+    if (!this.groupForm.sendToAll && this.groupMemberIds.size === 0) {
+      this.errorMessage = 'צריך לבחור לפחות משתמש אחד לקבוצה.';
+      return;
+    }
+
+    this.isSavingGroup = true;
     const payload = this.normalizeGroupPayload();
     const request = this.editingGroupId
       ? this.notificationService.updateNotificationGroup(this.editingGroupId, payload)
@@ -243,11 +323,13 @@ export class AdminNotificationsComponent implements OnInit {
       next: group => {
         this.showGroupForm = false;
         this.editingGroupId = null;
+        this.isSavingGroup = false;
         this.loadGroups();
         this.selectGroup(group);
       },
       error: err => {
         this.errorMessage = err?.error?.message || 'שמירת הקבוצה נכשלה.';
+        this.isSavingGroup = false;
       }
     });
   }
@@ -269,6 +351,107 @@ export class AdminNotificationsComponent implements OnInit {
   closeGroupForm(): void {
     this.showGroupForm = false;
     this.editingGroupId = null;
+    this.groupMemberIds = new Set<number>();
+    this.selectedGroupImageFileName = '';
+    this.showGroupImageOptions = false;
+    this.groupImageUrlDraft = '';
+    this.isSavingGroup = false;
+  }
+
+  toggleGroupMember(userId: number): void {
+    if (this.groupMemberIds.has(userId)) {
+      this.groupMemberIds.delete(userId);
+    } else {
+      this.groupMemberIds.add(userId);
+    }
+
+    this.groupForm.memberUserIds = Array.from(this.groupMemberIds);
+  }
+
+  isGroupMemberSelected(userId: number): boolean {
+    return this.groupMemberIds.has(userId);
+  }
+
+  selectAllVisibleUsersForGroup(): void {
+    const isActive =
+      this.activityFilter === 'active'
+        ? true
+        : this.activityFilter === 'inactive'
+          ? false
+          : undefined;
+
+    this.userService.getUsers(
+      this.searchTerm || undefined,
+      this.roleFilter ?? undefined,
+      isActive,
+      1,
+      Math.max(this.totalUsers, this.pageSize),
+      this.contentTagFilter ?? undefined,
+      this.instrumentFilter ?? undefined
+    ).subscribe({
+      next: result => {
+        result.items.forEach(user => this.groupMemberIds.add(user.id));
+        this.groupForm.memberUserIds = Array.from(this.groupMemberIds);
+      },
+      error: () => {
+        this.visibleUsers.forEach(user => this.groupMemberIds.add(user.id));
+        this.groupForm.memberUserIds = Array.from(this.groupMemberIds);
+      }
+    });
+  }
+
+  clearGroupMembers(): void {
+    this.groupMemberIds = new Set<number>();
+    this.groupForm.memberUserIds = [];
+  }
+
+  clearGroupImage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.groupForm.imageUrl = '';
+    this.selectedGroupImageFileName = '';
+    this.groupImageUrlDraft = '';
+    this.showGroupImageOptions = false;
+  }
+
+  toggleGroupImageOptions(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.groupImageUrlDraft = this.groupForm.imageUrl || this.groupImageUrlDraft;
+    this.showGroupImageOptions = !this.showGroupImageOptions;
+  }
+
+  applyGroupImageUrl(): void {
+    const url = this.groupImageUrlDraft.trim();
+    if (!url) return;
+
+    this.groupForm.imageUrl = url;
+    this.selectedGroupImageFileName = '';
+    this.showGroupImageOptions = false;
+  }
+
+  onGroupImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    input.value = '';
+    this.selectedGroupImageFileName = file.name;
+    this.showGroupImageOptions = false;
+    this.groupImageUrlDraft = '';
+    this.isUploadingGroupImage = true;
+    this.errorMessage = '';
+
+    this.mediaService.uploadMedia(file).subscribe({
+      next: response => {
+        this.groupForm.imageUrl = response.url;
+        this.isUploadingGroupImage = false;
+      },
+      error: () => {
+        this.errorMessage = 'העלאת תמונת הקבוצה נכשלה. בדוק שהשרת רץ ונסה שוב.';
+        this.isUploadingGroupImage = false;
+      }
+    });
   }
 
   loadThread(userId: number): void {
@@ -326,6 +509,49 @@ export class AdminNotificationsComponent implements OnInit {
     this.saveCurrentDraft();
   }
 
+  addAttachment(): void {
+    if (!this.attachmentType) return;
+
+    const url = this.getAttachmentValue().trim();
+    if (!url) {
+      this.errorMessage = 'צריך להוסיף קישור או קובץ לפני הצירוף.';
+      return;
+    }
+
+    if (this.attachmentType === 'image') {
+      this.attachmentType = null;
+      this.showAttachPanel = false;
+      this.saveCurrentDraft();
+      return;
+    }
+
+    this.attachments = [
+      ...this.attachments,
+      {
+        type: this.attachmentType,
+        url,
+        label: this.attachmentLabel.trim() || this.mediaAltText.trim() || null,
+        clickUrl: null
+      }
+    ];
+
+    this.actionUrl = '';
+    this.mediaUrl = '';
+    this.mediaType = '';
+    this.mediaAltText = '';
+    this.attachmentLabel = '';
+    this.attachmentClickUrl = '';
+    this.selectedFileName = '';
+    this.attachmentType = null;
+    this.showAttachPanel = false;
+    this.saveCurrentDraft();
+  }
+
+  removeAttachment(index: number): void {
+    this.attachments = this.attachments.filter((_, itemIndex) => itemIndex !== index);
+    this.saveCurrentDraft();
+  }
+
   onAttachmentFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -373,8 +599,8 @@ export class AdminNotificationsComponent implements OnInit {
       return;
     }
 
-    if (!this.message.trim()) {
-      this.errorMessage = 'צריך לכתוב הודעה לפני השליחה.';
+    if (!this.hasNotificationContent()) {
+      this.errorMessage = 'צריך להוסיף הודעה, תמונה או צירוף לפני השליחה.';
       return;
     }
 
@@ -393,12 +619,14 @@ export class AdminNotificationsComponent implements OnInit {
     this.notificationService.sendUserMessage({
       userId: this.selectedUserId!,
       title: this.buildTitle(),
-      message: this.message.trim(),
-      actionUrl: this.actionUrl.trim() || null,
+      message: this.buildMessage(),
+      actionUrl: this.buildActionUrl(),
       mediaUrl: this.mediaUrl.trim() || null,
       mediaType: this.mediaType || null,
       mediaThumbnailUrl: null,
-      mediaAltText: this.mediaAltText.trim() || null
+      mediaAltText: this.mediaAltText.trim() || null,
+      attachments: this.buildAttachmentsPayload(),
+      isMarketingContent: this.isMarketingContent
     }).subscribe({
       next: () => this.handleMessageSent('ההודעה נשלחה למשתמש.'),
       error: err => {
@@ -411,12 +639,14 @@ export class AdminNotificationsComponent implements OnInit {
   sendGroupMessage(): void {
     this.notificationService.sendBroadcast({
       title: this.buildTitle(),
-      message: this.message.trim(),
-      actionUrl: this.actionUrl.trim() || null,
+      message: this.buildMessage(),
+      actionUrl: this.buildActionUrl(),
       mediaUrl: this.mediaUrl.trim() || null,
       mediaType: this.mediaType || null,
       mediaThumbnailUrl: null,
       mediaAltText: this.mediaAltText.trim() || null,
+      attachments: this.buildAttachmentsPayload(),
+      isMarketingContent: this.isMarketingContent,
       campaignName: this.campaignName.trim() || this.selectedGroup?.name || null,
       groupId: this.selectedGroup?.id ?? null,
       sendToAll: this.selectedGroup?.sendToAll ?? false,
@@ -472,6 +702,19 @@ export class AdminNotificationsComponent implements OnInit {
     }
   }
 
+  getAttachmentIcon(type: string): string {
+    switch (type) {
+      case 'image':
+        return 'image';
+      case 'video':
+        return 'smart_display';
+      case 'file':
+        return 'attach_file';
+      default:
+        return 'link';
+    }
+  }
+
   shouldShowTitle(notification: NotificationDto): boolean {
     return notification.type !== 3 && notification.type !== 6 && notification.title !== notification.message;
   }
@@ -497,7 +740,32 @@ export class AdminNotificationsComponent implements OnInit {
   }
 
   private buildTitle(): string {
-    return this.message.trim().replace(/\s+/g, ' ').slice(0, 80) || 'הודעה מהמערכת';
+    const messageTitle = this.message.trim().replace(/\s+/g, ' ').slice(0, 80);
+    if (messageTitle) return messageTitle;
+    if (this.mediaType === 'image' || this.attachments.some(item => item.type === 'image')) return 'תמונה מצורפת';
+    if (this.mediaType === 'video' || this.attachments.some(item => item.type === 'video')) return 'וידאו מצורף';
+    if (this.mediaUrl.trim() || this.attachments.length) return 'צירוף חדש';
+    return 'הודעה מהמערכת';
+  }
+
+  private buildMessage(): string {
+    return this.message.trim();
+  }
+
+  private buildActionUrl(): string | null {
+    if (this.actionUrl.trim()) return this.actionUrl.trim();
+    if (this.mediaType === 'image' && this.attachmentClickUrl.trim()) return this.attachmentClickUrl.trim();
+    return null;
+  }
+
+  private hasNotificationContent(): boolean {
+    return !!(
+      this.message.trim() ||
+      this.actionUrl.trim() ||
+      this.mediaUrl.trim() ||
+      this.attachments.length ||
+      (this.attachmentType && this.getAttachmentValue().trim())
+    );
   }
 
   private handleMessageSent(message: string): void {
@@ -520,6 +788,8 @@ export class AdminNotificationsComponent implements OnInit {
       mediaUrl: this.mediaUrl,
       mediaType: this.mediaType,
       mediaAltText: this.mediaAltText,
+      attachments: this.attachments,
+      isMarketingContent: this.isMarketingContent,
       campaignName: this.campaignName
     };
   }
@@ -531,6 +801,8 @@ export class AdminNotificationsComponent implements OnInit {
     this.mediaUrl = draft?.mediaUrl ?? '';
     this.mediaType = draft?.mediaType ?? '';
     this.mediaAltText = draft?.mediaAltText ?? '';
+    this.attachments = draft?.attachments ?? [];
+    this.isMarketingContent = draft?.isMarketingContent ?? false;
     this.campaignName = draft?.campaignName ?? '';
     this.attachmentType = this.actionUrl ? 'link' : (this.mediaType || null);
     this.showAttachPanel = !!(this.actionUrl || this.mediaUrl);
@@ -543,7 +815,11 @@ export class AdminNotificationsComponent implements OnInit {
     this.mediaUrl = '';
     this.mediaType = '';
     this.mediaAltText = '';
+    this.attachments = [];
+    this.isMarketingContent = false;
     this.campaignName = '';
+    this.attachmentLabel = '';
+    this.attachmentClickUrl = '';
     this.attachmentType = null;
     this.closeAttachUi();
   }
@@ -561,24 +837,47 @@ export class AdminNotificationsComponent implements OnInit {
       imageUrl: '',
       sendToAll: false,
       role: null,
-      isActive: true,
+      isActive: null,
       contentTag: null,
       preferredInstrumentId: null,
       joinedFrom: null,
       joinedTo: null,
-      addressContains: ''
+      addressContains: '',
+      memberUserIds: []
     };
   }
 
   private normalizeGroupPayload(): SaveNotificationGroupDto {
+    const memberUserIds = Array.from(this.groupMemberIds);
+
     return {
       ...this.groupForm,
+      name: this.groupForm.name.trim(),
       description: this.groupForm.description?.trim() || null,
       imageUrl: this.groupForm.imageUrl?.trim() || null,
-      joinedFrom: this.groupForm.joinedFrom || null,
-      joinedTo: this.groupForm.joinedTo || null,
-      addressContains: this.groupForm.addressContains?.trim() || null
+      role: null,
+      isActive: null,
+      contentTag: null,
+      preferredInstrumentId: null,
+      joinedFrom: null,
+      joinedTo: null,
+      addressContains: null,
+      memberUserIds: this.groupForm.sendToAll ? [] : memberUserIds
     };
+  }
+
+  private buildAttachmentsPayload(): NotificationAttachmentDto[] | null {
+    const pending = this.attachmentType && this.attachmentType !== 'image' && this.getAttachmentValue().trim()
+      ? [{
+          type: this.attachmentType,
+          url: this.getAttachmentValue().trim(),
+          label: this.attachmentLabel.trim() || this.mediaAltText.trim() || null,
+          clickUrl: null
+        }]
+      : [];
+
+    const payload = [...this.attachments, ...pending];
+    return payload.length ? payload : null;
   }
 
   private toDateInput(value?: string | null): string | null {

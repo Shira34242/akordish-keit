@@ -194,14 +194,21 @@
                 class="notifications-popup-item"
                 [class.unread]="!notification.isRead"
                 (click)="openNotificationFromPopup($event, notification)">
-                <span class="popup-item-dot"></span>
                 <span class="popup-item-content">
+                    <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
                     <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
-                    <small>{{ notification.message }}</small>
-                    <a *ngIf="notification.mediaUrl && notification.mediaType === 'image'" [href]="notification.actionUrl || notification.mediaUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                    <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
+                    <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                         <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
                     </a>
+                    <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
                     <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                    <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
+                        <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                            <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
+                            <span>{{ item.label || 'צירוף' }}</span>
+                        </a>
+                    </span>
                 </span>
             </button>
         </ng-container>
@@ -236,14 +243,21 @@
                     class="notifications-chat-bubble"
                     [class.unread]="!notification.isRead"
                     (click)="openNotificationFromCenter(notification)">
-                    <span class="notifications-chat-dot"></span>
                     <span class="notifications-chat-content">
+                        <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
                         <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
-                        <small>{{ notification.message }}</small>
-                        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image'" [href]="notification.actionUrl || notification.mediaUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                        <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
+                        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                             <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
                         </a>
+                        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview">
                         <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                        <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
+                            <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                                <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
+                                <span>{{ item.label || 'צירוף' }}</span>
+                            </a>
+                        </span>
                     </span>
                 </button>
             </ng-container>

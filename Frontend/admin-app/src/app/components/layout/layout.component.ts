@@ -451,6 +451,19 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       && notification.title.trim() !== notification.message.trim();
   }
 
+  getNotificationAttachmentIcon(type: string): string {
+    switch (type) {
+      case 'image':
+        return 'image';
+      case 'video':
+        return 'smart_display';
+      case 'file':
+        return 'attach_file';
+      default:
+        return 'link';
+    }
+  }
+
   private getNotificationDateKey(dateValue: string): string {
     const date = new Date(dateValue);
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
