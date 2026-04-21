@@ -10,6 +10,9 @@ namespace AkordishKeit.Controllers;
 [Authorize(Roles = "Admin")]
 public class SystemSettingsController : ControllerBase
 {
+    private const string TickerConfigKey = "hero_news_ticker_config";
+    private const string TickerConfigDescription = "הגדרות פס חדשות הירו בדף הבית";
+
     private readonly ISystemSettingsService _settingsService;
 
     public SystemSettingsController(ISystemSettingsService settingsService)
@@ -17,7 +20,17 @@ public class SystemSettingsController : ControllerBase
         _settingsService = settingsService;
     }
 
-    // GET: api/SystemSettings
+    [HttpGet("public/{key}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> GetPublic(string key)
+    {
+        if (key != TickerConfigKey)
+            return NotFound();
+
+        var value = await _settingsService.GetValueAsync(key);
+        return Ok(new { key, value });
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<SystemSettingDto>>> GetAll()
     {
@@ -25,17 +38,14 @@ public class SystemSettingsController : ControllerBase
         return Ok(settings);
     }
 
-    // PUT: api/SystemSettings/{key}
     [HttpPut("{key}")]
     public async Task<ActionResult<SystemSettingDto>> Update(string key, [FromBody] UpdateSystemSettingDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var updated = await _settingsService.UpdateAsync(key, dto.Value);
-
-        if (updated == null)
-            return NotFound(new { message = $"הגדרה '{key}' לא נמצאה" });
+        var description = key == TickerConfigKey ? TickerConfigDescription : "";
+        var updated = await _settingsService.UpsertAsync(key, dto.Value, description);
 
         return Ok(updated);
     }

@@ -51,22 +51,28 @@
                 </div>
             </div>
 
-            <!-- קישור עדין למילון האקורדים -->
+            <!-- קישורים עדינים מתחת לחיפוש -->
             <div class="dict-entry-wrap" *ngIf="!knownChordsMode">
-                <a routerLink="/chords/dictionary" class="dict-entry-btn">
-                    מילון האקורדים
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6"/>
-                    </svg>
-                </a>
                 <button class="dict-entry-btn known-entry-btn"
                         [class.active]="knownChordsMode"
                         (click)="toggleKnownChordsMode()">
                     שירים שאני יודע לנגן
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6"/>
+                        <path d="m9 18 6-6-6-6"/>
                     </svg>
                 </button>
+                <a routerLink="/chords/dictionary" class="dict-entry-btn">
+                    מילון האקורדים
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                </a>
+                <a routerLink="/tuner" class="dict-entry-btn">
+                    כיוון גיטרה ויוקלילי
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                </a>
             </div>
 
             <div class="known-filter-wrap" *ngIf="knownChordsMode">

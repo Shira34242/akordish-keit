@@ -63,6 +63,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     preferFlat: boolean = false;
     isEasyMode: boolean = false;
     showInlineChordDiagrams: boolean = false;
+    showKnownChordSummary: boolean = true;
 
     // Tooltip State
     hoveredChord: string | null = null;
@@ -97,8 +98,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isEditModalOpen: boolean = false;
     artistSongs: any[] = [];
     popularSongs: any[] = [];
+    similarSongs: any[] = [];
     isLoadingArtistSongs: boolean = false;
     isLoadingPopularSongs: boolean = false;
+    isLoadingSimilarSongs: boolean = false;
 
     // Auto Scroll State
     private scrollInterval: any = null;
@@ -185,6 +188,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.error = null;
         this.canEdit = false; 
         this.isEasyMode = false;
+        this.showKnownChordSummary = true;
 
         this.songService.getSongById(id).subscribe({
             next: (data) => {
@@ -204,6 +208,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
                 this.loadArtistSongs();
+                this.loadSimilarSongs();
                 this.loadPopularSongs();
                 this.loadSongSavedState();
                 this.loadKnownChordsForCurrentInstrument();
@@ -403,6 +408,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
+        this.showKnownChordSummary = true;
         this.loadKnownChordsForCurrentInstrument();
     }
 
@@ -521,8 +527,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     get knownChordSummary() {
         const instrument = this.activeKnownInstrument;
-        if (!instrument || !this.authService.isLoggedIn) return null;
+        if (!this.showKnownChordSummary || !instrument || !this.authService.isLoggedIn) return null;
         return this.knownChordService.buildLocalSummary(instrument, this.uniqueTransposedChords);
+    }
+
+    hideKnownChordSummary(): void {
+        this.showKnownChordSummary = false;
     }
 
     private get activeKnownInstrument(): KnownChordInstrument | null {
@@ -790,6 +800,69 @@ private getKeyIndex(keyName: string): number {
                 this.isLoadingPopularSongs = false;
             }
         });
+    }
+
+    loadSimilarSongs(): void {
+        this.isLoadingSimilarSongs = true;
+        const genreId = this.song?.genres?.[0]?.id;
+        const artistId = this.song?.artists?.[0]?.id;
+
+        if (genreId) {
+            this.songService.getSongs(undefined, 1, 6, undefined, genreId, undefined, 'views').subscribe({
+                next: (response) => {
+                    if (this.setSimilarSongs(response?.songs || [])) {
+                        this.isLoadingSimilarSongs = false;
+                        return;
+                    }
+                    this.loadSimilarSongsByArtistOrPopular(artistId);
+                },
+                error: () => this.loadSimilarSongsByArtistOrPopular(artistId)
+            });
+            return;
+        }
+
+        this.loadSimilarSongsByArtistOrPopular(artistId);
+    }
+
+    private loadSimilarSongsByArtistOrPopular(artistId?: number): void {
+        if (artistId) {
+            this.songService.getSongsByArtist(artistId, 6).subscribe({
+                next: (songs) => {
+                    if (this.setSimilarSongs(songs)) {
+                        this.isLoadingSimilarSongs = false;
+                        return;
+                    }
+                    this.loadSimilarSongsPopularFallback();
+                },
+                error: () => this.loadSimilarSongsPopularFallback()
+            });
+            return;
+        }
+
+        this.loadSimilarSongsPopularFallback();
+    }
+
+    private loadSimilarSongsPopularFallback(): void {
+        this.songService.getPopularSongs(6).subscribe({
+            next: (songs) => {
+                this.setSimilarSongs(songs);
+                this.isLoadingSimilarSongs = false;
+            },
+            error: () => {
+                this.similarSongs = [];
+                this.isLoadingSimilarSongs = false;
+            }
+        });
+    }
+
+    private setSimilarSongs(songs: any[]): boolean {
+        const uniqueSongs = (songs || [])
+            .filter((song) => song?.id && song.id !== this.songId)
+            .filter((song, index, self) => self.findIndex((item) => item.id === song.id) === index)
+            .slice(0, 5);
+
+        this.similarSongs = uniqueSongs;
+        return uniqueSongs.length > 0;
     }
 
     navigateToSong(id: number): void {

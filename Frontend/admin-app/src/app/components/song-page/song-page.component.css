@@ -519,47 +519,166 @@
     align-items: start; /* חשוב - מיישר את הסיידבר לראש */
 }
 
+.song-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-base);
+    min-width: 0;
+}
+
 /* ===== Chord Diagrams Bar ===== */
+.chord-diagrams-panel {
+    background: #F2F2F2;
+    border-radius: 24px;
+    padding: var(--space-lg) var(--space-xl);
+    min-width: 0;
+}
+
+.chord-diagrams-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-base);
+}
+
+.chord-diagrams-head h3 {
+    margin: 0;
+    font-size: var(--font-base);
+    font-weight: 800;
+    line-height: var(--lh-heading);
+    color: #000000;
+}
+
+.chord-diagrams-head p {
+    margin: 0;
+    font-size: var(--font-sm);
+    line-height: var(--lh-small);
+    color: rgba(0, 0, 0, 0.55);
+}
+
 .chord-diagrams-bar {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: thin;
-    gap: 8px;
+    gap: var(--space-md);
     direction: rtl;
-    margin-bottom: 24px;
-    padding: 14px 16px;
-    background: #ffffff;
-    border-radius: 16px;
+    margin-bottom: 0;
+    padding: 0;
+    background: transparent;
     min-width: 0;
 }
 
-.known-chords-summary {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-base);
-    padding: var(--space-md) var(--space-base);
-    border-radius: 999px;
-    background: #ddff53;
+.known-sidebar-card {
     color: #000000;
     font-size: var(--font-sm);
     line-height: var(--lh-small);
+    padding: var(--space-base);
 }
 
-.known-chords-summary strong {
+.known-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.known-summary-info {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-xs);
     font-weight: 800;
+    line-height: 1;
+    cursor: help;
+    flex-shrink: 0;
 }
 
-.known-chords-summary span {
+.known-summary-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    background: transparent;
+    padding: 0;
+}
+
+.known-summary-copy.all-known {
+    background: transparent;
+}
+
+.known-sidebar-card strong {
+    font-weight: 800;
+    line-height: var(--lh-heading);
+}
+
+.known-summary-note {
+    color: rgba(0, 0, 0, 0.55);
+    font-size: var(--font-xs);
+}
+
+.known-summary-missing {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    align-items: center;
+    margin-top: var(--space-xs);
+}
+
+.known-summary-missing-label {
+    width: 100%;
+    color: rgba(0, 0, 0, 0.55);
+    font-size: var(--font-xs);
+}
+
+.known-summary-chord {
+    top: 0 !important;
+    margin-right: 0;
+    color: #000000;
+    font-weight: 800;
+    background: #ddff53 !important;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+.known-summary-chord:hover {
+    color: #000000;
+    background: #ddff53 !important;
+    text-decoration: underline !important;
+}
+
+.known-summary-link {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 var(--space-md);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #000000;
+    text-decoration: none;
+    font-size: var(--font-xs);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.known-summary-link:hover {
+    background: #e8e8e8;
+}
+
+.known-summary-copy span {
     font-weight: 300;
 }
 
 /* מאפס את עיצוב ה-tooltip להצגה inline */
 .inline-diagram {
     display: block;
-    zoom: 0.75;
+    zoom: 0.9;
     flex-shrink: 0;
 }
 
@@ -570,13 +689,17 @@
     align-items: center;
     background: #F2F2F2;
     border-radius: 12px;
-    padding: 8px 10px;
+    padding: var(--space-xs) var(--space-md);
     box-shadow: none !important;
     min-width: 0;
     cursor: default;
 }
 
 .inline-diagram ::ng-deep .tooltip-close-btn {
+    display: none !important;
+}
+
+.inline-diagram ::ng-deep .known-chord-btn {
     display: none !important;
 }
 
@@ -815,16 +938,6 @@
     margin-bottom: var(--space-base);
 }
 
-/* Chord Dictionary Card */
-.chord-dict-card {
-    background: #ddff53;
-}
-
-.chord-dict-card h3 {
-    color: #000000;
-    margin-bottom: var(--space-sm);
-}
-
 .chord-dict-desc {
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
@@ -851,14 +964,15 @@
     opacity: 0.8;
 }
 
-/* Tuner Sidebar Card */
-.tuner-sidebar-card {
-    background: #F2F2F2;
-}
-
-.tuner-sidebar-card h3 {
+.tools-sidebar-card h3 {
     color: #000000;
     margin-bottom: var(--space-sm);
+}
+
+.tools-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
 }
 
 .tuner-btn {
@@ -1039,6 +1153,10 @@
         padding: 0 var(--space-md);
     }
 
+    .chord-diagrams-panel {
+        padding: var(--space-lg);
+    }
+
     .song-list li {
         text-align: center;
     }
@@ -1200,6 +1318,11 @@
 
     .main-layout {
         padding: 0 var(--space-sm);
+    }
+
+    .chord-diagrams-panel {
+        padding: var(--space-base);
+        border-radius: 16px;
     }
 
     .lyrics-column {

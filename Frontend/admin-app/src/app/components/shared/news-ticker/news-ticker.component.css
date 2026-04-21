@@ -1,0 +1,75 @@
+/* ================================================
+   NEWS TICKER — wrapper, band, scrolling track
+   כל הערכים הויזואליים מגיעים מ-inline styles
+   הנשלטים דרך פאנל הניהול
+================================================ */
+
+.ticker-wrapper {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: visible;
+  /* top / left / width / transform — נשלטים בניהול (ngStyle) */
+}
+
+.ticker-band {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  /* height / background-color — נשלטים בניהול */
+}
+
+/* ——— המסילה הרצה ——— */
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  direction: rtl;
+  will-change: transform;
+  animation: ticker-scroll linear infinite;
+  /* animation-duration — נשלט ב-TS לפי אורך הטקסט */
+}
+
+.ticker-set {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 50%;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* ——— פריטי טקסט ——— */
+.ticker-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  white-space: nowrap;
+  padding: 0 var(--space-base);
+  letter-spacing: 0;
+  line-height: 1;
+  direction: rtl;
+  /* color / font-size / font-weight — נשלטים בניהול */
+}
+
+.ticker-sep {
+  font-size: 7px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin: 0 2px;
+  /* color — נשלט בניהול */
+}
+
+/* ================================================
+   RESPONSIVE — מכוונן את מה שלא נשלט בניהול
+================================================ */
+
+@media (max-width: 768px) {
+  .ticker-wrapper {
+    /* כל ערכי המיקום נשארים מהניהול גם במובייל */
+  }
+}

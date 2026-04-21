@@ -115,8 +115,9 @@
               <div class="known-chords-actions">
                 <button class="known-basic-btn"
                         (click)="addBasicKnownChords(instrument)"
+                        [title]="getMissingBasicChordCount(instrument) > 0 ? 'יוסיף ' + getMissingBasicChordCount(instrument) + ' אקורדים בסיסיים' : 'כל האקורדים הבסיסיים כבר נוספו'"
                         [disabled]="quickAddingBasic[instrument] || getMissingBasicChordCount(instrument) === 0">
-                  {{ quickAddingBasic[instrument] ? 'מוסיף...' : getMissingBasicChordCount(instrument) === 0 ? 'האקורדים הבסיסיים נוספו' : 'הוסף את כל האקורדים הבסיסיים' }}
+                  {{ quickAddingBasic[instrument] ? 'מוסיף...' : getMissingBasicChordCount(instrument) === 0 ? 'הבסיסיים נוספו' : 'הוסף בסיסיים' }}
                 </button>
                 <button class="known-clear-btn"
                         *ngIf="getKnownChordsForInstrument(instrument).length > 0"
@@ -126,9 +127,6 @@
                 </button>
               </div>
             </div>
-            @if (getMissingBasicChordCount(instrument) > 0) {
-              <span class="known-basic-count">מוסיף {{ getMissingBasicChordCount(instrument) }} אקורדים בסיסיים</span>
-            }
             <div class="known-chords-list">
               @if (getKnownChordsForInstrument(instrument).length > 0) {
                 @for (chord of getKnownChordsForInstrument(instrument); track chord.id) {

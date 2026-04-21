@@ -4,12 +4,13 @@ namespace AkordishKeit.Services;
 
 public interface ISystemSettingsService
 {
-    /// <summary>קריאת ערך בוליאני. ברירת מחדל: false אם המפתח לא קיים.</summary>
     Task<bool> GetBoolAsync(string key, bool defaultValue = false);
 
-    /// <summary>עדכון ערך הגדרה. מחזיר null אם המפתח לא נמצא.</summary>
+    Task<string?> GetValueAsync(string key);
+
     Task<SystemSettingDto?> UpdateAsync(string key, string value);
 
-    /// <summary>כל ההגדרות (לממשק הניהול)</summary>
+    Task<SystemSettingDto> UpsertAsync(string key, string value, string description = "");
+
     Task<List<SystemSettingDto>> GetAllAsync();
 }

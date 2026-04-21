@@ -268,6 +268,11 @@ export const routes: Routes = [
                 title: 'ניהול פסי חדשות - אקורדישקייט'
             },
             {
+                path: 'content/ticker',
+                loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
+                title: 'ניהול פס חדשות הירו - אקורדישקייט'
+            },
+            {
                 path: 'content/stats',
                 loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
                 title: 'סטטיסטיקות תוכן - אקורדישקייט'
