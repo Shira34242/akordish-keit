@@ -31,6 +31,11 @@ export const routes: Routes = [
                 title: 'מילון האקורדים - אקורדישקייט'
             },
             {
+                path: 'tuner',
+                loadComponent: () => import('./components/tuner/tuner.component').then(m => m.TunerComponent),
+                title: 'כיוון גיטרה ויוקלילי - אקורדישקייט'
+            },
+            {
                 path: 'music-news',
                 loadComponent: () => import('./components/public/music-news/music-news.component').then(m => m.MusicNewsComponent),
                 title: 'חדשות המוזיקה - אקורדישקייט'

@@ -40,6 +40,11 @@ export class MyProfileComponent implements OnInit {
     piano: false,
     ukulele: false
   };
+  quickRemovingAll: Record<KnownChordInstrument, boolean> = {
+    guitar: false,
+    piano: false,
+    ukulele: false
+  };
   readonly basicChordsByInstrument: Record<KnownChordInstrument, string[]> = {
     guitar: ['C', 'D', 'E', 'G', 'A', 'Am', 'Dm', 'Em', 'F', 'Bm', 'B7', 'D7', 'E7', 'G7'],
     piano: ['C', 'D', 'E', 'G', 'A', 'Am', 'Dm', 'Em', 'F', 'Bm', 'B7', 'D7', 'E7', 'G7'],
@@ -241,6 +246,30 @@ export class MyProfileComponent implements OnInit {
     this.userKnownChordService.remove(chord.instrument, chord.chordName).subscribe(removed => {
       if (removed) {
         this.knownChords = this.knownChords.filter(item => item.id !== chord.id);
+      }
+    });
+  }
+
+  removeAllKnownChords(instrument: KnownChordInstrument) {
+    const chords = this.getKnownChordsForInstrument(instrument);
+    if (chords.length === 0 || this.quickRemovingAll[instrument]) return;
+
+    const confirmed = window.confirm(`למחוק את כל האקורדים שסומנו עבור ${this.getInstrumentLabel(instrument)}?`);
+    if (!confirmed) return;
+
+    this.quickRemovingAll[instrument] = true;
+    forkJoin(chords.map(chord => this.userKnownChordService.remove(instrument, chord.chordName))).subscribe({
+      next: (results) => {
+        this.quickRemovingAll[instrument] = false;
+        if (results.every(Boolean)) {
+          this.knownChords = this.knownChords.filter(chord => chord.instrument !== instrument);
+        } else {
+          this.refreshKnownChords();
+        }
+      },
+      error: () => {
+        this.quickRemovingAll[instrument] = false;
+        this.refreshKnownChords();
       }
     });
   }
