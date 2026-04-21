@@ -1,4 +1,5 @@
 using AkordishKeit.Data;
+using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -26,6 +27,11 @@ public class SystemSettingsService : ISystemSettingsService
         return value.Equals("true", StringComparison.OrdinalIgnoreCase);
     }
 
+    public Task<string?> GetValueAsync(string key)
+    {
+        return GetRawValueAsync(key);
+    }
+
     public async Task<SystemSettingDto?> UpdateAsync(string key, string value)
     {
         var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == key);
@@ -36,6 +42,35 @@ public class SystemSettingsService : ISystemSettingsService
         await _context.SaveChangesAsync();
 
         // פינוי קאש
+        _cache.Remove(CacheKeyPrefix + key);
+
+        return MapToDto(setting);
+    }
+
+    public async Task<SystemSettingDto> UpsertAsync(string key, string value, string description = "")
+    {
+        var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new SystemSetting
+            {
+                Key = key,
+                Value = value,
+                Description = description,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.SystemSettings.Add(setting);
+        }
+        else
+        {
+            setting.Value = value;
+            if (!string.IsNullOrWhiteSpace(description))
+                setting.Description = description;
+            setting.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
         _cache.Remove(CacheKeyPrefix + key);
 
         return MapToDto(setting);

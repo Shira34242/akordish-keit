@@ -18,4 +18,6 @@ public interface IReportService
     Task<bool> UpdateReportStatusAsync(int id, UpdateReportStatusDto dto, int resolvedByUserId);
 
     Task<bool> DeleteReportAsync(int id);
+
+    Task<(bool Success, string Message, int? ArtistId)> ApproveNewArtistAsync(int reportId, int adminUserId);
 }

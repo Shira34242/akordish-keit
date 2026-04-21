@@ -6,8 +6,9 @@
             <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
-            <button class="btn-bell header-desktop-only">
+            <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
@@ -52,8 +53,9 @@
         </div>
 
         <div class="header-mobile-actions" *ngIf="!showMobileMenu">
-            <button class="btn-bell">
+            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
@@ -109,8 +111,9 @@
                 <span class="material-icons index-search-icon">search</span>
                 <span class="btn-music-index-text">אינדקס</span>
             </a>
-            <button class="btn-bell">
+            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
@@ -172,6 +175,104 @@
 
     </div>
 </header>
+
+<section class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
+    <div class="notifications-popup-state notifications-popup-bubble" *ngIf="notificationsPreviewLoading">טוען התראות...</div>
+    <div class="notifications-popup-state notifications-popup-bubble" *ngIf="!notificationsPreviewLoading && notificationsPreviewError">{{ notificationsPreviewError }}</div>
+
+    <div class="notifications-popup-empty notifications-popup-bubble" *ngIf="!notificationsPreviewLoading && !notificationsPreviewError && notificationsPreview.length === 0">
+        אין התראות חדשות כרגע.
+    </div>
+
+    <div class="notifications-popup-list" *ngIf="!notificationsPreviewLoading && notificationsPreview.length > 0">
+        <ng-container *ngFor="let notification of notificationsPreview; let index = index">
+            <time class="notifications-date-divider" *ngIf="shouldShowNotificationDate(notificationsPreview, index)">
+                {{ formatNotificationDateOnly(notification.createdAt) }}
+            </time>
+            <button
+                type="button"
+                class="notifications-popup-item"
+                [class.unread]="!notification.isRead"
+                (click)="openNotificationFromPopup($event, notification)">
+                <span class="popup-item-content">
+                    <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
+                    <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
+                    <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
+                    <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                        <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
+                    </a>
+                    <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
+                    <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                    <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
+                        <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                            <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
+                            <span>{{ item.label || 'צירוף' }}</span>
+                        </a>
+                    </span>
+                </span>
+            </button>
+        </ng-container>
+    </div>
+
+    <footer class="notifications-popup-actions">
+        <button type="button" class="popup-primary-button" (click)="goToNotificationsPage($event)">
+            לכל ההתראות
+        </button>
+        <button type="button" class="popup-icon-button" (click)="closeNotificationsPopup()" aria-label="סגור" title="סגור">
+            <span class="material-icons">close</span>
+        </button>
+    </footer>
+</section>
+
+<section class="notifications-center-overlay" *ngIf="showNotificationsCenterModal" (click)="closeNotificationsCenter()">
+    <aside class="notifications-center-modal" (click)="$event.stopPropagation()">
+        <div class="notifications-center-state" *ngIf="notificationsCenterLoading">טוען התראות...</div>
+        <div class="notifications-center-state" *ngIf="!notificationsCenterLoading && notificationsCenterError">{{ notificationsCenterError }}</div>
+
+        <div class="notifications-center-empty" *ngIf="!notificationsCenterLoading && !notificationsCenterError && notificationsCenter.length === 0">
+            אין התראות כרגע.
+        </div>
+
+        <div class="notifications-chat-list" *ngIf="!notificationsCenterLoading && notificationsCenter.length > 0">
+            <ng-container *ngFor="let notification of notificationsCenter; let index = index">
+                <time class="notifications-date-divider" *ngIf="shouldShowNotificationDate(notificationsCenter, index)">
+                    {{ formatNotificationDateOnly(notification.createdAt) }}
+                </time>
+                <button
+                    type="button"
+                    class="notifications-chat-bubble"
+                    [class.unread]="!notification.isRead"
+                    (click)="openNotificationFromCenter(notification)">
+                    <span class="notifications-chat-content">
+                        <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
+                        <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
+                        <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
+                        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                            <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
+                        </a>
+                        <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
+                        <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                        <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
+                            <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                                <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
+                                <span>{{ item.label || 'צירוף' }}</span>
+                            </a>
+                        </span>
+                    </span>
+                </button>
+            </ng-container>
+        </div>
+
+        <footer class="notifications-center-actions">
+            <button type="button" class="popup-primary-button" *ngIf="notificationsCenter.length > 0" (click)="deleteAllCenterNotifications($event)">
+                מחיקת ההיסטוריה
+            </button>
+            <button type="button" class="popup-icon-button" (click)="closeNotificationsCenter()" aria-label="סגור" title="סגור">
+                <span class="material-icons">close</span>
+            </button>
+        </footer>
+    </aside>
+</section>
 
 <main class="main-content">
     <router-outlet></router-outlet>

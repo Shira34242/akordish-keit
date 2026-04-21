@@ -132,7 +132,7 @@
                     </div>
 
                     <div class="smart-composer smart-composer-sticky">
-                        <div class="smart-search-row" *ngIf="!hasSearchedYouTube && !showManualYoutubeInput">
+                        <div class="smart-search-row" *ngIf="(!hasSearchedYouTube || (hasSearchedYouTube && youtubeSearchResults.length === 0)) && !hasSelectedVideo && !showManualYoutubeInput && !showDuplicateSuggestion">
                             <input
                                 type="text"
                                 #titleInput
@@ -146,7 +146,7 @@
                             </button>
                         </div>
 
-                        <div class="smart-helper" *ngIf="stepOneHelperText">
+                        <div class="smart-helper" [class.empty]="hasSearchedYouTube && youtubeSearchResults.length === 0 && !hasSelectedVideo && !showManualYoutubeInput" *ngIf="stepOneHelperText">
                             <span>{{ stepOneHelperText }}</span>
                         </div>
 

@@ -44,5 +44,6 @@ public class Song
     public virtual ICollection<SongTag> SongTags { get; set; }
     public virtual ICollection<SongRating> Ratings { get; set; }
     public virtual ICollection<Favorite> Favorites { get; set; }
+    public virtual ICollection<SongChord> SongChords { get; set; } = new List<SongChord>();
 
 }

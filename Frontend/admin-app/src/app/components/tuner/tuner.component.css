@@ -1,0 +1,598 @@
+/* ══════════════════════════════════════════════
+   TUNER PAGE — follows DESIGN_RULES.md
+══════════════════════════════════════════════ */
+
+.tuner-page {
+    direction: rtl;
+    min-height: 100vh;
+    background: #ffffff;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 300;
+    color: #000000;
+}
+
+/* ─── TOP MASK ─── */
+
+.top-scroll-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: #ffffff;
+    z-index: 897;
+    pointer-events: none;
+}
+
+/* ─── HERO BG ─── */
+
+.hero-bg {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    border-radius: 28px;
+    height: 55vh;
+    z-index: 895;
+    background-color: #ddff53;
+    overflow: hidden;
+    will-change: height;
+}
+
+.hero-collapse-overlay {
+    position: absolute;
+    inset: -2px;
+    background: #F2F2F2;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    transform: translateZ(0);
+}
+
+/* ─── HERO CONTENT ─── */
+
+.hero-content-area {
+    position: relative;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-xl);
+}
+
+.hero-inner {
+    max-width: 640px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-2xl) 0 var(--space-lg);
+    text-align: center;
+}
+
+.hero-title {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-3xl);
+    color: #000000;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.hero-sub {
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: #000000;
+    margin: 0;
+    opacity: 0.65;
+}
+
+/* ─── INSTRUMENT TABS ─── */
+
+.instrument-tabs {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    height: 34px;
+    padding: 0 var(--space-base);
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 300;
+    font-size: var(--font-sm);
+    background: rgba(0, 0, 0, 0.1);
+    color: #000000;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.tab-btn.active {
+    background: #000000;
+    color: #ddff53;
+    font-weight: 800;
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.tab-btn:active {
+    transform: scale(0.97);
+}
+
+/* ─── TUNER CONTENT ─── */
+
+.tuner-content {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--space-lg) var(--space-lg) var(--space-4xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+/* ─── INSTRUCTIONS ─── */
+
+.instructions-card {
+    background: #F2F2F2;
+    border-radius: 16px;
+    padding: var(--space-base) var(--space-lg);
+}
+
+.instructions-text {
+    font-size: var(--font-xs);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+    line-height: 1.65;
+}
+
+.instructions-text strong {
+    font-weight: 800;
+    color: #000;
+}
+
+/* ─── MIC CARD ─── */
+
+.mic-card {
+    background: #F2F2F2;
+    border-radius: 24px;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-base);
+}
+
+/* ─── MIC TOGGLE BUTTON ─── */
+
+.mic-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    height: 44px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-sm);
+    background: #000000;
+    color: #ddff53;
+    width: 100%;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.mic-toggle-btn.active {
+    background: #404040;
+    color: #ffffff;
+}
+
+.mic-toggle-btn.loading {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.mic-toggle-btn:hover:not([disabled]) {
+    opacity: 0.85;
+}
+
+.mic-toggle-btn:active:not([disabled]) {
+    transform: scale(0.98);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+    animation: spin 0.8s linear infinite;
+}
+
+/* ─── MIC ERROR ─── */
+
+.mic-error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-base);
+    background: #ffffff;
+    border-radius: 12px;
+    font-size: var(--font-xs);
+    font-weight: 300;
+    color: #000;
+    line-height: 1.5;
+}
+
+.mic-error svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ─── TUNER METER ─── */
+
+.tuner-meter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-base);
+    padding: var(--space-base) 0 var(--space-sm);
+}
+
+.tuner-meter.in-tune {
+    /* subtle yellow wash when in tune */
+}
+
+/* hint text above meter */
+.meter-hint {
+    font-size: var(--font-xs);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0;
+    text-align: center;
+}
+
+/* ─── DETECTED NOTE ─── */
+
+.detected-note-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.det-note {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-4xl);
+    line-height: 1;
+    color: #000000;
+    min-width: 80px;
+    text-align: center;
+    padding: var(--space-xs) var(--space-base);
+    border-radius: 14px;
+    background: #ffffff;
+    transition: background 0.2s, color 0.2s;
+}
+
+.det-note.in-tune {
+    background: #ddff53;
+    color: #000000;
+}
+
+.det-status {
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.5);
+    min-height: 20px;
+    text-align: center;
+}
+
+/* Pulsing "listening" dot */
+.listening-dot-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.listening-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #404040;
+    animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.3; transform: scale(0.8); }
+}
+
+.in-tune-label {
+    font-weight: 800;
+    color: #000000;
+    font-size: var(--font-sm);
+}
+
+.cents-label {
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* ─── CENTS METER ─── */
+
+.meter-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.meter-edge-label {
+    font-weight: 800;
+    font-size: var(--font-base);
+    opacity: 0.4;
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+}
+
+.meter-track {
+    flex: 1;
+    position: relative;
+    height: 8px;
+    background: #e8e8e8;
+    border-radius: 999px;
+}
+
+.meter-center-line {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 2px;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.3);
+    transform: translateX(-50%);
+    border-radius: 1px;
+    z-index: 1;
+}
+
+.meter-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: #404040;
+    transition: left 0.08s ease-out, width 0.08s ease-out;
+    opacity: 0.6;
+}
+
+.meter-fill.in-tune {
+    background: #ddff53;
+    opacity: 1;
+}
+
+.meter-needle {
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #000000;
+    border: 2.5px solid #ffffff;
+    transition: left 0.08s ease-out;
+    z-index: 2;
+}
+
+.meter-needle.in-tune {
+    background: #000000;
+    border-color: #ddff53;
+}
+
+.zone-label {
+    position: absolute;
+    bottom: -18px;
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.flat-zone  { left: 10%;  }
+.sharp-zone { right: 10%; }
+
+/* ─── STRINGS CARD ─── */
+
+.tuner-card {
+    background: #F2F2F2;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.strings-wrapper {
+    padding: var(--space-sm) 0;
+}
+
+/* ─── STRING ROW ─── */
+
+.string-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-base);
+    padding: var(--space-base) var(--space-lg);
+    cursor: pointer;
+    transition: background 0.12s;
+    user-select: none;
+    -webkit-user-select: none;
+    min-height: 64px;
+}
+
+.string-row:hover {
+    background: #e8e8e8;
+}
+
+.string-row.is-active {
+    background: #ddff53;
+}
+
+/* ─── NOTE LABEL ─── */
+
+.str-note {
+    flex: 0 0 52px;
+    text-align: center;
+}
+
+.note-name {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-lg);
+    color: #000000;
+    line-height: 1;
+}
+
+/* ─── STRING TRACK ─── */
+
+.str-track {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-xs);
+}
+
+.str-line {
+    width: 100%;
+    background: #404040;
+    border-radius: 999px;
+    transition: background 0.12s;
+}
+
+.str-line.is-active {
+    background: #000000;
+    animation: pluck 0.5s ease-out 1;
+}
+
+@keyframes pluck {
+    0%   { transform: scaleY(5); opacity: 0.6; }
+    40%  { transform: scaleY(2); }
+    100% { transform: scaleY(1); opacity: 1; }
+}
+
+/* ─── STRING NUMBER BADGE ─── */
+
+.str-num-badge {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #ffffff;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-sm);
+    color: #000000;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+}
+
+.str-num-badge.is-active {
+    background: #000000;
+    color: #ddff53;
+}
+
+/* ─── ACTIVE BAR ─── */
+
+.active-bar {
+    padding: var(--space-sm) var(--space-lg);
+    background: #ffffff;
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-xs);
+    color: rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.active-bar.visible {
+    color: #000000;
+}
+
+/* ─── TUNING GUIDE ─── */
+
+.tuning-guide {
+    background: #F2F2F2;
+    border-radius: 20px;
+    padding: var(--space-lg) var(--space-xl);
+}
+
+.guide-title {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 800;
+    font-size: var(--font-xs);
+    color: rgba(0, 0, 0, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 var(--space-base) 0;
+}
+
+.guide-strings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-base);
+}
+
+.guide-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: #ffffff;
+    border-radius: 999px;
+    padding: var(--space-xs) var(--space-base);
+}
+
+.guide-num  { font-weight: 800; font-size: var(--font-xs); color: rgba(0,0,0,0.4); }
+.guide-note { font-weight: 800; font-size: var(--font-sm); color: #000000; }
+.guide-freq { font-weight: 300; font-size: var(--font-xs); color: rgba(0,0,0,0.4); }
+
+.guide-hint {
+    font-size: var(--font-xs);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ─── RESPONSIVE ─── */
+
+@media (max-width: 768px) {
+    .hero-bg { border-radius: 20px; }
+    .hero-title { font-size: var(--font-2xl); }
+    .tuner-content { padding: var(--space-md) var(--space-md) var(--space-3xl); }
+    .string-row { padding: var(--space-base) var(--space-base); min-height: 56px; }
+    .note-name { font-size: var(--font-base); }
+    .str-note  { flex: 0 0 44px; }
+    .tuning-guide { padding: var(--space-base) var(--space-lg); }
+    .det-note { font-size: var(--font-2xl); }
+}
+
+@media (max-width: 480px) {
+    .hero-content-area { padding: 0 var(--space-base); }
+    .hero-title  { font-size: var(--font-xl); }
+    .hero-sub    { font-size: var(--font-xs); }
+    .str-num-badge { width: 28px; height: 28px; flex: 0 0 28px; }
+    .guide-strings { gap: var(--space-xs); }
+    .mic-card { padding: var(--space-base); }
+}

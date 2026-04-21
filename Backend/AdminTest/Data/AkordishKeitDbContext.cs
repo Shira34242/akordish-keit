@@ -74,6 +74,8 @@ public class AkordishKeitDbContext : DbContext
 
     // Liked Content
     public DbSet<LikedContent> LikedContents { get; set; }
+    public DbSet<UserKnownChord> UserKnownChords { get; set; }
+    public DbSet<SongChord> SongChords { get; set; }
 
     // Content Reports
     public DbSet<ContentReport> ContentReports { get; set; }
@@ -95,6 +97,11 @@ public class AkordishKeitDbContext : DbContext
 
     // System Settings — Feature Flags
     public DbSet<SystemSetting> SystemSettings { get; set; }
+
+    // Notifications
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationGroup> NotificationGroups { get; set; }
+    public DbSet<NotificationGroupMember> NotificationGroupMembers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -150,6 +157,8 @@ public class AkordishKeitDbContext : DbContext
 
         // Liked Content Configuration
         modelBuilder.ApplyConfiguration(new LikedContentConfiguration());
+        modelBuilder.ApplyConfiguration(new UserKnownChordConfiguration());
+        modelBuilder.ApplyConfiguration(new SongChordConfiguration());
 
         // Content Reports Configuration
         modelBuilder.ApplyConfiguration(new ContentReportConfiguration());
@@ -174,6 +183,11 @@ public class AkordishKeitDbContext : DbContext
 
         // System Settings Configuration
         modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());
+
+        // Notifications Configuration
+        modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationGroupConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationGroupMemberConfiguration());
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

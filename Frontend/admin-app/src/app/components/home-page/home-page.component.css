@@ -1,6 +1,11 @@
 /* ============================================
    TOP SCROLL MASK
 ============================================ */
+.home-view {
+  position: relative;
+  overflow-x: clip;
+}
+
 .top-scroll-mask {
   position: fixed;
   top: 0;

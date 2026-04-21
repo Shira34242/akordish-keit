@@ -71,6 +71,42 @@
     color: rgba(0, 0, 0, 0.4);
 }
 
+.song-card-match-badge {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 18px;
+    padding: 0 var(--space-sm);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-xs);
+    font-weight: 800;
+    line-height: 1;
+    margin-top: auto;
+}
+
+.song-card-match-badge.complete {
+    background: #ddff53;
+}
+
+.song-card-match-info {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    color: #000000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-xs);
+    font-weight: 800;
+    line-height: 1;
+    cursor: help;
+}
+
 .song-card-title {
     font-family: 'Open Sans', sans-serif;
     font-optical-sizing: auto;

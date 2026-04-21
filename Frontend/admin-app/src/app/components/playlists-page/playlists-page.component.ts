@@ -1,30 +1,34 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { PlaylistService } from '../../services/playlist.service';
-import { Playlist } from '../../models/playlist.model';
-import { LikedContentService } from '../../services/liked-content.service';
 import { LikedContent } from '../../models/liked-content.model';
+import { CreatePlaylistDto, Playlist, PlaylistDetail } from '../../models/playlist.model';
+import { LikedContentService } from '../../services/liked-content.service';
+import { PlaylistService } from '../../services/playlist.service';
 
 @Component({
   selector: 'app-playlists-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './playlists-page.component.html',
   styleUrls: ['./playlists-page.component.css']
 })
 export class PlaylistsPageComponent implements OnInit {
   playlists: Playlist[] = [];
   defaultPlaylist: Playlist | null = null;
-  myPlaylists: Playlist[] = [];
-  adoptedPlaylists: Playlist[] = [];
+  defaultPlaylistDetail: PlaylistDetail | null = null;
+  personalPlaylists: Playlist[] = [];
   likedContent: LikedContent[] = [];
-  isLoading = false;
-  isLoadingLiked = false;
-  error: string | null = null;
 
-  // Filter state
-  activeFilter: 'all' | 'liked' | 'my-playlists' | 'adopted' | 'community' = 'all';
+  isLoading = false;
+  error: string | null = null;
+  activeTab: 'all' | 'songs' | 'content' = 'all';
+  isCreatingPlaylist = false;
+  isSavingPlaylist = false;
+  createPlaylistError: string | null = null;
+  newPlaylistName = '';
+  newPlaylistIsPublic = true;
 
   constructor(
     private playlistService: PlaylistService,
@@ -33,173 +37,173 @@ export class PlaylistsPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadPlaylists();
-    this.loadLikedContent();
+    this.loadPageData();
   }
 
-  loadPlaylists(): void {
+  loadPageData(): void {
     this.isLoading = true;
     this.error = null;
 
     this.playlistService.getMyPlaylists().subscribe({
       next: (playlists) => {
         this.playlists = playlists;
-        // הפרדה: ברירת מחדל, רגילות, מאומצות
-        this.defaultPlaylist = playlists.find(p => p.isDefault) || null;
-        this.myPlaylists = playlists.filter(p => !p.isAdopted && !p.isDefault);
-        this.adoptedPlaylists = playlists.filter(p => p.isAdopted);
-        this.isLoading = false;
+        this.defaultPlaylist = playlists.find((playlist) => playlist.isDefault) || null;
+        this.personalPlaylists = playlists.filter((playlist) => !playlist.isDefault && !playlist.isAdopted);
+
+        if (this.defaultPlaylist) {
+          this.playlistService.getPlaylistById(this.defaultPlaylist.id).subscribe({
+            next: (playlistDetail) => {
+              this.defaultPlaylistDetail = playlistDetail;
+              this.loadLikedContent();
+            },
+            error: () => {
+              this.defaultPlaylistDetail = null;
+              this.loadLikedContent();
+            }
+          });
+          return;
+        }
+
+        this.loadLikedContent();
       },
       error: (err) => {
         console.error('Error loading playlists:', err);
-        this.error = 'שגיאה בטעינת הרשימות';
+        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת הרשימות';
         this.isLoading = false;
       }
     });
   }
 
   loadLikedContent(): void {
-    this.isLoadingLiked = true;
-
     this.likedContentService.getUserLikedContent().subscribe({
       next: (content) => {
         this.likedContent = content;
-        this.isLoadingLiked = false;
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading liked content:', err);
-        this.isLoadingLiked = false;
+        this.likedContent = [];
+        this.isLoading = false;
       }
     });
+  }
+
+  setTab(tab: 'all' | 'songs' | 'content'): void {
+    this.activeTab = tab;
+  }
+
+  goToSong(songId: number): void {
+    this.router.navigate(['/song', songId]);
   }
 
   viewPlaylist(id: number): void {
     this.router.navigate(['/playlist', id]);
   }
 
-  deletePlaylist(id: number, event: Event): void {
-    event.stopPropagation();
-
-    const playlist = this.playlists.find(p => p.id === id);
-    if (playlist?.isDefault) return;
-
-    if (confirm('האם אתה בטוח שברצונך למחוק רשימה זו?')) {
-      this.playlistService.deletePlaylist(id).subscribe({
-        next: () => {
-          this.playlists = this.playlists.filter(p => p.id !== id);
-          this.myPlaylists = this.myPlaylists.filter(p => p.id !== id);
-          this.adoptedPlaylists = this.adoptedPlaylists.filter(p => p.id !== id);
-        },
-        error: (err) => {
-          console.error('Error deleting playlist:', err);
-          alert('שגיאה במחיקת הרשימה');
-        }
-      });
-    }
+  createPlaylist(): void {
+    this.isCreatingPlaylist = true;
+    this.isSavingPlaylist = false;
+    this.createPlaylistError = null;
+    this.newPlaylistName = '';
+    this.newPlaylistIsPublic = true;
   }
 
-  getPlaylistImage(playlist: Playlist): string | null {
-    return playlist.imageUrl || null;
+  cancelCreatePlaylist(): void {
+    this.isCreatingPlaylist = false;
+    this.isSavingPlaylist = false;
+    this.createPlaylistError = null;
+    this.newPlaylistName = '';
+    this.newPlaylistIsPublic = true;
   }
 
-  duplicatePlaylist(id: number, event: Event): void {
-    event.stopPropagation();
-
-    if (confirm('האם לשכפל רשימה זו? תיווצר עותק חדש ברשימות שלך')) {
-      this.playlistService.duplicatePlaylist(id).subscribe({
-        next: (duplicatedPlaylist) => {
-          this.playlists.push(duplicatedPlaylist);
-          // הוספה לרשימה המתאימה בהתאם לסטטוס
-          if (duplicatedPlaylist.isAdopted) {
-            this.adoptedPlaylists.push(duplicatedPlaylist);
-          } else {
-            this.myPlaylists.push(duplicatedPlaylist);
-          }
-          alert(`הרשימה "${duplicatedPlaylist.name}" שוכפלה בהצלחה! ✨`);
-        },
-        error: (err) => {
-          console.error('Error duplicating playlist:', err);
-          alert('שגיאה בשכפול הרשימה');
-        }
-      });
+  submitCreatePlaylist(): void {
+    if (!this.newPlaylistName.trim()) {
+      this.createPlaylistError = 'יש להזין שם לרשימה';
+      return;
     }
+
+    this.isSavingPlaylist = true;
+    this.createPlaylistError = null;
+
+    const dto: CreatePlaylistDto = {
+      name: this.newPlaylistName.trim(),
+      isPublic: this.newPlaylistIsPublic
+    };
+
+    this.playlistService.createPlaylist(dto).subscribe({
+      next: (playlist) => {
+        this.personalPlaylists = [playlist, ...this.personalPlaylists];
+        this.playlists = this.defaultPlaylist
+          ? [this.defaultPlaylist, ...this.personalPlaylists]
+          : [...this.personalPlaylists];
+        this.cancelCreatePlaylist();
+      },
+      error: (err) => {
+        console.error('Error creating playlist:', err);
+        this.isSavingPlaylist = false;
+        this.createPlaylistError = err?.message || err?.error?.message || 'שגיאה ביצירת הרשימה';
+      }
+    });
   }
 
   viewLikedContent(content: LikedContent): void {
-    if (content.contentType === 'Article') {
-      if (content.slug) {
-        this.router.navigate(['/news', content.slug]);
-      }
-      // אין slug — לא מנווטים ל-id כי המסלול לא קיים
-    } else if (content.contentType === 'BlogPost') {
-      if (content.slug) {
-        this.router.navigate(['/blog', content.slug]);
-      }
-      // אין slug — לא מנווטים ל-id כי המסלול לא קיים
+    if (content.contentType === 'Article' && content.slug) {
+      this.router.navigate(['/news', content.slug]);
+      return;
+    }
+
+    if (content.contentType === 'BlogPost' && content.slug) {
+      this.router.navigate(['/blog', content.slug]);
     }
   }
 
   removeLikedContent(content: LikedContent, event: Event): void {
     event.stopPropagation();
 
-    if (confirm('האם להסיר מהמועדפים?')) {
-      this.likedContentService.removeLikedContent(content.contentType, content.contentId).subscribe({
-        next: () => {
-          this.likedContent = this.likedContent.filter(c =>
-            !(c.contentType === content.contentType && c.contentId === content.contentId)
-          );
-        },
-        error: (err) => {
-          console.error('Error removing liked content:', err);
-          alert('שגיאה בהסרת התוכן מהמועדפים');
-        }
-      });
+    this.likedContentService.removeLikedContent(content.contentType, content.contentId).subscribe({
+      next: () => {
+        this.likedContent = this.likedContent.filter(
+          (item) => !(item.contentType === content.contentType && item.contentId === content.contentId)
+        );
+      },
+      error: (err) => {
+        console.error('Error removing liked content:', err);
+      }
+    });
+  }
+
+  deletePlaylist(id: number, event: Event): void {
+    event.stopPropagation();
+
+    if (!confirm('למחוק את הרשימה?')) {
+      return;
     }
+
+    this.playlistService.deletePlaylist(id).subscribe({
+      next: () => {
+        this.personalPlaylists = this.personalPlaylists.filter((playlist) => playlist.id !== id);
+        this.playlists = this.playlists.filter((playlist) => playlist.id !== id);
+      },
+      error: (err) => {
+        console.error('Error deleting playlist:', err);
+      }
+    });
   }
 
-  // Filter methods
-  setFilter(filter: 'all' | 'liked' | 'my-playlists' | 'adopted' | 'community'): void {
-    this.activeFilter = filter;
+  get totalSavedItems(): number {
+    const savedSongs = this.defaultPlaylistDetail?.songs.length ?? 0;
+    return savedSongs + this.likedContent.length;
   }
 
-  getTotalCount(): number {
-    return (this.defaultPlaylist ? 1 : 0) + this.myPlaylists.length + this.adoptedPlaylists.length + this.likedContent.length;
+  get allPreviewSongs() {
+    return this.defaultPlaylistDetail?.songs.slice(0, 6) ?? [];
   }
 
-  getMyPlaylistsCount(): number {
-    return (this.defaultPlaylist ? 1 : 0) + this.myPlaylists.length;
+  get allPreviewContent() {
+    return this.likedContent.slice(0, 6);
   }
 
-  getAdoptedPlaylistsCount(): number {
-    return this.adoptedPlaylists.length;
-  }
-
-  getLikedContentCount(): number {
-    return this.likedContent.length;
-  }
-
-  // Get limited items for horizontal banners (max 10)
-  getMyPlaylistsBanner(): Playlist[] {
-    return this.myPlaylists.slice(0, 10);
-  }
-
-  getAdoptedPlaylistsBanner(): Playlist[] {
-    return this.adoptedPlaylists.slice(0, 10);
-  }
-
-  getLikedContentBanner(): LikedContent[] {
-    return this.likedContent.slice(0, 10);
-  }
-
-  shouldShowBanner(): boolean {
-    return this.activeFilter === 'all';
-  }
-
-  shouldShowGridForCategory(category: 'liked' | 'my-playlists' | 'adopted'): boolean {
-    return this.activeFilter === category;
-  }
-
-  navigateToCommunity(): void {
-    this.router.navigate(['/community-playlists']);
+  get allPreviewPlaylists() {
+    return this.personalPlaylists.slice(0, 4);
   }
 }

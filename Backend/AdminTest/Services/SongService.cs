@@ -10,11 +10,19 @@ public class SongService : ISongService
 {
     private readonly AkordishKeitDbContext _context;
     private readonly IYouTubeService _youTubeService;
+    private readonly INotificationService _notificationService;
+    private readonly IChordIndexService _chordIndexService;
 
-    public SongService(AkordishKeitDbContext context, IYouTubeService youTubeService)
+    public SongService(
+        AkordishKeitDbContext context,
+        IYouTubeService youTubeService,
+        INotificationService notificationService,
+        IChordIndexService chordIndexService)
     {
         _context = context;
         _youTubeService = youTubeService;
+        _notificationService = notificationService;
+        _chordIndexService = chordIndexService;
     }
 
     // ============================================
@@ -260,11 +268,15 @@ public class SongService : ISongService
 
             _context.ContentSubmissions.Add(submission);
 
+            await _chordIndexService.SyncSongChordsAsync(song.Id, song.LyricsWithChords);
+
             // Save all changes within transaction
             await _context.SaveChangesAsync();
 
             // Commit transaction
             await transaction.CommitAsync();
+
+            await _notificationService.NotifySongSubmittedAsync(userId, song.Id, song.Title);
 
             return new AddSongResponseDto
             {
@@ -509,6 +521,8 @@ public class SongService : ISongService
                     });
                 }
             }
+
+            await _chordIndexService.SyncSongChordsAsync(song.Id, song.LyricsWithChords);
 
             // Save all changes within transaction
             await _context.SaveChangesAsync();
@@ -1220,7 +1234,26 @@ public class SongService : ISongService
             song.IsApproved = isApproved;
             song.UpdatedAt = DateTime.UtcNow;
 
+            var submission = await _context.ContentSubmissions
+                .Where(cs => cs.SongId == song.Id && !cs.IsDeleted)
+                .OrderByDescending(cs => cs.SubmittedAt)
+                .FirstOrDefaultAsync();
+
+            if (submission != null)
+            {
+                submission.Status = isApproved ? SubmissionStatus.Approved : SubmissionStatus.Pending;
+                submission.ReviewedAt = DateTime.UtcNow;
+            }
+
             await _context.SaveChangesAsync();
+
+            if (isApproved && song.UploadedByUserId.HasValue)
+            {
+                await _notificationService.NotifySongApprovedAsync(
+                    song.UploadedByUserId.Value,
+                    song.Id,
+                    song.Title);
+            }
 
             return true;
         }
@@ -1265,6 +1298,8 @@ public class SongService : ISongService
         };
 
         _context.Songs.Add(newSong);
+        await _chordIndexService.SyncSongChordsAsync(newSong.Id, newSong.LyricsWithChords);
+
         await _context.SaveChangesAsync();
 
         foreach (var sa in original.SongArtists)

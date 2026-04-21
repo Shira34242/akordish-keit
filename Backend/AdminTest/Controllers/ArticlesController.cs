@@ -14,15 +14,18 @@ public class ArticlesController : ControllerBase
     private readonly IArticleService _articleService;
     private readonly IYouTubeService _youTubeService;
     private readonly IUserTagService _userTagService;
+    private readonly INotificationService _notificationService;
 
     public ArticlesController(
         IArticleService articleService,
         IYouTubeService youTubeService,
-        IUserTagService userTagService)
+        IUserTagService userTagService,
+        INotificationService notificationService)
     {
         _articleService = articleService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
+        _notificationService = notificationService;
     }
 
     // GET: api/Articles
@@ -142,7 +145,10 @@ public class ArticlesController : ControllerBase
 
             // עדכון תג תרומת תוכן לאחר הגשת כתבה מוצלחת
             if (userId.HasValue)
+            {
                 await _userTagService.RecalculateTagAsync(userId.Value);
+                await _notificationService.NotifyArticleSubmittedAsync(userId.Value, article.Id, article.Title);
+            }
 
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }

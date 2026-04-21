@@ -9,10 +9,12 @@ namespace AkordishKeit.Services
     public class EventService : IEventService
     {
         private readonly AkordishKeitDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public EventService(AkordishKeitDbContext context)
+        public EventService(AkordishKeitDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<PagedResult<EventDto>> GetEventsAsync(
@@ -150,6 +152,14 @@ namespace AkordishKeit.Services
                     .LoadAsync();
             }
 
+            if (submittedByUserId.HasValue)
+            {
+                await _notificationService.NotifyEventSubmittedAsync(
+                    submittedByUserId.Value,
+                    eventEntity.Id,
+                    eventEntity.Name);
+            }
+
             return MapToDto(eventEntity);
         }
 
@@ -161,6 +171,8 @@ namespace AkordishKeit.Services
 
             if (eventEntity == null)
                 return null;
+
+            var wasActive = eventEntity.IsActive;
 
             eventEntity.Name = dto.Name;
             eventEntity.Description = dto.Description;
@@ -199,6 +211,14 @@ namespace AkordishKeit.Services
             await _context.SaveChangesAsync();
 
             // טעינה מחדש עם האומנים
+            if (!wasActive && eventEntity.IsActive && eventEntity.SubmittedByUserId.HasValue)
+            {
+                await _notificationService.NotifyEventApprovedAsync(
+                    eventEntity.SubmittedByUserId.Value,
+                    eventEntity.Id,
+                    eventEntity.Name);
+            }
+
             await _context.Entry(eventEntity)
                 .Collection(e => e.EventArtists)
                 .Query()

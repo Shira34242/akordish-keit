@@ -1,8 +1,12 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GUITAR_CHORDS, PIANO_CHORDS, UKULELE_CHORDS, GuitarChord, UkuleleChord } from '../../utils/chord-data';
 import { simplifyChord, parseChord, enharmonicRoot } from '../../utils/music-utils';
 import { ChordPlayerService } from '../../services/chord-player.service';
+import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-chord-tooltip',
@@ -11,7 +15,7 @@ import { ChordPlayerService } from '../../services/chord-player.service';
     templateUrl: './chord-tooltip.component.html',
     styleUrls: ['./chord-tooltip.component.css']
 })
-export class ChordTooltipComponent implements OnChanges {
+export class ChordTooltipComponent implements OnChanges, OnDestroy {
     @Input() chordName: string = '';
     @Input() instrument: 'guitar' | 'piano' | 'ukulele' = 'guitar';
     @Input() isPinned: boolean = false;
@@ -21,7 +25,24 @@ export class ChordTooltipComponent implements OnChanges {
     isPlaying = false;
     private playTimer: any = null;
 
-    constructor(private chordPlayer: ChordPlayerService) {}
+    isKnownChord = false;
+    isSavingKnownChord = false;
+    private knownSub?: Subscription;
+
+    constructor(
+        private chordPlayer: ChordPlayerService,
+        private knownChordService: UserKnownChordService,
+        private authService: AuthService,
+        private router: Router
+    ) {
+        this.knownSub = this.knownChordService.known$.subscribe(() => {
+            this.syncKnownState();
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.knownSub?.unsubscribe();
+    }
 
     async playChord(event: Event): Promise<void> {
         event.stopPropagation();
@@ -95,7 +116,50 @@ export class ChordTooltipComponent implements OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['chordName'] || changes['instrument']) {
             this.updateChordData();
+            this.loadKnownState();
         }
+    }
+
+    toggleKnownChord(event: Event): void {
+        event.stopPropagation();
+
+        if (!this.authService.isLoggedIn) {
+            this.authService.requestLogin(this.router.url);
+            return;
+        }
+
+        if (!this.chordName || this.isSavingKnownChord) return;
+
+        this.isSavingKnownChord = true;
+        this.knownChordService.toggle(this.instrument, this.chordName).subscribe({
+            next: () => {
+                this.syncKnownState();
+                this.isSavingKnownChord = false;
+            },
+            error: () => {
+                this.isSavingKnownChord = false;
+            }
+        });
+    }
+
+    private loadKnownState(): void {
+        if (!this.authService.isLoggedIn) {
+            this.isKnownChord = false;
+            return;
+        }
+
+        this.knownChordService.ensureLoaded(this.instrument as KnownChordInstrument).subscribe(() => {
+            this.syncKnownState();
+        });
+    }
+
+    private syncKnownState(): void {
+        if (!this.authService.isLoggedIn || !this.chordName) {
+            this.isKnownChord = false;
+            return;
+        }
+
+        this.isKnownChord = this.knownChordService.isKnown(this.instrument, this.chordName);
     }
 
     updateChordData() {

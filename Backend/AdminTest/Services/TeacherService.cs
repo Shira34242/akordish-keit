@@ -10,10 +10,12 @@ namespace AkordishKeit.Services;
 public class TeacherService : ITeacherService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public TeacherService(AkordishKeitDbContext context)
+    public TeacherService(AkordishKeitDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<PagedResult<TeacherListDto>> GetTeachersAsync(
@@ -364,6 +366,14 @@ public class TeacherService : ITeacherService
         teacher.ServiceProvider.Status = ProfileStatus.Active;
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (teacher.ServiceProvider.UserId.HasValue)
+        {
+            await _notificationService.NotifyTeacherApprovedAsync(
+                teacher.ServiceProvider.UserId.Value,
+                teacher.Id,
+                teacher.ServiceProvider.DisplayName);
+        }
 
         return true;
     }

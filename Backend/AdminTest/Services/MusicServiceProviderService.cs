@@ -10,10 +10,12 @@ namespace AkordishKeit.Services;
 public class MusicServiceProviderService : IMusicServiceProviderService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public MusicServiceProviderService(AkordishKeitDbContext context)
+    public MusicServiceProviderService(AkordishKeitDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<PagedResult<MusicServiceProviderListDto>> GetServiceProvidersAsync(
@@ -311,6 +313,14 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         serviceProvider.Status = ProfileStatus.Active;
         serviceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (serviceProvider.UserId.HasValue)
+        {
+            await _notificationService.NotifyServiceProviderApprovedAsync(
+                serviceProvider.UserId.Value,
+                serviceProvider.Id,
+                serviceProvider.DisplayName);
+        }
 
         return true;
     }

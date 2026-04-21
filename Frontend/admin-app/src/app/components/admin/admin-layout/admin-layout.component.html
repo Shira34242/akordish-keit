@@ -60,6 +60,10 @@
                                 <span class="material-symbols-outlined">view_list</span>
                                 <span>פסי חדשות</span>
                             </a>
+                            <a routerLink="/admin/content/ticker" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
+                                <span class="material-symbols-outlined">breaking_news</span>
+                                <span>פס חדשות הירו</span>
+                            </a>
                             <a routerLink="/admin/content/stats" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
                                 <span class="material-symbols-outlined">bar_chart</span>
                                 <span>סטטיסטיקות</span>
@@ -81,6 +85,10 @@
                     <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
                         <span class="material-symbols-outlined">report</span>
                         <span>דיווחים</span>
+                    </a>
+                    <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-item">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span>התראות</span>
                     </a>
                     <a routerLink="/admin/system" routerLinkActive="active" class="nav-item">
                         <span class="material-symbols-outlined">settings</span>

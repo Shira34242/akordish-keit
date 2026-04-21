@@ -26,6 +26,16 @@ export const routes: Routes = [
                 title: 'מאגר האקורדים - אקורדישקייט'
             },
             {
+                path: 'chords/dictionary',
+                loadComponent: () => import('./components/chord-dictionary/chord-dictionary.component').then(m => m.ChordDictionaryComponent),
+                title: 'מילון האקורדים - אקורדישקייט'
+            },
+            {
+                path: 'tuner',
+                loadComponent: () => import('./components/tuner/tuner.component').then(m => m.TunerComponent),
+                title: 'כיוון גיטרה ויוקלילי - אקורדישקייט'
+            },
+            {
                 path: 'music-news',
                 loadComponent: () => import('./components/public/music-news/music-news.component').then(m => m.MusicNewsComponent),
                 title: 'חדשות המוזיקה - אקורדישקייט'
@@ -58,6 +68,7 @@ export const routes: Routes = [
             {
                 path: 'my-playlists',
                 loadComponent: () => import('./components/playlists-page/playlists-page.component').then(m => m.PlaylistsPageComponent),
+                canActivate: [authGuard],
                 title: 'הרשימות שלי - אקורדישקייט'
             },
             {
@@ -116,6 +127,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/my-profile/my-profile.component').then(m => m.MyProfileComponent),
                 canActivate: [authGuard],
                 title: 'הפרופיל שלי - אקורדישקייט'
+            },
+            {
+                path: 'notifications',
+                loadComponent: () => import('./components/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
+                canActivate: [authGuard],
+                title: 'התראות - אקורדישקייט'
             },
             // ===== מנויים ותשלומים =====
             {
@@ -262,6 +279,11 @@ export const routes: Routes = [
                 title: 'ניהול פסי חדשות - אקורדישקייט'
             },
             {
+                path: 'content/ticker',
+                loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
+                title: 'ניהול פס חדשות הירו - אקורדישקייט'
+            },
+            {
                 path: 'content/stats',
                 loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
                 title: 'סטטיסטיקות תוכן - אקורדישקייט'
@@ -270,6 +292,11 @@ export const routes: Routes = [
                 path: 'reports',
                 loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
                 title: 'ניהול דיווחים - אקורדישקייט'
+            },
+            {
+                path: 'notifications',
+                loadComponent: () => import('./components/admin/notifications/admin-notifications.component').then(m => m.AdminNotificationsComponent),
+                title: 'התראות - ניהול'
             },
             {
                 path: 'system',

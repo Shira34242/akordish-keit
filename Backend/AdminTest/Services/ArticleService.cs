@@ -10,10 +10,12 @@ namespace AkordishKeit.Services;
 public class ArticleService : IArticleService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public ArticleService(AkordishKeitDbContext context)
+    public ArticleService(AkordishKeitDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
@@ -231,6 +233,8 @@ public class ArticleService : IArticleService
             throw new KeyNotFoundException("Article not found");
         }
 
+        var wasPublished = article.Status == (int)ArticleStatus.Published;
+
         // Validate slug uniqueness (excluding current article)
         if (article.Slug != dto.Slug && await SlugExistsAsync(dto.Slug, id))
         {
@@ -299,6 +303,18 @@ public class ArticleService : IArticleService
         }
 
         await _context.SaveChangesAsync();
+
+        if (!wasPublished &&
+            article.Status == (int)ArticleStatus.Published &&
+            article.SubmittedByUserId.HasValue)
+        {
+            await _notificationService.NotifyArticleApprovedAsync(
+                article.SubmittedByUserId.Value,
+                article.Id,
+                article.Title,
+                article.Slug,
+                article.ContentType);
+        }
 
         return (await GetArticleByIdAsync(id))!;
     }

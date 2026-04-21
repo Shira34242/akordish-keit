@@ -13,6 +13,7 @@ import { SearchService, SearchResults, SearchItem } from '../../services/search.
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { TeacherListDto } from '../../models/teacher.model';
@@ -34,7 +35,8 @@ interface HeroParticle {
     RouterModule,
     SongCardComponent,
     ArtistCircleComponent,
-    NewsBannerComponent
+    NewsBannerComponent,
+    NewsTickerComponent
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']

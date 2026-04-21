@@ -66,6 +66,8 @@ public class UserListDto
     public bool EmailConfirmed { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public int? PreferredInstrumentId { get; set; }
+    public string? PreferredInstrumentName { get; set; }
     public int ContentTag { get; set; }
     public int UploadCount { get; set; }
 }

@@ -1,123 +1,101 @@
-<!-- Backdrop -->
 <div class="popup-backdrop" (click)="onBackdropClick($event)">
-
-  <!-- Popup Card -->
   <div class="popup-card" (click)="$event.stopPropagation()">
-
-    <!-- Header -->
     <div class="popup-header">
-      <button class="icon-bookmark-filled">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
-          stroke="none">
+      <button class="icon-bookmark-filled" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
         </svg>
       </button>
-      <h3>הרשימות השמורות של:</h3>
+      <h3>ניהול שמירה</h3>
     </div>
 
-    <!-- Success Message -->
-    <div class="success-message" *ngIf="successMessage">
-      {{ successMessage }}
-    </div>
+    <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="error-message" *ngIf="error">{{ error }}</div>
 
-    <!-- Error Message -->
-    <div class="error-message" *ngIf="error">
-      {{ error }}
-    </div>
-
-    <!-- Quick Save to Default ("השמורים שלי") -->
-    <div class="quick-save-section" *ngIf="!isCreatingNew && !successMessage">
-      <button class="btn-quick-save" (click)="saveToDefault()" [disabled]="isSavingToDefault">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
-        </svg>
-        <span>{{ isSavingToDefault ? 'שומר...' : 'שמור ב"השמורים שלי"' }}</span>
-      </button>
-    </div>
-
-    <!-- Loading -->
     <div class="loading-state" *ngIf="isLoading">
       <div class="spinner"></div>
       <p>טוען רשימות...</p>
     </div>
 
-    <!-- Recent Playlists (other playlists) -->
-    <div class="playlists-list" *ngIf="!isLoading && !isCreatingNew">
-      <p class="section-label" *ngIf="recentPlaylists.length > 0">או הוסף לרשימה אחרת:</p>
-      <div
-        class="playlist-item"
-        [class.playlist-item--default]="playlist.isDefault"
-        *ngFor="let playlist of recentPlaylists"
-        (click)="addToPlaylist(playlist.id)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
-        </svg>
-        <div class="playlist-info">
-          <span class="playlist-name">{{ playlist.name }}</span>
-          <span class="playlist-count">{{ playlist.songCount }} שירים</span>
+    <ng-container *ngIf="!isLoading">
+      <div class="status-panel" *ngIf="songState.isInDefault">
+        <div class="status-copy">
+          <strong>השיר שמור ב"השמורים שלי"</strong>
+          <p>אפשר להוסיף אותו גם לרשימות האישיות שלך.</p>
         </div>
-        <span class="default-badge" *ngIf="playlist.isDefault">ברירת מחדל</span>
+        <button class="btn-status-remove" type="button" (click)="startRemoveFromDefault()">
+          הסר מהשמורים שלי
+        </button>
       </div>
-    </div>
 
-    <!-- Create New Playlist Form -->
-    <div class="create-new-form" *ngIf="isCreatingNew">
-      <input
-        type="text"
-        class="new-playlist-input"
-        [(ngModel)]="newPlaylistName"
-        placeholder="שם הרשימה החדשה..."
-        (keyup.enter)="createNewPlaylist()"
-        autofocus>
+      <div class="remove-panel" *ngIf="showRemoveOptions">
+        <label class="remove-checkbox">
+          <input type="checkbox" [(ngModel)]="removeFromPersonalPlaylists">
+          <span>להסיר גם מכל הרשימות האישיות</span>
+        </label>
+        <div class="remove-actions">
+          <button class="btn-remove-confirm" type="button" (click)="removeFromDefault()" [disabled]="isRemovingFromDefault">
+            {{ isRemovingFromDefault ? 'מסיר...' : 'אישור הסרה' }}
+          </button>
+          <button class="btn-cancel" type="button" (click)="cancelRemoveFromDefault()">ביטול</button>
+        </div>
+      </div>
 
-      <!-- Public/Private Toggle -->
-      <div class="privacy-toggle">
-        <label class="toggle-label">
+      <div class="playlists-list" *ngIf="!isCreatingNew">
+        <p class="section-label">רשימות השירים האישיות שלך</p>
+
+        <label class="playlist-toggle" *ngFor="let playlist of personalPlaylists">
+          <div class="playlist-meta">
+            <span class="playlist-name">{{ playlist.name }}</span>
+            <span class="playlist-count">{{ playlist.songCount }} שירים</span>
+          </div>
           <input
             type="checkbox"
-            [(ngModel)]="newPlaylistIsPublic"
-            class="toggle-checkbox">
-          <span class="toggle-slider"></span>
-          <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
+            [checked]="isSelected(playlist.id)"
+            (change)="onPlaylistToggle(playlist.id, $event)">
         </label>
-        <p class="toggle-hint">{{ newPlaylistIsPublic ? 'הרשימה תופיע במאגר הקהילתי' : 'רק אתה תוכל לראות את הרשימה' }}</p>
+
+        <div class="empty-state" *ngIf="personalPlaylists.length === 0">
+          <p>עדיין אין לך רשימות שירים אישיות.</p>
+        </div>
       </div>
 
-      <div class="form-actions">
-        <button class="btn-create" (click)="createNewPlaylist()">יצירה</button>
-        <button class="btn-cancel" (click)="toggleCreateNew()">ביטול</button>
+      <div class="create-new-form" *ngIf="isCreatingNew">
+        <input
+          type="text"
+          class="new-playlist-input"
+          [(ngModel)]="newPlaylistName"
+          placeholder="שם הרשימה החדשה"
+          (keyup.enter)="createNewPlaylist()"
+          autofocus>
+
+        <div class="privacy-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" [(ngModel)]="newPlaylistIsPublic" class="toggle-checkbox">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-create" type="button" (click)="createNewPlaylist()">צור רשימה</button>
+          <button class="btn-cancel" type="button" (click)="toggleCreateNew()">ביטול</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="popup-actions" *ngIf="!isCreatingNew">
-      <button class="action-btn btn-new-playlist" (click)="toggleCreateNew()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" x2="12" y1="15" y2="3"></line>
-        </svg>
-        רשימה חדשה
-      </button>
+      <div class="popup-actions" *ngIf="!isCreatingNew">
+        <button class="action-btn btn-new-playlist" type="button" (click)="toggleCreateNew()">
+          רשימה חדשה
+        </button>
 
-      <button class="action-btn btn-view-all" routerLink="/community-playlists" (click)="closePopup()">
-        למאגר קהילתי
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 18-6-6 6-6"></path>
-        </svg>
-      </button>
+        <button class="action-btn btn-view-all" routerLink="/community-playlists" (click)="closePopup()">
+          למאגר הקהילתי
+        </button>
 
-      <button class="action-btn btn-my-playlists" routerLink="/my-playlists" (click)="closePopup()">
-        הרשימות שלי
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 18-6-6 6-6"></path>
-        </svg>
-      </button>
-    </div>
-
+        <button class="action-btn btn-my-playlists" routerLink="/my-playlists" (click)="closePopup()">
+          לרשימות שלי
+        </button>
+      </div>
+    </ng-container>
   </div>
 </div>

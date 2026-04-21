@@ -178,6 +178,15 @@
   background: rgba(255, 255, 255, 0.75);
 }
 
+.assistant-secondary-label {
+  width: 100%;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 4px;
+}
+
 .smart-upload-chip-disabled {
   opacity: 0.6;
   cursor: wait;
@@ -487,6 +496,76 @@
   font-size: 16px;
 }
 
+.smart-select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.smart-contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+.contact-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.contact-attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.contact-att-icon {
+  font-size: 18px;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.contact-att-uploading {
+  color: #404040;
+  animation: spin 1s linear infinite;
+}
+
+.contact-att-error {
+  color: #c00;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.contact-att-name {
+  flex: 1;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-att-status {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: #404040;
+  flex-shrink: 0;
+}
+
+.contact-att-status-error {
+  color: #c00;
+}
+
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 12px;
@@ -516,7 +595,8 @@
     padding-right: 0;
   }
 
-  .smart-optional-grid {
+  .smart-optional-grid,
+  .smart-contact-row {
     grid-template-columns: 1fr;
   }
 

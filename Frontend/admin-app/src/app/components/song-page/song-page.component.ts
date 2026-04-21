@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
@@ -24,11 +25,13 @@ import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.compone
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
+import { PlaylistService } from '../../services/playlist.service';
+import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
@@ -60,6 +63,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     preferFlat: boolean = false;
     isEasyMode: boolean = false;
     showInlineChordDiagrams: boolean = false;
+    showKnownChordSummary: boolean = true;
 
     // Tooltip State
     hoveredChord: string | null = null;
@@ -75,6 +79,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     tooltipHovered = false;
     private tooltipCloseTimer: any = null;
 
+    // Cache for formattedLyricsHtml — prevents DOM replacement on every CD cycle
+    private _lyricsHtmlCache: SafeHtml = '';
+    private _lyricsHtmlCacheKey = '';
+
     // Print Panel State
     isPrintPanelOpen: boolean = false;
 
@@ -84,13 +92,16 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // Bookmark State
     isSongSaved: boolean = false;
+    shouldAutoSaveOnPopupOpen: boolean = false;
 
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
     artistSongs: any[] = [];
     popularSongs: any[] = [];
+    similarSongs: any[] = [];
     isLoadingArtistSongs: boolean = false;
     isLoadingPopularSongs: boolean = false;
+    isLoadingSimilarSongs: boolean = false;
 
     // Auto Scroll State
     private scrollInterval: any = null;
@@ -102,6 +113,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private authService: AuthService,
         private router: Router,
         private ngZone: NgZone,
+        private playlistService: PlaylistService,
+        private knownChordService: UserKnownChordService,
     ) { }
 
     ngOnInit(): void {
@@ -113,9 +126,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             }
         });
 
-        // Native listener — guaranteed to fire in DOM bubble order, independent of Angular zone
+        // All native listeners run outside Angular zone — no change detection on scroll/click
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
+            window.addEventListener('scroll', this.nativeWindowScroll, { passive: true });
         });
 
         // חסימת העתקה וקליק ימני בדף השיר
@@ -126,6 +140,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
+        window.removeEventListener('scroll', this.nativeWindowScroll);
         document.removeEventListener('copy', this.preventCopy);
         document.removeEventListener('contextmenu', this.preventContextMenu);
         document.removeEventListener('selectstart', this.preventSelect);
@@ -173,6 +188,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.error = null;
         this.canEdit = false; 
         this.isEasyMode = false;
+        this.showKnownChordSummary = true;
 
         this.songService.getSongById(id).subscribe({
             next: (data) => {
@@ -187,11 +203,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.transposeStep = 0;
                 this.fontSize = window.innerWidth <= 600 ? 14 : 18;
                 this.isSongSaved = false;
+                this.shouldAutoSaveOnPopupOpen = false;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
                 this.loadArtistSongs();
+                this.loadSimilarSongs();
                 this.loadPopularSongs();
+                this.loadSongSavedState();
+                this.loadKnownChordsForCurrentInstrument();
 
                 // Increment view count with unique tracking
                 this.songService.incrementView(id).subscribe({
@@ -211,6 +231,22 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 console.error('Error loading song:', err);
                 this.error = 'שגיאה בטעינת השיר';
                 this.isLoading = false;
+            }
+        });
+    }
+
+    loadSongSavedState(): void {
+        if (!this.songId || !this.authService.isLoggedIn) {
+            this.isSongSaved = false;
+            return;
+        }
+
+        this.playlistService.getSongPlaylistState(this.songId).subscribe({
+            next: (state) => {
+                this.isSongSaved = state.isInDefault;
+            },
+            error: () => {
+                this.isSongSaved = false;
             }
         });
     }
@@ -255,9 +291,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.headerLayoutDone = false;
     }
 
-    @HostListener('window:scroll')
-    onWindowScroll() {
-        this.isToolbarSticky = window.scrollY > 300;
+    // Runs outside Angular zone — no change detection on every scroll event
+    private nativeWindowScroll = () => {
+        const shouldBeSticky = window.scrollY > 300;
+
+        // Bring into zone only when value actually changes
+        if (shouldBeSticky !== this.isToolbarSticky) {
+            this.ngZone.run(() => { this.isToolbarSticky = shouldBeSticky; });
+        }
+
         if (!this.rafPending) {
             this.rafPending = true;
             requestAnimationFrame(() => {
@@ -265,9 +307,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.rafPending = false;
             });
         }
+
         // On mobile, scroll closes the open tooltip
-        if (this.isMobileDevice()) this.hoveredChord = null;
-    }
+        if (this.isMobileDevice() && this.hoveredChord) {
+            this.ngZone.run(() => { this.hoveredChord = null; });
+        }
+    };
 
 
     /** Active chord for the single shared tooltip element */
@@ -363,6 +408,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
+        this.showKnownChordSummary = true;
+        this.loadKnownChordsForCurrentInstrument();
     }
 
     toggleTheme() {
@@ -478,6 +525,26 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         return result;
     }
 
+    get knownChordSummary() {
+        const instrument = this.activeKnownInstrument;
+        if (!this.showKnownChordSummary || !instrument || !this.authService.isLoggedIn) return null;
+        return this.knownChordService.buildLocalSummary(instrument, this.uniqueTransposedChords);
+    }
+
+    hideKnownChordSummary(): void {
+        this.showKnownChordSummary = false;
+    }
+
+    private get activeKnownInstrument(): KnownChordInstrument | null {
+        return this.selectedInstrument === 'lyrics' ? null : this.selectedInstrument;
+    }
+
+    private loadKnownChordsForCurrentInstrument(): void {
+        const instrument = this.activeKnownInstrument;
+        if (!instrument || !this.authService.isLoggedIn) return;
+        this.knownChordService.ensureLoaded(instrument).subscribe();
+    }
+
     toggleInlineChordDiagrams() {
         this.showInlineChordDiagrams = !this.showInlineChordDiagrams;
     }
@@ -496,6 +563,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // ⭐ הלוגיקה החדשה - תמיכה גם ב-Inline וגם ב-Block (Line over Line)
     get formattedLyricsHtml(): SafeHtml {
         if (!this.song || !this.song.lyricsWithChords) return '';
+
+        // Cache key — recompute only when relevant inputs change
+        const cacheKey = `${this.song.lyricsWithChords}|${this.transposeStep}|${this.showChords}|${this.isEasyMode}|${this.activePreferFlat}`;
+        if (cacheKey === this._lyricsHtmlCacheKey) return this._lyricsHtmlCache;
 
         const lines = this.song.lyricsWithChords.split('\n');
 
@@ -546,7 +617,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         }).filter((line: any) => line !== null);
 
         // Join lines with newlines (pre-wrap handles the display)
-        return this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
+        this._lyricsHtmlCacheKey = cacheKey;
+        this._lyricsHtmlCache = this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
+        return this._lyricsHtmlCache;
     }
 
     handleLyricsMouseOver(event: MouseEvent) {
@@ -729,6 +802,69 @@ private getKeyIndex(keyName: string): number {
         });
     }
 
+    loadSimilarSongs(): void {
+        this.isLoadingSimilarSongs = true;
+        const genreId = this.song?.genres?.[0]?.id;
+        const artistId = this.song?.artists?.[0]?.id;
+
+        if (genreId) {
+            this.songService.getSongs(undefined, 1, 6, undefined, genreId, undefined, 'views').subscribe({
+                next: (response) => {
+                    if (this.setSimilarSongs(response?.songs || [])) {
+                        this.isLoadingSimilarSongs = false;
+                        return;
+                    }
+                    this.loadSimilarSongsByArtistOrPopular(artistId);
+                },
+                error: () => this.loadSimilarSongsByArtistOrPopular(artistId)
+            });
+            return;
+        }
+
+        this.loadSimilarSongsByArtistOrPopular(artistId);
+    }
+
+    private loadSimilarSongsByArtistOrPopular(artistId?: number): void {
+        if (artistId) {
+            this.songService.getSongsByArtist(artistId, 6).subscribe({
+                next: (songs) => {
+                    if (this.setSimilarSongs(songs)) {
+                        this.isLoadingSimilarSongs = false;
+                        return;
+                    }
+                    this.loadSimilarSongsPopularFallback();
+                },
+                error: () => this.loadSimilarSongsPopularFallback()
+            });
+            return;
+        }
+
+        this.loadSimilarSongsPopularFallback();
+    }
+
+    private loadSimilarSongsPopularFallback(): void {
+        this.songService.getPopularSongs(6).subscribe({
+            next: (songs) => {
+                this.setSimilarSongs(songs);
+                this.isLoadingSimilarSongs = false;
+            },
+            error: () => {
+                this.similarSongs = [];
+                this.isLoadingSimilarSongs = false;
+            }
+        });
+    }
+
+    private setSimilarSongs(songs: any[]): boolean {
+        const uniqueSongs = (songs || [])
+            .filter((song) => song?.id && song.id !== this.songId)
+            .filter((song, index, self) => self.findIndex((item) => item.id === song.id) === index)
+            .slice(0, 5);
+
+        this.similarSongs = uniqueSongs;
+        return uniqueSongs.length > 0;
+    }
+
     navigateToSong(id: number): void {
         if (id === this.songId) return; // כבר בשיר הזה
         this.router.navigate(['/song', id]);
@@ -745,11 +881,20 @@ private getKeyIndex(keyName: string): number {
             this.authService.requestLogin(this.router.url);
             return;
         }
-        this.isPlaylistPopupOpen = !this.isPlaylistPopupOpen;
+
+        if (this.isPlaylistPopupOpen) {
+            this.isPlaylistPopupOpen = false;
+            this.shouldAutoSaveOnPopupOpen = false;
+            return;
+        }
+
+        this.shouldAutoSaveOnPopupOpen = !this.isSongSaved;
+        this.isPlaylistPopupOpen = true;
     }
 
     closePlaylistPopup(): void {
         this.isPlaylistPopupOpen = false;
+        this.shouldAutoSaveOnPopupOpen = false;
     }
 
     openReportModal(): void {
@@ -787,7 +932,6 @@ private getKeyIndex(keyName: string): number {
     }
 
     onSongSaved(): void {
-        this.isSongSaved = true;
-        this.isPlaylistPopupOpen = false;
+        this.loadSongSavedState();
     }
 }

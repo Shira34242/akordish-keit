@@ -1,0 +1,409 @@
+<section class="admin-notifications">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">מרכז הודעות</p>
+      <h1>צ׳אטים וקבוצות</h1>
+      <p>ניהול הודעות אישי וקבוצתי במבנה קל, נקי ודומה לאפליקציית צ׳אט.</p>
+    </div>
+    <span class="page-chip">{{ totalUsers }} משתמשים</span>
+  </header>
+
+  <div class="chat-shell">
+    <aside class="users-panel">
+      <div class="wa-topbar">
+        <div class="wa-tabs">
+          <button type="button" [class.active]="sidebarMode === 'chats'" (click)="switchSidebarMode('chats')">צ׳אטים</button>
+          <button type="button" [class.active]="sidebarMode === 'groups'" (click)="switchSidebarMode('groups')">קבוצות</button>
+        </div>
+
+        <div class="top-actions">
+          <button type="button" class="circle-action" (click)="toggleSearch()" aria-label="חיפוש">
+            <span class="material-icons">search</span>
+          </button>
+          <button type="button" class="circle-action" *ngIf="sidebarMode === 'groups'" (click)="startCreateGroup()" aria-label="יצירת קבוצה">
+            <span class="material-icons">add</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-row soft-search" *ngIf="isSearchOpen">
+        <input type="search" [(ngModel)]="searchTerm" placeholder="חיפוש">
+        <button type="button" (click)="applyFilters()">חפש</button>
+      </div>
+
+      <section class="sidebar-filters">
+        <div class="quick-filters">
+          <select [(ngModel)]="activityFilter" (change)="applyFilters()">
+            <option value="all">כל הסטטוסים</option>
+            <option value="active">פעילים</option>
+            <option value="inactive">לא פעילים</option>
+          </select>
+
+          <select [(ngModel)]="instrumentFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל הכלים</option>
+            <option *ngFor="let instrument of availableInstruments" [ngValue]="instrument.id">{{ instrument.name }}</option>
+          </select>
+
+          <select [(ngModel)]="sortMode">
+            <option value="newest">חדשים קודם</option>
+            <option value="oldest">ותיקים קודם</option>
+          </select>
+
+          <select [(ngModel)]="roleFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל התפקידים</option>
+            <option [ngValue]="0">משתמשים</option>
+            <option [ngValue]="1">מורים</option>
+            <option [ngValue]="2">אמנים</option>
+            <option [ngValue]="4">מנהלים</option>
+          </select>
+
+          <select [(ngModel)]="contentTagFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל החברים</option>
+            <option [ngValue]="0">רגיל</option>
+            <option [ngValue]="1">מתחיל</option>
+            <option [ngValue]="2">תורם</option>
+            <option [ngValue]="3">תורם מוביל</option>
+          </select>
+
+          <button type="button" class="filter-clear-button" (click)="clearFilters()">ניקוי</button>
+        </div>
+      </section>
+
+      <div class="users-state" *ngIf="isLoadingUsers && sidebarMode === 'chats'">טוען משתמשים...</div>
+      <div class="users-state" *ngIf="isLoadingGroups && sidebarMode === 'groups'">טוען קבוצות...</div>
+
+      <div class="users-list" *ngIf="sidebarMode === 'chats' && !isLoadingUsers">
+        <button
+          type="button"
+          class="chat-row"
+          *ngFor="let user of visibleUsers"
+          [class.selected]="selectedUserId === user.id && composerMode === 'private'"
+          (click)="selectUser(user)">
+          <img *ngIf="user.profileImageUrl" [src]="user.profileImageUrl" [alt]="user.username" class="avatar-img">
+          <span class="avatar" *ngIf="!user.profileImageUrl">{{ user.username.charAt(0) }}</span>
+          <span class="user-copy">
+            <strong>{{ user.username }}</strong>
+            <small>{{ user.email }}</small>
+            <small>{{ user.preferredInstrumentName || 'לא הוגדר כלי' }} · {{ getContentTagLabel(user.contentTag) }}</small>
+          </span>
+          <span class="joined">{{ formatDate(user.createdAt) }}</span>
+        </button>
+      </div>
+
+      <div class="users-list" *ngIf="sidebarMode === 'groups' && !isLoadingGroups">
+        <button
+          type="button"
+          class="chat-row group-row"
+          *ngFor="let group of visibleGroups"
+          [class.selected]="selectedGroup?.id === group.id && composerMode === 'group'"
+          (click)="selectGroup(group)">
+          <img *ngIf="group.imageUrl" [src]="group.imageUrl" [alt]="group.name" class="avatar-img">
+          <span class="avatar group-avatar" *ngIf="!group.imageUrl">
+            <span class="material-icons">groups</span>
+          </span>
+          <span class="user-copy">
+            <strong>{{ group.name }}</strong>
+            <small>{{ group.description || 'קבוצה למנהלים בלבד' }}</small>
+            <small>{{ group.estimatedUserCount }} חברים</small>
+          </span>
+          <span class="group-actions" *ngIf="group.id !== 0">
+            <button type="button" (click)="startEditGroup(group, $event)" aria-label="עריכה"><span class="material-icons">edit</span></button>
+            <button type="button" (click)="deleteGroup(group, $event)" aria-label="מחיקה"><span class="material-icons">close</span></button>
+          </span>
+        </button>
+      </div>
+
+      <div class="pager" *ngIf="sidebarMode === 'chats'">
+        <button type="button" (click)="previousPage()" [disabled]="pageNumber === 1">הקודם</button>
+        <button type="button" (click)="nextPage()" [disabled]="pageNumber * pageSize >= totalUsers">הבא</button>
+      </div>
+    </aside>
+
+    <section class="conversation-panel" [class.empty]="!hasSelectedTarget">
+      <ng-container *ngIf="hasSelectedTarget; else noTarget">
+        <header class="conversation-header">
+          <div class="conversation-person">
+            <img *ngIf="selectedUser?.profileImageUrl || selectedGroup?.imageUrl" [src]="selectedUser?.profileImageUrl || selectedGroup?.imageUrl || ''" [alt]="activeTargetTitle" class="header-avatar-img">
+            <span class="header-avatar" *ngIf="!selectedUser?.profileImageUrl && !selectedGroup?.imageUrl">
+              {{ composerMode === 'group' ? 'ק' : activeTargetTitle.charAt(0) }}
+            </span>
+            <div>
+              <p class="eyebrow">{{ composerMode === 'group' ? 'קבוצה פעילה' : 'שיחה פעילה' }}</p>
+              <h2>{{ activeTargetTitle }}</h2>
+              <span>{{ activeTargetSubtitle }}</span>
+              <span *ngIf="selectedUser">טלפון: {{ selectedUser.phone || 'לא הוזן' }} · {{ selectedUser.roleName }} · {{ selectedUser.isActive ? 'פעיל' : 'לא פעיל' }}</span>
+            </div>
+          </div>
+          <span class="status-pill">{{ composerMode === 'group' ? 'קבוצה' : 'פרטי' }}</span>
+        </header>
+
+        <div class="messages-list" *ngIf="composerMode === 'private'">
+          <div class="users-state" *ngIf="isLoadingThread">טוען שיחה...</div>
+          <article class="message-bubble" *ngFor="let notification of threadNotifications">
+            <span class="marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
+            <span class="message-title" *ngIf="shouldShowTitle(notification)">{{ notification.title }}</span>
+            <p *ngIf="notification.message?.trim()">{{ notification.message }}</p>
+            <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener">
+              <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media" [ngClass]="getMediaSizeClass(notification.mediaDisplaySize)">
+            </a>
+            <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="message-media" [ngClass]="getMediaSizeClass(notification.mediaDisplaySize)">
+            <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="message-media-link">פתיחת מדיה</a>
+            <a *ngIf="notification.actionUrl && !(notification.mediaUrl && notification.mediaType === 'image')" [href]="notification.actionUrl" target="_blank" rel="noopener" class="message-media-link">קישור מצורף</a>
+            <div class="attachment-chips" *ngIf="notification.attachments?.length">
+              <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" class="attachment-chip">
+                <span class="material-icons">{{ getAttachmentIcon(item.type) }}</span>
+                <span>{{ item.label || item.type }}</span>
+              </a>
+            </div>
+            <time>{{ formatDate(notification.createdAt) }}</time>
+          </article>
+          <div class="conversation-empty" *ngIf="!isLoadingThread && threadNotifications.length === 0">עדיין אין התראות למשתמש הזה.</div>
+        </div>
+
+        <div class="messages-list broadcast-preview" *ngIf="composerMode === 'group'">
+          <article class="message-bubble">
+            <p>{{ selectedGroup?.description || 'שליחה לקבוצה שנבחרה' }}</p>
+            <small>{{ selectedGroup?.estimatedUserCount || 0 }} חברים יקבלו את ההודעה בפעמון באתר.</small>
+          </article>
+        </div>
+
+        <form class="composer" (ngSubmit)="sendMessage()">
+          <article class="message-bubble composer-bubble" *ngIf="hasDraftBubble">
+            <span class="marketing-tag" *ngIf="isMarketingContent">תוכן שיווקי</span>
+            <span class="message-title" *ngIf="message.trim()">{{ buildTitle() }}</span>
+            <p *ngIf="message.trim()">{{ message }}</p>
+            <a *ngIf="mediaUrl && mediaType === 'image' && getDraftActionUrl()" [href]="getDraftActionUrl() || ''" target="_blank" rel="noopener">
+              <img [src]="mediaUrl" [alt]="mediaAltText || message" class="message-media" [ngClass]="getMediaSizeClass(mediaDisplaySize)">
+            </a>
+            <img *ngIf="mediaUrl && mediaType === 'image' && !getDraftActionUrl()" [src]="mediaUrl" [alt]="mediaAltText || message" class="message-media" [ngClass]="getMediaSizeClass(mediaDisplaySize)">
+            <a *ngIf="mediaUrl && mediaType !== 'image'" [href]="mediaUrl" target="_blank" rel="noopener" class="message-media-link">פתיחת מדיה</a>
+            <a *ngIf="getDraftActionUrl() && !(mediaUrl && mediaType === 'image')" [href]="getDraftActionUrl() || ''" target="_blank" rel="noopener" class="message-media-link">קישור מצורף</a>
+            <div class="attachment-chips" *ngIf="attachments.length">
+              <a *ngFor="let item of attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" class="attachment-chip">
+                <span class="material-icons">{{ getAttachmentIcon(item.type) }}</span>
+                <span>{{ item.label || item.type }}</span>
+              </a>
+            </div>
+            <time>עכשיו</time>
+          </article>
+          <div class="attachment-panel" *ngIf="showAttachPanel && attachmentType">
+            <div class="attachment-head">
+              <strong>{{ getAttachmentLabel() }}</strong>
+              <button type="button" (click)="clearAttachment()"><span class="material-icons">close</span></button>
+            </div>
+
+            <div class="attachment-mode" *ngIf="attachmentType !== 'link'">
+              <button type="button" [class.active]="attachmentInputMode === 'url'" (click)="attachmentInputMode = 'url'">הדבקת קישור</button>
+              <button type="button" [class.active]="attachmentInputMode === 'upload'" (click)="attachmentInputMode = 'upload'">העלאה</button>
+            </div>
+
+            <input
+              *ngIf="attachmentInputMode === 'url' || attachmentType === 'link'"
+              type="text"
+              [ngModel]="getAttachmentValue()"
+              name="attachmentUrl"
+              (ngModelChange)="onAttachmentUrlChange($event)"
+              [placeholder]="attachmentType === 'link' ? 'קישור לפתיחה בלחיצה' : 'קישור למדיה'">
+
+            <label class="upload-line" *ngIf="attachmentInputMode === 'upload' && attachmentType !== 'link'">
+              <input type="file" [accept]="getAttachmentAccept()" (change)="onAttachmentFileSelected($event)">
+              <span class="material-icons">upload</span>
+              <span>{{ isUploadingAttachment ? 'מעלה קובץ...' : (selectedFileName || 'בחירת קובץ להעלאה') }}</span>
+            </label>
+
+            <input type="text" [(ngModel)]="attachmentLabel" name="attachmentLabel" (ngModelChange)="onDraftChanged()" placeholder="שם קצר לצירוף">
+            <input *ngIf="attachmentType === 'image'" type="text" [(ngModel)]="attachmentClickUrl" name="attachmentClickUrl" (ngModelChange)="onDraftChanged()" placeholder="קישור בלחיצה על התמונה">
+            <div class="image-size-control" *ngIf="attachmentType === 'image' || mediaType === 'image'">
+              <span>גודל תמונה</span>
+              <button type="button" [class.active]="mediaDisplaySize === 'small'" (click)="setMediaDisplaySize('small')">קטן</button>
+              <button type="button" [class.active]="mediaDisplaySize === 'medium'" (click)="setMediaDisplaySize('medium')">רגיל</button>
+              <button type="button" [class.active]="mediaDisplaySize === 'large'" (click)="setMediaDisplaySize('large')">גדול</button>
+            </div>
+            <button type="button" class="add-attachment-button" (click)="addAttachment()">
+              {{ attachmentType === 'image' ? 'הצמד תמונה' : 'הוסף לצ׳אט' }}
+            </button>
+          </div>
+
+          <div class="attachment-preview" *ngIf="attachments.length">
+            <button type="button" *ngFor="let item of attachments; let i = index" (click)="removeAttachment(i)">
+              <span class="material-icons">{{ getAttachmentIcon(item.type) }}</span>
+              <span>{{ item.label || item.type }}</span>
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="composer-line">
+            <div class="attach-wrap">
+              <button type="button" class="attach-button" (click)="toggleAttachMenu()" aria-label="צירוף">
+                <span class="material-icons">add</span>
+              </button>
+              <div class="attach-menu" *ngIf="showAttachMenu">
+                <button type="button" (click)="chooseAttachment('link')"><span class="material-icons">link</span> קישור</button>
+                <button type="button" (click)="chooseAttachment('image')"><span class="material-icons">image</span> תמונה</button>
+                <button type="button" (click)="chooseAttachment('video')"><span class="material-icons">smart_display</span> וידאו</button>
+                <button type="button" (click)="chooseAttachment('file')"><span class="material-icons">attach_file</span> קובץ</button>
+              </div>
+            </div>
+
+            <input type="text" [(ngModel)]="message" name="message" maxlength="1000" (ngModelChange)="onDraftChanged()" placeholder="כתוב הודעה...">
+
+            <label class="marketing-toggle">
+              <input type="checkbox" [(ngModel)]="isMarketingContent" name="isMarketingContent" (ngModelChange)="onDraftChanged()">
+              <span>תוכן שיווקי</span>
+            </label>
+
+            <input class="campaign-input" *ngIf="composerMode === 'group'" type="text" [(ngModel)]="campaignName" name="campaignName" maxlength="160" (ngModelChange)="onDraftChanged()" placeholder="שם פנימי">
+
+            <button type="submit" class="send-button" [disabled]="isSending || isUploadingAttachment">
+              <span class="material-icons">{{ isSending ? 'hourglass_empty' : 'send' }}</span>
+            </button>
+          </div>
+
+          <div class="form-message success" *ngIf="successMessage">{{ successMessage }}</div>
+          <div class="form-message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        </form>
+      </ng-container>
+
+      <ng-template #noTarget>
+        <div class="no-target">
+          <span class="material-icons">chat_bubble_outline</span>
+          <h2>בחר צ׳אט או קבוצה</h2>
+          <p>הטיוטה נשמרת לכל יעד בנפרד, כדי שהודעה לא תעבור בטעות למקום אחר.</p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+
+  <section class="group-modal-overlay" *ngIf="showGroupForm" (click)="closeGroupForm()">
+    <form class="group-form" (click)="$event.stopPropagation()" (ngSubmit)="saveGroup()">
+      <div class="group-form-head">
+        <strong>{{ editingGroupId ? 'עריכת קבוצה' : 'קבוצה חדשה' }}</strong>
+        <button type="button" (click)="closeGroupForm()" aria-label="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <label class="group-image-picker" aria-label="תמונת קבוצה">
+        <input type="file" accept="image/*" (change)="onGroupImageSelected($event)" aria-hidden="true">
+        <img *ngIf="groupForm.imageUrl" [src]="groupForm.imageUrl" [alt]="groupForm.name || 'תמונת קבוצה'">
+        <span class="group-image-placeholder" *ngIf="!groupForm.imageUrl">
+          <span class="material-icons">{{ isUploadingGroupImage ? 'hourglass_empty' : 'add_a_photo' }}</span>
+        </span>
+      </label>
+      <div class="group-image-wrap">
+        <button
+          type="button"
+          class="group-image-picker"
+          [class.has-image]="groupForm.imageUrl"
+          (click)="toggleGroupImageOptions($event)"
+          aria-label="תמונת קבוצה">
+          <img *ngIf="groupForm.imageUrl" [src]="groupForm.imageUrl" [alt]="groupForm.name || 'תמונת קבוצה'">
+          <span class="group-image-placeholder" *ngIf="!groupForm.imageUrl">
+            <span class="material-icons">{{ isUploadingGroupImage ? 'hourglass_empty' : 'add_a_photo' }}</span>
+          </span>
+        </button>
+
+        <div class="group-image-menu" *ngIf="showGroupImageOptions">
+          <label class="group-image-menu-button">
+            <input type="file" accept="image/*" (change)="onGroupImageSelected($event)">
+            <span class="material-icons">upload</span>
+            <span>{{ isUploadingGroupImage ? 'מעלה...' : 'העלאת קובץ' }}</span>
+          </label>
+          <div class="group-image-url-row">
+            <input type="text" [(ngModel)]="groupImageUrlDraft" name="groupImageUrlDraft" placeholder="קישור לתמונה">
+            <button type="button" (click)="applyGroupImageUrl()">אישור</button>
+          </div>
+          <button type="button" class="group-image-remove" *ngIf="groupForm.imageUrl" (click)="clearGroupImage($event)">הסרה</button>
+        </div>
+
+        <span class="group-image-note">{{ selectedGroupImageFileName || (groupForm.imageUrl ? 'תמונה נבחרה' : 'תמונה') }}</span>
+      </div>
+      <div class="group-image-actions">
+        <span>{{ selectedGroupImageFileName || (groupForm.imageUrl ? 'תמונה נבחרה' : 'העלאת תמונת קבוצה') }}</span>
+        <button type="button" *ngIf="groupForm.imageUrl" (click)="clearGroupImage($event)">הסרה</button>
+      </div>
+
+      <input type="text" [(ngModel)]="groupForm.name" name="groupName" placeholder="שם הקבוצה">
+      <input type="text" [(ngModel)]="groupForm.description" name="groupDescription" placeholder="תיאור">
+
+      <label class="check-row">
+        <input type="checkbox" [(ngModel)]="groupForm.sendToAll" name="sendToAll">
+        <span>כל חברי האתר</span>
+      </label>
+
+      <div class="modal-filters" *ngIf="!groupForm.sendToAll">
+        <div class="search-row soft-search">
+          <input type="search" [(ngModel)]="searchTerm" name="groupSearch" placeholder="חיפוש משתמשים">
+          <button type="button" (click)="applyFilters()">חפש</button>
+        </div>
+
+        <div class="quick-filters">
+          <select [(ngModel)]="activityFilter" name="groupActivityFilter" (change)="applyFilters()">
+            <option value="all">כל הסטטוסים</option>
+            <option value="active">פעילים</option>
+            <option value="inactive">לא פעילים</option>
+          </select>
+
+          <select [(ngModel)]="instrumentFilter" name="groupInstrumentFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל הכלים</option>
+            <option *ngFor="let instrument of availableInstruments" [ngValue]="instrument.id">{{ instrument.name }}</option>
+          </select>
+
+          <select [(ngModel)]="roleFilter" name="groupRoleFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל התפקידים</option>
+            <option [ngValue]="0">משתמשים</option>
+            <option [ngValue]="1">מורים</option>
+            <option [ngValue]="2">אמנים</option>
+            <option [ngValue]="4">מנהלים</option>
+          </select>
+
+          <select [(ngModel)]="contentTagFilter" name="groupContentTagFilter" (change)="applyFilters()">
+            <option [ngValue]="null">כל החברים</option>
+            <option [ngValue]="0">רגיל</option>
+            <option [ngValue]="1">מתחיל</option>
+            <option [ngValue]="2">תורם</option>
+            <option [ngValue]="3">תורם מוביל</option>
+          </select>
+
+          <button type="button" class="filter-clear-button" (click)="clearFilters()">ניקוי סינונים</button>
+        </div>
+      </div>
+
+      <div class="member-picker" *ngIf="!groupForm.sendToAll">
+        <div class="member-picker-head">
+          <span>{{ selectedGroupMembersCount }} נבחרו</span>
+          <button type="button" (click)="selectAllVisibleUsersForGroup()">בחר את כל מי שמוצג</button>
+          <button type="button" (click)="clearGroupMembers()">נקה</button>
+        </div>
+
+        <div class="users-state" *ngIf="isLoadingUsers">טוען משתמשים...</div>
+
+        <div class="member-list" *ngIf="!isLoadingUsers">
+          <button
+            type="button"
+            class="member-row"
+            *ngFor="let user of visibleUsers"
+            [class.checked]="isGroupMemberSelected(user.id)"
+            (click)="toggleGroupMember(user.id)">
+            <img *ngIf="user.profileImageUrl" [src]="user.profileImageUrl" [alt]="user.username" class="avatar-img">
+            <span class="avatar" *ngIf="!user.profileImageUrl">{{ user.username.charAt(0) }}</span>
+            <span>
+              <strong>{{ user.username }}</strong>
+              <small>{{ user.email }}</small>
+              <small>{{ user.preferredInstrumentName || 'לא הוגדר כלי' }} · {{ getContentTagLabel(user.contentTag) }}</small>
+            </span>
+            <span class="member-check">
+              <span class="material-icons">{{ isGroupMemberSelected(user.id) ? 'check' : 'add' }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <button type="submit" class="save-group-button" [disabled]="isSavingGroup || isUploadingGroupImage">
+        {{ isSavingGroup ? 'שומר...' : 'שמירת קבוצה' }}
+      </button>
+    </form>
+  </section>
+</section>

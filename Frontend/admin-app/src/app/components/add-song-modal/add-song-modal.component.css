@@ -1159,7 +1159,7 @@ select option {
     display: flex;
     flex-direction: column;
     gap:10px;
-    margin-bottom: 16px;
+    margin-bottom: 0;
 }
 
 .smart-composer {
@@ -1237,6 +1237,8 @@ select option {
     font-size: var(--font-sm);
     color: rgba(0, 0, 0, 0.68);
 }
+
+.empty{padding:var(--space-base);border-radius:18px;background:#fff;font-size:var(--font-base)}
 
 .smart-results-list {
     display: flex;
@@ -1325,10 +1327,6 @@ select option {
     border-radius: 18px;
     background: #ffffff;
     margin-bottom: 12px;
-}
-
-.smart-manual-panel {
-    margin-bottom: 0;
 }
 
 .smart-chip-list {

@@ -1,9 +1,9 @@
-import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CreatePlaylistDto, Playlist, SongPlaylistState } from '../../models/playlist.model';
 import { PlaylistService } from '../../services/playlist.service';
-import { Playlist, CreatePlaylistDto } from '../../models/playlist.model';
 
 @Component({
   selector: 'app-playlist-popup',
@@ -14,58 +14,115 @@ import { Playlist, CreatePlaylistDto } from '../../models/playlist.model';
 })
 export class PlaylistPopupComponent implements OnInit {
   @Input() songId!: number;
+  @Input() autoSaveToDefault = false;
   @Output() close = new EventEmitter<void>();
   @Output() songSaved = new EventEmitter<void>();
 
-  recentPlaylists: Playlist[] = [];
+  personalPlaylists: Playlist[] = [];
+  songState: SongPlaylistState = { isInDefault: false, playlistIds: [] };
+  selectedPlaylistIds = new Set<number>();
+
   isLoading = false;
-  isSavingToDefault = false;
   isCreatingNew = false;
+  isRemovingFromDefault = false;
+  showRemoveOptions = false;
+  removeFromPersonalPlaylists = false;
   newPlaylistName = '';
-  newPlaylistIsPublic = true;  // ברירת מחדל: ציבורי
+  newPlaylistIsPublic = true;
   error: string | null = null;
   successMessage: string | null = null;
 
   constructor(private playlistService: PlaylistService) {}
 
   ngOnInit(): void {
-    this.loadRecentPlaylists();
+    this.loadPopupData();
   }
 
-  loadRecentPlaylists(): void {
+  loadPopupData(): void {
     this.isLoading = true;
-    this.playlistService.getRecentPlaylists().subscribe({
+    this.error = null;
+
+    this.playlistService.getMyPlaylists().subscribe({
       next: (playlists) => {
-        this.recentPlaylists = playlists;
-        this.isLoading = false;
+        this.personalPlaylists = playlists.filter((playlist) => !playlist.isDefault && !playlist.isAdopted);
+        this.loadSongState();
       },
       error: (err) => {
         console.error('Error loading playlists:', err);
-        this.error = 'שגיאה בטעינת הרשימות';
+        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת הרשימות';
         this.isLoading = false;
       }
     });
   }
 
-  addToPlaylist(playlistId: number): void {
+  loadSongState(): void {
+    this.playlistService.getSongPlaylistState(this.songId).subscribe({
+      next: (state) => {
+        this.songState = state;
+        this.selectedPlaylistIds = new Set(state.playlistIds);
+
+        if (this.autoSaveToDefault && !state.isInDefault) {
+          this.saveToDefaultAndStayOpen();
+          return;
+        }
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading song state:', err);
+        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת מצב השמירה';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  saveToDefaultAndStayOpen(): void {
+    this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
+      next: () => {
+        this.songState.isInDefault = true;
+        this.successMessage = 'השיר נשמר ב"השמורים שלי"';
+        this.songSaved.emit();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error saving to default playlist:', err);
+        this.error =
+          err.status === 400
+            ? 'השיר כבר שמור ב"השמורים שלי"'
+            : err?.message || err?.error?.message || 'שגיאה בשמירת השיר';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onPlaylistToggle(playlistId: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
     this.error = null;
     this.successMessage = null;
 
-    this.playlistService.addSongToPlaylist(playlistId, this.songId).subscribe({
+    if (checked) {
+      this.playlistService.addSongToPlaylist(playlistId, this.songId).subscribe({
+        next: () => {
+          this.selectedPlaylistIds.add(playlistId);
+          this.songSaved.emit();
+        },
+        error: (err) => {
+          console.error('Error adding song to playlist:', err);
+          this.error = err?.message || err?.error?.message || 'לא ניתן להוסיף את השיר לרשימה';
+          (event.target as HTMLInputElement).checked = false;
+        }
+      });
+      return;
+    }
+
+    this.playlistService.removeSongFromPlaylist(playlistId, this.songId).subscribe({
       next: () => {
-        this.successMessage = 'השיר נוסף לרשימה בהצלחה!';
-        this.songSaved.emit();
-        setTimeout(() => {
-          this.closePopup();
-        }, 1500);
+        this.selectedPlaylistIds.delete(playlistId);
       },
       error: (err) => {
-        console.error('Error adding song to playlist:', err);
-        if (err.status === 400) {
-          this.error = 'השיר כבר קיים ברשימה זו';
-        } else {
-          this.error = 'שגיאה בהוספת השיר לרשימה';
-        }
+        console.error('Error removing song from playlist:', err);
+        this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר מהרשימה';
+        (event.target as HTMLInputElement).checked = true;
       }
     });
   }
@@ -73,7 +130,7 @@ export class PlaylistPopupComponent implements OnInit {
   toggleCreateNew(): void {
     this.isCreatingNew = !this.isCreatingNew;
     this.newPlaylistName = '';
-    this.newPlaylistIsPublic = true;  // איפוס לברירת מחדל
+    this.newPlaylistIsPublic = true;
     this.error = null;
     this.successMessage = null;
   }
@@ -84,9 +141,6 @@ export class PlaylistPopupComponent implements OnInit {
       return;
     }
 
-    this.error = null;
-    this.successMessage = null;
-
     const dto: CreatePlaylistDto = {
       name: this.newPlaylistName.trim(),
       isPublic: this.newPlaylistIsPublic
@@ -94,40 +148,61 @@ export class PlaylistPopupComponent implements OnInit {
 
     this.playlistService.createPlaylist(dto).subscribe({
       next: (playlist) => {
-        this.successMessage = 'הרשימה נוצרה בהצלחה!';
-        // הוספת השיר לרשימה החדשה
-        this.addToPlaylist(playlist.id);
+        this.personalPlaylists = [playlist, ...this.personalPlaylists];
+        this.isCreatingNew = false;
+        this.newPlaylistName = '';
+        this.successMessage = 'הרשימה נוצרה בהצלחה';
+
+        this.playlistService.addSongToPlaylist(playlist.id, this.songId).subscribe({
+          next: () => {
+            this.selectedPlaylistIds.add(playlist.id);
+            this.songSaved.emit();
+          },
+          error: (err) => {
+            console.error('Error adding song to newly created playlist:', err);
+            this.error =
+              err?.message || err?.error?.message || 'הרשימה נוצרה אבל לא הצלחנו להוסיף אליה את השיר';
+          }
+        });
       },
       error: (err) => {
         console.error('Error creating playlist:', err);
-        this.error = 'שגיאה ביצירת הרשימה';
+        this.error = err?.message || err?.error?.message || 'שגיאה ביצירת הרשימה';
       }
     });
   }
 
-  saveToDefault(): void {
+  startRemoveFromDefault(): void {
+    this.showRemoveOptions = true;
+    this.removeFromPersonalPlaylists = false;
     this.error = null;
     this.successMessage = null;
-    this.isSavingToDefault = true;
+  }
 
-    this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
+  removeFromDefault(): void {
+    this.isRemovingFromDefault = true;
+
+    this.playlistService.removeFromDefaultPlaylist(this.songId, this.removeFromPersonalPlaylists).subscribe({
       next: () => {
-        this.successMessage = 'השיר נשמר ב"השמורים שלי"!';
-        this.isSavingToDefault = false;
+        this.songState.isInDefault = false;
+        if (this.removeFromPersonalPlaylists) {
+          this.selectedPlaylistIds.clear();
+        }
         this.songSaved.emit();
-        setTimeout(() => {
-          this.closePopup();
-        }, 1500);
+        this.isRemovingFromDefault = false;
+        this.closePopup();
       },
       error: (err) => {
-        this.isSavingToDefault = false;
-        if (err.status === 400) {
-          this.error = 'השיר כבר קיים ב"השמורים שלי"';
-        } else {
-          this.error = 'שגיאה בשמירת השיר';
-        }
+        console.error('Error removing song from default playlist:', err);
+        this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר מהשמורים שלי';
+        this.isRemovingFromDefault = false;
       }
     });
+  }
+
+  cancelRemoveFromDefault(): void {
+    this.showRemoveOptions = false;
+    this.removeFromPersonalPlaylists = false;
   }
 
   closePopup(): void {
@@ -138,5 +213,9 @@ export class PlaylistPopupComponent implements OnInit {
     if (event.target === event.currentTarget) {
       this.closePopup();
     }
+  }
+
+  isSelected(playlistId: number): boolean {
+    return this.selectedPlaylistIds.has(playlistId);
   }
 }

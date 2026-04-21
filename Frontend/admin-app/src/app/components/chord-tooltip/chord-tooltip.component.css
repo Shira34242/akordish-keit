@@ -36,6 +36,39 @@
     background: #f2f2f2;
 }
 
+.known-chord-btn {
+    pointer-events: auto;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #F2F2F2;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.known-chord-btn:hover,
+.known-chord-btn.known {
+    background: #ddff53;
+    color: #000000;
+}
+
+.known-chord-btn:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
 .chord-name {
     font-weight: 700;
     font-size: 1.1rem;

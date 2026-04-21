@@ -1,0 +1,25 @@
+<div class="ticker-wrapper"
+     *ngIf="cfg?.enabled && tickerTitles.length > 0"
+     [ngStyle]="wrapperStyle">
+
+  <div class="ticker-band" [ngStyle]="bandStyle">
+    <div class="ticker-track"
+         [style.animation-duration]="animationDuration">
+
+      <!-- ×2 לולאה חלקה ללא קפיצה -->
+      <div class="ticker-set">
+        <ng-container *ngFor="let title of tickerTitles">
+          <span class="ticker-title" [ngStyle]="titleStyle">{{ title }}</span>
+          <span class="ticker-sep"   [ngStyle]="sepStyle"   aria-hidden="true">●</span>
+        </ng-container>
+      </div>
+      <div class="ticker-set" aria-hidden="true">
+        <ng-container *ngFor="let title of tickerTitles">
+          <span class="ticker-title" [ngStyle]="titleStyle">{{ title }}</span>
+          <span class="ticker-sep"   [ngStyle]="sepStyle"   aria-hidden="true">●</span>
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
+</div>

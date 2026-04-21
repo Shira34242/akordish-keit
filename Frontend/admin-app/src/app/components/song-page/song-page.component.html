@@ -306,19 +306,26 @@
     <!-- 3. Main Content Grid -->
     <div class="main-layout">
 
+        <div class="song-main-column">
+            <div class="chord-diagrams-panel" *ngIf="showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
+                <div class="chord-diagrams-head">
+                    <h3>תרשימי האקורדים בשיר</h3>
+                    <p>כאן מוצגים כל האקורדים שמופיעים בשיר לפי הכלי שבחרת.</p>
+                </div>
+                <div class="chord-diagrams-bar">
+                    <app-chord-tooltip
+                        *ngFor="let chord of uniqueTransposedChords"
+                        [chordName]="chord"
+                        [instrument]="selectedInstrument"
+                        [isPinned]="false"
+                        class="inline-diagram">
+                    </app-chord-tooltip>
+                </div>
+            </div>
+
         <!-- Right Column: Lyrics -->
         <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
-            <!-- תרשימי אקורדים inline -->
-            <div class="chord-diagrams-bar" *ngIf="showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
-                <app-chord-tooltip
-                    *ngFor="let chord of uniqueTransposedChords"
-                    [chordName]="chord"
-                    [instrument]="selectedInstrument"
-                    [isPinned]="false"
-                    class="inline-diagram">
-                </app-chord-tooltip>
-            </div>
 
             <!-- Capo Hint -->
             <div class="capo-hint" *ngIf="capoFret !== null && selectedInstrument === 'guitar'">
@@ -354,11 +361,45 @@
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>
+        </div>
         <!-- Left Column: Sidebar -->
         <div class="sidebar-column">
+
+            <div class="sidebar-card known-sidebar-card" *ngIf="knownChordSummary as summary">
+                <ng-container *ngIf="summary.totalChords > 0">
+                    <div class="known-summary-head">
+                        <span class="known-summary-info"
+                              title="המידע מחושב לפי האקורדים שסימנת שאתה יודע לנגן. לפי זה מוצג כמה אקורדים חסרים לך כדי לנגן את השיר.">i</span>
+                    </div>
+
+                    <div class="known-summary-copy" [class.all-known]="summary.knowsAll">
+                        <strong *ngIf="summary.knowsAll">אתה יודע לנגן את כל האקורדים בשיר</strong>
+                        <strong *ngIf="!summary.knowsAll">חסרים לך {{ summary.missingChords }} אקורדים</strong>
+                        <span class="known-summary-note" *ngIf="!summary.knowsAll">כדי לנגן את השיר הזה עם האקורדים שבחרת</span>
+                        <div class="known-summary-missing"
+                             *ngIf="!summary.knowsAll"
+                             (mouseover)="handleLyricsMouseOver($event)"
+                             (mouseleave)="handleLyricsLeave()"
+                             (click)="handleLyricsClick($event)">
+                            <span class="known-summary-missing-label">צריך ללמוד:</span>
+                            <span class="chord-inline known-summary-chord"
+                                  *ngFor="let chord of summary.missingChordNames"
+                                  dir="ltr">{{ chord }}</span>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+
+            <div class="sidebar-card tools-sidebar-card">
+                <h3>כלים לאקורדים</h3>
+                <div class="tools-links">
+                    <a routerLink="/chords/dictionary" class="chord-dict-btn">מילון אקורדים</a>
+                    <a routerLink="/tuner" class="chord-dict-btn tuner-btn">כיוון גיטרה ויוקלילי</a>
+                </div>
+            </div>
             
             <!-- שירים נוספים של האמן -->
-            <div class="sidebar-card artist-card">
+            <div class="sidebar-card artist-card" *ngIf="isLoadingArtistSongs || artistSongs.length > 0">
                 <h3>עוד אקורדים לשירים של {{ song.artists[0]?.name }}:</h3>
                 
                 <div *ngIf="isLoadingArtistSongs" class="loading-small">טוען...</div>
@@ -369,8 +410,22 @@
                         (click)="navigateToSong(artistSong.id)">
                         {{ artistSong.title }}
                     </li>
-                    <li *ngIf="artistSongs.length === 0" class="no-songs">
-                        אין שירים נוספים
+                </ul>
+            </div>
+
+            <div class="sidebar-card similar-card">
+                <h3>שירים שאולי יעניינו אותך</h3>
+
+                <div *ngIf="isLoadingSimilarSongs" class="loading-small">טוען...</div>
+
+                <ul class="song-list" *ngIf="!isLoadingSimilarSongs">
+                    <li *ngFor="let similarSong of similarSongs"
+                        [class.current]="similarSong.id === songId"
+                        (click)="navigateToSong(similarSong.id)">
+                        {{ similarSong.title }}
+                    </li>
+                    <li *ngIf="similarSongs.length === 0" class="no-songs">
+                        אין כרגע שירים נוספים להצגה
                     </li>
                 </ul>
             </div>
@@ -426,6 +481,7 @@
 <app-playlist-popup
     *ngIf="isPlaylistPopupOpen && songId"
     [songId]="songId"
+    [autoSaveToDefault]="shouldAutoSaveOnPopupOpen"
     (close)="closePlaylistPopup()"
     (songSaved)="onSongSaved()">
 </app-playlist-popup>

@@ -143,6 +143,49 @@
       </div>
     </div>
 
+    <!-- ===== KNOWN CHORDS ===== -->
+    <section class="content-section known-chords-section">
+      <div class="section-header">
+        <h3 class="section-title">האקורדים שאני יודע לנגן:</h3>
+      </div>
+
+      <div class="known-chords-board">
+        @for (instrument of knownChordInstruments; track instrument) {
+          <div class="known-chords-column">
+            <div class="known-chords-column-head">
+              <span class="known-chords-title">{{ getInstrumentLabel(instrument) }}</span>
+              <div class="known-chords-actions">
+                <button class="known-basic-btn"
+                        (click)="addBasicKnownChords(instrument)"
+                        [title]="getMissingBasicChordCount(instrument) > 0 ? 'יוסיף ' + getMissingBasicChordCount(instrument) + ' אקורדים בסיסיים' : 'כל האקורדים הבסיסיים כבר נוספו'"
+                        [disabled]="quickAddingBasic[instrument] || getMissingBasicChordCount(instrument) === 0">
+                  {{ quickAddingBasic[instrument] ? 'מוסיף...' : getMissingBasicChordCount(instrument) === 0 ? 'הבסיסיים נוספו' : 'הוסף בסיסיים' }}
+                </button>
+                <button class="known-clear-btn"
+                        *ngIf="getKnownChordsForInstrument(instrument).length > 0"
+                        (click)="removeAllKnownChords(instrument)"
+                        [disabled]="quickRemovingAll[instrument]">
+                  {{ quickRemovingAll[instrument] ? 'מוחק...' : 'מחק הכל' }}
+                </button>
+              </div>
+            </div>
+            <div class="known-chords-list">
+              @if (getKnownChordsForInstrument(instrument).length > 0) {
+                @for (chord of getKnownChordsForInstrument(instrument); track chord.id) {
+                  <button class="known-chord-pill" (click)="removeKnownChord(chord)" [title]="'הסרה: ' + chord.chordName">
+                    {{ chord.chordName }}
+                    <span class="material-icons known-chord-remove">close</span>
+                  </button>
+                }
+              } @else {
+                <span class="known-chords-empty">עדיין לא סומנו אקורדים</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
     <!-- ===== MY UPLOADED CONTENT ===== -->
     <section class="content-section">
       <div class="section-header">

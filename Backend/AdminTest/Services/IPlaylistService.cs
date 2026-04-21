@@ -74,4 +74,14 @@ public interface IPlaylistService
     /// שמירת שיר ישירות ל"השמורים שלי" של המשתמש
     /// </summary>
     Task<bool> SaveToDefaultPlaylistAsync(int songId, int userId);
+
+    /// <summary>
+    /// מצב השמירה של שיר עבור המשתמש המחובר
+    /// </summary>
+    Task<SongPlaylistStateDto> GetSongPlaylistStateAsync(int songId, int userId);
+
+    /// <summary>
+    /// הסרת שיר מ"השמורים שלי" עם אפשרות להסרה גם משאר הרשימות האישיות
+    /// </summary>
+    Task<bool> RemoveFromDefaultPlaylistAsync(int songId, int userId, bool removeFromPersonalPlaylists);
 }

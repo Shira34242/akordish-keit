@@ -9,6 +9,7 @@ public interface IUserService
         int? role,
         bool? isActive,
         int? contentTag,
+        int? preferredInstrumentId,
         int pageNumber,
         int pageSize);
 
