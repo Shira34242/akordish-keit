@@ -1,0 +1,134 @@
+:host {
+  display: block;
+}
+
+.cancel-page {
+  min-height: 100vh;
+  background: var(--color-white, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8, 32px) var(--space-4, 16px);
+}
+
+.cancel-content {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+}
+
+/* Hero */
+.cancel-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  text-align: center;
+  padding: var(--space-8, 32px) var(--space-4, 16px);
+  background: var(--color-black, #000000);
+  border-radius: 12px;
+}
+
+.x-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2.5px solid var(--color-light, #F2F2F2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cancel-title {
+  margin: 0;
+  font-size: var(--font-2xl, 1.5rem);
+  font-weight: 700;
+  color: var(--color-white, #ffffff);
+  letter-spacing: -0.02em;
+}
+
+.cancel-subtitle {
+  margin: 0;
+  font-size: var(--font-base, 1rem);
+  color: var(--color-light, #F2F2F2);
+}
+
+/* Info */
+.cancel-info {
+  padding: var(--space-5, 20px);
+  background: var(--color-surface, #F2F2F2);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.cancel-info p {
+  margin: 0;
+  font-size: var(--font-sm, 0.875rem);
+  color: var(--color-dark, #404040);
+  line-height: 1.6;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: var(--space-4, 16px);
+  background: var(--color-accent, #ddff53);
+  color: var(--color-black, #000000);
+  font-size: var(--font-base, 1rem);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  display: block;
+  width: 100%;
+  padding: var(--space-4, 16px);
+  background: transparent;
+  color: var(--color-black, #000000);
+  font-size: var(--font-sm, 0.875rem);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border: 1.5px solid var(--color-black, #000000);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface, #F2F2F2);
+}
+
+@media (max-width: 480px) {
+  .cancel-page {
+    align-items: flex-start;
+    padding-top: var(--space-6, 24px);
+  }
+
+  .cancel-hero {
+    border-radius: 8px;
+    padding: var(--space-6, 24px) var(--space-4, 16px);
+  }
+
+  .cancel-title {
+    font-size: var(--font-xl, 1.25rem);
+  }
+}

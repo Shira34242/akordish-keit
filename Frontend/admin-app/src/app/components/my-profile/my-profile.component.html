@@ -21,12 +21,22 @@
       </svg>
       <img
         class="profile-avatar"
+        [class.profile-avatar--uploading]="uploadingAvatar"
         [src]="user?.profileImageUrl || '/logo.png'"
         alt="תמונת פרופיל"
         onerror="this.src='/logo.png'"/>
-      <button class="edit-avatar-btn" title="שינוי תמונה">
-        <span class="material-icons">edit</span>
+      <div class="avatar-upload-overlay" *ngIf="uploadingAvatar">
+        <span class="avatar-spinner"></span>
+      </div>
+      <button class="edit-avatar-btn" title="שינוי תמונה" (click)="triggerAvatarUpload()" [disabled]="uploadingAvatar">
+        <span class="material-icons">{{ uploadingAvatar ? 'hourglass_empty' : 'edit' }}</span>
       </button>
+      <input
+        #avatarInput
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        style="display:none"
+        (change)="onAvatarFileSelected($event)"/>
     </div>
 
     <!-- Level + badges row -->
@@ -100,6 +110,38 @@
         </div>
       </div>
     }
+
+    <!-- ===== SUBSCRIPTION CARD ===== -->
+    <div class="manage-card">
+      <div class="manage-card-col">
+        <div>
+          <h3 class="manage-card-title">מינויים ותשלומים</h3>
+          <p class="manage-card-subtitle">ניהול המנויים שלך והיסטוריית תשלומים</p>
+        </div>
+        <div class="manage-card-actions">
+          @if (canUpgradeSubscription()) {
+            <button class="manage-account-link" (click)="navigateToUpgrade()">שדרג מנוי</button>
+          }
+          <a class="manage-btn" routerLink="/subscription/status">לניהול</a>
+        </div>
+      </div>
+      <div class="manage-card-col manage-card-col--info">
+        <div class="manage-info-list">
+          <div class="manage-info-item">
+            <span class="manage-info-label">חשבון:</span>
+            <span class="sub-plan-badge" [ngClass]="getSubscriptionBadgeClass()">{{ getSubscriptionBadgeText() }}</span>
+          </div>
+          <div class="manage-info-item">
+            <span class="manage-info-label">סטטוס:</span>
+            <span class="sub-status-value">
+              <span class="status-dot" [ngClass]="getSubscriptionStatusDotClass()"></span>
+              {{ getSubscriptionStatusText() }}
+            </span>
+          </div>
+        </div>
+        <a routerLink="/subscription/status" class="manage-account-link">לניהול</a>
+      </div>
+    </div>
 
     <!-- ===== MY UPLOADED CONTENT ===== -->
     <section class="content-section">

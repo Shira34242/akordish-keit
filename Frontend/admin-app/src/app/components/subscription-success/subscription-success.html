@@ -1,0 +1,60 @@
+<div class="success-page" dir="rtl">
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner"></div>
+    <p>טוען פרטי מנוי...</p>
+  </div>
+
+  <!-- Success Content -->
+  <div class="success-content" *ngIf="!loading">
+
+    <!-- Hero -->
+    <div class="success-hero">
+      <div class="checkmark-circle">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <path d="M8 20L16 28L32 12" stroke="#000000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="success-title">התשלום התקבל</h1>
+      <p class="success-subtitle">המנוי שלך פעיל ומוכן לשימוש</p>
+      <div class="plan-chip" *ngIf="subscription">{{ getPlanName() }}</div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card" *ngIf="subscription">
+      <div class="info-row">
+        <span class="info-label">סטטוס</span>
+        <span class="info-value active-value">פעיל</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-row">
+        <span class="info-label">מחזור חיוב</span>
+        <span class="info-value">{{ subscription.billingCycle === 'Monthly' ? 'חודשי' : 'שנתי' }}</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-row">
+        <span class="info-label">חידוש הבא</span>
+        <span class="info-value">{{ subscription.renewalDate ? (subscription.renewalDate | date:'dd/MM/yyyy') : '—' }}</span>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="next-steps">
+      <h2 class="next-title">מה עכשיו?</h2>
+      <ul class="steps-list">
+        <li>הפרופיל שלך כעת מקבל את כל הפיצ'רים של תוכנית {{ getPlanName() }}</li>
+        <li>תוכל לנהל את המנוי שלך בכל עת מהפרופיל</li>
+        <li>אישור יישלח לכתובת המייל שלך</li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <a routerLink="/my-profile" class="btn-primary">לפרופיל שלי</a>
+      <a routerLink="/subscription/status" class="btn-secondary">ניהול המנוי</a>
+    </div>
+
+  </div>
+
+</div>

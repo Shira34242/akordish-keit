@@ -206,15 +206,28 @@ public class SubscriptionService : ISubscriptionService
 
         if (dto.CancelImmediately)
         {
-            // ביטול מיידי
-            subscription.Status = SubscriptionStatus.Cancelled;
+            // ביטול מיידי — הורד פרופילים מיד ל-Free
+            subscription.Status  = SubscriptionStatus.Cancelled;
             subscription.EndDate = DateTime.UtcNow;
+
+            foreach (var artist in subscription.CoveredArtists)
+            {
+                artist.Tier           = ProfileTier.Free;
+                artist.SubscriptionId = null;
+            }
+
+            foreach (var serviceProvider in subscription.CoveredServiceProviders)
+            {
+                serviceProvider.Tier             = ProfileTier.Free;
+                serviceProvider.SubscriptionId   = null;
+                serviceProvider.IsPrimaryProfile = false;
+            }
         }
         else
         {
-            // ביטול בסוף התקופה ששולמה
+            // ביטול בסוף התקופה — הפרופילים ישארו פעילים עד EndDate
+            // ה-CleanupService יוריד אותם כשהמנוי יפוג
             subscription.Status = SubscriptionStatus.Cancelled;
-            // EndDate נשאר כמו שהוא - המשתמש ימשיך ליהנות עד תום התקופה
         }
 
         await _context.SaveChangesAsync();

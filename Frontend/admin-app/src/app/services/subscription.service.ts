@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   SubscriptionDto,
+  SubscriptionPlan,
   CreateSubscriptionDto,
   UpdateSubscriptionStatusDto,
   UpgradeSubscriptionDto,
@@ -14,9 +15,29 @@ import {
   providedIn: 'root'
 })
 export class SubscriptionService {
-  private apiUrl = 'https://localhost:44395/api/Subscriptions';
+  private apiUrl     = 'https://localhost:44395/api/Subscriptions';
+  private paymentsUrl = 'https://localhost:44395/api/Payments';
 
   constructor(private http: HttpClient) { }
+
+  /**
+   * יצירת Checkout Session ב-Stripe — מחזיר URL לדף תשלום
+   */
+  verifySession(sessionId: string): Observable<{ activated: boolean }> {
+    return this.http.get<{ activated: boolean }>(
+      `${this.paymentsUrl}/verify-session?sessionId=${sessionId}`
+    );
+  }
+
+  createCheckoutSession(
+    plan: SubscriptionPlan,
+    billingCycle: 'Monthly' | 'Yearly'
+  ): Observable<{ checkoutUrl: string; sessionId: string }> {
+    return this.http.post<{ checkoutUrl: string; sessionId: string }>(
+      `${this.paymentsUrl}/create-checkout`,
+      { plan, billingCycle }
+    );
+  }
 
   /**
    * יצירת מנוי חדש

@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 import { LikedContentService } from '../../services/liked-content.service';
@@ -14,6 +14,8 @@ import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
 import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
 import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
+import { SubscriptionService } from '../../services/subscription.service';
+import { SubscriptionDto, SubscriptionPlan, SubscriptionStatus } from '../../models/subscription.model';
 
 @Component({
   selector: 'app-my-profile',
@@ -23,7 +25,10 @@ import { TeacherCreateComponent } from '../teacher-create/teacher-create.compone
   styleUrls: ['./my-profile.component.css']
 })
 export class MyProfileComponent implements OnInit {
+  @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
+
   user: User | null = null;
+  uploadingAvatar = false;
   myPageInfo: UserWithProfileDto | null = null;
   myPages: UserWithProfileDto[] = [];
 
@@ -41,6 +46,9 @@ export class MyProfileComponent implements OnInit {
   showEditPageModal = false;
   editPageType: 'artist' | 'teacher' | 'provider' | null = null;
 
+  // מנוי
+  subscription: SubscriptionDto | null = null;
+
   // שגיאות טעינה
   pageLoadError = false;
 
@@ -57,7 +65,9 @@ export class MyProfileComponent implements OnInit {
     private songService: SongService,
     private eventService: EventService,
     private articleService: ArticleService,
-    private userService: UserService
+    private userService: UserService,
+    private subscriptionService: SubscriptionService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -69,6 +79,7 @@ export class MyProfileComponent implements OnInit {
     this.loadMyProfileDetails();
     this.loadMyPageInfo();
     this.loadMyAllPages();
+    this.loadSubscription();
   }
 
   get profileIncomplete(): boolean {
@@ -105,6 +116,32 @@ export class MyProfileComponent implements OnInit {
       },
       error: () => { this.profileSaving = false; }
     });
+  }
+
+  triggerAvatarUpload() {
+    this.avatarInput.nativeElement.click();
+  }
+
+  onAvatarFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingAvatar = true;
+    this.userService.uploadProfileImage(file).subscribe({
+      next: (url) => {
+        this.userService.updateMyProfile({ profileImageUrl: url }).subscribe({
+          next: () => {
+            if (this.user) {
+              this.user = { ...this.user, profileImageUrl: url };
+              this.authService.updateCurrentUser(this.user);
+            }
+            this.uploadingAvatar = false;
+          },
+          error: () => { this.uploadingAvatar = false; }
+        });
+      },
+      error: () => { this.uploadingAvatar = false; }
+    });
+    (event.target as HTMLInputElement).value = '';
   }
 
   private loadMyProfileDetails() {
@@ -161,6 +198,71 @@ export class MyProfileComponent implements OnInit {
         this.likedSongs = [];
       }
     });
+  }
+
+  private loadSubscription() {
+    if (!this.user?.id) return;
+    this.subscriptionService.getUserActiveSubscription(this.user.id).subscribe({
+      next: (sub) => { this.subscription = sub; },
+      error: () => { this.subscription = null; }
+    });
+  }
+
+  getSubscriptionBadgeText(): string {
+    if (!this.subscription || this.subscription.plan === SubscriptionPlan.Free) return 'FREE';
+    return 'PRO';
+  }
+
+  getSubscriptionBadgeClass(): string {
+    if (!this.subscription || this.subscription.plan === SubscriptionPlan.Free) return 'sub-badge--free';
+    return 'sub-badge--pro';
+  }
+
+  getSubscriptionStatusDotClass(): string {
+    if (!this.subscription) return 'status-dot--inactive';
+    switch (this.subscription.status) {
+      case SubscriptionStatus.Active:
+      case SubscriptionStatus.Trial:
+        return 'status-dot--active';
+      case SubscriptionStatus.PendingPayment:
+      case SubscriptionStatus.Cancelled:
+        return 'status-dot--pending';
+      default:
+        return 'status-dot--inactive';
+    }
+  }
+
+  getSubscriptionStatusText(): string {
+    if (!this.subscription) return 'חינמי';
+    switch (this.subscription.status) {
+      case SubscriptionStatus.Active: return 'פעיל';
+      case SubscriptionStatus.Trial: return 'ניסיון חינם';
+      case SubscriptionStatus.PendingPayment: return 'ממתין לתשלום';
+      case SubscriptionStatus.Cancelled: return 'בוטל';
+      case SubscriptionStatus.Expired: return 'פג תוקף';
+      case SubscriptionStatus.Suspended: return 'מושהה';
+      default: return 'לא פעיל';
+    }
+  }
+
+  navigateToUpgrade() {
+    const types = this.myPages.map(p => {
+      if (p.profileType === 'artist') return 'artist';
+      if (p.isTeacher) return 'teacher';
+      return 'service-provider';
+    });
+    if (types.length === 0) {
+      this.router.navigate(['/subscription/select']);
+      return;
+    }
+    this.router.navigate(['/subscription/select'], {
+      queryParams: { types: types.join(','), primary: types[0] }
+    });
+  }
+
+  canUpgradeSubscription(): boolean {
+    if (!this.subscription) return true;
+    return this.subscription.plan !== SubscriptionPlan.Premium;
   }
 
   private loadMyPageInfo() {

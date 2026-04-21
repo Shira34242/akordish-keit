@@ -39,6 +39,7 @@ builder.Services.AddScoped<IPlaylistService, PlaylistService>();
 builder.Services.AddScoped<ILikedContentService, LikedContentService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 

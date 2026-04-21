@@ -75,7 +75,14 @@ export class UserService {
     );
   }
 
-  updateMyProfile(data: { phone?: string; address?: string; birthDate?: string }): Observable<any> {
+  updateMyProfile(data: { phone?: string; address?: string; birthDate?: string; profileImageUrl?: string }): Observable<any> {
     return this.http.put(`${this.apiUrl}/me`, data, { withCredentials: true });
+  }
+
+  uploadProfileImage(file: File): Observable<string> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ url: string }>('https://localhost:44395/api/Media/upload', form, { withCredentials: true })
+      .pipe(map(res => res.url));
   }
 }

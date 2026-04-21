@@ -131,6 +131,17 @@ export const routes: Routes = [
                 title: 'המנוי שלי - אקורדישקייט'
             },
             {
+                path: 'subscription/success',
+                loadComponent: () => import('./components/subscription-success/subscription-success').then(m => m.SubscriptionSuccessComponent),
+                canActivate: [authGuard],
+                title: 'תשלום התקבל - אקורדישקייט'
+            },
+            {
+                path: 'subscription/cancel',
+                loadComponent: () => import('./components/subscription-cancel/subscription-cancel').then(m => m.SubscriptionCancelComponent),
+                title: 'תשלום בוטל - אקורדישקייט'
+            },
+            {
                 path: 'submit/article',
                 loadComponent: () => import('./components/public/submit-article/submit-article.component').then(m => m.SubmitArticleComponent),
                 canActivate: [authGuard],

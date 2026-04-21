@@ -83,8 +83,42 @@
   transition: opacity 0.2s;
 }
 
-.edit-avatar-btn:hover {
+.edit-avatar-btn:hover:not(:disabled) {
   opacity: 0.82;
+}
+
+.edit-avatar-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.profile-avatar--uploading {
+  opacity: 0.5;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  inset: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+}
+
+.avatar-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.4);
+  border-top-color: #ddff53;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .edit-avatar-btn .material-icons {
@@ -755,16 +789,23 @@
 }
 
 .manage-account-link {
-  font-size: var(--font-xs);
-  font-weight: 300;
-  color: rgba(0,0,0,0.4);
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  border: none;
+  background: #ddff53;
+  color: #000000;
+  font-size: var(--font-sm);
+  font-weight: 800;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .manage-account-link:hover {
-  color: #000000;
+  opacity: 0.82;
+  transform: scale(1.03);
 }
 
 /* ===========================
@@ -961,6 +1002,41 @@
   color: rgba(0,0,0,0.35);
   text-align: center;
   margin: 0;
+}
+
+/* ===========================
+   SUBSCRIPTION CARD
+   =========================== */
+
+.sub-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 var(--space-sm);
+  border-radius: 999px;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sub-badge--pro {
+  background: #ddff53;
+  color: #000000;
+}
+
+.sub-badge--free {
+  background: #F2F2F2;
+  color: #404040;
+}
+
+.sub-status-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
 }
 
 /* ===========================
