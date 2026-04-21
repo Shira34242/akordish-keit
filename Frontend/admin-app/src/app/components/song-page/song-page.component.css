@@ -534,6 +534,28 @@
     min-width: 0;
 }
 
+.known-chords-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-base);
+    padding: var(--space-md) var(--space-base);
+    border-radius: 999px;
+    background: #ddff53;
+    color: #000000;
+    font-size: var(--font-sm);
+    line-height: var(--lh-small);
+}
+
+.known-chords-summary strong {
+    font-weight: 800;
+}
+
+.known-chords-summary span {
+    font-weight: 300;
+}
+
 /* מאפס את עיצוב ה-tooltip להצגה inline */
 .inline-diagram {
     display: block;

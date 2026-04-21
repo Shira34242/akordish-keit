@@ -11,9 +11,11 @@ import { EventService } from '../../services/event.service';
 import { ArticleService } from '../../services/article.service';
 import { UserService } from '../../services/user.service';
 import { UserWithProfileDto } from '../../models/user.model';
+import { KnownChordInstrument, UserKnownChord, UserKnownChordService } from '../../services/user-known-chord.service';
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
 import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
 import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-my-profile',
@@ -31,6 +33,18 @@ export class MyProfileComponent implements OnInit {
   myArticles: any[] = [];
   myEvents: any[] = [];
   likedSongs: any[] = [];
+  knownChords: UserKnownChord[] = [];
+  knownChordInstruments: KnownChordInstrument[] = ['guitar', 'piano', 'ukulele'];
+  quickAddingBasic: Record<KnownChordInstrument, boolean> = {
+    guitar: false,
+    piano: false,
+    ukulele: false
+  };
+  readonly basicChordsByInstrument: Record<KnownChordInstrument, string[]> = {
+    guitar: ['C', 'D', 'E', 'G', 'A', 'Am', 'Dm', 'Em', 'F', 'Bm', 'B7', 'D7', 'E7', 'G7'],
+    piano: ['C', 'D', 'E', 'G', 'A', 'Am', 'Dm', 'Em', 'F', 'Bm', 'B7', 'D7', 'E7', 'G7'],
+    ukulele: ['C', 'D', 'F', 'G', 'A', 'Am', 'Dm', 'Em', 'Fmaj7', 'G7', 'A7', 'C7']
+  };
 
   // מודל השלמת פרטים
   showProfileModal = false;
@@ -57,7 +71,8 @@ export class MyProfileComponent implements OnInit {
     private songService: SongService,
     private eventService: EventService,
     private articleService: ArticleService,
-    private userService: UserService
+    private userService: UserService,
+    private userKnownChordService: UserKnownChordService
   ) {}
 
   ngOnInit() {
@@ -66,6 +81,7 @@ export class MyProfileComponent implements OnInit {
     this.loadMyArticles();
     this.loadMyEvents();
     this.loadLikedSongs();
+    this.loadKnownChords();
     this.loadMyProfileDetails();
     this.loadMyPageInfo();
     this.loadMyAllPages();
@@ -159,6 +175,72 @@ export class MyProfileComponent implements OnInit {
       },
       error: () => {
         this.likedSongs = [];
+      }
+    });
+  }
+
+  private loadKnownChords() {
+    this.userKnownChordService.ensureLoaded('guitar').subscribe(() => this.refreshKnownChords());
+    this.userKnownChordService.ensureLoaded('piano').subscribe(() => this.refreshKnownChords());
+    this.userKnownChordService.ensureLoaded('ukulele').subscribe(() => this.refreshKnownChords());
+  }
+
+  private refreshKnownChords() {
+    this.userKnownChordService.getKnownChords().subscribe(chords => {
+      this.knownChords = chords;
+    });
+  }
+
+  getKnownChordsForInstrument(instrument: KnownChordInstrument): UserKnownChord[] {
+    return this.knownChords.filter(chord => chord.instrument === instrument);
+  }
+
+  getInstrumentLabel(instrument: KnownChordInstrument): string {
+    const labels: Record<KnownChordInstrument, string> = {
+      guitar: 'גיטרה',
+      piano: 'פסנתר',
+      ukulele: 'יוקלילי'
+    };
+    return labels[instrument];
+  }
+
+  getMissingBasicChordCount(instrument: KnownChordInstrument): number {
+    const known = new Set(
+      this.getKnownChordsForInstrument(instrument)
+        .map(chord => this.userKnownChordService.normalizeChordName(chord.chordName))
+    );
+
+    return this.basicChordsByInstrument[instrument]
+      .filter(chord => !known.has(this.userKnownChordService.normalizeChordName(chord)))
+      .length;
+  }
+
+  addBasicKnownChords(instrument: KnownChordInstrument) {
+    const known = new Set(
+      this.getKnownChordsForInstrument(instrument)
+        .map(chord => this.userKnownChordService.normalizeChordName(chord.chordName))
+    );
+    const missing = this.basicChordsByInstrument[instrument]
+      .filter(chord => !known.has(this.userKnownChordService.normalizeChordName(chord)));
+
+    if (missing.length === 0 || this.quickAddingBasic[instrument]) return;
+
+    this.quickAddingBasic[instrument] = true;
+    forkJoin(missing.map(chord => this.userKnownChordService.add(instrument, chord))).subscribe({
+      next: () => {
+        this.quickAddingBasic[instrument] = false;
+        this.refreshKnownChords();
+      },
+      error: () => {
+        this.quickAddingBasic[instrument] = false;
+      }
+    });
+  }
+
+  removeKnownChord(chord: UserKnownChord) {
+    this.userKnownChordService.remove(chord.instrument, chord.chordName).subscribe(removed => {
+      if (removed) {
+        this.knownChords = this.knownChords.filter(item => item.id !== chord.id);
       }
     });
   }

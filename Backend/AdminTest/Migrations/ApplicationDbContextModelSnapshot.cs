@@ -2165,6 +2165,17 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("AttachmentsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AudienceLabel")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("CampaignName")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
@@ -2188,6 +2199,26 @@ namespace AkordishKeit.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("MediaAltText")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("MediaDisplaySize")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("MediaThumbnailUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MediaType")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("MediaUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Message")
                         .IsRequired()
@@ -2226,6 +2257,97 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_Notifications_User_Read_Deleted_Created");
 
                     b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NotificationGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AddressContains")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("ContentTag")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("JoinedFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("JoinedTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int?>("PreferredInstrumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("SendToAll")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("IsDeleted", "CreatedAt")
+                        .HasDatabaseName("IX_NotificationGroups_Deleted_Created");
+
+                    b.ToTable("NotificationGroups", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NotificationGroupMember", b =>
+                {
+                    b.Property<int>("NotificationGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("NotificationGroupId", "UserId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_NotificationGroupMembers_UserId");
+
+                    b.ToTable("NotificationGroupMembers", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.Person", b =>
@@ -2529,6 +2651,44 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_SongArtists_SongId");
 
                     b.ToTable("SongArtists", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.SongChord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("DisplayChordName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("NormalizedChordName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("SongId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedChordName", "SongId")
+                        .HasDatabaseName("IX_SongChords_Chord_Song");
+
+                    b.HasIndex("SongId", "NormalizedChordName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SongChords_Song_Chord");
+
+                    b.ToTable("SongChords", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.SongGenre", b =>
@@ -3104,6 +3264,47 @@ namespace AkordishKeit.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserKnownChord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChordName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Instrument")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("NormalizedChordName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Instrument", "AddedAt")
+                        .HasDatabaseName("IX_UserKnownChords_User_Instrument_AddedAt");
+
+                    b.HasIndex("UserId", "Instrument", "NormalizedChordName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserKnownChords_User_Instrument_Chord");
+
+                    b.ToTable("UserKnownChords", (string)null);
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.AdCampaign", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.AdSpot", "AdSpot")
@@ -3565,6 +3766,36 @@ namespace AkordishKeit.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NotificationGroup", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NotificationGroupMember", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.NotificationGroup", "NotificationGroup")
+                        .WithMany("Members")
+                        .HasForeignKey("NotificationGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("NotificationGroup");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.Playlist", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.User", "User")
@@ -3661,6 +3892,17 @@ namespace AkordishKeit.Migrations
                         .IsRequired();
 
                     b.Navigation("Artist");
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.SongChord", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Song", "Song")
+                        .WithMany("SongChords")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Song");
                 });
@@ -3791,6 +4033,17 @@ namespace AkordishKeit.Migrations
                     b.Navigation("PreferredInstrument");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserKnownChord", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.AdSpot", b =>
                 {
                     b.Navigation("Campaigns");
@@ -3872,6 +4125,11 @@ namespace AkordishKeit.Migrations
                     b.Navigation("SongsInOriginalKey");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NotificationGroup", b =>
+                {
+                    b.Navigation("Members");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.Person", b =>
                 {
                     b.Navigation("ArrangedSongs");
@@ -3895,6 +4153,8 @@ namespace AkordishKeit.Migrations
                     b.Navigation("Ratings");
 
                     b.Navigation("SongArtists");
+
+                    b.Navigation("SongChords");
 
                     b.Navigation("SongGenres");
 

@@ -11,15 +11,18 @@ public class SongService : ISongService
     private readonly AkordishKeitDbContext _context;
     private readonly IYouTubeService _youTubeService;
     private readonly INotificationService _notificationService;
+    private readonly IChordIndexService _chordIndexService;
 
     public SongService(
         AkordishKeitDbContext context,
         IYouTubeService youTubeService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IChordIndexService chordIndexService)
     {
         _context = context;
         _youTubeService = youTubeService;
         _notificationService = notificationService;
+        _chordIndexService = chordIndexService;
     }
 
     // ============================================
@@ -264,6 +267,8 @@ public class SongService : ISongService
             };
 
             _context.ContentSubmissions.Add(submission);
+
+            await _chordIndexService.SyncSongChordsAsync(song.Id, song.LyricsWithChords);
 
             // Save all changes within transaction
             await _context.SaveChangesAsync();
@@ -516,6 +521,8 @@ public class SongService : ISongService
                     });
                 }
             }
+
+            await _chordIndexService.SyncSongChordsAsync(song.Id, song.LyricsWithChords);
 
             // Save all changes within transaction
             await _context.SaveChangesAsync();
@@ -1291,6 +1298,8 @@ public class SongService : ISongService
         };
 
         _context.Songs.Add(newSong);
+        await _chordIndexService.SyncSongChordsAsync(newSong.Id, newSong.LyricsWithChords);
+
         await _context.SaveChangesAsync();
 
         foreach (var sa in original.SongArtists)

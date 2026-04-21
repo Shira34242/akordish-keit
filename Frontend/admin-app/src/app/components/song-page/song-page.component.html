@@ -320,6 +320,14 @@
                 </app-chord-tooltip>
             </div>
 
+            <div class="known-chords-summary" *ngIf="knownChordSummary as summary">
+                <ng-container *ngIf="summary.totalChords > 0">
+                    <strong *ngIf="summary.knowsAll">אתה יודע לנגן את כל האקורדים בשיר</strong>
+                    <strong *ngIf="!summary.knowsAll">צריך ללמוד עוד {{ summary.missingChords }} אקורדים בשביל לנגן שיר זה</strong>
+                    <span *ngIf="!summary.knowsAll" dir="ltr">{{ summary.missingChordNames.join(', ') }}</span>
+                </ng-container>
+            </div>
+
             <!-- Capo Hint -->
             <div class="capo-hint" *ngIf="capoFret !== null && selectedInstrument === 'guitar'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"

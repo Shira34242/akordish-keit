@@ -370,6 +370,16 @@
                         {{ isPlayingDetail ? 'מנגן...' : 'השמע אקורד' }}
                     </button>
 
+                    <button
+                        class="detail-known-btn"
+                        [class.known]="isSelectedChordKnown"
+                        [disabled]="isSavingKnownChord"
+                        (click)="toggleSelectedKnownChord()"
+                        [title]="isSelectedChordKnown ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'">
+                        <span class="detail-known-mark">{{ isSelectedChordKnown ? '✓' : '+' }}</span>
+                        <span>{{ isSelectedChordKnown ? 'ברשימת האקורדים שאני יודע' : 'הוסף לאקורדים שאני יודע' }}</span>
+                    </button>
+
                     <!-- #7 Finger legend — clean numbered circles -->
                     <div class="hand-wrap" *ngIf="selectedInstrument !== 'piano'">
                         <p class="hand-title">מספור אצבעות</p>

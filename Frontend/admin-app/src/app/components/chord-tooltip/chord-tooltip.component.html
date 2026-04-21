@@ -1,4 +1,15 @@
 <div class="tooltip-container" (click)="$event.stopPropagation()">
+    <button
+        class="known-chord-btn"
+        [class.known]="isKnownChord"
+        [disabled]="isSavingKnownChord"
+        (click)="toggleKnownChord($event)"
+        (mouseenter)="playBtnHoverChange.emit(true)"
+        (mouseleave)="playBtnHoverChange.emit(false)"
+        [title]="isKnownChord ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'"
+        [attr.aria-label]="isKnownChord ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'">
+        {{ isKnownChord ? '✓' : '+' }}
+    </button>
     <button *ngIf="isPinned" class="tooltip-close-btn" (click)="closePinned.emit()" aria-label="סגור">×</button>
     <div class="chord-name">
         {{ chordName }}

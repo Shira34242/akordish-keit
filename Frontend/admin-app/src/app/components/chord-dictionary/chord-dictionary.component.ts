@@ -5,6 +5,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { GUITAR_CHORDS, PIANO_CHORDS, UKULELE_CHORDS, GuitarChord, UkuleleChord } from '../../utils/chord-data';
 import { ChordPlayerService } from '../../services/chord-player.service';
+import { UserKnownChordService } from '../../services/user-known-chord.service';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 export type Instrument = 'guitar' | 'piano' | 'ukulele';
 
@@ -167,9 +170,18 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     private readonly BLACK_X_28: { [n: number]: number } = { 1: 20, 3: 48, 6: 104, 8: 132, 10: 160 };
     private readonly BLACK_X_13: { [n: number]: number } = { 1: 9,  3: 22, 6: 48,  8: 61,  10: 74 };
 
-    constructor(private chordPlayer: ChordPlayerService) {}
+    isSavingKnownChord = false;
 
-    ngOnInit(): void {}
+    constructor(
+        private chordPlayer: ChordPlayerService,
+        private knownChordService: UserKnownChordService,
+        private authService: AuthService,
+        private router: Router
+    ) {}
+
+    ngOnInit(): void {
+        this.loadKnownChords();
+    }
 
     ngAfterViewInit(): void {
         setTimeout(() => this.initHeroHeight(), 50);
@@ -276,6 +288,7 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     selectInstrument(inst: Instrument): void {
         this.selectedInstrument = inst;
         this.clearDetail();
+        this.loadKnownChords();
     }
 
     selectRoot(root: string | null): void {
@@ -361,6 +374,31 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         this.selectedChord = name;
         this.chordDetail = this.buildDetail(name);
         if (this.selectedInstrument === 'piano') this.buildPianoLarge(name);
+    }
+
+    get isSelectedChordKnown(): boolean {
+        return !!this.selectedChord && this.knownChordService.isKnown(this.selectedInstrument, this.selectedChord);
+    }
+
+    toggleSelectedKnownChord(): void {
+        if (!this.selectedChord) return;
+
+        if (!this.authService.isLoggedIn) {
+            this.authService.requestLogin(this.router.url);
+            return;
+        }
+
+        if (this.isSavingKnownChord) return;
+        this.isSavingKnownChord = true;
+        this.knownChordService.toggle(this.selectedInstrument, this.selectedChord).subscribe({
+            next: () => this.isSavingKnownChord = false,
+            error: () => this.isSavingKnownChord = false
+        });
+    }
+
+    private loadKnownChords(): void {
+        if (!this.authService.isLoggedIn) return;
+        this.knownChordService.ensureLoaded(this.selectedInstrument).subscribe();
     }
 
     get heroTitle(): string {

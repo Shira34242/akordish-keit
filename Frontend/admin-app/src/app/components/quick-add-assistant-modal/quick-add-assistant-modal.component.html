@@ -31,10 +31,21 @@
           <button
             type="button"
             class="assistant-chip"
-            *ngFor="let option of currentOptions; trackBy: trackByOption"
+            *ngFor="let option of primaryOptions; trackBy: trackByOption"
             (click)="selectOption(option, $event)">
             {{ option.label }}
           </button>
+
+          <ng-container *ngIf="secondaryOptions.length > 0">
+            <span class="assistant-secondary-label">או שתרצו</span>
+            <button
+              type="button"
+              class="assistant-chip assistant-chip-muted"
+              *ngFor="let option of secondaryOptions; trackBy: trackByOption"
+              (click)="selectOption(option, $event)">
+              {{ option.label }}
+            </button>
+          </ng-container>
         </div>
 
         <div class="embedded-flow" *ngIf="currentMode === 'song'">
@@ -293,6 +304,89 @@
                 {{ isSubmitting ? 'שולח...' : 'שליחה לאישור' }}
               </button>
             </div>
+          </div>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'chord-request'">
+          <div class="smart-form">
+            <label class="smart-label">שם השיר</label>
+            <input class="smart-input" [(ngModel)]="chordRequest.songName" placeholder="שם השיר">
+
+            <label class="smart-label">שם האמן</label>
+            <input class="smart-input" [(ngModel)]="chordRequest.artistName" placeholder="שם האמן">
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="smart-submit" (click)="submitChordRequest()" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'שולח...' : 'שליחת בקשה' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'contact'">
+          <div class="smart-form">
+
+            <div class="smart-contact-row">
+              <div>
+                <label class="smart-label">שם מלא</label>
+                <input class="smart-input" [(ngModel)]="contactForm.fullName" placeholder="שם מלא">
+              </div>
+              <div>
+                <label class="smart-label">אימייל</label>
+                <input class="smart-input" type="email" [(ngModel)]="contactForm.email" placeholder="כתובת אימייל">
+              </div>
+            </div>
+
+            <label class="smart-label">נושא</label>
+            <select class="smart-input smart-select" [(ngModel)]="contactForm.subject">
+              <option value="" disabled>בחר נושא</option>
+              <option value="שאלה כללית">שאלה כללית</option>
+              <option value="בעיה טכנית">בעיה טכנית</option>
+              <option value="שיתוף פעולה">שיתוף פעולה</option>
+              <option value="הצעה לשיפור">הצעה לשיפור</option>
+              <option value="אחר">אחר</option>
+            </select>
+
+            <label class="smart-label">הודעה</label>
+            <textarea class="smart-textarea" [(ngModel)]="contactForm.message" rows="5" placeholder="כתבו את ההודעה כאן..."></textarea>
+
+            <div class="smart-media-card">
+              <div class="smart-media-head">
+                <label class="smart-label smart-media-label">קבצים מצורפים</label>
+                <span class="smart-media-note">עד {{ CONTACT_MAX_FILES }} קבצים, {{ CONTACT_MAX_FILE_MB }}MB לקובץ</span>
+              </div>
+
+              <div class="smart-media-actions">
+                <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="contactAttachments.length >= CONTACT_MAX_FILES">
+                  <input type="file" multiple hidden (change)="onContactFileSelected($event)" [disabled]="contactAttachments.length >= CONTACT_MAX_FILES">
+                  <span class="material-icons">attach_file</span>
+                  <span>צרף קובץ</span>
+                </label>
+              </div>
+
+              <div class="contact-attachments" *ngIf="contactAttachments.length > 0">
+                <div class="contact-attachment-item" *ngFor="let att of contactAttachments; let i = index">
+                  <span class="material-icons contact-att-icon" [class.contact-att-uploading]="att.uploading" [class.contact-att-error]="att.error">
+                    {{ att.error ? 'error_outline' : att.uploading ? 'hourglass_top' : getContactFileIcon(att.file) }}
+                  </span>
+                  <span class="contact-att-name">{{ att.file.name }}</span>
+                  <span class="contact-att-status" *ngIf="att.uploading">מעלה...</span>
+                  <span class="contact-att-status contact-att-status-error" *ngIf="att.error">שגיאה</span>
+                  <button type="button" class="btn-clear-profile" (click)="removeContactAttachment(i)">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="smart-submit" (click)="submitContact()" [disabled]="isSubmitting || isContactUploading">
+                {{ isSubmitting ? 'שולח...' : 'שליחה' }}
+              </button>
+            </div>
+
           </div>
         </div>
 

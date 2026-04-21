@@ -26,6 +26,7 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
 import { PlaylistService } from '../../services/playlist.service';
+import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
 
 @Component({
     selector: 'app-song-page',
@@ -110,6 +111,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private router: Router,
         private ngZone: NgZone,
         private playlistService: PlaylistService,
+        private knownChordService: UserKnownChordService,
     ) { }
 
     ngOnInit(): void {
@@ -204,6 +206,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.loadArtistSongs();
                 this.loadPopularSongs();
                 this.loadSongSavedState();
+                this.loadKnownChordsForCurrentInstrument();
 
                 // Increment view count with unique tracking
                 this.songService.incrementView(id).subscribe({
@@ -400,6 +403,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
+        this.loadKnownChordsForCurrentInstrument();
     }
 
     toggleTheme() {
@@ -513,6 +517,22 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             }
         }
         return result;
+    }
+
+    get knownChordSummary() {
+        const instrument = this.activeKnownInstrument;
+        if (!instrument || !this.authService.isLoggedIn) return null;
+        return this.knownChordService.buildLocalSummary(instrument, this.uniqueTransposedChords);
+    }
+
+    private get activeKnownInstrument(): KnownChordInstrument | null {
+        return this.selectedInstrument === 'lyrics' ? null : this.selectedInstrument;
+    }
+
+    private loadKnownChordsForCurrentInstrument(): void {
+        const instrument = this.activeKnownInstrument;
+        if (!instrument || !this.authService.isLoggedIn) return;
+        this.knownChordService.ensureLoaded(instrument).subscribe();
     }
 
     toggleInlineChordDiagrams() {

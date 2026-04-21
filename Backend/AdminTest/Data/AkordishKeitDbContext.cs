@@ -74,6 +74,8 @@ public class AkordishKeitDbContext : DbContext
 
     // Liked Content
     public DbSet<LikedContent> LikedContents { get; set; }
+    public DbSet<UserKnownChord> UserKnownChords { get; set; }
+    public DbSet<SongChord> SongChords { get; set; }
 
     // Content Reports
     public DbSet<ContentReport> ContentReports { get; set; }
@@ -155,6 +157,8 @@ public class AkordishKeitDbContext : DbContext
 
         // Liked Content Configuration
         modelBuilder.ApplyConfiguration(new LikedContentConfiguration());
+        modelBuilder.ApplyConfiguration(new UserKnownChordConfiguration());
+        modelBuilder.ApplyConfiguration(new SongChordConfiguration());
 
         // Content Reports Configuration
         modelBuilder.ApplyConfiguration(new ContentReportConfiguration());

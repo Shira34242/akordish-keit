@@ -37,6 +37,8 @@ builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPlaylistService, PlaylistService>();
 builder.Services.AddScoped<ILikedContentService, LikedContentService>();
+builder.Services.AddScoped<IUserKnownChordService, UserKnownChordService>();
+builder.Services.AddScoped<IChordIndexService, ChordIndexService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IBoostService, BoostService>();

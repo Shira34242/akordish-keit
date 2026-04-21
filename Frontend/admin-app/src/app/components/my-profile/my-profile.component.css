@@ -258,6 +258,105 @@
 }
 
 /* ===========================
+   KNOWN CHORDS
+   =========================== */
+
+.known-chords-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.known-chords-column {
+  background: #F2F2F2;
+  border-radius: 16px;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+.known-chords-column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.known-chords-title {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
+}
+
+.known-basic-btn {
+  height: 26px;
+  padding: 0 var(--space-md);
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-family: inherit;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.known-basic-btn:hover:not(:disabled) {
+  background: #ddff53;
+}
+
+.known-basic-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.known-basic-count {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+}
+
+.known-chords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.known-chord-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 28px;
+  padding: 0 var(--space-md);
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.known-chord-pill:hover {
+  background: #ddff53;
+}
+
+.known-chord-remove {
+  font-size: 14px;
+}
+
+.known-chords-empty {
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+}
+
+/* ===========================
    SONG CARD (אקורדים)
    =========================== */
 
@@ -998,6 +1097,10 @@
 
   .event-card {
     flex: 0 0 180px;
+  }
+
+  .known-chords-board {
+    grid-template-columns: 1fr;
   }
 }
 

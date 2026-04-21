@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
+import { AuthService } from '../../services/auth.service';
+import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -46,6 +48,9 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     selectedGenreId: number | null = null;
     selectedKeyId: number | null = null;
     sortBy: string = 'date';
+    knownChordsMode = false;
+    knownInstrument: KnownChordInstrument = 'guitar';
+    knownSortBy: KnownChordSort = 'closest';
 
     // Artist strip selection
     selectedFilterArtistId: number | null = null;
@@ -71,14 +76,19 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     private recentlyViewedKey = 'chords-recently-viewed';
 
     get isFiltered(): boolean {
-        return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId);
+        return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId || this.knownChordsMode);
     }
 
-    constructor(private songService: SongService) {
+    constructor(
+        private songService: SongService,
+        private authService: AuthService,
+        private knownChordService: UserKnownChordService
+    ) {
         this.searchSubject.pipe(
             debounceTime(500),
             distinctUntilChanged()
         ).subscribe(query => {
+            this.knownChordsMode = false;
             this.search = query;
             this.currentPage = 1;
             this.hasMoreSongs = true;
@@ -189,6 +199,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // ─────────────────────────────────────────────
 
     selectFilterArtist(artist: any): void {
+        this.knownChordsMode = false;
         if (this.selectedFilterArtistId === artist.id) {
             this.selectedFilterArtistId = null;
             this.selectedArtistId = null;
@@ -255,6 +266,11 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // ─────────────────────────────────────────────
 
     loadSongs(): void {
+        if (this.knownChordsMode) {
+            this.loadKnownChordSongs();
+            return;
+        }
+
         this.isLoading = true;
         this.songService.getSongs(
             this.search || undefined,
@@ -372,6 +388,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     onFilterChange(): void {
+        this.knownChordsMode = false;
         this.currentPage = 1;
         this.hasMoreSongs = true;
         this.songs = [];
@@ -385,6 +402,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedKeyId = null;
         this.selectedFilterArtistId = null;
         this.sortBy = 'date';
+        this.knownChordsMode = false;
+        this.knownSortBy = 'closest';
         this.artistSearchText = '';
         this.genreSearchText = '';
         this.keySearchText = '';
@@ -411,6 +430,79 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!target.closest('.sort-btn-wrap')) {
             this.showSortDropdown = false;
         }
+    }
+
+    toggleKnownChordsMode(): void {
+        if (!this.authService.isLoggedIn) {
+            this.authService.requestLogin('/chords');
+            return;
+        }
+
+        this.knownChordsMode = !this.knownChordsMode;
+        if (this.knownChordsMode) {
+            this.knownSortBy = 'closest';
+            this.search = '';
+            this.selectedArtistId = null;
+            this.selectedGenreId = null;
+            this.selectedKeyId = null;
+            this.selectedFilterArtistId = null;
+            this.artistSearchText = '';
+            this.genreSearchText = '';
+            this.keySearchText = '';
+        }
+        this.currentPage = 1;
+        this.hasMoreSongs = true;
+        this.songs = [];
+        this.loadSongs();
+    }
+
+    setKnownInstrument(instrument: KnownChordInstrument): void {
+        if (this.knownInstrument === instrument) return;
+        this.knownInstrument = instrument;
+        if (this.knownChordsMode) {
+            this.currentPage = 1;
+            this.loadKnownChordSongs();
+        }
+    }
+
+    setKnownSort(sortBy: KnownChordSort): void {
+        if (this.knownSortBy === sortBy) return;
+        this.knownSortBy = sortBy;
+        if (this.knownChordsMode) {
+            this.currentPage = 1;
+            this.loadKnownChordSongs();
+        }
+    }
+
+    closeKnownChordsMode(): void {
+        this.knownChordsMode = false;
+        this.knownSortBy = 'closest';
+        this.currentPage = 1;
+        this.hasMoreSongs = true;
+        this.songs = [];
+        this.loadSongs();
+    }
+
+    private loadKnownChordSongs(): void {
+        this.isLoading = true;
+        const maxMissing = this.knownSortBy === 'exact' ? 0 : -1;
+        const sortBy = this.knownSortBy === 'exact' ? 'closest' : this.knownSortBy;
+        this.knownChordService.getMatchingSongs(
+            this.knownInstrument,
+            sortBy,
+            this.currentPage,
+            this.pageSize,
+            maxMissing
+        ).subscribe({
+            next: (res) => {
+                this.songs = res.songs || [];
+                this.totalCount = res.totalCount;
+                this.totalPages = res.totalPages;
+                this.hasMoreSongs = this.currentPage < this.totalPages;
+                this.isLoading = false;
+            },
+            error: () => { this.isLoading = false; }
+        });
     }
 
     private closeAllFilterDropdowns(): void {
