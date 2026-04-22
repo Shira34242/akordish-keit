@@ -30,4 +30,9 @@ export class SearchService {
     const params = new HttpParams().set('q', q);
     return this.http.get<SearchResults>(this.apiUrl, { params });
   }
+
+  searchDeep(q: string): Observable<SearchResults> {
+    const params = new HttpParams().set('q', q).set('deep', 'true');
+    return this.http.get<SearchResults>(this.apiUrl, { params });
+  }
 }

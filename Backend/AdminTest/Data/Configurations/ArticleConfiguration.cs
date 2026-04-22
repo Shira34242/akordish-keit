@@ -130,6 +130,9 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasIndex(e => new { e.IsFeatured, e.DisplayOrder })
                .HasDatabaseName("IX_Articles_IsFeatured_DisplayOrder");
 
+        builder.HasIndex(e => new { e.UploaderProfileType, e.UploaderProfileId })
+               .HasDatabaseName("IX_Articles_UploaderProfile");
+
         // Relationships
         builder.HasMany(e => e.ArticleTags)
                .WithOne(at => at.Article)

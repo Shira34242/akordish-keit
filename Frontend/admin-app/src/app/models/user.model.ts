@@ -1,12 +1,12 @@
 export interface UserWithProfileDto {
-  userId: number;
+  userId?: number | null;
   displayName: string;
   imageUrl?: string;
-  profileType: 'artist' | 'serviceProvider';
+  profileType: 'artist' | 'serviceProvider' | 'user';
   profileId: number;
   profileUrl: string;
   isTeacher: boolean;
-  status: 'Active' | 'Pending' | 'Suspended' | 'Hidden' | 'None';
+  status: 'Active' | 'Pending' | 'Suspended' | 'Hidden' | 'Inactive' | 'None';
   categories: string[];
 }
 

@@ -384,6 +384,17 @@
   position: relative;
 }
 
+.admin-profile-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.admin-profile-select {
+  min-width: 0;
+}
+
 .profile-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -398,6 +409,11 @@
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.profile-dropdown-static {
+  position: static;
+  margin-top: var(--space-sm);
 }
 
 .profile-dropdown::-webkit-scrollbar {

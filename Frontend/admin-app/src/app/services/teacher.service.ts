@@ -8,6 +8,8 @@ import {
   UpdateTeacherDto
 } from '../models/teacher.model';
 import { PagedResult } from '../models/user.model';
+import { Article } from '../models/article.model';
+import { SongDto } from '../models/song.model';
 
 @Injectable({
   providedIn: 'root'
@@ -51,6 +53,16 @@ export class TeacherService {
 
   getTeacherByUserId(userId: number): Observable<TeacherDto> {
     return this.http.get<TeacherDto>(`${this.apiUrl}/user/${userId}`);
+  }
+
+  getTeacherSongs(id: number, limit: number = 12): Observable<SongDto[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<SongDto[]>(`${this.apiUrl}/${id}/songs`, { params });
+  }
+
+  getTeacherArticles(id: number, limit: number = 12): Observable<Article[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<Article[]>(`${this.apiUrl}/${id}/articles`, { params });
   }
 
   createTeacher(dto: CreateTeacherDto): Observable<TeacherDto> {

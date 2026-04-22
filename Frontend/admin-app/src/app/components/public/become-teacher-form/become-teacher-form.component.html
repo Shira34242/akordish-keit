@@ -194,6 +194,26 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">המלצות תלמידים</label>
+          <div class="gallery-manager">
+            <div class="add-image-form">
+              <input type="text" class="form-input" [(ngModel)]="newTestimonial.studentName" placeholder="שם התלמיד או הממליץ">
+              <textarea class="form-textarea" [(ngModel)]="newTestimonial.text" rows="3" placeholder="טקסט ההמלצה"></textarea>
+              <button type="button" class="btn-add-image" (click)="addTestimonial()">הוסף המלצה</button>
+            </div>
+            <div class="testimonial-preview" *ngIf="testimonials.length > 0">
+              <div class="testimonial-form-item" *ngFor="let item of testimonials; let i = index">
+                <div>
+                  <strong>{{ item.studentName || 'ממליץ' }}</strong>
+                  <p>{{ item.text }}</p>
+                </div>
+                <button type="button" class="btn-remove-testimonial" (click)="removeTestimonial(i)">מחק</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">אתר אינטרנט</label>
           <input type="url" class="form-input" [(ngModel)]="websiteUrl" placeholder="https://...">
         </div>

@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkordishKeit.Migrations
 {
     [DbContext(typeof(AkordishKeitDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422081232_SyncPendingChanges")]
+    partial class SyncPendingChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -382,11 +385,8 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("UploaderProfileId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UploaderProfileType")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("UploaderUserId")
                         .HasColumnType("int");
@@ -423,9 +423,6 @@ namespace AkordishKeit.Migrations
                     b.HasIndex("IsFeatured", "PublishDate")
                         .IsDescending(false, true)
                         .HasDatabaseName("IX_Articles_IsFeatured_PublishDate");
-
-                    b.HasIndex("UploaderProfileType", "UploaderProfileId")
-                        .HasDatabaseName("IX_Articles_UploaderProfile");
 
                     b.ToTable("Articles", (string)null);
                 });
@@ -2564,11 +2561,8 @@ namespace AkordishKeit.Migrations
                     b.Property<int?>("UploadedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UploaderProfileId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UploaderProfileType")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("UploaderUserId")
                         .HasColumnType("int");
@@ -2616,9 +2610,6 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("Language", "IsApproved")
                         .HasDatabaseName("IX_Songs_Language_IsApproved");
-
-                    b.HasIndex("UploaderProfileType", "UploaderProfileId")
-                        .HasDatabaseName("IX_Songs_UploaderProfile");
 
                     b.ToTable("Songs", (string)null);
                 });

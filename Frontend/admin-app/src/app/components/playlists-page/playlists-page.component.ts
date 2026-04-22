@@ -141,7 +141,7 @@ export class PlaylistsPageComponent implements OnInit {
       error: (err) => {
         console.error('Error creating playlist:', err);
         this.isSavingPlaylist = false;
-        this.createPlaylistError = err?.message || err?.error?.message || 'שגיאה ביצירת הרשימה';
+        this.createPlaylistError = err?.error?.message || err?.message || 'שגיאה ביצירת הרשימה';
       }
     });
   }

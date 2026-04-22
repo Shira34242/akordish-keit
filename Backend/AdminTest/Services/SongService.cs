@@ -72,6 +72,12 @@ public class SongService : ISongService
             int? lyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
             int? arrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
 
+            var uploader = await NormalizeUploaderAsync(
+                userId,
+                dto.UploaderUserId,
+                dto.UploaderProfileType,
+                dto.UploaderProfileId);
+
             // 4. Create the song entity
             var song = new Song
             {
@@ -87,8 +93,9 @@ public class SongService : ISongService
                 ArrangerId = arrangerId,
                 DurationSeconds = durationSeconds,
                 UploadedByUserId = userId,
-                UploaderUserId = dto.UploaderUserId ?? userId,
-                UploaderProfileType = dto.UploaderProfileType,
+                UploaderUserId = uploader.UserId,
+                UploaderProfileType = uploader.ProfileType,
+                UploaderProfileId = uploader.ProfileId,
                 IsApproved = dto.IsApproved,
                 ViewCount = 0,
                 PlayCount = 0,
@@ -287,6 +294,15 @@ public class SongService : ISongService
                 IsApproved = false
             };
         }
+        catch (InvalidOperationException ex)
+        {
+            await transaction.RollbackAsync();
+            return new AddSongResponseDto
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
@@ -346,6 +362,12 @@ public class SongService : ISongService
                 };
             }
 
+            var uploader = await NormalizeUploaderAsync(
+                userId,
+                dto.UploaderUserId,
+                dto.UploaderProfileType,
+                dto.UploaderProfileId);
+
             // 3. Update basic fields
             song.Title = dto.Title.Trim();
             song.LyricsWithChords = dto.LyricsWithChords;
@@ -357,8 +379,9 @@ public class SongService : ISongService
             song.ComposerId = await GetOrCreatePersonAsync(dto.Composer, userId);
             song.LyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
             song.ArrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
-            song.UploaderUserId = dto.UploaderUserId;
-            song.UploaderProfileType = dto.UploaderProfileType;
+            song.UploaderUserId = uploader.UserId;
+            song.UploaderProfileType = uploader.ProfileType;
+            song.UploaderProfileId = uploader.ProfileId;
             song.UpdatedAt = DateTime.UtcNow;
 
             // 4. Update artists - remove and re-add (support both existing and new artists)
@@ -538,6 +561,15 @@ public class SongService : ISongService
                 IsApproved = song.IsApproved
             };
         }
+        catch (InvalidOperationException ex)
+        {
+            await transaction.RollbackAsync();
+            return new AddSongResponseDto
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
@@ -688,7 +720,12 @@ public class SongService : ISongService
                     DurationSeconds = s.DurationSeconds,
                     CreatedAt = s.CreatedAt,
                     UpdatedAt = s.UpdatedAt,
-                    UploadedByUserId = s.UploadedByUserId
+                    UploadedByUserId = s.UploadedByUserId,
+                    UploaderUserId = s.UploaderUserId,
+                    UploaderProfileType = s.UploaderProfileType,
+                    UploaderProfileId = s.UploaderProfileId,
+                    AverageRating = s.Ratings.Any() ? Math.Round(s.Ratings.Average(r => (double)r.Rating), 1) : 0,
+                    RatingCount = s.Ratings.Count()
                 })
                 .ToListAsync();
 
@@ -805,7 +842,10 @@ public class SongService : ISongService
                 CreatedAt = song.CreatedAt,
                 UpdatedAt = song.UpdatedAt,
                 UploadedByUserId = song.UploadedByUserId,
-                UploaderProfile = ResolveUploaderProfile(song.UploaderUser, song.UploaderProfileType)
+                UploaderUserId = song.UploaderUserId,
+                UploaderProfileType = song.UploaderProfileType,
+                UploaderProfileId = song.UploaderProfileId,
+                UploaderProfile = ResolveUploaderProfile(song.UploaderUser, song.UploaderProfileType, song.UploaderProfileId)
             };
         }
         catch (Exception ex)
@@ -815,26 +855,154 @@ public class SongService : ISongService
         }
     }
 
-    private static ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType)
+    private async Task<(int? UserId, string? ProfileType, int? ProfileId)> NormalizeUploaderAsync(
+        int currentUserId,
+        int? requestedUserId,
+        string? requestedProfileType,
+        int? requestedProfileId)
     {
-        if (user == null || string.IsNullOrEmpty(profileType)) return null;
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+        if (currentUser == null)
+        {
+            throw new InvalidOperationException("׳׳©׳×׳׳© ׳׳ ׳ ׳׳¦׳");
+        }
 
-        if (profileType == "artist" && user.ManagedArtist != null)
+        var isAdmin = currentUser.Role == UserRole.Admin || currentUser.Role == UserRole.Manager;
+        var profileType = NormalizeProfileType(requestedProfileType);
+        int? uploaderUserId = isAdmin ? requestedUserId ?? currentUserId : currentUserId;
+        var profileId = requestedProfileId;
+
+        if (isAdmin && profileId.HasValue && profileType != null)
+        {
+            var profileOwnerUserId = await GetProfileOwnerUserIdAsync(profileType, profileId.Value);
+            if (requestedUserId.HasValue && profileOwnerUserId.HasValue && requestedUserId.Value != profileOwnerUserId.Value)
+            {
+                throw new InvalidOperationException("הפרופיל שנבחר לא שייך למשתמש שנבחר");
+            }
+
+            var profileExists = await ProfileExistsAsync(profileType, profileId.Value);
+            if (!profileExists)
+            {
+                throw new InvalidOperationException("הפרופיל שנבחר לא נמצא");
+            }
+
+            return (profileOwnerUserId ?? requestedUserId, profileType, profileId);
+        }
+
+        if (profileType == null)
+        {
+            return (uploaderUserId, null, null);
+        }
+
+        if (!uploaderUserId.HasValue)
+        {
+            return (null, null, null);
+        }
+
+        profileId ??= await GetDefaultProfileIdForUserAsync(uploaderUserId.Value, profileType);
+        if (!profileId.HasValue)
+        {
+            return (uploaderUserId, null, null);
+        }
+
+        var belongsToUser = await ProfileBelongsToUserAsync(uploaderUserId.Value, profileType, profileId.Value);
+        if (!belongsToUser)
+        {
+            throw new InvalidOperationException("׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳ ׳‘׳—׳¨ ׳׳ ׳©׳™׳™׳ ׳׳׳©׳×׳׳© ׳”׳׳¢׳׳”");
+        }
+
+        return (uploaderUserId, profileType, profileId);
+    }
+
+    private static string? NormalizeProfileType(string? profileType)
+    {
+        if (string.IsNullOrWhiteSpace(profileType)) return null;
+        return profileType == "artist" || profileType == "serviceProvider" ? profileType : null;
+    }
+
+    private async Task<int?> GetProfileOwnerUserIdAsync(string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .Where(a => !a.IsDeleted && a.Id == profileId)
+                .Select(a => a.UserId)
+                .FirstOrDefaultAsync();
+        }
+
+        return await _context.ServiceProviders
+            .Where(p => !p.IsDeleted && p.Id == profileId)
+            .Select(p => p.UserId)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<int?> GetDefaultProfileIdForUserAsync(int userId, string profileType)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .Where(a => !a.IsDeleted && a.UserId == userId)
+                .OrderByDescending(a => a.Status == ArtistStatus.Active)
+                .Select(a => (int?)a.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        return await _context.ServiceProviders
+            .Where(p => !p.IsDeleted && p.UserId == userId)
+            .OrderByDescending(p => p.IsPrimaryProfile)
+            .ThenByDescending(p => p.Status == ProfileStatus.Active)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<bool> ProfileBelongsToUserAsync(int userId, string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .AnyAsync(a => !a.IsDeleted && a.Id == profileId && a.UserId == userId);
+        }
+
+        return await _context.ServiceProviders
+            .AnyAsync(p => !p.IsDeleted && p.Id == profileId && p.UserId == userId);
+    }
+
+    private async Task<bool> ProfileExistsAsync(string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .AnyAsync(a => !a.IsDeleted && a.Id == profileId);
+        }
+
+        return await _context.ServiceProviders
+            .AnyAsync(p => !p.IsDeleted && p.Id == profileId);
+    }
+
+    private ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType, int? profileId)
+    {
+        if (string.IsNullOrEmpty(profileType)) return null;
+
+        if (profileType == "artist" && user?.ManagedArtist != null)
         {
             var artist = user.ManagedArtist;
+            if (profileId.HasValue && artist.Id != profileId.Value) return null;
+
             return new ContentUploaderProfileDto
             {
                 Type = "artist",
+                ProfileId = artist.Id,
                 Name = artist.Name,
                 ImageUrl = artist.ImageUrl,
                 ProfileUrl = $"/artist/{artist.Id}"
             };
         }
 
-        if (profileType == "serviceProvider")
+        if (profileType == "serviceProvider" && user != null)
         {
             var provider = user.ServiceProviderProfiles
                 .Where(p => !p.IsDeleted)
+                .Where(p => !profileId.HasValue || p.Id == profileId.Value)
                 .OrderByDescending(p => p.IsPrimaryProfile)
                 .FirstOrDefault();
 
@@ -844,6 +1012,47 @@ public class SongService : ISongService
                 return new ContentUploaderProfileDto
                 {
                     Type = "serviceProvider",
+                    ProfileId = provider.Id,
+                    Name = provider.DisplayName,
+                    ImageUrl = provider.ProfileImageUrl,
+                    ProfileUrl = $"/{route}/{provider.Id}"
+                };
+            }
+        }
+
+        if (profileId.HasValue)
+        {
+            if (profileType == "artist")
+            {
+                var artist = _context.Artists
+                    .AsNoTracking()
+                    .FirstOrDefault(a => !a.IsDeleted && a.Id == profileId.Value);
+
+                return artist == null
+                    ? null
+                    : new ContentUploaderProfileDto
+                    {
+                        Type = "artist",
+                        ProfileId = artist.Id,
+                        Name = artist.Name,
+                        ImageUrl = artist.ImageUrl,
+                        ProfileUrl = $"/artist/{artist.Id}"
+                    };
+            }
+
+            if (profileType == "serviceProvider")
+            {
+                var provider = _context.ServiceProviders
+                    .AsNoTracking()
+                    .FirstOrDefault(p => !p.IsDeleted && p.Id == profileId.Value);
+
+                if (provider == null) return null;
+
+                var route = provider.IsTeacher ? "teacher" : "provider";
+                return new ContentUploaderProfileDto
+                {
+                    Type = "serviceProvider",
+                    ProfileId = provider.Id,
                     Name = provider.DisplayName,
                     ImageUrl = provider.ProfileImageUrl,
                     ProfileUrl = $"/{route}/{provider.Id}"
@@ -1018,6 +1227,28 @@ public class SongService : ISongService
             Console.WriteLine($"Error getting user songs: {ex.Message}");
             throw;
         }
+    }
+
+    public async Task<List<SongDto>> GetApprovedSongsByUploaderProfileAsync(string profileType, int profileId, int limit = 12)
+    {
+        var songIds = await _context.Songs
+            .Where(s => !s.IsDeleted
+                && s.IsApproved
+                && s.UploaderProfileType == profileType
+                && s.UploaderProfileId == profileId)
+            .OrderByDescending(s => s.CreatedAt)
+            .Take(limit)
+            .Select(s => s.Id)
+            .ToListAsync();
+
+        var songs = new List<SongDto>();
+        foreach (var songId in songIds)
+        {
+            var song = await GetSongByIdAsync(songId);
+            if (song != null) songs.Add(song);
+        }
+
+        return songs;
     }
 
     // ============================================
@@ -1291,6 +1522,9 @@ public class SongService : ISongService
             DurationSeconds = original.DurationSeconds,
             IsApproved = false,
             UploadedByUserId = null,
+            UploaderUserId = null,
+            UploaderProfileType = null,
+            UploaderProfileId = null,
             ViewCount = 0,
             PlayCount = 0,
             CreatedAt = DateTime.UtcNow,
@@ -1566,5 +1800,53 @@ public class SongService : ISongService
         await _context.SaveChangesAsync();
 
         return newPerson.Id;
+    }
+
+    // ============================================
+    // RATING — שמירה ושליפה של דירוגי שיר
+    // ============================================
+
+    public async Task<SongRatingResponseDto> RateSongAsync(int songId, int userId, int rating)
+    {
+        var existing = await _context.SongRatings
+            .FirstOrDefaultAsync(r => r.SongId == songId && r.UserId == userId);
+
+        if (existing != null)
+        {
+            existing.Rating = rating;
+            existing.CreatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            _context.SongRatings.Add(new SongRating
+            {
+                SongId = songId,
+                UserId = userId,
+                Rating = rating,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        return await GetSongRatingAsync(songId, userId);
+    }
+
+    public async Task<SongRatingResponseDto> GetSongRatingAsync(int songId, int? userId)
+    {
+        var ratings = await _context.SongRatings
+            .Where(r => r.SongId == songId)
+            .Select(r => new { r.UserId, r.Rating })
+            .ToListAsync();
+
+        int? userRating = null;
+        if (userId.HasValue)
+            userRating = ratings.FirstOrDefault(r => r.UserId == userId.Value)?.Rating;
+
+        return new SongRatingResponseDto
+        {
+            AverageRating = ratings.Count > 0 ? Math.Round(ratings.Average(r => r.Rating), 1) : 0,
+            RatingCount = ratings.Count,
+            UserRating = userRating
+        };
     }
 }

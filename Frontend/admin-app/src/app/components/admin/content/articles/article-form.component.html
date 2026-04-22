@@ -162,7 +162,17 @@
               <span *ngIf="!selectedProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedProfile.displayName.charAt(0) }}</span>
               <div class="profile-tag-info">
                 <span class="profile-tag-name">{{ selectedProfile.displayName }}</span>
-                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedProfile.profileType) }}</span>
+                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedProfile.profileType, selectedProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedProfile) }}</span>
+              </div>
+            </div>
+            <div *ngIf="tagAsMyself && !selectedProfile && myUploaderProfiles.length > 1" class="profile-dropdown profile-dropdown-static">
+              <div *ngFor="let p of myUploaderProfiles" class="profile-dropdown-item" (click)="selectProfile(p)">
+                <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
+                <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
+                <div class="profile-dropdown-info">
+                  <span class="profile-dropdown-name">{{ p.displayName }}</span>
+                  <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType, p.isTeacher) }}{{ getProfileConnectionLabel(p) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -174,7 +184,7 @@
               <span *ngIf="!selectedProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedProfile.displayName.charAt(0) }}</span>
               <div class="profile-tag-info">
                 <span class="profile-tag-name">{{ selectedProfile.displayName }}</span>
-                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedProfile.profileType) }}</span>
+                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedProfile.profileType, selectedProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedProfile) }}</span>
               </div>
               <button type="button" class="btn-clear-profile" (click)="clearProfile()" title="הסר">
                 <span class="material-icons">close</span>
@@ -182,6 +192,19 @@
             </div>
 
             <div *ngIf="!selectedProfile" class="profile-search-wrapper">
+              <div class="admin-profile-tools">
+                <select class="form-input admin-profile-select" [(ngModel)]="profileTypeFilter" name="profileTypeFilter" (change)="onProfileFilterChange()">
+                  <option value="all">כולם</option>
+                  <option value="teacher">מורים</option>
+                  <option value="serviceProvider">נותני שירות</option>
+                  <option value="artist">אמנים</option>
+                  <option value="user">חברים רגילים</option>
+                </select>
+                <select class="form-input admin-profile-select" [(ngModel)]="profileSort" name="profileSort">
+                  <option value="name">מיון לפי שם</option>
+                  <option value="type">מיון לפי סוג</option>
+                </select>
+              </div>
               <input
                 type="text"
                 class="form-input"
@@ -194,17 +217,17 @@
               <span *ngIf="profileSearchLoading" class="profile-search-spinner">
                 <span class="spinner-small"></span>
               </span>
-              <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
-                <div *ngFor="let p of profileSearchResults" class="profile-dropdown-item" (click)="selectProfile(p)">
+              <div *ngIf="showProfileDropdown && filteredProfileSearchResults.length > 0" class="profile-dropdown">
+                <div *ngFor="let p of filteredProfileSearchResults" class="profile-dropdown-item" (click)="selectProfile(p)">
                   <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
                   <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
                   <div class="profile-dropdown-info">
                     <span class="profile-dropdown-name">{{ p.displayName }}</span>
-                    <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType) }}</span>
+                    <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType, p.isTeacher) }}{{ getProfileConnectionLabel(p) }}</span>
                   </div>
                 </div>
               </div>
-              <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
+              <div *ngIf="showProfileDropdown && !profileSearchLoading && filteredProfileSearchResults.length === 0" class="profile-dropdown">
                 <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
               </div>
             </div>

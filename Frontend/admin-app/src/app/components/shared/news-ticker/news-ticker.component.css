@@ -1,75 +1,74 @@
-/* ================================================
-   NEWS TICKER — wrapper, band, scrolling track
-   כל הערכים הויזואליים מגיעים מ-inline styles
-   הנשלטים דרך פאנל הניהול
-================================================ */
+:host {
+  display: contents;
+}
 
-.ticker-wrapper {
+.ticker-host {
   position: absolute;
   z-index: 1000;
   pointer-events: none;
   overflow: visible;
-  /* top / left / width / transform — נשלטים בניהול (ngStyle) */
 }
 
 .ticker-band {
+  width: 100%;
+  height: var(--ticker-height);
   overflow: hidden;
   display: flex;
   align-items: center;
-  width: 100%;
-  /* height / background-color — נשלטים בניהול */
+  background: var(--ticker-bg);
 }
 
-/* ——— המסילה הרצה ——— */
 .ticker-track {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  white-space: nowrap;
-  direction: rtl;
+  width: max-content;
+  min-width: 200%;
+  height: 100%;
+  animation-name: ticker-run;
+  animation-duration: var(--ticker-duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: var(--ticker-direction);
   will-change: transform;
-  animation: ticker-scroll linear infinite;
-  /* animation-duration — נשלט ב-TS לפי אורך הטקסט */
 }
 
-.ticker-set {
-  display: inline-flex;
+.ticker-copy {
+  display: flex;
   align-items: center;
   flex: 0 0 auto;
-  min-width: 50%;
+  height: 100%;
+  min-width: 100vw;
 }
 
-@keyframes ticker-scroll {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
-/* ——— פריטי טקסט ——— */
 .ticker-title {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--space-base);
+  color: var(--ticker-text);
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
+  font-size: var(--ticker-font-size);
+  font-weight: var(--ticker-font-weight);
   font-variation-settings: "wdth" 100;
-  white-space: nowrap;
-  padding: 0 var(--space-base);
+  line-height: 1;
   letter-spacing: 0;
-  line-height: 1;
+  white-space: nowrap;
   direction: rtl;
-  /* color / font-size / font-weight — נשלטים בניהול */
 }
 
-.ticker-sep {
-  font-size: 7px;
+.ticker-separator {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  color: var(--ticker-separator);
+  font-size: var(--font-xs);
   line-height: 1;
-  flex-shrink: 0;
-  margin: 0 2px;
-  /* color — נשלט בניהול */
+  padding: 0 var(--space-xs);
+  flex: 0 0 auto;
 }
 
-/* ================================================
-   RESPONSIVE — מכוונן את מה שלא נשלט בניהול
-================================================ */
-
-@media (max-width: 768px) {
-  .ticker-wrapper {
-    /* כל ערכי המיקום נשארים מהניהול גם במובייל */
-  }
+@keyframes ticker-run {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }

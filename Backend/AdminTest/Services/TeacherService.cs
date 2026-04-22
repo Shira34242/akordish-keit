@@ -99,6 +99,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
+            .Include(t => t.Testimonials)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
         return teacher == null ? null : MapToDto(teacher);
@@ -115,6 +116,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
+            .Include(t => t.Testimonials)
             .FirstOrDefaultAsync(t => t.ServiceProvider.UserId == userId && !t.ServiceProvider.IsDeleted);
 
         return teacher == null ? null : MapToDto(teacher);
@@ -223,6 +225,8 @@ public class TeacherService : ITeacherService
             });
         }
 
+        AddTestimonials(teacher, dto.Testimonials);
+
         _context.Teachers.Add(teacher);
         await _context.SaveChangesAsync();
 
@@ -237,6 +241,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.GalleryImages)
             .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
+            .Include(t => t.Testimonials)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
         if (teacher == null)
@@ -329,6 +334,9 @@ public class TeacherService : ITeacherService
                 IsPrimary = instrumentDto.IsPrimary
             });
         }
+
+        teacher.Testimonials.Clear();
+        AddTestimonials(teacher, dto.Testimonials);
 
         await _context.SaveChangesAsync();
 
@@ -459,6 +467,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.ServiceProvider.GalleryImages)
             .Include(t => t.ServiceProvider.SocialLinks)
             .Include(t => t.Instruments)
+            .Include(t => t.Testimonials)
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
         if (original == null)
@@ -548,6 +557,16 @@ public class TeacherService : ITeacherService
             });
         }
 
+        foreach (var testimonial in original.Testimonials.OrderBy(t => t.Order))
+        {
+            newTeacher.Testimonials.Add(new TeacherTestimonial
+            {
+                StudentName = testimonial.StudentName,
+                Text = testimonial.Text,
+                Order = testimonial.Order
+            });
+        }
+
         _context.Teachers.Add(newTeacher);
         await _context.SaveChangesAsync();
 
@@ -620,8 +639,30 @@ public class TeacherService : ITeacherService
                 InstrumentId = i.InstrumentId,
                 InstrumentName = i.Instrument.Name,
                 IsPrimary = i.IsPrimary
+            }).ToList(),
+            Testimonials = entity.Testimonials.OrderBy(t => t.Order).Select(t => new TeacherTestimonialDto
+            {
+                Id = t.Id,
+                StudentName = t.StudentName,
+                Text = t.Text,
+                Order = t.Order
             }).ToList()
         };
+    }
+
+    private static void AddTestimonials(Teacher teacher, List<CreateTeacherTestimonialDto>? testimonials)
+    {
+        if (testimonials == null || !testimonials.Any()) return;
+
+        foreach (var item in testimonials.Where(t => !string.IsNullOrWhiteSpace(t.Text)).OrderBy(t => t.Order))
+        {
+            teacher.Testimonials.Add(new TeacherTestimonial
+            {
+                StudentName = string.IsNullOrWhiteSpace(item.StudentName) ? null : item.StudentName.Trim(),
+                Text = item.Text.Trim(),
+                Order = item.Order
+            });
+        }
     }
 
     private static TeacherListDto MapToListDto(Teacher entity)

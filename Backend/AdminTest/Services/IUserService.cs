@@ -16,7 +16,7 @@ public interface IUserService
     /// <summary>
     /// מחפש משתמשים בעלי פרופיל ציבורי פעיל (אמן / מורה / בעל מקצוע)
     /// </summary>
-    Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20);
+    Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20, string? profileKind = null);
 
     /// <summary>
     /// מחזיר את פרופיל המעלה של משתמש לפי ה-UserId שלו (אמן / בעל מקצוע / מורה)

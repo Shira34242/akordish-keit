@@ -1,257 +1,172 @@
-<div class="ta-container" *ngIf="cfg">
-
-  <div class="page-header">
-    <div class="header-text">
+<div class="ticker-admin" dir="rtl">
+  <header class="page-header">
+    <div>
       <h2>פס חדשות הירו</h2>
-      <p class="subtitle">עיצוב, מיקום וקטגוריית תוכן של הפס הרץ בדף הבית</p>
+      <p class="subtitle">בנייה מחדש של הפס: מיקום, תנועה, טקסט ועיצוב במקום אחד</p>
     </div>
+
     <div class="header-actions">
-      <span class="saved-badge pending" *ngIf="dirty && !saving && !saveError">
-        <span class="material-symbols-outlined">edit</span> טיוטה
-      </span>
-      <span class="saved-badge" *ngIf="saved">
-        <span class="material-symbols-outlined">check_circle</span> נשמר
-      </span>
-      <span class="saved-badge error" *ngIf="saveError">
-        <span class="material-symbols-outlined">error</span> לא נשמר
-      </span>
-      <button class="btn-save" (click)="saveForEveryone()" [disabled]="saving || !dirty">
+      <span class="status-pill draft" *ngIf="dirty && !saving && !saveError">טיוטה</span>
+      <span class="status-pill saved" *ngIf="saved">נשמר לכולם</span>
+      <span class="status-pill error" *ngIf="saveError">לא נשמר</span>
+
+      <button class="btn-primary" type="button" [disabled]="saving || !dirty" (click)="saveForEveryone()">
         <span class="material-symbols-outlined">save</span>
         {{ saving ? 'שומר...' : 'שמור לכולם' }}
       </button>
-      <button class="btn-reset" (click)="resetDefaults()">
+
+      <button class="btn-secondary" type="button" (click)="resetDraft()">
         <span class="material-symbols-outlined">restart_alt</span>
         ברירת מחדל
       </button>
     </div>
-  </div>
+  </header>
 
-  <div class="settings-layout">
-    <!-- ══════════════════════ תצוגה מקדימה ══════════════════════ -->
-    <div class="settings-section preview-section">
-      <div class="preview-head">
-        <h3 class="section-title">
-          <span class="material-symbols-outlined">visibility</span>
-          תצוגה מקדימה
-        </h3>
-        <div class="preview-toggle" aria-label="בחירת תצוגה">
-          <button
-            type="button"
-            class="preview-device"
-            [class.selected]="previewMode === 'desktop'"
-            (click)="setPreviewMode('desktop')">
+  <div class="ticker-admin-grid">
+    <section class="preview-panel">
+      <div class="panel-head">
+        <h3>תצוגה חיה</h3>
+        <div class="device-switch">
+          <button type="button" [class.active]="previewMode === 'desktop'" (click)="setPreviewMode('desktop')">
             <span class="material-symbols-outlined">desktop_windows</span>
             מחשב
           </button>
-          <button
-            type="button"
-            class="preview-device"
-            [class.selected]="previewMode === 'mobile'"
-            (click)="setPreviewMode('mobile')">
+          <button type="button" [class.active]="previewMode === 'mobile'" (click)="setPreviewMode('mobile')">
             <span class="material-symbols-outlined">smartphone</span>
             מובייל
           </button>
         </div>
       </div>
 
-      <div class="preview-shell" [class.mobile]="previewMode === 'mobile'">
-        <div class="preview-stage">
+      <div class="screen-wrap" [class]="screenClass">
+        <div class="preview-viewport">
           <iframe
             class="preview-frame"
             [src]="previewFrameSrc"
-            title="תצוגה מקדימה אמיתית של דף הבית">
+            title="תצוגה אמיתית של דף הבית">
           </iframe>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="settings-controls">
+    <section class="controls-panel">
+      <div class="control-card">
+        <h3>הפעלה ותוכן</h3>
 
-  <!-- ══════════════════════ 1. הפעלה ══════════════════════ -->
-  <div class="settings-section">
-    <h3 class="section-title">
-      <span class="material-symbols-outlined">toggle_on</span>
-      הפעלה
-    </h3>
+        <div class="toggle-row">
+          <div>
+            <strong>הצגת הפס</strong>
+            <span>{{ cfg.enabled ? 'מוצג בדף הבית' : 'מוסתר מדף הבית' }}</span>
+          </div>
+          <button class="toggle-btn" type="button" [class.on]="cfg.enabled" (click)="toggleEnabled()">
+            <span></span>
+          </button>
+        </div>
 
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">הצגת הפס</span>
-        <span class="setting-desc">מציג / מסתיר את הפס בהירו של דף הבית</span>
-      </div>
-      <div class="toggle-group">
-        <span class="toggle-status" [class.on]="cfg.enabled">
-          {{ cfg.enabled ? 'פעיל' : 'כבוי' }}
-        </span>
-        <button class="toggle-btn" [class.on]="cfg.enabled" (click)="toggleEnabled()">
-          <span class="toggle-thumb"></span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ 2. קטגוריה ══════════════════════ -->
-  <div class="settings-section">
-    <h3 class="section-title">
-      <span class="material-symbols-outlined">category</span>
-      קטגוריית תוכן
-    </h3>
-
-    <div class="filter-grid">
-      <button
-        *ngFor="let opt of filterOptions"
-        class="filter-pill"
-        [class.selected]="selectedFilter === opt"
-        (click)="selectFilter(opt)">
-        {{ opt.label }}
-      </button>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ 3. מיקום ══════════════════════ -->
-  <div class="settings-section">
-    <h3 class="section-title">
-      <span class="material-symbols-outlined">open_with</span>
-      מיקום
-    </h3>
-
-    <!-- גובה מהחלק העליון -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">מיקום אנכי (מהחלק העליון)</span>
-        <span class="setting-desc">{{ cfg.topOffset }}px מתחת לשפת הירו העליונה</span>
-      </div>
-      <div class="slider-group">
-        <span class="slider-val">{{ cfg.topOffset }}px</span>
-        <input
-          type="range" min="-120" max="320" step="1"
-          [(ngModel)]="cfg.topOffset"
-          (input)="apply()"
-          class="slider" />
-      </div>
-    </div>
-
-    <!-- זווית סיבוב -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">זווית אלכסון</span>
-        <span class="setting-desc">{{ cfg.rotation }}° (שלילי = שמאל יורד)</span>
-      </div>
-      <div class="slider-group">
-        <span class="slider-val">{{ cfg.rotation }}°</span>
-        <input
-          type="range" min="-45" max="45" step="0.5"
-          [(ngModel)]="cfg.rotation"
-          (input)="apply()"
-          class="slider" />
-      </div>
-    </div>
-
-    <!-- הרחבה שמאלית -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">הרחבה שמאלית</span>
-        <span class="setting-desc">{{ cfg.leftExtend }}% מעבר לשפת הירו השמאלית</span>
-      </div>
-      <div class="slider-group">
-        <span class="slider-val">{{ cfg.leftExtend }}%</span>
-        <input
-          type="range" min="0" max="140" step="1"
-          [(ngModel)]="cfg.leftExtend"
-          (input)="apply()"
-          class="slider" />
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════ 4. עיצוב ══════════════════════ -->
-  <div class="settings-section">
-    <h3 class="section-title">
-      <span class="material-symbols-outlined">palette</span>
-      עיצוב
-    </h3>
-
-    <!-- עובי הסרט -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">עובי הסרט</span>
-        <span class="setting-desc">{{ cfg.bandHeight }}px</span>
-      </div>
-      <div class="slider-group">
-        <span class="slider-val">{{ cfg.bandHeight }}px</span>
-        <input
-          type="range" min="12" max="90" step="1"
-          [(ngModel)]="cfg.bandHeight"
-          (input)="apply()"
-          class="slider" />
-      </div>
-    </div>
-
-    <!-- גודל פונט -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">גודל טקסט</span>
-        <span class="setting-desc">{{ cfg.fontSize }}px</span>
-      </div>
-      <div class="slider-group">
-        <span class="slider-val">{{ cfg.fontSize }}px</span>
-        <input
-          type="range" min="9" max="28" step="1"
-          [(ngModel)]="cfg.fontSize"
-          (input)="apply()"
-          class="slider" />
-      </div>
-    </div>
-
-    <!-- משקל פונט -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span class="setting-label">עובי הפונט</span>
-      </div>
-      <div class="fw-group">
-        <button
-          *ngFor="let fw of fontWeights"
-          class="fw-btn"
-          [class.selected]="cfg.fontWeight === fw.value"
-          (click)="cfg.fontWeight = fw.value; apply()">
-          {{ fw.label }}
-        </button>
-      </div>
-    </div>
-
-    <!-- צבעים -->
-    <div class="setting-row colors-row">
-      <div class="color-field">
-        <label class="color-label">רקע הסרט</label>
-        <div class="color-input-wrap">
-          <input type="color" [(ngModel)]="cfg.backgroundColor" (input)="apply()" class="color-swatch" />
-          <span class="color-hex">{{ cfg.backgroundColor }}</span>
+        <div class="filter-grid">
+          <button
+            *ngFor="let option of filterOptions"
+            type="button"
+            class="chip"
+            [class.active]="selectedFilter === option"
+            (click)="selectFilter(option)">
+            {{ option.label }}
+          </button>
         </div>
       </div>
-      <div class="color-field">
-        <label class="color-label">צבע טקסט</label>
-        <div class="color-input-wrap">
-          <input type="color" [(ngModel)]="cfg.textColor" (input)="apply()" class="color-swatch" />
-          <span class="color-hex">{{ cfg.textColor }}</span>
+
+      <div class="control-card">
+        <h3>מיקום וגודל</h3>
+
+        <label class="range-control">
+          <span>גובה על המסך</span>
+          <b>{{ cfg.positionY }}%</b>
+          <input type="range" min="-20" max="120" step="1" [(ngModel)]="cfg.positionY" (input)="markDraft()">
+        </label>
+
+        <label class="range-control">
+          <span>מרכז אופקי</span>
+          <b>{{ cfg.positionX }}%</b>
+          <input type="range" min="-20" max="120" step="1" [(ngModel)]="cfg.positionX" (input)="markDraft()">
+        </label>
+
+        <label class="range-control">
+          <span>רוחב הפס</span>
+          <b>{{ cfg.widthVw }}%</b>
+          <input type="range" min="80" max="260" step="1" [(ngModel)]="cfg.widthVw" (input)="markDraft()">
+        </label>
+
+        <label class="range-control">
+          <span>זווית</span>
+          <b>{{ cfg.rotation }}°</b>
+          <input type="range" min="-45" max="45" step="0.5" [(ngModel)]="cfg.rotation" (input)="markDraft()">
+        </label>
+      </div>
+
+      <div class="control-card">
+        <h3>תנועה וטקסט</h3>
+
+        <div class="segmented">
+          <button
+            *ngFor="let option of directionOptions"
+            type="button"
+            [class.active]="cfg.direction === option.value"
+            (click)="setDirection(option.value)">
+            {{ option.label }}
+          </button>
+        </div>
+
+        <label class="range-control">
+          <span>מהירות</span>
+          <b>{{ cfg.speed }}s</b>
+          <input type="range" min="12" max="80" step="1" [(ngModel)]="cfg.speed" (input)="markDraft()">
+        </label>
+
+        <label class="range-control">
+          <span>גובה סרט</span>
+          <b>{{ cfg.bandHeight }}px</b>
+          <input type="range" min="16" max="90" step="1" [(ngModel)]="cfg.bandHeight" (input)="markDraft()">
+        </label>
+
+        <label class="range-control">
+          <span>גודל טקסט</span>
+          <b>{{ cfg.fontSize }}px</b>
+          <input type="range" min="10" max="32" step="1" [(ngModel)]="cfg.fontSize" (input)="markDraft()">
+        </label>
+
+        <div class="segmented">
+          <button
+            *ngFor="let option of fontWeights"
+            type="button"
+            [class.active]="cfg.fontWeight === option.value"
+            (click)="setFontWeight(option.value)">
+            {{ option.label }}
+          </button>
         </div>
       </div>
-      <div class="color-field">
-        <label class="color-label">צבע מפריד ●</label>
-        <div class="color-input-wrap">
-          <input type="color" [(ngModel)]="cfg.separatorColor" (input)="apply()" class="color-swatch" />
-          <span class="color-hex">{{ cfg.separatorColor }}</span>
+
+      <div class="control-card">
+        <h3>צבעים</h3>
+
+        <div class="color-grid">
+          <label>
+            <span>רקע</span>
+            <input type="color" [(ngModel)]="cfg.backgroundColor" (input)="markDraft()">
+          </label>
+          <label>
+            <span>טקסט</span>
+            <input type="color" [(ngModel)]="cfg.textColor" (input)="markDraft()">
+          </label>
+          <label>
+            <span>מפריד</span>
+            <input type="color" [(ngModel)]="cfg.separatorColor" (input)="markDraft()">
+          </label>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ══════════════════════ הערה ══════════════════════ -->
-  <div class="info-note">
-    <span class="material-symbols-outlined">info</span>
-    <span>השינויים מוצגים כאן כטיוטה בלבד. רק לחיצה על "שמור לכולם" מחילה אותם לכל האתר.</span>
+      <p class="info-note">
+        השינויים כאן הם טיוטה בלבד. רק "שמור לכולם" מעדכן את דף הבית לכל הגולשים.
+      </p>
+    </section>
   </div>
-
-    </div>
-  </div>
-
 </div>

@@ -452,6 +452,67 @@
       </div>
     </div>
 
+    <!-- Testimonials -->
+    <div class="form-section">
+      <h2 class="section-title">המלצות תלמידים</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">שם התלמיד או הממליץ</label>
+          <input
+            type="text"
+            [(ngModel)]="newTestimonial.studentName"
+            name="newTestimonialStudentName"
+            class="form-input"
+            placeholder="שם שיופיע ליד ההמלצה"
+          />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">טקסט ההמלצה</label>
+          <textarea
+            [(ngModel)]="newTestimonial.text"
+            name="newTestimonialText"
+            class="form-textarea"
+            rows="3"
+            placeholder="כתוב כאן את ההמלצה כפי שהיא תופיע בדף"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <button type="button" class="btn-add-gallery" (click)="addTestimonial()">
+          <span class="material-icons">format_quote</span>
+          הוסף המלצה
+        </button>
+      </div>
+
+      <div *ngIf="testimonials.length > 0" class="gallery-list">
+        <div *ngFor="let item of testimonials; let i = index" class="gallery-item testimonial-admin-item">
+          <div class="gallery-item-info">
+            <div class="gallery-item-caption">{{ item.studentName || 'ממליץ' }}</div>
+            <div class="testimonial-admin-text">{{ item.text }}</div>
+          </div>
+          <div class="gallery-item-actions">
+            <button type="button" class="btn-gallery-action" (click)="moveTestimonialUp(i)" [disabled]="i === 0" title="הזז למעלה">
+              <span class="material-icons">arrow_upward</span>
+            </button>
+            <button type="button" class="btn-gallery-action" (click)="moveTestimonialDown(i)" [disabled]="i === testimonials.length - 1" title="הזז למטה">
+              <span class="material-icons">arrow_downward</span>
+            </button>
+            <button type="button" class="btn-gallery-action btn-delete" (click)="removeTestimonial(i)" title="מחק">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="testimonials.length === 0" class="gallery-empty">
+        <span class="material-icons">format_quote</span>
+        <p>אין עדיין המלצות. אפשר להוסיף כל המלצה בנפרד.</p>
+      </div>
+    </div>
+
     <!-- Media -->
     <div class="form-section">
       <h2 class="section-title">מדיה</h2>

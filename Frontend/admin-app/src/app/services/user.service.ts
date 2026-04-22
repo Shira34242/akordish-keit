@@ -43,10 +43,11 @@ export class UserService {
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params, withCredentials: true });
   }
-  searchUsersWithProfiles(q?: string, limit: number = 20): Observable<UserWithProfileDto[]> {
+  searchUsersWithProfiles(q?: string, limit: number = 20, profileKind?: string): Observable<UserWithProfileDto[]> {
     let params = new HttpParams().set('limit', limit.toString());
     if (q) params = params.set('q', q);
-    return this.http.get<UserWithProfileDto[]>(`${this.apiUrl}/with-profiles`, { params });
+    if (profileKind) params = params.set('profileKind', profileKind);
+    return this.http.get<UserWithProfileDto[]>(`${this.apiUrl}/with-profiles`, { params, withCredentials: true });
   }
 
   getMyUploaderProfile(): Observable<UserWithProfileDto | null> {

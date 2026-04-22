@@ -48,6 +48,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
+  lyricsMatches: SearchItem[] = [];
+  isSearchingDeep = false;
   showSearchResults = false;
   private searchSubject = new Subject<string>();
 
@@ -83,6 +85,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(query => {
+        // איפוס תוצאות השלב העמוק בכל חיפוש חדש
+        this.lyricsMatches = [];
+        this.isSearchingDeep = false;
         if (!query || query.length < 2) {
           return of(null);
         }
@@ -91,6 +96,29 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe(results => {
       this.searchResults = results;
       this.showSearchResults = this.searchQuery.length >= 2;
+
+      // שלב 2 — חיפוש עמוק לפי מילות שיר (מופעל אחרי שהשלב הראשון חזר)
+      if (results && this.searchQuery.length >= 2) {
+        const queryAtLaunch = this.searchQuery;
+        this.isSearchingDeep = true;
+        this.searchService.searchDeep(queryAtLaunch).subscribe(deepResults => {
+          // לא מעדכנים אם המשתמש כבר החליף את החיפוש
+          if (this.searchQuery !== queryAtLaunch) return;
+          this.isSearchingDeep = false;
+          this.lyricsMatches = deepResults?.songs ?? [];
+        });
+      }
+    });
+  }
+
+  handleRandomSongClick(): void {
+    this.songService.getRandomSong().subscribe({
+      next: (song: any) => {
+        if (song?.id) {
+          this.router.navigate(['/song', song.id]);
+        }
+      },
+      error: (err: any) => console.error('Failed to get random song', err)
     });
   }
 
@@ -235,6 +263,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get hasNoResults(): boolean {
+    if (this.isSearchingDeep) return false;
+    if (this.lyricsMatches.length > 0) return false;
     if (!this.searchResults) return false;
     return this.searchResults.totalCount === 0;
   }

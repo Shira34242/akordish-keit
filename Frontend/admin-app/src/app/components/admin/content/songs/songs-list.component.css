@@ -194,6 +194,13 @@
 .stat-value { font-size: var(--font-sm); font-weight: 800; color: #000000; }
 .date-cell  { font-size: var(--font-xs); color: #000000; }
 
+/* Rating Cell */
+.rating-cell { white-space: nowrap; }
+.rating-stars { display: flex; align-items: center; gap: 4px; }
+.rating-avg { font-size: var(--font-sm); font-weight: 800; color: #000000; }
+.rating-count { font-size: var(--font-xs); font-weight: 300; color: #000000; }
+.rating-empty { font-size: var(--font-sm); color: #000000; opacity: 0.35; }
+
 /* Status Badge */
 .status-badge {
   padding: 3px 12px;

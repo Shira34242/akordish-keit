@@ -121,7 +121,10 @@
     color: rgba(0, 0, 0, 0.5);
     text-decoration: none;
     padding: 2px 0;
+    border: none;
     border-bottom: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
     white-space: nowrap;
 }

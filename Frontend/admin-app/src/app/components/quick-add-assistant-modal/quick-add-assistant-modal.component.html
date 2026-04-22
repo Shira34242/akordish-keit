@@ -107,7 +107,7 @@
             </div>
 
             <div class="smart-tag-block" *ngIf="isProfessionalNonAdmin || isAdminUser">
-              <label class="smart-label">האם לתייג את התוכן על שמך</label>
+              <label class="smart-label">{{ isAdminUser ? 'שיוך התוכן למעלה התוכן' : 'האם לתייג את התוכן על שמך' }}</label>
 
               <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
                 <label class="smart-checkbox-row">
@@ -120,7 +120,17 @@
                   <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
                   <div class="profile-tag-info">
                     <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType, selectedUploaderProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedUploaderProfile) }}</span>
+                  </div>
+                </div>
+                <div *ngIf="tagAsMyself && !selectedUploaderProfile && myUploaderProfiles.length > 1" class="profile-dropdown profile-dropdown-static">
+                  <div *ngFor="let profile of myUploaderProfiles" class="profile-dropdown-item" (click)="selectUploaderProfile(profile)">
+                    <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName" class="profile-dropdown-avatar">
+                    <span *ngIf="!profile.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ profile.displayName.charAt(0) }}</span>
+                    <div class="profile-dropdown-info">
+                      <span class="profile-dropdown-name">{{ profile.displayName }}</span>
+                      <span class="profile-dropdown-type">{{ getProfileTypeLabel(profile.profileType, profile.isTeacher) }}{{ getProfileConnectionLabel(profile) }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -131,7 +141,7 @@
                   <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
                   <div class="profile-tag-info">
                     <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                    <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType, selectedUploaderProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedUploaderProfile) }}</span>
                   </div>
                   <button type="button" class="btn-clear-profile" (click)="clearUploaderProfile()">
                     <span class="material-icons">close</span>
@@ -139,26 +149,39 @@
                 </div>
 
                 <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
+                  <div class="admin-profile-tools">
+                    <select class="smart-input admin-profile-select" [(ngModel)]="profileTypeFilter" (change)="onProfileFilterChange()">
+                      <option value="all">כולם</option>
+                      <option value="teacher">מורים</option>
+                      <option value="serviceProvider">נותני שירות</option>
+                      <option value="artist">אמנים</option>
+                      <option value="user">חברים רגילים</option>
+                    </select>
+                    <select class="smart-input admin-profile-select" [(ngModel)]="profileSort">
+                      <option value="name">מיון לפי שם</option>
+                      <option value="type">מיון לפי סוג</option>
+                    </select>
+                  </div>
                   <input
                     type="text"
                     class="smart-input"
                     [(ngModel)]="profileSearchQuery"
                     (input)="onProfileSearchInput()"
                     (focus)="onProfileSearchInput()"
-                    placeholder="חפש אמן, מורה או נותן שירות">
+                    placeholder="חפש לפי שם ברשימה שנבחרה">
 
-                  <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
-                    <div *ngFor="let profile of profileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(profile)">
+                  <div *ngIf="showProfileDropdown && filteredProfileSearchResults.length > 0" class="profile-dropdown">
+                    <div *ngFor="let profile of filteredProfileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(profile)">
                       <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName" class="profile-dropdown-avatar">
                       <span *ngIf="!profile.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ profile.displayName.charAt(0) }}</span>
                       <div class="profile-dropdown-info">
                         <span class="profile-dropdown-name">{{ profile.displayName }}</span>
-                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(profile.profileType) }}</span>
+                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(profile.profileType, profile.isTeacher) }}{{ getProfileConnectionLabel(profile) }}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
+                  <div *ngIf="showProfileDropdown && !profileSearchLoading && filteredProfileSearchResults.length === 0" class="profile-dropdown">
                     <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
                   </div>
                 </div>

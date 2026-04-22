@@ -34,9 +34,11 @@ export class AuthModalComponent {
     private authService: AuthService,
     private socialAuthService: SocialAuthService
   ) {
-    // Listen for Google sign-in
+    // Listen for Google sign-in — רק אם המשתמש לא כבר מחובר
+    // (authState הוא ReplaySubject שמשדר מיד בפתיחת המודל — בלי הבדיקה הזאת
+    //  כל פתיחת מודל הייתה מפעילה google-login מחדש אם יש סשן Google פעיל בדפדפן)
     this.socialAuthService.authState.subscribe((user) => {
-      if (user && user.idToken) {
+      if (user && user.idToken && !this.authService.isLoggedIn) {
         this.handleGoogleLogin(user.idToken);
       }
     });

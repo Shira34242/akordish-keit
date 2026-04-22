@@ -27,6 +27,7 @@ import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/
 import { PrintPanelComponent } from './print-panel/print-panel.component';
 import { PlaylistService } from '../../services/playlist.service';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
+import { SongRatingService } from '../../services/song-rating.service';
 
 @Component({
     selector: 'app-song-page',
@@ -96,6 +97,14 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
+
+    // Rating State
+    ratingAverage: number = 0;
+    ratingCount: number = 0;
+    userRating: number | null = null;
+    isSubmittingRating: boolean = false;
+
+    get isLoggedIn(): boolean { return this.authService.isLoggedIn; }
     artistSongs: any[] = [];
     popularSongs: any[] = [];
     similarSongs: any[] = [];
@@ -115,7 +124,19 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private ngZone: NgZone,
         private playlistService: PlaylistService,
         private knownChordService: UserKnownChordService,
+        private songRatingService: SongRatingService,
     ) { }
+
+    handleRandomSongClick(): void {
+        this.songService.getRandomSong().subscribe({
+            next: (song: any) => {
+                if (song?.id) {
+                    this.router.navigate(['/song', song.id]);
+                }
+            },
+            error: (err: any) => console.error('Failed to get random song', err)
+        });
+    }
 
     ngOnInit(): void {
         this.route.params.subscribe(params => {
@@ -212,6 +233,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.loadPopularSongs();
                 this.loadSongSavedState();
                 this.loadKnownChordsForCurrentInstrument();
+                this.loadRating(id);
 
                 // Increment view count with unique tracking
                 this.songService.incrementView(id).subscribe({
@@ -770,6 +792,42 @@ private getKeyIndex(keyName: string): number {
     return index;
 }
 
+
+    loadRating(songId: number): void {
+        this.ratingAverage = 0;
+        this.ratingCount = 0;
+        this.userRating = null;
+
+        this.songRatingService.getRating(songId).subscribe({
+            next: (data) => {
+                this.ratingAverage = data.averageRating;
+                this.ratingCount = data.ratingCount;
+                this.userRating = data.userRating ?? null;
+            },
+            error: () => { /* שקט — הדירוג לא קריטי */ }
+        });
+    }
+
+    submitRating(rating: number): void {
+        if (!this.authService.isLoggedIn) {
+            this.authService.requestLogin(this.router.url);
+            return;
+        }
+        if (!this.songId || this.isSubmittingRating) return;
+
+        this.isSubmittingRating = true;
+        this.songRatingService.rateSong(this.songId, rating).subscribe({
+            next: (data) => {
+                this.ratingAverage = data.averageRating;
+                this.ratingCount = data.ratingCount;
+                this.userRating = data.userRating ?? rating;
+                this.isSubmittingRating = false;
+            },
+            error: () => {
+                this.isSubmittingRating = false;
+            }
+        });
+    }
 
     loadArtistSongs(): void {
         if (!this.song?.artists?.[0]?.id) return;

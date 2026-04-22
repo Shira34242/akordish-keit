@@ -197,6 +197,16 @@
   color: #fff;
 }
 
+.btn-book {
+  background: #ddff53;
+  color: #000;
+  border: 1px solid transparent;
+}
+
+.btn-book:hover {
+  opacity: 0.85;
+}
+
 .btn-delete {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;

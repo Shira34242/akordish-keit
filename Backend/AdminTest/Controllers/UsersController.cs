@@ -19,11 +19,13 @@ public class UsersController : ControllerBase
     // GET: api/Users/with-profiles?q=שם&limit=20
     // מחזיר משתמשים בעלי פרופיל ציבורי פעיל (אמן / מורה / בעל מקצוע) — לשימוש בתיוג מעלה תוכן
     [HttpGet("with-profiles")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<List<UserWithProfileDto>>> GetUsersWithProfiles(
         [FromQuery] string? q = null,
-        [FromQuery] int limit = 20)
+        [FromQuery] int limit = 20,
+        [FromQuery] string? profileKind = null)
     {
-        var results = await _service.SearchUsersWithProfilesAsync(q, limit);
+        var results = await _service.SearchUsersWithProfilesAsync(q, limit, profileKind);
         return Ok(results);
     }
 

@@ -51,6 +51,8 @@ public interface ISongService
     /// </summary>
     Task<List<SongBasicDto>> GetMySongsAsync(int userId);
 
+    Task<List<SongDto>> GetApprovedSongsByUploaderProfileAsync(string profileType, int profileId, int limit = 12);
+
     // ============================================
     // MEDIUM PRIORITY - Search & Discovery
     // ============================================
@@ -102,4 +104,14 @@ public interface ISongService
     /// Increment unique view count with tracking
     /// </summary>
     Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);
+
+    /// <summary>
+    /// שמירת דירוג שיר (upsert — מחליף אם כבר קיים)
+    /// </summary>
+    Task<SongRatingResponseDto> RateSongAsync(int songId, int userId, int rating);
+
+    /// <summary>
+    /// קבלת ממוצע דירוגי שיר + דירוג המשתמש הנוכחי
+    /// </summary>
+    Task<SongRatingResponseDto> GetSongRatingAsync(int songId, int? userId);
 }

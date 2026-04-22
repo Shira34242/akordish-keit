@@ -46,6 +46,11 @@ namespace AkordishKeit.Data.Configurations
                 .WithOne(ti => ti.Teacher)
                 .HasForeignKey(ti => ti.TeacherId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(t => t.Testimonials)
+                .WithOne(tt => tt.Teacher)
+                .HasForeignKey(tt => tt.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

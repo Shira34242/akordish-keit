@@ -3,6 +3,8 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +23,7 @@ namespace AkordishKeit.Controllers
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ICsrfTokenService _csrfTokenService; // 🔐 שירות CSRF
+        private readonly Cloudinary _cloudinary;
 
         // Simple in-memory storage for verification codes (in production, use Redis or database)
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -35,6 +38,14 @@ namespace AkordishKeit.Controllers
             _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _csrfTokenService = csrfTokenService;
+
+            var account = new Account(
+                configuration["Cloudinary:CloudName"],
+                configuration["Cloudinary:ApiKey"],
+                configuration["Cloudinary:ApiSecret"]
+            );
+            _cloudinary = new Cloudinary(account);
+            _cloudinary.Api.Secure = true;
         }
 
         [HttpPost("google-login")]
@@ -60,6 +71,18 @@ namespace AkordishKeit.Controllers
 
             bool isNewGoogleUser = user == null;
 
+            // שמירת תמונת פרופיל ב-Cloudinary (במקום URL ישיר מ-Google שעלול להשתנות)
+            // מבוצע כשאין תמונה שמורה, או כשהתמונה הקיימת היא URL ישיר מ-Google
+            bool needsImageUpload = user == null
+                || string.IsNullOrEmpty(user.ProfileImageUrl)
+                || user.ProfileImageUrl.Contains("lh3.googleusercontent.com");
+
+            string? profileImageUrl = user?.ProfileImageUrl;
+            if (needsImageUpload && !string.IsNullOrEmpty(googleUser.Picture))
+            {
+                profileImageUrl = await UploadGoogleProfileImageAsync(googleUser.Picture) ?? googleUser.Picture;
+            }
+
             if (user == null)
             {
                 // 3. Create new user
@@ -68,7 +91,7 @@ namespace AkordishKeit.Controllers
                     Username = googleUser.Name,
                     Email = googleUser.Email,
                     GoogleId = googleUser.Sub,
-                    ProfileImageUrl = googleUser.Picture,
+                    ProfileImageUrl = profileImageUrl,
                     Role = UserRole.Regular,
                     Level = 1,
                     Points = 0,
@@ -88,9 +111,9 @@ namespace AkordishKeit.Controllers
                 {
                     user.GoogleId = googleUser.Sub;
                 }
-                if (user.ProfileImageUrl != googleUser.Picture)
+                if (needsImageUpload && profileImageUrl != null)
                 {
-                    user.ProfileImageUrl = googleUser.Picture;
+                    user.ProfileImageUrl = profileImageUrl;
                 }
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
@@ -452,6 +475,31 @@ namespace AkordishKeit.Controllers
             _verificationCodes.Remove(key);
 
             return Ok(new { message = "הסיסמא שונתה בהצלחה" });
+        }
+
+        // הורדת תמונת פרופיל מ-Google ושמירה ב-Cloudinary
+        // מחזיר URL של Cloudinary, או null אם נכשל (במקרה כזה נשמר ה-Google URL כגיבוי)
+        private async Task<string?> UploadGoogleProfileImageAsync(string googleImageUrl)
+        {
+            try
+            {
+                var imageBytes = await _httpClient.GetByteArrayAsync(googleImageUrl);
+                using var stream = new MemoryStream(imageBytes);
+
+                var uploadResult = await _cloudinary.UploadAsync(new ImageUploadParams
+                {
+                    File = new FileDescription("profile.jpg", stream),
+                    PublicId = $"profile-images/{Guid.NewGuid()}",
+                    Overwrite = false,
+                    Transformation = new Transformation().Width(200).Height(200).Crop("fill").Gravity("face")
+                });
+
+                return uploadResult.Error == null ? uploadResult.SecureUrl.ToString() : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         // Helper class for Google response

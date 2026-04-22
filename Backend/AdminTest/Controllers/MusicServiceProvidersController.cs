@@ -16,15 +16,21 @@ public class MusicServiceProvidersController : ControllerBase
     private readonly IMusicServiceProviderService _service;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly ISongService _songService;
+    private readonly IArticleService _articleService;
 
     public MusicServiceProvidersController(
         IMusicServiceProviderService service,
         AkordishKeitDbContext context,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ISongService songService,
+        IArticleService articleService)
     {
         _service = service;
         _context = context;
         _notificationService = notificationService;
+        _songService = songService;
+        _articleService = articleService;
     }
 
     // GET: api/MusicServiceProviders
@@ -71,6 +77,38 @@ public class MusicServiceProvidersController : ControllerBase
         }
 
         return Ok(serviceProvider);
+    }
+
+    // GET: api/MusicServiceProviders/5/songs
+    [HttpGet("{id}/songs")]
+    public async Task<ActionResult<List<SongDto>>> GetServiceProviderSongs(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.ServiceProviders
+            .AnyAsync(sp => sp.Id == id && !sp.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
+        }
+
+        var songs = await _songService.GetApprovedSongsByUploaderProfileAsync("serviceProvider", id, limit);
+        return Ok(songs);
+    }
+
+    // GET: api/MusicServiceProviders/5/articles
+    [HttpGet("{id}/articles")]
+    public async Task<ActionResult<List<ArticleDto>>> GetServiceProviderArticles(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.ServiceProviders
+            .AnyAsync(sp => sp.Id == id && !sp.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
+        }
+
+        var articles = await _articleService.GetPublishedArticlesByUploaderProfileAsync("serviceProvider", id, limit);
+        return Ok(articles);
     }
 
     // POST: api/MusicServiceProviders

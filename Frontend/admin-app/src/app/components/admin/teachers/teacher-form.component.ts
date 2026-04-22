@@ -6,7 +6,7 @@ import { TeacherService } from '../../../services/teacher.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { UserService } from '../../../services/user.service';
 import { CitiesService, City } from '../../../services/cities.service';
-import { CreateTeacherDto, UpdateTeacherDto, TeacherDto, CreateTeacherInstrumentDto } from '../../../models/teacher.model';
+import { CreateTeacherDto, UpdateTeacherDto, TeacherDto, CreateTeacherInstrumentDto, CreateTeacherTestimonialDto } from '../../../models/teacher.model';
 import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
 import { TeachingLanguage, getTeachingLanguageOptions, hasLanguage, toggleLanguage } from '../../../models/teaching-language.enum';
@@ -66,6 +66,8 @@ export class TeacherFormComponent implements OnInit {
   selectedAudiences: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  testimonials: CreateTeacherTestimonialDto[] = [];
+  newTestimonial = { studentName: '', text: '' };
   socialLinks: SocialLinkDto[] = [];
 
   readonly SOCIAL_PLATFORMS = [
@@ -324,6 +326,11 @@ export class TeacherFormComponent implements OnInit {
           caption: img.caption,
           order: img.order
         })) || [];
+        this.testimonials = teacher.testimonials?.map(item => ({
+          studentName: item.studentName,
+          text: item.text,
+          order: item.order
+        })) || [];
         this.socialLinks = teacher.socialLinks?.map(link => ({
           id: link.id,
           platform: link.platform,
@@ -374,6 +381,7 @@ export class TeacherFormComponent implements OnInit {
         specializations: this.specializations,
         instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
         galleryImages: this.galleryImages,
+        testimonials: this.testimonials,
         socialLinks: this.socialLinks.filter(link => link.url?.trim())
       };
 
@@ -426,6 +434,7 @@ export class TeacherFormComponent implements OnInit {
         specializations: this.specializations,
         instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
         galleryImages: this.galleryImages,
+        testimonials: this.testimonials,
         socialLinks: this.socialLinks.filter(link => link.url?.trim())
       };
 
@@ -630,6 +639,41 @@ export class TeacherFormComponent implements OnInit {
     this.galleryImages.forEach((img, idx) => {
       img.order = idx;
     });
+  }
+
+  addTestimonial(): void {
+    if (!this.newTestimonial.text.trim()) {
+      alert('נא להזין טקסט המלצה');
+      return;
+    }
+
+    this.testimonials.push({
+      studentName: this.newTestimonial.studentName.trim() || undefined,
+      text: this.newTestimonial.text.trim(),
+      order: this.testimonials.length
+    });
+    this.newTestimonial = { studentName: '', text: '' };
+  }
+
+  removeTestimonial(index: number): void {
+    this.testimonials.splice(index, 1);
+    this.testimonials.forEach((item, idx) => item.order = idx);
+  }
+
+  moveTestimonialUp(index: number): void {
+    if (index === 0) return;
+    const temp = this.testimonials[index];
+    this.testimonials[index] = this.testimonials[index - 1];
+    this.testimonials[index - 1] = temp;
+    this.testimonials.forEach((item, idx) => item.order = idx);
+  }
+
+  moveTestimonialDown(index: number): void {
+    if (index === this.testimonials.length - 1) return;
+    const temp = this.testimonials[index];
+    this.testimonials[index] = this.testimonials[index + 1];
+    this.testimonials[index + 1] = temp;
+    this.testimonials.forEach((item, idx) => item.order = idx);
   }
 
   addSocialLink(): void {

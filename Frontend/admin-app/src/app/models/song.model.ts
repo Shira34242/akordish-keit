@@ -1,8 +1,8 @@
 export interface UserWithProfile {
-    userId: number;
+    userId?: number | null;
     displayName: string;
     imageUrl?: string;
-    profileType: 'artist' | 'serviceProvider';
+    profileType: 'artist' | 'serviceProvider' | 'user';
     profileId: number;
     profileUrl: string;
 }
@@ -42,8 +42,9 @@ export interface AddSongRequest {
     arranger?: PersonInput;  // שונה מ-arrangerId
     genres?: GenreInput[];  // שונה מ-genreIds
     isApproved?: boolean;
-    uploaderUserId?: number;
-    uploaderProfileType?: 'artist' | 'serviceProvider';
+    uploaderUserId?: number | null;
+    uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+    uploaderProfileId?: number;
 }
 
 export interface SongDto {
@@ -71,7 +72,12 @@ export interface SongDto {
     createdAt: Date;
     updatedAt?: Date;
     uploadedByUserId?: number;
+    uploaderUserId?: number | null;
+    uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+    uploaderProfileId?: number;
     uploaderProfile?: import('./article.model').ContentUploaderProfile;
+    averageRating?: number;
+    ratingCount?: number;
 }
 
 export interface ArtistBasicDto {

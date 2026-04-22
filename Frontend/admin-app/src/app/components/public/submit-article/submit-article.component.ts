@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ArticleService } from '../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { ArtistService } from '../../../services/artist.service';
+import { UserService } from '../../../services/user.service';
 import { ArtistListDto } from '../../../models/artist.model';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import {
@@ -26,6 +27,7 @@ export class SubmitArticleComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
+  private readonly userService = inject(UserService);
 
   // State
   categories: SystemItem[] = [];
@@ -76,11 +78,23 @@ export class SubmitArticleComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadArtists();
+    this.autoFillUploaderProfile();
 
     this.route.queryParams.subscribe(params => {
       if (params['type'] === 'content') {
         this.article.contentType = ArticleContentType.Blog;
       }
+    });
+  }
+
+  private autoFillUploaderProfile(): void {
+    this.userService.getMyAllPages().subscribe(profiles => {
+      if (profiles.length !== 1) return;
+
+      const profile = profiles[0];
+      this.article.uploaderUserId = profile.userId;
+      this.article.uploaderProfileType = profile.profileType;
+      this.article.uploaderProfileId = profile.profileId;
     });
   }
 

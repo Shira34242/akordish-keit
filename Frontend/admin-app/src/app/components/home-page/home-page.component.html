@@ -3,8 +3,10 @@
   <!-- White top mask -->
   <div class="top-scroll-mask"></div>
 
-  <!-- פס חדשות אלכסוני - מעל כל שכבות ההירו ונעלם בגלילה -->
-  <app-news-ticker></app-news-ticker>
+  <!-- פס חדשות אלכסוני - שכבת הירו שנגללת עם הדף -->
+  <div class="hero-ticker-layer">
+    <app-news-ticker></app-news-ticker>
+  </div>
 
   <!-- Hero Background — fixed, shrinks on scroll -->
   <div class="hero-bg" #heroBg>
@@ -106,6 +108,29 @@
             </div>
           </div>
 
+          <!-- שירים לפי מילות השיר (שלב 2) -->
+          <div *ngIf="lyricsMatches.length > 0" class="search-group">
+            <span class="search-group-label">
+              שירים לפי מילות השיר
+              <span class="search-lyrics-badge">חיפוש עמוק</span>
+            </span>
+            <div class="search-result-item" *ngFor="let item of lyricsMatches" (click)="navigateToResult(item)">
+              <img [src]="item.imageUrl || 'assets/default-song.png'" class="result-thumb" loading="lazy">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- טעינת חיפוש עמוק -->
+          <div class="search-deep-loading" *ngIf="isSearchingDeep">
+            <span class="search-deep-dot"></span>
+            <span class="search-deep-dot"></span>
+            <span class="search-deep-dot"></span>
+            <span class="search-deep-label">מחפש במילות השיר...</span>
+          </div>
+
           <!-- אין תוצאות -->
           <div class="no-results" *ngIf="hasNoResults">
             לא נמצאו תוצאות עבור "{{ searchQuery }}"
@@ -150,7 +175,10 @@
       <div class="promo-content">
         <h2 class="promo-title">אקורדים</h2>
         <p class="promo-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
-        <a routerLink="/chords" class="promo-btn">לכל האקורדים ‹</a>
+        <div class="promo-actions">
+          <a routerLink="/chords" class="promo-btn">לכל האקורדים ‹</a>
+          <button (click)="handleRandomSongClick()" class="promo-btn promo-btn-secondary">שיר בהפתעה</button>
+        </div>
       </div>
     </div>
 

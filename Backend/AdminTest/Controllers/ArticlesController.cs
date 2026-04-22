@@ -164,7 +164,7 @@ public class ArticlesController : ControllerBase
     {
         try
         {
-            var article = await _articleService.UpdateArticleAsync(id, dto);
+            var article = await _articleService.UpdateArticleAsync(id, dto, GetCurrentUserId());
 
             return Ok(article);
         }

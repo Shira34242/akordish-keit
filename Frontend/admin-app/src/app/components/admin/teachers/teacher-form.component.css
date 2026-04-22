@@ -478,6 +478,20 @@
   text-overflow: ellipsis;
 }
 
+.testimonial-admin-item {
+  align-items: flex-start;
+}
+
+.testimonial-admin-text {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  line-height: var(--lh-body);
+  color: #000000;
+  opacity: 0.72;
+  white-space: normal;
+}
+
 .gallery-item-actions {
   display: flex;
   align-items: center;

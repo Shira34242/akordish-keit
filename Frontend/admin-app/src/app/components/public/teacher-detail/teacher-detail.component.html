@@ -1,10 +1,8 @@
-<!-- Loading -->
 <div class="loading-container" *ngIf="loading" dir="rtl">
   <div class="spinner"></div>
   <p>טוען פרטי מורה...</p>
 </div>
 
-<!-- Teacher Page -->
 <div class="teacher-page"
      [class.has-banner]="!!heroBannerSrc"
      *ngIf="!loading && teacher"
@@ -12,70 +10,87 @@
 
   <div class="top-scroll-mask"></div>
 
-  <!-- ════════════════════════════════════════
-       HERO BANNER — קומפקטי, כהה, fixed, מתכווץ
-  ════════════════════════════════════════ -->
-  <div class="teacher-hero-bg"
-       #teacherHeroBg
-       [style.backgroundImage]="heroBannerSrc ? 'url(' + heroBannerSrc + ')' : null">
-
-    <!-- רקע מטושטש -->
+  <section class="teacher-hero-bg"
+           #teacherHeroBg
+           [style.backgroundImage]="heroBannerSrc ? 'url(' + heroBannerSrc + ')' : null">
     <div class="hero-bg-photo" *ngIf="teacher.profileImageUrl && !heroBannerSrc">
       <img [src]="teacher.profileImageUrl" alt="" class="hero-bg-img" aria-hidden="true" />
     </div>
     <div class="hero-dark-overlay"></div>
     <div class="hero-collapse-overlay"></div>
 
-    <!-- תוכן Banner (fade ב-JS) -->
     <div class="hero-content">
+      <div class="hero-profile-side">
+        <img [src]="teacher.profileImageUrl || '/logo.png'"
+             [alt]="teacher.displayName"
+             class="hero-profile-photo"
+             imgFallback />
+      </div>
 
-      <!-- שורה ראשית: תמונה (ימין) + פרטים (שמאל) -->
-      <div class="hero-main-row">
+      <div class="hero-text-block">
+        <span *ngIf="teacher.isFeatured" class="badge-featured">
+          <span class="material-icons">star</span>
+          מומלץ
+        </span>
+        <h1 class="hero-name">{{ teacher.displayName }}</h1>
+        <p class="hero-role">{{ heroRole }}</p>
+        <p class="hero-location" *ngIf="teacher.cityId || teacher.location">
+          <span class="material-icons">location_on</span>
+          {{ getLocationLine() }}
+        </p>
 
-        <!-- תמונה — צד ימין (ראשון ב-RTL flex row) -->
-        <div class="hero-image-section">
-          <img [src]="teacher.profileImageUrl"
-               alt="{{ teacher.displayName }}"
-               class="hero-photo-square"
-               imgFallback />
-        </div>
+        <a *ngIf="teacher.websiteUrl"
+           [href]="teacher.websiteUrl"
+           target="_blank"
+           rel="noopener"
+           class="hero-website-link">
+          {{ getShortUrl(teacher.websiteUrl) }}
+        </a>
+      </div>
 
-        <!-- פרטים — צד שמאל -->
-        <div class="hero-info-section">
-          <span *ngIf="teacher.isFeatured" class="badge-featured">★ מומלץ</span>
-          <h1 class="hero-name">{{ teacher.displayName }}</h1>
-          <p class="hero-role"
-             *ngIf="teacher.instruments && teacher.instruments.length > 0">
-            מורה ל{{ teacher.instruments[0].instrumentName }}
-          </p>
-          <div class="hero-city" *ngIf="teacher.cityId">
-            <span class="material-icons">location_on</span>
-            {{ getCityName(teacher.cityId) }}
+      <div class="hero-actions">
+        <div class="contact-action-wrap">
+          <button class="btn-cta-primary" (click)="toggleContact()">
+            ליצירת קשר
+          </button>
+
+          <div class="contact-panel" [class.open]="contactOpen">
+            <a *ngIf="teacher.phoneNumber" [href]="'tel:' + teacher.phoneNumber" class="contact-item">
+              <span class="material-icons">phone</span>
+              <span>{{ teacher.phoneNumber }}</span>
+            </a>
+            <a *ngIf="teacher.whatsAppNumber" [href]="'https://wa.me/' + teacher.whatsAppNumber" target="_blank" class="contact-item">
+              <span class="material-icons">chat</span>
+              <span>{{ teacher.whatsAppNumber }}</span>
+            </a>
+            <a *ngIf="teacher.email" [href]="'mailto:' + teacher.email" class="contact-item">
+              <span class="material-icons">email</span>
+              <span>{{ teacher.email }}</span>
+            </a>
+            <a *ngIf="teacher.websiteUrl" [href]="teacher.websiteUrl" target="_blank" rel="noopener" class="contact-item">
+              <span class="material-icons">language</span>
+              <span>{{ getShortUrl(teacher.websiteUrl) }}</span>
+            </a>
+            <div *ngIf="teacher.cityId || teacher.location" class="contact-item contact-item-static">
+              <span class="material-icons">location_on</span>
+              <span>{{ getLocationLine() }}</span>
+            </div>
           </div>
         </div>
 
-      </div>
+        <a *ngIf="teacher.whatsAppNumber"
+           [href]="'https://wa.me/' + teacher.whatsAppNumber"
+           target="_blank"
+           class="btn-cta-whatsapp"
+           aria-label="הודעה מהירה">
+          <svg viewBox="0 0 512 512" aria-hidden="true">
+            <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
+          </svg>
+        </a>
 
-      <!-- שמאל-תחתון: "עקבו אחרי" + אייקוני קשר מהיר -->
-      <div class="hero-social-strip"
-           *ngIf="teacher.phoneNumber || teacher.email || teacher.websiteUrl">
-        <span class="hero-follow-pill">עקבו אחרי</span>
-        <div class="hero-social-icons">
-          <a *ngIf="teacher.phoneNumber"
-             [href]="'tel:' + teacher.phoneNumber"
-             class="hero-social-btn" title="טלפון">
-            <span class="material-icons">phone</span>
-          </a>
-          <a *ngIf="teacher.email"
-             [href]="'mailto:' + teacher.email"
-             class="hero-social-btn" title="אימייל">
-            <span class="material-icons">email</span>
-          </a>
-          <a *ngIf="teacher.websiteUrl"
-             [href]="teacher.websiteUrl" target="_blank"
-             class="hero-social-btn" title="אתר">
-            <span class="material-icons">language</span>
-          </a>
+        <span *ngIf="socialLinks.length > 0" class="hero-actions-divider" aria-hidden="true"></span>
+
+        <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
           <a *ngFor="let link of socialLinks"
              [href]="link.url"
              target="_blank"
@@ -86,203 +101,114 @@
           </a>
         </div>
       </div>
-
     </div>
-    <!-- /hero-content -->
+  </section>
 
-  </div>
-
-  <!-- ════════════════════════════════════════
-       SCROLL SPACER (גובה = hero height)
-  ════════════════════════════════════════ -->
   <div class="hero-scroll-spacer"></div>
 
-  <!-- ════════════════════════════════════════
-       CTA ZONE — מתחת לתמונה, מחוץ לתיבה
-  ════════════════════════════════════════ -->
-  <div class="hero-cta-zone">
+  <main class="page-content">
+    <section class="intro-section">
+      <p class="details-line" *ngIf="detailsLine">{{ detailsLine }}</p>
+      <p class="full-desc-text" *ngIf="teacher.fullDescription">{{ teacher.fullDescription }}</p>
+    </section>
 
-    <!-- ליצירת קשר + פאנל -->
-    <div class="contact-btn-wrap">
-      <button class="btn-cta-primary" (click)="toggleContact()">
-        <span class="material-icons">contact_phone</span>
-        ליצירת קשר
-      </button>
-      <div class="contact-panel" [class.open]="contactOpen">
-        <a *ngIf="teacher.phoneNumber"
-           [href]="'tel:' + teacher.phoneNumber"
-           class="contact-item">
-          <span class="material-icons">phone</span>
-          <span>{{ teacher.phoneNumber }}</span>
-        </a>
-        <a *ngIf="teacher.whatsAppNumber"
-           [href]="'https://wa.me/' + teacher.whatsAppNumber"
-           target="_blank"
-           class="contact-item">
-          <span class="material-icons">chat</span>
-          <span>{{ teacher.whatsAppNumber }}</span>
-        </a>
-        <a *ngIf="teacher.email"
-           [href]="'mailto:' + teacher.email"
-           class="contact-item">
-          <span class="material-icons">email</span>
-          <span>{{ teacher.email }}</span>
-        </a>
-        <a *ngIf="teacher.websiteUrl"
-           [href]="teacher.websiteUrl" target="_blank"
-           class="contact-item">
-          <span class="material-icons">language</span>
-          <span>{{ teacher.websiteUrl }}</span>
-        </a>
-        <div *ngIf="teacher.cityId || teacher.location" class="contact-item contact-item-nolink">
-          <span class="material-icons">location_on</span>
-          <span>{{ getCityName(teacher.cityId) }}{{ teacher.location ? '، ' + teacher.location : '' }}</span>
-        </div>
-      </div>
-    </div>
-
-    <a *ngIf="teacher.tier === 1 && teacher.whatsAppNumber"
-       [href]="'https://wa.me/' + teacher.whatsAppNumber"
-       target="_blank"
-       class="btn-cta-whatsapp">
-      <span class="material-icons">chat</span>
-      הודעה מהירה
-    </a>
-
-  </div>
-  <!-- /hero-cta-zone -->
-
-  <!-- ════════════════════════════════════════
-       PAGE CONTENT
-  ════════════════════════════════════════ -->
-  <div class="page-content">
-
-    <!-- שורת תיאור ראשית — shortBio + פרטים בולדים -->
-    <p class="details-line" *ngIf="detailsLine">{{ detailsLine }}</p>
-
-    <!-- תיאור מלא + קהל יעד -->
-    <div class="about-block" *ngIf="teacher.fullDescription || teacher.targetAudience">
-      <p *ngIf="teacher.fullDescription" class="full-desc-text">{{ teacher.fullDescription }}</p>
-      <a *ngIf="teacher.websiteUrl"
-         [href]="teacher.websiteUrl"
-         target="_blank"
-         rel="noopener"
-         class="teacher-website-link">
-        {{ getShortUrl(teacher.websiteUrl) }}
-      </a>
-      <div class="section-divider" *ngIf="teacher.targetAudience"></div>
-      <div class="tags-row" *ngIf="teacher.targetAudience">
-        <span class="pill-tag-secondary"
-              *ngFor="let a of getTargetAudienceList(teacher.targetAudience)">{{ a }}</span>
-      </div>
-    </div>
-
-    <!-- התמחויות -->
-    <div *ngIf="hasSpecializations">
+    <section class="content-section" *ngIf="teacherSongs.length > 0">
       <div class="section-header">
-        <span class="card-section-label">התמחויות</span>
-      </div>
-      <div class="tags-row">
-        <span class="pill-tag-secondary"
-              *ngFor="let sp of getSpecializationsList()">{{ sp }}</span>
-      </div>
-    </div>
-
-    <!-- תכנים שהעלתי לאחרונה -->
-    <div *ngIf="teacherSongs.length > 0">
-      <div class="section-header">
-        <span class="card-section-label">תכנים שהעלתי לאחרונה</span>
+        <h2 class="section-title">תכנים שהועלו לאחרונה</h2>
       </div>
       <div class="songs-row">
         <app-song-card *ngFor="let song of teacherSongs" [song]="song"></app-song-card>
       </div>
-    </div>
+    </section>
 
-    <!-- גלריה + וידאו -->
-    <div class="gallery-section" *ngIf="galleryItems.length > 0 || teacher.videoUrl">
-
-      <!-- וידאו -->
-      <div class="gallery-video-wrap" *ngIf="teacher.videoUrl">
-        <iframe [src]="getSafeVideoUrl(teacher.videoUrl)"
-                frameborder="0"
-                allowfullscreen
-                class="gallery-video-iframe"></iframe>
+    <section class="gallery-section" *ngIf="galleryMediaItems.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">גלריה</h2>
       </div>
-
-      <!-- גריד תמונות -->
-      <div class="gallery-grid" *ngIf="galleryItems.length > 0">
+      <div class="gallery-grid">
         <div class="gallery-item"
-             *ngFor="let img of galleryItems; let i = index"
-             (click)="openLightbox(i)">
-          <img [src]="img.imageUrl"
-               [alt]="img.caption || ''"
-               class="gallery-img" />
-          <p class="gallery-caption" *ngIf="img.caption">{{ img.caption }}</p>
+             *ngFor="let item of galleryMediaItems; let i = index"
+             [class.video-gallery-item]="item.type === 'video'"
+             (click)="openMediaLightbox(i)">
+          <img [src]="item.imageUrl || '/logo.png'" [alt]="item.caption || teacher.displayName" class="gallery-img">
+          <span class="material-icons gallery-play-icon" *ngIf="item.type === 'video'">play_arrow</span>
+          <p class="gallery-caption" *ngIf="item.caption">{{ item.caption }}</p>
         </div>
       </div>
+    </section>
 
-    </div>
-
-    <!-- המלצות תלמידים -->
-    <div *ngIf="teacherTestimonials.length > 0">
+    <section class="content-section" *ngIf="teacherTestimonials.length > 0">
       <div class="section-header">
-        <span class="card-section-label">המלצות תלמידים</span>
+        <h2 class="section-title">המלצות תלמידים</h2>
       </div>
-      <div class="testimonials-grid">
-        <div *ngFor="let t of teacherTestimonials" class="testimonial-card">
-          <div class="testimonial-quote-mark">&ldquo;</div>
-          <p class="testimonial-text">{{ t.text }}</p>
-          <p class="testimonial-author">{{ t.studentName }}</p>
+      <div class="testimonials-carousel">
+        <button *ngIf="canScrollTestimonialsNext"
+                class="testimonial-nav testimonial-nav-next"
+                type="button"
+                aria-label="המלצות נוספות"
+                (click)="scrollTestimonials('next')">
+          <span class="material-icons">chevron_right</span>
+        </button>
+
+        <div class="testimonials-grid"
+             #testimonialsScroller
+             (scroll)="updateTestimonialsNav()">
+          <article *ngFor="let t of teacherTestimonials" class="testimonial-card">
+            <span class="quote-mark">"</span>
+            <p>{{ t.text }}</p>
+            <strong>{{ t.studentName || 'תלמיד' }}</strong>
+          </article>
         </div>
-      </div>
-    </div>
 
-    <!-- כתבות -->
-    <div *ngIf="teacherArticles.length > 0">
+        <button *ngIf="canScrollTestimonialsPrev"
+                class="testimonial-nav testimonial-nav-prev"
+                type="button"
+                aria-label="המלצות קודמות"
+                (click)="scrollTestimonials('prev')">
+          <span class="material-icons">chevron_left</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="content-section" *ngIf="teacherArticles.length > 0">
       <div class="section-header">
-        <span class="card-section-label">כתבות</span>
+        <h2 class="section-title">כתבות</h2>
       </div>
       <div class="articles-grid">
         <app-news-banner *ngFor="let article of teacherArticles" [article]="article"></app-news-banner>
       </div>
-    </div>
+    </section>
+  </main>
+</div>
 
-  </div>
-  <!-- /page-content -->
+<div class="lightbox-overlay" *ngIf="mediaLightboxIndex !== null" (click)="closeMediaLightbox()">
+  <button class="lightbox-close" (click)="closeMediaLightbox()">
+    <span class="material-icons">close</span>
+  </button>
 
-  <!-- ════════════════════════════════════════
-       LIGHTBOX
-  ════════════════════════════════════════ -->
-  <div class="image-lightbox" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">
+  <button class="lightbox-nav lightbox-prev"
+          (click)="$event.stopPropagation(); mediaLightboxStep(-1)"
+          *ngIf="galleryMediaItems.length > 1">
+    <span class="material-icons">chevron_left</span>
+  </button>
 
-    <button class="lightbox-close-btn" (click)="closeLightbox()">
-      <span class="material-icons">close</span>
-    </button>
-
-    <button class="lightbox-nav lightbox-prev"
-            (click)="$event.stopPropagation(); lightboxStep(-1)"
-            *ngIf="galleryItems.length > 1">
-      <span class="material-icons">chevron_right</span>
-    </button>
-
-    <div class="lightbox-content" (click)="$event.stopPropagation()">
-      <img [src]="galleryItems[lightboxIndex!].imageUrl"
-           [alt]="galleryItems[lightboxIndex!].caption || ''"
-           class="image-lightbox-img" />
-      <p *ngIf="galleryItems[lightboxIndex!].caption" class="image-lightbox-caption">
-        {{ galleryItems[lightboxIndex!].caption }}
-      </p>
-      <span class="lightbox-counter" *ngIf="galleryItems.length > 1">
-        {{ lightboxIndex! + 1 }} / {{ galleryItems.length }}
-      </span>
-    </div>
-
-    <button class="lightbox-nav lightbox-next"
-            (click)="$event.stopPropagation(); lightboxStep(1)"
-            *ngIf="galleryItems.length > 1">
-      <span class="material-icons">chevron_left</span>
-    </button>
-
+  <div class="lightbox-content" (click)="$event.stopPropagation()">
+    <img *ngIf="activeMedia?.type === 'image'"
+         [src]="activeMedia?.imageUrl"
+         [alt]="activeMedia?.caption || ''"
+         class="lightbox-img" />
+    <iframe *ngIf="activeMedia?.type === 'video' && activeVideoUrl"
+            [src]="activeVideoUrl"
+            class="lightbox-video"
+            allowfullscreen>
+    </iframe>
+    <p *ngIf="activeMedia?.caption" class="lightbox-caption">{{ activeMedia?.caption }}</p>
+    <span class="lightbox-counter">{{ mediaLightboxIndex! + 1 }} / {{ galleryMediaItems.length }}</span>
   </div>
 
+  <button class="lightbox-nav lightbox-next"
+          (click)="$event.stopPropagation(); mediaLightboxStep(1)"
+          *ngIf="galleryMediaItems.length > 1">
+    <span class="material-icons">chevron_right</span>
+  </button>
 </div>

@@ -78,6 +78,9 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
         builder.HasIndex(e => new { e.Language, e.IsApproved })
                .HasDatabaseName("IX_Songs_Language_IsApproved");
 
+        builder.HasIndex(e => new { e.UploaderProfileType, e.UploaderProfileId })
+               .HasDatabaseName("IX_Songs_UploaderProfile");
+
         // Relationships - Composer
         builder.HasOne(s => s.Composer)
                .WithMany(p => p.ComposedSongs)

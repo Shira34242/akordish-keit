@@ -190,11 +190,18 @@ public class PlaylistsController : ControllerBase
         if (!userId.HasValue)
             return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
 
-        var success = await _playlistService.AddSongToPlaylistAsync(id, songId, userId.Value);
-        if (!success)
-            return BadRequest(new { message = "לא ניתן להוסיף את השיר לרשימה" });
+        try
+        {
+            var success = await _playlistService.AddSongToPlaylistAsync(id, songId, userId.Value);
+            if (!success)
+                return BadRequest(new { message = "לא ניתן להוסיף את השיר לרשימה" });
 
-        return Ok(new { message = "השיר נוסף לרשימה בהצלחה" });
+            return Ok(new { message = "השיר נוסף לרשימה בהצלחה" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}/songs/{songId}")]
@@ -232,11 +239,18 @@ public class PlaylistsController : ControllerBase
         if (!userId.HasValue)
             return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
 
-        var adoptedPlaylist = await _playlistService.AdoptPlaylistAsync(id, userId.Value);
-        if (adoptedPlaylist == null)
-            return NotFound(new { message = "הרשימה לא נמצאה או שאינה ציבורית" });
+        try
+        {
+            var adoptedPlaylist = await _playlistService.AdoptPlaylistAsync(id, userId.Value);
+            if (adoptedPlaylist == null)
+                return NotFound(new { message = "הרשימה לא נמצאה או שאינה ציבורית" });
 
-        return Ok(adoptedPlaylist);
+            return Ok(adoptedPlaylist);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("{id}/duplicate")]
@@ -246,10 +260,17 @@ public class PlaylistsController : ControllerBase
         if (!userId.HasValue)
             return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
 
-        var duplicatedPlaylist = await _playlistService.DuplicatePlaylistAsync(id, userId.Value);
-        if (duplicatedPlaylist == null)
-            return NotFound(new { message = "הרשימה לא נמצאה" });
+        try
+        {
+            var duplicatedPlaylist = await _playlistService.DuplicatePlaylistAsync(id, userId.Value);
+            if (duplicatedPlaylist == null)
+                return NotFound(new { message = "הרשימה לא נמצאה" });
 
-        return Ok(duplicatedPlaylist);
+            return Ok(duplicatedPlaylist);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

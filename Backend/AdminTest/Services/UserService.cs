@@ -78,43 +78,58 @@ public class UserService : IUserService
     }
 
 
-    public async Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20)
+    public async Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20, string? profileKind = null)
     {
         var results = new List<UserWithProfileDto>();
         var q = query?.Trim().ToLower() ?? "";
+        var kind = profileKind?.Trim().ToLower() ?? "all";
+        var safeLimit = Math.Clamp(limit, 1, 100);
 
-        // --- אמנים פעילים עם UserId ---
+        // --- אמנים עם UserId ---
+        if (kind == "all" || kind == "artist")
+        {
         var artists = await _context.Artists
             .Where(a => !a.IsDeleted
-                && a.UserId != null
-                && a.Status == ArtistStatus.Active
                 && (string.IsNullOrEmpty(q) || a.Name.ToLower().Contains(q)))
             .OrderBy(a => a.Name)
-            .Take(limit)
+            .Take(safeLimit)
             .Select(a => new UserWithProfileDto
             {
-                UserId = a.UserId!.Value,
+                UserId = a.UserId,
                 DisplayName = a.Name,
                 ImageUrl = a.ImageUrl,
                 ProfileType = "artist",
                 ProfileId = a.Id,
-                ProfileUrl = $"/artist/{a.Id}"
+                ProfileUrl = $"/artist/{a.Id}",
+                Status = a.Status.ToString()
             })
             .ToListAsync();
 
         results.AddRange(artists);
+        }
 
-        // --- בעלי מקצוע / מורים פעילים עם UserId ---
-        var providers = await _context.ServiceProviders
+        // --- בעלי מקצוע / מורים עם UserId ---
+        if (kind == "all" || kind == "teacher" || kind == "serviceprovider")
+        {
+        var providersQuery = _context.ServiceProviders
             .Where(p => !p.IsDeleted
-                && p.UserId != null
-                && p.Status == ProfileStatus.Active
-                && (string.IsNullOrEmpty(q) || p.DisplayName.ToLower().Contains(q)))
+                && (string.IsNullOrEmpty(q) || p.DisplayName.ToLower().Contains(q)));
+
+        if (kind == "teacher")
+        {
+            providersQuery = providersQuery.Where(p => p.IsTeacher);
+        }
+        else if (kind == "serviceprovider")
+        {
+            providersQuery = providersQuery.Where(p => !p.IsTeacher);
+        }
+
+        var providers = await providersQuery
             .OrderBy(p => p.DisplayName)
-            .Take(limit)
+            .Take(safeLimit)
             .Select(p => new UserWithProfileDto
             {
-                UserId = p.UserId!.Value,
+                UserId = p.UserId,
                 DisplayName = p.DisplayName,
                 ImageUrl = p.ProfileImageUrl,
                 ProfileType = "serviceProvider",
@@ -126,10 +141,38 @@ public class UserService : IUserService
             .ToListAsync();
 
         results.AddRange(providers);
+        }
+
+        if (kind == "all" || kind == "user")
+        {
+            var regularUsers = await _context.Users
+                .Where(u => !u.IsDeleted
+                    && u.Role == UserRole.Regular
+                    && (string.IsNullOrEmpty(q)
+                        || u.Username.ToLower().Contains(q)
+                        || u.Email.ToLower().Contains(q)
+                        || (u.Phone != null && u.Phone.Contains(q))))
+                .OrderBy(u => u.Username)
+                .Take(safeLimit)
+                .Select(u => new UserWithProfileDto
+                {
+                    UserId = u.Id,
+                    DisplayName = u.Username,
+                    ImageUrl = u.ProfileImageUrl,
+                    ProfileType = "user",
+                    ProfileId = 0,
+                    ProfileUrl = string.Empty,
+                    IsTeacher = false,
+                    Status = u.IsActive ? "Active" : "Inactive"
+                })
+                .ToListAsync();
+
+            results.AddRange(regularUsers);
+        }
 
         return results
             .OrderBy(r => r.DisplayName)
-            .Take(limit)
+            .Take(safeLimit)
             .ToList();
     }
 

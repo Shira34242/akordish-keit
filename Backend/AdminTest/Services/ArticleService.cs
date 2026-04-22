@@ -156,6 +156,12 @@ public class ArticleService : IArticleService
             throw new InvalidOperationException("An article with this slug already exists");
         }
 
+        var uploader = await NormalizeUploaderAsync(
+            callerUserId,
+            dto.UploaderUserId,
+            dto.UploaderProfileType,
+            dto.UploaderProfileId);
+
         var article = new Article
         {
             Title = dto.Title,
@@ -181,8 +187,9 @@ public class ArticleService : IArticleService
             MetaDescription = dto.MetaDescription,
             OpenGraphImageUrl = dto.OpenGraphImageUrl,
             ReadTimeMinutes = dto.ReadTimeMinutes,
-            UploaderUserId = dto.UploaderUserId ?? callerUserId,
-            UploaderProfileType = dto.UploaderProfileType,
+            UploaderUserId = uploader.UserId,
+            UploaderProfileType = uploader.ProfileType,
+            UploaderProfileId = uploader.ProfileId,
             SubmittedByUserId = callerUserId,
             ViewCount = 0,
             LikeCount = 0,
@@ -219,7 +226,7 @@ public class ArticleService : IArticleService
         return (await GetArticleByIdAsync(article.Id))!;
     }
 
-    public async Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto)
+    public async Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto, int? callerUserId = null)
     {
         var article = await _context.Articles
             .Include(a => a.ArticleCategories)
@@ -240,6 +247,12 @@ public class ArticleService : IArticleService
         {
             throw new InvalidOperationException("An article with this slug already exists");
         }
+
+        var uploader = await NormalizeUploaderAsync(
+            callerUserId,
+            dto.UploaderUserId,
+            dto.UploaderProfileType,
+            dto.UploaderProfileId);
 
         // Update article properties
         article.Title = dto.Title;
@@ -264,8 +277,9 @@ public class ArticleService : IArticleService
         article.MetaDescription = dto.MetaDescription;
         article.OpenGraphImageUrl = dto.OpenGraphImageUrl;
         article.ReadTimeMinutes = dto.ReadTimeMinutes;
-        article.UploaderUserId = dto.UploaderUserId;
-        article.UploaderProfileType = dto.UploaderProfileType;
+        article.UploaderUserId = uploader.UserId;
+        article.UploaderProfileType = uploader.ProfileType;
+        article.UploaderProfileId = uploader.ProfileId;
 
         // Update categories
         _context.ArticleArticleCategories.RemoveRange(article.ArticleCategories);
@@ -491,9 +505,33 @@ public class ArticleService : IArticleService
             .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
             .Include(a => a.GalleryImages)
             .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
-            .Include(a => a.UploaderUser)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
             .Where(a => a.SubmittedByUserId == userId && !a.IsDeleted)
             .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        return articles.Select(MapToDto).ToList();
+    }
+
+    public async Task<List<ArticleDto>> GetPublishedArticlesByUploaderProfileAsync(string profileType, int profileId, int limit = 12)
+    {
+        var now = DateTime.UtcNow;
+
+        var articles = await _context.Articles
+            .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
+            .Where(a => a.UploaderProfileType == profileType
+                && a.UploaderProfileId == profileId
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= now
+                && !a.IsDeleted)
+            .OrderByDescending(a => a.PublishDate)
+            .Take(limit)
             .ToListAsync();
 
         return articles.Select(MapToDto).ToList();
@@ -602,6 +640,7 @@ public class ArticleService : IArticleService
             CreatedAt = DateTime.UtcNow,
             UploaderUserId = original.UploaderUserId,
             UploaderProfileType = original.UploaderProfileType,
+            UploaderProfileId = original.UploaderProfileId,
             ViewCount = 0,
             LikeCount = 0,
             IsDeleted = false
@@ -692,7 +731,7 @@ public class ArticleService : IArticleService
         return query;
     }
 
-    private static ArticleDto MapToDto(Article article)
+    private ArticleDto MapToDto(Article article)
     {
         return new ArticleDto
         {
@@ -748,32 +787,211 @@ public class ArticleService : IArticleService
                 ArtistName = aa.Artist.Name,
                 ArtistImageUrl = aa.Artist.ImageUrl
             }).ToList() ?? new List<ArticleArtistDto>(),
-            UploaderProfile = ResolveUploaderProfile(article.UploaderUser, article.UploaderProfileType),
+            UploaderProfile = ResolveUploaderProfile(article.UploaderUser, article.UploaderProfileType, article.UploaderProfileId),
             UploaderUserId = article.UploaderUserId,
-            UploaderProfileType = article.UploaderProfileType
+            UploaderProfileType = article.UploaderProfileType,
+            UploaderProfileId = article.UploaderProfileId
         };
     }
 
-    private static ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType)
+    private async Task<(int? UserId, string? ProfileType, int? ProfileId)> NormalizeUploaderAsync(
+        int? callerUserId,
+        int? requestedUserId,
+        string? requestedProfileType,
+        int? requestedProfileId)
     {
-        if (user == null || string.IsNullOrEmpty(profileType)) return null;
+        if (!callerUserId.HasValue)
+        {
+            return await NormalizeUploaderWithoutCallerAsync(requestedUserId, requestedProfileType, requestedProfileId);
+        }
 
-        if (profileType == "artist" && user.ManagedArtist != null)
+        var currentUser = await _context.Users.FindAsync(callerUserId.Value);
+        if (currentUser == null)
+        {
+            throw new InvalidOperationException("׳׳©׳×׳׳© ׳׳ ׳ ׳׳¦׳");
+        }
+
+        var isAdmin = currentUser.Role == UserRole.Admin || currentUser.Role == UserRole.Manager;
+        var profileType = NormalizeProfileType(requestedProfileType);
+        int? uploaderUserId = isAdmin ? requestedUserId ?? callerUserId.Value : callerUserId.Value;
+        var profileId = requestedProfileId;
+
+        if (isAdmin && profileId.HasValue && profileType != null)
+        {
+            var profileOwnerUserId = await GetProfileOwnerUserIdAsync(profileType, profileId.Value);
+            if (requestedUserId.HasValue && profileOwnerUserId.HasValue && requestedUserId.Value != profileOwnerUserId.Value)
+            {
+                throw new InvalidOperationException("הפרופיל שנבחר לא שייך למשתמש שנבחר");
+            }
+
+            var profileExists = await ProfileExistsAsync(profileType, profileId.Value);
+            if (!profileExists)
+            {
+                throw new InvalidOperationException("הפרופיל שנבחר לא נמצא");
+            }
+
+            return (profileOwnerUserId ?? requestedUserId, profileType, profileId);
+        }
+
+        if (profileType == null)
+        {
+            return (uploaderUserId, null, null);
+        }
+
+        if (!uploaderUserId.HasValue)
+        {
+            return (null, null, null);
+        }
+
+        profileId ??= await GetDefaultProfileIdForUserAsync(uploaderUserId.Value, profileType);
+        if (!profileId.HasValue)
+        {
+            return (uploaderUserId, null, null);
+        }
+
+        var belongsToUser = await ProfileBelongsToUserAsync(uploaderUserId.Value, profileType, profileId.Value);
+        if (!belongsToUser)
+        {
+            throw new InvalidOperationException("׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳ ׳‘׳—׳¨ ׳׳ ׳©׳™׳™׳ ׳׳׳©׳×׳׳© ׳”׳׳¢׳׳”");
+        }
+
+        return (uploaderUserId, profileType, profileId);
+    }
+
+    private async Task<(int? UserId, string? ProfileType, int? ProfileId)> NormalizeUploaderWithoutCallerAsync(
+        int? requestedUserId,
+        string? requestedProfileType,
+        int? requestedProfileId)
+    {
+        var profileType = NormalizeProfileType(requestedProfileType);
+        if (profileType == null)
+        {
+            return (requestedUserId, null, null);
+        }
+
+        var uploaderUserId = requestedUserId;
+        if (!uploaderUserId.HasValue && requestedProfileId.HasValue)
+        {
+            uploaderUserId = await GetProfileOwnerUserIdAsync(profileType, requestedProfileId.Value);
+        }
+
+        if (!uploaderUserId.HasValue)
+        {
+            if (requestedProfileId.HasValue)
+            {
+                var profileExists = await ProfileExistsAsync(profileType, requestedProfileId.Value);
+                return profileExists
+                    ? (null, profileType, requestedProfileId.Value)
+                    : (null, null, null);
+            }
+
+            return (null, null, null);
+        }
+
+        var profileId = requestedProfileId ?? await GetDefaultProfileIdForUserAsync(uploaderUserId.Value, profileType);
+        if (!profileId.HasValue)
+        {
+            return (uploaderUserId, null, null);
+        }
+
+        var belongsToUser = await ProfileBelongsToUserAsync(uploaderUserId.Value, profileType, profileId.Value);
+        if (!belongsToUser)
+        {
+            throw new InvalidOperationException("׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳ ׳‘׳—׳¨ ׳׳ ׳©׳™׳™׳ ׳׳׳©׳×׳׳© ׳”׳׳¢׳׳”");
+        }
+
+        return (uploaderUserId, profileType, profileId);
+    }
+
+    private static string? NormalizeProfileType(string? profileType)
+    {
+        if (string.IsNullOrWhiteSpace(profileType)) return null;
+        return profileType == "artist" || profileType == "serviceProvider" ? profileType : null;
+    }
+
+    private async Task<int?> GetProfileOwnerUserIdAsync(string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .Where(a => !a.IsDeleted && a.Id == profileId)
+                .Select(a => a.UserId)
+                .FirstOrDefaultAsync();
+        }
+
+        return await _context.ServiceProviders
+            .Where(p => !p.IsDeleted && p.Id == profileId)
+            .Select(p => p.UserId)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<int?> GetDefaultProfileIdForUserAsync(int userId, string profileType)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .Where(a => !a.IsDeleted && a.UserId == userId)
+                .OrderByDescending(a => a.Status == ArtistStatus.Active)
+                .Select(a => (int?)a.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        return await _context.ServiceProviders
+            .Where(p => !p.IsDeleted && p.UserId == userId)
+            .OrderByDescending(p => p.IsPrimaryProfile)
+            .ThenByDescending(p => p.Status == ProfileStatus.Active)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<bool> ProfileBelongsToUserAsync(int userId, string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .AnyAsync(a => !a.IsDeleted && a.Id == profileId && a.UserId == userId);
+        }
+
+        return await _context.ServiceProviders
+            .AnyAsync(p => !p.IsDeleted && p.Id == profileId && p.UserId == userId);
+    }
+
+    private async Task<bool> ProfileExistsAsync(string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            return await _context.Artists
+                .AnyAsync(a => !a.IsDeleted && a.Id == profileId);
+        }
+
+        return await _context.ServiceProviders
+            .AnyAsync(p => !p.IsDeleted && p.Id == profileId);
+    }
+
+    private ContentUploaderProfileDto? ResolveUploaderProfile(User? user, string? profileType, int? profileId)
+    {
+        if (string.IsNullOrEmpty(profileType)) return null;
+
+        if (profileType == "artist" && user?.ManagedArtist != null)
         {
             var artist = user.ManagedArtist;
+            if (profileId.HasValue && artist.Id != profileId.Value) return null;
+
             return new ContentUploaderProfileDto
             {
                 Type = "artist",
+                ProfileId = artist.Id,
                 Name = artist.Name,
                 ImageUrl = artist.ImageUrl,
                 ProfileUrl = $"/artist/{artist.Id}"
             };
         }
 
-        if (profileType == "serviceProvider")
+        if (profileType == "serviceProvider" && user != null)
         {
             var provider = user.ServiceProviderProfiles
                 .Where(p => !p.IsDeleted)
+                .Where(p => !profileId.HasValue || p.Id == profileId.Value)
                 .OrderByDescending(p => p.IsPrimaryProfile)
                 .FirstOrDefault();
 
@@ -783,6 +1001,47 @@ public class ArticleService : IArticleService
                 return new ContentUploaderProfileDto
                 {
                     Type = "serviceProvider",
+                    ProfileId = provider.Id,
+                    Name = provider.DisplayName,
+                    ImageUrl = provider.ProfileImageUrl,
+                    ProfileUrl = $"/{route}/{provider.Id}"
+                };
+            }
+        }
+
+        if (profileId.HasValue)
+        {
+            if (profileType == "artist")
+            {
+                var artist = _context.Artists
+                    .AsNoTracking()
+                    .FirstOrDefault(a => !a.IsDeleted && a.Id == profileId.Value);
+
+                return artist == null
+                    ? null
+                    : new ContentUploaderProfileDto
+                    {
+                        Type = "artist",
+                        ProfileId = artist.Id,
+                        Name = artist.Name,
+                        ImageUrl = artist.ImageUrl,
+                        ProfileUrl = $"/artist/{artist.Id}"
+                    };
+            }
+
+            if (profileType == "serviceProvider")
+            {
+                var provider = _context.ServiceProviders
+                    .AsNoTracking()
+                    .FirstOrDefault(p => !p.IsDeleted && p.Id == profileId.Value);
+
+                if (provider == null) return null;
+
+                var route = provider.IsTeacher ? "teacher" : "provider";
+                return new ContentUploaderProfileDto
+                {
+                    Type = "serviceProvider",
+                    ProfileId = provider.Id,
                     Name = provider.DisplayName,
                     ImageUrl = provider.ProfileImageUrl,
                     ProfileUrl = $"/{route}/{provider.Id}"

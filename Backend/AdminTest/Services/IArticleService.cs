@@ -25,7 +25,7 @@ public interface IArticleService
 
     Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto, int? callerUserId = null);
 
-    Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto);
+    Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto, int? callerUserId = null);
 
     Task<bool> DeleteArticleAsync(int id);
 
@@ -46,4 +46,6 @@ public interface IArticleService
 
     // ─── My Content ───────────────────────────────────────────
     Task<List<ArticleDto>> GetMyArticlesAsync(int userId);
+
+    Task<List<ArticleDto>> GetPublishedArticlesByUploaderProfileAsync(string profileType, int profileId, int limit = 12);
 }

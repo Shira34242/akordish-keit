@@ -2,8 +2,8 @@ import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
@@ -51,16 +51,39 @@ export class ArticleFormComponent implements OnInit {
   profileSearchResults: UserWithProfileDto[] = [];
   profileSearchLoading = false;
   selectedProfile: UserWithProfileDto | null = null;
+  myUploaderProfiles: UserWithProfileDto[] = [];
+  profileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+  profileSort: 'name' | 'type' = 'name';
   showProfileDropdown = false;
   tagAsMyself = true;
   private profileSearch$ = new Subject<string>();
 
   get isAdminUser(): boolean {
-    return Number(this.authService.currentUserValue?.role) >= 3;
+    return this.authService.isAdminOrManager();
   }
 
   get isProfessionalNonAdmin(): boolean {
     return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
+  }
+
+  get filteredProfileSearchResults(): UserWithProfileDto[] {
+    const filtered = this.profileSearchResults.filter(profile => {
+      if (this.profileTypeFilter === 'all') return true;
+      if (this.profileTypeFilter === 'user') return profile.profileType === 'user';
+      if (this.profileTypeFilter === 'teacher') return profile.profileType === 'serviceProvider' && profile.isTeacher;
+      if (this.profileTypeFilter === 'serviceProvider') return profile.profileType === 'serviceProvider' && !profile.isTeacher;
+      return profile.profileType === this.profileTypeFilter;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (this.profileSort === 'type') {
+        const typeCompare = this.getProfileTypeLabel(a.profileType, a.isTeacher)
+          .localeCompare(this.getProfileTypeLabel(b.profileType, b.isTeacher), 'he');
+        if (typeCompare !== 0) return typeCompare;
+      }
+
+      return a.displayName.localeCompare(b.displayName, 'he');
+    });
   }
 
   // Gallery state
@@ -118,7 +141,7 @@ export class ArticleFormComponent implements OnInit {
         this.articleId = +params['id'];
         this.loadArticle();
       } else {
-        this.autoFillUploaderFromCurrentUser();
+        this.initializeUploaderSelector();
       }
     });
 
@@ -130,13 +153,35 @@ export class ArticleFormComponent implements OnInit {
     });
   }
 
+  initializeUploaderSelector(): void {
+    if (this.isAdminUser) {
+      this.tagAsMyself = false;
+      this.clearProfile();
+      this.onProfileFilterChange();
+      return;
+    }
+
+    this.autoFillUploaderFromCurrentUser();
+  }
+
   autoFillUploaderFromCurrentUser(): void {
     if (!this.isProfessionalNonAdmin) return;
 
-    this.userService.getMyUploaderProfile().subscribe(profile => {
-      if (profile) {
-        this.selectProfile(profile);
+    this.userService.getMyAllPages().subscribe(profiles => {
+      this.myUploaderProfiles = profiles;
+
+      if (!this.tagAsMyself) {
+        return;
+      }
+
+      if (profiles.length === 1) {
+        this.selectProfile(profiles[0]);
+        return;
+      }
+
+      if (profiles.length > 1) {
         this.tagAsMyself = true;
+        this.clearProfile();
       }
     });
   }
@@ -155,7 +200,7 @@ export class ArticleFormComponent implements OnInit {
       distinctUntilChanged(),
       switchMap(q => {
         this.profileSearchLoading = true;
-        return this.userService.searchUsersWithProfiles(q, 20);
+        return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter);
       })
     ).subscribe({
       next: (results) => {
@@ -171,10 +216,23 @@ export class ArticleFormComponent implements OnInit {
     this.profileSearch$.next(this.profileSearchQuery);
   }
 
+  onProfileFilterChange(): void {
+    this.clearProfile();
+    this.profileSearchLoading = true;
+    this.userService.searchUsersWithProfiles('', 100, this.profileTypeFilter)
+      .pipe(catchError(() => of([])))
+      .subscribe(results => {
+        this.profileSearchResults = results;
+        this.profileSearchLoading = false;
+        this.showProfileDropdown = true;
+      });
+  }
+
   selectProfile(profile: UserWithProfileDto): void {
     this.selectedProfile = profile;
     this.article.uploaderUserId = profile.userId;
     this.article.uploaderProfileType = profile.profileType;
+    this.article.uploaderProfileId = profile.profileId;
     this.profileSearchQuery = profile.displayName;
     this.showProfileDropdown = false;
     this.profileSearchResults = [];
@@ -184,6 +242,7 @@ export class ArticleFormComponent implements OnInit {
     this.selectedProfile = null;
     this.article.uploaderUserId = undefined;
     this.article.uploaderProfileType = undefined;
+    this.article.uploaderProfileId = undefined;
     this.profileSearchQuery = '';
     this.profileSearchResults = [];
     this.showProfileDropdown = false;
@@ -197,8 +256,17 @@ export class ArticleFormComponent implements OnInit {
     }
   }
 
-  getProfileTypeLabel(type: string): string {
+  getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
+    if (type === 'artist') return 'אמן';
+    if (type === 'user') return 'חבר רגיל';
+    if (type === 'serviceProvider') return isTeacher ? 'מורה' : 'נותן שירות';
     return type === 'artist' ? 'אמן' : 'מורה / בעל מקצוע';
+  }
+
+  getProfileConnectionLabel(profile: UserWithProfileDto | null): string {
+    return profile && profile.profileType !== 'user' && !profile.userId
+      ? ' · לא מקושר לחשבון'
+      : '';
   }
 
   loadCategories(): void {
@@ -256,15 +324,16 @@ export class ArticleFormComponent implements OnInit {
           })),
           artistIds: data.taggedArtists?.map(a => a.artistId) || [],
           uploaderUserId: data.uploaderUserId,
-          uploaderProfileType: data.uploaderProfileType
+          uploaderProfileType: data.uploaderProfileType,
+          uploaderProfileId: data.uploaderProfileId
         };
-        if (data.uploaderProfile && data.uploaderUserId) {
+        if (data.uploaderProfile) {
           this.selectedProfile = {
             userId: data.uploaderUserId,
             displayName: data.uploaderProfile.name,
             imageUrl: data.uploaderProfile.imageUrl,
             profileType: data.uploaderProfile.type,
-            profileId: 0,
+            profileId: data.uploaderProfileId ?? data.uploaderProfile.profileId,
             profileUrl: data.uploaderProfile.profileUrl,
             isTeacher: false,
             status: 'None',

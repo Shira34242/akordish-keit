@@ -136,6 +136,8 @@ public class AddSongRequestDto
 
     /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
     public string? UploaderProfileType { get; set; }
+
+    public int? UploaderProfileId { get; set; }
 }
 /// <summary>
 /// DTO לעריכת שיר קיים
@@ -181,6 +183,8 @@ public class UpdateSongRequestDto
 
     /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
     public string? UploaderProfileType { get; set; }
+
+    public int? UploaderProfileId { get; set; }
 }
 // ============================================
 // RESPONSE DTOs - מה שחוזר ל-Angular
@@ -240,9 +244,16 @@ public class SongDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int? UploadedByUserId { get; set; }
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; }
+    public int? UploaderProfileId { get; set; }
 
     /// <summary>פרופיל ציבורי שהעלה את השיר (אמן / מורה / בעל מקצוע)</summary>
     public ContentUploaderProfileDto? UploaderProfile { get; set; }
+
+    // דירוג
+    public double AverageRating { get; set; }
+    public int RatingCount { get; set; }
 }
 
 /// <summary>
@@ -395,4 +406,28 @@ public class DetectKeyResponseDto
 {
     public int? OriginalKeyId { get; set; }
     public int? EasyKeyId { get; set; }
+}
+
+// ============================================
+// RATING DTOs
+// ============================================
+
+/// <summary>
+/// בקשת דירוג שיר
+/// </summary>
+public class RateSongDto
+{
+    [Required]
+    [Range(1, 5, ErrorMessage = "דירוג חייב להיות בין 1 ל-5")]
+    public int Rating { get; set; }
+}
+
+/// <summary>
+/// תשובת דירוג שיר — ממוצע + מספר הצבעות + הדירוג של המשתמש הנוכחי
+/// </summary>
+public class SongRatingResponseDto
+{
+    public double AverageRating { get; set; }
+    public int RatingCount { get; set; }
+    public int? UserRating { get; set; }
 }

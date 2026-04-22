@@ -98,6 +98,9 @@ export class QuickAddAssistantModalComponent {
   profileSearchResults: UserWithProfileDto[] = [];
   profileSearchLoading = false;
   selectedUploaderProfile: UserWithProfileDto | null = null;
+  myUploaderProfiles: UserWithProfileDto[] = [];
+  profileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+  profileSort: 'name' | 'type' = 'name';
   showProfileDropdown = false;
   tagAsMyself = true;
   private readonly profileSearch$ = new Subject<string>();
@@ -110,7 +113,7 @@ export class QuickAddAssistantModalComponent {
 
   constructor() {
     this.initProfileSearch();
-    this.autoFillUploaderFromCurrentUser();
+    this.initializeUploaderSelector();
     this.loadEventArtists();
     this.loadProfessionalCategories();
     this.resetConversation();
@@ -141,11 +144,31 @@ export class QuickAddAssistantModalComponent {
   }
 
   get isAdminUser(): boolean {
-    return Number(this.authService.currentUserValue?.role) >= 3;
+    return this.authService.isAdminOrManager();
   }
 
   get isProfessionalNonAdmin(): boolean {
     return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
+  }
+
+  get filteredProfileSearchResults(): UserWithProfileDto[] {
+    const filtered = this.profileSearchResults.filter(profile => {
+      if (this.profileTypeFilter === 'all') return true;
+      if (this.profileTypeFilter === 'user') return profile.profileType === 'user';
+      if (this.profileTypeFilter === 'teacher') return profile.profileType === 'serviceProvider' && profile.isTeacher;
+      if (this.profileTypeFilter === 'serviceProvider') return profile.profileType === 'serviceProvider' && !profile.isTeacher;
+      return profile.profileType === this.profileTypeFilter;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (this.profileSort === 'type') {
+        const typeCompare = this.getProfileTypeLabel(a.profileType, a.isTeacher)
+          .localeCompare(this.getProfileTypeLabel(b.profileType, b.isTeacher), 'he');
+        if (typeCompare !== 0) return typeCompare;
+      }
+
+      return a.displayName.localeCompare(b.displayName, 'he');
+    });
   }
 
   get canUseVideoThumbnail(): boolean {
@@ -273,6 +296,7 @@ export class QuickAddAssistantModalComponent {
     this.article.readTimeMinutes = Math.max(1, Math.ceil(this.article.content.split(/\s+/).length / 200));
     this.article.uploaderUserId = this.selectedUploaderProfile?.userId;
     this.article.uploaderProfileType = this.selectedUploaderProfile?.profileType;
+    this.article.uploaderProfileId = this.selectedUploaderProfile?.profileId;
 
     this.articleService.submitArticle(this.article).subscribe({
       next: () => {
@@ -476,9 +500,33 @@ export class QuickAddAssistantModalComponent {
     }
   }
 
+  private initializeUploaderSelector(): void {
+    if (this.isAdminUser) {
+      this.tagAsMyself = false;
+      this.clearUploaderProfile();
+      this.onProfileFilterChange();
+      return;
+    }
+
+    this.autoFillUploaderFromCurrentUser();
+  }
+
   onProfileSearchInput(): void {
     this.showEventArtistDropdown = false;
     this.profileSearch$.next(this.profileSearchQuery);
+  }
+
+  onProfileFilterChange(): void {
+    this.clearUploaderProfile();
+    this.showEventArtistDropdown = false;
+    this.profileSearchLoading = true;
+    this.userService.searchUsersWithProfiles('', 100, this.profileTypeFilter)
+      .pipe(catchError(() => of([])))
+      .subscribe(results => {
+        this.profileSearchResults = results;
+        this.profileSearchLoading = false;
+        this.showProfileDropdown = true;
+      });
   }
 
   selectUploaderProfile(profile: UserWithProfileDto): void {
@@ -504,8 +552,17 @@ export class QuickAddAssistantModalComponent {
     }
   }
 
-  getProfileTypeLabel(type: string): string {
+  getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
+    if (type === 'artist') return 'אמן';
+    if (type === 'user') return 'חבר רגיל';
+    if (type === 'serviceProvider') return isTeacher ? 'מורה' : 'נותן שירות';
     return type === 'artist' ? 'אמן' : 'מורה / נותן שירות';
+  }
+
+  getProfileConnectionLabel(profile: UserWithProfileDto | null): string {
+    return profile && profile.profileType !== 'user' && !profile.userId
+      ? ' · לא מקושר לחשבון'
+      : '';
   }
 
   private loadEventArtists(): void {
@@ -689,7 +746,8 @@ export class QuickAddAssistantModalComponent {
       galleryImages: [],
       artistIds: [],
       uploaderUserId: undefined,
-      uploaderProfileType: undefined
+      uploaderProfileType: undefined,
+      uploaderProfileId: undefined
     };
   }
 
@@ -852,10 +910,21 @@ export class QuickAddAssistantModalComponent {
       return;
     }
 
-    this.userService.getMyUploaderProfile().subscribe(profile => {
-      if (profile) {
-        this.selectUploaderProfile(profile);
+    this.userService.getMyAllPages().subscribe(profiles => {
+      this.myUploaderProfiles = profiles;
+
+      if (!this.tagAsMyself) {
+        return;
+      }
+
+      if (profiles.length === 1) {
+        this.selectUploaderProfile(profiles[0]);
+        return;
+      }
+
+      if (profiles.length > 1) {
         this.tagAsMyself = true;
+        this.clearUploaderProfile();
       }
     });
   }
@@ -866,7 +935,7 @@ export class QuickAddAssistantModalComponent {
       distinctUntilChanged(),
       switchMap(query => {
         this.profileSearchLoading = true;
-        return this.userService.searchUsersWithProfiles(query, 20).pipe(catchError(() => of([])));
+        return this.userService.searchUsersWithProfiles(query, 100, this.profileTypeFilter).pipe(catchError(() => of([])));
       })
     ).subscribe({
       next: (results) => {
