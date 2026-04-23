@@ -41,6 +41,7 @@ builder.Services.AddScoped<IUserKnownChordService, UserKnownChordService>();
 builder.Services.AddScoped<IChordIndexService, ChordIndexService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

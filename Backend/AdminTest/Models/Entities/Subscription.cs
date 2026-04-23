@@ -65,9 +65,24 @@ public class Subscription
     public string? CancellationReason { get; set; }
 
     /// <summary>
-    /// מזהה תשלום חיצוני (מספק הסליקה) - לעתיד
+    /// מזהה עסקה חיצוני (LowProfileCode של Cardcom)
     /// </summary>
     public string? ExternalPaymentId { get; set; }
+
+    /// <summary>
+    /// טוקן כרטיס של Cardcom לחיוב חוזר
+    /// </summary>
+    public string? CardToken { get; set; }
+
+    /// <summary>
+    /// תאריך תפוגת הטוקן (MMYY, למשל "0327")
+    /// </summary>
+    public string? CardTokenExpiry { get; set; }
+
+    /// <summary>
+    /// 4 ספרות אחרונות של הכרטיס (לתצוגה)
+    /// </summary>
+    public string? CardLastFour { get; set; }
 
     /// <summary>
     /// מחיר ששולם (לתיעוד)

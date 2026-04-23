@@ -18,6 +18,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string? GoogleId { get; set; }
     public string? PasswordHash { get; set; }
+
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public DateTime? BirthDate { get; set; }

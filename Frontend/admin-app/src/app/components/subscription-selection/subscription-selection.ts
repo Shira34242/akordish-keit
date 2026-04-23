@@ -131,8 +131,14 @@ export class SubscriptionSelectionComponent implements OnInit {
   loading = false;
   error = '';
   fromProfileComplete = false;
-  profileType: ProfileType = null;
+
+  // תמיכה בסוגי פרופיל מרובים
+  profileTypes: ProfileType[] = [];
+  primaryProfileType: ProfileType = null;
+  activeTab: ProfileType = null;
+
   planOptions: PlanOption[] = [];
+  SubscriptionPlan = SubscriptionPlan;
 
   constructor(
     private subscriptionService: SubscriptionService,
@@ -144,21 +150,43 @@ export class SubscriptionSelectionComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.fromProfileComplete = params['from'] === 'profile-complete';
-      // Use query param as source of truth; fall back to localStorage if missing
-      this.profileType = (params['type'] as ProfileType)
-        || (localStorage.getItem('pendingProfessionalType') as ProfileType)
-        || null;
+
+      if (params['types']) {
+        // פורמט חדש: ?types=teacher,artist&primary=teacher
+        this.profileTypes = (params['types'] as string)
+          .split(',')
+          .filter(Boolean) as ProfileType[];
+        this.primaryProfileType = (params['primary'] as ProfileType) || this.profileTypes[0] || null;
+      } else if (params['type']) {
+        // פורמט ישן (תאימות לאחור)
+        this.profileTypes = [params['type'] as ProfileType];
+        this.primaryProfileType = params['type'] as ProfileType;
+      } else {
+        // fallback מ-localStorage (flow של הרשמה)
+        const stored = localStorage.getItem('pendingProfessionalType') as ProfileType;
+        if (stored) {
+          this.profileTypes = [stored];
+          this.primaryProfileType = stored;
+        }
+      }
+
+      this.activeTab = this.primaryProfileType;
       this.buildPlanOptions();
     });
 
     this.loadCurrentSubscription();
   }
 
+  setActiveTab(type: ProfileType) {
+    this.activeTab = type;
+    this.buildPlanOptions();
+  }
+
   buildPlanOptions() {
-    const features =
-      this.profileType && PROFILE_PLAN_FEATURES[this.profileType]
-        ? PROFILE_PLAN_FEATURES[this.profileType]
-        : DEFAULT_FEATURES;
+    const displayType = this.activeTab || this.primaryProfileType;
+    const features = displayType && PROFILE_PLAN_FEATURES[displayType]
+      ? PROFILE_PLAN_FEATURES[displayType]
+      : DEFAULT_FEATURES;
 
     this.planOptions = [
       {
@@ -202,9 +230,7 @@ export class SubscriptionSelectionComponent implements OnInit {
           localStorage.removeItem('pendingProfessionalType');
         }
       },
-      error: () => {
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
   }
 
@@ -235,39 +261,57 @@ export class SubscriptionSelectionComponent implements OnInit {
       return;
     }
 
-    if (this.currentSubscription) {
-      const confirmChange = confirm(
-        `יש לך כבר מנוי ${SubscriptionPlanHelper.getName(this.currentSubscription.plan)}.\n` +
-        'האם אתה בטוח שברצונך לשנות את המנוי?'
-      );
-      if (!confirmChange) return;
-    }
+    this.loading = true;
+    this.error = '';
 
-    localStorage.setItem('selectedSubscriptionPlan', this.selectedPlan.toString());
-    localStorage.setItem('selectedBillingCycle', this.billingCycle);
-    localStorage.removeItem('pendingProfessionalType');
-
-    if (this.fromProfileComplete) {
-      this.router.navigate(['/']);
-    } else {
-      this.router.navigate(['/subscription/status']);
-    }
+    this.subscriptionService.createCheckoutSession(this.selectedPlan, this.billingCycle).subscribe({
+      next: (response) => {
+        localStorage.removeItem('selectedSubscriptionPlan');
+        localStorage.removeItem('selectedBillingCycle');
+        localStorage.removeItem('pendingProfessionalType');
+        window.location.href = response.checkoutUrl;
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.error?.message || 'שגיאה ביצירת תהליך התשלום. אנא נסה שנית.';
+      }
+    });
   }
 
   getPlanPrice(plan: SubscriptionPlan): number {
     return SubscriptionPlanHelper.getPrice(plan, this.billingCycle);
   }
 
-  getSavingsText(): string {
-    return 'חסוך 2 חודשים!';
+  // ── מספר פרופילים ──
+
+  getAdditionalProfilesCount(): number {
+    return Math.max(0, this.profileTypes.length - 1);
   }
 
-  getProfileTypeLabel(): string {
-    switch (this.profileType) {
+  getAdditionalProfilesCost(): number {
+    const extra = this.getAdditionalProfilesCount();
+    if (extra === 0) return 0;
+    return this.billingCycle === 'Monthly' ? extra * 30 : extra * 300;
+  }
+
+  // ── תוויות ──
+
+  getTabLabel(type: ProfileType): string {
+    switch (type) {
       case 'teacher': return 'מורה';
       case 'artist': return 'אמן';
       case 'service-provider': return 'בעל מקצוע';
       default: return '';
     }
+  }
+
+  getProfileTypeLabel(): string {
+    if (this.profileTypes.length === 0) return '';
+    if (this.profileTypes.length === 1) return this.getTabLabel(this.profileTypes[0]);
+    return this.profileTypes.map(t => this.getTabLabel(t)).join(' + ');
+  }
+
+  getSavingsText(): string {
+    return 'חסוך 2 חודשים!';
   }
 }

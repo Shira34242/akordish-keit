@@ -143,7 +143,7 @@ export class SubscriptionPlanHelper {
 
     const basePrice = this.getPrice(plan, billingCycle);
 
-    let addonPricePerProfile = 25;
+    let addonPricePerProfile = 30;
     if (billingCycle === 'Yearly') {
       addonPricePerProfile *= 10;
     }

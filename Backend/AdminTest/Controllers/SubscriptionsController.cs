@@ -115,16 +115,24 @@ public class SubscriptionsController : ControllerBase
 
     /// <summary>
     /// קבלת מנוי פעיל של משתמש
-    /// GET /api/subscriptions/user/{userId}
+    /// GET /api/subscriptions/user/{userId}/active
     /// </summary>
     [HttpGet("user/{userId}/active")]
+    [Authorize]
     public async Task<ActionResult<SubscriptionDto?>> GetUserActiveSubscription(int userId)
     {
+        // וידוא שמשתמש שואל על עצמו בלבד (או Admin)
+        var callerIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(callerIdStr, out int callerId))
+            return Unauthorized(new { message = "משתמש לא מזוהה" });
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && callerId != userId)
+            return Forbid();
+
         try
         {
             var subscription = await _subscriptionService.GetUserActiveSubscriptionAsync(userId);
-            
-            // מחזיר null אם אין מנוי - לא שגיאה 404
             return Ok(subscription);
         }
         catch (Exception ex)
@@ -286,6 +294,13 @@ public class SubscriptionsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<FeatureAccessDto>> CheckFeatureAccess(int userId, string featureName)
     {
+        var callerIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(callerIdStr, out int callerId))
+            return Unauthorized(new { message = "משתמש לא מזוהה" });
+
+        if (!User.IsInRole("Admin") && callerId != userId)
+            return Forbid();
+
         try
         {
             var result = await _subscriptionService.CheckFeatureAccessAsync(userId, featureName);
@@ -306,6 +321,13 @@ public class SubscriptionsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<bool>> IsPremiumUser(int userId)
     {
+        var callerIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(callerIdStr, out int callerId))
+            return Unauthorized(new { message = "משתמש לא מזוהה" });
+
+        if (!User.IsInRole("Admin") && callerId != userId)
+            return Forbid();
+
         try
         {
             var isPremium = await _subscriptionService.IsPremiumUserAsync(userId);

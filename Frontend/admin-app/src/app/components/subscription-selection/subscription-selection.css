@@ -131,6 +131,82 @@
   white-space: nowrap;
 }
 
+/* ─── Profile Type Tabs ───────────────────────────── */
+.profile-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  max-width: 860px;
+  margin: 0 auto 20px auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.profile-tab {
+  height: 34px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  border: 1.5px solid #e8e8e8;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.profile-tab--active {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.profile-tab:hover:not(.profile-tab--active) {
+  border-color: #1a1a1a;
+  color: #1a1a1a;
+}
+
+.tabs-hint {
+  font-size: 0.75rem;
+  color: #b0b0b0;
+  font-weight: 300;
+}
+
+/* ─── Additional Profiles Note ────────────────────── */
+.additional-note {
+  max-width: 860px;
+  margin: -24px auto 0 auto;
+  padding: 0 4px;
+}
+
+.additional-note-inner {
+  background: #f7f7f7;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.additional-note-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.additional-note-extra {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.additional-note-extra strong {
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
 /* ─── Billing Toggle ──────────────────────────────── */
 .billing-toggle {
   display: flex;

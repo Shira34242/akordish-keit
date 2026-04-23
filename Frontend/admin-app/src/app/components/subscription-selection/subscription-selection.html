@@ -22,7 +22,7 @@
     <p class="subtitle" *ngIf="!fromProfileComplete">
       שדרג את הפרופיל שלך ותהנה מנראות מקסימלית
     </p>
-    <p class="profile-type-label" *ngIf="profileType">
+    <p class="profile-type-label" *ngIf="profileTypes.length > 0">
       עבור פרופיל {{ getProfileTypeLabel() }}
     </p>
     <div class="header-bottom">
@@ -31,16 +31,28 @@
     </div>
   </div>
 
+  <!-- Profile Type Tabs (when multiple profiles) -->
+  <div class="profile-tabs" *ngIf="profileTypes.length > 1">
+    <button
+      *ngFor="let type of profileTypes"
+      class="profile-tab"
+      [class.profile-tab--active]="activeTab === type"
+      (click)="setActiveTab(type)">
+      {{ getTabLabel(type) }}
+    </button>
+    <span class="tabs-hint">לחץ לראות פיצ'רים לפי סוג פרופיל</span>
+  </div>
+
   <!-- Billing Cycle Toggle -->
   <div class="billing-toggle">
     <button
       [class.active]="billingCycle === 'Monthly'"
-      (click)="billingCycle = 'Monthly'">
+      (click)="billingCycle = 'Monthly'; buildPlanOptions()">
       חודשי
     </button>
     <button
       [class.active]="billingCycle === 'Yearly'"
-      (click)="billingCycle = 'Yearly'">
+      (click)="billingCycle = 'Yearly'; buildPlanOptions()">
       שנתי
     </button>
   </div>
@@ -103,6 +115,17 @@
           {{ feature }}
         </li>
       </ul>
+    </div>
+  </div>
+
+  <!-- Additional Profiles Note (when user has multiple profile types) -->
+  <div class="additional-note" *ngIf="profileTypes.length > 1 && selectedPlan !== SubscriptionPlan.Free">
+    <div class="additional-note-inner">
+      <span class="additional-note-label">פרופיל ראשי ({{ getTabLabel(primaryProfileType) }}) — כלול במחיר</span>
+      <span class="additional-note-extra">
+        + {{ getAdditionalProfilesCount() }} פרופיל נוסף × 30₪ =
+        <strong>+{{ getAdditionalProfilesCost() }}₪/{{ billingCycle === 'Monthly' ? 'חודש' : 'שנה' }}</strong>
+      </span>
     </div>
   </div>
 

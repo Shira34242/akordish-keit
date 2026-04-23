@@ -1,167 +1,169 @@
-<div class="subscription-status">
-  <div class="status-header">
-    <h2>פרטי המנוי שלי</h2>
+<div class="sub-page" dir="rtl">
+
+  <!-- ===== HERO ===== -->
+  <div class="sub-hero">
+    <h1 class="sub-hero-title">מינויים ותשלומים</h1>
+
+    @if (loading) {
+      <div class="sub-spinner-wrap">
+        <span class="sub-spinner"></span>
+      </div>
+    }
+
+    @if (!loading && currentSubscription) {
+      <div class="sub-hero-chips">
+        <span class="sub-chip" [ngClass]="getPlanChipClass()">{{ getPlanDisplayName() }}</span>
+        <span class="sub-chip" [ngClass]="getStatusChipClass()">{{ getStatusText() }}</span>
+      </div>
+      @if (currentSubscription.isTrial) {
+        <p class="sub-hero-trial">ניסיון חינם — {{ getDaysRemaining() }} ימים נותרו</p>
+      }
+    }
+
+    @if (!loading && !currentSubscription && !error) {
+      <p class="sub-hero-subtitle">אין לך מנוי פעיל כרגע</p>
+    }
   </div>
 
-  <!-- Loading State -->
-  <div class="loading" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>טוען נתונים...</p>
-  </div>
+  <!-- ===== CONTENT ===== -->
+  <div class="sub-content">
 
-  <!-- Error Message -->
-  <div class="error-message" *ngIf="error && !loading">
-    {{ error }}
-  </div>
+    @if (error) {
+      <div class="sub-alert sub-alert--error">{{ error }}</div>
+    }
 
-  <!-- No Subscription -->
-  <div class="no-subscription" *ngIf="!currentSubscription && !loading && !error">
-    <div class="empty-state">
-      <div class="icon">📦</div>
-      <h3>אין לך מנוי פעיל</h3>
-      <p>התחל עכשיו ותהנה מתכונות מתקדמות ונראות מקסימלית</p>
-      <button class="primary-btn" (click)="upgradeSubscription()">
-        בחר תוכנית
-      </button>
-    </div>
-  </div>
+    @if (successMessage) {
+      <div class="sub-alert sub-alert--success">{{ successMessage }}</div>
+    }
 
-  <!-- Subscription Details -->
-  <div class="subscription-details" *ngIf="currentSubscription && !loading">
-    <!-- Current Plan Card -->
-    <div class="plan-card">
-      <div class="plan-header">
-        <div class="plan-info">
-          <h3>{{ getPlanName() }}</h3>
-          <span class="status-badge" [ngClass]="getStatusClass()">
-            {{ getStatusText() }}
+    <!-- ── אין מנוי ── -->
+    @if (!currentSubscription && !loading) {
+      <div class="sub-empty">
+        <p class="sub-empty-text">שדרג את הפרופיל שלך ותהנה מנראות מקסימלית</p>
+        <a class="sub-btn-primary" routerLink="/subscription/select">בחר תוכנית</a>
+        <a class="sub-back-link" routerLink="/my-profile">
+          <span class="material-icons">chevron_right</span>
+          חזור לפרופיל
+        </a>
+      </div>
+    }
+
+    <!-- ── יש מנוי ── -->
+    @if (currentSubscription && !loading) {
+
+      <!-- כרטיס מחיר -->
+      <div class="sub-price-card">
+        <div class="sub-price-main">
+          @if (getPlanPrice() > 0) {
+            <span class="sub-price-amount">{{ getPlanPrice() }}</span>
+            <span class="sub-price-symbol">₪</span>
+            <span class="sub-price-period">/{{ getBillingCycleText() }}</span>
+          } @else {
+            <span class="sub-price-amount">חינם</span>
+          }
+        </div>
+        @if (getAdditionalProfilesCost() > 0) {
+          <div class="sub-price-extra">
+            + {{ getAdditionalProfilesCost() }}₪/חודש (פרופילים נוספים)
+          </div>
+        }
+      </div>
+
+      <!-- סטטיסטיקות -->
+      <div class="sub-stats-grid">
+        @if (getNextBillingDate()) {
+          <div class="sub-stat">
+            <span class="sub-stat-label">
+              {{ currentSubscription.status === SubscriptionStatus.Cancelled ? 'פעיל עד' : 'חיוב הבא' }}
+            </span>
+            <span class="sub-stat-value">{{ getNextBillingDate() }}</span>
+          </div>
+        }
+        <div class="sub-stat">
+          <span class="sub-stat-label">מחזור חיוב</span>
+          <span class="sub-stat-value">{{ currentSubscription.billingCycle === 'Monthly' ? 'חודשי' : 'שנתי' }}</span>
+        </div>
+        <div class="sub-stat">
+          <span class="sub-stat-label">פרופילים במנוי</span>
+          <span class="sub-stat-value">{{ getTotalProfilesUsed() }} / {{ getIncludedProfiles() }}</span>
+        </div>
+        <div class="sub-stat">
+          <span class="sub-stat-label">חידוש אוטומטי</span>
+          <span class="sub-stat-value" [class.sub-stat-value--on]="currentSubscription.isAutoRenew">
+            {{ currentSubscription.isAutoRenew ? 'פעיל' : 'כבוי' }}
           </span>
         </div>
-        <div class="plan-price">
-          <span class="amount">{{ getPlanPrice() }}</span>
-          <span class="currency">₪</span>
-          <span class="period">/{{ getBillingCycleText() }}</span>
+      </div>
+
+      <!-- טיפים -->
+      @if (currentSubscription.billingCycle === 'Monthly' || currentSubscription.status === SubscriptionStatus.Cancelled) {
+        <div class="sub-tips">
+          @if (currentSubscription.billingCycle === 'Monthly') {
+            <div class="sub-tip">
+              <span class="material-icons sub-tip-icon">info</span>
+              מנוי שנתי חוסך לך 2 חודשי תשלום
+            </div>
+          }
+          @if (currentSubscription.status === SubscriptionStatus.Cancelled) {
+            <div class="sub-tip sub-tip--warn">
+              <span class="material-icons sub-tip-icon">warning</span>
+              המנוי בוטל — תוכל להשתמש בתכונות עד {{ getNextBillingDate() }}
+            </div>
+          }
         </div>
+      }
+
+      <!-- כפתורי פעולה -->
+      <div class="sub-actions">
+        @if (canUpgrade()) {
+          <a class="sub-btn-primary" routerLink="/subscription/select">שדרג מנוי</a>
+        }
+        @if (currentSubscription.status === SubscriptionStatus.Cancelled) {
+          <button class="sub-btn-secondary" (click)="renewSubscription()" [disabled]="loading">
+            {{ loading ? '...' : 'חדש מנוי' }}
+          </button>
+        }
+        @if (canCancel()) {
+          <button class="sub-btn-ghost" (click)="showCancelDialog()">בטל מנוי</button>
+        }
       </div>
 
-      <!-- Trial Banner -->
-      <div class="trial-banner" *ngIf="currentSubscription.isTrial">
-        🎁 תקופת ניסיון חינמית - {{ getDaysRemaining() }} ימים נותרו
+      <!-- חזרה לפרופיל -->
+      <div class="sub-back-row">
+        <a routerLink="/my-profile" class="sub-back-link">
+          <span class="material-icons">chevron_right</span>
+          חזור לפרופיל
+        </a>
       </div>
+    }
 
-      <!-- Subscription Stats -->
-      <div class="subscription-stats">
-        <div class="stat-item">
-          <div class="stat-label">חיוב הבא</div>
-          <div class="stat-value">{{ getNextBillingDate() }}</div>
-        </div>
-
-        <div class="stat-item">
-          <div class="stat-label">פרופילים בשימוש</div>
-          <div class="stat-value">
-            {{ getTotalProfilesUsed() }} / {{ getIncludedProfiles() }}
-            <span class="included-hint">(כלולים במנוי)</span>
-          </div>
-        </div>
-
-        <div class="stat-item" *ngIf="getAdditionalProfilesCost() > 0">
-          <div class="stat-label">פרופילים נוספים</div>
-          <div class="stat-value">
-            +{{ getAdditionalProfilesCost() }}₪ לחודש
-          </div>
-        </div>
-
-        <div class="stat-item" *ngIf="currentSubscription.isAutoRenew">
-          <div class="stat-label">חידוש אוטומטי</div>
-          <div class="stat-value">
-            <span class="auto-renew-badge">✓ פעיל</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button
-          class="upgrade-btn"
-          *ngIf="canUpgrade()"
-          (click)="upgradeSubscription()">
-          שדרג תוכנית
-        </button>
-
-        <button
-          class="cancel-btn"
-          *ngIf="canCancel()"
-          (click)="showCancelDialog()">
-          בטל מנוי
-        </button>
-
-        <button
-          class="renew-btn"
-          *ngIf="currentSubscription.status === SubscriptionStatus.Cancelled"
-          (click)="renewSubscription()">
-          חדש מנוי
-        </button>
-      </div>
-    </div>
-
-    <!-- Additional Info -->
-    <div class="info-section">
-      <h4>💡 טיפים</h4>
-      <ul>
-        <li *ngIf="currentSubscription.billingCycle === 'Monthly'">
-          עבור למנוי שנתי וחסוך 2 חודשי תשלום!
-        </li>
-        <li *ngIf="getTotalProfilesUsed() === getIncludedProfiles()">
-          צריך יותר פרופילים? כל פרופיל נוסף רק 30₪ לחודש
-        </li>
-        <li>ניתן לשדרג או לבטל את המנוי בכל עת</li>
-        <li *ngIf="currentSubscription.status === SubscriptionStatus.Cancelled">
-          תוכל להמשיך להשתמש בתכונות עד {{ getNextBillingDate() }}
-        </li>
-      </ul>
-    </div>
-
-    <!-- Billing History Link -->
-    <div class="billing-link">
-      <a href="/subscription/history">צפה בהיסטוריית תשלומים →</a>
-    </div>
-  </div>
-
-  <!-- Cancel Confirmation Dialog -->
-  <div class="modal-overlay" *ngIf="showCancelConfirmation" (click)="hideCancelDialog()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>⚠️ האם אתה בטוח?</h3>
-      </div>
-
-      <div class="modal-body">
-        <p>ביטול המנוי יגרום ל:</p>
-        <ul>
-          <li>הפרופילים שלך יעברו לרמה חינמית</li>
-          <li>תאבד גישה לתכונות מתקדמות</li>
-          <li>הנראות בחיפוש תפחת משמעותית</li>
-          <li>תג "מומלץ" יוסר</li>
-        </ul>
-        <p class="note">
-          תוכל להמשיך להשתמש בתכונות עד {{ getNextBillingDate() }}
-        </p>
-      </div>
-
-      <div class="modal-actions">
-        <button
-          class="secondary-btn"
-          (click)="hideCancelDialog()"
-          [disabled]="cancelLoading">
-          חזור
-        </button>
-        <button
-          class="danger-btn"
-          (click)="confirmCancel()"
-          [disabled]="cancelLoading">
-          <span *ngIf="!cancelLoading">כן, בטל מנוי</span>
-          <span *ngIf="cancelLoading">מבטל...</span>
-        </button>
-      </div>
-    </div>
   </div>
 </div>
+
+<!-- ===== MODAL ביטול ===== -->
+@if (showCancelConfirmation) {
+  <div class="modal-backdrop" (click)="hideCancelDialog()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="hideCancelDialog()">
+        <span class="material-icons">close</span>
+      </button>
+      <h2 class="modal-title">לבטל את המנוי?</h2>
+      <p class="modal-subtitle">לאחר הביטול:</p>
+      <ul class="modal-list">
+        <li>הפרופילים שלך יעברו לרמה חינמית</li>
+        <li>תאבד גישה לתכונות מתקדמות</li>
+        <li>הנראות בחיפוש תפחת משמעותית</li>
+        <li>תג "מומלץ" יוסר</li>
+      </ul>
+      @if (getNextBillingDate()) {
+        <p class="modal-note">תוכל להמשיך להשתמש בתכונות עד {{ getNextBillingDate() }}</p>
+      }
+      <div class="modal-actions">
+        <button class="modal-btn-back" (click)="hideCancelDialog()" [disabled]="cancelLoading">חזור</button>
+        <button class="modal-btn-confirm" (click)="confirmCancel()" [disabled]="cancelLoading">
+          {{ cancelLoading ? 'מבטל...' : 'כן, בטל מנוי' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

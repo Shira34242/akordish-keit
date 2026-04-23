@@ -253,6 +253,8 @@ public class UserService : IUserService
         user.Phone = dto.Phone;
         user.Address = dto.Address;
         user.BirthDate = dto.BirthDate;
+        if (dto.ProfileImageUrl != null)
+            user.ProfileImageUrl = dto.ProfileImageUrl;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

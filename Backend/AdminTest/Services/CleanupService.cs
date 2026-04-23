@@ -51,6 +51,7 @@ public class CleanupService : BackgroundService
 
                 // Perform cleanup
                 await CleanupOldViews(stoppingToken);
+                await CleanupExpiredSubscriptions(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -62,6 +63,23 @@ public class CleanupService : BackgroundService
         }
 
         _logger.LogInformation("View Cleanup Service is stopping.");
+    }
+
+    private async Task CleanupExpiredSubscriptions(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var subscriptionService = scope.ServiceProvider.GetRequiredService<ISubscriptionService>();
+
+        try
+        {
+            _logger.LogInformation("Starting expired subscriptions cleanup.");
+            await subscriptionService.UpdateExpiredSubscriptionsAsync();
+            _logger.LogInformation("Expired subscriptions cleanup completed.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during expired subscriptions cleanup.");
+        }
     }
 
     private async Task CleanupOldViews(CancellationToken stoppingToken)
