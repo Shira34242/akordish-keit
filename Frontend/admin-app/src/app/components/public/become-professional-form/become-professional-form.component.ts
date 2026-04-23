@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { CitiesService, City } from '../../../services/cities.service';
-import { CreateMusicServiceProviderDto, ProfileStatus, CreateGalleryImageDto, CreateServiceProviderCategoryDto } from '../../../models/music-service-provider.model';
+import { CreateMusicServiceProviderDto, ProfileStatus, CreateGalleryImageDto, CreateServiceProviderCategoryDto, ServiceProviderParkingType } from '../../../models/music-service-provider.model';
 import { AuthService } from '../../../services/auth.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 
@@ -46,6 +46,9 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   videoUrl: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
+  parkingType: ServiceProviderParkingType = ServiceProviderParkingType.None;
+  hasAccessibleEntrance: boolean = false;
+  isAnash: boolean = false;
   selectedCategoryId: number | undefined = undefined; // Single category for professionals
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
@@ -62,6 +65,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   categorySearchText = '';
   filteredCities: City[] = [];
   filteredCategories: Category[] = [];
+  readonly ServiceProviderParkingType = ServiceProviderParkingType;
 
   ngOnInit(): void {
     this.loadCategories();
@@ -243,6 +247,9 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       videoUrl: this.videoUrl,
       yearsOfExperience: this.yearsOfExperience,
       workingHours: this.workingHours,
+      parkingType: this.parkingType,
+      hasAccessibleEntrance: this.hasAccessibleEntrance,
+      isAnash: this.isAnash,
       isFeatured: false,
       status: ProfileStatus.Pending, // Always pending for public registration
       categories: this.selectedCategoryId ? [{

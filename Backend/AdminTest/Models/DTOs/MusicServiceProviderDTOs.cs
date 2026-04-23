@@ -23,6 +23,9 @@ public class MusicServiceProviderDto
     public string? Location { get; set; }
     public int? YearsOfExperience { get; set; }
     public string? WorkingHours { get; set; }
+    public ServiceProviderParkingType ParkingType { get; set; }
+    public bool HasAccessibleEntrance { get; set; }
+    public bool IsAnash { get; set; }
     public string? WhatsAppNumber { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
@@ -127,6 +130,12 @@ public class CreateMusicServiceProviderDto
 
     [StringLength(500)]
     public string? WorkingHours { get; set; }
+
+    public ServiceProviderParkingType ParkingType { get; set; } = ServiceProviderParkingType.None;
+
+    public bool HasAccessibleEntrance { get; set; }
+
+    public bool IsAnash { get; set; }
 
     [StringLength(20)]
     public string? WhatsAppNumber { get; set; }
@@ -273,6 +282,12 @@ public class UpdateMusicServiceProviderDto
 
     [StringLength(500)]
     public string? WorkingHours { get; set; }
+
+    public ServiceProviderParkingType ParkingType { get; set; } = ServiceProviderParkingType.None;
+
+    public bool HasAccessibleEntrance { get; set; }
+
+    public bool IsAnash { get; set; }
 
     [StringLength(20)]
     public string? WhatsAppNumber { get; set; }

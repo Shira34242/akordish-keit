@@ -36,6 +36,16 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(sp => sp.WorkingHours)
                 .HasMaxLength(500);
 
+            builder.Property(sp => sp.ParkingType)
+                .HasConversion<int>()
+                .HasDefaultValue(ServiceProviderParkingType.None);
+
+            builder.Property(sp => sp.HasAccessibleEntrance)
+                .HasDefaultValue(false);
+
+            builder.Property(sp => sp.IsAnash)
+                .HasDefaultValue(false);
+
             builder.Property(sp => sp.WhatsAppNumber)
                 .HasMaxLength(20);
 

@@ -13,6 +13,7 @@ import {
   MusicServiceProviderDto,
   CreateServiceProviderCategoryDto,
   ProfileStatus,
+  ServiceProviderParkingType,
   CreateGalleryImageDto,
   SocialLinkDto,
   SocialPlatform,
@@ -65,6 +66,9 @@ export class ServiceProviderFormComponent implements OnInit {
   videoUrl: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
+  parkingType: ServiceProviderParkingType = ServiceProviderParkingType.None;
+  hasAccessibleEntrance: boolean = false;
+  isAnash: boolean = false;
   isFeatured: boolean = false;
   isTeacher: boolean = false;
   status: ProfileStatus = ProfileStatus.Pending;
@@ -96,6 +100,7 @@ export class ServiceProviderFormComponent implements OnInit {
     { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'קישור לטיקטוק' },
     { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'קישור ל-X / Twitter' }
   ];
+  readonly ServiceProviderParkingType = ServiceProviderParkingType;
 
   ngOnInit(): void {
     this.loadCategories();
@@ -178,6 +183,9 @@ export class ServiceProviderFormComponent implements OnInit {
         this.videoUrl = provider.videoUrl || '';
         this.yearsOfExperience = provider.yearsOfExperience || 0;
         this.workingHours = provider.workingHours || '';
+        this.parkingType = provider.parkingType ?? ServiceProviderParkingType.None;
+        this.hasAccessibleEntrance = provider.hasAccessibleEntrance || false;
+        this.isAnash = provider.isAnash || false;
         this.isFeatured = provider.isFeatured || false;
         this.status = provider.status;
         this.selectedCategoryId = provider.categories?.[0]?.categoryId; // Get first category
@@ -226,6 +234,9 @@ export class ServiceProviderFormComponent implements OnInit {
         videoUrl: this.videoUrl?.trim() || undefined,
         yearsOfExperience: this.yearsOfExperience || undefined,
         workingHours: this.workingHours || undefined,
+        parkingType: this.parkingType,
+        hasAccessibleEntrance: this.hasAccessibleEntrance,
+        isAnash: this.isAnash,
         isFeatured: this.isFeatured,
         status: this.status,
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
@@ -277,6 +288,9 @@ export class ServiceProviderFormComponent implements OnInit {
         videoUrl: this.videoUrl?.trim() || undefined,
         yearsOfExperience: this.yearsOfExperience || undefined,
         workingHours: this.workingHours || undefined,
+        parkingType: this.parkingType,
+        hasAccessibleEntrance: this.hasAccessibleEntrance,
+        isAnash: this.isAnash,
         isFeatured: this.isFeatured,
         status: this.status,
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],

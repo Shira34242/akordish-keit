@@ -13,6 +13,9 @@ export interface MusicServiceProviderDto {
   location?: string;
   yearsOfExperience?: number;
   workingHours?: string;
+  parkingType: ServiceProviderParkingType;
+  hasAccessibleEntrance: boolean;
+  isAnash: boolean;
   whatsAppNumber?: string;
   phoneNumber?: string;
   email?: string;
@@ -66,6 +69,9 @@ export interface CreateMusicServiceProviderDto {
   location?: string;
   yearsOfExperience?: number;
   workingHours?: string;
+  parkingType?: ServiceProviderParkingType;
+  hasAccessibleEntrance?: boolean;
+  isAnash?: boolean;
   whatsAppNumber?: string;
   phoneNumber?: string;
   email?: string;
@@ -89,6 +95,9 @@ export interface UpdateMusicServiceProviderDto {
   location?: string;
   yearsOfExperience?: number;
   workingHours?: string;
+  parkingType?: ServiceProviderParkingType;
+  hasAccessibleEntrance?: boolean;
+  isAnash?: boolean;
   whatsAppNumber?: string;
   phoneNumber?: string;
   email?: string;
@@ -151,6 +160,12 @@ export enum ProfileStatus {
   Pending = 0,
   Active = 1,
   Suspended = 2
+}
+
+export enum ServiceProviderParkingType {
+  None = 0,
+  ParkingAvailable = 1,
+  FreeParking = 2
 }
 
 export enum SocialPlatform {
