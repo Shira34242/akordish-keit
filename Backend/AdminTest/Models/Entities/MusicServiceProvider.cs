@@ -197,6 +197,11 @@ namespace AkordishKeit.Models.Entities
         public virtual ICollection<MusicServiceProviderSocialLink> SocialLinks { get; set; } = new List<MusicServiceProviderSocialLink>();
 
         /// <summary>
+        /// המלצות לקוחות
+        /// </summary>
+        public virtual ICollection<MusicServiceProviderTestimonial> CustomerTestimonials { get; set; } = new List<MusicServiceProviderTestimonial>();
+
+        /// <summary>
         /// הרחבה למורה (1:0..1) - קיימת רק אם IsTeacher = true
         /// </summary>
         public virtual Teacher? TeacherProfile { get; set; }

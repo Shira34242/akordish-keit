@@ -7,8 +7,25 @@ import { MusicServiceProviderService } from '../../../services/music-service-pro
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { UserService } from '../../../services/user.service';
 import { CitiesService, City } from '../../../services/cities.service';
-import { CreateMusicServiceProviderDto, UpdateMusicServiceProviderDto, MusicServiceProviderDto, CreateServiceProviderCategoryDto, ProfileStatus, CreateGalleryImageDto } from '../../../models/music-service-provider.model';
+import {
+  CreateMusicServiceProviderDto,
+  UpdateMusicServiceProviderDto,
+  MusicServiceProviderDto,
+  CreateServiceProviderCategoryDto,
+  ProfileStatus,
+  CreateGalleryImageDto,
+  SocialLinkDto,
+  SocialPlatform,
+  CreateServiceProviderTestimonialDto
+} from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
+
+interface PlatformLinkOption {
+  platform: SocialPlatform;
+  label: string;
+  icon: string;
+  placeholder: string;
+}
 
 @Component({
   selector: 'app-service-provider-form',
@@ -43,6 +60,7 @@ export class ServiceProviderFormComponent implements OnInit {
   whatsAppNumber: string = '';
   email: string = '';
   websiteUrl: string = '';
+  bannerImageUrl: string = '';
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -53,6 +71,9 @@ export class ServiceProviderFormComponent implements OnInit {
   selectedCategoryId: number | undefined = undefined; // Single category for professionals
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  socialLinks: SocialLinkDto[] = [];
+  customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
+  newTestimonial = { clientName: '', text: '' };
 
   // Available categories, cities, and users loaded from API
   availableCategories: SystemItem[] = [];
@@ -68,6 +89,13 @@ export class ServiceProviderFormComponent implements OnInit {
   categoryDropdownOpen = false;
   categorySearchText = '';
   filteredCategories: SystemItem[] = [];
+  readonly socialPlatformOptions: PlatformLinkOption[] = [
+    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'קישור לאינסטגרם' },
+    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'קישור לפייסבוק' },
+    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: 'קישור ליוטיוב' },
+    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'קישור לטיקטוק' },
+    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'קישור ל-X / Twitter' }
+  ];
 
   ngOnInit(): void {
     this.loadCategories();
@@ -145,6 +173,7 @@ export class ServiceProviderFormComponent implements OnInit {
         this.whatsAppNumber = provider.whatsAppNumber || '';
         this.email = provider.email || '';
         this.websiteUrl = provider.websiteUrl || '';
+        this.bannerImageUrl = provider.bannerImageUrl || '';
         this.profileImageUrl = provider.profileImageUrl || '';
         this.videoUrl = provider.videoUrl || '';
         this.yearsOfExperience = provider.yearsOfExperience || 0;
@@ -156,6 +185,12 @@ export class ServiceProviderFormComponent implements OnInit {
           imageUrl: img.imageUrl,
           caption: img.caption,
           order: img.order
+        })) || [];
+        this.socialLinks = provider.socialLinks || [];
+        this.customerTestimonials = provider.customerTestimonials?.map(item => ({
+          clientName: item.clientName,
+          text: item.text,
+          order: item.order
         })) || [];
         this.loading = false;
       },
@@ -186,6 +221,7 @@ export class ServiceProviderFormComponent implements OnInit {
         whatsAppNumber: this.whatsAppNumber || undefined,
         email: this.email,
         websiteUrl: this.websiteUrl?.trim() || undefined,
+        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
         profileImageUrl: this.profileImageUrl?.trim() || undefined,
         videoUrl: this.videoUrl?.trim() || undefined,
         yearsOfExperience: this.yearsOfExperience || undefined,
@@ -193,7 +229,9 @@ export class ServiceProviderFormComponent implements OnInit {
         isFeatured: this.isFeatured,
         status: this.status,
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
-        galleryImages: this.galleryImages
+        galleryImages: this.galleryImages,
+        socialLinks: this.socialLinks.filter(link => link.url?.trim()),
+        customerTestimonials: this.customerTestimonials
       };
 
       this.serviceProviderService.updateServiceProvider(this.serviceProviderId, dto).subscribe({
@@ -234,6 +272,7 @@ export class ServiceProviderFormComponent implements OnInit {
         whatsAppNumber: this.whatsAppNumber || undefined,
         email: this.email,
         websiteUrl: this.websiteUrl?.trim() || undefined,
+        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
         profileImageUrl: this.profileImageUrl?.trim() || undefined,
         videoUrl: this.videoUrl?.trim() || undefined,
         yearsOfExperience: this.yearsOfExperience || undefined,
@@ -241,7 +280,9 @@ export class ServiceProviderFormComponent implements OnInit {
         isFeatured: this.isFeatured,
         status: this.status,
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
-        galleryImages: this.galleryImages
+        galleryImages: this.galleryImages,
+        socialLinks: this.socialLinks.filter(link => link.url?.trim()),
+        customerTestimonials: this.customerTestimonials
       };
 
       this.serviceProviderService.createServiceProvider(dto).subscribe({
@@ -420,6 +461,53 @@ export class ServiceProviderFormComponent implements OnInit {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown')) {
       this.closeAllDropdowns();
+    }
+  }
+
+  getPlatformLink(platform: SocialPlatform): string {
+    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+  }
+
+  setPlatformLink(platform: SocialPlatform, url: string): void {
+    const normalizedUrl = url.trim();
+    const existingLink = this.socialLinks.find(link => link.platform === platform);
+
+    if (!normalizedUrl) {
+      this.socialLinks = this.socialLinks.filter(link => link.platform !== platform);
+      return;
+    }
+
+    if (existingLink) {
+      existingLink.url = normalizedUrl;
+      return;
+    }
+
+    this.socialLinks = [...this.socialLinks, { platform, url: normalizedUrl }];
+  }
+
+  trackByPlatform(_index: number, option: PlatformLinkOption): number {
+    return option.platform;
+  }
+
+  addTestimonial(): void {
+    if (!this.newTestimonial.text.trim()) {
+      alert('נא להזין טקסט המלצה');
+      return;
+    }
+
+    this.customerTestimonials.push({
+      clientName: this.newTestimonial.clientName.trim() || undefined,
+      text: this.newTestimonial.text.trim(),
+      order: this.customerTestimonials.length
+    });
+
+    this.newTestimonial = { clientName: '', text: '' };
+  }
+
+  removeTestimonial(index: number): void {
+    if (confirm('האם למחוק את ההמלצה הזו?')) {
+      this.customerTestimonials.splice(index, 1);
+      this.customerTestimonials.forEach((item, idx) => item.order = idx);
     }
   }
 

@@ -1,194 +1,229 @@
-<!-- Loading -->
 <div class="loading-container" *ngIf="loading" dir="rtl">
   <div class="spinner"></div>
-  <p>טוען פרטי בעל מקצוע...</p>
+  <p>טוען פרטי נותן שירות...</p>
 </div>
 
-<!-- Professional Page -->
-<div class="professional-page" *ngIf="!loading && professional" dir="rtl">
+<div class="professional-page"
+     [class.has-banner]="!!heroBannerSrc"
+     *ngIf="!loading && professional"
+     dir="rtl">
 
-  <!-- מסכה לבנה מעל ה-hero -->
   <div class="top-scroll-mask"></div>
 
-  <!-- Hero Background — fixed, מתכווץ בגלילה -->
-  <div class="professional-hero-bg" #professionalHeroBg>
-    <div class="hero-overlay"></div>
-    <div class="hero-collapse-overlay"></div>
-  </div>
-
-  <!-- Hero Content Area — בתזרים רגיל, מעל ה-bg -->
-  <div class="hero-content-area">
-
-    <!-- כפתור חזרה -->
-    <button class="back-btn" (click)="goBack()">
-      <span class="material-icons">arrow_forward</span>
-    </button>
-
-    <!-- תיבת מידע — צמוד לתחתית, צד ימין -->
-    <div class="professional-info-card">
-      <div class="hero-text">
-        <div class="hero-badges">
-          <span *ngIf="professional.isFeatured" class="badge-featured">מומלץ</span>
-        </div>
-        <h1 class="professional-name">{{ professional.displayName }}</h1>
-
-        <!-- קטגוריות -->
-        <div class="categories-row" *ngIf="professional.categories?.length">
-          <span
-            *ngFor="let cat of professional.categories"
-            class="category-chip">
-            {{ cat.categoryName }}<span *ngIf="cat.subCategory"> · {{ cat.subCategory }}</span>
-          </span>
-        </div>
-
-        <!-- עיר -->
-        <p class="city-row" *ngIf="professional.cityId">
-          <span class="material-icons">location_on</span>
-          {{ getCityName(professional.cityId) }}
-        </p>
-      </div>
-
-      <!-- תמונת פרופיל — בולטת מחוץ לתיבה -->
-      <div class="profile-bubble">
-        <img
-          [src]="professional.profileImageUrl"
-          alt="{{ professional.displayName }}"
-          class="profile-img"
-          imgFallback />
-        <span *ngIf="professional.isFeatured" class="star-badge">
-          <span class="material-icons">star</span>
-        </span>
-      </div>
+  <section class="professional-hero-bg"
+           #professionalHeroBg>
+    <div class="hero-bg-photo" *ngIf="heroBackgroundSrc">
+      <img [src]="heroBackgroundSrc"
+           alt=""
+           class="hero-bg-img"
+           [class.hero-banner-img]="!!heroBannerSrc"
+           aria-hidden="true" />
     </div>
+    <div class="hero-dark-overlay"></div>
+    <div class="hero-collapse-overlay"></div>
 
-  </div>
+    <div class="hero-content">
+      <div class="hero-profile-side">
+        <img [src]="profileImageSrc"
+             [alt]="professional.displayName"
+             class="hero-profile-photo"
+             imgFallback />
+      </div>
 
-  <!-- ═══════════════════════════════════════
-       תוכן הדף (מתחת ל-hero)
-  ═══════════════════════════════════════ -->
-  <div class="page-content">
-    <div class="main-layout">
+      <div class="hero-text-block">
+        <span *ngIf="professional.isFeatured" class="badge-featured">
+          <span class="material-icons">star</span>
+          מומלץ
+        </span>
+        <h1 class="hero-name">{{ professional.displayName }}</h1>
+        <p class="hero-role">{{ heroRole }}</p>
+        <p class="hero-location" *ngIf="heroLocationLine">
+          <span class="material-icons">location_on</span>
+          {{ heroLocationLine }}
+        </p>
 
-      <!-- ── SIDEBAR (ימין ב-RTL) ── -->
-      <div class="sidebar">
+        <a *ngIf="professional.websiteUrl"
+           [href]="professional.websiteUrl"
+           target="_blank"
+           rel="noopener"
+           class="hero-website-link">
+          {{ getShortUrl(professional.websiteUrl) }}
+        </a>
+      </div>
 
-        <!-- כפתור פרטי יצירת קשר -->
-        <div class="contact-card">
-          <button class="btn-contact" (click)="toggleContact()">
-            <span class="material-icons">{{ showContact ? 'expand_less' : 'contact_phone' }}</span>
-            פרטי יצירת קשר
+      <div class="hero-actions">
+        <div class="contact-action-wrap">
+          <button class="btn-cta-primary" type="button" (click)="toggleContact()">
+            ליצירת קשר
           </button>
-          <div class="contact-details" *ngIf="showContact">
-            <div class="contact-item">
-              <span class="material-icons">person</span>
-              <span>{{ professional.displayName }}</span>
-            </div>
-            <a class="contact-item link" *ngIf="professional.phoneNumber"
-               [href]="'tel:' + professional.phoneNumber">
+
+          <div class="contact-panel" [class.open]="contactOpen">
+            <a *ngIf="professional.phoneNumber" [href]="'tel:' + professional.phoneNumber" class="contact-item">
               <span class="material-icons">phone</span>
               <span>{{ professional.phoneNumber }}</span>
             </a>
-            <a class="contact-item link" *ngIf="professional.email"
-               [href]="'mailto:' + professional.email">
+            <a *ngIf="professional.whatsAppNumber" [href]="getWhatsAppUrl(professional.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item">
+              <svg class="contact-whatsapp-icon" viewBox="0 0 512 512" aria-hidden="true">
+                <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
+              </svg>
+              <span>{{ professional.whatsAppNumber }}</span>
+            </a>
+            <a *ngIf="professional.email" [href]="'mailto:' + professional.email" class="contact-item">
               <span class="material-icons">email</span>
               <span>{{ professional.email }}</span>
             </a>
-            <div class="contact-item" *ngIf="professional.cityId">
-              <span class="material-icons">location_on</span>
-              <span>{{ getCityName(professional.cityId) }}</span>
-            </div>
-            <div class="contact-item" *ngIf="professional.location">
-              <span class="material-icons">home</span>
-              <span>{{ professional.location }}</span>
-            </div>
-            <a class="contact-item link" *ngIf="professional.websiteUrl"
-               [href]="professional.websiteUrl" target="_blank">
+            <a *ngIf="professional.websiteUrl" [href]="professional.websiteUrl" target="_blank" rel="noopener" class="contact-item">
               <span class="material-icons">language</span>
-              <span>אתר אינטרנט</span>
+              <span>{{ getShortUrl(professional.websiteUrl) }}</span>
             </a>
+            <div *ngIf="professional.cityId || professional.location" class="contact-item contact-item-static">
+              <span class="material-icons">location_on</span>
+              <span>{{ getLocationLine() }}</span>
+            </div>
           </div>
         </div>
 
-        <!-- וואטסאפ -->
         <a *ngIf="professional.whatsAppNumber"
-           (click)="openWhatsApp()"
-           class="btn-whatsapp">
-          <span class="material-icons">chat</span>
-          שלח הודעה בוואטסאפ
+           [href]="getWhatsAppUrl(professional.whatsAppNumber)"
+           target="_blank"
+           rel="noopener"
+           class="btn-cta-whatsapp"
+           aria-label="הודעה מהירה">
+          <svg viewBox="0 0 512 512" aria-hidden="true">
+            <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
+          </svg>
         </a>
 
-      </div>
+        <a *ngIf="hasNavigationTarget"
+           [href]="wazeNavigationUrl"
+           target="_blank"
+           rel="noopener"
+           class="btn-cta-waze"
+           aria-label="ניווט עם Waze">
+          <span class="material-icons">near_me</span>
+        </a>
 
-      <!-- ── תוכן ראשי ── -->
-      <div class="content-column">
+        <span *ngIf="socialLinks.length > 0" class="hero-actions-divider" aria-hidden="true"></span>
 
-        <!-- ביו קצר -->
-        <div class="short-bio-card" *ngIf="professional.shortBio">
-          <p class="short-bio-text">{{ professional.shortBio }}</p>
+        <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
+          <a *ngFor="let link of socialLinks"
+             [href]="link.url"
+             target="_blank"
+             rel="noopener"
+             class="hero-social-btn"
+             [title]="getSocialPlatformName(link.platform)"
+             [innerHTML]="getSocialIconSvg(link.platform)">
+          </a>
         </div>
-
-        <!-- תיאור מלא -->
-        <div class="description-card" *ngIf="professional.fullDescription">
-          <h2 class="card-label">אודות</h2>
-          <p class="full-desc-text">{{ professional.fullDescription }}</p>
-        </div>
-
-        <!-- מידע נוסף -->
-        <div class="info-card"
-             *ngIf="professional.yearsOfExperience || professional.workingHours || getCategoriesDisplay()">
-          <div class="info-row" *ngIf="professional.yearsOfExperience">
-            <span class="info-label">ניסיון</span>
-            <span class="chip">{{ professional.yearsOfExperience }} שנים</span>
-          </div>
-          <div class="info-row" *ngIf="professional.workingHours">
-            <span class="info-label">שעות פעילות</span>
-            <span class="chip">{{ professional.workingHours }}</span>
-          </div>
-          <div class="info-row" *ngIf="getCategoriesDisplay()">
-            <span class="info-label">קטגוריות</span>
-            <span class="chip">{{ getCategoriesDisplay() }}</span>
-          </div>
-        </div>
-
-        <!-- Divider -->
-        <div class="divider" *ngIf="professional.galleryImages?.length || professional.videoUrl"></div>
-
-        <!-- גלריה — שורה נגללת -->
-        <div class="gallery-section" *ngIf="professional.galleryImages?.length">
-          <h2 class="card-label">גלריה</h2>
-          <div class="gallery-scroll">
-            <div *ngFor="let img of professional.galleryImages" class="gallery-item">
-              <img [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"
-                   loading="lazy" imgFallback />
-            </div>
-          </div>
-        </div>
-
-        <!-- Divider לפני וידאו -->
-        <div class="divider" *ngIf="professional.videoUrl && professional.galleryImages?.length"></div>
-
-        <!-- וידאו -->
-        <div class="video-section" *ngIf="professional.videoUrl">
-          <h2 class="card-label">וידאו</h2>
-          <div class="video-wrapper">
-            <iframe
-              [src]="getSafeVideoUrl(professional.videoUrl)"
-              frameborder="0"
-              allowfullscreen
-              class="video-iframe">
-            </iframe>
-          </div>
-        </div>
-
       </div>
     </div>
-  </div>
+  </section>
 
+  <div class="hero-scroll-spacer"></div>
+
+  <main class="page-content">
+    <section class="intro-section">
+      <p class="details-line" *ngIf="detailsLine">{{ detailsLine }}</p>
+      <p class="details-line details-meta-line" *ngIf="scheduleLine">{{ scheduleLine }}</p>
+      <p class="full-desc-text" *ngIf="professional.fullDescription">{{ professional.fullDescription }}</p>
+    </section>
+
+    <section class="info-section" *ngIf="infoCards.length > 0">
+      <div class="info-grid">
+        <article class="info-card" *ngFor="let card of infoCards">
+          <span class="info-label">{{ card.label }}</span>
+          <p>{{ card.value }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="hours-section spotlight-section" *ngIf="professional.workingHours">
+      <div class="spotlight-copy">
+        <span class="spotlight-label">שעות פתיחה</span>
+        <p>{{ professional.workingHours }}</p>
+      </div>
+      <span class="material-icons spotlight-icon">schedule</span>
+    </section>
+
+    <section class="website-section spotlight-section" *ngIf="professional.websiteUrl">
+      <div class="spotlight-copy">
+        <span class="spotlight-label">האתר שלנו</span>
+        <p>{{ websiteDisplay }}</p>
+      </div>
+      <a [href]="professional.websiteUrl"
+         target="_blank"
+         rel="noopener"
+         class="spotlight-button">
+        בקרו באתר שלנו
+      </a>
+    </section>
+
+    <section class="gallery-section" *ngIf="galleryMediaItems.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">גלריה</h2>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item"
+             *ngFor="let item of galleryMediaItems; let i = index"
+             [class.video-gallery-item]="item.type === 'video'"
+             (click)="openMediaLightbox(i)">
+          <img [src]="item.imageUrl || '/logo.png'" [alt]="item.caption || professional.displayName" class="gallery-img">
+          <span class="material-icons gallery-play-icon" *ngIf="item.type === 'video'">play_arrow</span>
+          <p class="gallery-caption" *ngIf="item.caption">{{ item.caption }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="testimonials-section" *ngIf="customerTestimonials.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">המלצות לקוחות</h2>
+      </div>
+      <div class="testimonials-grid">
+        <article class="testimonial-card" *ngFor="let testimonial of customerTestimonials">
+          <p class="testimonial-text">״{{ testimonial.text }}״</p>
+          <span class="testimonial-name" *ngIf="testimonial.clientName">{{ testimonial.clientName }}</span>
+        </article>
+      </div>
+    </section>
+  </main>
 </div>
 
-<!-- Error State -->
+<div class="lightbox-overlay" *ngIf="mediaLightboxIndex !== null" (click)="closeMediaLightbox()">
+  <button class="lightbox-close" type="button" (click)="closeMediaLightbox()">
+    <span class="material-icons">close</span>
+  </button>
+
+  <button class="lightbox-nav lightbox-prev"
+          type="button"
+          (click)="$event.stopPropagation(); mediaLightboxStep(-1)"
+          *ngIf="galleryMediaItems.length > 1">
+    <span class="material-icons">chevron_left</span>
+  </button>
+
+  <div class="lightbox-content" (click)="$event.stopPropagation()">
+    <img *ngIf="activeMedia?.type === 'image'"
+         [src]="activeMedia?.imageUrl"
+         [alt]="activeMedia?.caption || ''"
+         class="lightbox-img" />
+    <iframe *ngIf="activeMedia?.type === 'video' && activeVideoUrl"
+            [src]="activeVideoUrl"
+            class="lightbox-video"
+            allowfullscreen>
+    </iframe>
+    <p *ngIf="activeMedia?.caption" class="lightbox-caption">{{ activeMedia?.caption }}</p>
+    <span class="lightbox-counter">{{ mediaLightboxIndex! + 1 }} / {{ galleryMediaItems.length }}</span>
+  </div>
+
+  <button class="lightbox-nav lightbox-next"
+          type="button"
+          (click)="$event.stopPropagation(); mediaLightboxStep(1)"
+          *ngIf="galleryMediaItems.length > 1">
+    <span class="material-icons">chevron_right</span>
+  </button>
+</div>
+
 <div class="error-state" *ngIf="error && !loading" dir="rtl">
   <span class="material-icons">error_outline</span>
   <p>{{ error }}</p>
-  <button class="btn-retry" (click)="loadProfessional()">נסה שוב</button>
+  <button class="btn-retry" type="button" (click)="retryLoad()">נסה שוב</button>
 </div>

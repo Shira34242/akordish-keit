@@ -112,6 +112,11 @@ namespace AkordishKeit.Data.Configurations
                 .HasForeignKey(sl => sl.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.HasMany(sp => sp.CustomerTestimonials)
+                .WithOne(t => t.ServiceProvider)
+                .HasForeignKey(t => t.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Subscription (Many-to-One)
             builder.HasOne(sp => sp.Subscription)
                 .WithMany(s => s.CoveredServiceProviders)

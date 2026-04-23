@@ -99,6 +99,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 .ThenInclude(c => c.Category)
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
+            .Include(sp => sp.CustomerTestimonials)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -112,6 +113,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 .ThenInclude(c => c.Category)
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
+            .Include(sp => sp.CustomerTestimonials)
             .FirstOrDefaultAsync(sp => sp.UserId == userId && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -195,6 +197,8 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             }
         }
 
+        AddCustomerTestimonials(serviceProvider, dto.CustomerTestimonials);
+
         _context.ServiceProviders.Add(serviceProvider);
         await _context.SaveChangesAsync();
 
@@ -207,6 +211,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.Categories)
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
+            .Include(sp => sp.CustomerTestimonials)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (serviceProvider == null)
@@ -278,6 +283,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 });
             }
         }
+
+        serviceProvider.CustomerTestimonials.Clear();
+        AddCustomerTestimonials(serviceProvider, dto.CustomerTestimonials);
 
         await _context.SaveChangesAsync();
 
@@ -412,6 +420,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.Categories)
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
+            .Include(sp => sp.CustomerTestimonials)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (original == null)
@@ -474,6 +483,16 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             });
         }
 
+        foreach (var testimonial in original.CustomerTestimonials)
+        {
+            newProvider.CustomerTestimonials.Add(new MusicServiceProviderTestimonial
+            {
+                ClientName = testimonial.ClientName,
+                Text = testimonial.Text,
+                Order = testimonial.Order
+            });
+        }
+
         _context.ServiceProviders.Add(newProvider);
         await _context.SaveChangesAsync();
 
@@ -532,8 +551,32 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 Id = sl.Id,
                 Platform = sl.Platform,
                 Url = sl.Url
+            }).ToList(),
+            CustomerTestimonials = entity.CustomerTestimonials.OrderBy(t => t.Order).Select(t => new ServiceProviderTestimonialDto
+            {
+                Id = t.Id,
+                ClientName = t.ClientName,
+                Text = t.Text,
+                Order = t.Order
             }).ToList()
         };
+    }
+
+    private static void AddCustomerTestimonials(
+        MusicServiceProvider serviceProvider,
+        IEnumerable<CreateServiceProviderTestimonialDto>? testimonials)
+    {
+        if (testimonials == null) return;
+
+        foreach (var testimonialDto in testimonials.Where(t => !string.IsNullOrWhiteSpace(t.Text)))
+        {
+            serviceProvider.CustomerTestimonials.Add(new MusicServiceProviderTestimonial
+            {
+                ClientName = testimonialDto.ClientName,
+                Text = testimonialDto.Text,
+                Order = testimonialDto.Order
+            });
+        }
     }
 
     private static MusicServiceProviderListDto MapToListDto(MusicServiceProvider entity)

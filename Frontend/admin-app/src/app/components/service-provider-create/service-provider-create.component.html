@@ -235,6 +235,44 @@
                 <input type="text" id="workingHours" [(ngModel)]="workingHours" name="workingHours" class="form-input" placeholder="שעות פעילות" />
               </div>
             </div>
+
+            <div class="section-kicker section-kicker--spaced">המלצות לקוחות</div>
+            <p class="section-description section-description--compact">אפשר להוסיף כל המלצה בנפרד, עם שם הלקוח או הממליץ, כדי שהן יוצגו בדף בצורה מסודרת.</p>
+
+            <div class="testimonial-editor">
+              <div class="testimonial-draft">
+                <input
+                  type="text"
+                  [(ngModel)]="newTestimonial.clientName"
+                  [ngModelOptions]="{standalone: true}"
+                  class="form-input"
+                  placeholder="שם לקוח או ממליץ"
+                />
+
+                <textarea
+                  [(ngModel)]="newTestimonial.text"
+                  [ngModelOptions]="{standalone: true}"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="טקסט ההמלצה"
+                ></textarea>
+
+                <button type="button" class="btn-secondary btn-action" (click)="addTestimonial()">
+                  <span class="material-icons">format_quote</span>
+                  <span>הוסף המלצה</span>
+                </button>
+              </div>
+
+              <div class="testimonial-list" *ngIf="customerTestimonials.length > 0">
+                <article *ngFor="let item of customerTestimonials; let i = index" class="testimonial-edit-card">
+                  <button type="button" class="media-card-remove" (click)="removeTestimonial(i)" aria-label="מחיקת המלצה">
+                    <span class="material-icons">close</span>
+                  </button>
+                  <p>{{ item.text }}</p>
+                  <strong>{{ item.clientName || 'לקוח' }}</strong>
+                </article>
+              </div>
+            </div>
           </section>
 
           <section class="form-section" *ngIf="currentStep === 3">

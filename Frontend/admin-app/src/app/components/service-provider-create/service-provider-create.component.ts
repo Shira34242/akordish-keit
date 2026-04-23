@@ -12,7 +12,8 @@ import {
   CreateMusicServiceProviderDto,
   ProfileStatus,
   CreateGalleryImageDto,
-  CreateServiceProviderCategoryDto
+  CreateServiceProviderCategoryDto,
+  CreateServiceProviderTestimonialDto
 } from '../../models/music-service-provider.model';
 import {
   SubscriptionPlan,
@@ -73,6 +74,8 @@ export class ServiceProviderCreateComponent implements OnInit {
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
   socialLinks: SocialLinkDto[] = [];
+  customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
+  newTestimonial = { clientName: '', text: '' };
 
   // Available data
   availableCategories: Category[] = [];
@@ -308,6 +311,28 @@ export class ServiceProviderCreateComponent implements OnInit {
     }
   }
 
+  addTestimonial(): void {
+    if (!this.newTestimonial.text.trim()) {
+      alert('נא להזין טקסט המלצה');
+      return;
+    }
+
+    this.customerTestimonials.push({
+      clientName: this.newTestimonial.clientName.trim() || undefined,
+      text: this.newTestimonial.text.trim(),
+      order: this.customerTestimonials.length
+    });
+
+    this.newTestimonial = { clientName: '', text: '' };
+  }
+
+  removeTestimonial(index: number): void {
+    if (confirm('האם למחוק את ההמלצה הזו?')) {
+      this.customerTestimonials.splice(index, 1);
+      this.customerTestimonials.forEach((item, idx) => item.order = idx);
+    }
+  }
+
   getPlatformLink(platform: SocialPlatform): string {
     return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
   }
@@ -367,7 +392,8 @@ export class ServiceProviderCreateComponent implements OnInit {
         subCategory: undefined
       } as CreateServiceProviderCategoryDto] : [],
       galleryImages: this.galleryImages,
-      socialLinks: this.socialLinks.filter(link => link.url?.trim())
+      socialLinks: this.socialLinks.filter(link => link.url?.trim()),
+      customerTestimonials: this.customerTestimonials
     };
 
     this.serviceProviderService.createServiceProviderProfile(dto).subscribe({

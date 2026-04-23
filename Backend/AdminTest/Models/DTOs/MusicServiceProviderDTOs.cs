@@ -39,6 +39,7 @@ public class MusicServiceProviderDto
     public List<ServiceProviderCategoryDto> Categories { get; set; } = new();
     public List<GalleryImageDto> GalleryImages { get; set; } = new();
     public List<SocialLinkDto> SocialLinks { get; set; } = new();
+    public List<ServiceProviderTestimonialDto> CustomerTestimonials { get; set; } = new();
 }
 
 public class TeacherDto : MusicServiceProviderDto
@@ -58,6 +59,14 @@ public class TeacherTestimonialDto
 {
     public int Id { get; set; }
     public string? StudentName { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public int Order { get; set; }
+}
+
+public class ServiceProviderTestimonialDto
+{
+    public int Id { get; set; }
+    public string? ClientName { get; set; }
     public string Text { get; set; } = string.Empty;
     public int Order { get; set; }
 }
@@ -149,6 +158,7 @@ public class CreateMusicServiceProviderDto
     public List<CreateServiceProviderCategoryDto>? Categories { get; set; }
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
     public List<SocialLinkDto>? SocialLinks { get; set; }
+    public List<CreateServiceProviderTestimonialDto>? CustomerTestimonials { get; set; }
 }
 
 public class CreateTeacherDto : CreateMusicServiceProviderDto
@@ -183,6 +193,19 @@ public class CreateTeacherTestimonialDto
 {
     [StringLength(120)]
     public string? StudentName { get; set; }
+
+    [Required]
+    [StringLength(1000)]
+    public string Text { get; set; } = string.Empty;
+
+    [Required]
+    public int Order { get; set; }
+}
+
+public class CreateServiceProviderTestimonialDto
+{
+    [StringLength(120)]
+    public string? ClientName { get; set; }
 
     [Required]
     [StringLength(1000)]
@@ -281,6 +304,7 @@ public class UpdateMusicServiceProviderDto
     public List<CreateServiceProviderCategoryDto>? Categories { get; set; }
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
     public List<SocialLinkDto>? SocialLinks { get; set; }
+    public List<CreateServiceProviderTestimonialDto>? CustomerTestimonials { get; set; }
 }
 
 public class UpdateTeacherDto : UpdateMusicServiceProviderDto

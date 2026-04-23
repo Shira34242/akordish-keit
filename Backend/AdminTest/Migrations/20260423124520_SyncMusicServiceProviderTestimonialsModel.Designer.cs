@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkordishKeit.Migrations
 {
     [DbContext(typeof(AkordishKeitDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260423124520_SyncMusicServiceProviderTestimonialsModel")]
+    partial class SyncMusicServiceProviderTestimonialsModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2873,15 +2876,6 @@ namespace AkordishKeit.Migrations
 
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("CardLastFour")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CardToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CardTokenExpiry")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
