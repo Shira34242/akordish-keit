@@ -198,6 +198,22 @@
           placeholder="https://..."
         />
       </div>
+
+      <div class="social-links-admin">
+        <h3 class="subsection-title">רשתות חברתיות</h3>
+        <div class="social-link-row" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform">
+          <span class="material-icons">{{ option.icon }}</span>
+          <label>{{ option.label }}</label>
+          <input
+            type="url"
+            class="form-input"
+            [name]="'social_' + option.platform"
+            [placeholder]="option.placeholder"
+            [ngModel]="getPlatformLink(option.platform)"
+            (ngModelChange)="setPlatformLink(option.platform, $event)"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Professional Information -->
@@ -270,6 +286,37 @@
         </div>
         <small class="form-hint">בחר קטגוריה אחת - לכל עסק נוסף צור בעל מקצוע נפרד</small>
       </div>
+
+      <div class="testimonial-editor">
+        <h3 class="subsection-title">המלצות לקוחות</h3>
+        <div class="testimonial-draft">
+          <input
+            type="text"
+            [(ngModel)]="newTestimonial.clientName"
+            [ngModelOptions]="{standalone: true}"
+            class="form-input"
+            placeholder="שם לקוח או ממליץ"
+          />
+          <textarea
+            [(ngModel)]="newTestimonial.text"
+            [ngModelOptions]="{standalone: true}"
+            class="form-textarea"
+            rows="3"
+            placeholder="טקסט ההמלצה"
+          ></textarea>
+          <button type="button" class="btn-secondary" (click)="addTestimonial()">הוסף המלצה</button>
+        </div>
+
+        <div class="testimonial-list" *ngIf="customerTestimonials.length > 0">
+          <article class="testimonial-edit-card" *ngFor="let item of customerTestimonials; let i = index">
+            <button type="button" class="media-card-remove" (click)="removeTestimonial(i)" aria-label="מחיקת המלצה">
+              <span class="material-icons">close</span>
+            </button>
+            <p>{{ item.text }}</p>
+            <strong>{{ item.clientName || 'לקוח' }}</strong>
+          </article>
+        </div>
+      </div>
     </div>
 
     <!-- Media -->
@@ -286,6 +333,15 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">תמונת באנר</label>
+        <app-file-upload-input
+          [(url)]="bannerImageUrl"
+          placeholder="https://..."
+        />
+        <small class="form-hint">תמונה רחבה לראש דף נותן השירות</small>
+      </div>
+
+      <div class="form-group">
         <label class="form-label">סרטון היכרות (URL)</label>
         <input
           type="url"
@@ -295,6 +351,43 @@
           placeholder="https://youtube.com/..."
         />
         <small class="form-hint">קישור לסרטון YouTube או Vimeo</small>
+      </div>
+
+      <div class="gallery-editor">
+        <h3 class="subsection-title">גלריה</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">קישור לתמונה</label>
+            <input
+              type="url"
+              [(ngModel)]="newGalleryImage.imageUrl"
+              [ngModelOptions]="{standalone: true}"
+              class="form-input"
+              placeholder="https://..."
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">כיתוב</label>
+            <input
+              type="text"
+              [(ngModel)]="newGalleryImage.caption"
+              [ngModelOptions]="{standalone: true}"
+              class="form-input"
+              placeholder="כיתוב קצר"
+            />
+          </div>
+        </div>
+        <button type="button" class="btn-secondary" (click)="addGalleryImage()">הוסף תמונה לגלריה</button>
+
+        <div class="gallery-admin-grid" *ngIf="galleryImages.length > 0">
+          <article class="gallery-admin-card" *ngFor="let image of galleryImages; let i = index">
+            <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" aria-label="מחיקת תמונה">
+              <span class="material-icons">close</span>
+            </button>
+            <img [src]="image.imageUrl" [alt]="image.caption || 'תמונה בגלריה'" />
+            <p>{{ image.caption || 'ללא כיתוב' }}</p>
+          </article>
+        </div>
       </div>
     </div>
 

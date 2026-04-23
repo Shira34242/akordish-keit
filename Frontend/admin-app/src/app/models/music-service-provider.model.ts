@@ -30,6 +30,7 @@ export interface MusicServiceProviderDto {
   categories: ServiceProviderCategoryDto[];
   galleryImages: GalleryImageDto[];
   socialLinks: SocialLinkDto[];
+  customerTestimonials: ServiceProviderTestimonialDto[];
 }
 
 export interface MusicServiceProviderListDto {
@@ -76,6 +77,7 @@ export interface CreateMusicServiceProviderDto {
   categories?: CreateServiceProviderCategoryDto[];
   galleryImages?: CreateGalleryImageDto[];
   socialLinks?: SocialLinkDto[];
+  customerTestimonials?: CreateServiceProviderTestimonialDto[];
 }
 
 export interface UpdateMusicServiceProviderDto {
@@ -98,6 +100,7 @@ export interface UpdateMusicServiceProviderDto {
   categories?: CreateServiceProviderCategoryDto[];
   galleryImages?: CreateGalleryImageDto[];
   socialLinks?: SocialLinkDto[];
+  customerTestimonials?: CreateServiceProviderTestimonialDto[];
 }
 
 export interface SocialLinkDto {
@@ -128,6 +131,19 @@ export interface GalleryImageDto {
 export interface CreateGalleryImageDto {
   imageUrl: string;
   caption?: string;
+  order: number;
+}
+
+export interface ServiceProviderTestimonialDto {
+  id: number;
+  clientName?: string;
+  text: string;
+  order: number;
+}
+
+export interface CreateServiceProviderTestimonialDto {
+  clientName?: string;
+  text: string;
   order: number;
 }
 
