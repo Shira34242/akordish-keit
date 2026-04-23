@@ -83,6 +83,7 @@ public class AkordishKeitDbContext : DbContext
     // Service Providers & Teachers (חדש!)
     public DbSet<MusicServiceProvider> ServiceProviders { get; set; }
     public DbSet<Teacher> Teachers { get; set; }
+    public DbSet<TeacherTestimonial> TeacherTestimonials { get; set; }
     public DbSet<MusicServiceProviderCategory> ServiceProviderCategories { get; set; }
     public DbSet<MusicServiceProviderCategoryMapping> ServiceProviderCategoryMappings { get; set; }
     public DbSet<TeacherInstrument> TeacherInstruments { get; set; }
@@ -166,6 +167,7 @@ public class AkordishKeitDbContext : DbContext
         // Service Providers & Teachers Configurations (חדש!)
         modelBuilder.ApplyConfiguration(new MusicServiceProviderConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherConfiguration());
+        modelBuilder.ApplyConfiguration(new TeacherTestimonialConfiguration());
         modelBuilder.ApplyConfiguration(new MusicServiceProviderCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new MusicServiceProviderCategoryMappingConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherInstrumentConfiguration());

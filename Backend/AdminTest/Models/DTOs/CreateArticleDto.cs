@@ -82,6 +82,8 @@ public class CreateArticleDto
     /// <summary>סוג הפרופיל: "artist" | "serviceProvider"</summary>
     [StringLength(30)]
     public string? UploaderProfileType { get; set; }
+
+    public int? UploaderProfileId { get; set; }
 }
 
 public class CreateArticleGalleryImageDto

@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
@@ -82,7 +82,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     constructor(
         private songService: SongService,
         private authService: AuthService,
-        private knownChordService: UserKnownChordService
+        private knownChordService: UserKnownChordService,
+        private router: Router
     ) {
         this.searchSubject.pipe(
             debounceTime(500),
@@ -94,6 +95,17 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.hasMoreSongs = true;
             this.songs = [];
             this.loadSongs();
+        });
+    }
+
+    handleRandomSongClick(): void {
+        this.songService.getRandomSong().subscribe({
+            next: (song: any) => {
+                if (song?.id) {
+                    this.router.navigate(['/song', song.id]);
+                }
+            },
+            error: (err: any) => console.error('Failed to get random song', err)
         });
     }
 

@@ -1,9 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil, switchMap, of } from 'rxjs';
-import { ArticleService } from '../../../services/admin/article.service';
-import { TickerSettingsService, TickerConfig } from '../../../services/ticker-settings.service';
+import { Subject, of, switchMap, takeUntil } from 'rxjs';
 import { Article, ArticleStatus } from '../../../models/article.model';
+import { ArticleService } from '../../../services/admin/article.service';
+import {
+  TickerConfig,
+  TICKER_DEFAULT,
+  TickerSettingsService
+} from '../../../services/ticker-settings.service';
 
 @Component({
   selector: 'app-news-ticker',
@@ -12,17 +16,16 @@ import { Article, ArticleStatus } from '../../../models/article.model';
   templateUrl: './news-ticker.component.html',
   styleUrls: ['./news-ticker.component.css']
 })
-export class NewsTickerComponent implements OnInit, OnDestroy {
+export class NewsTickerComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() previewConfig?: TickerConfig;
+  @Input() previewTitles: string[] = [];
 
-  articles: Article[] = [];
-  cfg!: TickerConfig;
-  readonly isPreviewFrame = window.location.search.includes('tickerPreview=');
-  readonly previewTitles = [
-    'הסינגל החדש שמטלטל את עולם המוזיקה היהודית',
-    'ראיון מיוחד מאחורי הקלעים',
-    'מצעד השבוע: השירים שהכי אהבתם',
-    'הופעה חדשה בדרך לבמות'
-  ];
+  cfg: TickerConfig = { ...TICKER_DEFAULT };
+  titles: string[] = [];
+
+  readonly trackCopies = [0, 1, 2, 3];
+  readonly fallbackTitles = ['חדשות המוזיקה באקורדישקייט'];
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -30,7 +33,19 @@ export class NewsTickerComponent implements OnInit, OnDestroy {
     private tickerSettings: TickerSettingsService
   ) {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.previewConfig) return;
+    this.cfg = this.previewConfig;
+    this.titles = this.cleanTitles(this.previewTitles);
+  }
+
   ngOnInit(): void {
+    if (this.previewConfig) {
+      this.cfg = this.previewConfig;
+      this.titles = this.cleanTitles(this.previewTitles);
+      return;
+    }
+
     this.tickerSettings.config$
       .pipe(
         takeUntil(this.destroy$),
@@ -40,17 +55,22 @@ export class NewsTickerComponent implements OnInit, OnDestroy {
 
           if (cfg.filterType === 'category') {
             return this.articleService.getArticles(
-              1, 12, undefined, cfg.categoryId, undefined, ArticleStatus.Published
+              1, 16, undefined, cfg.categoryId, undefined, ArticleStatus.Published
             );
           }
+
           return this.articleService.getArticles(
-            1, 12, undefined, undefined, cfg.contentType, ArticleStatus.Published
+            1, 16, undefined, undefined, cfg.contentType, ArticleStatus.Published
           );
         })
       )
       .subscribe({
-        next: (res: any) => { this.articles = res.items || []; },
-        error: ()        => { this.articles = []; }
+        next: (res: any) => {
+          this.titles = this.cleanTitles((res.items || []).map((article: Article) => article.title));
+        },
+        error: () => {
+          this.titles = [];
+        }
       });
   }
 
@@ -59,56 +79,42 @@ export class NewsTickerComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /* ---- inline styles ---- */
+  get hasContent(): boolean {
+    return this.cfg.enabled && this.titles.length > 0;
+  }
 
-  get wrapperStyle(): Record<string, string> {
-    const c = this.cfg;
-    if (!c) return {};
-    const extend = Math.max(0, c.leftExtend);
+  get hostStyle(): Record<string, string> {
     return {
-      top:             `${c.topOffset}px`,
-      left:            `-${extend}vw`,
-      width:           `calc(100vw + ${extend * 2}vw)`,
-      transform:       `rotate(${c.rotation}deg)`,
-      transformOrigin: '50% 0'
+      top: `${this.cfg.positionY}%`,
+      left: `${this.cfg.positionX}%`,
+      width: `${this.cfg.widthVw}%`,
+      transform: `translate(-50%, -50%) rotate(${this.cfg.rotation}deg)`,
+      '--ticker-height': `${this.cfg.bandHeight}px`,
+      '--ticker-bg': this.cfg.backgroundColor,
+      '--ticker-text': this.cfg.textColor,
+      '--ticker-separator': this.cfg.separatorColor,
+      '--ticker-font-size': `${this.cfg.fontSize}px`,
+      '--ticker-font-weight': String(this.cfg.fontWeight),
+      '--ticker-duration': `${this.cfg.speed}s`,
+      '--ticker-direction': this.cfg.direction === 'rtl' ? 'normal' : 'reverse'
     };
   }
 
-  get bandStyle(): Record<string, string> {
-    const c = this.cfg;
-    if (!c) return {};
-    return {
-      height:          `${c.bandHeight}px`,
-      backgroundColor: c.backgroundColor
-    };
+  trackCopy(index: number): number {
+    return index;
   }
 
-  get titleStyle(): Record<string, string> {
-    const c = this.cfg;
-    if (!c) return {};
-    return {
-      color:      c.textColor,
-      fontSize:   `${c.fontSize}px`,
-      fontWeight: String(c.fontWeight)
-    };
+  trackTitle(index: number, title: string): string {
+    return `${index}-${title}`;
   }
 
-  get sepStyle(): Record<string, string> {
-    return { color: this.cfg?.separatorColor ?? '#ddff53' };
-  }
+  private cleanTitles(titles: Array<string | undefined | null>): string[] {
+    const clean = titles
+      .map(title => (title || '').trim())
+      .filter(title => title.length > 0);
 
-  get tickerTitles(): string[] {
-    const titles = this.articles
-      .map(a => a.title)
-      .filter((title): title is string => !!title?.trim());
-
-    if (titles.length > 0) return titles;
-    return this.isPreviewFrame ? this.previewTitles : [];
-  }
-
-  get animationDuration(): string {
-    const chars = this.tickerTitles.reduce((s, title) => s + title.length, 0);
-    const dur = Math.max(18, Math.min(70, chars * 0.24));
-    return `${dur}s`;
+    if (clean.length === 0) return [...this.fallbackTitles];
+    while (clean.length < 6) clean.push(...clean.slice(0, 6 - clean.length));
+    return clean;
   }
 }

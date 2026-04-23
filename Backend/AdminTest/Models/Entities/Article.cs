@@ -36,6 +36,7 @@ public class Article
     // תיוג מעלה תוכן — UserId של פרופיל ציבורי + סוג הפרופיל
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; } // "artist" | "serviceProvider"
+    public int? UploaderProfileId { get; set; }
 
     /// <summary>
     /// המשתמש הרגיל שהגיש את הכתבה דרך טופס ההגשה.

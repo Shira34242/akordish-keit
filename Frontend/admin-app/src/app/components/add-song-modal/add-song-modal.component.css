@@ -989,6 +989,17 @@ select option {
 
 .profile-search-wrapper { position: relative; }
 
+.admin-profile-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm, 6px);
+    margin-bottom: var(--space-sm, 6px);
+}
+
+.admin-profile-select {
+    min-width: 0;
+}
+
 .profile-dropdown {
     position: absolute;
     top: calc(100% + 4px);
@@ -1160,6 +1171,11 @@ select option {
     flex-direction: column;
     gap:10px;
     margin-bottom: 0;
+}
+
+.profile-dropdown-static {
+    position: static;
+    margin-top: var(--space-xs, 8px);
 }
 
 .smart-composer {

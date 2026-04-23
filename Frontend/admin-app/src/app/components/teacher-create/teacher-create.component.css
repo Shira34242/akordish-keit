@@ -797,6 +797,52 @@
   font-family: inherit;
 }
 
+.testimonial-editor {
+  display: grid;
+  gap: var(--space-base);
+}
+
+.testimonial-draft {
+  display: grid;
+  gap: var(--space-base);
+  padding: var(--space-base);
+  border-radius: 24px;
+  background: #ffffff;
+}
+
+.testimonial-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-base);
+}
+
+.testimonial-edit-card {
+  position: relative;
+  display: grid;
+  gap: var(--space-sm);
+  width: max-content;
+  min-width: 180px;
+  max-width: min(420px, 100%);
+  padding: var(--space-base) var(--space-base) var(--space-md);
+  border-radius: 18px 18px 4px 18px;
+  background: #ffffff;
+}
+
+.testimonial-edit-card p {
+  margin: 0;
+  color: #000000;
+  font-size: var(--font-sm);
+  line-height: var(--lh-body);
+  overflow-wrap: anywhere;
+}
+
+.testimonial-edit-card strong {
+  color: #404040;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
 :host ::ng-deep .media-card .fui-row {
   display: grid;
   gap: 10px;

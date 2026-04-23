@@ -382,8 +382,11 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("UploaderProfileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UploaderProfileType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("UploaderUserId")
                         .HasColumnType("int");
@@ -420,6 +423,9 @@ namespace AkordishKeit.Migrations
                     b.HasIndex("IsFeatured", "PublishDate")
                         .IsDescending(false, true)
                         .HasDatabaseName("IX_Articles_IsFeatured_PublishDate");
+
+                    b.HasIndex("UploaderProfileType", "UploaderProfileId")
+                        .HasDatabaseName("IX_Articles_UploaderProfile");
 
                     b.ToTable("Articles", (string)null);
                 });
@@ -2558,8 +2564,11 @@ namespace AkordishKeit.Migrations
                     b.Property<int?>("UploadedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UploaderProfileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UploaderProfileType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("UploaderUserId")
                         .HasColumnType("int");
@@ -2607,6 +2616,9 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("Language", "IsApproved")
                         .HasDatabaseName("IX_Songs_Language_IsApproved");
+
+                    b.HasIndex("UploaderProfileType", "UploaderProfileId")
+                        .HasDatabaseName("IX_Songs_UploaderProfile");
 
                     b.ToTable("Songs", (string)null);
                 });
@@ -3157,6 +3169,36 @@ namespace AkordishKeit.Migrations
                         .IsUnique();
 
                     b.ToTable("TeacherInstruments", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.TeacherTestimonial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentName")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TeacherTestimonials", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.User", b =>
@@ -4032,6 +4074,17 @@ namespace AkordishKeit.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.TeacherTestimonial", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Teacher", "Teacher")
+                        .WithMany("Testimonials")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.User", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.Instrument", "PreferredInstrument")
@@ -4185,6 +4238,8 @@ namespace AkordishKeit.Migrations
             modelBuilder.Entity("AkordishKeit.Models.Entities.Teacher", b =>
                 {
                     b.Navigation("Instruments");
+
+                    b.Navigation("Testimonials");
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.User", b =>

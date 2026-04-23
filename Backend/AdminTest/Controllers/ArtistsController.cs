@@ -15,13 +15,19 @@ public class ArtistsController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly ISongService _songService;
+    private readonly IArticleService _articleService;
 
     public ArtistsController(
         AkordishKeitDbContext context,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ISongService songService,
+        IArticleService articleService)
     {
         _context = context;
         _notificationService = notificationService;
+        _songService = songService;
+        _articleService = articleService;
     }
 
     // ========================================
@@ -349,6 +355,38 @@ public class ArtistsController : ControllerBase
     /// <summary>
     /// קבלת הופעות קרובות של אומן
     /// </summary>
+    // GET: api/Artists/5/uploaded-songs
+    [HttpGet("{id}/uploaded-songs")]
+    public async Task<ActionResult<List<SongDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.Artists
+            .AnyAsync(a => a.Id == id && !a.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "Artist not found" });
+        }
+
+        var songs = await _songService.GetApprovedSongsByUploaderProfileAsync("artist", id, limit);
+        return Ok(songs);
+    }
+
+    // GET: api/Artists/5/uploaded-articles
+    [HttpGet("{id}/uploaded-articles")]
+    public async Task<ActionResult<List<ArticleDto>>> GetArtistUploadedArticles(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.Artists
+            .AnyAsync(a => a.Id == id && !a.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "Artist not found" });
+        }
+
+        var articles = await _articleService.GetPublishedArticlesByUploaderProfileAsync("artist", id, limit);
+        return Ok(articles);
+    }
+
     [HttpGet("{id}/events")]
     public async Task<ActionResult<List<UpcomingEventDto>>> GetArtistEvents(int id)
     {

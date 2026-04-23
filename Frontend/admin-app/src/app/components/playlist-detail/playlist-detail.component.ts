@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail, PlaylistSong, UpdatePlaylistDto } from '../../models/playlist.model';
 import { AuthService } from '../../services/auth.service';
+import { ChordBookPanelComponent } from './chord-book-panel/chord-book-panel.component';
 
 @Component({
   selector: 'app-playlist-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ChordBookPanelComponent],
   templateUrl: './playlist-detail.component.html',
   styleUrls: ['./playlist-detail.component.css']
 })
@@ -21,6 +22,7 @@ export class PlaylistDetailComponent implements OnInit {
   isEditing = false;
   editedName = '';
   editedDescription = '';
+  showChordBook = false;
 
   constructor(
     private route: ActivatedRoute,

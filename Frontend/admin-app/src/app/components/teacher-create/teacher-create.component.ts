@@ -10,7 +10,8 @@ import { SystemTablesService, SystemItem } from '../../services/system-tables.se
 import { CitiesService, City } from '../../services/cities.service';
 import {
   CreateTeacherDto,
-  CreateTeacherInstrumentDto
+  CreateTeacherInstrumentDto,
+  CreateTeacherTestimonialDto
 } from '../../models/teacher.model';
 import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../models/music-service-provider.model';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../models/teaching-language.enum';
@@ -72,6 +73,8 @@ export class TeacherCreateComponent implements OnInit {
   selectedInstrumentIds: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  testimonials: CreateTeacherTestimonialDto[] = [];
+  newTestimonial = { studentName: '', text: '' };
   socialLinks: SocialLinkDto[] = [];
 
   // Available data
@@ -390,6 +393,28 @@ export class TeacherCreateComponent implements OnInit {
     }
   }
 
+  addTestimonial(): void {
+    if (!this.newTestimonial.text.trim()) {
+      alert('נא להזין טקסט המלצה');
+      return;
+    }
+
+    this.testimonials.push({
+      studentName: this.newTestimonial.studentName.trim() || undefined,
+      text: this.newTestimonial.text.trim(),
+      order: this.testimonials.length
+    });
+
+    this.newTestimonial = { studentName: '', text: '' };
+  }
+
+  removeTestimonial(index: number): void {
+    if (confirm('האם למחוק את ההמלצה הזו?')) {
+      this.testimonials.splice(index, 1);
+      this.testimonials.forEach((item, idx) => item.order = idx);
+    }
+  }
+
   addSocialLink() {
     this.socialLinks.push({ platform: SocialPlatform.Instagram, url: '' });
   }
@@ -469,6 +494,7 @@ export class TeacherCreateComponent implements OnInit {
         isPrimary: false
       } as CreateTeacherInstrumentDto)),
       galleryImages: this.galleryImages,
+      testimonials: this.testimonials,
       socialLinks: this.socialLinks.filter(link => link.url?.trim())
     };
 

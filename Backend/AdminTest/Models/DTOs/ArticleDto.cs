@@ -51,6 +51,7 @@ public class ArticleDto
     /// <summary>שדות גולמיים — לשימוש בטופס עריכה</summary>
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; }
+    public int? UploaderProfileId { get; set; }
 }
 
 /// <summary>
@@ -60,6 +61,7 @@ public class ContentUploaderProfileDto
 {
     /// <summary>"artist" | "serviceProvider"</summary>
     public string Type { get; set; } = string.Empty;
+    public int ProfileId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     /// <summary>נתיב לדף הפרופיל, לדוגמה: /artist/5 או /teacher/12</summary>

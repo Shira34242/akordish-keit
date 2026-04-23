@@ -143,24 +143,18 @@ public class PlaylistService : IPlaylistService
             .ToListAsync();
     }
 
+    private const int MaxPlaylistsPerUser = 4;
+    private const int MaxSongsPerPlaylist = 7;
+
     public async Task<PlaylistDto> CreatePlaylistAsync(CreatePlaylistDto dto, int userId)
     {
-        // בדיקת מגבלת רשימות לפי תג תרומת תוכן (פעיל רק כשמנויים מופעלים)
-        var subscriptionsEnabled = false;
-        if (subscriptionsEnabled)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            if (user != null)
-            {
-                var maxPlaylists = _userTagService.GetPlaylistLimit(user.ContentTag);
-                var existingCount = await _context.Playlists
-                    .CountAsync(p => p.UserId == userId && !p.IsDefault);
+        // בדיקת מגבלת רשימות: עד 4 רשימות (לא כולל ברירת מחדל)
+        var existingCount = await _context.Playlists
+            .CountAsync(p => p.UserId == userId && !p.IsDefault);
 
-                if (existingCount >= maxPlaylists)
-                    throw new InvalidOperationException(
-                        $"הגעת למגבלת הרשימות שלך ({maxPlaylists} רשימות). שדרג את חברותך להוספת רשימות נוספות.");
-            }
-        }
+        if (existingCount >= MaxPlaylistsPerUser)
+            throw new InvalidOperationException(
+                $"ניתן לשמור עד {MaxPlaylistsPerUser} רשימות בלבד. מחק רשימה קיימת כדי ליצור חדשה.");
 
         var playlist = new Playlist
         {
@@ -264,6 +258,17 @@ public class PlaylistService : IPlaylistService
 
         if (alreadyExists) return false;
 
+        // בדיקת מגבלת שירים: עד 7 שירים ברשימה (לא כולל ברירת מחדל)
+        if (!playlist.IsDefault)
+        {
+            var currentSongCount = await _context.PlaylistSongs
+                .CountAsync(ps => ps.PlaylistId == playlistId);
+
+            if (currentSongCount >= MaxSongsPerPlaylist)
+                throw new InvalidOperationException(
+                    $"ניתן להוסיף עד {MaxSongsPerPlaylist} שירים לרשימה בלבד.");
+        }
+
         // חישוב הסדר הבא
         var maxOrder = await _context.PlaylistSongs
             .Where(ps => ps.PlaylistId == playlistId)
@@ -364,6 +369,14 @@ public class PlaylistService : IPlaylistService
 
         if (originalPlaylist == null) return null;
 
+        // בדיקת מגבלת רשימות
+        var existingCount = await _context.Playlists
+            .CountAsync(p => p.UserId == userId && !p.IsDefault);
+
+        if (existingCount >= MaxPlaylistsPerUser)
+            throw new InvalidOperationException(
+                $"ניתן לשמור עד {MaxPlaylistsPerUser} רשימות בלבד. מחק רשימה קיימת כדי לאמץ חדשה.");
+
         // יצירת עותק של הרשימה
         var adoptedPlaylist = new Playlist
         {
@@ -418,6 +431,14 @@ public class PlaylistService : IPlaylistService
             .FirstOrDefaultAsync(p => p.Id == playlistId && p.UserId == userId);
 
         if (originalPlaylist == null) return null;
+
+        // בדיקת מגבלת רשימות
+        var existingCount = await _context.Playlists
+            .CountAsync(p => p.UserId == userId && !p.IsDefault);
+
+        if (existingCount >= MaxPlaylistsPerUser)
+            throw new InvalidOperationException(
+                $"ניתן לשמור עד {MaxPlaylistsPerUser} רשימות בלבד. מחק רשימה קיימת כדי לשכפל.");
 
         // יצירת עותק של הרשימה
         var duplicatedPlaylist = new Playlist

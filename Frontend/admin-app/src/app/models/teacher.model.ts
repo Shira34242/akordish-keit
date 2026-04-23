@@ -16,6 +16,14 @@ export interface TeacherDto extends MusicServiceProviderDto {
   lessonTypes?: string;
   specializations?: string;
   instruments: TeacherInstrumentDto[];
+  testimonials?: TeacherTestimonialDto[];
+}
+
+export interface TeacherTestimonialDto {
+  id?: number;
+  studentName?: string;
+  text: string;
+  order: number;
 }
 
 export interface TeacherListDto extends MusicServiceProviderListDto {
@@ -35,6 +43,7 @@ export interface CreateTeacherDto extends CreateMusicServiceProviderDto {
   lessonTypes?: string;
   specializations?: string;
   instruments: CreateTeacherInstrumentDto[];
+  testimonials?: CreateTeacherTestimonialDto[];
 }
 
 export interface UpdateTeacherDto extends UpdateMusicServiceProviderDto {
@@ -46,6 +55,13 @@ export interface UpdateTeacherDto extends UpdateMusicServiceProviderDto {
   lessonTypes?: string;
   specializations?: string;
   instruments: CreateTeacherInstrumentDto[];
+  testimonials?: CreateTeacherTestimonialDto[];
+}
+
+export interface CreateTeacherTestimonialDto {
+  studentName?: string;
+  text: string;
+  order: number;
 }
 
 export interface TeacherInstrumentDto {

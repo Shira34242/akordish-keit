@@ -21,6 +21,7 @@ public class Song
     // תיוג מעלה תוכן — UserId של פרופיל ציבורי + סוג הפרופיל
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; } // "artist" | "serviceProvider"
+    public int? UploaderProfileId { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

@@ -68,6 +68,8 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public string? Specializations { get; set; }
 
+        public virtual ICollection<TeacherTestimonial> Testimonials { get; set; } = new List<TeacherTestimonial>();
+
         // ════════════════════════════════════
         //          Navigation Properties
         // ════════════════════════════════════

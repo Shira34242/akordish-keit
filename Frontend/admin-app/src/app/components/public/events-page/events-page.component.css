@@ -1,0 +1,203 @@
+/* ============================================
+   LAYOUT
+============================================ */
+
+.events-page {
+  direction: rtl;
+}
+
+/* מסכת גלילה עליונה — 8px לבן קבוע */
+.top-scroll-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: #ffffff;
+  z-index: 100;
+}
+
+/* ============================================
+   HERO
+============================================ */
+
+.hero-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ddff53;
+  z-index: -1;
+  overflow: hidden;
+}
+
+/* overlay לבן שמופיע בגלילה */
+.hero-collapse-overlay {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* אזור relative שיוצר גובה — מתאים לגובה ה-hero */
+.hero-content-area {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  height: calc(52vh - 76px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 24px 28px;
+  max-width: 1200px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.hero-subtitle {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-xs);
+  color: #404040;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.04em;
+}
+
+.hero-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-3xl);
+  color: #000000;
+  margin: 0 0 20px 0;
+  line-height: 1;
+}
+
+/* Filter chips */
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-direction: row-reverse;
+}
+
+.filter-chip {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 2px solid #000000;
+  background: transparent;
+  color: #000000;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.filter-chip--active {
+  background: #000000;
+  color: #ddff53;
+}
+
+.filter-chip:hover:not(.filter-chip--active) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   CONTENT
+============================================ */
+
+.events-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+/* ============================================
+   STATES
+============================================ */
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.spinner {
+  border: 3px solid #F2F2F2;
+  border-top: 3px solid #000000;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 0;
+  color: #404040;
+}
+
+.empty-state .material-icons {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+  color: #F2F2F2;
+}
+
+.empty-state p {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-base);
+  color: #000000;
+  margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 20px 20px 24px;
+  }
+
+  .hero-title {
+    font-size: var(--font-2xl);
+  }
+
+  .events-content {
+    padding: 24px 16px 48px;
+  }
+
+  .events-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}

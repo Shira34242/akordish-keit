@@ -19,6 +19,7 @@
     <div class="header-content" #songHeaderContent>
 
         <!-- שורה עליונה: תמונה + מידע -->
+        <div class="header-top-row-wrapper">
         <div class="header-top-row">
 
             <!-- Image Section -->
@@ -58,47 +59,46 @@
                     <span class="credit-line" *ngIf="song.composer">לחן: {{ song.composer.name }}</span>
                 </div>
 
+                <!-- לחצני פעולה — תחתית הפרטים, בשורה עם תחתית התמונה -->
+                <div class="header-actions">
+                    <button class="action-btn btn-bookmark" [class.saved]="isSongSaved" title="הוסף לרשימה" (click)="togglePlaylistPopup()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+                        </svg>
+                    </button>
+                    <button class="action-btn btn-share" title="שתף" (click)="handleShare()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                            <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
+                        </svg>
+                    </button>
+                    <button class="action-btn btn-print" title="הדפס" (click)="handlePrint()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"></path>
+                            <rect x="6" y="14" width="12" height="8" rx="1"></rect>
+                        </svg>
+                    </button>
+                    <button class="action-btn btn-report" title="דווח על טעות" (click)="openReportModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
+                            <path d="M12 9v4"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg>
+                    </button>
+                </div>
 
             </div>
 
         </div><!-- end header-top-row -->
-
-        <!-- לחצני פעולה - תחתית שמאל -->
-        <div class="header-actions">
-            <button class="action-btn btn-bookmark" [class.saved]="isSongSaved" title="הוסף לרשימה" (click)="togglePlaylistPopup()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
-                </svg>
-            </button>
-            <button class="action-btn btn-share" title="שתף" (click)="handleShare()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
-                    <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
-                </svg>
-            </button>
-            <button class="action-btn btn-print" title="הדפס" (click)="handlePrint()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                    <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"></path>
-                    <rect x="6" y="14" width="12" height="8" rx="1"></rect>
-                </svg>
-            </button>
-            <button class="action-btn btn-report" title="דווח על טעות" (click)="openReportModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
-                    <path d="M12 9v4"></path>
-                    <path d="M12 17h.01"></path>
-                </svg>
-            </button>
-
-        </div>
+        </div><!-- end header-top-row-wrapper -->
     </div>
 <div class="content-wrapper">
 
@@ -361,6 +361,150 @@
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>
+
+        <!-- Rating Section -->
+        <div class="song-rating-section">
+            <p class="rating-title">דרג את השיר</p>
+
+            <form class="rating" (submit)="$event.preventDefault()">
+                <div class="rating__stars">
+                    <input id="sr-1-{{songId}}" class="rating__input rating__input-1" type="radio"
+                           name="song-rating-{{songId}}" value="1"
+                           [checked]="userRating === 1"
+                           [disabled]="!isLoggedIn"
+                           (change)="submitRating(1)">
+                    <input id="sr-2-{{songId}}" class="rating__input rating__input-2" type="radio"
+                           name="song-rating-{{songId}}" value="2"
+                           [checked]="userRating === 2"
+                           [disabled]="!isLoggedIn"
+                           (change)="submitRating(2)">
+                    <input id="sr-3-{{songId}}" class="rating__input rating__input-3" type="radio"
+                           name="song-rating-{{songId}}" value="3"
+                           [checked]="userRating === 3"
+                           [disabled]="!isLoggedIn"
+                           (change)="submitRating(3)">
+                    <input id="sr-4-{{songId}}" class="rating__input rating__input-4" type="radio"
+                           name="song-rating-{{songId}}" value="4"
+                           [checked]="userRating === 4"
+                           [disabled]="!isLoggedIn"
+                           (change)="submitRating(4)">
+                    <input id="sr-5-{{songId}}" class="rating__input rating__input-5" type="radio"
+                           name="song-rating-{{songId}}" value="5"
+                           [checked]="userRating === 5"
+                           [disabled]="!isLoggedIn"
+                           (change)="submitRating(5)">
+
+                    <label class="rating__label" [for]="'sr-1-'+songId">
+                        <svg class="rating__star" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                            <g transform="translate(16,16)"><circle class="rating__star-ring" fill="none" stroke="#000" stroke-width="16" r="8" transform="scale(0)"/></g>
+                            <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <g transform="translate(16,16) rotate(180)">
+                                    <polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="none"/>
+                                    <polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="#000"/>
+                                </g>
+                                <g transform="translate(16,16)" stroke-dasharray="12 12" stroke-dashoffset="12">
+                                    <polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <span class="rating__sr">1 כוכב — גרוע</span>
+                    </label>
+
+                    <label class="rating__label" [for]="'sr-2-'+songId">
+                        <svg class="rating__star" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                            <g transform="translate(16,16)"><circle class="rating__star-ring" fill="none" stroke="#000" stroke-width="16" r="8" transform="scale(0)"/></g>
+                            <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <g transform="translate(16,16) rotate(180)">
+                                    <polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="none"/>
+                                    <polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="#000"/>
+                                </g>
+                                <g transform="translate(16,16)" stroke-dasharray="12 12" stroke-dashoffset="12">
+                                    <polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <span class="rating__sr">2 כוכבים — לא טוב</span>
+                    </label>
+
+                    <label class="rating__label" [for]="'sr-3-'+songId">
+                        <svg class="rating__star" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                            <g transform="translate(16,16)"><circle class="rating__star-ring" fill="none" stroke="#000" stroke-width="16" r="8" transform="scale(0)"/></g>
+                            <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <g transform="translate(16,16) rotate(180)">
+                                    <polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="none"/>
+                                    <polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="#000"/>
+                                </g>
+                                <g transform="translate(16,16)" stroke-dasharray="12 12" stroke-dashoffset="12">
+                                    <polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <span class="rating__sr">3 כוכבים — בסדר</span>
+                    </label>
+
+                    <label class="rating__label" [for]="'sr-4-'+songId">
+                        <svg class="rating__star" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                            <g transform="translate(16,16)"><circle class="rating__star-ring" fill="none" stroke="#000" stroke-width="16" r="8" transform="scale(0)"/></g>
+                            <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <g transform="translate(16,16) rotate(180)">
+                                    <polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="none"/>
+                                    <polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="#000"/>
+                                </g>
+                                <g transform="translate(16,16)" stroke-dasharray="12 12" stroke-dashoffset="12">
+                                    <polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <span class="rating__sr">4 כוכבים — טוב</span>
+                    </label>
+
+                    <label class="rating__label" [for]="'sr-5-'+songId">
+                        <svg class="rating__star" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                            <g transform="translate(16,16)"><circle class="rating__star-ring" fill="none" stroke="#000" stroke-width="16" r="8" transform="scale(0)"/></g>
+                            <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <g transform="translate(16,16) rotate(180)">
+                                    <polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="none"/>
+                                    <polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" fill="#000"/>
+                                </g>
+                                <g transform="translate(16,16)" stroke-dasharray="12 12" stroke-dashoffset="12">
+                                    <polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16"/>
+                                    <polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <span class="rating__sr">5 כוכבים — מצוין</span>
+                    </label>
+
+                    <p class="rating__display" data-rating="1" hidden>גרוע</p>
+                    <p class="rating__display" data-rating="2" hidden>לא טוב</p>
+                    <p class="rating__display" data-rating="3" hidden>בסדר</p>
+                    <p class="rating__display" data-rating="4" hidden>טוב</p>
+                    <p class="rating__display" data-rating="5" hidden>מצוין!</p>
+                </div>
+            </form>
+
+            <p class="rating-login-hint" *ngIf="!isLoggedIn">התחבר כדי לדרג</p>
+        </div>
+
         </div>
         <!-- Left Column: Sidebar -->
         <div class="sidebar-column">
@@ -390,13 +534,24 @@
                 </ng-container>
             </div>
 
-            <div class="sidebar-card tools-sidebar-card">
-                <h3>כלים לאקורדים</h3>
-                <div class="tools-links">
-                    <a routerLink="/chords/dictionary" class="chord-dict-btn">מילון אקורדים</a>
-                    <a routerLink="/tuner" class="chord-dict-btn tuner-btn">כיוון גיטרה ויוקלילי</a>
-                </div>
-            </div>
+            <a routerLink="/chords/dictionary" class="sidebar-card tool-card">
+                <span class="tool-card-label">מילון אקורדים</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+            </a>
+            <a routerLink="/tuner" class="sidebar-card tool-card">
+                <span class="tool-card-label">כיוון גיטרה ויוקלילי</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+            </a>
+            <button (click)="handleRandomSongClick()" class="sidebar-card tool-card">
+                <span class="tool-card-label">שיר בהפתעה</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+            </button>
             
             <!-- שירים נוספים של האמן -->
             <div class="sidebar-card artist-card" *ngIf="isLoadingArtistSongs || artistSongs.length > 0">

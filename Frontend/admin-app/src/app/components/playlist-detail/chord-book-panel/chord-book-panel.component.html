@@ -1,0 +1,187 @@
+<div class="chord-book-backdrop" (click)="onBackdropClick($event)">
+    <div class="chord-book-panel">
+
+        <!-- כותרת -->
+        <div class="panel-header">
+            <div class="panel-title-area">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                </svg>
+                <span class="panel-title">ספר אקורדים</span>
+                <span class="panel-subtitle">{{ playlist.name }}</span>
+            </div>
+            <button class="close-btn" (click)="close.emit()" title="סגור">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- גוף -->
+        <div class="panel-body">
+
+            <!-- עמודת הגדרות -->
+            <div class="settings-col">
+
+                <!-- כרטיס פריסה -->
+                <div class="settings-card">
+
+                    <div class="setting-group">
+                        <div class="setting-label">עמודות</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="columns === 1" (click)="columns = 1">1</button>
+                            <button class="seg-btn" [class.active]="columns === 2" (click)="columns = 2">2</button>
+                            <button class="seg-btn" [class.active]="columns === 3" (click)="columns = 3">3</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>פונט</span>
+                            <span class="setting-value">{{ fontSize }}px</span>
+                        </div>
+                        <input class="range-slider" type="range" min="10" max="22" step="1" [(ngModel)]="fontSize">
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-label">אקורדים</div>
+                        <div class="btn-group">
+                            <button class="seg-btn" [class.active]="showChords" (click)="showChords = true">מוצגים</button>
+                            <button class="seg-btn" [class.active]="!showChords" (click)="showChords = false">מוסתרים</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- כרטיס צבעים -->
+                <div class="settings-card" *ngIf="showChords">
+                    <div class="setting-group">
+                        <div class="setting-label">צבעים</div>
+                        <div class="color-pairs-row">
+                            <div class="color-pair">
+                                <label class="color-swatch-label">
+                                    <input type="color" [(ngModel)]="chordColor">
+                                    <span class="color-swatch" [style.background]="chordColor"></span>
+                                </label>
+                                <span class="color-pair-label">אקורד</span>
+                            </div>
+                            <div class="color-pair">
+                                <label class="color-swatch-label">
+                                    <input type="color" [(ngModel)]="lyricsColor">
+                                    <span class="color-swatch" [style.background]="lyricsColor"></span>
+                                </label>
+                                <span class="color-pair-label">מילים</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- כפתור ייצוא -->
+                <div class="action-area">
+                    <button class="action-btn btn-export" (click)="exportBook()" [disabled]="isExporting || songCount === 0">
+                        <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" x2="12" y1="15" y2="3"/>
+                        </svg>
+                        <span class="spinner-sm" *ngIf="isExporting"></span>
+                        {{ isExporting ? 'מכין...' : 'ייצא ספר PDF' }}
+                    </button>
+                </div>
+
+                <!-- הסבר -->
+                <div class="info-card">
+                    <div class="info-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </div>
+                    <p>הספר יכלול עמוד כריכה, תוכן עניינים, ואת כל השירים ברשימה. הקובץ מוגן מהעתקה.</p>
+                </div>
+
+            </div>
+
+            <!-- רשימת שירים -->
+            <div class="songs-col">
+                <div class="songs-header">
+                    <span class="songs-header-label">שירים בספר</span>
+                    <span class="songs-count-badge">{{ songCount }}</span>
+                </div>
+
+                <div class="songs-list">
+                    <div class="song-entry" *ngFor="let s of playlist.songs; let i = index">
+                        <span class="song-num">{{ i + 1 }}</span>
+                        <img class="song-thumb" [src]="s.songImageUrl" [alt]="s.songTitle"
+                            onerror="this.src='/logo.png'">
+                        <div class="song-info">
+                            <span class="song-title">{{ s.songTitle }}</span>
+                            <span class="song-artist">{{ s.artistName }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- תצוגה מקדימה של עמודי הספר -->
+                <div class="book-preview">
+                    <div class="book-page book-page--cover">
+                        <div class="book-page-label">כריכה</div>
+                        <div class="cover-preview-content">
+                            <div class="cover-book-badge">ספר אקורדים</div>
+                            <div class="cover-title">{{ playlist.name }}</div>
+                            <div class="cover-count">{{ songCount }} שירים</div>
+                            <div class="cover-divider"></div>
+                            <div class="cover-brand">אקורדישקייט</div>
+                        </div>
+                    </div>
+                    <div class="book-page book-page--index">
+                        <div class="book-page-label">תוכן עניינים</div>
+                        <div class="index-preview-row" *ngFor="let s of playlist.songs.slice(0, 6); let i = index">
+                            <span class="index-num">{{ i + 1 }}</span>
+                            <span class="index-title">{{ s.songTitle }}</span>
+                            <span class="index-page">{{ 3 + i }}</span>
+                        </div>
+                        <div class="index-more" *ngIf="songCount > 6">+ עוד {{ songCount - 6 }}</div>
+                    </div>
+                    <div class="book-page book-page--song">
+                        <div class="book-page-label">שיר לדוגמה</div>
+                        <div class="song-preview-header">
+                            <div class="song-preview-cover"></div>
+                            <div>
+                                <div class="song-preview-title">{{ playlist.songs[0]?.songTitle || 'שם השיר' }}</div>
+                                <div class="song-preview-artist">{{ playlist.songs[0]?.artistName || 'שם האמן' }}</div>
+                            </div>
+                        </div>
+                        <div class="song-preview-lines">
+                            <div class="song-preview-chord">Am  G  F  C</div>
+                            <div class="song-preview-lyric">שורת מילים לדוגמה</div>
+                            <div class="song-preview-chord">C  G</div>
+                            <div class="song-preview-lyric">ועוד שורה</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- שכבת התקדמות בייצוא -->
+        <div class="progress-overlay" *ngIf="isExporting">
+            <div class="progress-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="#ddff53" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                </svg>
+                <p class="progress-text">{{ progressText }}</p>
+                <div class="progress-track">
+                    <div class="progress-fill" [style.width.%]="progressPercent"></div>
+                </div>
+                <span class="progress-pct">{{ progressPercent }}%</span>
+            </div>
+        </div>
+
+    </div>
+</div>

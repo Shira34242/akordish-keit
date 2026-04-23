@@ -1,0 +1,71 @@
+<div class="events-page" dir="rtl">
+
+  <!-- White top mask (מסכת גלילה עליונה) -->
+  <div class="top-scroll-mask"></div>
+
+  <!-- Hero Background — fixed, shrinks on scroll -->
+  <div class="hero-bg" #heroBg>
+    <div class="hero-collapse-overlay"></div>
+  </div>
+
+  <!-- Hero Content Area (relative — יוצר גובה בפלוו) -->
+  <div class="hero-content-area">
+    <div class="hero-content">
+      <p class="hero-subtitle">אקורדישקייט</p>
+      <h1 class="hero-title">הופעות</h1>
+
+      <!-- Filter chips -->
+      <div class="filter-chips">
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="filterMode === 'upcoming'"
+          (click)="setFilter('upcoming')">
+          קרובות
+        </button>
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="filterMode === 'all'"
+          (click)="setFilter('all')">
+          הכל
+        </button>
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="filterMode === 'past'"
+          (click)="setFilter('past')">
+          שעברו
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- תוכן -->
+  <div class="events-content">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Grid כרטיסים -->
+    <div *ngIf="!loading && filteredEvents.length > 0" class="events-grid">
+      <app-event-card
+        *ngFor="let event of filteredEvents"
+        [event]="event"
+        (cardClick)="openModal($event)">
+      </app-event-card>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && filteredEvents.length === 0" class="empty-state">
+      <span class="material-icons">event_busy</span>
+      <p>אין הופעות להצגה</p>
+    </div>
+
+  </div>
+
+</div>
+
+<app-event-modal
+  [event]="selectedEvent"
+  (close)="selectedEvent = null">
+</app-event-modal>

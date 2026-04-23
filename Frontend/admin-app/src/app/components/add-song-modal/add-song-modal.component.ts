@@ -130,12 +130,15 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     profileSearchResults: UserWithProfileDto[] = [];
     profileSearchLoading = false;
     selectedUploaderProfile: UserWithProfileDto | null = null;
+    myUploaderProfiles: UserWithProfileDto[] = [];
+    profileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+    profileSort: 'name' | 'type' = 'name';
     showProfileDropdown = false;
     tagAsMyself = true;
     private profileSearch$ = new Subject<string>();
 
     get isAdminUser(): boolean {
-        return Number(this.authService.currentUserValue?.role) >= 3;
+        return this.authService.isAdminOrManager();
     }
 
     get isLegacyFlow(): boolean {
@@ -248,6 +251,26 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
     }
 
+    get filteredProfileSearchResults(): UserWithProfileDto[] {
+        const filtered = this.profileSearchResults.filter(profile => {
+            if (this.profileTypeFilter === 'all') return true;
+            if (this.profileTypeFilter === 'user') return profile.profileType === 'user';
+            if (this.profileTypeFilter === 'teacher') return profile.profileType === 'serviceProvider' && profile.isTeacher;
+            if (this.profileTypeFilter === 'serviceProvider') return profile.profileType === 'serviceProvider' && !profile.isTeacher;
+            return profile.profileType === this.profileTypeFilter;
+        });
+
+        return [...filtered].sort((a, b) => {
+            if (this.profileSort === 'type') {
+                const typeCompare = this.getProfileTypeLabel(a.profileType, a.isTeacher)
+                    .localeCompare(this.getProfileTypeLabel(b.profileType, b.isTeacher), 'he');
+                if (typeCompare !== 0) return typeCompare;
+            }
+
+            return a.displayName.localeCompare(b.displayName, 'he');
+        });
+    }
+
     // Search subjects
     private artistSearch$ = new Subject<string>();
     private tagSearch$ = new Subject<string>();
@@ -300,7 +323,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         // Only setup duplicate check for new songs
         if (!this.editMode) {
             this.setupDuplicateCheck();
-            this.autoFillUploaderFromCurrentUser();
+            this.initializeUploaderSelector();
         }
 
         // If edit mode, populate form with existing data — and mark keys as user-set
@@ -370,13 +393,13 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         }
 
         // Uploader profile
-        if (this.songToEdit.uploaderProfile && this.songToEdit.uploaderUserId) {
+        if (this.songToEdit.uploaderProfile) {
             this.selectedUploaderProfile = {
                 userId: this.songToEdit.uploaderUserId,
                 displayName: this.songToEdit.uploaderProfile.name,
                 imageUrl: this.songToEdit.uploaderProfile.imageUrl,
                 profileType: this.songToEdit.uploaderProfile.type,
-                profileId: 0,
+                profileId: this.songToEdit.uploaderProfileId ?? this.songToEdit.uploaderProfile.profileId,
                 profileUrl: this.songToEdit.uploaderProfile.profileUrl,
                 isTeacher: false,
                 status: 'None',
@@ -525,13 +548,35 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         });
     }
 
+    initializeUploaderSelector(): void {
+        if (this.isAdminUser) {
+            this.tagAsMyself = false;
+            this.clearUploaderProfile();
+            this.onProfileFilterChange();
+            return;
+        }
+
+        this.autoFillUploaderFromCurrentUser();
+    }
+
     autoFillUploaderFromCurrentUser(): void {
         if (!this.isProfessionalNonAdmin) return;
 
-        this.userService.getMyUploaderProfile().subscribe(profile => {
-            if (profile) {
-                this.selectUploaderProfile(profile);
+        this.userService.getMyAllPages().subscribe(profiles => {
+            this.myUploaderProfiles = profiles;
+
+            if (!this.tagAsMyself) {
+                return;
+            }
+
+            if (profiles.length === 1) {
+                this.selectUploaderProfile(profiles[0]);
+                return;
+            }
+
+            if (profiles.length > 1) {
                 this.tagAsMyself = true;
+                this.clearUploaderProfile();
             }
         });
     }
@@ -550,7 +595,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             distinctUntilChanged(),
             switchMap(q => {
                 this.profileSearchLoading = true;
-                return this.userService.searchUsersWithProfiles(q, 20).pipe(catchError(() => of([])));
+                return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter).pipe(catchError(() => of([])));
             })
         ).subscribe({
             next: (results) => {
@@ -564,6 +609,18 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     onProfileSearchInput(): void {
         this.profileSearch$.next(this.profileSearchQuery);
+    }
+
+    onProfileFilterChange(): void {
+        this.clearUploaderProfile();
+        this.profileSearchLoading = true;
+        this.userService.searchUsersWithProfiles('', 100, this.profileTypeFilter)
+            .pipe(catchError(() => of([])))
+            .subscribe(results => {
+                this.profileSearchResults = results;
+                this.profileSearchLoading = false;
+                this.showProfileDropdown = true;
+            });
     }
 
     selectUploaderProfile(profile: UserWithProfileDto): void {
@@ -580,8 +637,17 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         this.showProfileDropdown = false;
     }
 
-    getProfileTypeLabel(type: string): string {
+    getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
+        if (type === 'artist') return 'אמן';
+        if (type === 'user') return 'חבר רגיל';
+        if (type === 'serviceProvider') return isTeacher ? 'מורה' : 'נותן שירות';
         return type === 'artist' ? 'אמן' : 'מורה / בעל מקצוע';
+    }
+
+    getProfileConnectionLabel(profile: UserWithProfileDto | null): string {
+        return profile && profile.profileType !== 'user' && !profile.userId
+            ? ' · לא מקושר לחשבון'
+            : '';
     }
 
     onComposerInput(event: Event) {
@@ -1668,7 +1734,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 arranger: undefined,  // נשאיר כרגע - נעדכן אחר כך
                 isApproved: formValue.isApproved ?? false,
                 uploaderUserId: this.selectedUploaderProfile?.userId,
-                uploaderProfileType: this.selectedUploaderProfile?.profileType
+                uploaderProfileType: this.selectedUploaderProfile?.profileType,
+                uploaderProfileId: this.selectedUploaderProfile?.profileId
             };
 
             // Choose add or update based on mode

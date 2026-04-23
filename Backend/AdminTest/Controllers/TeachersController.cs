@@ -16,15 +16,21 @@ public class TeachersController : ControllerBase
     private readonly ITeacherService _service;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly ISongService _songService;
+    private readonly IArticleService _articleService;
 
     public TeachersController(
         ITeacherService service,
         AkordishKeitDbContext context,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ISongService songService,
+        IArticleService articleService)
     {
         _service = service;
         _context = context;
         _notificationService = notificationService;
+        _songService = songService;
+        _articleService = articleService;
     }
 
     // GET: api/Teachers
@@ -70,6 +76,38 @@ public class TeachersController : ControllerBase
         }
 
         return Ok(teacher);
+    }
+
+    // GET: api/Teachers/5/songs
+    [HttpGet("{id}/songs")]
+    public async Task<ActionResult<List<SongDto>>> GetTeacherSongs(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.ServiceProviders
+            .AnyAsync(sp => sp.Id == id && sp.IsTeacher && !sp.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "׳”׳׳•׳¨׳” ׳׳ ׳ ׳׳¦׳" });
+        }
+
+        var songs = await _songService.GetApprovedSongsByUploaderProfileAsync("serviceProvider", id, limit);
+        return Ok(songs);
+    }
+
+    // GET: api/Teachers/5/articles
+    [HttpGet("{id}/articles")]
+    public async Task<ActionResult<List<ArticleDto>>> GetTeacherArticles(int id, [FromQuery] int limit = 12)
+    {
+        var exists = await _context.ServiceProviders
+            .AnyAsync(sp => sp.Id == id && sp.IsTeacher && !sp.IsDeleted);
+
+        if (!exists)
+        {
+            return NotFound(new { message = "׳”׳׳•׳¨׳” ׳׳ ׳ ׳׳¦׳" });
+        }
+
+        var articles = await _articleService.GetPublishedArticlesByUploaderProfileAsync("serviceProvider", id, limit);
+        return Ok(articles);
     }
 
     // POST: api/Teachers
@@ -217,6 +255,20 @@ public class TeachersController : ControllerBase
                         TeacherId = teacher.Id,
                         InstrumentId = instrument.InstrumentId,
                         IsPrimary = instrument.IsPrimary
+                    });
+                }
+            }
+
+            if (dto.Testimonials != null && dto.Testimonials.Any())
+            {
+                foreach (var item in dto.Testimonials.Where(t => !string.IsNullOrWhiteSpace(t.Text)).OrderBy(t => t.Order))
+                {
+                    _context.TeacherTestimonials.Add(new TeacherTestimonial
+                    {
+                        TeacherId = teacher.Id,
+                        StudentName = string.IsNullOrWhiteSpace(item.StudentName) ? null : item.StudentName.Trim(),
+                        Text = item.Text.Trim(),
+                        Order = item.Order
                     });
                 }
             }

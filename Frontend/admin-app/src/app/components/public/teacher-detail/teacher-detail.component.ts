@@ -13,6 +13,7 @@ import { SocialLinkDto, SocialPlatform } from '../../../models/music-service-pro
 import { TeachingLanguage } from '../../../models/teaching-language.enum';
 import { TargetAudience } from '../../../models/target-audience.enum';
 import { Article } from '../../../models/article.model';
+import { SongDto } from '../../../models/song.model';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 
@@ -29,6 +30,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('g3dWrapper')    g3dWrapperRef?: ElementRef<HTMLDivElement>;
   @ViewChild('g3dSection')    g3dSectionRef?: ElementRef<HTMLDivElement>;
   @ViewChild('g3dCardsEl')    g3dCardsElRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
 
   teacher: TeacherDto | null = null;
   cities: City[] = [];
@@ -36,19 +38,21 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   SocialPlatform = SocialPlatform;
 
   // ⚠️ ממתין לחיבור בקאנד: אקורדים שהמורה העלה
-  teacherSongs: any[] = [];
+  teacherSongs: SongDto[] = [];
 
   // ⚠️ ממתין לחיבור בקאנד: כתבות שהמורה העלה
   teacherArticles: Article[] = [];
 
-  // ⚠️ ממתין לחיבור בקאנד: המלצות תלמידים (דורש הוספת שדה testimonials למודל)
-  teacherTestimonials: { text: string; studentName: string }[] = [];
-
-  // Lightbox
-  lightboxIndex: number | null = null;
+  mediaLightboxIndex: number | null = null;
+  galleryMediaItems: Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string }> = [];
+  activeMedia: { type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string } | null = null;
+  activeVideoUrl: SafeResourceUrl | null = null;
 
   // Contact panel
   contactOpen = false;
+  canScrollTestimonialsPrev = false;
+  canScrollTestimonialsNext = false;
+  activeTestimonialIndex = 0;
 
   // ========== Hero ==========
   private fullHeroHeight = 0;
@@ -121,15 +125,40 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.teacherService.getTeacherById(id).subscribe({
       next: teacher => {
         this.teacher = teacher;
+        this.rebuildGalleryMedia();
+        this.loadTeacherContent(id);
         this.loading = false;
         setTimeout(() => {
           this.cdr.detectChanges();
           this.initHeroHeight();
+          this.updateTestimonialsNav();
         }, 0);
       },
       error: () => {
         this.loading = false;
         this.router.navigate(['/teachers']);
+      }
+    });
+  }
+
+  private loadTeacherContent(id: number): void {
+    this.teacherService.getTeacherSongs(id).subscribe({
+      next: songs => {
+        this.teacherSongs = songs;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.teacherSongs = [];
+      }
+    });
+
+    this.teacherService.getTeacherArticles(id).subscribe({
+      next: articles => {
+        this.teacherArticles = articles;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.teacherArticles = [];
       }
     });
   }
@@ -141,7 +170,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   private initHeroHeight(): void {
     const bg = this.teacherHeroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = 300; // compact dark banner (not full-screen)
+    this.fullHeroHeight = window.innerWidth <= 768 ? 340 : 380;
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
   }
@@ -159,6 +188,58 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   @HostListener('window:resize')
   onResize(): void {
     this.initHeroHeight();
+    this.updateTestimonialsNav();
+  }
+
+  scrollTestimonials(direction: 'prev' | 'next'): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) return;
+    const amount = Math.round(el.clientWidth * 0.8);
+    el.scrollBy({
+      left: direction === 'next' ? -amount : amount,
+      behavior: 'smooth'
+    });
+    window.setTimeout(() => this.updateTestimonialsNav(), 260);
+  }
+
+  updateTestimonialsNav(): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) {
+      this.canScrollTestimonialsPrev = false;
+      this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
+      return;
+    }
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 2) {
+      this.canScrollTestimonialsPrev = false;
+      this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
+      return;
+    }
+
+    const current = Math.abs(el.scrollLeft);
+    this.canScrollTestimonialsNext = current < maxScroll - 2;
+    this.canScrollTestimonialsPrev = current > 2;
+    this.activeTestimonialIndex = Math.max(
+      0,
+      Math.min(
+        this.teacherTestimonials.length - 1,
+        Math.round((current / maxScroll) * (this.teacherTestimonials.length - 1))
+      )
+    );
+  }
+
+  scrollToTestimonial(index: number): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) return;
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('.testimonial-card'));
+    const card = cards[index];
+    if (!card) return;
+    this.activeTestimonialIndex = index;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    window.setTimeout(() => this.updateTestimonialsNav(), 260);
   }
 
   private shrinkHero(): void {
@@ -341,6 +422,73 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     }));
   }
 
+  get galleryMedia(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string }> {
+    return this.galleryMediaItems;
+  }
+
+  private rebuildGalleryMedia(): void {
+    const media: Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string }> = [];
+
+    if (this.teacher?.videoUrl) {
+      media.push({
+        type: 'video',
+        videoUrl: this.teacher.videoUrl,
+        imageUrl: this.getVideoThumbnailUrl(this.teacher.videoUrl) || this.heroBannerSrc || this.teacher.profileImageUrl || '/logo.png',
+        caption: 'סרטון היכרות'
+      });
+    }
+
+    this.galleryItems.forEach(item => media.push({ type: 'image', ...item }));
+    this.galleryMediaItems = media;
+  }
+
+  private getVideoThumbnailUrl(url: string): string {
+    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  get teacherTestimonials(): Array<{ text: string; studentName?: string }> {
+    return (this.teacher?.testimonials || [])
+      .filter(item => !!item.text?.trim())
+      .sort((a, b) => a.order - b.order)
+      .map(item => ({
+        text: item.text,
+        studentName: item.studentName
+      }));
+  }
+
+  get testimonialDots(): number[] {
+    return this.teacherTestimonials.map((_, index) => index);
+  }
+
+  get heroRole(): string {
+    if (!this.teacher) return '';
+    const instruments = this.getInstrumentNames();
+    return instruments ? `מורה ל${instruments}` : 'מורה למוזיקה';
+  }
+
+  get infoCards(): Array<{ label: string; value: string }> {
+    if (!this.teacher) return [];
+    const cards: Array<{ label: string; value: string }> = [];
+
+    if (this.teacher.education) cards.push({ label: 'השכלה', value: this.teacher.education });
+    if (this.teacher.lessonTypes) cards.push({ label: 'סוגי שיעורים', value: this.teacher.lessonTypes });
+    if (this.teacher.availability) cards.push({ label: 'זמינות', value: this.teacher.availability });
+    if (this.teacher.workingHours) cards.push({ label: 'שעות פעילות', value: this.teacher.workingHours });
+    if (this.teacher.priceList) cards.push({ label: 'מחירון', value: this.teacher.priceList });
+    if (this.teacher.specializations) cards.push({ label: 'התמחויות', value: this.teacher.specializations });
+
+    return cards;
+  }
+
+  get tags(): string[] {
+    if (!this.teacher) return [];
+    return [
+      ...this.getTargetAudienceList(this.teacher.targetAudience),
+      ...this.getSpecializationsList()
+    ];
+  }
+
   toggleContact(): void {
     this.contactOpen = !this.contactOpen;
   }
@@ -354,9 +502,19 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.teacher.languages) parts.push(this.getLanguagesDisplay(this.teacher.languages));
     if (this.teacher.lessonTypes) parts.push(this.teacher.lessonTypes);
     if (this.teacher.availability) parts.push(this.teacher.availability);
+    return parts.join(', ');
+  }
+
+  get scheduleAndPriceLine(): string {
+    if (!this.teacher) return '';
+    const parts: string[] = [];
     if (this.teacher.workingHours) parts.push(this.teacher.workingHours);
     if (this.teacher.priceList) parts.push(this.teacher.priceList);
-    return parts.join(' · ');
+    return parts.join(', ');
+  }
+
+  get learningDetailsText(): string {
+    return '';
   }
 
   get heroBannerSrc(): string {
@@ -372,17 +530,56 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   // ============================================================
 
   openLightbox(index: number): void {
-    this.lightboxIndex = index;
+    this.openMediaLightbox(this.teacher?.videoUrl ? index + 1 : index);
   }
 
   closeLightbox(): void {
-    this.lightboxIndex = null;
+    this.closeMediaLightbox();
   }
 
   lightboxStep(delta: number): void {
-    if (this.lightboxIndex === null || this.galleryItems.length === 0) return;
-    const n = this.galleryItems.length;
-    this.lightboxIndex = ((this.lightboxIndex + delta) % n + n) % n;
+    this.mediaLightboxStep(delta);
+  }
+
+  openMediaLightbox(index: number): void {
+    if (index < 0 || index >= this.galleryMediaItems.length) return;
+    this.mediaLightboxIndex = index;
+    this.setActiveMedia();
+  }
+
+  closeMediaLightbox(): void {
+    this.mediaLightboxIndex = null;
+    this.activeMedia = null;
+    this.activeVideoUrl = null;
+  }
+
+  mediaLightboxStep(delta: number): void {
+    if (this.mediaLightboxIndex === null || this.galleryMediaItems.length === 0) return;
+    const n = this.galleryMediaItems.length;
+    this.mediaLightboxIndex = ((this.mediaLightboxIndex + delta) % n + n) % n;
+    this.setActiveMedia();
+  }
+
+  private setActiveMedia(): void {
+    if (this.mediaLightboxIndex === null) {
+      this.activeMedia = null;
+      this.activeVideoUrl = null;
+      return;
+    }
+
+    const media = this.galleryMediaItems[this.mediaLightboxIndex] || null;
+    this.activeMedia = media;
+    this.activeVideoUrl = media?.type === 'video' && media.videoUrl
+      ? this.getSafeVideoUrl(media.videoUrl)
+      : null;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    if (this.mediaLightboxIndex === null) return;
+    if (e.key === 'ArrowLeft') this.mediaLightboxStep(1);
+    if (e.key === 'ArrowRight') this.mediaLightboxStep(-1);
+    if (e.key === 'Escape') this.closeMediaLightbox();
   }
 
   // ============================================================
@@ -415,6 +612,15 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       .filter((s: string) => s);
   }
 
+  private getInstrumentNames(): string {
+    if (!this.teacher?.instruments?.length) return '';
+    const primary = this.teacher.instruments.find(i => i.isPrimary);
+    const ordered = primary
+      ? [primary, ...this.teacher.instruments.filter(i => i.id !== primary.id)]
+      : this.teacher.instruments;
+    return ordered.map(i => i.instrumentName).filter(Boolean).join(', ');
+  }
+
   // ============================================================
   // Helpers
   // ============================================================
@@ -422,6 +628,17 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   getCityName(cityId?: number | null): string {
     if (!cityId) return '';
     return this.cities.find(c => c.id === cityId)?.name || '';
+  }
+
+  getLocationLine(): string {
+    if (!this.teacher) return '';
+    const city = this.getCityName(this.teacher.cityId) || this.teacher.cityName || '';
+    return [city, this.teacher.location].filter(Boolean).join(' · ');
+  }
+
+  get heroLocationLine(): string {
+    if (!this.teacher) return '';
+    return this.getCityName(this.teacher.cityId) || this.teacher.cityName || '';
   }
 
   getLanguagesDisplay(languages?: TeachingLanguage): string {
@@ -433,7 +650,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (languages & TeachingLanguage.French)  list.push('צרפתית');
     if (languages & TeachingLanguage.Spanish) list.push('ספרדית');
     if (languages & TeachingLanguage.Arabic)  list.push('ערבית');
-    return list.join('، ');
+    return list.join(', ');
   }
 
   getTargetAudienceList(audience?: TargetAudience): string[] {
@@ -456,6 +673,26 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     } catch {
       return url;
     }
+  }
+
+  getWhatsAppUrl(phoneNumber: string): string {
+    const normalizedNumber = this.normalizeWhatsAppNumber(phoneNumber);
+    const message = encodeURIComponent('הי, הגעתי דרך אתר אקורדישקייט');
+    return `https://wa.me/${normalizedNumber}?text=${message}`;
+  }
+
+  private normalizeWhatsAppNumber(phoneNumber: string): string {
+    let digits = phoneNumber.replace(/\D/g, '');
+
+    if (digits.startsWith('00')) {
+      digits = digits.slice(2);
+    }
+
+    if (digits.startsWith('0')) {
+      return `972${digits.slice(1)}`;
+    }
+
+    return digits;
   }
 
   getSocialPlatformName(platform: SocialPlatform): string {

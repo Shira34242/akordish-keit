@@ -59,16 +59,22 @@
 }
 
 .header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    margin-top: 0;
+    /* ללא max-width — wrapper פנימי מגביל את התוכן */
     margin-bottom: var(--space-md);
-    padding: 80px var(--space-xl) var(--space-md);
+    padding: 80px 0 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
     position: relative;
     z-index: 896;
+}
+
+/* wrapper פנימי — מגביל את שורת התמונה+פרטים+כפתורים ל-1200px */
+.header-top-row-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl) var(--space-md);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Image Section */
@@ -253,11 +259,12 @@
     color: rgba(0, 0, 0, 0.7);
 }
 
-/* Action Buttons - בתחתית, צמוד לשמאל פיזי (flex-end ב-RTL) */
+/* Action Buttons — בתוך header-info-section, בשורה עם תחתית התמונה */
 .header-actions {
     display: flex;
     gap: var(--space-sm);
-    align-self: flex-end;
+    align-self: flex-end; /* RTL flex-column → שמאל פיזי של עמודת הפרטים */
+    margin-top: var(--space-sm);
 }
 
 .action-btn {
@@ -813,8 +820,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-    position: sticky;
-    top: calc(8px + 80px);
+    /* ללא sticky — גולל ביחד עם שאר הדף */
 }
 
 .sidebar-card {
@@ -947,37 +953,31 @@
     line-height: 1.5;
 }
 
-.chord-dict-btn {
-    display: inline-block;
-    background: #000000;
-    color: #ffffff;
+
+.tool-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: #000000;
+    background: #F2F2F2;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: right;
+    padding: var(--space-md) var(--space-lg);
+    transition: background 0.15s;
+}
+
+.tool-card:hover {
+    background: #e8e8e8;
+}
+
+.tool-card-label {
     font-family: 'Open Sans', sans-serif;
     font-weight: 800;
     font-size: var(--font-xs);
-    padding: var(--space-xs) var(--space-md);
-    border-radius: 999px;
-    text-decoration: none;
-    transition: opacity 0.15s;
-}
-
-.chord-dict-btn:hover {
-    opacity: 0.8;
-}
-
-.tools-sidebar-card h3 {
     color: #000000;
-    margin-bottom: var(--space-sm);
-}
-
-.tools-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-}
-
-.tuner-btn {
-    background: #000000;
-    color: #ddff53;
 }
 
 @keyframes spin {
@@ -1002,6 +1002,11 @@
     .header-content {
         text-align: center;
         align-items: center;
+        padding-top: 60px;
+    }
+
+    .header-top-row-wrapper {
+        padding: 0 var(--space-lg) var(--space-md);
     }
 
     .header-top-row {
@@ -1176,9 +1181,15 @@
 
     /* header — תמונה מעל פרטים, הכל ממורכז */
     .header-content {
-        padding: calc(1vh + var(--space-sm)) var(--space-md) var(--space-sm);
+        padding: calc(1vh + var(--space-sm)) 0 0;
         text-align: center;
         align-items: center;
+    }
+
+    .header-top-row-wrapper {
+        padding: 0 var(--space-md) var(--space-sm);
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .header-top-row {
@@ -1488,5 +1499,245 @@
 
 .youtube-modal-fallback:hover {
     color: #fff;
+}
+
+/* ============================================
+   SONG RATING — דירוג כוכבים
+   ============================================ */
+
+.song-rating-section {
+    margin-top: 16px;
+    padding: 24px 24px 32px;
+    background: #F2F2F2;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-title {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: var(--font-base);
+    color: #000000;
+    margin: 0;
+    text-align: center;
+}
+
+/* ---- CodePen star widget — adapted colors ---- */
+.rating {
+    margin: 0;
+}
+
+.rating__stars {
+    display: flex;
+    padding-bottom: 0.75em;
+    position: relative;
+    direction: ltr; /* כוכבים — שמאל לימין תמיד */
+}
+
+.rating__star {
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+    width: 2em;
+    height: 2em;
+}
+
+.rating__star-ring,
+.rating__star-fill,
+.rating__star-line,
+.rating__star-stroke {
+    animation-duration: 1s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+
+.rating__star-ring,
+.rating__star-fill,
+.rating__star-line {
+    stroke: #ddff53;
+}
+
+.rating__star-fill {
+    fill: #ddff53;
+    transform: scale(0);
+    transition: fill 0.3s cubic-bezier(0.42, 0, 0.58, 1),
+                transform 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.rating__star-line {
+    stroke-dasharray: 12 13;
+    stroke-dashoffset: -13;
+}
+
+.rating__star-stroke {
+    stroke: rgba(0, 0, 0, 0.25);
+    transition: stroke 0.3s;
+}
+
+.rating__label {
+    cursor: pointer;
+    padding: 0.125em;
+}
+
+.rating__input:disabled ~ .rating__label {
+    cursor: not-allowed;
+}
+
+/* עיכובי אנימציה לכוכבים 2–4 */
+.rating__label--delay1 .rating__star-ring,
+.rating__label--delay1 .rating__star-fill,
+.rating__label--delay1 .rating__star-line,
+.rating__label--delay1 .rating__star-stroke { animation-delay: 0.05s; }
+
+.rating__label--delay2 .rating__star-ring,
+.rating__label--delay2 .rating__star-fill,
+.rating__label--delay2 .rating__star-line,
+.rating__label--delay2 .rating__star-stroke { animation-delay: 0.10s; }
+
+.rating__label--delay3 .rating__star-ring,
+.rating__label--delay3 .rating__star-fill,
+.rating__label--delay3 .rating__star-line,
+.rating__label--delay3 .rating__star-stroke { animation-delay: 0.15s; }
+
+.rating__label--delay4 .rating__star-ring,
+.rating__label--delay4 .rating__star-fill,
+.rating__label--delay4 .rating__star-line,
+.rating__label--delay4 .rating__star-stroke { animation-delay: 0.20s; }
+
+.rating__input {
+    position: absolute;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* --- תצוגת הטקסט (hover) --- */
+.rating__display {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: var(--font-base);
+    color: #000000;
+    min-height: 1.25em;
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+.rating__input:hover ~ [data-rating]:not([hidden]) { display: none; }
+
+.rating__input-1:hover ~ [data-rating="1"][hidden],
+.rating__input-2:hover ~ [data-rating="2"][hidden],
+.rating__input-3:hover ~ [data-rating="3"][hidden],
+.rating__input-4:hover ~ [data-rating="4"][hidden],
+.rating__input-5:hover ~ [data-rating="5"][hidden],
+.rating__input:checked:hover ~ [data-rating]:not([hidden]) { display: block; }
+
+/* --- hover: הדגשת כוכבים --- */
+.rating__input-1:hover ~ .rating__label:first-of-type .rating__star-stroke,
+.rating__input-2:hover ~ .rating__label:nth-of-type(-n+2) .rating__star-stroke,
+.rating__input-3:hover ~ .rating__label:nth-of-type(-n+3) .rating__star-stroke,
+.rating__input-4:hover ~ .rating__label:nth-of-type(-n+4) .rating__star-stroke,
+.rating__input-5:hover ~ .rating__label:nth-of-type(-n+5) .rating__star-stroke {
+    stroke: #ddff53;
+    transform: scale(1);
+}
+
+/* --- checked: אנימציות --- */
+.rating__input-1:checked ~ .rating__label:first-of-type .rating__star-ring,
+.rating__input-2:checked ~ .rating__label:nth-of-type(-n+2) .rating__star-ring,
+.rating__input-3:checked ~ .rating__label:nth-of-type(-n+3) .rating__star-ring,
+.rating__input-4:checked ~ .rating__label:nth-of-type(-n+4) .rating__star-ring,
+.rating__input-5:checked ~ .rating__label:nth-of-type(-n+5) .rating__star-ring {
+    animation-name: srStarRing;
+}
+
+.rating__input-1:checked ~ .rating__label:first-of-type .rating__star-stroke,
+.rating__input-2:checked ~ .rating__label:nth-of-type(-n+2) .rating__star-stroke,
+.rating__input-3:checked ~ .rating__label:nth-of-type(-n+3) .rating__star-stroke,
+.rating__input-4:checked ~ .rating__label:nth-of-type(-n+4) .rating__star-stroke,
+.rating__input-5:checked ~ .rating__label:nth-of-type(-n+5) .rating__star-stroke {
+    animation-name: srStarStroke;
+}
+
+.rating__input-1:checked ~ .rating__label:first-of-type .rating__star-line,
+.rating__input-2:checked ~ .rating__label:nth-of-type(-n+2) .rating__star-line,
+.rating__input-3:checked ~ .rating__label:nth-of-type(-n+3) .rating__star-line,
+.rating__input-4:checked ~ .rating__label:nth-of-type(-n+4) .rating__star-line,
+.rating__input-5:checked ~ .rating__label:nth-of-type(-n+5) .rating__star-line {
+    animation-name: srStarLine;
+}
+
+.rating__input-1:checked ~ .rating__label:first-of-type .rating__star-fill,
+.rating__input-2:checked ~ .rating__label:nth-of-type(-n+2) .rating__star-fill,
+.rating__input-3:checked ~ .rating__label:nth-of-type(-n+3) .rating__star-fill,
+.rating__input-4:checked ~ .rating__label:nth-of-type(-n+4) .rating__star-fill,
+.rating__input-5:checked ~ .rating__label:nth-of-type(-n+5) .rating__star-fill {
+    animation-name: srStarFill;
+}
+
+.rating__input-1:not(:checked):hover ~ .rating__label:first-of-type .rating__star-fill,
+.rating__input-2:not(:checked):hover ~ .rating__label:nth-of-type(2) .rating__star-fill,
+.rating__input-3:not(:checked):hover ~ .rating__label:nth-of-type(3) .rating__star-fill,
+.rating__input-4:not(:checked):hover ~ .rating__label:nth-of-type(4) .rating__star-fill,
+.rating__input-5:not(:checked):hover ~ .rating__label:nth-of-type(5) .rating__star-fill {
+    fill: hsla(73, 100%, 66%, 0); /* צהוב שקוף */
+}
+
+.rating__sr {
+    clip: rect(1px, 1px, 1px, 1px);
+    overflow: hidden;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+}
+
+
+.rating-login-hint {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: var(--font-sm);
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes srStarRing {
+    from, 20% { animation-timing-function: ease-in; opacity: 1; r: 8px; stroke-width: 16px; transform: scale(0); }
+    35% { animation-timing-function: ease-out; opacity: 0.5; r: 8px; stroke-width: 16px; transform: scale(1); }
+    50%, to { opacity: 0; r: 16px; stroke-width: 0; transform: scale(1); }
+}
+
+@keyframes srStarFill {
+    from, 40% { animation-timing-function: ease-out; transform: scale(0); }
+    60% { animation-timing-function: ease-in-out; transform: scale(1.2); }
+    80% { transform: scale(0.9); }
+    to { transform: scale(1); }
+}
+
+@keyframes srStarStroke {
+    from { transform: scale(1); }
+    20%, to { transform: scale(0); }
+}
+
+@keyframes srStarLine {
+    from, 40% { animation-timing-function: ease-out; stroke-dasharray: 1 23; stroke-dashoffset: 1; }
+    60%, to { stroke-dasharray: 12 13; stroke-dashoffset: -13; }
+}
+
+/* Responsive: כוכבים קטנים יותר בנייד */
+@media (max-width: 600px) {
+    .song-rating-section {
+        margin-top: 32px;
+        padding: 24px 16px;
+        border-radius: 16px;
+    }
+
+    .rating__star {
+        width: 1.6em;
+        height: 1.6em;
+    }
 }
 

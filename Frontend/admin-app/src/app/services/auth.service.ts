@@ -8,6 +8,7 @@ export interface User {
     email: string;
     profileImageUrl?: string;
     role: string | number;
+    roleName?: string;
     level: number;
     points: number;
     preferredInstrumentId?: number | null;
@@ -136,6 +137,34 @@ export class AuthService {
 
     get currentUserValue(): User | null {
         return this.currentUserSubject.value;
+    }
+
+    isAdminOrManager(user: User | null = this.currentUserSubject.value): boolean {
+        if (!user) return false;
+
+        const rawRole = user.role;
+        if (typeof rawRole === 'number') return rawRole >= 3;
+
+        const roleValues = [
+            rawRole,
+            user.roleName,
+            (user as unknown as { Role?: string | number }).Role,
+            (user as unknown as { roleName?: string }).roleName
+        ];
+
+        return roleValues.some(role => {
+            if (role === undefined || role === null) return false;
+            if (typeof role === 'number') return role >= 3;
+
+            const normalizedRole = String(role).trim().toLowerCase();
+            return normalizedRole === 'admin'
+                || normalizedRole === 'manager'
+                || normalizedRole === '4'
+                || normalizedRole === '3'
+                || normalizedRole.includes('admin')
+                || normalizedRole.includes('manager')
+                || normalizedRole.includes('מנהל');
+        });
     }
 
     updateCurrentUser(user: User) {

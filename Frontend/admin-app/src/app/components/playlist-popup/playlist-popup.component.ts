@@ -108,7 +108,7 @@ export class PlaylistPopupComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error adding song to playlist:', err);
-          this.error = err?.message || err?.error?.message || 'לא ניתן להוסיף את השיר לרשימה';
+          this.error = err?.error?.message || err?.message || 'לא ניתן להוסיף את השיר לרשימה';
           (event.target as HTMLInputElement).checked = false;
         }
       });
@@ -167,7 +167,7 @@ export class PlaylistPopupComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error creating playlist:', err);
-        this.error = err?.message || err?.error?.message || 'שגיאה ביצירת הרשימה';
+        this.error = err?.error?.message || err?.message || 'שגיאה ביצירת הרשימה';
       }
     });
   }

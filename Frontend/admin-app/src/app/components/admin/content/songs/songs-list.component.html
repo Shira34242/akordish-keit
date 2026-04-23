@@ -55,6 +55,7 @@
           <th>צפיות</th>
           <th>תאריך העלאה</th>
           <th>סטטוס</th>
+          <th>דירוג</th>
           <th>פעולות</th>
         </tr>
       </thead>
@@ -112,6 +113,15 @@
             <span class="status-badge" [ngClass]="song.isApproved ? 'status-approved' : 'status-pending'">
               {{ song.isApproved ? 'מאושר' : 'ממתין' }}
             </span>
+          </td>
+
+          <!-- Rating -->
+          <td class="rating-cell">
+            <div class="rating-stars" *ngIf="song.ratingCount && song.ratingCount > 0">
+              <span class="rating-avg">★ {{ song.averageRating }}</span>
+              <span class="rating-count">({{ song.ratingCount }})</span>
+            </div>
+            <span class="rating-empty" *ngIf="!song.ratingCount || song.ratingCount === 0">—</span>
           </td>
 
           <!-- Actions -->

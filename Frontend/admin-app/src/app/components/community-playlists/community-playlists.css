@@ -1,139 +1,130 @@
-/* Container */
 .community-playlists-container {
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
+  font-weight: 300;
   font-variation-settings: "wdth" 100;
-  background-color: #f3f4f6;
+  background: #ffffff;
   min-height: 100vh;
   direction: rtl;
-  padding: 30px 24px;
+  padding: var(--space-xl) var(--space-lg);
 }
 
-/* Header */
+/* ===== HEADER ===== */
 .page-header {
   max-width: 1200px;
-  margin: 0 auto 32px auto;
+  margin: 0 auto var(--space-xl) auto;
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 24px 28px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  gap: var(--space-md);
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: var(--space-xl);
 }
 
 .header-icon {
   background: #ddff53;
-  color: #000;
-  border-radius: 16px;
-  width: 64px;
-  height: 64px;
+  color: #000000;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(221, 255, 83, 0.3);
   flex-shrink: 0;
 }
 
 .header-text h1 {
-  font-family: 'Karantina', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-2xl);
+  font-weight: 800;
+  color: #000000;
   margin: 0 0 4px 0;
 }
 
 .header-text p {
-  font-size: 0.95rem;
-  color: #888;
+  font-size: var(--font-sm);
+  color: #404040;
   margin: 0;
+  font-weight: 300;
 }
 
-/* Search Container */
+/* ===== SEARCH ===== */
 .search-container {
   max-width: 1200px;
-  margin: 0 auto 24px auto;
+  margin: 0 auto var(--space-lg) auto;
 }
 
 .search-box {
-  position: relative;
   display: flex;
   align-items: center;
-  background: #4c4c4c;
-  border: 2px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
-  padding: 0 16px;
-  transition: all 0.3s;
+  background: #F2F2F2;
+  border-radius: 999px;
+  padding: 0 var(--space-md);
+  height: 48px;
 }
 
 .search-box:focus-within {
-  border-color: rgba(221, 255, 83, 0.5);
-  box-shadow: 0 0 0 3px rgba(221, 255, 83, 0.07);
+  outline: 2px solid #ddff53;
+  outline-offset: 0;
 }
 
 .search-icon {
-  color: #ddff53;
+  color: #404040;
   flex-shrink: 0;
-  margin-left: 12px;
+  margin-left: var(--space-sm);
 }
 
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 14px 8px;
-  font-size: 0.95rem;
+  padding: 0 var(--space-xs);
+  font-size: var(--font-base);
   font-family: 'Open Sans', sans-serif;
-  color: #fff;
+  font-weight: 300;
+  color: #000000;
   outline: none;
 }
 
 .search-input::placeholder {
-  color: #555;
+  color: #404040;
 }
 
 .clear-search {
-  background: rgba(255, 255, 255, 0.06);
+  background: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #888;
-  transition: all 0.2s;
+  color: #404040;
   flex-shrink: 0;
 }
 
-.clear-search:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  transform: scale(1.1);
-}
-
-/* Loading & Error */
+/* ===== LOADING & ERROR ===== */
 .loading-container,
 .error-container {
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
-  padding: 60px 20px;
-  color: #888;
+  padding: var(--space-xl) var(--space-xl);
+  color: #404040;
+  font-size: var(--font-sm);
 }
 
 .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.08);
-  border-top-color: #ddff53;
+  border: 3px solid #F2F2F2;
+  border-top-color: #000000;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  margin: 0 auto 20px auto;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto var(--space-md) auto;
   animation: spin 0.8s linear infinite;
 }
 
@@ -142,77 +133,69 @@
 }
 
 .error-container button {
-  margin-top: 16px;
-  padding: 12px 24px;
+  margin-top: var(--space-md);
+  padding: 0 var(--space-lg);
+  height: 40px;
   background: #ddff53;
-  color: #000;
+  color: #000000;
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 700;
   font-family: 'Open Sans', sans-serif;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.error-container button:hover {
-  background: #ccff66;
-  transform: translateY(-1px);
-}
-
-/* Playlists Grid */
+/* ===== PLAYLISTS GRID ===== */
 .playlists-grid {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  gap: var(--space-md);
 }
 
-/* Empty State */
+/* ===== EMPTY STATE ===== */
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 80px 20px;
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 20px;
+  padding: var(--space-xl) var(--space-xl);
+  background: #F2F2F2;
+  border-radius: 24px;
 }
 
 .empty-icon {
-  margin-bottom: 24px;
-  color: #ddff53;
+  margin-bottom: var(--space-lg);
+  color: #404040;
   opacity: 0.3;
 }
 
 .empty-state h2 {
-  font-family: 'Karantina', sans-serif;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 12px 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-2xl);
+  font-weight: 800;
+  color: #000000;
+  margin: 0 0 var(--space-sm) 0;
 }
 
 .empty-state p {
-  font-size: 1rem;
-  color: #888;
+  font-size: var(--font-sm);
+  color: #404040;
   margin: 0;
+  font-weight: 300;
 }
 
-/* Playlist Card */
+/* ===== PLAYLIST CARD ===== */
 .playlist-card {
-  background: #4c4c4c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: #F2F2F2;
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s ease;
   position: relative;
+  transition: background 0.15s;
 }
 
 .playlist-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(221, 255, 83, 0.4);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(221, 255, 83, 0.15);
+  background: #e8e8e8;
 }
 
 /* Playlist Image */
@@ -221,11 +204,11 @@
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background: #565656;
+  background: #404040;
 }
 
 .playlist-image.no-image {
-  background: linear-gradient(135deg, #3a3a3a 0%, #474747 100%);
+  background: #404040;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,37 +221,28 @@
   width: 100%;
   height: 100%;
   color: #ddff53;
-  opacity: 0.3;
+  opacity: 0.4;
 }
 
 .playlist-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.playlist-card:hover .playlist-image img {
-  transform: scale(1.05);
 }
 
 .play-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s;
 }
 
 .play-overlay svg {
   color: #ddff53;
-  filter: drop-shadow(0 0 10px rgba(221, 255, 83, 0.6));
 }
 
 .playlist-card:hover .play-overlay {
@@ -278,123 +252,110 @@
 /* Public Badge */
 .public-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.85);
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: #000000;
   color: #ddff53;
-  border: 1px solid rgba(221, 255, 83, 0.4);
-  padding: 5px 8px;
-  border-radius: 8px;
+  padding: 4px var(--space-sm);
+  border-radius: 999px;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-xs);
+  font-weight: 700;
 }
 
 /* Playlist Info */
 .playlist-info {
-  padding: 14px 16px 54px 16px;
+  padding: var(--space-md) var(--space-md) 56px var(--space-md);
 }
 
 .playlist-info h3 {
-  font-family: 'Karantina', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 4px 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 800;
+  color: #000000;
+  margin: 0 0 var(--space-xs) 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .playlist-description {
-  font-size: 0.8rem;
-  color: #888;
-  margin: 0 0 8px 0;
+  font-size: var(--font-sm);
+  color: #404040;
+  margin: 0 0 var(--space-xs) 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 300;
 }
 
 .playlist-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: #555;
+  font-size: var(--font-sm);
+  color: #404040;
+  font-weight: 300;
 }
 
 .song-count {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
-  color: #ddff53;
+  font-weight: 700;
+  color: #000000;
 }
 
 /* Adopt Button */
 .btn-adopt {
   position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  margin: 0 12px;
+  bottom: var(--space-sm);
+  left: var(--space-sm);
+  right: var(--space-sm);
   background: #ddff53;
-  color: #000;
+  color: #000000;
   border: none;
-  border-radius: 10px;
-  padding: 9px 16px;
+  border-radius: 999px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.88rem;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
   font-weight: 700;
   font-family: 'Open Sans', sans-serif;
   cursor: pointer;
   opacity: 0;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(221, 255, 83, 0.3);
+  transition: opacity 0.2s;
 }
 
 .playlist-card:hover .btn-adopt {
   opacity: 1;
 }
 
-.btn-adopt:hover {
-  background: #ccff66;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(221, 255, 83, 0.4);
-}
-
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .community-playlists-container {
-    padding: 20px 16px;
+    padding: var(--space-lg) var(--space-sm);
   }
 
   .playlists-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
+    gap: var(--space-sm);
   }
 
   .header-content {
-    padding: 18px 20px;
+    padding: var(--space-lg);
   }
 
   .header-icon {
-    width: 52px;
-    height: 52px;
-  }
-
-  .header-text h1 {
-    font-size: 1.6rem;
+    width: 48px;
+    height: 48px;
   }
 
   .btn-adopt {
-    font-size: 0.8rem;
-    padding: 8px 12px;
     opacity: 1;
   }
 }

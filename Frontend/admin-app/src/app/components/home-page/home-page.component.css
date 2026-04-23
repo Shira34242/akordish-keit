@@ -17,6 +17,17 @@
   pointer-events: none;
 }
 
+.hero-ticker-layer {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: calc(100vh - 16px);
+  z-index: 1000;
+  pointer-events: none;
+  overflow: visible;
+}
+
 /* ============================================
    HERO BACKGROUND — fixed, מתכווץ בגלילה
 ============================================ */
@@ -244,6 +255,56 @@
   font-family: 'Open Sans', sans-serif;
   color: rgba(0, 0, 0, 0.45);
   font-size: var(--font-sm);
+}
+
+/* תגית "חיפוש עמוק" ליד כותרת הקטגוריה */
+.search-lyrics-badge {
+  display: inline-block;
+  background: #ddff53;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Open Sans', sans-serif;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-right: 6px;
+  vertical-align: middle;
+  text-transform: none;
+}
+
+/* אינדיקטור טעינת שלב 2 */
+.search-deep-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-md) var(--space-base);
+  direction: rtl;
+}
+
+.search-deep-label {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  color: rgba(0, 0, 0, 0.35);
+  font-weight: 300;
+}
+
+.search-deep-dot {
+  width: 5px;
+  height: 5px;
+  background: #ddff53;
+  border-radius: 50%;
+  animation: deepDotPulse 1.2s ease-in-out infinite;
+}
+
+.search-deep-dot:nth-child(1) { animation-delay: 0s; }
+.search-deep-dot:nth-child(2) { animation-delay: 0.2s; }
+.search-deep-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes deepDotPulse {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+  40%            { transform: scale(1.2); opacity: 1; }
 }
 
 /* ============================================
@@ -505,6 +566,8 @@
   background: #000;
   color: #ddff53;
   border-radius: 999px;
+  border: none;
+  cursor: pointer;
   padding: 0 var(--space-xl);
   text-decoration: none;
   transition: opacity 0.2s;
@@ -520,122 +583,31 @@
 }
 
 /* ============================================
-   EVENTS LIST (הופעות קרובות)
+   EVENTS STRIP (הופעות קרובות) — פס אופקי נגלל
+   עיצוב הכרטיסים נמצא ב-EventCardComponent
 ============================================ */
 .events-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-inline: calc(-1 * var(--space-md));
+  padding-inline: var(--space-md);
 }
 
-.event-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-base);
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: var(--space-base) var(--space-lg);
-  direction: rtl;
+.events-list::-webkit-scrollbar {
+  display: none;
 }
 
-.event-image-wrap {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  overflow: hidden;
+.events-list app-event-card {
   flex-shrink: 0;
-  background: #F2F2F2;
+  width: 155px;
+  scroll-snap-align: start;
 }
 
-.event-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.event-info {
-  flex: 1;
-  text-align: right;
-  min-width: 0;
-}
-
-.event-status-badge {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 800;
-  font-size: var(--font-xs);
-  background: #ddff53;
-  color: #000;
-  padding: var(--space-xs) var(--space-md);
-  border-radius: 999px;
-  display: inline-block;
-  margin-bottom: var(--space-xs);
-}
-
-.event-name {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-base);
-  color: #000;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.event-artist {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.5);
-  margin: 0;
-}
-
-.event-location {
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.4);
-  margin: 0;
-}
-
-.event-date-col {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.event-date {
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-lg);
-  color: #000;
-}
-
-.event-ticket-btn {
-  display: inline-flex;
-  align-items: center;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 800;
-  font-size: var(--font-sm);
-  height: 34px;
-  background: #000;
-  color: #ddff53;
-  border-radius: 999px;
-  padding: 0 var(--space-lg);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-}
-
-.event-ticket-btn:hover {
-  opacity: 0.8;
-}
 
 /* ============================================
    RESPONSIVE
@@ -702,15 +674,6 @@
     grid-template-columns: 1fr;
   }
 
-  .event-card {
-    flex-wrap: wrap;
-  }
-
-  .event-date-col {
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-  }
 }
 
 /* Small mobile ≤480px */

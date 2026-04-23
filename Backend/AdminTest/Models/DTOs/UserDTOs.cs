@@ -26,10 +26,10 @@ public class UpdateMyProfileDto
 /// </summary>
 public class UserWithProfileDto
 {
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
-    /// <summary>"artist" | "serviceProvider"</summary>
+    /// <summary>"artist" | "serviceProvider" | "user"</summary>
     public string ProfileType { get; set; } = string.Empty;
     public int ProfileId { get; set; }
     public string ProfileUrl { get; set; } = string.Empty;

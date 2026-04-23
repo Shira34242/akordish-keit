@@ -21,13 +21,36 @@ public class SearchController : ControllerBase
     /// חיפוש גלובלי — מחזיר תוצאות מכל סוגי התוכן במקביל
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<SearchResultsDto>> Search([FromQuery] string q = "")
+    public async Task<ActionResult<SearchResultsDto>> Search([FromQuery] string q = "", [FromQuery] bool deep = false)
     {
         if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
             return Ok(new SearchResultsDto());
 
         var term = q.Trim();
 
+        // שלב 2 — חיפוש עמוק לפי מילות השיר (לא כולל שירים שכבר נמצאו בשלב 1 לפי כותרת)
+        if (deep)
+        {
+            var lyricsSongs = await _context.Songs
+                .Where(s => !s.IsDeleted && s.IsApproved
+                    && !s.Title.Contains(term)
+                    && s.LyricsWithChords != null && s.LyricsWithChords.Contains(term))
+                .OrderByDescending(s => s.ViewCount)
+                .Take(5)
+                .Select(s => new SearchItemDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Subtitle = s.SongArtists.Select(sa => sa.Artist.Name).FirstOrDefault(),
+                    ImageUrl = s.ImageUrl,
+                    Type = "song"
+                })
+                .ToListAsync();
+
+            return Ok(new SearchResultsDto { Songs = lyricsSongs });
+        }
+
+        // שלב 1 — חיפוש מהיר לפי שמות
         // EF Core DbContext אינו thread-safe — הקוורי רצים בסדר רציף
         var songs = await _context.Songs
             .Where(s => !s.IsDeleted && s.IsApproved && s.Title.Contains(term))

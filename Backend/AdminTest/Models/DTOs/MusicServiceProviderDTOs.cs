@@ -51,6 +51,15 @@ public class TeacherDto : MusicServiceProviderDto
     public string? LessonTypes { get; set; }
     public string? Specializations { get; set; }
     public List<TeacherInstrumentDto> Instruments { get; set; } = new();
+    public List<TeacherTestimonialDto> Testimonials { get; set; } = new();
+}
+
+public class TeacherTestimonialDto
+{
+    public int Id { get; set; }
+    public string? StudentName { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public int Order { get; set; }
 }
 
 public class ServiceProviderCategoryDto
@@ -166,6 +175,21 @@ public class CreateTeacherDto : CreateMusicServiceProviderDto
     [Required]
     [MinLength(1, ErrorMessage = "חובה לבחור לפחות כלי אחד")]
     public List<CreateTeacherInstrumentDto> Instruments { get; set; } = new();
+
+    public List<CreateTeacherTestimonialDto>? Testimonials { get; set; }
+}
+
+public class CreateTeacherTestimonialDto
+{
+    [StringLength(120)]
+    public string? StudentName { get; set; }
+
+    [Required]
+    [StringLength(1000)]
+    public string Text { get; set; } = string.Empty;
+
+    [Required]
+    public int Order { get; set; }
 }
 
 public class CreateServiceProviderCategoryDto
@@ -283,6 +307,8 @@ public class UpdateTeacherDto : UpdateMusicServiceProviderDto
     [Required]
     [MinLength(1, ErrorMessage = "חובה לבחור לפחות כלי אחד")]
     public List<CreateTeacherInstrumentDto> Instruments { get; set; } = new();
+
+    public List<CreateTeacherTestimonialDto>? Testimonials { get; set; }
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -662,6 +662,53 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // POST: api/Songs/{id}/rate
+    // שמירת דירוג שיר (מחייב התחברות)
+    // ============================================
+    [HttpPost("{id}/rate")]
+    [Authorize]
+    public async Task<ActionResult<SongRatingResponseDto>> RateSong(int id, [FromBody] RateSongDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { message = "דירוג לא תקין" });
+
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(new { message = "נדרשת התחברות לדירוג" });
+
+            var result = await _songService.RateSongAsync(id, userId.Value, dto.Rating);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rating song: {ex.Message}");
+            return StatusCode(500, new { message = "שגיאה בשמירת הדירוג" });
+        }
+    }
+
+    // ============================================
+    // GET: api/Songs/{id}/rating
+    // קבלת ממוצע דירוגים + דירוג המשתמש הנוכחי
+    // ============================================
+    [HttpGet("{id}/rating")]
+    public async Task<ActionResult<SongRatingResponseDto>> GetSongRating(int id)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _songService.GetSongRatingAsync(id, userId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting song rating: {ex.Message}");
+            return Ok(new SongRatingResponseDto { AverageRating = 0, RatingCount = 0, UserRating = null });
+        }
+    }
+
+    // ============================================
     // Helper: Get current user ID from token
     // ============================================
     private int? GetCurrentUserId()

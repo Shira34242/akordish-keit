@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TeacherService } from '../../../services/teacher.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { CitiesService, City } from '../../../services/cities.service';
-import { CreateTeacherDto, CreateTeacherInstrumentDto } from '../../../models/teacher.model';
+import { CreateTeacherDto, CreateTeacherInstrumentDto, CreateTeacherTestimonialDto } from '../../../models/teacher.model';
 import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../../models/music-service-provider.model';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
@@ -55,6 +55,8 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   selectedInstrumentIds: number[] = [];
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
+  testimonials: CreateTeacherTestimonialDto[] = [];
+  newTestimonial = { studentName: '', text: '' };
   socialLinks: SocialLinkDto[] = [];
 
   // Available data
@@ -285,6 +287,25 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  addTestimonial(): void {
+    if (!this.newTestimonial.text.trim()) {
+      alert('נא להזין טקסט המלצה');
+      return;
+    }
+
+    this.testimonials.push({
+      studentName: this.newTestimonial.studentName.trim() || undefined,
+      text: this.newTestimonial.text.trim(),
+      order: this.testimonials.length
+    });
+    this.newTestimonial = { studentName: '', text: '' };
+  }
+
+  removeTestimonial(index: number): void {
+    this.testimonials.splice(index, 1);
+    this.testimonials.forEach((item, idx) => item.order = idx);
+  }
+
   addSocialLink(): void {
     this.socialLinks.push({
       platform: SocialPlatform.Instagram,
@@ -379,7 +400,8 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
         instrumentId: id,
         isPrimary: false
       } as CreateTeacherInstrumentDto)),
-      galleryImages: this.galleryImages
+      galleryImages: this.galleryImages,
+      testimonials: this.testimonials
     };
 
     this.teacherService.createTeacher(dto).subscribe({

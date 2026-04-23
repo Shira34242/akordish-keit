@@ -684,7 +684,7 @@
 
                 <!-- Uploader Profile -->
                 <div class="form-group uploader-group" *ngIf="isProfessionalNonAdmin || isAdminUser">
-                    <label class="form-label">האם לתייג את התוכן על שמך</label>
+                    <label class="form-label">{{ isAdminUser ? 'שיוך התוכן לפרופיל ציבורי' : 'האם לתייג את התוכן על שמך' }}</label>
 
                     <!-- Professional (non-admin): checkbox -->
                     <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
@@ -697,7 +697,17 @@
                             <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
                             <div class="profile-tag-info">
                                 <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType, selectedUploaderProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedUploaderProfile) }}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="tagAsMyself && !selectedUploaderProfile && myUploaderProfiles.length > 1" class="profile-dropdown profile-dropdown-static">
+                            <div *ngFor="let p of myUploaderProfiles" class="profile-dropdown-item" (click)="selectUploaderProfile(p)">
+                                <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
+                                <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
+                                <div class="profile-dropdown-info">
+                                    <span class="profile-dropdown-name">{{ p.displayName }}</span>
+                                    <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType, p.isTeacher) }}{{ getProfileConnectionLabel(p) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -709,13 +719,26 @@
                             <span *ngIf="!selectedUploaderProfile.imageUrl" class="profile-tag-avatar profile-tag-initial">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
                             <div class="profile-tag-info">
                                 <span class="profile-tag-name">{{ selectedUploaderProfile.displayName }}</span>
-                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType) }}</span>
+                                <span class="profile-tag-type">{{ getProfileTypeLabel(selectedUploaderProfile.profileType, selectedUploaderProfile.isTeacher) }}{{ getProfileConnectionLabel(selectedUploaderProfile) }}</span>
                             </div>
                             <button type="button" class="btn-clear-profile" (click)="clearUploaderProfile()">
                                 <span class="material-icons">close</span>
                             </button>
                         </div>
                         <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
+                            <div class="admin-profile-tools">
+                                <select class="form-input admin-profile-select" [(ngModel)]="profileTypeFilter" [ngModelOptions]="{standalone: true}" (change)="onProfileFilterChange()">
+                                    <option value="all">כולם</option>
+                                    <option value="teacher">מורים</option>
+                                    <option value="serviceProvider">נותני שירות</option>
+                                    <option value="artist">אמנים</option>
+                                    <option value="user">חברים רגילים</option>
+                                </select>
+                                <select class="form-input admin-profile-select" [(ngModel)]="profileSort" [ngModelOptions]="{standalone: true}">
+                                    <option value="name">מיון לפי שם</option>
+                                    <option value="type">מיון לפי סוג</option>
+                                </select>
+                            </div>
                             <input
                                 type="text"
                                 class="form-input"
@@ -725,17 +748,17 @@
                                 (focus)="onProfileSearchInput()"
                                 placeholder="חפש לפי שם אמן / מורה / בעל מקצוע..."
                                 autocomplete="off">
-                            <div *ngIf="showProfileDropdown && profileSearchResults.length > 0" class="profile-dropdown">
-                                <div *ngFor="let p of profileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(p)">
+                            <div *ngIf="showProfileDropdown && filteredProfileSearchResults.length > 0" class="profile-dropdown">
+                                <div *ngFor="let p of filteredProfileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(p)">
                                     <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" class="profile-dropdown-avatar">
                                     <span *ngIf="!p.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ p.displayName.charAt(0) }}</span>
                                     <div class="profile-dropdown-info">
                                         <span class="profile-dropdown-name">{{ p.displayName }}</span>
-                                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType) }}</span>
+                                        <span class="profile-dropdown-type">{{ getProfileTypeLabel(p.profileType, p.isTeacher) }}{{ getProfileConnectionLabel(p) }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery" class="profile-dropdown">
+                            <div *ngIf="showProfileDropdown && !profileSearchLoading && filteredProfileSearchResults.length === 0" class="profile-dropdown">
                                 <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
                             </div>
                         </div>

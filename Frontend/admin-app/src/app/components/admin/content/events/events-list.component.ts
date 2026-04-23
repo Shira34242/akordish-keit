@@ -106,11 +106,8 @@ export class EventsListComponent implements OnInit {
   }
 
   getEventStatusClass(event: Event): string {
-    if (event.eventStatus === 'היום') {
-      return 'status-today';
-    } else if (event.eventStatus === 'אירוע שחלף') {
-      return 'status-past';
-    }
-    return 'status-upcoming';
+    if (event.isPast) return 'badge-danger';
+    if (event.eventStatus === 'היום') return 'badge-success';
+    return 'badge-warning';
   }
 }
