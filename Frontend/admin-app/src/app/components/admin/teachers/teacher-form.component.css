@@ -428,6 +428,14 @@
   margin-top: var(--space-base);
 }
 
+.gallery-video-field {
+  margin-top: var(--space-base);
+  margin-bottom: var(--space-base);
+  padding: var(--space-base);
+  background: #F2F2F2;
+  border-radius: 16px;
+}
+
 .gallery-item {
   display: flex;
   align-items: center;

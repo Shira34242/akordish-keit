@@ -78,7 +78,7 @@
   gap: var(--space-lg);
   width: 100%;
   margin: 0;
-  padding: var(--space-2xl) var(--space-lg) var(--space-xl);
+  padding: var(--space-2xl) var(--space-2xl) var(--space-xl) var(--space-lg);
 }
 
 .hero-profile-side {
@@ -216,6 +216,14 @@
   font-size: 18px;
 }
 
+.contact-whatsapp-icon {
+  width: 18px;
+  height: 18px;
+  color: #404040;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
 .hero-text-block {
   display: flex;
   flex: 1 1 auto;
@@ -346,6 +354,10 @@
   text-align: right;
 }
 
+.details-meta-line {
+  color: #404040;
+}
+
 .full-desc-text {
   margin: 0;
   color: #404040;
@@ -369,20 +381,38 @@
   line-height: var(--lh-heading);
 }
 
-.songs-row {
+.section-count {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: var(--font-sm);
+  font-weight: 300;
+}
+
+.teacher-content-section {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+.teacher-content-shell {
+  gap: var(--space-xl);
+}
+
+.content-subtitle {
+  margin: 0;
+  color: #000000;
+  font-size: var(--font-base);
+  font-weight: 800;
+  line-height: var(--lh-heading);
+}
+
+.teacher-songs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-md);
-  overflow-x: auto;
-  padding-bottom: var(--space-xs);
-  scrollbar-width: none;
 }
 
-.songs-row::-webkit-scrollbar {
-  display: none;
-}
-
-:host ::ng-deep .songs-row app-song-card {
-  min-width: 240px;
+:host ::ng-deep .teacher-songs-grid app-song-card {
+  min-width: 0;
 }
 
 .gallery-grid {
@@ -442,17 +472,34 @@
   margin: 0;
 }
 
+.testimonials-section {
+  gap: var(--space-md);
+}
+
+.testimonials-header {
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-base);
+}
+
+.testimonial-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  direction: ltr;
+}
+
 .testimonials-carousel {
   position: relative;
+  overflow: hidden;
 }
 
 .testimonials-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc((100% - var(--space-xl) - var(--space-xl)) / 3);
-  gap: var(--space-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-base);
   overflow-x: auto;
-  padding-bottom: var(--space-xs);
+  padding: 0 var(--space-sm) var(--space-sm) 0;
   scrollbar-width: none;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
@@ -465,31 +512,60 @@
 
 .testimonial-card {
   position: relative;
+  box-sizing: border-box;
   background: transparent;
   border-radius: 0;
-  padding: 0 var(--space-lg) 0 0;
-  min-height: auto;
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: 128px;
+  max-width: min(460px, 76vw);
+  padding: 0;
   text-align: right;
   scroll-snap-align: start;
   direction: rtl;
 }
 
-.quote-mark {
+.testimonial-bubble {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: max-content;
+  min-width: 128px;
+  max-width: min(460px, 76vw);
+  padding: var(--space-base) var(--space-base) var(--space-md);
+  background: #F2F2F2;
+  border-radius: 18px 18px 4px 18px;
+}
+
+.testimonial-bubble::after {
+  content: "";
   position: absolute;
-  top: 0;
-  right: 0;
-  color: #ddff53;
-  font-size: var(--font-2xl);
-  font-weight: 800;
-  line-height: 1;
+  right: -6px;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  background: #F2F2F2;
+  border-bottom-left-radius: 14px;
 }
 
 .testimonial-card p {
-  margin: 0 0 var(--space-sm);
+  margin: 0;
   color: #000000;
   font-size: var(--font-sm);
   line-height: var(--lh-body);
   font-weight: 300;
+  max-width: 42ch;
+  overflow-wrap: anywhere;
+}
+
+.testimonial-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  direction: ltr;
 }
 
 .testimonial-card strong {
@@ -498,40 +574,62 @@
   font-weight: 800;
 }
 
+.read-checks {
+  color: #34b7f1;
+  font-size: 16px;
+  line-height: 1;
+}
+
 .testimonial-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
-  width: 34px;
-  height: 34px;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
   border: none;
   border-radius: 50%;
-  background: #F2F2F2;
-  color: #000000;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.45);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transform: translateY(-50%);
 }
 
 .testimonial-nav:hover {
-  background: #ddff53;
+  background: #F2F2F2;
+  color: #000000;
 }
 
 .testimonial-nav .material-icons {
-  font-size: 24px;
+  font-size: 20px;
 }
 
-.testimonial-nav-next {
-  right: calc(-1 * var(--space-xl));
+.testimonial-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 18px;
+  margin: 0 auto;
+  direction: ltr;
 }
 
-.testimonial-nav-prev {
-  left: calc(-1 * var(--space-xl));
+.testimonial-dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
 }
 
-.articles-grid {
+.testimonial-dot.active {
+  width: 18px;
+  border-radius: 999px;
+  background: #000000;
+}
+
+.teacher-articles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-md);
@@ -667,7 +765,7 @@
 
   .hero-content {
     gap: var(--space-base);
-    padding: var(--space-lg);
+    padding: var(--space-lg) var(--space-xl) var(--space-lg) var(--space-lg);
   }
 
   .hero-profile-side {
@@ -694,6 +792,10 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 
+  .teacher-songs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
   .lightbox-nav {
     width: 36px;
     height: 36px;
@@ -709,17 +811,11 @@
     left: auto;
   }
 
-  .testimonials-grid {
-    grid-auto-columns: calc((100% - var(--space-xl)) / 2);
+  .testimonial-card,
+  .testimonial-bubble {
+    max-width: min(400px, 78vw);
   }
 
-  .testimonial-nav-next {
-    right: 0;
-  }
-
-  .testimonial-nav-prev {
-    left: 0;
-  }
 }
 
 @media (max-width: 520px) {
@@ -796,9 +892,19 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .teacher-songs-grid,
+  .teacher-articles-grid {
+    grid-template-columns: 1fr;
+  }
+
   .testimonials-grid {
-    grid-auto-columns: 100%;
-    gap: var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .testimonial-card,
+  .testimonial-bubble {
+    min-width: 128px;
+    max-width: 82vw;
   }
 
   .lightbox-overlay {

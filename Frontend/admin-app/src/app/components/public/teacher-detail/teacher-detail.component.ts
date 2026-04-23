@@ -52,6 +52,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   contactOpen = false;
   canScrollTestimonialsPrev = false;
   canScrollTestimonialsNext = false;
+  activeTestimonialIndex = 0;
 
   // ========== Hero ==========
   private fullHeroHeight = 0;
@@ -193,7 +194,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   scrollTestimonials(direction: 'prev' | 'next'): void {
     const el = this.testimonialsScrollerRef?.nativeElement;
     if (!el) return;
-    const amount = el.clientWidth;
+    const amount = Math.round(el.clientWidth * 0.8);
     el.scrollBy({
       left: direction === 'next' ? -amount : amount,
       behavior: 'smooth'
@@ -206,6 +207,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (!el) {
       this.canScrollTestimonialsPrev = false;
       this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
       return;
     }
 
@@ -213,12 +215,31 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (maxScroll <= 2) {
       this.canScrollTestimonialsPrev = false;
       this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
       return;
     }
 
     const current = Math.abs(el.scrollLeft);
     this.canScrollTestimonialsNext = current < maxScroll - 2;
     this.canScrollTestimonialsPrev = current > 2;
+    this.activeTestimonialIndex = Math.max(
+      0,
+      Math.min(
+        this.teacherTestimonials.length - 1,
+        Math.round((current / maxScroll) * (this.teacherTestimonials.length - 1))
+      )
+    );
+  }
+
+  scrollToTestimonial(index: number): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) return;
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('.testimonial-card'));
+    const card = cards[index];
+    if (!card) return;
+    this.activeTestimonialIndex = index;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    window.setTimeout(() => this.updateTestimonialsNav(), 260);
   }
 
   private shrinkHero(): void {
@@ -436,6 +457,10 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       }));
   }
 
+  get testimonialDots(): number[] {
+    return this.teacherTestimonials.map((_, index) => index);
+  }
+
   get heroRole(): string {
     if (!this.teacher) return '';
     const instruments = this.getInstrumentNames();
@@ -477,6 +502,12 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.teacher.languages) parts.push(this.getLanguagesDisplay(this.teacher.languages));
     if (this.teacher.lessonTypes) parts.push(this.teacher.lessonTypes);
     if (this.teacher.availability) parts.push(this.teacher.availability);
+    return parts.join(', ');
+  }
+
+  get scheduleAndPriceLine(): string {
+    if (!this.teacher) return '';
+    const parts: string[] = [];
     if (this.teacher.workingHours) parts.push(this.teacher.workingHours);
     if (this.teacher.priceList) parts.push(this.teacher.priceList);
     return parts.join(', ');
@@ -601,8 +632,13 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   getLocationLine(): string {
     if (!this.teacher) return '';
-    const city = this.getCityName(this.teacher.cityId);
+    const city = this.getCityName(this.teacher.cityId) || this.teacher.cityName || '';
     return [city, this.teacher.location].filter(Boolean).join(' · ');
+  }
+
+  get heroLocationLine(): string {
+    if (!this.teacher) return '';
+    return this.getCityName(this.teacher.cityId) || this.teacher.cityName || '';
   }
 
   getLanguagesDisplay(languages?: TeachingLanguage): string {
@@ -637,6 +673,26 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     } catch {
       return url;
     }
+  }
+
+  getWhatsAppUrl(phoneNumber: string): string {
+    const normalizedNumber = this.normalizeWhatsAppNumber(phoneNumber);
+    const message = encodeURIComponent('הי, הגעתי דרך אתר אקורדישקייט');
+    return `https://wa.me/${normalizedNumber}?text=${message}`;
+  }
+
+  private normalizeWhatsAppNumber(phoneNumber: string): string {
+    let digits = phoneNumber.replace(/\D/g, '');
+
+    if (digits.startsWith('00')) {
+      digits = digits.slice(2);
+    }
+
+    if (digits.startsWith('0')) {
+      return `972${digits.slice(1)}`;
+    }
+
+    return digits;
   }
 
   getSocialPlatformName(platform: SocialPlatform): string {

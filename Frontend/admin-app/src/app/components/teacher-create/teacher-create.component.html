@@ -297,16 +297,54 @@
                 <label class="form-label form-label--sr-only" for="priceList">מחירון</label>
                 <textarea id="priceList" [(ngModel)]="priceList" name="priceList" class="form-textarea" rows="4" placeholder="מחירון: שיעור פרטי, אונליין, חבילות או מידע רלוונטי נוסף"></textarea>
               </div>
+
+              <div class="section-kicker section-kicker--spaced">המלצות תלמידים</div>
+              <p class="section-description section-description--compact">אפשר להוסיף כל המלצה בנפרד, עם שם התלמיד או הממליץ, כדי שהן יוצגו בדף בצורה מסודרת.</p>
+
+              <div class="testimonial-editor">
+                <div class="testimonial-draft">
+                  <input
+                    type="text"
+                    [(ngModel)]="newTestimonial.studentName"
+                    [ngModelOptions]="{standalone: true}"
+                    class="form-input"
+                    placeholder="שם תלמיד או ממליץ"
+                  />
+
+                  <textarea
+                    [(ngModel)]="newTestimonial.text"
+                    [ngModelOptions]="{standalone: true}"
+                    class="form-textarea"
+                    rows="3"
+                    placeholder="טקסט ההמלצה"
+                  ></textarea>
+
+                  <button type="button" class="btn-secondary btn-action" (click)="addTestimonial()">
+                    <span class="material-icons">format_quote</span>
+                    <span>הוסף המלצה</span>
+                  </button>
+                </div>
+
+                <div class="testimonial-list" *ngIf="testimonials.length > 0">
+                  <article *ngFor="let item of testimonials; let i = index" class="testimonial-edit-card">
+                    <button type="button" class="media-card-remove" (click)="removeTestimonial(i)" aria-label="מחיקת המלצה">
+                      <span class="material-icons">close</span>
+                    </button>
+                    <p>{{ item.text }}</p>
+                    <strong>{{ item.studentName || 'תלמיד' }}</strong>
+                  </article>
+                </div>
+              </div>
             </section>
 
             <section class="form-section" *ngIf="currentStep === 3">
               <div class="section-head">
                 <h2>מדיה</h2>
-                <p class="section-description">גלריה מסודרת קודם, ואז וידאו, כדי שהדף ירגיש עשיר אבל לא עמוס.</p>
+                <p class="section-description">תמונות וסרטון היכרות שמופיעים יחד בגלריה של דף המורה.</p>
               </div>
 
               <div class="section-kicker">גלריה</div>
-              <p class="section-description section-description--compact">תמונות נוספות שמרחיבות את התחושה מהשיעורים, הסטודיו או סביבת העבודה.</p>
+              <p class="section-description section-description--compact">אפשר להוסיף תמונות וגם קישור לסרטון. בדף המורה כולם יוצגו באותה גלריה.</p>
 
               <div class="media-grid">
                 <div class="media-card media-card--draft">
@@ -347,24 +385,15 @@
 
                   <div class="media-card-caption">{{ img.caption || 'ללא כיתוב' }}</div>
                 </div>
-              </div>
-
-              <div class="section-kicker section-kicker--spaced">וידאו</div>
-              <p class="section-description section-description--compact">קישור אחד ברור לסרטון היכרות, נגינה או דוגמת שיעור.</p>
-
-              <div class="media-grid media-grid--single">
-                <div class="media-add-card media-add-card--video-shell">
-                  <span class="material-icons">smart_display</span>
-                  <strong>הוסף סרטון</strong>
-                  <span>כרטיס וידאו באותה שפה של הגלריה</span>
-                </div>
 
                 <div class="media-card media-card--video media-card--video-entry">
                   <div class="media-card-preview media-card-preview--video">
                     <span class="material-icons">smart_display</span>
                   </div>
 
-                  <input type="url" id="videoUrl" [(ngModel)]="videoUrl" name="videoUrl" class="form-input" placeholder="הדבק כאן קישור לסרטון" />
+                  <label class="form-label form-label--inline" for="videoUrl">סרטון לגלריה</label>
+                  <input type="url" id="videoUrl" [(ngModel)]="videoUrl" name="videoUrl" class="form-input" placeholder="הדבק כאן קישור לסרטון שיופיע בגלריה" />
+                  <div class="media-card-caption">יוצג בגלריה לצד התמונות</div>
                 </div>
               </div>
             </section>

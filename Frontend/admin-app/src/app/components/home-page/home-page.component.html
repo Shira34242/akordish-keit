@@ -278,23 +278,11 @@
         <a routerLink="/events" class="section-link">לכל ההופעות ‹</a>
       </div>
       <div class="events-list">
-        <div class="event-card" *ngFor="let event of upcomingEvents">
-          <div class="event-image-wrap">
-            <img [src]="event.imageUrl || 'assets/default-event.png'" [alt]="event.name" class="event-img">
-          </div>
-          <div class="event-info">
-            <span class="event-status-badge">{{ event.eventStatus }}</span>
-            <h3 class="event-name">{{ event.name }}</h3>
-            <p class="event-artist" *ngIf="event.artistName || event.taggedArtistNames?.length">
-              {{ event.artistName || event.taggedArtistNames[0] }}
-            </p>
-            <p class="event-location" *ngIf="event.location">{{ event.location }}</p>
-          </div>
-          <div class="event-date-col">
-            <span class="event-date">{{ event.eventDate | date:'dd/MM' }}</span>
-            <a [href]="event.ticketUrl" class="event-ticket-btn" target="_blank">כרטיסים ‹</a>
-          </div>
-        </div>
+        <app-event-card
+          *ngFor="let event of upcomingEvents"
+          [event]="event"
+          (cardClick)="openEventModal($event)">
+        </app-event-card>
       </div>
     </section>
 
@@ -312,3 +300,8 @@
     </div><!-- /page-content -->
   </div>
 </div>
+
+<app-event-modal
+  [event]="selectedEventModal"
+  (close)="selectedEventModal = null">
+</app-event-modal>

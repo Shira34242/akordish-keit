@@ -92,10 +92,10 @@
 
           <!-- Status -->
           <td>
-            <span class="status-badge" [ngClass]="getEventStatusClass(event)">
+            <span class="badge" [ngClass]="getEventStatusClass(event)">
               {{ event.eventStatus }}
             </span>
-            <span *ngIf="!event.isActive" class="inactive-badge">לא פעיל</span>
+            <span *ngIf="!event.isActive" class="badge badge-secondary" style="margin-right: 4px;">לא פעיל</span>
           </td>
 
           <!-- Actions -->

@@ -154,6 +154,11 @@ export const routes: Routes = [
                 title: 'הגשת כתבה - אקורדישקייט'
             },
             {
+                path: 'events',
+                loadComponent: () => import('./components/public/events-page/events-page.component').then(m => m.EventsPageComponent),
+                title: 'הופעות - אקורדישקייט'
+            },
+            {
                 path: 'submit/event',
                 loadComponent: () => import('./components/public/submit-event/submit-event.component').then(m => m.SubmitEventComponent),
                 canActivate: [authGuard],

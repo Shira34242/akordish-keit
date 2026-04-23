@@ -1,0 +1,219 @@
+/* Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 24px;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Container — גבוה כמו פוסטר, לא נגלל */
+.modal-container {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 3 / 4;
+  animation: slideUp 0.25s ease;
+  background: #ddff53;
+  flex-shrink: 0;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* תמונה ממלאת הכל */
+.modal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ddff53;
+}
+
+.modal-placeholder .material-icons {
+  font-size: 80px;
+  color: #000000;
+}
+
+/* ============================================
+   TOP BAR — badge + סגירה
+============================================ */
+.modal-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  padding: 14px 14px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%);
+  z-index: 2;
+}
+
+/* ============================================
+   BOTTOM BAR — פרטים + כפתור
+============================================ */
+.modal-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  gap: 12px;
+  padding: 40px 16px 18px;
+  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+  z-index: 2;
+}
+
+.modal-info {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+.modal-name {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-lg);
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-meta {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-xs);
+  color: rgba(255,255,255,0.8);
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-date {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-xs);
+  color: rgba(255,255,255,0.65);
+  margin: 0;
+}
+
+/* ============================================
+   PILLS
+============================================ */
+.overlay-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.overlay-pill--badge {
+  font-weight: 800;
+  font-size: 11px;
+  padding: 4px 12px;
+  background: #ddff53;
+  color: #000000;
+  cursor: default;
+}
+
+.overlay-pill--badge.overlay-pill--past {
+  background: #404040;
+  color: #ffffff;
+}
+
+.overlay-pill--close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.15s;
+}
+
+.overlay-pill--close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.overlay-pill--close .material-icons {
+  font-size: 17px;
+}
+
+/* כפתור כרטיסים */
+.modal-ticket-btn {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: #ddff53;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-xs);
+  padding: 8px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.modal-ticket-btn:hover {
+  opacity: 0.85;
+}
+
+/* ============================================
+   MOBILE
+============================================ */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 16px;
+    align-items: flex-end;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    border-radius: 20px;
+    aspect-ratio: 3 / 4;
+  }
+}

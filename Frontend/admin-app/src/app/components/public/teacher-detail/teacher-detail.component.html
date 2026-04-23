@@ -34,9 +34,9 @@
         </span>
         <h1 class="hero-name">{{ teacher.displayName }}</h1>
         <p class="hero-role">{{ heroRole }}</p>
-        <p class="hero-location" *ngIf="teacher.cityId || teacher.location">
+        <p class="hero-location" *ngIf="heroLocationLine">
           <span class="material-icons">location_on</span>
-          {{ getLocationLine() }}
+          {{ heroLocationLine }}
         </p>
 
         <a *ngIf="teacher.websiteUrl"
@@ -59,8 +59,10 @@
               <span class="material-icons">phone</span>
               <span>{{ teacher.phoneNumber }}</span>
             </a>
-            <a *ngIf="teacher.whatsAppNumber" [href]="'https://wa.me/' + teacher.whatsAppNumber" target="_blank" class="contact-item">
-              <span class="material-icons">chat</span>
+            <a *ngIf="teacher.whatsAppNumber" [href]="getWhatsAppUrl(teacher.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item">
+              <svg class="contact-whatsapp-icon" viewBox="0 0 512 512" aria-hidden="true">
+                <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
+              </svg>
               <span>{{ teacher.whatsAppNumber }}</span>
             </a>
             <a *ngIf="teacher.email" [href]="'mailto:' + teacher.email" class="contact-item">
@@ -79,8 +81,9 @@
         </div>
 
         <a *ngIf="teacher.whatsAppNumber"
-           [href]="'https://wa.me/' + teacher.whatsAppNumber"
+           [href]="getWhatsAppUrl(teacher.whatsAppNumber)"
            target="_blank"
+           rel="noopener"
            class="btn-cta-whatsapp"
            aria-label="הודעה מהירה">
           <svg viewBox="0 0 512 512" aria-hidden="true">
@@ -109,16 +112,8 @@
   <main class="page-content">
     <section class="intro-section">
       <p class="details-line" *ngIf="detailsLine">{{ detailsLine }}</p>
+      <p class="details-line details-meta-line" *ngIf="scheduleAndPriceLine">{{ scheduleAndPriceLine }}</p>
       <p class="full-desc-text" *ngIf="teacher.fullDescription">{{ teacher.fullDescription }}</p>
-    </section>
-
-    <section class="content-section" *ngIf="teacherSongs.length > 0">
-      <div class="section-header">
-        <h2 class="section-title">תכנים שהועלו לאחרונה</h2>
-      </div>
-      <div class="songs-row">
-        <app-song-card *ngFor="let song of teacherSongs" [song]="song"></app-song-card>
-      </div>
     </section>
 
     <section class="gallery-section" *ngIf="galleryMediaItems.length > 0">
@@ -137,45 +132,75 @@
       </div>
     </section>
 
-    <section class="content-section" *ngIf="teacherTestimonials.length > 0">
-      <div class="section-header">
+    <section class="content-section testimonials-section" *ngIf="teacherTestimonials.length > 0">
+      <div class="section-header testimonials-header">
         <h2 class="section-title">המלצות תלמידים</h2>
+        <div class="testimonial-dots" *ngIf="testimonialDots.length > 1">
+          <button *ngFor="let dot of testimonialDots"
+                  class="testimonial-dot"
+                  type="button"
+                  [class.active]="dot === activeTestimonialIndex"
+                  [attr.aria-label]="'המלצה ' + (dot + 1)"
+                  (click)="scrollToTestimonial(dot)">
+          </button>
+        </div>
+        <div class="testimonial-controls" *ngIf="canScrollTestimonialsPrev || canScrollTestimonialsNext">
+          <button *ngIf="canScrollTestimonialsNext"
+                  class="testimonial-nav"
+                  type="button"
+                  aria-label="המלצות נוספות"
+                  (click)="scrollTestimonials('next')">
+            <span class="material-icons">chevron_right</span>
+          </button>
+          <button *ngIf="canScrollTestimonialsPrev"
+                  class="testimonial-nav"
+                  type="button"
+                  aria-label="המלצות קודמות"
+                  (click)="scrollTestimonials('prev')">
+            <span class="material-icons">chevron_left</span>
+          </button>
+        </div>
       </div>
       <div class="testimonials-carousel">
-        <button *ngIf="canScrollTestimonialsNext"
-                class="testimonial-nav testimonial-nav-next"
-                type="button"
-                aria-label="המלצות נוספות"
-                (click)="scrollTestimonials('next')">
-          <span class="material-icons">chevron_right</span>
-        </button>
-
         <div class="testimonials-grid"
              #testimonialsScroller
              (scroll)="updateTestimonialsNav()">
           <article *ngFor="let t of teacherTestimonials" class="testimonial-card">
-            <span class="quote-mark">"</span>
-            <p>{{ t.text }}</p>
-            <strong>{{ t.studentName || 'תלמיד' }}</strong>
+            <div class="testimonial-bubble">
+              <p>{{ t.text }}</p>
+              <div class="testimonial-meta">
+                <strong>{{ t.studentName || 'תלמיד' }}</strong>
+                <span class="material-icons read-checks" aria-hidden="true">done_all</span>
+              </div>
+            </div>
           </article>
         </div>
-
-        <button *ngIf="canScrollTestimonialsPrev"
-                class="testimonial-nav testimonial-nav-prev"
-                type="button"
-                aria-label="המלצות קודמות"
-                (click)="scrollTestimonials('prev')">
-          <span class="material-icons">chevron_left</span>
-        </button>
       </div>
     </section>
 
-    <section class="content-section" *ngIf="teacherArticles.length > 0">
+    <section class="content-section teacher-content-shell" *ngIf="teacherSongs.length > 0 || teacherArticles.length > 0">
       <div class="section-header">
-        <h2 class="section-title">כתבות</h2>
+        <h2 class="section-title">תכנים שהעלתי</h2>
       </div>
-      <div class="articles-grid">
-        <app-news-banner *ngFor="let article of teacherArticles" [article]="article"></app-news-banner>
+
+      <div class="teacher-content-section" *ngIf="teacherSongs.length > 0">
+        <h3 class="content-subtitle">
+          אקורדים
+          <span class="section-count">({{ teacherSongs.length }})</span>
+        </h3>
+        <div class="teacher-songs-grid">
+          <app-song-card *ngFor="let song of teacherSongs" [song]="song"></app-song-card>
+        </div>
+      </div>
+
+      <div class="teacher-content-section" *ngIf="teacherArticles.length > 0">
+        <h3 class="content-subtitle">
+          כתבות ותכנים
+          <span class="section-count">({{ teacherArticles.length }})</span>
+        </h3>
+        <div class="teacher-articles-grid">
+          <app-news-banner *ngFor="let article of teacherArticles" [article]="article"></app-news-banner>
+        </div>
       </div>
     </section>
   </main>

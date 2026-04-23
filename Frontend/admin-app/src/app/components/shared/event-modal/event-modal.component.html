@@ -1,0 +1,46 @@
+<div *ngIf="event" class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-container" (click)="$event.stopPropagation()" dir="rtl">
+
+    <!-- תמונה ממלאת את כל המודל -->
+    <img
+      *ngIf="event.imageUrl"
+      [src]="event.imageUrl"
+      [alt]="event.name"
+      class="modal-img">
+    <div *ngIf="!event.imageUrl" class="modal-placeholder">
+      <span class="material-icons">music_note</span>
+    </div>
+
+    <!-- Overlay עליון: badge + סגירה -->
+    <div class="modal-top-bar">
+      <span class="overlay-pill overlay-pill--badge" [class.overlay-pill--past]="isPast">
+        {{ isPast ? 'הסתיים' : event.eventStatus }}
+      </span>
+      <button class="overlay-pill overlay-pill--close" (click)="close.emit()" aria-label="סגור">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Overlay תחתון: פרטים + כפתור -->
+    <div class="modal-bottom-bar">
+      <div class="modal-info">
+        <h2 class="modal-name">{{ event.name }}</h2>
+        <p class="modal-meta" *ngIf="displayArtist || event.location">
+          <span *ngIf="displayArtist">{{ displayArtist }}</span>
+          <span *ngIf="displayArtist && event.location"> · </span>
+          <span *ngIf="event.location">{{ event.location }}</span>
+        </p>
+        <p class="modal-date">{{ formattedDateTime }}</p>
+      </div>
+      <a
+        *ngIf="event.ticketUrl && !isPast"
+        [href]="event.ticketUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="modal-ticket-btn">
+        לכרטיסים ›
+      </a>
+    </div>
+
+  </div>
+</div>

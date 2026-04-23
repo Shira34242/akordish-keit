@@ -14,8 +14,11 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
+import { EventCardComponent } from '../shared/event-card/event-card.component';
+import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
+import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
 
@@ -36,7 +39,9 @@ interface HeroParticle {
     SongCardComponent,
     ArtistCircleComponent,
     NewsBannerComponent,
-    NewsTickerComponent
+    NewsTickerComponent,
+    EventCardComponent,
+    EventModalComponent
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
@@ -60,6 +65,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
   upcomingEvents: UpcomingEventDto[] = [];
+  selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
 
@@ -109,6 +115,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  openEventModal(event: EventCardData): void {
+    this.selectedEventModal = event;
   }
 
   handleRandomSongClick(): void {
