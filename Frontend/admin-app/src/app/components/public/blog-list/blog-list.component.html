@@ -1,4 +1,4 @@
-<div class="music-news-page" dir="rtl">
+<div class="blog-list-page" dir="rtl">
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="page-loading">
@@ -7,30 +7,30 @@
 
   <!-- Error states -->
   <div *ngIf="loadFailed" class="page-error">
-    <p>טעינת החדשות נכשלה. אנא בדקו את החיבור ונסו שנית.</p>
+    <p>טעינת הבלוג נכשלה. אנא בדקו את החיבור ונסו שנית.</p>
   </div>
 
   <div *ngIf="hasError && !loadFailed" class="page-error">
-    <p>אין תוכן חדשות להצגה כרגע.</p>
+    <p>אין פוסטים בבלוג להצגה כרגע.</p>
   </div>
 
   <!-- Content -->
   <ng-container *ngIf="!isLoading && !hasError && !loadFailed">
     <div class="news-content">
-      <div class="managed-grid">
+      <div class="managed-grid" *ngIf="managedArticles.length > 0">
         <div
           *ngFor="let slot of managedSlots"
           class="managed-cell"
           [ngClass]="'mc-' + (slot + 1)">
-          <app-news-banner *ngIf="getFeaturedArticle(slot)" [article]="getFeaturedArticle(slot)!"></app-news-banner>
-          <div *ngIf="!getFeaturedArticle(slot)" class="cell-skeleton"></div>
+          <app-news-banner *ngIf="managedArticles[slot]" [article]="managedArticles[slot]"></app-news-banner>
+          <div *ngIf="!managedArticles[slot]" class="cell-skeleton"></div>
         </div>
       </div>
 
       <div class="stream-grid">
         <div
           class="stream-cell"
-          *ngFor="let article of newsArticles; let i = index"
+          *ngFor="let article of streamArticles; let i = index"
           [ngClass]="getCellClass(i)">
           <app-news-banner [article]="article"></app-news-banner>
         </div>
@@ -46,8 +46,8 @@
 
   <!-- Floating Tab Navigation -->
   <nav class="tab-bar" dir="rtl">
-    <a class="tab-bar__item tab-bar__item--active" routerLink="/music-news">חדשות</a>
-    <a class="tab-bar__item" routerLink="/blog">בלוג</a>
+    <a class="tab-bar__item" routerLink="/music-news">חדשות</a>
+    <a class="tab-bar__item tab-bar__item--active" routerLink="/blog">בלוג</a>
     <a class="tab-bar__item" routerLink="/events">הופעות</a>
   </nav>
 

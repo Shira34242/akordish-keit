@@ -69,6 +69,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
 
+  readonly newsBannerRowSize = 6;
+
   private fullHeroHeight = 0;
   private rafPending = false;
 
@@ -213,7 +215,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => console.error('loadContent: featured artists', err)
     });
 
-    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
       .subscribe({
         next: (res: any) => { this.newsArticles = res.items || []; },
         error: (err) => console.error('loadContent: news articles', err)
@@ -283,6 +285,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.showSearchResults = false;
     }, 200);
+  }
+
+  get newsArticlesFirstRow(): Article[] {
+    return this.newsArticles.slice(0, this.newsBannerRowSize);
+  }
+
+  get newsArticlesSecondRow(): Article[] {
+    return this.newsArticles.slice(this.newsBannerRowSize, this.newsBannerRowSize * 2);
   }
 
   private initParticleEffect(): void {

@@ -340,9 +340,10 @@
 }
 
 .page-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-xl);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 8px;
 }
 
 /* ============================================
@@ -388,6 +389,75 @@
 /* ============================================
    NEWS GRID (חדשות + בלוג)
 ============================================ */
+.news-banner-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.news-banner-row {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding-bottom: 4px;
+}
+
+.news-banner-row::-webkit-scrollbar {
+  display: none;
+}
+
+.news-banner-row--bottom {
+  padding-inline-start: calc((((100% - (var(--space-md) * 4.5)) / 5.5) / 2) + (var(--space-md) / 2));
+}
+
+.news-banner-card {
+  flex: 0 0 calc((100% - (var(--space-md) * 4.5)) / 5.5);
+  min-width: 13rem;
+  max-width: 21rem;
+  scroll-snap-align: start;
+}
+
+.news-banner-row app-news-banner:last-child {
+  margin-inline-end: clamp(4rem, 8vw, 8rem);
+}
+
+.news-banner-card ::ng-deep .news-banner {
+  aspect-ratio: 1.7 / 1;
+  border-radius: 22px;
+}
+
+.news-banner-card ::ng-deep .banner-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.44) 48%, rgba(0, 0, 0, 0.08) 100%);
+}
+
+.news-banner-card ::ng-deep .banner-text {
+  right: 16px;
+  bottom: 16px;
+  left: 68px;
+}
+
+.news-banner-card ::ng-deep .banner-title {
+  font-size: var(--font-2xl);
+  line-height: 1.08;
+}
+
+.news-banner-card ::ng-deep .banner-subtitle {
+  margin-top: 2px;
+  font-size: var(--font-base);
+  line-height: 1.2;
+  -webkit-line-clamp: 1;
+}
+
+.news-banner-card ::ng-deep .banner-arrow-btn {
+  left: 16px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
 .news-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -519,6 +589,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  background-image: url('/collection-guitars-guitars-are-display-room.png');
   padding: var(--space-3xl) var(--space-4xl);
   direction: rtl;
 }
@@ -616,7 +687,7 @@
 /* Tablet ≤1024px */
 @media (max-width: 1024px) {
   .page-content {
-    padding: 0 var(--space-lg);
+    padding: 0 8px;
   }
 }
 
@@ -640,7 +711,7 @@
   }
 
   .page-content {
-    padding: 0 var(--space-md);
+    padding: 0 8px;
   }
 
   .home-section {
@@ -670,6 +741,11 @@
     grid-template-columns: 1fr;
   }
 
+  .news-banner-card {
+    flex-basis: calc((100% - (var(--space-md) * 3)) / 4);
+    min-width: 12.5rem;
+  }
+
   .songs-grid {
     grid-template-columns: 1fr;
   }
@@ -694,5 +770,49 @@
 
   .promo-box {
     border-radius: 16px;
+  }
+
+  .news-banner-stack {
+    gap: var(--space-sm);
+  }
+
+  .news-banner-row {
+    gap: var(--space-sm);
+  }
+
+  .news-banner-row--bottom {
+    padding-inline-start: calc((((100% - (var(--space-md) * 3)) / 4) / 2) + (var(--space-md) / 2));
+  }
+
+  .news-banner-card {
+    flex-basis: calc((100% - var(--space-sm)) / 1.9);
+    min-width: 0;
+  }
+
+  .news-banner-card ::ng-deep .news-banner {
+    aspect-ratio: 1.3 / 1;
+    border-radius: 16px;
+  }
+
+  .news-banner-card ::ng-deep .banner-text {
+    right: 12px;
+    bottom: 12px;
+    left: 52px;
+  }
+
+  .news-banner-card ::ng-deep .banner-title {
+    font-size: var(--font-lg);
+  }
+
+  .news-banner-card ::ng-deep .banner-subtitle {
+    font-size: var(--font-xs);
+  }
+
+  .news-banner-card ::ng-deep .banner-arrow-btn {
+    left: 10px;
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 }

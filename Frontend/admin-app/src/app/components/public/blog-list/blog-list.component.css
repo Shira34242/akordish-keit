@@ -2,10 +2,11 @@
    PAGE WRAPPER
 ============================================ */
 
-.music-news-page {
+.blog-list-page {
   direction: rtl;
   background: #ffffff;
   min-height: 100vh;
+  margin-top: -56px;
 }
 
 /* ============================================
@@ -54,7 +55,6 @@
   flex-direction: column;
   gap: var(--space-md);
   padding: 8px 8px 120px;
-  margin-top: -56px; /* מושך את הכרטיסים מתחת ל-header השקוף */
 }
 
 /* ============================================
@@ -251,13 +251,13 @@
 ============================================ */
 
 @media (max-width: 768px) {
-  .news-content {
+  .blog-list-page {
     margin-top: -50px;
   }
 }
 
 @media (max-width: 480px) {
-  .news-content {
+  .blog-list-page {
     margin-top: -46px;
   }
 }

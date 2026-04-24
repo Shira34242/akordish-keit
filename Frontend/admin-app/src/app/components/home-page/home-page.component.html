@@ -165,8 +165,21 @@
         <h2 class="section-title">חדשות המוזיקה</h2>
         <a routerLink="/music-news" class="section-link">לכל החדשות ‹</a>
       </div>
-      <div class="news-grid">
-        <app-news-banner *ngFor="let article of newsArticles" [article]="article"></app-news-banner>
+      <div class="news-banner-stack">
+        <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0">
+          <app-news-banner
+            *ngFor="let article of newsArticlesFirstRow"
+            class="news-banner-card"
+            [article]="article">
+          </app-news-banner>
+        </div>
+        <div class="news-banner-row news-banner-row--bottom" *ngIf="newsArticlesSecondRow.length > 0">
+          <app-news-banner
+            *ngFor="let article of newsArticlesSecondRow"
+            class="news-banner-card"
+            [article]="article">
+          </app-news-banner>
+        </div>
       </div>
     </section>
 

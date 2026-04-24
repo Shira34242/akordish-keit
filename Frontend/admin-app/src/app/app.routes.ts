@@ -51,6 +51,11 @@ export const routes: Routes = [
                 title: 'אקורדישקייט - חדשות המוזיקה'
             },
             {
+                path: 'blog',
+                loadComponent: () => import('./components/public/blog-list/blog-list.component').then(m => m.BlogListComponent),
+                title: 'בלוג - אקורדישקייט'
+            },
+            {
                 path: 'blog/:slug',
                 loadComponent: () => import('./components/news/blog-post-view/blog-post-view.component').then(m => m.BlogPostViewComponent),
                 title: 'אקורדישקייט - תוכן'
