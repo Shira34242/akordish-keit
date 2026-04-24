@@ -161,6 +161,14 @@
                 <span class="material-icons">block</span>
               </button>
               <button
+                *ngIf="teacher.status === 2"
+                class="btn-action btn-approve"
+                (click)="activateTeacher(teacher.id)"
+                title="הפעל דף"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
+              <button
                 class="btn-action btn-duplicate"
                 (click)="duplicateTeacher(teacher.id, teacher.displayName)"
                 title="שכפל"

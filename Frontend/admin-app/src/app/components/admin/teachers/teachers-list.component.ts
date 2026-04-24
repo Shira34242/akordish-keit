@@ -151,6 +151,20 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
+  activateTeacher(id: number): void {
+    if (confirm('האם להפעיל את דף המורה ולהחזיר אותו לאינדקס?')) {
+      this.teacherService.approveTeacher(id).subscribe({
+        next: () => {
+          this.loadTeachers();
+        },
+        error: (err) => {
+          console.error('שגיאה בהפעלת מורה:', err);
+          alert('שגיאה בהפעלת המורה');
+        }
+      });
+    }
+  }
+
   deleteTeacher(id: number): void {
     if (confirm('האם למחוק את המורה? פעולה זו אינה הפיכה.')) {
       this.teacherService.deleteTeacher(id).subscribe({

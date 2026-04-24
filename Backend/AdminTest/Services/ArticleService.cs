@@ -500,6 +500,16 @@ public class ArticleService : IArticleService
 
     public async Task<List<ArticleDto>> GetMyArticlesAsync(int userId)
     {
+        var artistIds = await _context.Artists
+            .Where(a => a.UserId == userId && !a.IsDeleted)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        var serviceProviderIds = await _context.ServiceProviders
+            .Where(p => p.UserId == userId && !p.IsDeleted)
+            .Select(p => p.Id)
+            .ToListAsync();
+
         var articles = await _context.Articles
             .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
             .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
@@ -507,7 +517,13 @@ public class ArticleService : IArticleService
             .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
-            .Where(a => a.SubmittedByUserId == userId && !a.IsDeleted)
+            .Where(a =>
+                !a.IsDeleted &&
+                (a.SubmittedByUserId == userId ||
+                 a.UploaderUserId == userId ||
+                 (a.UploaderProfileType == "artist" && a.UploaderProfileId.HasValue && artistIds.Contains(a.UploaderProfileId.Value)) ||
+                 (a.UploaderProfileType == "serviceProvider" && a.UploaderProfileId.HasValue && serviceProviderIds.Contains(a.UploaderProfileId.Value)) ||
+                 a.ArticleArtists.Any(aa => artistIds.Contains(aa.ArtistId))))
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
 

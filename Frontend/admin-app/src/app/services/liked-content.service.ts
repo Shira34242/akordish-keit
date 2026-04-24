@@ -12,18 +12,18 @@ export class LikedContentService {
   constructor(private http: HttpClient) {}
 
   getUserLikedContent(): Observable<LikedContent[]> {
-    return this.http.get<LikedContent[]>(this.apiUrl);
+    return this.http.get<LikedContent[]>(this.apiUrl, { withCredentials: true });
   }
 
   isContentLiked(contentType: 'Article' | 'BlogPost', contentId: number): Observable<{ isLiked: boolean }> {
-    return this.http.get<{ isLiked: boolean }>(`${this.apiUrl}/check/${contentType}/${contentId}`);
+    return this.http.get<{ isLiked: boolean }>(`${this.apiUrl}/check/${contentType}/${contentId}`, { withCredentials: true });
   }
 
   addLikedContent(dto: AddLikedContentDto): Observable<LikedContent> {
-    return this.http.post<LikedContent>(this.apiUrl, dto);
+    return this.http.post<LikedContent>(this.apiUrl, dto, { withCredentials: true });
   }
 
   removeLikedContent(contentType: 'Article' | 'BlogPost', contentId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${contentType}/${contentId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${contentType}/${contentId}`, { withCredentials: true });
   }
 }

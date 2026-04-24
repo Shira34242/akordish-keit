@@ -95,6 +95,21 @@ public class UsersController : ControllerBase
 
     // ─── Helper ──────────────────────────────────────────────────────────────────
 
+    // POST: api/Users/me/pages/visibility
+    // מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
+    [HttpPost("me/pages/visibility")]
+    [Authorize]
+    public async Task<ActionResult<UserWithProfileDto>> SetPageVisibility([FromBody] SetPageVisibilityDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var page = await _service.SetPageVisibilityAsync(userId.Value, dto);
+        if (page == null) return BadRequest(new { message = "לא ניתן לשנות סטטוס לדף הזה כרגע" });
+
+        return Ok(page);
+    }
+
     private int? GetCurrentUserId()
     {
         if (User.Identity?.IsAuthenticated != true) return null;

@@ -1,16 +1,15 @@
 <div class="profile-page" dir="rtl">
-
-  <!-- ===== PROFILE HERO ===== -->
-  <div class="profile-hero">
+  <div class="profile-hero" [class.profile-hero--collapsed]="heroCollapsed">
     <h1 class="profile-title">הפרופיל שלי</h1>
     <p class="profile-subtitle">פרטים אישיים לניהול החשבון — אינם מוצגים בפרופיל הציבורי</p>
 
-    <!-- Avatar + ring -->
     <div class="avatar-wrapper">
       <svg class="progress-ring" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
         <circle cx="60" cy="60" r="52" fill="none" stroke="#404040" stroke-width="6"/>
         <circle
-          cx="60" cy="60" r="52"
+          cx="60"
+          cy="60"
+          r="52"
           fill="none"
           stroke="#ddff53"
           stroke-width="6"
@@ -29,7 +28,7 @@
         <span class="avatar-spinner"></span>
       </div>
       <button class="edit-avatar-btn" title="שינוי תמונה" (click)="triggerAvatarUpload()" [disabled]="uploadingAvatar">
-        <span class="material-icons">{{ uploadingAvatar ? 'hourglass_empty' : 'edit' }}</span>
+        <span class="material-icons">{{ uploadingAvatar ? 'hourglass_empty' : 'person' }}</span>
       </button>
       <input
         #avatarInput
@@ -39,32 +38,28 @@
         (change)="onAvatarFileSelected($event)"/>
     </div>
 
-    <!-- Level + badges row -->
     <div class="level-badges-row">
       <span class="level-label">
         דרגה {{ getLevelNumber() }}
         <span class="material-icons info-icon">info</span>
       </span>
-      <div class="badges">
-        @if (user?.hasProfessionalProfile) {
-          <span class="badge badge-pro">PRO</span>
-        }
-        <span class="badge badge-level">{{ getLevelName() }}</span>
-      </div>
     </div>
 
-    <!-- User info -->
+  </div>
+  <div class="profile-identity">
     <h2 class="profile-name">{{ user?.username }}</h2>
     <p class="profile-email">{{ user?.email }}</p>
     @if (user?.phone) {
       <p class="profile-phone">{{ user?.phone }}</p>
     }
+    <div class="profile-tags">
+      <span class="profile-tag">גיטרה</span>
+      <span class="profile-tag">אורגן</span>
+      <span class="profile-tag">{{ getLevelName() }}</span>
+    </div>
   </div>
 
-  <!-- ===== PAGE CONTENT ===== -->
   <div class="profile-content">
-
-    <!-- ===== PROFILE COMPLETION BANNER ===== -->
     @if (profileIncomplete) {
       <div class="completion-banner" (click)="openProfileModal()">
         <div class="completion-banner-text">
@@ -75,16 +70,15 @@
       </div>
     }
 
-    <!-- ===== PAGE MANAGEMENT CARDS ===== -->
     @if (myPages.length === 0) {
       <div class="manage-card manage-card--empty">
         <p class="manage-empty-text">עדיין אין לך דף באתר</p>
-        <button class="manage-account-link" (click)="openAccountTypeModal()">הוסף דף +</button>
+        <button class="manage-account-link" (click)="openManageAccountFlow()">הוסף דף +</button>
       </div>
     }
 
     @for (page of myPages; track page.profileId) {
-      <div class="manage-card">
+      <div class="manage-card manage-card--page">
         <div class="manage-card-col">
           <div>
             <h3 class="manage-card-title">ניהול הדף שלך באתר</h3>
@@ -103,20 +97,31 @@
             </div>
             <div class="manage-info-item">
               <span class="manage-info-label">סטטוס:</span>
-              <span class="status-dot" [ngClass]="getPageStatusClass(page)"></span>
+              <span class="status-value">
+                <span class="status-dot" [ngClass]="getPageStatusClass(page)"></span>
+                {{ getPageStatusLabel(page) }}
+              </span>
             </div>
           </div>
-          <button class="manage-account-link" (click)="openAccountTypeModal()">לשינוי סוג חשבון ></button>
+          <div class="manage-card-actions">
+            <button
+              class="manage-account-link"
+              [class.manage-account-link--off]="isPageActive(page)"
+              (click)="togglePageVisibility(page)"
+              [disabled]="!canTogglePage(page) || togglingPageId === page.profileId">
+              {{ togglingPageId === page.profileId ? 'שומר...' : (isPageActive(page) ? 'כבה דף' : 'הפעל דף') }}
+            </button>
+            <button class="manage-account-link" (click)="openManageAccountFlow()">לשינוי סוג חשבון &gt;</button>
+          </div>
         </div>
       </div>
     }
 
-    <!-- ===== SUBSCRIPTION CARD ===== -->
-    <div class="manage-card">
+    <div class="manage-card manage-card--subscription">
       <div class="manage-card-col">
         <div>
           <h3 class="manage-card-title">מינויים ותשלומים</h3>
-          <p class="manage-card-subtitle">ניהול המנויים שלך והיסטוריית תשלומים</p>
+          <p class="manage-card-subtitle">ניהול המינויים שלך והיסטוריית תשלומים</p>
         </div>
         <div class="manage-card-actions">
           @if (canUpgradeSubscription()) {
@@ -135,7 +140,7 @@
             <span class="manage-info-label">סטטוס:</span>
             <span class="sub-status-value">
               <span class="status-dot" [ngClass]="getSubscriptionStatusDotClass()"></span>
-              {{ getSubscriptionStatusText() }}
+              {{ getSafeSubscriptionStatusText() }}
             </span>
           </div>
         </div>
@@ -143,7 +148,6 @@
       </div>
     </div>
 
-    <!-- ===== KNOWN CHORDS ===== -->
     <section class="content-section known-chords-section">
       <div class="section-header">
         <h3 class="section-title">האקורדים שאני יודע לנגן:</h3>
@@ -153,18 +157,20 @@
         @for (instrument of knownChordInstruments; track instrument) {
           <div class="known-chords-column">
             <div class="known-chords-column-head">
-              <span class="known-chords-title">{{ getInstrumentLabel(instrument) }}</span>
+              <span class="known-chords-title">{{ getSafeInstrumentLabel(instrument) }}</span>
               <div class="known-chords-actions">
-                <button class="known-basic-btn"
-                        (click)="addBasicKnownChords(instrument)"
-                        [title]="getMissingBasicChordCount(instrument) > 0 ? 'יוסיף ' + getMissingBasicChordCount(instrument) + ' אקורדים בסיסיים' : 'כל האקורדים הבסיסיים כבר נוספו'"
-                        [disabled]="quickAddingBasic[instrument] || getMissingBasicChordCount(instrument) === 0">
+                <button
+                  class="known-basic-btn"
+                  (click)="addBasicKnownChords(instrument)"
+                  [title]="getMissingBasicChordCount(instrument) > 0 ? 'יוסיף ' + getMissingBasicChordCount(instrument) + ' אקורדים בסיסיים' : 'כל האקורדים הבסיסיים כבר נוספו'"
+                  [disabled]="quickAddingBasic[instrument] || getMissingBasicChordCount(instrument) === 0">
                   {{ quickAddingBasic[instrument] ? 'מוסיף...' : getMissingBasicChordCount(instrument) === 0 ? 'הבסיסיים נוספו' : 'הוסף בסיסיים' }}
                 </button>
-                <button class="known-clear-btn"
-                        *ngIf="getKnownChordsForInstrument(instrument).length > 0"
-                        (click)="removeAllKnownChords(instrument)"
-                        [disabled]="quickRemovingAll[instrument]">
+                <button
+                  class="known-clear-btn"
+                  *ngIf="getKnownChordsForInstrument(instrument).length > 0"
+                  (click)="removeAllKnownChords(instrument)"
+                  [disabled]="quickRemovingAll[instrument]">
                   {{ quickRemovingAll[instrument] ? 'מוחק...' : 'מחק הכל' }}
                 </button>
               </div>
@@ -186,31 +192,23 @@
       </div>
     </section>
 
-    <!-- ===== MY UPLOADED CONTENT ===== -->
+    @if (hasUploadedContent()) {
     <section class="content-section">
       <div class="section-header">
         <h3 class="section-title">תכנים שהעליתי:</h3>
       </div>
 
-      <!-- Row: אקורדים -->
       <div class="content-row">
         <div class="row-label-strip">אקורדים</div>
-        <div class="row-cards-wrap">
+        <div class="row-cards-wrap row-cards-wrap--songs">
           @if (mySongs.length > 0) {
-            @for (song of mySongs; track song.id) {
-              <a class="song-card" [routerLink]="['/song', song.id]">
-                <div class="song-card-img">
-                  <img [src]="song.imageUrl || ''" alt="" onerror="this.style.display='none'"/>
-                </div>
-                <div class="song-card-text">
-                  <span class="song-label">אקורדים לשיר</span>
-                  <span class="song-title">{{ song.title }}</span>
-                  <span class="song-artist">{{ song.artistNames }}</span>
-                  @if (song.createdAt) {
-                    <span class="song-date">{{ getRelativeTime(song.createdAt) }}</span>
-                  }
-                </div>
-              </a>
+            @for (song of (mySongs | slice:0:visibleSongCount); track song.id) {
+              <div class="song-card-shell">
+                @if (song.isApproved === false) {
+                  <span class="pending-badge">ממתין לאישור</span>
+                }
+                <app-song-card [song]="song"></app-song-card>
+              </div>
             }
           } @else {
             <div class="empty-row-state">
@@ -219,48 +217,46 @@
             </div>
           }
         </div>
+        @if (mySongs.length > visibleSongCount) {
+          <button class="show-more-btn" type="button" (click)="showMoreSongs()">הצג עוד</button>
+        }
       </div>
 
-      <!-- Row: כתבות ובלוג -->
       <div class="content-row">
         <div class="row-label-strip">כתבות ובלוג</div>
-        <div class="row-cards-wrap">
+        <div class="row-cards-wrap row-cards-wrap--articles">
           @if (myArticles.length > 0) {
-            @for (article of myArticles; track article.id) {
-              <a class="news-card" [routerLink]="['/news', article.slug]">
-                <div class="news-card-bg" [style.background-image]="'url(' + article.imageUrl + ')'">
-                  <div class="news-card-overlay"></div>
-                  <div class="news-card-body">
-                    <span class="news-card-title">{{ article.title }}</span>
-                  </div>
-                </div>
-              </a>
+            @for (article of (myArticles | slice:0:visibleArticleCount); track article.id) {
+              <div class="news-banner-shell">
+                @if (!isArticleApproved(article)) {
+                  <span class="pending-badge">ממתין לאישור</span>
+                }
+                <app-news-banner [article]="getArticleBannerInput(article)"></app-news-banner>
+              </div>
             }
           } @else {
             <div class="empty-row-state">
               <span class="material-icons empty-icon">article</span>
-              <span>עוד לא העלית כתבות</span>
+              <span>עוד לא העלית כתבות או בלוג</span>
             </div>
           }
         </div>
+        @if (myArticles.length > visibleArticleCount) {
+          <button class="show-more-btn" type="button" (click)="showMoreArticles()">הצג עוד</button>
+        }
       </div>
 
-      <!-- Row: הופעות -->
       <div class="content-row">
         <div class="row-label-strip">הופעות</div>
-        <div class="row-cards-wrap">
+        <div class="row-cards-wrap row-cards-wrap--events">
           @if (myEvents.length > 0) {
-            @for (event of myEvents; track event.id) {
-              <a class="event-card">
-                <div class="event-date-badge">
-                  <span class="event-day">{{ event.day }}</span>
-                  <span class="event-month">{{ event.month }}</span>
-                </div>
-                <div class="event-info">
-                  <span class="event-title">{{ event.title }}</span>
-                  <span class="event-venue">{{ event.venue }}</span>
-                </div>
-              </a>
+            @for (event of (myEvents | slice:0:visibleEventCount); track event.id) {
+              <div class="event-card-shell">
+                @if (event.isApproved === false) {
+                  <span class="pending-badge">ממתין לאישור</span>
+                }
+                <app-event-card [event]="event" (cardClick)="openEventModal($event)"></app-event-card>
+              </div>
             }
           } @else {
             <div class="empty-row-state">
@@ -269,28 +265,28 @@
             </div>
           }
         </div>
+        @if (myEvents.length > visibleEventCount) {
+          <button class="show-more-btn" type="button" (click)="showMoreEvents()">הצג עוד</button>
+        }
       </div>
     </section>
+    }
 
-    <!-- ===== LIKED SONGS ===== -->
     <section class="content-section">
       <div class="section-header">
-        <h3 class="section-title">אקורדים שאהבתי:</h3>
+        <h3 class="section-title">תוכן שאהבתי:</h3>
       </div>
 
       <div class="content-row">
-        <div class="row-cards-wrap">
-          @if (likedSongs.length > 0) {
-            @for (item of likedSongs; track item.id) {
-              <a class="news-card" [routerLink]="getLikedPath(item)">
-                <div class="news-card-bg"
-                  [style.background-image]="item.imageUrl ? 'url(' + item.imageUrl + ')' : 'none'">
-                  <div class="news-card-overlay"></div>
-                  <div class="news-card-body">
-                    <span class="news-card-title">{{ item.title }}</span>
-                  </div>
-                </div>
-              </a>
+        <div class="row-cards-wrap row-cards-wrap--articles">
+          @if (likedContent.length > 0) {
+            @for (item of (likedContent | slice:0:visibleLikedCount); track item.id) {
+              <div class="news-banner-shell news-banner-shell--liked">
+                <app-news-banner [article]="getArticleBannerInput(item)"></app-news-banner>
+                <button type="button" class="liked-remove-btn" (click)="removeLikedContent(item, $event)">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
             }
           } @else {
             <div class="empty-row-state">
@@ -299,21 +295,27 @@
             </div>
           }
         </div>
+        @if (likedContent.length > visibleLikedCount) {
+          <button class="show-more-btn" type="button" (click)="showMoreLiked()">הצג עוד</button>
+        }
       </div>
     </section>
 
-    <!-- ===== SAVED LISTS LINK ===== -->
     <div class="saved-lists-row">
       <a routerLink="/my-playlists" class="saved-lists-link">
         למעבר לרשימות שמורות
         <span class="material-icons arrow-icon">chevron_left</span>
       </a>
     </div>
-
   </div>
 </div>
 
-<!-- ===== EDIT PAGE MODAL ===== -->
+<app-event-modal
+  *ngIf="selectedEventModal"
+  [event]="selectedEventModal"
+  (close)="closeEventModal()">
+</app-event-modal>
+
 @if (showEditPageModal) {
   <div class="modal-backdrop modal-backdrop--full" (click)="closeEditPageModal()">
     <div class="modal-box modal-box--edit-page" (click)="$event.stopPropagation()">
@@ -321,17 +323,16 @@
         <span class="material-icons">close</span>
       </button>
       @if (editPageType === 'artist') {
-        <app-artist-create [embedded]="true" (close)="closeEditPageModal()"></app-artist-create>
+        <app-artist-edit-modal [artistId]="editPageId" (close)="closeEditPageModal()" (saved)="closeEditPageModal()"></app-artist-edit-modal>
       } @else if (editPageType === 'teacher') {
-        <app-teacher-create [embedded]="true" (close)="closeEditPageModal()"></app-teacher-create>
+        <app-teacher-form [embedded]="true" [teacherIdInput]="editPageId ?? undefined" (close)="closeEditPageModal()"></app-teacher-form>
       } @else {
-        <app-service-provider-create [embedded]="true" (close)="closeEditPageModal()"></app-service-provider-create>
+        <app-service-provider-form [embedded]="true" [serviceProviderIdInput]="editPageId ?? undefined" (close)="closeEditPageModal()"></app-service-provider-form>
       }
     </div>
   </div>
 }
 
-<!-- ===== PROFILE MODAL ===== -->
 @if (showProfileModal) {
   <div class="modal-backdrop" (click)="closeProfileModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
@@ -367,65 +368,22 @@
   </div>
 }
 
-<!-- ===== ACCOUNT TYPE MODAL ===== -->
 @if (showAccountTypeModal) {
   <div class="modal-backdrop" (click)="closeAccountTypeModal()">
     <div class="modal-box modal-box--wide" (click)="$event.stopPropagation()">
       <button class="modal-close" (click)="closeAccountTypeModal()">
         <span class="material-icons">close</span>
       </button>
-      <h2 class="modal-title">שינוי סוג חשבון</h2>
-
-      <!-- אזור: הוסף דף חדש -->
-      <p class="modal-subtitle">הוסף דף חדש לחשבון שלך:</p>
-      <div class="account-type-options">
-        <a class="account-type-btn" routerLink="/artist/create" (click)="closeAccountTypeModal()">
-          <span class="material-icons">music_note</span>
-          אמן
-        </a>
-        <a class="account-type-btn" routerLink="/service-provider/create" [queryParams]="{teacher: true}" (click)="closeAccountTypeModal()">
-          <span class="material-icons">school</span>
-          מורה למוזיקה
-        </a>
-        <a class="account-type-btn" routerLink="/service-provider/create" (click)="closeAccountTypeModal()">
-          <span class="material-icons">work</span>
-          בעל מקצוע
-        </a>
+      <h2 class="modal-title">{{ accountWarningTitle }}</h2>
+      <p class="modal-subtitle">{{ accountWarningSubtitle }}</p>
+      <div class="account-warning-actions">
+        <button type="button" class="manage-account-link" (click)="leaveCurrentPage()" [disabled]="leavingCurrentPage">
+          {{ leavingCurrentPage ? 'מנתק...' : accountWarningContinueLabel }}
+        </button>
+        <button type="button" class="manage-btn" (click)="closeAccountTypeModal()" [disabled]="leavingCurrentPage">
+          {{ accountWarningCancelLabel }}
+        </button>
       </div>
-
-      <!-- אזור: עזוב דף קיים -->
-      @if (myPages.length > 0) {
-        <div class="modal-divider"></div>
-        <p class="modal-subtitle">עזוב דף קיים:</p>
-        <div class="revoke-list">
-          @for (page of myPages; track page.profileId) {
-            <div class="revoke-item">
-              <div class="revoke-item-info">
-                @if (page.imageUrl) {
-                  <img class="revoke-item-img" [src]="page.imageUrl" alt="" onerror="this.style.display='none'"/>
-                }
-                <div>
-                  <span class="revoke-item-name">{{ page.displayName }}</span>
-                  <span class="revoke-item-type">{{ getPageLabel(page) }}</span>
-                </div>
-              </div>
-
-              @if (revokeConfirmPage?.profileId === page.profileId && revokeConfirmPage?.profileType === page.profileType) {
-                <div class="revoke-confirm">
-                  <span class="revoke-confirm-text">לעזוב את הדף? הוא יעבור לניהול האתר.</span>
-                  <button class="revoke-confirm-btn revoke-confirm-btn--yes" (click)="confirmRevoke()" [disabled]="revoking">
-                    {{ revoking ? '...' : 'כן, עזוב' }}
-                  </button>
-                  <button class="revoke-confirm-btn" (click)="cancelRevoke()">ביטול</button>
-                </div>
-              } @else {
-                <button class="revoke-btn" (click)="askRevokeConfirm(page)">עזוב דף</button>
-              }
-            </div>
-          }
-        </div>
-        <p class="revoke-notice">הדף לא יימחק — יעבור לניהול הצוות</p>
-      }
     </div>
   </div>
 }

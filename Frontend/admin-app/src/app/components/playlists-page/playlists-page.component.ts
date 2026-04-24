@@ -3,14 +3,24 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LikedContent } from '../../models/liked-content.model';
-import { CreatePlaylistDto, Playlist, PlaylistDetail } from '../../models/playlist.model';
+import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
+import { CreatePlaylistDto, Playlist, PlaylistDetail, PlaylistSong } from '../../models/playlist.model';
 import { LikedContentService } from '../../services/liked-content.service';
 import { PlaylistService } from '../../services/playlist.service';
+import { SongCardComponent } from '../shared/song-card/song-card.component';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+
+interface SavedSongCard {
+  id: number;
+  title: string;
+  imageUrl?: string;
+  artists: Array<{ name: string }>;
+}
 
 @Component({
   selector: 'app-playlists-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent],
   templateUrl: './playlists-page.component.html',
   styleUrls: ['./playlists-page.component.css']
 })
@@ -29,6 +39,9 @@ export class PlaylistsPageComponent implements OnInit {
   createPlaylistError: string | null = null;
   newPlaylistName = '';
   newPlaylistIsPublic = true;
+
+  visibleSongCount = 8;
+  visibleContentCount = 6;
 
   constructor(
     private playlistService: PlaylistService,
@@ -90,6 +103,16 @@ export class PlaylistsPageComponent implements OnInit {
 
   setTab(tab: 'all' | 'songs' | 'content'): void {
     this.activeTab = tab;
+    this.visibleSongCount = tab === 'songs' ? 8 : 4;
+    this.visibleContentCount = tab === 'content' ? 6 : 3;
+  }
+
+  showMoreSongs(): void {
+    this.visibleSongCount += 8;
+  }
+
+  showMoreContent(): void {
+    this.visibleContentCount += 6;
   }
 
   goToSong(songId: number): void {
@@ -190,20 +213,68 @@ export class PlaylistsPageComponent implements OnInit {
     });
   }
 
+  mapPlaylistSongToCard(song: PlaylistSong): SavedSongCard {
+    return {
+      id: song.songId,
+      title: song.songTitle,
+      imageUrl: song.songImageUrl,
+      artists: song.artistName ? [{ name: song.artistName }] : []
+    };
+  }
+
+  getArticleBannerInput(item: LikedContent): Article {
+    const contentType = item.contentType === 'BlogPost' ? ArticleContentType.Blog : ArticleContentType.News;
+
+    return {
+      id: item.contentId,
+      title: item.title || '',
+      subtitle: item.subtitle,
+      content: '',
+      featuredImageUrl: item.imageUrl || 'assets/default-article.png',
+      publishDate: '',
+      createdAt: '',
+      authorName: '',
+      categoryIds: [],
+      categoryNames: [],
+      contentType,
+      slug: item.slug || '',
+      shortDescription: item.subtitle,
+      isFeatured: false,
+      displayOrder: 0,
+      status: ArticleStatus.Published,
+      isPremium: false,
+      viewCount: 0,
+      likeCount: 0,
+      tags: [],
+      galleryImages: [],
+      taggedArtists: []
+    };
+  }
+
   get totalSavedItems(): number {
     const savedSongs = this.defaultPlaylistDetail?.songs.length ?? 0;
     return savedSongs + this.likedContent.length;
   }
 
-  get allPreviewSongs() {
-    return this.defaultPlaylistDetail?.songs.slice(0, 6) ?? [];
+  get savedSongs(): PlaylistSong[] {
+    return this.defaultPlaylistDetail?.songs ?? [];
   }
 
-  get allPreviewContent() {
-    return this.likedContent.slice(0, 6);
+  get visibleSavedSongs(): PlaylistSong[] {
+    return this.savedSongs.slice(0, this.visibleSongCount);
   }
 
-  get allPreviewPlaylists() {
-    return this.personalPlaylists.slice(0, 4);
+  get visibleLikedContent(): LikedContent[] {
+    return this.likedContent.slice(0, this.visibleContentCount);
+  }
+
+  get isEmptyState(): boolean {
+    return (
+      !this.isLoading &&
+      !this.error &&
+      this.savedSongs.length === 0 &&
+      this.likedContent.length === 0 &&
+      this.personalPlaylists.length === 0
+    );
   }
 }

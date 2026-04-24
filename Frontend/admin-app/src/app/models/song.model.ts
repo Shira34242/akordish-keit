@@ -123,6 +123,7 @@ export interface SongBasicDto {
     title: string;
     artistNames: string;
     imageUrl?: string;
+    isApproved?: boolean;
     viewCount: number;
     createdAt?: string;
 }

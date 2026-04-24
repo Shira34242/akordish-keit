@@ -244,10 +244,17 @@ namespace AkordishKeit.Services
 
         public async Task<List<EventDto>> GetMyEventsAsync(int userId)
         {
+            var artistIds = await _context.Artists
+                .Where(a => a.UserId == userId && !a.IsDeleted)
+                .Select(a => a.Id)
+                .ToListAsync();
+
             var events = await _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .Where(e => e.SubmittedByUserId == userId && !e.IsDeleted)
+                .Where(e => !e.IsDeleted &&
+                    (e.SubmittedByUserId == userId ||
+                     e.EventArtists.Any(ea => artistIds.Contains(ea.ArtistId))))
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
 

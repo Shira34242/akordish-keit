@@ -354,6 +354,63 @@ public class UserService : IUserService
     //                    Mapping Methods
     // ═══════════════════════════════════════════════════════════
 
+    public async Task<UserWithProfileDto?> SetPageVisibilityAsync(int userId, SetPageVisibilityDto dto)
+    {
+        if (dto.ProfileType == "artist")
+        {
+            var artist = await _context.Artists
+                .FirstOrDefaultAsync(a => a.Id == dto.ProfileId && a.UserId == userId && !a.IsDeleted);
+
+            if (artist == null || artist.Status == ArtistStatus.Pending)
+                return null;
+
+            artist.Status = dto.IsActive ? ArtistStatus.Active : ArtistStatus.Hidden;
+            await _context.SaveChangesAsync();
+
+            return new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = artist.Name,
+                ImageUrl = artist.ImageUrl,
+                ProfileType = "artist",
+                ProfileId = artist.Id,
+                ProfileUrl = $"/artist/{artist.Id}",
+                IsTeacher = false,
+                Status = artist.Status.ToString(),
+                Categories = new List<string>()
+            };
+        }
+
+        if (dto.ProfileType == "serviceProvider")
+        {
+            var provider = await _context.ServiceProviders
+                .Include(p => p.Categories)
+                .ThenInclude(c => c.Category)
+                .FirstOrDefaultAsync(p => p.Id == dto.ProfileId && p.UserId == userId && !p.IsDeleted);
+
+            if (provider == null || provider.Status == ProfileStatus.Pending)
+                return null;
+
+            provider.Status = dto.IsActive ? ProfileStatus.Active : ProfileStatus.Suspended;
+            await _context.SaveChangesAsync();
+
+            return new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = provider.DisplayName,
+                ImageUrl = provider.ProfileImageUrl,
+                ProfileType = "serviceProvider",
+                ProfileId = provider.Id,
+                ProfileUrl = provider.IsTeacher ? $"/teacher/{provider.Id}" : $"/provider/{provider.Id}",
+                IsTeacher = provider.IsTeacher,
+                Status = provider.Status.ToString(),
+                Categories = provider.Categories.Select(c => c.Category.Name).ToList()
+            };
+        }
+
+        return null;
+    }
+
     private static UserListDto MapToListDto(User entity)
     {
         return new UserListDto

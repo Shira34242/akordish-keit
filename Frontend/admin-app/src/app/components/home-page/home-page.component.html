@@ -238,7 +238,7 @@
         <p class="promo-subtitle">המאגר הגדול לנותני שירות במוזיקה היהודית</p>
         <div class="promo-actions">
           <a routerLink="/professionals" class="promo-btn">לאינדקס ‹</a>
-          <a routerLink="/service-provider/create" class="promo-btn promo-btn-secondary">הצטרף לאינדקס ‹</a>
+          <button type="button" (click)="handleJoinIndexClick()" class="promo-btn promo-btn-secondary">הצטרף לאינדקס ‹</button>
         </div>
       </div>
     </div>
@@ -305,3 +305,4 @@
   [event]="selectedEventModal"
   (close)="selectedEventModal = null">
 </app-event-modal>
+

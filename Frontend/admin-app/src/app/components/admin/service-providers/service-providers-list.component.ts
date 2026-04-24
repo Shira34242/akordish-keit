@@ -155,6 +155,20 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
+  activateProvider(id: number): void {
+    if (confirm('האם להפעיל את דף נותן השירות ולהחזיר אותו לאינדקס?')) {
+      this.providerService.approveServiceProvider(id).subscribe({
+        next: () => {
+          this.loadProviders();
+        },
+        error: (err) => {
+          console.error('שגיאה בהפעלת בעל מקצוע:', err);
+          alert('שגיאה בהפעלת בעל המקצוע');
+        }
+      });
+    }
+  }
+
   deleteProvider(id: number): void {
     if (confirm('האם למחוק את בעל המקצוע? פעולה זו אינה הפיכה.')) {
       this.providerService.deleteServiceProvider(id).subscribe({

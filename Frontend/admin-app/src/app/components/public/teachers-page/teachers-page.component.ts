@@ -12,6 +12,7 @@ import { TeacherProfileModalComponent } from '../../admin/teachers/teacher-profi
 import { BecomeTeacherFormComponent } from '../become-teacher-form/become-teacher-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 
 interface Instrument {
   id: number;
@@ -77,7 +78,8 @@ export class TeachersPageComponent implements OnInit {
     private citiesService: CitiesService,
     private systemTablesService: SystemTablesService,
     private router: Router,
-    public authService: AuthService
+    public authService: AuthService,
+    private quickAddAssistantService: QuickAddAssistantService
   ) {}
 
   ngOnInit(): void {
@@ -350,7 +352,7 @@ export class TeachersPageComponent implements OnInit {
       this.authService.requestLogin('/teachers');
       return;
     }
-    this.router.navigate(['/subscription/select'], { queryParams: { type: 'teacher' } });
+    this.quickAddAssistantService.requestOpen('index');
   }
 
   closeBecomeTeacherForm(): void {

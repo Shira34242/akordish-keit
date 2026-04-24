@@ -1206,8 +1206,22 @@ public class SongService : ISongService
     {
         try
         {
+            var artistIds = await _context.Artists
+                .Where(a => a.UserId == userId && !a.IsDeleted)
+                .Select(a => a.Id)
+                .ToListAsync();
+
+            var serviceProviderIds = await _context.ServiceProviders
+                .Where(p => p.UserId == userId && !p.IsDeleted)
+                .Select(p => p.Id)
+                .ToListAsync();
+
             return await _context.Songs
-                .Where(s => s.UploadedByUserId == userId && !s.IsDeleted)
+                .Where(s => !s.IsDeleted &&
+                    (s.UploadedByUserId == userId ||
+                     s.UploaderUserId == userId ||
+                     (s.UploaderProfileType == "artist" && s.UploaderProfileId.HasValue && artistIds.Contains(s.UploaderProfileId.Value)) ||
+                     (s.UploaderProfileType == "serviceProvider" && s.UploaderProfileId.HasValue && serviceProviderIds.Contains(s.UploaderProfileId.Value))))
                 .OrderByDescending(s => s.CreatedAt)
                 .Select(s => new SongBasicDto
                 {
@@ -1217,6 +1231,7 @@ public class SongService : ISongService
                         .OrderBy(sa => sa.Order)
                         .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "")),
                     ImageUrl = s.ImageUrl,
+                    IsApproved = s.IsApproved,
                     ViewCount = s.ViewCount,
                     CreatedAt = s.CreatedAt
                 })

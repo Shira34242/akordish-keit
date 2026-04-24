@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
@@ -15,6 +15,7 @@ import { CreateArticleDto, ArticleContentType, ArticleStatus } from '../../model
 import { CreateEventDto } from '../../models/event.model';
 import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistListDto } from '../../models/artist.model';
+import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 
 export type QuickAddAction =
   | 'index-teacher'
@@ -57,7 +58,7 @@ interface AssistantStepDefinition {
   templateUrl: './quick-add-assistant-modal.component.html',
   styleUrls: ['./quick-add-assistant-modal.component.css']
 })
-export class QuickAddAssistantModalComponent {
+export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private readonly articleService = inject(ArticleService);
   private readonly eventService = inject(EventService);
   private readonly mediaService = inject(MediaService);
@@ -68,6 +69,7 @@ export class QuickAddAssistantModalComponent {
   private readonly reportService = inject(ReportService);
 
   @Input() adminEditLabel: string | null = null;
+  @Input() entryPoint: QuickAddEntryPoint = 'root';
 
   @Output() close = new EventEmitter<void>();
   @Output() actionSelected = new EventEmitter<QuickAddAction>();
@@ -116,7 +118,16 @@ export class QuickAddAssistantModalComponent {
     this.initializeUploaderSelector();
     this.loadEventArtists();
     this.loadProfessionalCategories();
+  }
+
+  ngOnInit(): void {
     this.resetConversation();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['entryPoint'] && !changes['entryPoint'].firstChange) {
+      this.resetConversation();
+    }
   }
 
   get currentOptions(): AssistantOption[] {
@@ -613,9 +624,11 @@ export class QuickAddAssistantModalComponent {
   }
 
   private resetConversation(): void {
-    this.currentStep = 'root';
+    const initialStep = this.entryPoint === 'index' ? 'index' : 'root';
+
+    this.currentStep = initialStep;
     this.currentMode = 'choices';
-    this.modeOriginStep = 'root';
+    this.modeOriginStep = initialStep;
     this.isSubmitting = false;
     this.submittedMessage = '';
     this.showArticleOptional = false;
@@ -633,7 +646,7 @@ export class QuickAddAssistantModalComponent {
     this.chordRequest = { songName: '', artistName: '' };
     this.contactForm = { fullName: '', email: '', subject: '', message: '' };
     this.contactAttachments = [];
-    this.appendBotStep('root');
+    this.appendBotStep(initialStep);
   }
 
   private appendBotStep(step: AssistantStep): void {

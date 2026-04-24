@@ -9,6 +9,7 @@ import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
 import { TeacherService } from '../../services/teacher.service';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
+import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
 import { SearchService, SearchResults, SearchItem } from '../../services/search.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
@@ -85,6 +86,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     private eventService: EventService,
     private teacherService: TeacherService,
     private providerService: MusicServiceProviderService,
+    private quickAddAssistantService: QuickAddAssistantService,
     private searchService: SearchService
   ) {
     this.searchSubject.pipe(
@@ -130,6 +132,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err: any) => console.error('Failed to get random song', err)
     });
+  }
+
+  handleJoinIndexClick(): void {
+    this.quickAddAssistantService.requestOpen('index');
   }
 
   ngOnInit() {

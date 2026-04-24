@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,36 +8,80 @@ import { LikedContentService } from '../../services/liked-content.service';
 import { LikedContent } from '../../models/liked-content.model';
 import { SongService } from '../../services/song.service';
 import { SongBasicDto } from '../../models/song.model';
-import { EventService } from '../../services/event.service';
-import { ArticleService } from '../../services/article.service';
+import { EventDto, EventService } from '../../services/event.service';
+import { ArticleService, ArticleDto } from '../../services/article.service';
 import { UserService } from '../../services/user.service';
 import { UserWithProfileDto } from '../../models/user.model';
 import { KnownChordInstrument, UserKnownChord, UserKnownChordService } from '../../services/user-known-chord.service';
-import { ArtistCreateComponent } from '../artist-create/artist-create.component';
-import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
-import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
+import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
+import { ServiceProviderFormComponent } from '../admin/service-providers/service-provider-form.component';
+import { TeacherFormComponent } from '../admin/teachers/teacher-form.component';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SubscriptionDto, SubscriptionPlan, SubscriptionStatus } from '../../models/subscription.model';
+import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
+import { SongCardComponent } from '../shared/song-card/song-card.component';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { EventCardComponent } from '../shared/event-card/event-card.component';
+import { EventModalComponent } from '../shared/event-modal/event-modal.component';
+import { EventCardData } from '../../utils/event.utils';
+import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
+
+interface ProfileSongCard {
+  id: number;
+  title: string;
+  imageUrl?: string;
+  isApproved?: boolean;
+  artists: Array<{ name: string }>;
+}
+
+interface ProfileArticleCard {
+  id: number;
+  title: string;
+  slug: string;
+  imageUrl?: string;
+  featuredImageUrl?: string;
+  shortDescription?: string;
+  contentType?: number;
+  status?: number;
+}
 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ArtistCreateComponent, ServiceProviderCreateComponent, TeacherCreateComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ArtistEditModalComponent,
+    ServiceProviderFormComponent,
+    TeacherFormComponent,
+    SongCardComponent,
+    NewsBannerComponent,
+    EventCardComponent,
+    EventModalComponent
+  ],
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
 })
 export class MyProfileComponent implements OnInit {
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
 
+  readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
+  readonly accountWarningSubtitle = '\u05dc\u05d0 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05e3 \u05d0\u05d7\u05d3. \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4 \u05e2\u05dc \u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3 \u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d5\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05ea\u05e0\u05ea\u05e7.';
+  readonly accountWarningContinueLabel = '\u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3';
+  readonly accountWarningCancelLabel = '\u05d1\u05d9\u05d8\u05d5\u05dc';
+  readonly accountWarningErrorLabel = '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05e0\u05d5 \u05dc\u05e0\u05ea\u05e7 \u05d0\u05ea \u05d4\u05d3\u05e3 \u05db\u05e8\u05d2\u05e2. \u05e0\u05e1\u05d5 \u05e9\u05d5\u05d1.';
+
   user: User | null = null;
   uploadingAvatar = false;
   myPageInfo: UserWithProfileDto | null = null;
   myPages: UserWithProfileDto[] = [];
 
-  mySongs: SongBasicDto[] = [];
-  myArticles: any[] = [];
-  myEvents: any[] = [];
-  likedSongs: any[] = [];
+  mySongs: ProfileSongCard[] = [];
+  myArticles: ProfileArticleCard[] = [];
+  myEvents: EventCardData[] = [];
+  likedContent: LikedContent[] = [];
+  selectedEventModal: EventCardData | null = null;
   knownChords: UserKnownChord[] = [];
   knownChordInstruments: KnownChordInstrument[] = ['guitar', 'piano', 'ukulele'];
   quickAddingBasic: Record<KnownChordInstrument, boolean> = {
@@ -56,25 +100,25 @@ export class MyProfileComponent implements OnInit {
     ukulele: ['C', 'D', 'F', 'G', 'A', 'Am', 'Dm', 'Em', 'Fmaj7', 'G7', 'A7', 'C7']
   };
 
-  // מודל השלמת פרטים
   showProfileModal = false;
   profileForm = { phone: '', address: '', birthDate: '' };
   profileSaving = false;
 
-  // מודל עריכת דף
   showEditPageModal = false;
   editPageType: 'artist' | 'teacher' | 'provider' | null = null;
+  editPageId: number | null = null;
 
-  // מנוי
   subscription: SubscriptionDto | null = null;
-
-  // שגיאות טעינה
   pageLoadError = false;
+  heroCollapsed = false;
+  togglingPageId: number | null = null;
+  visibleSongCount = 4;
+  visibleArticleCount = 4;
+  visibleEventCount = 4;
+  visibleLikedCount = 4;
 
-  // מודל שינוי סוג חשבון
   showAccountTypeModal = false;
-  revokeConfirmPage: UserWithProfileDto | null = null;
-  revoking = false;
+  leavingCurrentPage = false;
 
   readonly CIRCUMFERENCE = 2 * Math.PI * 52;
 
@@ -87,7 +131,8 @@ export class MyProfileComponent implements OnInit {
     private userService: UserService,
     private userKnownChordService: UserKnownChordService,
     private subscriptionService: SubscriptionService,
-    private router: Router
+    private router: Router,
+    private quickAddAssistantService: QuickAddAssistantService
   ) {}
 
   ngOnInit() {
@@ -101,6 +146,21 @@ export class MyProfileComponent implements OnInit {
     this.loadMyPageInfo();
     this.loadMyAllPages();
     this.loadSubscription();
+    this.updateHeroState();
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.updateHeroState();
+  }
+
+  private updateHeroState(): void {
+    const scrollY = window.scrollY;
+    if (!this.heroCollapsed && scrollY > 96) {
+      this.heroCollapsed = true;
+    } else if (this.heroCollapsed && scrollY < 40) {
+      this.heroCollapsed = false;
+    }
   }
 
   get profileIncomplete(): boolean {
@@ -129,7 +189,12 @@ export class MyProfileComponent implements OnInit {
     }).subscribe({
       next: () => {
         if (this.user) {
-          this.user = { ...this.user, phone: this.profileForm.phone, address: this.profileForm.address, birthDate: this.profileForm.birthDate };
+          this.user = {
+            ...this.user,
+            phone: this.profileForm.phone,
+            address: this.profileForm.address,
+            birthDate: this.profileForm.birthDate
+          };
           this.authService.updateCurrentUser(this.user);
         }
         this.profileSaving = false;
@@ -146,6 +211,7 @@ export class MyProfileComponent implements OnInit {
   onAvatarFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+
     this.uploadingAvatar = true;
     this.userService.uploadProfileImage(file).subscribe({
       next: (url) => {
@@ -162,6 +228,7 @@ export class MyProfileComponent implements OnInit {
       },
       error: () => { this.uploadingAvatar = false; }
     });
+
     (event.target as HTMLInputElement).value = '';
   }
 
@@ -169,7 +236,14 @@ export class MyProfileComponent implements OnInit {
     this.userService.getMyProfile().subscribe({
       next: (data) => {
         if (this.user) {
-          this.user = { ...this.user, phone: data.phone, address: data.address, birthDate: data.birthDate, contentTag: data.contentTag ?? this.user.contentTag, uploadCount: data.uploadCount ?? this.user.uploadCount };
+          this.user = {
+            ...this.user,
+            phone: data.phone,
+            address: data.address,
+            birthDate: data.birthDate,
+            contentTag: data.contentTag ?? this.user.contentTag,
+            uploadCount: data.uploadCount ?? this.user.uploadCount
+          };
           this.authService.updateCurrentUser(this.user);
         }
       },
@@ -179,14 +253,14 @@ export class MyProfileComponent implements OnInit {
 
   private loadMySongs() {
     this.songService.getMySongs().subscribe({
-      next: (songs) => { this.mySongs = songs; },
+      next: (songs) => { this.mySongs = songs.map(song => this.toProfileSongCard(song)); },
       error: () => { this.mySongs = []; }
     });
   }
 
   private loadMyArticles() {
     this.articleService.getMyArticles().subscribe({
-      next: (articles) => { this.myArticles = articles; },
+      next: (articles) => { this.myArticles = articles.map(article => this.toProfileArticleCard(article)); },
       error: () => { this.myArticles = []; }
     });
   }
@@ -194,17 +268,7 @@ export class MyProfileComponent implements OnInit {
   private loadMyEvents() {
     this.eventService.getMyEvents().subscribe({
       next: (events) => {
-        this.myEvents = events.map(e => {
-          const date = new Date(e.eventDate);
-          const months = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
-          return {
-            id: e.id,
-            day: date.getDate(),
-            month: months[date.getMonth()],
-            title: e.name,
-            venue: e.location || e.artistName || ''
-          };
-        });
+        this.myEvents = events.map(event => this.toEventCardData(event));
       },
       error: () => { this.myEvents = []; }
     });
@@ -213,12 +277,69 @@ export class MyProfileComponent implements OnInit {
   private loadLikedSongs() {
     this.likedContentService.getUserLikedContent().subscribe({
       next: (items) => {
-        this.likedSongs = items.slice(0, 6);
+        this.likedContent = items.slice(0, 6);
       },
       error: () => {
-        this.likedSongs = [];
+        this.likedContent = [];
       }
     });
+  }
+
+  private toProfileSongCard(song: SongBasicDto): ProfileSongCard {
+    const artistNames = song.artistNames
+      .split(',')
+      .map(name => name.trim())
+      .filter(Boolean);
+
+    return {
+      id: song.id,
+      title: song.title,
+      imageUrl: song.imageUrl,
+      isApproved: song.isApproved,
+      artists: artistNames.map(name => ({ name }))
+    };
+  }
+
+  private toProfileArticleCard(article: ArticleDto): ProfileArticleCard {
+    return {
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      imageUrl: article.featuredImageUrl || article.imageUrl,
+      featuredImageUrl: article.featuredImageUrl || article.imageUrl,
+      shortDescription: article.shortDescription,
+      contentType: article.contentType,
+      status: (article as ArticleDto & { status?: number }).status
+    };
+  }
+
+  private toEventCardData(event: EventDto): EventCardData {
+    return {
+      id: event.id,
+      name: event.name,
+      imageUrl: event.imageUrl,
+      ticketUrl: event.ticketUrl,
+      eventDate: event.eventDate,
+      location: event.location,
+      artistName: event.artistName,
+      eventStatus: this.getEventStatusLabel(event.eventDate),
+      isPast: new Date(event.eventDate).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0),
+      isApproved: event.isActive
+    };
+  }
+
+  private getEventStatusLabel(eventDate: string): string {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const target = new Date(eventDate);
+    target.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'הסתיים';
+    if (diffDays === 0) return 'היום';
+    return 'קרוב';
   }
 
   private loadKnownChords() {
@@ -235,6 +356,16 @@ export class MyProfileComponent implements OnInit {
 
   getKnownChordsForInstrument(instrument: KnownChordInstrument): UserKnownChord[] {
     return this.knownChords.filter(chord => chord.instrument === instrument);
+  }
+
+  getSafeInstrumentLabel(instrument: KnownChordInstrument): string {
+    const labels: Record<KnownChordInstrument, string> = {
+      guitar: 'גיטרה',
+      piano: 'פסנתר',
+      ukulele: 'יוקלילי'
+    };
+
+    return labels[instrument];
   }
 
   getInstrumentLabel(instrument: KnownChordInstrument): string {
@@ -299,7 +430,7 @@ export class MyProfileComponent implements OnInit {
       next: (results) => {
         this.quickRemovingAll[instrument] = false;
         if (results.every(Boolean)) {
-          this.knownChords = this.knownChords.filter(chord => chord.instrument !== instrument);
+          this.knownChords = this.knownChords.filter(item => item.instrument !== instrument);
         } else {
           this.refreshKnownChords();
         }
@@ -356,16 +487,39 @@ export class MyProfileComponent implements OnInit {
     }
   }
 
+  getSafeSubscriptionStatusText(): string {
+    if (!this.subscription) return 'חינמי';
+
+    switch (this.subscription.status) {
+      case SubscriptionStatus.Active:
+        return 'פעיל';
+      case SubscriptionStatus.Trial:
+        return 'ניסיון חינם';
+      case SubscriptionStatus.PendingPayment:
+        return 'ממתין לתשלום';
+      case SubscriptionStatus.Cancelled:
+        return 'בוטל';
+      case SubscriptionStatus.Expired:
+        return 'פג תוקף';
+      case SubscriptionStatus.Suspended:
+        return 'מושהה';
+      default:
+        return 'לא פעיל';
+    }
+  }
+
   navigateToUpgrade() {
-    const types = this.myPages.map(p => {
-      if (p.profileType === 'artist') return 'artist';
-      if (p.isTeacher) return 'teacher';
+    const types = this.myPages.map(page => {
+      if (page.profileType === 'artist') return 'artist';
+      if (page.isTeacher) return 'teacher';
       return 'service-provider';
     });
+
     if (types.length === 0) {
       this.router.navigate(['/subscription/select']);
       return;
     }
+
     this.router.navigate(['/subscription/select'], {
       queryParams: { types: types.join(','), primary: types[0] }
     });
@@ -378,7 +532,10 @@ export class MyProfileComponent implements OnInit {
 
   private loadMyPageInfo() {
     this.userService.getMyUploaderProfile().subscribe({
-      next: (info) => { this.myPageInfo = info; this.pageLoadError = false; },
+      next: (info) => {
+        this.myPageInfo = info;
+        this.pageLoadError = false;
+      },
       error: () => { this.pageLoadError = true; }
     });
   }
@@ -390,9 +547,9 @@ export class MyProfileComponent implements OnInit {
     });
   }
 
-  // ── מודאל עריכת דף ──
-
   openEditPageModal(page: UserWithProfileDto) {
+    this.editPageId = page.profileId;
+
     if (page.profileType === 'artist') {
       this.editPageType = 'artist';
     } else if (page.isTeacher) {
@@ -400,53 +557,33 @@ export class MyProfileComponent implements OnInit {
     } else {
       this.editPageType = 'provider';
     }
+
     this.showEditPageModal = true;
   }
 
   closeEditPageModal() {
     this.showEditPageModal = false;
     this.editPageType = null;
+    this.editPageId = null;
+    this.loadMyPageInfo();
     this.loadMyAllPages();
   }
 
-  // ── מודאל שינוי סוג חשבון ──
+  openManageAccountFlow(): void {
+    if (this.myPages.length === 0) {
+      this.openIndexProfileFlow();
+      return;
+    }
 
-  openAccountTypeModal() {
-    this.revokeConfirmPage = null;
     this.showAccountTypeModal = true;
   }
 
-  closeAccountTypeModal() {
+  closeAccountTypeModal(): void {
+    if (this.leavingCurrentPage) {
+      return;
+    }
+
     this.showAccountTypeModal = false;
-    this.revokeConfirmPage = null;
-  }
-
-  askRevokeConfirm(page: UserWithProfileDto) {
-    this.revokeConfirmPage = page;
-  }
-
-  cancelRevoke() {
-    this.revokeConfirmPage = null;
-  }
-
-  confirmRevoke() {
-    if (!this.revokeConfirmPage || this.revoking) return;
-    this.revoking = true;
-    const page = this.revokeConfirmPage;
-    this.userService.revokePage(page.profileType, page.profileId).subscribe({
-      next: (ok) => {
-        this.revoking = false;
-        if (ok) {
-          this.myPages = this.myPages.filter(p => !(p.profileType === page.profileType && p.profileId === page.profileId));
-          if (this.myPageInfo?.profileType === page.profileType && this.myPageInfo?.profileId === page.profileId) {
-            this.myPageInfo = this.myPages[0] ?? null;
-          }
-          this.revokeConfirmPage = null;
-          if (this.myPages.length === 0) this.closeAccountTypeModal();
-        }
-      },
-      error: () => { this.revoking = false; }
-    });
   }
 
   getPageLabel(page: UserWithProfileDto): string {
@@ -457,10 +594,58 @@ export class MyProfileComponent implements OnInit {
   }
 
   getPageStatusClass(page?: UserWithProfileDto): string {
-    const s = (page ?? this.myPageInfo)?.status;
-    if (s === 'Active') return 'status-dot--active';
-    if (s === 'Pending') return 'status-dot--pending';
+    const status = (page ?? this.myPageInfo)?.status;
+    if (status === 'Active') return 'status-dot--active';
+    if (status === 'Pending') return 'status-dot--pending';
     return 'status-dot--inactive';
+  }
+
+  getPageStatusLabel(page?: UserWithProfileDto): string {
+    const status = (page ?? this.myPageInfo)?.status;
+    if (status === 'Active') return 'העמוד פעיל';
+    if (status === 'Pending') return 'ממתין לאישור';
+    return 'העמוד כבוי';
+  }
+
+  isPageActive(page: UserWithProfileDto): boolean {
+    return page.status === 'Active';
+  }
+
+  canTogglePage(page: UserWithProfileDto): boolean {
+    return page.status !== 'Pending';
+  }
+
+  togglePageVisibility(page: UserWithProfileDto): void {
+    if (!this.canTogglePage(page) || this.togglingPageId === page.profileId) {
+      return;
+    }
+
+    const nextIsActive = !this.isPageActive(page);
+    this.togglingPageId = page.profileId;
+
+    this.userService.setPageVisibility({
+      profileType: page.profileType === 'artist' ? 'artist' : 'serviceProvider',
+      profileId: page.profileId,
+      isActive: nextIsActive
+    }).subscribe({
+      next: (updatedPage) => {
+        this.togglingPageId = null;
+        if (!updatedPage) return;
+
+        this.myPages = this.myPages.map(item =>
+          item.profileType === updatedPage.profileType && item.profileId === updatedPage.profileId
+            ? updatedPage
+            : item
+        );
+
+        if (this.myPageInfo?.profileType === updatedPage.profileType && this.myPageInfo?.profileId === updatedPage.profileId) {
+          this.myPageInfo = updatedPage;
+        }
+      },
+      error: () => {
+        this.togglingPageId = null;
+      }
+    });
   }
 
   getAddPageUrl(type: 'artist' | 'teacher' | 'provider'): string {
@@ -469,20 +654,81 @@ export class MyProfileComponent implements OnInit {
     return '/service-provider/create';
   }
 
+  private getManagedPage(): UserWithProfileDto | null {
+    return this.myPageInfo ?? this.myPages[0] ?? null;
+  }
+
+  leaveCurrentPage(): void {
+    if (this.leavingCurrentPage) {
+      return;
+    }
+
+    const page = this.getManagedPage();
+    if (!page) {
+      this.openIndexProfileFlow();
+      return;
+    }
+
+    this.leavingCurrentPage = true;
+    this.userService.revokePage(page.profileType, page.profileId).subscribe({
+      next: (ok) => {
+        this.leavingCurrentPage = false;
+
+        if (!ok) {
+          window.alert(this.accountWarningErrorLabel);
+          return;
+        }
+
+        this.myPages = this.myPages.filter(
+          item => !(item.profileType === page.profileType && item.profileId === page.profileId)
+        );
+        if (this.myPageInfo?.profileType === page.profileType && this.myPageInfo?.profileId === page.profileId) {
+          this.myPageInfo = this.myPages[0] ?? null;
+        }
+
+        this.showAccountTypeModal = false;
+        this.authService.logout();
+        void this.router.navigate(['/']);
+      },
+      error: () => {
+        this.leavingCurrentPage = false;
+        window.alert(this.accountWarningErrorLabel);
+      }
+    });
+  }
+
+  openIndexProfileFlow(): void {
+    this.closeAccountTypeModal();
+    this.quickAddAssistantService.requestOpen('index');
+  }
+
   getPageTypeName(): string {
     return this.myPageInfo ? this.getPageLabel(this.myPageInfo) : 'משתמש רגיל';
   }
 
   getEditPageUrl(page?: UserWithProfileDto): string {
-    const p = page ?? this.myPageInfo;
-    if (!p) return '/service-provider/create';
-    if (p.profileType === 'artist') return '/artist/create';
-    if (p.isTeacher) return '/teacher/create';
+    const targetPage = page ?? this.myPageInfo;
+    if (!targetPage) return '/service-provider/create';
+    if (targetPage.profileType === 'artist') return '/artist/create';
+    if (targetPage.isTeacher) return '/teacher/create';
     return '/service-provider/create';
   }
 
   getViewPageUrl(page?: UserWithProfileDto): string {
-    return (page ?? this.myPageInfo)?.profileUrl || '/professionals';
+    const profilePage = page ?? this.myPageInfo;
+    if (!profilePage) {
+      return '/professionals';
+    }
+
+    if (profilePage.profileType === 'artist') {
+      return `/artist/${profilePage.profileId}`;
+    }
+
+    if (profilePage.isTeacher) {
+      return `/teacher/${profilePage.profileId}`;
+    }
+
+    return `/professional/${profilePage.profileId}`;
   }
 
   getLevelNumber(): number {
@@ -494,13 +740,17 @@ export class MyProfileComponent implements OnInit {
   }
 
   getLevelName(): string {
-    const names: Record<number, string> = { 0: 'משתמש רשום', 1: 'מתחיל', 2: 'תורם', 3: 'תורם מוביל' };
+    const names: Record<number, string> = {
+      0: 'משתמש רשום',
+      1: 'מתחיל',
+      2: 'תורם',
+      3: 'תורם מוביל'
+    };
     return names[this.getLevelNumber()];
   }
 
   getDashOffset(): number {
     const tag = this.user?.contentTag ?? 0;
-    // tag 0 = 0%, 1 = 25%, 2 = 50%, 3 = 75%
     const progress = tag / 4;
     return this.CIRCUMFERENCE * (1 - progress);
   }
@@ -511,15 +761,108 @@ export class MyProfileComponent implements OnInit {
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'הועלה אתמול';
+    if (diffDays === 0) return 'הועלה היום';
+    if (diffDays === 1) return 'הועלה אתמול';
     if (diffDays < 14) return `הועלה לפני ${diffDays} ימים`;
     if (diffDays < 30) return 'הועלה לפני שבועיים';
     if (diffDays < 60) return 'הועלה לפני חודש';
     return `הועלה לפני ${Math.floor(diffDays / 30)} חודשים`;
   }
 
-  getLikedPath(item: LikedContent): string {
-    if (item.contentType === 'Article') return `/news/${item.slug}`;
-    return `/blog/${item.slug}`;
+  isBlogContent(contentType?: number | string): boolean {
+    return contentType === ArticleContentType.Blog || contentType === 'BlogPost';
+  }
+
+  getArticleRoute(item: ProfileArticleCard | LikedContent): string[] {
+    if (!item.slug) {
+      return ['/my-playlists'];
+    }
+
+    return this.isBlogContent(item.contentType) ? ['/blog', item.slug] : ['/news', item.slug];
+  }
+
+  getArticleTypeLabel(contentType?: number | string): string {
+    return this.isBlogContent(contentType) ? 'בלוג' : 'כתבה';
+  }
+
+  isArticleApproved(article: ProfileArticleCard): boolean {
+    return article.status === 1;
+  }
+
+  hasUploadedContent(): boolean {
+    return this.mySongs.length > 0 || this.myArticles.length > 0 || this.myEvents.length > 0;
+  }
+
+  getArticleBannerInput(item: ProfileArticleCard | LikedContent): Article {
+    const contentType = this.isBlogContent(item.contentType) ? ArticleContentType.Blog : ArticleContentType.News;
+    const imageUrl = 'imageUrl' in item ? item.imageUrl : undefined;
+    const featuredImageUrl = 'featuredImageUrl' in item ? item.featuredImageUrl : imageUrl;
+    const contentId = 'contentId' in item ? item.contentId : item.id;
+
+    return {
+      id: contentId,
+      title: item.title || '',
+      subtitle: 'subtitle' in item ? item.subtitle : undefined,
+      content: '',
+      featuredImageUrl: featuredImageUrl || imageUrl || 'assets/default-article.png',
+      publishDate: '',
+      createdAt: '',
+      authorName: '',
+      categoryIds: [],
+      categoryNames: [],
+      contentType,
+      slug: item.slug || '',
+      shortDescription: 'shortDescription' in item ? item.shortDescription : ('subtitle' in item ? item.subtitle : undefined),
+      isFeatured: false,
+      displayOrder: 0,
+      status: ArticleStatus.Published,
+      isPremium: false,
+      viewCount: 0,
+      likeCount: 0,
+      tags: [],
+      galleryImages: [],
+      taggedArtists: []
+    };
+  }
+
+  showMoreSongs(): void {
+    this.visibleSongCount += 4;
+  }
+
+  showMoreArticles(): void {
+    this.visibleArticleCount += 4;
+  }
+
+  showMoreEvents(): void {
+    this.visibleEventCount += 4;
+  }
+
+  showMoreLiked(): void {
+    this.visibleLikedCount += 4;
+  }
+
+  openEventModal(event: EventCardData): void {
+    this.selectedEventModal = event;
+  }
+
+  closeEventModal(): void {
+    this.selectedEventModal = null;
+  }
+
+  viewLikedContent(item: LikedContent): void {
+    void this.router.navigate(this.getArticleRoute(item));
+  }
+
+  removeLikedContent(item: LikedContent, event: Event): void {
+    event.stopPropagation();
+
+    this.likedContentService.removeLikedContent(item.contentType, item.contentId).subscribe({
+      next: () => {
+        this.likedContent = this.likedContent.filter(
+          likedItem => !(likedItem.contentType === item.contentType && likedItem.contentId === item.contentId)
+        );
+      },
+      error: () => {}
+    });
   }
 }

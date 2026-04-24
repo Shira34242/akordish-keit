@@ -7,7 +7,11 @@ export interface ArticleDto {
   title: string;
   slug: string;
   imageUrl?: string;
+  featuredImageUrl?: string;
+  shortDescription?: string;
   createdAt: string;
+  contentType?: number;
+  status?: number;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -943,75 +943,197 @@
    FOOTER
 ============================================ */
 .main-footer {
-    border-top: 1px solid #1e1e1e;
-    padding: var(--space-2xl) 0;
+    border-top: 1px solid #F2F2F2;
+    padding: var(--space-xl) 2.5rem var(--space-lg);
     margin-top: auto;
     direction: rtl;
+    background: #ffffff;
 }
 
-.footer-inner {
-    width: 100%;
-    padding: 0 2.5rem;
+/* --- Body row: nav + newsletter side by side --- */
+.footer-body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    direction: rtl;
-    box-sizing: border-box;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-lg);
 }
 
-.footer-right {
+/* --- Navigation columns --- */
+.footer-nav {
     display: flex;
-    align-items: center;
-    gap: var(--space-base);
+    gap: var(--space-xl);
+    flex-shrink: 0;
 }
 
-.footer-logo-img {
-    height: 50px;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s;
-}
-
-.footer-logo-img:hover {
-    opacity: 1;
-}
-
-.footer-left {
-    display: flex;
-    align-items: flex-start;
-}
-
-.footer-links {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
+.footer-col {
     list-style: none;
     margin: 0;
     padding: 0;
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 0 0 auto;
 }
 
-.footer-links li a {
+.footer-col li a,
+.footer-col li > a {
     font-family: 'Open Sans', sans-serif;
-    color: #888;
-    text-decoration: none;
-    font-size: var(--font-sm);
-    transition: color 0.2s;
-    cursor: pointer;
-}
-
-.footer-links li a:hover {
-    color: #ddff53;
-}
-
-.footer-contact-link {
-    cursor: pointer;
-    color: #ddff53 !important;
     font-weight: 600;
+    font-size: 13px;
+    color: #404040;
+    text-decoration: none;
+    transition: color 0.15s;
+    display: block;
 }
 
-.footer-contact-link:hover {
-    color: #ccff66 !important;
+.footer-col li a:hover {
+    color: #000000;
+}
+
+/* --- Tool tags --- */
+.footer-col--tools {
+    gap: 8px;
+}
+
+.footer-tag {
+    display: inline-block;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: #000000 !important;
+    background: #F2F2F2;
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.footer-tag:hover {
+    background: #e8e8e8;
+}
+
+.footer-link-btn {
+    cursor: pointer;
+}
+
+/* --- Newsletter --- */
+.footer-newsletter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 200px;
+}
+
+.footer-newsletter-label {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #000000;
+    margin: 0;
+}
+
+.footer-newsletter-sub {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.footer-newsletter-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.footer-newsletter-input {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #000000;
+    background: #F2F2F2;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 16px;
+    outline: none;
+    width: 180px;
+    text-align: right;
+    direction: rtl;
+}
+
+.footer-newsletter-input::placeholder {
+    color: #aaa;
+}
+
+.footer-newsletter-btn {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+
+.footer-newsletter-btn:hover {
+    opacity: 0.75;
+}
+
+/* --- Legal bar --- */
+.footer-legal {
+    border-top: 1px solid #F2F2F2;
+    padding-top: var(--space-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    align-items: center;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #888;
+    direction: rtl;
+}
+
+.footer-dot {
+    color: #bbb;
+}
+
+.footer-acum {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-acum-logo {
+    height: 22px;
+    width: auto;
+    opacity: 0.6;
+    display: block;
+    object-fit: contain;
+}
+
+.footer-legal-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: #666;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* ============================================
@@ -1085,8 +1207,31 @@
         border-radius: 28px 28px 0 0;
     }
 
-    .footer-inner {
-        padding: 0 1rem;
+    .main-footer {
+        padding: var(--space-lg) 1.25rem var(--space-md);
+    }
+
+    .footer-body {
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .footer-nav {
+        gap: var(--space-lg);
+    }
+
+    .footer-newsletter-input {
+        width: 160px;
+    }
+
+    .footer-legal {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .footer-dot {
+        display: none;
     }
 }
 
@@ -1125,12 +1270,27 @@
         right: 0;
     }
 
-    .footer-inner {
-        padding: 0 0.75rem;
+    .main-footer {
+        padding: var(--space-md) 0.75rem var(--space-sm);
     }
 
-    .footer-logo-img {
-        height: 38px;
+    .footer-body {
+        gap: var(--space-md);
+    }
+
+    .footer-nav {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .footer-col {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px var(--space-lg);
+    }
+
+    .footer-newsletter-input {
+        width: 130px;
     }
 
     .fab-add-song {

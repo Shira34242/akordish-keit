@@ -10,6 +10,12 @@ export interface UserWithProfileDto {
   categories: string[];
 }
 
+export interface SetPageVisibilityDto {
+  profileType: 'artist' | 'serviceProvider';
+  profileId: number;
+  isActive: boolean;
+}
+
 export enum UserContentTag {
   None               = 0,
   Beginner           = 1,

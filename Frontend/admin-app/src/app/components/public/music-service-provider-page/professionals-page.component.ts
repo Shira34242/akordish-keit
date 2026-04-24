@@ -15,6 +15,7 @@ import { TargetAudience, getTargetAudienceOptions } from '../../../models/target
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { BecomeProfessionalFormComponent } from '../become-professional-form/become-professional-form.component';
 import { AuthService } from '../../../services/auth.service';
+import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 
 interface Category {
   id: number;
@@ -114,7 +115,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     private citiesService: CitiesService,
     private systemTablesService: SystemTablesService,
     public authService: AuthService,
-    private router: Router
+    private router: Router,
+    private quickAddAssistantService: QuickAddAssistantService
   ) {}
 
   ngOnInit(): void {
@@ -501,7 +503,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       this.authService.requestLogin('/professionals');
       return;
     }
-    this.router.navigate(['/subscription/select'], { queryParams: { type: 'service-provider' } });
+    this.quickAddAssistantService.requestOpen('index');
   }
 
   openBecomeTeacherForm(): void {

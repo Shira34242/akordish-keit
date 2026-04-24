@@ -284,6 +284,7 @@
 
 <app-quick-add-assistant-modal
     *ngIf="showQuickAddAssistant"
+    [entryPoint]="quickAddEntryPoint"
     [adminEditLabel]="canEditArtistPage ? adminEditTarget?.label ?? null : null"
     (close)="closeFabMenu()"
     (actionSelected)="handleQuickAddAction($event)">
@@ -313,20 +314,49 @@
 </div>
 
 <footer class="main-footer">
-    <div class="footer-inner">
-        <div class="footer-right">
-            <img src="/logo.png" alt="אקורדישקיית" class="footer-logo-img" (click)="handleLogoClick()">
-        </div>
-        <div class="footer-left">
-            <ul class="footer-links">
-                <li><a routerLink="/">בית</a></li>
-                <li><a routerLink="/music-news">חדשות המוזיקה</a></li>
+
+    <div class="footer-body">
+
+        <div class="footer-nav">
+            <ul class="footer-col">
+                <li><a routerLink="/">דף הבית</a></li>
                 <li><a routerLink="/chords">אקורדים</a></li>
-                <li><a routerLink="/professionals">אינדקס עולם המוזיקה</a></li>
-                <li><a class="footer-contact-link" (click)="openReportModal()">צור קשר</a></li>
+                <li><a routerLink="/professionals">אינדקס</a></li>
+                <li><a routerLink="/music-news">חדשות מוזיקה</a></li>
+                <li><a routerLink="/artists">דף אמנים</a></li>
+                <li><a routerLink="/events">דף הופעות</a></li>
+                <li><a routerLink="/articles">כתבות תוכן</a></li>
+                <li><a routerLink="/community-playlists">מאגר רשימות שמורות</a></li>
+            </ul>
+            <ul class="footer-col footer-col--tools">
+                <li><a routerLink="/chords/dictionary" class="footer-tag">מילון אקורדים</a></li>
+                <li><button class="footer-tag footer-link-btn" type="button" (click)="handleRandomSongClick()">שיר בהפתעה</button></li>
+                <li><a routerLink="/tuner" class="footer-tag">כיוון גיטרה ויוקלילי</a></li>
             </ul>
         </div>
+
+        <div class="footer-newsletter">
+            <p class="footer-newsletter-label">הישאר מעודכן</p>
+            <p class="footer-newsletter-sub">שירים, אמנים וכתבות ישירות למייל</p>
+            <div class="footer-newsletter-form">
+                <input type="email" placeholder="כתובת מייל" class="footer-newsletter-input" />
+                <button class="footer-newsletter-btn" type="button">הרשמה</button>
+            </div>
+        </div>
+
     </div>
+
+    <div class="footer-legal">
+        <span class="footer-acum">
+            <img src="/acum-logo.png" alt="אקו&quot;ם" class="footer-acum-logo" (error)="$event.target.style.display='none'" />
+            אתר זה פועל ברשיון אקום
+        </span>
+        <span class="footer-dot">·</span>
+        <span>אתר זה מכבד זכויות יוצרים — באם זכויותכם נפגעו <button class="footer-legal-link" type="button" (click)="openReportModal()">צרו קשר</button> להסדרת העניין</span>
+        <span class="footer-dot">·</span>
+        <span>© אקורדישקייט. כל הזכויות שמורות</span>
+    </div>
+
 </footer>
 
 <app-add-song-modal *ngIf="showAddSongModal" (close)="closeAddSongModal()" (songAdded)="onSongAdded()">

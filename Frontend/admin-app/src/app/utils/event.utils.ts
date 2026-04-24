@@ -10,6 +10,7 @@ export interface EventCardData {
   eventStatus: string;
   daysUntilEvent?: number;
   isPast?: boolean;
+  isApproved?: boolean;
   description?: string;
 }
 

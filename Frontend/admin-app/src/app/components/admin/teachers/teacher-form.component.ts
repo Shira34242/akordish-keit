@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -22,6 +22,10 @@ import { FileUploadInputComponent } from '../../shared/file-upload-input/file-up
   styleUrls: ['./teacher-form.component.css']
 })
 export class TeacherFormComponent implements OnInit {
+  @Input() embedded = false;
+  @Input() teacherIdInput?: number;
+  @Output() close = new EventEmitter<void>();
+
   private readonly teacherService = inject(TeacherService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly userService = inject(UserService);
@@ -110,10 +114,13 @@ export class TeacherFormComponent implements OnInit {
     this.loadInstruments();
     this.loadCities();
     this.loadUsers();
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
+    const inputId = this.teacherIdInput;
+    const routeId = this.route.snapshot.paramMap.get('id');
+    const resolvedId = inputId ?? (routeId ? +routeId : undefined);
+
+    if (resolvedId) {
       this.isEditMode = true;
-      this.teacherId = +id;
+      this.teacherId = resolvedId;
       this.loadTeacher();
     } else {
       // Check for userId in query params (upgrade from user)
@@ -685,6 +692,11 @@ export class TeacherFormComponent implements OnInit {
   }
 
   goBack(): void {
+    if (this.embedded) {
+      this.close.emit();
+      return;
+    }
+
     this.router.navigate(['/admin/teachers']);
   }
 

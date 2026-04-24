@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, HostListener } from '@angular/core';
+import { Component, OnInit, inject, HostListener, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -36,6 +36,10 @@ interface PlatformLinkOption {
   styleUrls: ['./service-provider-form.component.css']
 })
 export class ServiceProviderFormComponent implements OnInit {
+  @Input() embedded = false;
+  @Input() serviceProviderIdInput?: number;
+  @Output() close = new EventEmitter<void>();
+
   private readonly serviceProviderService = inject(MusicServiceProviderService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly userService = inject(UserService);
@@ -106,10 +110,13 @@ export class ServiceProviderFormComponent implements OnInit {
     this.loadCategories();
     this.loadCities();
     this.loadUsers();
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
+    const inputId = this.serviceProviderIdInput;
+    const routeId = this.route.snapshot.paramMap.get('id');
+    const resolvedId = inputId ?? (routeId ? +routeId : undefined);
+
+    if (resolvedId) {
       this.isEditMode = true;
-      this.serviceProviderId = +id;
+      this.serviceProviderId = resolvedId;
       this.loadServiceProvider();
     } else {
       // Check for userId in query params (upgrade from user)
@@ -531,6 +538,11 @@ export class ServiceProviderFormComponent implements OnInit {
   }
 
   goBack(): void {
+    if (this.embedded) {
+      this.close.emit();
+      return;
+    }
+
     this.router.navigate(['/admin/service-providers']);
   }
 }

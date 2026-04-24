@@ -144,6 +144,14 @@
                 <span class="material-icons">visibility_off</span>
               </button>
               <button
+                *ngIf="artist.status === ArtistStatus.Hidden"
+                class="btn-action btn-approve"
+                (click)="activateArtist(artist.id)"
+                title="הפעל דף"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
+              <button
                 class="btn-action btn-duplicate"
                 (click)="duplicateArtist(artist.id, artist.name)"
                 title="שכפל"

@@ -35,4 +35,9 @@ public interface IUserService
     /// מנתק את המשתמש מהדף (UserId = null) — הדף עצמו נשאר ועובר לניהול המערכת
     /// </summary>
     Task<bool> RevokePageAsync(int userId, RevokePageDto dto);
+
+    /// <summary>
+    /// מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
+    /// </summary>
+    Task<UserWithProfileDto?> SetPageVisibilityAsync(int userId, SetPageVisibilityDto dto);
 }

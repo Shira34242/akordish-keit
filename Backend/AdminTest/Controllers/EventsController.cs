@@ -70,7 +70,7 @@ namespace AkordishKeit.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var eventDto = await _eventService.CreateEventAsync(dto);
+            var eventDto = await _eventService.CreateEventAsync(dto, GetCurrentUserId());
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
         }
 
@@ -84,14 +84,14 @@ namespace AkordishKeit.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
                 return Unauthorized();
 
             dto.IsActive = false;
             dto.DisplayOrder = 0;
 
-            var eventDto = await _eventService.CreateEventAsync(dto, userId);
+            var eventDto = await _eventService.CreateEventAsync(dto, userId.Value);
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
         }
 
@@ -102,11 +102,11 @@ namespace AkordishKeit.Controllers
         [Authorize]
         public async Task<ActionResult<List<EventDto>>> GetMyEvents()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
                 return Unauthorized();
 
-            var events = await _eventService.GetMyEventsAsync(userId);
+            var events = await _eventService.GetMyEventsAsync(userId.Value);
             return Ok(events);
         }
 
@@ -141,6 +141,13 @@ namespace AkordishKeit.Controllers
                 return NotFound(new { message = "ההופעה לא נמצאה" });
 
             return NoContent();
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? User.FindFirst("sub")?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : null;
         }
     }
 }

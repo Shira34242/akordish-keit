@@ -20,6 +20,7 @@ import { ServiceProviderCreateComponent } from '../service-provider-create/servi
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
 import { NotificationService } from '../../services/notification.service';
 import { NotificationDto } from '../../models/notification.model';
+import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 
 @Component({
   selector: 'app-layout',
@@ -50,6 +51,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showAddSongModal = false;
   showMobileMenu = false;
   showQuickAddAssistant = false;
+  quickAddEntryPoint: QuickAddEntryPoint = 'root';
   showNotificationsPopup = false;
   showNotificationsCenterModal = false;
   notificationsPreview: NotificationDto[] = [];
@@ -87,7 +89,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private sessionTimeoutService: SessionTimeoutService,
     private artistPageService: ArtistPageService,
     private contentPageService: ContentPageService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private quickAddAssistantService: QuickAddAssistantService
   ) {}
 
   @HostListener('window:scroll')
@@ -141,6 +144,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     });
 
     this.sessionTimeoutService.startWatching();
+
+    this.quickAddAssistantService.openRequests$.subscribe(entryPoint => {
+      this.openQuickAddAssistant(entryPoint);
+    });
 
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
@@ -608,10 +615,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
         break;
       case UserType.Teacher:
-        this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
+        this.quickAddAssistantService.requestOpen('index');
         break;
       case UserType.ServiceProvider:
-        this.router.navigate(['/service-provider/create'], { queryParams: { from: 'registration' } });
+        this.quickAddAssistantService.requestOpen('index');
         break;
       default:
         this.router.navigate(['/subscription/select'], { queryParams: { from: 'registration' } });
@@ -636,16 +643,17 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   toggleFabMenu(event: Event): void {
     event.stopPropagation();
 
-    if (!this.loggedIn) {
-      this.authService.requestLogin(this.router.url);
+    if (this.showQuickAddAssistant) {
+      this.closeFabMenu();
       return;
     }
 
-    this.showQuickAddAssistant = !this.showQuickAddAssistant;
+    this.openQuickAddAssistant('root');
   }
 
   closeFabMenu(): void {
     this.showQuickAddAssistant = false;
+    this.quickAddEntryPoint = 'root';
   }
 
   handleQuickAddAction(action: QuickAddAction): void {
@@ -757,5 +765,15 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.closeMobileMenu();
 
     this.router.navigate(['/subscription/select']);
+  }
+
+  private openQuickAddAssistant(entryPoint: QuickAddEntryPoint): void {
+    if (!this.loggedIn) {
+      this.authService.requestLogin(this.router.url);
+      return;
+    }
+
+    this.quickAddEntryPoint = entryPoint;
+    this.showQuickAddAssistant = true;
   }
 }

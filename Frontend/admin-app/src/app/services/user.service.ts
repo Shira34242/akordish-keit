@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { UserListDto, UserWithProfileDto, PagedResult } from '../models/user.model';
+import { UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -67,6 +67,12 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/me/pages/revoke`, { profileType, profileId }, { withCredentials: true }).pipe(
       map(() => true),
       catchError(() => of(false))
+    );
+  }
+
+  setPageVisibility(data: SetPageVisibilityDto): Observable<UserWithProfileDto | null> {
+    return this.http.post<UserWithProfileDto>(`${this.apiUrl}/me/pages/visibility`, data, { withCredentials: true }).pipe(
+      catchError(() => of(null))
     );
   }
 

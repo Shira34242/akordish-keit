@@ -167,6 +167,14 @@
               >
                 <span class="material-icons">block</span>
               </button>
+              <button
+                *ngIf="provider.status === 2"
+                class="btn-action btn-approve"
+                (click)="activateProvider(provider.id)"
+                title="הפעל דף"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
               <button class="btn-action btn-duplicate" (click)="duplicateProvider(provider.id, provider.displayName)" title="שכפל">
                 <span class="material-icons">content_copy</span>
               </button>

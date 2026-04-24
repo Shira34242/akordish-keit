@@ -158,6 +158,20 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
+  activateArtist(id: number): void {
+    if (confirm('האם להפעיל את דף האמן ולהחזיר אותו לאינדקס?')) {
+      this.artistService.updateArtistStatus(id, ArtistStatus.Active).subscribe({
+        next: () => {
+          this.loadArtists();
+        },
+        error: (err) => {
+          console.error('שגיאה בהפעלת אמן:', err);
+          alert('שגיאה בהפעלת האמן');
+        }
+      });
+    }
+  }
+
   deleteArtist(id: number): void {
     if (confirm('האם למחוק את האומן? פעולה זו אינה הפיכה.')) {
       this.artistService.deleteArtist(id).subscribe({
