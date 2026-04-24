@@ -11,7 +11,7 @@ namespace AkordishKeit.Models.DTOs
         public int ArticleId { get; set; }
 
         [Required(ErrorMessage = "סדר התצוגה הוא שדה חובה")]
-        [Range(1, 4, ErrorMessage = "סדר התצוגה חייב להיות בין 1 ל-4")]
+        [Range(1, 5, ErrorMessage = "סדר התצוגה חייב להיות בין 1 ל-5")]
         public int DisplayOrder { get; set; }
 
         public bool IsActive { get; set; } = true;
@@ -26,7 +26,7 @@ namespace AkordishKeit.Models.DTOs
         public int ArticleId { get; set; }
 
         [Required(ErrorMessage = "סדר התצוגה הוא שדה חובה")]
-        [Range(1, 4, ErrorMessage = "סדר התצוגה חייב להיות בין 1 ל-4")]
+        [Range(1, 5, ErrorMessage = "סדר התצוגה חייב להיות בין 1 ל-5")]
         public int DisplayOrder { get; set; }
 
         public bool IsActive { get; set; } = true;
@@ -57,7 +57,7 @@ namespace AkordishKeit.Models.DTOs
     {
         [Required]
         [MinLength(1, ErrorMessage = "חייב לבחור לפחות כתבה אחת")]
-        [MaxLength(4, ErrorMessage = "ניתן לבחור עד 4 כתבות")]
+        [MaxLength(5, ErrorMessage = "ניתן לבחור עד 5 כתבות")]
         public List<FeaturedContentItemDto> Items { get; set; } = new();
     }
 
@@ -67,7 +67,7 @@ namespace AkordishKeit.Models.DTOs
         public int ArticleId { get; set; }
 
         [Required]
-        [Range(1, 4)]
+        [Range(1, 5)]
         public int DisplayOrder { get; set; }
     }
 }

@@ -1,67 +1,80 @@
-<div class="events-page" dir="rtl">
+<div class="events-page"
+  dir="rtl"
+  (wheel)="onWheel($event)"
+  (mousedown)="onMouseDown($event)"
+  (mousemove)="onMouseMove($event)"
+  (mouseup)="onMouseUp()"
+  (mouseleave)="onMouseUp()"
+  (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
+  (touchend)="onMouseUp()">
 
-  <!-- White top mask (מסכת גלילה עליונה) -->
-  <div class="top-scroll-mask"></div>
-
-  <!-- Hero Background — fixed, shrinks on scroll -->
-  <div class="hero-bg" #heroBg>
-    <div class="hero-collapse-overlay"></div>
+  <!-- Title + filters -->
+  <div class="events-header">
+    <h1 class="events-title">הופעות</h1>
+    <div class="filter-pills">
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">קרובות</button>
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'all'"      (click)="setFilter('all')">הכל</button>
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'past'"     (click)="setFilter('past')">שעברו</button>
+    </div>
   </div>
 
-  <!-- Hero Content Area (relative — יוצר גובה בפלוו) -->
-  <div class="hero-content-area">
-    <div class="hero-content">
-      <p class="hero-subtitle">אקורדישקייט</p>
-      <h1 class="hero-title">הופעות</h1>
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-center">
+    <div class="spinner"></div>
+  </div>
 
-      <!-- Filter chips -->
-      <div class="filter-chips">
-        <button
-          class="filter-chip"
-          [class.filter-chip--active]="filterMode === 'upcoming'"
-          (click)="setFilter('upcoming')">
-          קרובות
-        </button>
-        <button
-          class="filter-chip"
-          [class.filter-chip--active]="filterMode === 'all'"
-          (click)="setFilter('all')">
-          הכל
-        </button>
-        <button
-          class="filter-chip"
-          [class.filter-chip--active]="filterMode === 'past'"
-          (click)="setFilter('past')">
-          שעברו
-        </button>
+  <!-- Empty -->
+  <div *ngIf="!loading && filteredEvents.length === 0" class="state-center">
+    <span class="material-icons empty-icon">local_activity</span>
+    <p class="empty-text">אין הופעות להצגה</p>
+  </div>
+
+  <!-- Carousel -->
+  <div class="carousel" *ngIf="!loading && filteredEvents.length > 0">
+    <div
+      class="carousel-item"
+      #carouselItem
+      *ngFor="let event of filteredEvents; let i = index; trackBy: trackById"
+      (click)="onItemClick(i, event)">
+
+      <div class="carousel-box">
+        <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name" class="slide-img" draggable="false">
+        <div *ngIf="!event.imageUrl" class="slide-placeholder">
+          <span class="material-icons">music_note</span>
+        </div>
+
+        <span class="slide-badge" [class.slide-badge--past]="event.isPast">
+          {{ event.isPast ? 'הסתיים' : event.eventStatus }}
+        </span>
+
+        <div class="slide-info">
+          <h3 class="slide-name">{{ event.name }}</h3>
+          <p class="slide-meta" *ngIf="getArtist(event) || event.location">
+            <span *ngIf="getArtist(event)">{{ getArtist(event) }}</span>
+            <span *ngIf="getArtist(event) && event.location"> · </span>
+            <span *ngIf="event.location">{{ event.location }}</span>
+          </p>
+          <p class="slide-date">{{ formatDate(event.eventDate) }}</p>
+          <a *ngIf="event.ticketUrl && !event.isPast"
+             [href]="event.ticketUrl"
+             target="_blank" rel="noopener"
+             class="slide-ticket"
+             (click)="$event.stopPropagation()">
+            לכרטיסים
+          </a>
+        </div>
       </div>
+
     </div>
   </div>
 
-  <!-- תוכן -->
-  <div class="events-content">
-
-    <!-- Loading -->
-    <div *ngIf="loading" class="loading-state">
-      <div class="spinner"></div>
-    </div>
-
-    <!-- Grid כרטיסים -->
-    <div *ngIf="!loading && filteredEvents.length > 0" class="events-grid">
-      <app-event-card
-        *ngFor="let event of filteredEvents"
-        [event]="event"
-        (cardClick)="openModal($event)">
-      </app-event-card>
-    </div>
-
-    <!-- Empty state -->
-    <div *ngIf="!loading && filteredEvents.length === 0" class="empty-state">
-      <span class="material-icons">event_busy</span>
-      <p>אין הופעות להצגה</p>
-    </div>
-
-  </div>
+  <!-- Floating Tab Navigation -->
+  <nav class="tab-bar" dir="rtl">
+    <a class="tab-bar__item" routerLink="/music-news">חדשות</a>
+    <a class="tab-bar__item" routerLink="/blog">בלוג</a>
+    <a class="tab-bar__item tab-bar__item--active" routerLink="/events">הופעות</a>
+  </nav>
 
 </div>
 
