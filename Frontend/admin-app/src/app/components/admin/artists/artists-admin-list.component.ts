@@ -7,6 +7,7 @@ import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
 import { PagedResult } from '../../../models/user.model';
 import { ArtistEditModalComponent } from './artist-edit-modal.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 
 @Component({
   selector: 'app-artists-admin-list',
@@ -59,11 +60,13 @@ export class ArtistsAdminListComponent implements OnInit {
 
   constructor(
     private artistService: ArtistService,
-    private router: Router
+    private router: Router,
+    private layoutActions: AdminUsersLayoutActionsService
   ) { }
 
   ngOnInit(): void {
     this.loadArtists();
+    this.layoutActions.addArtistRequest$.subscribe(() => this.addNewArtist());
   }
 
   loadArtists(): void {

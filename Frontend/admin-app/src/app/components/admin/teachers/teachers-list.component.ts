@@ -115,7 +115,7 @@ export class TeachersListComponent implements OnInit {
   }
 
   editTeacher(id: number): void {
-    this.router.navigate(['/admin/teachers/edit', id]);
+    this.router.navigate(['/admin/users/teachers/edit', id]);
   }
 
   viewTeacher(id: number): void {
@@ -227,7 +227,7 @@ export class TeachersListComponent implements OnInit {
   }
 
   addNewTeacher(): void {
-    this.router.navigate(['/admin/teachers/new']);
+    this.router.navigate(['/admin/users/teachers/new']);
   }
 
   getStatusBadgeClass(status: number): string {

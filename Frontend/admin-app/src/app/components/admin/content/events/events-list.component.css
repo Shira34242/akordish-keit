@@ -184,6 +184,7 @@
 
 .btn-action .material-icons { font-size: 18px; color: #000000; }
 .btn-action:hover { background: #ddff53; }
+.btn-duplicate:hover { background: #ddff53; }
 .btn-delete:hover { background: #404040; }
 .btn-delete:hover .material-icons { color: #ffffff; }
 

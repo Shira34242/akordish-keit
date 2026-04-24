@@ -8,6 +8,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-base);
+  background: #F2F2F2;
+  border-radius: 28px;
+  padding: var(--space-base);
 }
 
 .page-header,
@@ -83,7 +86,7 @@ h2 {
 .chat-shell {
   display: grid;
   grid-template-columns: minmax(320px, 410px) 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-base);
   min-height: 680px;
 }
 
@@ -103,6 +106,12 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-base);
+}
+
+.wa-topbar {
+  background: #F2F2F2;
+  border-radius: 999px;
+  padding: var(--space-xs);
 }
 
 .wa-tabs {
@@ -274,6 +283,9 @@ button:disabled {
   margin-top: var(--space-lg);
   overflow: auto;
   min-height: 0;
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: var(--space-sm);
 }
 
 .chat-row {
@@ -294,7 +306,7 @@ button:disabled {
 }
 
 .chat-row.selected {
-  background: #F2F2F2;
+  background: #ddff53;
 }
 
 .avatar,
@@ -532,9 +544,9 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  background: #ffffff;
+  background: #F2F2F2;
   border-radius: 18px;
-  padding: 0;
+  padding: var(--space-sm);
 }
 
 .member-picker-head,
@@ -576,14 +588,15 @@ button:disabled {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-sm);
-  background: #F2F2F2;
+  background: #ffffff;
+  border-radius: 18px;
   padding: var(--space-sm);
   text-align: right;
   width: 100%;
 }
 
 .member-row.checked {
-  background: #ffffff;
+  background: #ddff53;
 }
 
 .member-check {
@@ -637,6 +650,7 @@ button:disabled {
 .conversation-panel {
   padding: 0;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .conversation-panel.empty {

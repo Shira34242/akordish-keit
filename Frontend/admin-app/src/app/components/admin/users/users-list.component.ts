@@ -136,13 +136,13 @@ export class UsersListComponent implements OnInit {
   }
 
   upgradeToTeacher(userId: number): void {
-    this.router.navigate(['/admin/teachers/new'], {
+    this.router.navigate(['/admin/users/teachers/new'], {
       queryParams: { userId: userId }
     });
   }
 
   upgradeToServiceProvider(userId: number): void {
-    this.router.navigate(['/admin/service-providers/new'], {
+    this.router.navigate(['/admin/users/service-providers/new'], {
       queryParams: { userId: userId }
     });
   }

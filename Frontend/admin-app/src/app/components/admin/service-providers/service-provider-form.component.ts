@@ -543,6 +543,6 @@ export class ServiceProviderFormComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/admin/service-providers']);
+    this.router.navigate(['/admin/users/service-providers']);
   }
 }

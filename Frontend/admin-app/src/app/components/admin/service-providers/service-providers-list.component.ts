@@ -118,7 +118,7 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   editProvider(id: number): void {
-    this.router.navigate(['/admin/service-providers/edit', id]);
+    this.router.navigate(['/admin/users/service-providers/edit', id]);
   }
 
   viewProvider(id: number): void {
@@ -230,7 +230,7 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   addNewProvider(): void {
-    this.router.navigate(['/admin/service-providers/new']);
+    this.router.navigate(['/admin/users/service-providers/new']);
   }
 
   getStatusBadgeClass(status: number): string {

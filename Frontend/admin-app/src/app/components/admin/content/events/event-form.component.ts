@@ -62,6 +62,11 @@ export class EventFormComponent implements OnInit {
       this.isEditMode = true;
       this.eventId = +id;
       this.loadEvent();
+    } else {
+      const duplicateId = this.route.snapshot.queryParamMap.get('duplicate');
+      if (duplicateId) {
+        this.loadDuplicateEvent(+duplicateId);
+      }
     }
   }
 
@@ -111,6 +116,34 @@ export class EventFormComponent implements OnInit {
         alert('שגיאה בטעינת ההופעה');
         this.loading = false;
         this.goBack();
+      }
+    });
+  }
+
+  loadDuplicateEvent(sourceId: number): void {
+    this.loading = true;
+    this.eventService.getEvent(sourceId).subscribe({
+      next: (event: Event) => {
+        this.event = {
+          name: `${event.name} (עותק)`,
+          description: event.description,
+          imageUrl: event.imageUrl,
+          ticketUrl: event.ticketUrl,
+          eventDate: '',
+          location: event.location,
+          artistName: event.artistName,
+          price: event.price,
+          displayOrder: event.displayOrder,
+          isActive: true,
+          artistIds: event.taggedArtists.map(a => a.artistId)
+        };
+        this.selectedArtistIds = event.taggedArtists.map(a => a.artistId);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading event for duplication:', error);
+        alert('שגיאה בטעינת ההופעה לשכפול');
+        this.loading = false;
       }
     });
   }

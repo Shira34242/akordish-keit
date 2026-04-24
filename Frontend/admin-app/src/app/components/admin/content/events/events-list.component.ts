@@ -80,6 +80,10 @@ export class EventsListComponent implements OnInit {
     this.router.navigate(['/admin/content/events/edit', event.id]);
   }
 
+  duplicateEvent(event: Event): void {
+    this.router.navigate(['/admin/content/events/new'], { queryParams: { duplicate: event.id } });
+  }
+
   deleteEvent(event: Event): void {
     if (confirm(`האם אתה בטוח שברצונך למחוק את ההופעה "${event.name}"?`)) {
       this.eventService.deleteEvent(event.id).subscribe({

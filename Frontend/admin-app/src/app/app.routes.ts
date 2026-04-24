@@ -190,6 +190,133 @@ export const routes: Routes = [
             { path: '', redirectTo: 'users', pathMatch: 'full' },
             {
                 path: 'users',
+                loadComponent: () => import('./components/admin/users/users-layout/users-layout.component').then(m => m.AdminUsersLayoutComponent),
+                children: [
+                    { path: '', redirectTo: 'clients', pathMatch: 'full' },
+                    {
+                        path: 'clients',
+                        loadComponent: () => import('./components/admin/users/users-list.component').then(m => m.UsersListComponent),
+                        title: 'ניהול לקוחות - אקורדישקייט'
+                    },
+                    {
+                        path: 'teachers',
+                        loadComponent: () => import('./components/admin/teachers/teachers-list.component').then(m => m.TeachersListComponent),
+                        title: 'ניהול מורים - אקורדישקייט'
+                    },
+                    {
+                        path: 'teachers/new',
+                        loadComponent: () => import('./components/admin/teachers/teacher-form.component').then(m => m.TeacherFormComponent),
+                        title: 'מורה חדש - אקורדישקייט'
+                    },
+                    {
+                        path: 'teachers/edit/:id',
+                        loadComponent: () => import('./components/admin/teachers/teacher-form.component').then(m => m.TeacherFormComponent),
+                        title: 'עריכת מורה - אקורדישקייט'
+                    },
+                    {
+                        path: 'service-providers',
+                        loadComponent: () => import('./components/admin/service-providers/service-providers-list.component').then(m => m.ServiceProvidersListComponent),
+                        title: 'ניהול בעלי מקצוע - אקורדישקייט'
+                    },
+                    {
+                        path: 'service-providers/new',
+                        loadComponent: () => import('./components/admin/service-providers/service-provider-form.component').then(m => m.ServiceProviderFormComponent),
+                        title: 'בעל מקצוע חדש - אקורדישקייט'
+                    },
+                    {
+                        path: 'service-providers/edit/:id',
+                        loadComponent: () => import('./components/admin/service-providers/service-provider-form.component').then(m => m.ServiceProviderFormComponent),
+                        title: 'עריכת בעל מקצוע - אקורדישקייט'
+                    },
+                    {
+                        path: 'artists',
+                        loadComponent: () => import('./components/admin/artists/artists-admin-list.component').then(m => m.ArtistsAdminListComponent),
+                        title: 'ניהול אומנים - אקורדישקייט'
+                    }
+                ]
+            },
+            {
+                path: 'content',
+                loadComponent: () => import('./components/admin/content/content-layout/content-layout.component').then(m => m.AdminContentLayoutComponent),
+                children: [
+                    { path: '', redirectTo: 'songs', pathMatch: 'full' },
+                    {
+                        path: 'songs',
+                        loadComponent: () => import('./components/admin/content/songs/songs-list.component').then(m => m.SongsListComponent),
+                        title: 'ניהול שירים - אקורדישקייט'
+                    },
+                    {
+                        path: 'articles',
+                        loadComponent: () => import('./components/admin/content/articles/articles-list.component').then(m => m.ArticlesListComponent),
+                        title: 'ניהול תוכן - כתבות - אקורדישקייט'
+                    },
+                    {
+                        path: 'articles/new',
+                        loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        title: 'כתבה חדשה - אקורדישקייט'
+                    },
+                    {
+                        path: 'articles/edit/:id',
+                        loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        title: 'עריכת כתבה - אקורדישקייט'
+                    },
+                    {
+                        path: 'featured',
+                        loadComponent: () => import('./components/admin/content/featured-content/featured-content-management.component').then(m => m.FeaturedContentManagementComponent),
+                        title: 'ניהול תוכן מרכזי - אקורדישקייט'
+                    },
+                    {
+                        path: 'news-sections',
+                        loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
+                        title: 'ניהול פסי חדשות - אקורדישקייט'
+                    },
+                    {
+                        path: 'ticker',
+                        loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
+                        title: 'ניהול פס חדשות הירו - אקורדישקייט'
+                    },
+                    {
+                        path: 'events',
+                        loadComponent: () => import('./components/admin/content/events/events-list.component').then(m => m.EventsListComponent),
+                        title: 'ניהול הופעות - אקורדישקייט'
+                    },
+                    {
+                        path: 'events/new',
+                        loadComponent: () => import('./components/admin/content/events/event-form.component').then(m => m.EventFormComponent),
+                        title: 'הופעה חדשה - אקורדישקייט'
+                    },
+                    {
+                        path: 'events/edit/:id',
+                        loadComponent: () => import('./components/admin/content/events/event-form.component').then(m => m.EventFormComponent),
+                        title: 'עריכת הופעה - אקורדישקייט'
+                    },
+                    {
+                        path: 'stats',
+                        loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
+                        title: 'סטטיסטיקות תוכן - אקורדישקייט'
+                    }
+                ]
+            },
+            {
+                path: 'notifications',
+                loadComponent: () => import('./components/admin/notifications/notifications-layout/notifications-layout.component').then(m => m.AdminNotificationsLayoutComponent),
+                children: [
+                    { path: '', redirectTo: 'messages', pathMatch: 'full' },
+                    {
+                        path: 'messages',
+                        loadComponent: () => import('./components/admin/notifications/admin-notifications.component').then(m => m.AdminNotificationsComponent),
+                        title: 'התראות - ניהול'
+                    },
+                    {
+                        path: 'reports',
+                        loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
+                        title: 'ניהול דיווחים - אקורדישקייט'
+                    }
+                ]
+            },
+            { path: 'reports', redirectTo: 'notifications/reports', pathMatch: 'full' },
+            {
+                path: 'users',
                 loadComponent: () => import('./components/admin/users/users-list.component').then(m => m.UsersListComponent),
                             title: 'ניהול לקוחות - אקורדישקייט'
             },

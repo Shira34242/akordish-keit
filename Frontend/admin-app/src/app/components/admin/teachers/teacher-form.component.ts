@@ -697,7 +697,7 @@ export class TeacherFormComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/admin/teachers']);
+    this.router.navigate(['/admin/users/teachers']);
   }
 
   preventEnterSubmit(event: Event): void {

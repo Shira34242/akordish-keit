@@ -13,85 +13,46 @@
             <div class="header-center">
                 <nav class="admin-nav">
                     <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">dashboard</span>
                         <span>מרכז בקרה</span>
                     </a>
-                    <div class="nav-item-with-dropdown" [class.open]="usersMenuOpen">
-                        <a class="nav-item" (click)="toggleUsersMenu()">
-                            <span class="material-symbols-outlined">group</span>
+                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                        <a routerLink="/admin/users" class="nav-item nav-parent">
                             <span>משתמשים</span>
-                            <span class="material-symbols-outlined dropdown-arrow">{{ usersMenuOpen ? 'expand_less' : 'expand_more' }}</span>
                         </a>
-                        <div class="dropdown-menu" *ngIf="usersMenuOpen">
-                            <a routerLink="/admin/users" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">person</span>
-                                <span>לקוחות</span>
-                            </a>
-                            <a routerLink="/admin/teachers" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">school</span>
-                                <span>מורים</span>
-                            </a>
-                            <a routerLink="/admin/service-providers" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">business_center</span>
-                                <span>בעלי מקצוע</span>
-                            </a>
-                            <a routerLink="/admin/artists" routerLinkActive="active-sub" (click)="closeUsersMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">mic</span>
-                                <span>אומנים</span>
-                            </a>
+                        <div class="nav-submenu" aria-label="סוגי משתמשים">
+                            <a routerLink="/admin/users/clients" routerLinkActive="active-sub" class="sub-nav-item">לקוחות</a>
+                            <a routerLink="/admin/users/teachers" routerLinkActive="active-sub" class="sub-nav-item">מורים</a>
+                            <a routerLink="/admin/users/service-providers" routerLinkActive="active-sub" class="sub-nav-item">בעלי מקצוע</a>
+                            <a routerLink="/admin/users/artists" routerLinkActive="active-sub" class="sub-nav-item">אומנים</a>
                         </div>
                     </div>
-                    <div class="nav-item-with-dropdown" [class.open]="contentMenuOpen">
-                        <a class="nav-item" (click)="toggleContentMenu()">
-                            <span class="material-symbols-outlined">menu_book</span>
+                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                        <a routerLink="/admin/content" class="nav-item nav-parent">
                             <span>תוכן</span>
-                            <span class="material-symbols-outlined dropdown-arrow">{{ contentMenuOpen ? 'expand_less' : 'expand_more' }}</span>
                         </a>
-                        <div class="dropdown-menu" *ngIf="contentMenuOpen">
-                            <a routerLink="/admin/content/articles" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">article</span>
-                                <span>חדשות ובלוג</span>
-                            </a>
-                            <a routerLink="/admin/content/featured" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">star</span>
-                                <span>תוכן מרכזי</span>
-                            </a>
-                            <a routerLink="/admin/content/news-sections" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">view_list</span>
-                                <span>פסי חדשות</span>
-                            </a>
-                            <a routerLink="/admin/content/ticker" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">breaking_news</span>
-                                <span>פס חדשות הירו</span>
-                            </a>
-                            <a routerLink="/admin/content/stats" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">bar_chart</span>
-                                <span>סטטיסטיקות</span>
-                            </a>
-                            <a routerLink="/admin/content/events" routerLinkActive="active-sub" (click)="closeContentMenu()" class="dropdown-item">
-                                <span class="material-symbols-outlined">event</span>
-                                <span>הופעות</span>
-                            </a>
+                        <div class="nav-submenu" aria-label="סוגי תוכן">
+                            <a routerLink="/admin/content/songs" routerLinkActive="active-sub" class="sub-nav-item">אקורדים</a>
+                            <a routerLink="/admin/content/articles" routerLinkActive="active-sub" class="sub-nav-item">כתבות</a>
+                            <a routerLink="/admin/content/featured" routerLinkActive="active-sub" class="sub-nav-item">מרכזי</a>
+                            <a routerLink="/admin/content/news-sections" routerLinkActive="active-sub" class="sub-nav-item">פסי חדשות</a>
+                            <a routerLink="/admin/content/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>
+                            <a routerLink="/admin/content/events" routerLinkActive="active-sub" class="sub-nav-item">הופעות</a>
+                            <a routerLink="/admin/content/stats" routerLinkActive="active-sub" class="sub-nav-item">סטטיסטיקה</a>
                         </div>
                     </div>
-                    <a routerLink="/admin/content/songs" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">music_note</span>
-                        <span>אקורדים</span>
-                    </a>
                     <a routerLink="/admin/advertising" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">campaign</span>
                         <span>פרסום</span>
                     </a>
-                    <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">report</span>
-                        <span>דיווחים</span>
-                    </a>
-                    <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span>התראות</span>
-                    </a>
+                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                        <a routerLink="/admin/notifications" class="nav-item nav-parent">
+                            <span>התראות</span>
+                        </a>
+                        <div class="nav-submenu" aria-label="סוגי התראות">
+                            <a routerLink="/admin/notifications/messages" routerLinkActive="active-sub" class="sub-nav-item">צ׳אטים</a>
+                            <a routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">דיווחים</a>
+                        </div>
+                    </div>
                     <a routerLink="/admin/system" routerLinkActive="active" class="nav-item">
-                        <span class="material-symbols-outlined">settings</span>
                         <span>מערכת</span>
                     </a>
                 </nav>
