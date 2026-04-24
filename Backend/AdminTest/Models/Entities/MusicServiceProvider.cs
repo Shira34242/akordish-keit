@@ -82,6 +82,12 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public string? WorkingHours { get; set; }
 
+        public ServiceProviderParkingType ParkingType { get; set; } = ServiceProviderParkingType.None;
+
+        public bool HasAccessibleEntrance { get; set; }
+
+        public bool IsAnash { get; set; }
+
         // ════════════════════════════════════
         //          יצירת קשר
         // ════════════════════════════════════

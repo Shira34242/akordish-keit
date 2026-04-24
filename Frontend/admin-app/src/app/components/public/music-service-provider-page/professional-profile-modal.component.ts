@@ -8,6 +8,7 @@ import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-brows
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import {
   MusicServiceProviderDto,
+  ServiceProviderParkingType,
   SocialLinkDto,
   SocialPlatform
 } from '../../../models/music-service-provider.model';
@@ -40,14 +41,19 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   @Output() close = new EventEmitter<void>();
 
   @ViewChild('professionalHeroBg') professionalHeroBg?: ElementRef<HTMLDivElement>;
+  @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
 
   professional: MusicServiceProviderDto | null = null;
   cities: City[] = [];
   loading = true;
   error: string | null = null;
   SocialPlatform = SocialPlatform;
+  ServiceProviderParkingType = ServiceProviderParkingType;
 
   contactOpen = false;
+  canScrollTestimonialsPrev = false;
+  canScrollTestimonialsNext = false;
+  activeTestimonialIndex = 0;
   mediaLightboxIndex: number | null = null;
   galleryMediaItems: GalleryMediaItem[] = [];
   activeMedia: GalleryMediaItem | null = null;
@@ -102,6 +108,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
         setTimeout(() => {
           this.cdr.detectChanges();
           this.initHeroHeight();
+          this.updateTestimonialsNav();
         }, 0);
       },
       error: () => {
@@ -132,6 +139,58 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   @HostListener('window:resize')
   onResize(): void {
     this.initHeroHeight();
+    this.updateTestimonialsNav();
+  }
+
+  scrollTestimonials(direction: 'prev' | 'next'): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) return;
+    const amount = Math.round(el.clientWidth * 0.8);
+    el.scrollBy({
+      left: direction === 'next' ? -amount : amount,
+      behavior: 'smooth'
+    });
+    window.setTimeout(() => this.updateTestimonialsNav(), 260);
+  }
+
+  updateTestimonialsNav(): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) {
+      this.canScrollTestimonialsPrev = false;
+      this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
+      return;
+    }
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 2) {
+      this.canScrollTestimonialsPrev = false;
+      this.canScrollTestimonialsNext = false;
+      this.activeTestimonialIndex = 0;
+      return;
+    }
+
+    const current = Math.abs(el.scrollLeft);
+    this.canScrollTestimonialsNext = current < maxScroll - 2;
+    this.canScrollTestimonialsPrev = current > 2;
+    this.activeTestimonialIndex = Math.max(
+      0,
+      Math.min(
+        this.customerTestimonials.length - 1,
+        Math.round((current / maxScroll) * (this.customerTestimonials.length - 1))
+      )
+    );
+  }
+
+  scrollToTestimonial(index: number): void {
+    const el = this.testimonialsScrollerRef?.nativeElement;
+    if (!el) return;
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('.testimonial-card'));
+    const card = cards[index];
+    if (!card) return;
+    this.activeTestimonialIndex = index;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    window.setTimeout(() => this.updateTestimonialsNav(), 260);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -221,6 +280,31 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     return this.readArray<SocialLinkDto>('socialLinks', 'SocialLinks').filter(link => !!link?.url);
   }
 
+  get featureTags(): string[] {
+    if (!this.professional) return [];
+
+    const tags: string[] = [];
+    const parkingType = this.professional.parkingType ?? ServiceProviderParkingType.None;
+
+    if (parkingType === ServiceProviderParkingType.ParkingAvailable) {
+      tags.push('חניה במקום');
+    }
+
+    if (parkingType === ServiceProviderParkingType.FreeParking) {
+      tags.push('חניה חינם במקום');
+    }
+
+    if (this.professional.hasAccessibleEntrance) {
+      tags.push('כניסה נגישה');
+    }
+
+    if (this.professional.isAnash) {
+      tags.push('מאנ"ש');
+    }
+
+    return tags;
+  }
+
   get galleryItems(): Array<{ imageUrl: string; caption?: string }> {
     const galleryImages = this.readArray<any>('galleryImages', 'GalleryImages');
     if (!galleryImages.length) return [];
@@ -234,18 +318,6 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       }));
   }
 
-  get infoCards(): Array<{ label: string; value: string }> {
-    if (!this.professional) return [];
-
-    const cards = [
-      { label: 'תחום', value: this.getCategoriesDisplay() },
-      { label: 'אזור', value: this.getLocationLine() },
-      { label: 'ניסיון', value: this.professional.yearsOfExperience ? `${this.professional.yearsOfExperience} שנות ניסיון` : '' }
-    ];
-
-    return cards.filter(card => !!card.value);
-  }
-
   get hasNavigationTarget(): boolean {
     return !!this.getLocationLine();
   }
@@ -253,10 +325,6 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   get wazeNavigationUrl(): string {
     const location = this.getLocationLine();
     return `https://waze.com/ul?q=${encodeURIComponent(location)}&navigate=yes`;
-  }
-
-  get websiteDisplay(): string {
-    return this.professional?.websiteUrl ? this.getShortUrl(this.professional.websiteUrl) : '';
   }
 
   get customerTestimonials(): ProviderDisplayTestimonial[] {
@@ -275,6 +343,10 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       }))
       .filter(item => !!item.text)
       .sort((a, b) => a.order - b.order);
+  }
+
+  get testimonialDots(): number[] {
+    return this.customerTestimonials.map((_, index) => index);
   }
 
   private rebuildGalleryMedia(): void {

@@ -42,13 +42,15 @@
           {{ heroLocationLine }}
         </p>
 
-        <a *ngIf="professional.websiteUrl"
-           [href]="professional.websiteUrl"
-           target="_blank"
-           rel="noopener"
-           class="hero-website-link">
-          {{ getShortUrl(professional.websiteUrl) }}
-        </a>
+        <div class="hero-website-block" *ngIf="professional.websiteUrl">
+          <span class="hero-website-label">בקרו באתר שלנו</span>
+          <a [href]="professional.websiteUrl"
+             target="_blank"
+             rel="noopener"
+             class="hero-website-link">
+            {{ getShortUrl(professional.websiteUrl) }}
+          </a>
+        </div>
       </div>
 
       <div class="hero-actions">
@@ -128,13 +130,8 @@
       <p class="full-desc-text" *ngIf="professional.fullDescription">{{ professional.fullDescription }}</p>
     </section>
 
-    <section class="info-section" *ngIf="infoCards.length > 0">
-      <div class="info-grid">
-        <article class="info-card" *ngFor="let card of infoCards">
-          <span class="info-label">{{ card.label }}</span>
-          <p>{{ card.value }}</p>
-        </article>
-      </div>
+    <section class="feature-tags-section" *ngIf="featureTags.length > 0">
+      <span class="feature-tag" *ngFor="let tag of featureTags">{{ tag }}</span>
     </section>
 
     <section class="hours-section spotlight-section" *ngIf="professional.workingHours">
@@ -143,19 +140,6 @@
         <p>{{ professional.workingHours }}</p>
       </div>
       <span class="material-icons spotlight-icon">schedule</span>
-    </section>
-
-    <section class="website-section spotlight-section" *ngIf="professional.websiteUrl">
-      <div class="spotlight-copy">
-        <span class="spotlight-label">האתר שלנו</span>
-        <p>{{ websiteDisplay }}</p>
-      </div>
-      <a [href]="professional.websiteUrl"
-         target="_blank"
-         rel="noopener"
-         class="spotlight-button">
-        בקרו באתר שלנו
-      </a>
     </section>
 
     <section class="gallery-section" *ngIf="galleryMediaItems.length > 0">
@@ -175,14 +159,48 @@
     </section>
 
     <section class="testimonials-section" *ngIf="customerTestimonials.length > 0">
-      <div class="section-header">
+      <div class="section-header testimonials-header">
         <h2 class="section-title">המלצות לקוחות</h2>
+        <div class="testimonial-dots" *ngIf="testimonialDots.length > 1">
+          <button *ngFor="let dot of testimonialDots"
+                  class="testimonial-dot"
+                  type="button"
+                  [class.active]="dot === activeTestimonialIndex"
+                  [attr.aria-label]="'המלצה ' + (dot + 1)"
+                  (click)="scrollToTestimonial(dot)">
+          </button>
+        </div>
+        <div class="testimonial-controls" *ngIf="canScrollTestimonialsPrev || canScrollTestimonialsNext">
+          <button *ngIf="canScrollTestimonialsNext"
+                  class="testimonial-nav"
+                  type="button"
+                  aria-label="המלצות נוספות"
+                  (click)="scrollTestimonials('next')">
+            <span class="material-icons">chevron_right</span>
+          </button>
+          <button *ngIf="canScrollTestimonialsPrev"
+                  class="testimonial-nav"
+                  type="button"
+                  aria-label="המלצות קודמות"
+                  (click)="scrollTestimonials('prev')">
+            <span class="material-icons">chevron_left</span>
+          </button>
+        </div>
       </div>
-      <div class="testimonials-grid">
-        <article class="testimonial-card" *ngFor="let testimonial of customerTestimonials">
-          <p class="testimonial-text">״{{ testimonial.text }}״</p>
-          <span class="testimonial-name" *ngIf="testimonial.clientName">{{ testimonial.clientName }}</span>
-        </article>
+      <div class="testimonials-carousel">
+        <div class="testimonials-grid"
+             #testimonialsScroller
+             (scroll)="updateTestimonialsNav()">
+          <article class="testimonial-card" *ngFor="let testimonial of customerTestimonials">
+            <div class="testimonial-bubble">
+              <p>{{ testimonial.text }}</p>
+              <div class="testimonial-meta">
+                <strong>{{ testimonial.clientName || 'לקוח' }}</strong>
+                <span class="material-icons read-checks" aria-hidden="true">done_all</span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   </main>

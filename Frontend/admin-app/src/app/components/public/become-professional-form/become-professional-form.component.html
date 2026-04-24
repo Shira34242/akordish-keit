@@ -123,6 +123,60 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">תגים שיוצגו בדף</label>
+          <div class="feature-tags-editor">
+            <div class="feature-choice-group">
+              <span class="feature-choice-title">חניה</span>
+              <label class="feature-choice">
+                <input
+                  type="radio"
+                  name="parkingType"
+                  [checked]="parkingType === ServiceProviderParkingType.None"
+                  (change)="parkingType = ServiceProviderParkingType.None"
+                />
+                <span>ללא סימון חניה</span>
+              </label>
+              <label class="feature-choice">
+                <input
+                  type="radio"
+                  name="parkingType"
+                  [checked]="parkingType === ServiceProviderParkingType.ParkingAvailable"
+                  (change)="parkingType = ServiceProviderParkingType.ParkingAvailable"
+                />
+                <span>חניה במקום</span>
+              </label>
+              <label class="feature-choice">
+                <input
+                  type="radio"
+                  name="parkingType"
+                  [checked]="parkingType === ServiceProviderParkingType.FreeParking"
+                  (change)="parkingType = ServiceProviderParkingType.FreeParking"
+                />
+                <span>חניה חינם במקום</span>
+              </label>
+            </div>
+
+            <label class="feature-choice">
+              <input
+                type="checkbox"
+                [(ngModel)]="hasAccessibleEntrance"
+                name="hasAccessibleEntrance"
+              />
+              <span>כניסה נגישה</span>
+            </label>
+
+            <label class="feature-choice">
+              <input
+                type="checkbox"
+                [(ngModel)]="isAnash"
+                name="isAnash"
+              />
+              <span>מאנ"ש</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">אתר אינטרנט</label>
           <input type="url" class="form-input" [(ngModel)]="websiteUrl" placeholder="https://...">
         </div>

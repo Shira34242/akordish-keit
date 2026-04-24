@@ -146,6 +146,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Location = dto.Location,
             YearsOfExperience = dto.YearsOfExperience,
             WorkingHours = dto.WorkingHours,
+            ParkingType = dto.ParkingType,
+            HasAccessibleEntrance = dto.HasAccessibleEntrance,
+            IsAnash = dto.IsAnash,
             WhatsAppNumber = dto.WhatsAppNumber,
             PhoneNumber = dto.PhoneNumber,
             Email = dto.Email,
@@ -228,6 +231,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         serviceProvider.Location = dto.Location;
         serviceProvider.YearsOfExperience = dto.YearsOfExperience;
         serviceProvider.WorkingHours = dto.WorkingHours;
+        serviceProvider.ParkingType = dto.ParkingType;
+        serviceProvider.HasAccessibleEntrance = dto.HasAccessibleEntrance;
+        serviceProvider.IsAnash = dto.IsAnash;
         serviceProvider.WhatsAppNumber = dto.WhatsAppNumber;
         serviceProvider.PhoneNumber = dto.PhoneNumber;
         serviceProvider.Email = dto.Email;
@@ -438,6 +444,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Location = original.Location,
             YearsOfExperience = original.YearsOfExperience,
             WorkingHours = original.WorkingHours,
+            ParkingType = original.ParkingType,
+            HasAccessibleEntrance = original.HasAccessibleEntrance,
+            IsAnash = original.IsAnash,
             WhatsAppNumber = original.WhatsAppNumber,
             PhoneNumber = original.PhoneNumber,
             Email = original.Email,
@@ -521,6 +530,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Location = entity.Location,
             YearsOfExperience = entity.YearsOfExperience,
             WorkingHours = entity.WorkingHours,
+            ParkingType = entity.ParkingType,
+            HasAccessibleEntrance = entity.HasAccessibleEntrance,
+            IsAnash = entity.IsAnash,
             WhatsAppNumber = entity.WhatsAppNumber,
             PhoneNumber = entity.PhoneNumber,
             Email = entity.Email,

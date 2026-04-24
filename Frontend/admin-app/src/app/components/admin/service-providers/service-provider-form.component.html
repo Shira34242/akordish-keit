@@ -287,6 +287,59 @@
         <small class="form-hint">בחר קטגוריה אחת - לכל עסק נוסף צור בעל מקצוע נפרד</small>
       </div>
 
+      <div class="feature-tags-editor">
+        <h3 class="subsection-title">תגים שיוצגו בדף</h3>
+
+        <div class="feature-choice-group">
+          <span class="form-label">חניה</span>
+          <label class="feature-choice">
+            <input
+              type="radio"
+              name="parkingType"
+              [checked]="parkingType === ServiceProviderParkingType.None"
+              (change)="parkingType = ServiceProviderParkingType.None"
+            />
+            <span>ללא סימון חניה</span>
+          </label>
+          <label class="feature-choice">
+            <input
+              type="radio"
+              name="parkingType"
+              [checked]="parkingType === ServiceProviderParkingType.ParkingAvailable"
+              (change)="parkingType = ServiceProviderParkingType.ParkingAvailable"
+            />
+            <span>חניה במקום</span>
+          </label>
+          <label class="feature-choice">
+            <input
+              type="radio"
+              name="parkingType"
+              [checked]="parkingType === ServiceProviderParkingType.FreeParking"
+              (change)="parkingType = ServiceProviderParkingType.FreeParking"
+            />
+            <span>חניה חינם במקום</span>
+          </label>
+        </div>
+
+        <label class="feature-choice">
+          <input
+            type="checkbox"
+            [(ngModel)]="hasAccessibleEntrance"
+            name="hasAccessibleEntrance"
+          />
+          <span>כניסה נגישה</span>
+        </label>
+
+        <label class="feature-choice">
+          <input
+            type="checkbox"
+            [(ngModel)]="isAnash"
+            name="isAnash"
+          />
+          <span>מאנ"ש</span>
+        </label>
+      </div>
+
       <div class="testimonial-editor">
         <h3 class="subsection-title">המלצות לקוחות</h3>
         <div class="testimonial-draft">
@@ -357,13 +410,11 @@
         <h3 class="subsection-title">גלריה</h3>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">קישור לתמונה</label>
-            <input
-              type="url"
-              [(ngModel)]="newGalleryImage.imageUrl"
-              [ngModelOptions]="{standalone: true}"
-              class="form-input"
+            <label class="form-label">תמונה לגלריה</label>
+            <app-file-upload-input
+              [(url)]="newGalleryImage.imageUrl"
               placeholder="https://..."
+              [showPreview]="false"
             />
           </div>
           <div class="form-group">
