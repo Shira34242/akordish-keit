@@ -121,6 +121,12 @@
     </div>
   </div>
 
+  <!-- שגיאה בטעינת dashboard -->
+  <div *ngIf="activeTab !== 'articles' && !dashboardLoading && dashboardError" class="error-state">
+    <span class="material-icons">error_outline</span>
+    <p>שגיאה בטעינת הנתונים — ודא שהבקאנד רץ ורענן</p>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════ -->
   <!-- TAB: EVENTS                                            -->
   <!-- ═══════════════════════════════════════════════════════ -->

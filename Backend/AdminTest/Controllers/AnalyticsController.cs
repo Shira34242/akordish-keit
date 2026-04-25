@@ -97,8 +97,7 @@ namespace AkordishKeit.Controllers
                 .CountAsync(v => v.EventId == null && v.ViewedAt >= last30Days);
             var eventsListViewsUniqueLast30 = await _context.EventViews
                 .Where(v => v.EventId == null && v.ViewedAt >= last30Days)
-                .Select(v => v.UserId != null ? $"u{v.UserId}" : $"ip{v.IpAddress}{v.UserAgent}")
-                .Distinct()
+                .GroupBy(v => new { v.UserId, v.IpAddress, v.UserAgent })
                 .CountAsync();
 
             // ─── צפיות בהופעות בודדות ───────────────────────────────────────
@@ -116,7 +115,10 @@ namespace AkordishKeit.Controllers
                 .ToListAsync();
 
             // צירוף שמות הופעות
-            var eventIds = topEvents.Select(e => e.EventId).ToList();
+            var eventIds = topEvents
+                .Where(e => e.EventId.HasValue)
+                .Select(e => e.EventId!.Value)
+                .ToList();
             var eventNames = await _context.Events
                 .Where(e => eventIds.Contains(e.Id))
                 .Select(e => new { e.Id, e.Name })

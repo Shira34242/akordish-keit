@@ -24,6 +24,7 @@ export class ContentStatsComponent implements OnInit {
   // Analytics dashboard (events + buttons + ads)
   dashboard: AnalyticsDashboard | null = null;
   dashboardLoading = true;
+  dashboardError = false;
 
   constructor(
     private feedbackService: ArticleFeedbackService,
@@ -54,12 +55,16 @@ export class ContentStatsComponent implements OnInit {
 
   loadDashboard(): void {
     this.dashboardLoading = true;
+    this.dashboardError = false;
     this.analytics.getDashboard().subscribe({
       next: (data) => {
         this.dashboard = data;
         this.dashboardLoading = false;
       },
-      error: () => { this.dashboardLoading = false; }
+      error: () => {
+        this.dashboardLoading = false;
+        this.dashboardError = true;
+      }
     });
   }
 
