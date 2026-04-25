@@ -42,7 +42,10 @@ export class AnalyticsService {
       .subscribe();
   }
 
-  getDashboard(): Observable<AnalyticsDashboard> {
-    return this.http.get<AnalyticsDashboard>(`${this.base}/dashboard`);
+  getDashboard(dateFrom?: string, dateTo?: string): Observable<AnalyticsDashboard> {
+    const params: Record<string, string> = {};
+    if (dateFrom) params['dateFrom'] = dateFrom;
+    if (dateTo) params['dateTo'] = dateTo;
+    return this.http.get<AnalyticsDashboard>(`${this.base}/dashboard`, { params });
   }
 }

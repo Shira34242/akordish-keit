@@ -1,30 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
 
 type Tab = 'articles' | 'events' | 'buttons' | 'ads';
+type Preset = '7' | '30' | '90' | '365';
 
 @Component({
   selector: 'app-content-stats',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './content-stats.component.html',
   styleUrls: ['./content-stats.component.css']
 })
 export class ContentStatsComponent implements OnInit {
   activeTab: Tab = 'articles';
 
-  // Articles tab
   articles: ArticleRank[] = [];
   articlesLoading = true;
   sortBy: 'views' | 'likes' | 'feedback' = 'views';
 
-  // Analytics dashboard (events + buttons + ads)
   dashboard: AnalyticsDashboard | null = null;
   dashboardLoading = true;
   dashboardError = false;
+
+  dateFrom = '';
+  dateTo = '';
+  activePreset: Preset | '' = '30';
 
   constructor(
     private feedbackService: ArticleFeedbackService,
@@ -33,12 +37,35 @@ export class ContentStatsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadArticles();
-    this.loadDashboard();
+    this.applyPreset('30');
   }
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
+  }
+
+  applyPreset(days: Preset): void {
+    this.activePreset = days;
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - parseInt(days));
+    this.dateTo = this.toDateInput(to);
+    this.dateFrom = this.toDateInput(from);
+    this.loadAll();
+  }
+
+  applyCustomRange(): void {
+    this.activePreset = '';
+    this.loadAll();
+  }
+
+  private toDateInput(d: Date): string {
+    return d.toISOString().substring(0, 10);
+  }
+
+  private loadAll(): void {
+    this.loadArticles();
+    this.loadDashboard();
   }
 
   loadArticles(): void {
@@ -56,7 +83,7 @@ export class ContentStatsComponent implements OnInit {
   loadDashboard(): void {
     this.dashboardLoading = true;
     this.dashboardError = false;
-    this.analytics.getDashboard().subscribe({
+    this.analytics.getDashboard(this.dateFrom, this.dateTo).subscribe({
       next: (data) => {
         this.dashboard = data;
         this.dashboardLoading = false;
@@ -69,8 +96,7 @@ export class ContentStatsComponent implements OnInit {
   }
 
   load(): void {
-    this.loadArticles();
-    this.loadDashboard();
+    this.loadAll();
   }
 
   setSort(by: 'views' | 'likes' | 'feedback'): void {
@@ -99,5 +125,10 @@ export class ContentStatsComponent implements OnInit {
     if (!this.dashboard) return 0;
     const { totalViews, totalClicks } = this.dashboard.ads;
     return totalViews > 0 ? Math.round(totalClicks / totalViews * 1000) / 10 : 0;
+  }
+
+  get periodLabel(): string {
+    const presetMap: Record<string, string> = { '7': '7 ימים', '30': '30 יום', '90': '90 יום', '365': 'שנה' };
+    return this.activePreset ? presetMap[this.activePreset] : `${this.dateFrom} — ${this.dateTo}`;
   }
 }

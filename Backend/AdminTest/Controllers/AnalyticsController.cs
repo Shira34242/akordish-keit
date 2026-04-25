@@ -82,21 +82,21 @@ namespace AkordishKeit.Controllers
             return Ok(new { tracked = true });
         }
 
-        // GET: api/analytics/dashboard
+        // GET: api/analytics/dashboard?dateFrom=2025-01-01&dateTo=2025-12-31
         [HttpGet("dashboard")]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<IActionResult> GetDashboard([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
         {
             var now = DateTime.UtcNow;
-            var last30Days = now.AddDays(-30);
-            var last7Days = now.AddDays(-7);
+            var periodEnd = dateTo.HasValue ? DateTime.SpecifyKind(dateTo.Value, DateTimeKind.Utc).Date.AddDays(1) : now;
+            var last30Days = dateFrom.HasValue ? DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc).Date : now.AddDays(-30);
 
             // ─── צפיות בדף הופעות (רשימה) ───────────────────────────────────
             var eventsListViewsTotal = await _context.EventViews
                 .CountAsync(v => v.EventId == null);
             var eventsListViewsLast30 = await _context.EventViews
-                .CountAsync(v => v.EventId == null && v.ViewedAt >= last30Days);
+                .CountAsync(v => v.EventId == null && v.ViewedAt >= last30Days && v.ViewedAt < periodEnd);
             var eventsListViewsUniqueLast30 = await _context.EventViews
-                .Where(v => v.EventId == null && v.ViewedAt >= last30Days)
+                .Where(v => v.EventId == null && v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
                 .GroupBy(v => new { v.UserId, v.IpAddress, v.UserAgent })
                 .CountAsync();
 
@@ -108,7 +108,7 @@ namespace AkordishKeit.Controllers
                 {
                     EventId = g.Key,
                     TotalViews = g.Count(),
-                    ViewsLast30 = g.Count(v => v.ViewedAt >= last30Days)
+                    ViewsLast30 = g.Count(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
                 })
                 .OrderByDescending(x => x.TotalViews)
                 .Take(10)
@@ -137,17 +137,17 @@ namespace AkordishKeit.Controllers
             var ticketClicksTotal = await _context.ButtonClicks
                 .CountAsync(c => c.ButtonType == "ticket");
             var ticketClicksLast30 = await _context.ButtonClicks
-                .CountAsync(c => c.ButtonType == "ticket" && c.ClickedAt >= last30Days);
+                .CountAsync(c => c.ButtonType == "ticket" && c.ClickedAt >= last30Days && c.ClickedAt < periodEnd);
 
             var contactClicksTotal = await _context.ButtonClicks
                 .CountAsync(c => c.ButtonType == "contact");
             var contactClicksLast30 = await _context.ButtonClicks
-                .CountAsync(c => c.ButtonType == "contact" && c.ClickedAt >= last30Days);
+                .CountAsync(c => c.ButtonType == "contact" && c.ClickedAt >= last30Days && c.ClickedAt < periodEnd);
 
             var notificationLinkClicksTotal = await _context.ButtonClicks
                 .CountAsync(c => c.ButtonType == "notification_link");
             var notificationLinkClicksLast30 = await _context.ButtonClicks
-                .CountAsync(c => c.ButtonType == "notification_link" && c.ClickedAt >= last30Days);
+                .CountAsync(c => c.ButtonType == "notification_link" && c.ClickedAt >= last30Days && c.ClickedAt < periodEnd);
 
             // ─── Top טיקט קליקים לפי הופעה ──────────────────────────────────
             var topTicketEvents = await _context.ButtonClicks
@@ -158,7 +158,7 @@ namespace AkordishKeit.Controllers
                     g.Key.ItemId,
                     g.Key.ItemLabel,
                     TotalClicks = g.Count(),
-                    ClicksLast30 = g.Count(c => c.ClickedAt >= last30Days)
+                    ClicksLast30 = g.Count(c => c.ClickedAt >= last30Days && c.ClickedAt < periodEnd)
                 })
                 .OrderByDescending(x => x.TotalClicks)
                 .Take(10)

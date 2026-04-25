@@ -426,9 +426,14 @@ export const routes: Routes = [
                 title: 'ניהול פס חדשות הירו - אקורדישקייט'
             },
             {
-                path: 'content/stats',
+                path: 'analytics',
                 loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
-                title: 'סטטיסטיקות תוכן - אקורדישקייט'
+                title: 'אנליטיקס - אקורדישקייט'
+            },
+            {
+                path: 'content/stats',
+                redirectTo: '/admin/analytics',
+                pathMatch: 'full'
             },
             {
                 path: 'reports',

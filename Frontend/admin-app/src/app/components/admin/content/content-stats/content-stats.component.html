@@ -6,9 +6,26 @@
       <h1 class="page-title">אנליטיקס</h1>
       <p class="page-subtitle">צפיות, קליקים ופרסומות — כל הנתונים במקום אחד</p>
     </div>
-    <button class="btn-refresh" (click)="load()">
+    <button class="btn-refresh" (click)="load()" title="רענן נתונים">
       <span class="material-icons">refresh</span>
     </button>
+  </div>
+
+  <!-- Date Range Bar -->
+  <div class="date-bar">
+    <div class="presets">
+      <button class="preset-btn" [class.active]="activePreset === '7'" (click)="applyPreset('7')">7 ימים</button>
+      <button class="preset-btn" [class.active]="activePreset === '30'" (click)="applyPreset('30')">30 יום</button>
+      <button class="preset-btn" [class.active]="activePreset === '90'" (click)="applyPreset('90')">90 יום</button>
+      <button class="preset-btn" [class.active]="activePreset === '365'" (click)="applyPreset('365')">שנה</button>
+    </div>
+    <div class="date-inputs">
+      <span class="date-label">מ</span>
+      <input class="date-input" type="date" [(ngModel)]="dateFrom">
+      <span class="date-label">עד</span>
+      <input class="date-input" type="date" [(ngModel)]="dateTo">
+      <button class="btn-apply" (click)="applyCustomRange()">החל</button>
+    </div>
   </div>
 
   <!-- Tabs -->
@@ -42,7 +59,6 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div *ngIf="activeTab === 'articles' && !articlesLoading">
 
-    <!-- Sort Tabs -->
     <div class="sort-bar">
       <button class="sort-btn" [class.active]="sortBy === 'views'" (click)="setSort('views')">
         <span class="material-icons">visibility</span> לפי צפיות
@@ -132,23 +148,23 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div *ngIf="activeTab === 'events' && !dashboardLoading && dashboard" class="tab-content">
 
-    <!-- Summary cards -->
+    <div class="period-badge">{{ periodLabel }}</div>
+
     <div class="kpi-row">
       <div class="kpi-card">
         <span class="kpi-label">צפיות ברשימת הופעות (סה״כ)</span>
         <span class="kpi-value">{{ dashboard.events.listPageViews.total | number }}</span>
       </div>
-      <div class="kpi-card">
-        <span class="kpi-label">צפיות 30 יום אחרונים</span>
-        <span class="kpi-value accent">{{ dashboard.events.listPageViews.last30Days | number }}</span>
+      <div class="kpi-card kpi-accent">
+        <span class="kpi-label">צפיות בתקופה הנבחרת</span>
+        <span class="kpi-value">{{ dashboard.events.listPageViews.last30Days | number }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">מבקרים ייחודיים (30 יום)</span>
+        <span class="kpi-label">מבקרים ייחודיים בתקופה</span>
         <span class="kpi-value">{{ dashboard.events.listPageViews.uniqueLast30Days | number }}</span>
       </div>
     </div>
 
-    <!-- Top events table -->
     <div class="section-label">הופעות עם הכי הרבה צפיות</div>
     <div class="table-wrap">
       <table class="stats-table">
@@ -157,7 +173,7 @@
             <th class="col-rank">#</th>
             <th class="col-title">הופעה</th>
             <th class="col-stat">סה״כ צפיות</th>
-            <th class="col-stat">30 יום אחרונים</th>
+            <th class="col-stat">בתקופה</th>
           </tr>
         </thead>
         <tbody>
@@ -165,9 +181,7 @@
             <td class="col-rank">
               <span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span>
             </td>
-            <td class="col-title">
-              <span class="title-text">{{ ev.eventName }}</span>
-            </td>
+            <td class="col-title"><span class="title-text">{{ ev.eventName }}</span></td>
             <td class="col-stat"><span class="stat-value">{{ ev.totalViews | number }}</span></td>
             <td class="col-stat"><span class="stat-value">{{ ev.viewsLast30 | number }}</span></td>
           </tr>
@@ -184,26 +198,26 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div *ngIf="activeTab === 'buttons' && !dashboardLoading && dashboard" class="tab-content">
 
-    <!-- Summary cards -->
+    <div class="period-badge">{{ periodLabel }}</div>
+
     <div class="kpi-row">
-      <div class="kpi-card">
+      <div class="kpi-card kpi-accent">
         <span class="kpi-label">קליקי כרטיסים (סה״כ)</span>
-        <span class="kpi-value accent">{{ dashboard.buttons.ticketClicks.total | number }}</span>
-        <span class="kpi-sub">{{ dashboard.buttons.ticketClicks.last30Days | number }} ב-30 יום</span>
+        <span class="kpi-value">{{ dashboard.buttons.ticketClicks.total | number }}</span>
+        <span class="kpi-sub">{{ dashboard.buttons.ticketClicks.last30Days | number }} בתקופה</span>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-accent">
         <span class="kpi-label">קליקי יצירת קשר (סה״כ)</span>
-        <span class="kpi-value accent">{{ dashboard.buttons.contactClicks.total | number }}</span>
-        <span class="kpi-sub">{{ dashboard.buttons.contactClicks.last30Days | number }} ב-30 יום</span>
+        <span class="kpi-value">{{ dashboard.buttons.contactClicks.total | number }}</span>
+        <span class="kpi-sub">{{ dashboard.buttons.contactClicks.last30Days | number }} בתקופה</span>
       </div>
       <div class="kpi-card">
         <span class="kpi-label">קישורי התראות (סה״כ)</span>
         <span class="kpi-value">{{ dashboard.buttons.notificationLinkClicks.total | number }}</span>
-        <span class="kpi-sub">{{ dashboard.buttons.notificationLinkClicks.last30Days | number }} ב-30 יום</span>
+        <span class="kpi-sub">{{ dashboard.buttons.notificationLinkClicks.last30Days | number }} בתקופה</span>
       </div>
     </div>
 
-    <!-- Top ticket events -->
     <div class="section-label">הופעות עם הכי הרבה קליקי כרטיסים</div>
     <div class="table-wrap">
       <table class="stats-table">
@@ -212,7 +226,7 @@
             <th class="col-rank">#</th>
             <th class="col-title">הופעה</th>
             <th class="col-stat">סה״כ קליקים</th>
-            <th class="col-stat">30 יום אחרונים</th>
+            <th class="col-stat">בתקופה</th>
           </tr>
         </thead>
         <tbody>
@@ -220,9 +234,7 @@
             <td class="col-rank">
               <span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span>
             </td>
-            <td class="col-title">
-              <span class="title-text">{{ item.itemLabel || '—' }}</span>
-            </td>
+            <td class="col-title"><span class="title-text">{{ item.itemLabel || '—' }}</span></td>
             <td class="col-stat"><span class="stat-value">{{ item.totalClicks | number }}</span></td>
             <td class="col-stat"><span class="stat-value">{{ item.clicksLast30 | number }}</span></td>
           </tr>
@@ -239,11 +251,10 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div *ngIf="activeTab === 'ads' && !dashboardLoading && dashboard" class="tab-content">
 
-    <!-- Summary cards -->
     <div class="kpi-row">
-      <div class="kpi-card">
+      <div class="kpi-card kpi-accent">
         <span class="kpi-label">קמפיינים פעילים</span>
-        <span class="kpi-value accent">{{ dashboard.ads.activeCampaigns | number }}</span>
+        <span class="kpi-value">{{ dashboard.ads.activeCampaigns | number }}</span>
       </div>
       <div class="kpi-card">
         <span class="kpi-label">סה״כ חשיפות</span>
@@ -255,11 +266,10 @@
       </div>
       <div class="kpi-card">
         <span class="kpi-label">CTR ממוצע</span>
-        <span class="kpi-value" [class.accent]="adsCtr > 1">{{ adsCtr }}%</span>
+        <span class="kpi-value" [class.kpi-accent-inline]="adsCtr > 1">{{ adsCtr }}%</span>
       </div>
     </div>
 
-    <!-- Top campaigns table -->
     <div class="section-label">קמפיינים לפי חשיפות</div>
     <div class="table-wrap">
       <table class="stats-table">
