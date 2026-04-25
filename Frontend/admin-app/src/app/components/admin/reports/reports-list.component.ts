@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { ReportService } from '../../../services/report.service';
 import { Report, ReportTypeLabels, ContentTypeLabels, StatusLabels, UpdateReportStatusDto } from '../../../models/report.model';
 import { PagedResult } from '../../../models/pagination.model';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-reports-list',
@@ -14,6 +16,7 @@ import { PagedResult } from '../../../models/pagination.model';
   styleUrls: ['./reports-list.component.css']
 })
 export class ReportsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
 
@@ -134,8 +137,8 @@ export class ReportsListComponent implements OnInit {
     });
   }
 
-  deleteReport(reportId: number): void {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את הדיווח לצמיתות?')) {
+  async deleteReport(reportId: number): Promise<void> {
+    if (!(await this.siteAlerts.confirm('האם אתה בטוח שברצונך למחוק את הדיווח לצמיתות?'))) {
       return;
     }
 
@@ -154,8 +157,8 @@ export class ReportsListComponent implements OnInit {
     window.open(report.contentUrl, '_blank');
   }
 
-  approveNewArtist(report: Report): void {
-    if (!confirm(`ליצור פרופיל אמן חדש עבור: "${report.contentTitle.split(' - ')[1] || report.description}"?`)) return;
+  async approveNewArtist(report: Report): Promise<void> {
+    if (!(await this.siteAlerts.confirm(`ליצור פרופיל אמן חדש עבור: "${report.contentTitle.split(' - ')[1] || report.description}"?`))) return;
 
     this.reportService.approveArtist(report.id).subscribe({
       next: () => this.loadReports(),

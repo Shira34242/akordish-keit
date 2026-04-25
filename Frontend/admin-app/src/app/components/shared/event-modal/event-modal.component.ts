@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/event.utils';
+import { AnalyticsService } from '../../../services/analytics.service';
 
 @Component({
   selector: 'app-event-modal',
@@ -14,8 +15,19 @@ export class EventModalComponent implements OnChanges {
   @Input() event: EventCardData | null = null;
   @Output() close = new EventEmitter<void>();
 
+  private readonly analytics = inject(AnalyticsService);
+
   ngOnChanges(): void {
     document.body.style.overflow = this.event ? 'hidden' : '';
+    if (this.event) {
+      this.analytics.trackEventView(this.event.id);
+    }
+  }
+
+  onTicketClick(): void {
+    if (this.event) {
+      this.analytics.trackButtonClick('ticket', this.event.id, this.event.name);
+    }
   }
 
   @HostListener('document:keydown.escape')

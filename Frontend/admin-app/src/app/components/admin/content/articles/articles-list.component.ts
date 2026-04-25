@@ -6,6 +6,8 @@ import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../../models/article.model';
 import { PagedResult } from '../../../../models/pagination.model';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-articles-list',
@@ -15,6 +17,7 @@ import { PagedResult } from '../../../../models/pagination.model';
   styleUrls: ['./articles-list.component.css']
 })
 export class ArticlesListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
   private readonly systemTablesService = inject(SystemTablesService);
@@ -135,8 +138,8 @@ export class ArticlesListComponent implements OnInit {
   }
 
 
-  duplicateArticle(article: Article): void {
-    if (confirm(`האם לשכפל את הכתבה "${article.title}"?`)) {
+  async duplicateArticle(article: Article): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם לשכפל את הכתבה "${article.title}"?`)) {
       this.articleService.duplicateArticle(article.id).subscribe({
         next: (duplicate) => {
           alert(`הכתבה "${duplicate.title}" שוכפלה בהצלחה!`);
@@ -150,8 +153,8 @@ export class ArticlesListComponent implements OnInit {
     }
   }
 
-  deleteArticle(article: Article): void {
-    if (confirm(`האם אתה בטוח שברצונך למחוק את הכתבה "${article.title}"?`)) {
+  async deleteArticle(article: Article): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את הכתבה "${article.title}"?`)) {
       this.articleService.deleteArticle(article.id).subscribe({
         next: () => {
           this.loadArticles();

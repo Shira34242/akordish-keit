@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,8 @@ import { MusicServiceProviderListDto } from '../../../models/music-service-provi
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-service-providers-list',
@@ -16,6 +18,7 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
   styleUrls: ['./service-providers-list.component.css']
 })
 export class ServiceProvidersListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   providers: MusicServiceProviderListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -125,8 +128,8 @@ export class ServiceProvidersListComponent implements OnInit {
     this.router.navigate(['/professional', id]);
   }
 
-  approveProvider(id: number): void {
-    if (confirm('האם לאשר את בעל המקצוע?')) {
+  async approveProvider(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לאשר את בעל המקצוע?')) {
       this.providerService.approveServiceProvider(id).subscribe({
         next: () => {
           alert('בעל המקצוע אושר בהצלחה');
@@ -140,8 +143,8 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
-  rejectProvider(id: number): void {
-    if (confirm('האם להשעות את בעל המקצוע?')) {
+  async rejectProvider(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם להשעות את בעל המקצוע?')) {
       this.providerService.rejectServiceProvider(id).subscribe({
         next: () => {
           alert('בעל המקצוע הושעה');
@@ -155,8 +158,8 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
-  activateProvider(id: number): void {
-    if (confirm('האם להפעיל את דף נותן השירות ולהחזיר אותו לאינדקס?')) {
+  async activateProvider(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם להפעיל את דף נותן השירות ולהחזיר אותו לאינדקס?')) {
       this.providerService.approveServiceProvider(id).subscribe({
         next: () => {
           this.loadProviders();
@@ -169,8 +172,8 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
-  deleteProvider(id: number): void {
-    if (confirm('האם למחוק את בעל המקצוע? פעולה זו אינה הפיכה.')) {
+  async deleteProvider(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את בעל המקצוע? פעולה זו אינה הפיכה.')) {
       this.providerService.deleteServiceProvider(id).subscribe({
         next: () => {
           this.loadProviders();
@@ -199,8 +202,8 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
-  unlinkFromUser(id: number): void {
-    if (confirm('האם לנתק את בעל המקצוע מהמשתמש?')) {
+  async unlinkFromUser(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לנתק את בעל המקצוע מהמשתמש?')) {
       this.providerService.unlinkFromUser(id).subscribe({
         next: () => {
           alert('בעל המקצוע נותק מהמשתמש בהצלחה');
@@ -214,8 +217,8 @@ export class ServiceProvidersListComponent implements OnInit {
     }
   }
 
-  duplicateProvider(id: number, name: string): void {
-    if (confirm(`האם לשכפל את "${name}"?`)) {
+  async duplicateProvider(id: number, name: string): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם לשכפל את "${name}"?`)) {
       this.providerService.duplicateServiceProvider(id).subscribe({
         next: (duplicate) => {
           alert(`"${duplicate.displayName}" שוכפל בהצלחה!`);

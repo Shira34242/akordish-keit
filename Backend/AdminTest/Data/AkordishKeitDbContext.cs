@@ -67,6 +67,10 @@ public class AkordishKeitDbContext : DbContext
 
     // View Tracking
     public DbSet<SongView> SongViews { get; set; }
+    public DbSet<EventView> EventViews { get; set; }
+
+    // Button Click Tracking
+    public DbSet<ButtonClick> ButtonClicks { get; set; }
 
     // Playlists
     public DbSet<Playlist> Playlists { get; set; }
@@ -152,6 +156,8 @@ public class AkordishKeitDbContext : DbContext
 
         // View Tracking Configurations
         modelBuilder.ApplyConfiguration(new SongViewConfiguration());
+        modelBuilder.ApplyConfiguration(new EventViewConfiguration());
+        modelBuilder.ApplyConfiguration(new ButtonClickConfiguration());
 
         // Playlist Configurations
         modelBuilder.ApplyConfiguration(new PlaylistConfiguration());

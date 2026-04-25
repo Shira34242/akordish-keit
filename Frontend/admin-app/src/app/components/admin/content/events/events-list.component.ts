@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { EventService } from '../../../../services/admin/event.service';
 import { Event } from '../../../../models/event.model';
 import { PagedResult } from '../../../../models/pagination.model';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-events-list',
@@ -14,6 +16,7 @@ import { PagedResult } from '../../../../models/pagination.model';
   styleUrls: ['./events-list.component.css']
 })
 export class EventsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
 
@@ -84,8 +87,8 @@ export class EventsListComponent implements OnInit {
     this.router.navigate(['/admin/content/events/new'], { queryParams: { duplicate: event.id } });
   }
 
-  deleteEvent(event: Event): void {
-    if (confirm(`האם אתה בטוח שברצונך למחוק את ההופעה "${event.name}"?`)) {
+  async deleteEvent(event: Event): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את ההופעה "${event.name}"?`)) {
       this.eventService.deleteEvent(event.id).subscribe({
         next: () => {
           this.loadEvents();

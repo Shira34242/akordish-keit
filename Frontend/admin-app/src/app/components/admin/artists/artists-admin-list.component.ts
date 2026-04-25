@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,8 @@ import { PagedResult } from '../../../models/user.model';
 import { ArtistEditModalComponent } from './artist-edit-modal.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-artists-admin-list',
@@ -17,6 +19,7 @@ import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layo
   styleUrls: ['./artists-admin-list.component.css']
 })
 export class ArtistsAdminListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   artists: ArtistListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -133,8 +136,8 @@ export class ArtistsAdminListComponent implements OnInit {
     this.router.navigate(['/artist', id]);
   }
 
-  approveArtist(id: number): void {
-    if (confirm('האם לאשר את האומן ולהפוך אותו לפעיל?')) {
+  async approveArtist(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לאשר את האומן ולהפוך אותו לפעיל?')) {
       this.artistService.updateArtistStatus(id, ArtistStatus.Active).subscribe({
         next: () => {
           this.loadArtists();
@@ -147,8 +150,8 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
-  hideArtist(id: number): void {
-    if (confirm('האם להסתיר את האומן?')) {
+  async hideArtist(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם להסתיר את האומן?')) {
       this.artistService.updateArtistStatus(id, ArtistStatus.Hidden).subscribe({
         next: () => {
           this.loadArtists();
@@ -161,8 +164,8 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
-  activateArtist(id: number): void {
-    if (confirm('האם להפעיל את דף האמן ולהחזיר אותו לאינדקס?')) {
+  async activateArtist(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם להפעיל את דף האמן ולהחזיר אותו לאינדקס?')) {
       this.artistService.updateArtistStatus(id, ArtistStatus.Active).subscribe({
         next: () => {
           this.loadArtists();
@@ -175,8 +178,8 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
-  deleteArtist(id: number): void {
-    if (confirm('האם למחוק את האומן? פעולה זו אינה הפיכה.')) {
+  async deleteArtist(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את האומן? פעולה זו אינה הפיכה.')) {
       this.artistService.deleteArtist(id).subscribe({
         next: () => {
           alert('האומן נמחק בהצלחה');
@@ -190,8 +193,8 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
-  duplicateArtist(id: number, name: string): void {
-    if (confirm(`האם לשכפל את האומן "${name}"?`)) {
+  async duplicateArtist(id: number, name: string): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם לשכפל את האומן "${name}"?`)) {
       this.artistService.duplicateArtist(id).subscribe({
         next: (duplicate) => {
           alert(`האומן "${duplicate.name}" שוכפל בהצלחה!`);

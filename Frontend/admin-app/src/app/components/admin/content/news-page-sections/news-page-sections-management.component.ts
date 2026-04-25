@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewsPageSectionService } from '../../../../services/news-page-section.service';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 import {
   NewsPageSection,
   NewsSectionType,
@@ -20,6 +22,7 @@ interface ContentTypeOption { id: number; name: string; }
   styleUrls: ['./news-page-sections-management.component.css']
 })
 export class NewsPageSectionsMangementComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly service = inject(NewsPageSectionService);
 
   sections: NewsPageSection[] = [];
@@ -185,8 +188,8 @@ export class NewsPageSectionsMangementComponent implements OnInit {
     );
   }
 
-  deleteSection(section: NewsPageSection): void {
-    if (!confirm(`למחוק את הפס "${section.title}"?`)) return;
+  async deleteSection(section: NewsPageSection): Promise<void> {
+    if (!(await this.siteAlerts.confirm(`למחוק את הפס "${section.title}"?`))) return;
     this.service.deleteSection(section.id).subscribe({
       next: () => this.loadSections(),
       error: () => alert('שגיאה במחיקה')

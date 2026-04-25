@@ -12,6 +12,8 @@ import { UserService } from '../../../../services/user.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 import {
   Article,
   CreateArticleDto,
@@ -28,6 +30,7 @@ import {
   styleUrls: ['./article-form.component.css']
 })
 export class ArticleFormComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -567,8 +570,8 @@ export class ArticleFormComponent implements OnInit {
     this.newGalleryImage = { imageUrl: '', caption: '' };
   }
 
-  removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+  async removeGalleryImage(index: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק תמונה זו מהגלריה?')) {
       this.article.galleryImages?.splice(index, 1);
       // Update display orders
       this.article.galleryImages?.forEach((img, idx) => {

@@ -7,6 +7,8 @@ import { AdSpot, CreateAdSpotRequest, UpdateAdSpotRequest } from '../../../../mo
 import { PagedResult } from '../../../../models/pagination.model';
 import { AdSpotFormComponent } from './ad-spot-form.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-ad-spots-list',
@@ -16,6 +18,7 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
   styleUrls: ['./ad-spots-list.component.css']
 })
 export class AdSpotsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly adSpotService = inject(AdSpotService);
   private readonly router = inject(Router);
 
@@ -59,7 +62,7 @@ export class AdSpotsListComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number): void {
+  async onPageChange(page: number): Promise<void> {
     this.pageNumber = page;
     this.loadAdSpots();
   }
@@ -147,8 +150,8 @@ export class AdSpotsListComponent implements OnInit {
     this.selectedAdSpot = undefined;
   }
 
-  deleteSpot(spot: AdSpot) {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את המיקום "${spot.name}"?`)) {
+  async deleteSpot(spot: AdSpot): Promise<void> {
+    if (!(await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את המיקום "${spot.name}"?`))) {
       return;
     }
 

@@ -1,9 +1,10 @@
 import {
   Component, Input, Output, EventEmitter, OnInit, AfterViewInit, OnDestroy,
-  OnChanges, HostListener, ViewChild, ElementRef, ChangeDetectorRef
+  OnChanges, HostListener, ViewChild, ElementRef, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AnalyticsService } from '../../../services/analytics.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import {
@@ -42,6 +43,8 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   @ViewChild('professionalHeroBg') professionalHeroBg?: ElementRef<HTMLDivElement>;
   @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
+
+  private readonly analytics = inject(AnalyticsService);
 
   professional: MusicServiceProviderDto | null = null;
   cities: City[] = [];
@@ -226,6 +229,9 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   toggleContact(): void {
     this.contactOpen = !this.contactOpen;
+    if (this.contactOpen && this.professional) {
+      this.analytics.trackButtonClick('contact', this.professional.id, this.professional.displayName);
+    }
   }
 
   closePage(): void {

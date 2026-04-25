@@ -1,0 +1,124 @@
+:host {
+  position: fixed;
+  inset-inline-start: var(--space-lg);
+  inset-block-end: var(--space-lg);
+  z-index: 2000;
+  pointer-events: none;
+  direction: rtl;
+}
+
+.site-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: min(26rem, calc(100vw - (var(--space-lg) * 2)));
+}
+
+.site-alert {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-base);
+  background: #000000;
+  color: #ddff53;
+  border-radius: 24px;
+  padding: var(--space-base);
+  pointer-events: auto;
+}
+
+.site-alert p {
+  margin: 0;
+  color: #ddff53;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+}
+
+.site-alert button {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #ddff53;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.site-alert .material-icons {
+  font-size: 18px;
+}
+
+.site-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+}
+
+.site-confirm {
+  width: min(28rem, 100%);
+  background: #ffffff;
+  border-radius: 28px;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  text-align: center;
+}
+
+.site-confirm p {
+  margin: 0;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 800;
+  line-height: var(--lh-body);
+}
+
+.site-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.site-confirm-actions button {
+  min-height: 34px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 var(--space-lg);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.confirm-cancel {
+  background: #F2F2F2;
+  color: #000000;
+}
+
+.confirm-approve {
+  background: #000000;
+  color: #ddff53;
+}
+
+@media (max-width: 700px) {
+  :host {
+    inset-inline-start: var(--space-base);
+    inset-inline-end: var(--space-base);
+    inset-block-end: var(--space-base);
+  }
+
+  .site-alerts {
+    width: 100%;
+  }
+}

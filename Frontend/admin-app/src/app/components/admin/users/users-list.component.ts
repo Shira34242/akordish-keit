@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 import { UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-users-list',
@@ -14,6 +16,7 @@ import { PagedResult } from '../../../models/user.model';
   styleUrls: ['./users-list.component.css']
 })
 export class UsersListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   users: UserListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -120,8 +123,8 @@ export class UsersListComponent implements OnInit {
     this.router.navigate(['/admin/users/edit', id]);
   }
 
-  deleteUser(id: number): void {
-    if (confirm('האם למחוק את המשתמש? פעולה זו אינה הפיכה.')) {
+  async deleteUser(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את המשתמש? פעולה זו אינה הפיכה.')) {
       this.userService.deleteUser(id).subscribe({
         next: () => {
           alert('המשתמש נמחק בהצלחה');

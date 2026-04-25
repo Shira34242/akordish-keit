@@ -7,6 +7,8 @@ import { Client, CreateClientRequest, UpdateClientRequest } from '../../../../mo
 import { PagedResult } from '../../../../models/pagination.model';
 import { ClientFormComponent } from './client-form.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-clients-list',
@@ -16,6 +18,7 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
   styleUrls: ['./clients-list.component.css']
 })
 export class ClientsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly clientService = inject(ClientService);
   private readonly router = inject(Router);
 
@@ -59,7 +62,7 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number): void {
+  async onPageChange(page: number): Promise<void> {
     this.pageNumber = page;
     this.loadClients();
   }
@@ -125,8 +128,8 @@ export class ClientsListComponent implements OnInit {
     this.selectedClient = undefined;
   }
 
-  deleteClient(client: Client) {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את הלקוח "${client.businessName}"?`)) {
+  async deleteClient(client: Client): Promise<void> {
+    if (!(await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את הלקוח "${client.businessName}"?`))) {
       return;
     }
 

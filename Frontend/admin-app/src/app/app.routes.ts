@@ -187,7 +187,12 @@ export const routes: Routes = [
         loadComponent: () => import('./components/admin/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
         canActivate: [adminGuard], // 🔒 הגנה! רק Admin יכול להגיע לכאן
         children: [
-            { path: '', redirectTo: 'users', pathMatch: 'full' },
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            {
+                path: 'dashboard',
+                loadComponent: () => import('./components/admin/dashboard-placeholder/dashboard-placeholder.component').then(m => m.AdminDashboardPlaceholderComponent),
+                title: 'מרכז בקרה - אקורדישקייט'
+            },
             {
                 path: 'users',
                 loadComponent: () => import('./components/admin/users/users-layout/users-layout.component').then(m => m.AdminUsersLayoutComponent),

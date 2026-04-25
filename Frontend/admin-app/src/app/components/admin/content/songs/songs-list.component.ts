@@ -6,6 +6,8 @@ import { SongService } from '../../../../services/song.service';
 import { SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-songs-list',
@@ -15,6 +17,7 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
   styleUrls: ['./songs-list.component.css']
 })
 export class SongsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
@@ -106,8 +109,8 @@ export class SongsListComponent implements OnInit {
     });
   }
 
-  duplicateSong(song: SongDto): void {
-    if (confirm(`האם לשכפל את השיר "${song.title}"?`)) {
+  async duplicateSong(song: SongDto): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם לשכפל את השיר "${song.title}"?`)) {
       this.songService.duplicateSong(song.id).subscribe({
         next: (duplicate) => {
           alert(`השיר "${duplicate.title}" שוכפל בהצלחה!`);
@@ -122,7 +125,7 @@ export class SongsListComponent implements OnInit {
   }
 
   async deleteSong(song: SongDto): Promise<void> {
-    if (confirm(`האם אתה בטוח שברצונך למחוק את "${song.title}"?`)) {
+    if (await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את "${song.title}"?`)) {
       this.songService.deleteSong(song.id).subscribe({
         next: () => {
           this.loadSongs();
@@ -137,7 +140,7 @@ export class SongsListComponent implements OnInit {
 
   async toggleApproval(song: SongDto): Promise<void> {
     const action = song.isApproved ? 'לבטל אישור' : 'לאשר';
-    if (confirm(`האם אתה בטוח שברצונך ${action} את "${song.title}"?`)) {
+    if (await this.siteAlerts.confirm(`האם אתה בטוח שברצונך ${action} את "${song.title}"?`)) {
       const newStatus = !song.isApproved;
       this.songService.toggleApproval(song.id, newStatus).subscribe({
         next: () => {

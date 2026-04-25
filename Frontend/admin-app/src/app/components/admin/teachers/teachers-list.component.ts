@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,8 @@ import { TeacherListDto } from '../../../models/teacher.model';
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-teachers-list',
@@ -16,6 +18,7 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
   styleUrls: ['./teachers-list.component.css']
 })
 export class TeachersListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   teachers: TeacherListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -122,8 +125,8 @@ export class TeachersListComponent implements OnInit {
     this.router.navigate(['/teacher', id]);
   }
 
-  approveTeacher(id: number): void {
-    if (confirm('האם לאשר את המורה?')) {
+  async approveTeacher(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לאשר את המורה?')) {
       this.teacherService.approveTeacher(id).subscribe({
         next: () => {
           this.loadTeachers();
@@ -136,8 +139,8 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  rejectTeacher(id: number): void {
-    if (confirm('האם לדחות את המורה?')) {
+  async rejectTeacher(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לדחות את המורה?')) {
       this.teacherService.rejectTeacher(id).subscribe({
         next: () => {
           alert('המורה נדחה');
@@ -151,8 +154,8 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  activateTeacher(id: number): void {
-    if (confirm('האם להפעיל את דף המורה ולהחזיר אותו לאינדקס?')) {
+  async activateTeacher(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם להפעיל את דף המורה ולהחזיר אותו לאינדקס?')) {
       this.teacherService.approveTeacher(id).subscribe({
         next: () => {
           this.loadTeachers();
@@ -165,8 +168,8 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  deleteTeacher(id: number): void {
-    if (confirm('האם למחוק את המורה? פעולה זו אינה הפיכה.')) {
+  async deleteTeacher(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את המורה? פעולה זו אינה הפיכה.')) {
       this.teacherService.deleteTeacher(id).subscribe({
         next: () => {
           alert('המורה נמחק בהצלחה');
@@ -196,8 +199,8 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  unlinkFromUser(id: number): void {
-    if (confirm('האם לנתק את המורה מהמשתמש?')) {
+  async unlinkFromUser(id: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם לנתק את המורה מהמשתמש?')) {
       this.teacherService.unlinkFromUser(id).subscribe({
         next: () => {
           alert('המורה נותק מהמשתמש בהצלחה');
@@ -211,8 +214,8 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  duplicateTeacher(id: number, name: string): void {
-    if (confirm(`האם לשכפל את המורה "${name}"?`)) {
+  async duplicateTeacher(id: number, name: string): Promise<void> {
+    if (await this.siteAlerts.confirm(`האם לשכפל את המורה "${name}"?`)) {
       this.teacherService.duplicateTeacher(id).subscribe({
         next: (duplicate) => {
           alert(`המורה "${duplicate.displayName}" שוכפל בהצלחה!`);

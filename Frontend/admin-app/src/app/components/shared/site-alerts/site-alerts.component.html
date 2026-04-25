@@ -1,0 +1,18 @@
+<div class="site-alerts" aria-live="polite" aria-atomic="false">
+  <article class="site-alert" *ngFor="let alert of alerts">
+    <p>{{ alert.message }}</p>
+    <button type="button" aria-label="סגירת הודעה" (click)="dismiss(alert.id)">
+      <span class="material-icons">close</span>
+    </button>
+  </article>
+</div>
+
+<div class="site-confirm-overlay" *ngIf="activeConfirm" (click)="answerConfirm(false)">
+  <section class="site-confirm" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <p>{{ activeConfirm.message }}</p>
+    <div class="site-confirm-actions">
+      <button type="button" class="confirm-cancel" (click)="answerConfirm(false)">ביטול</button>
+      <button type="button" class="confirm-approve" (click)="answerConfirm(true)">אישור</button>
+    </div>
+  </section>
+</div>

@@ -4,11 +4,13 @@ import { AddSongModalComponent } from './components/add-song-modal/add-song-moda
 import { LayoutComponent } from './components/layout/layout.component';
 import { CommonModule } from '@angular/common';
 import { ModalService } from './services/modal.service';
+import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts.component';
+import { SiteAlertService } from './services/site-alert.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AddSongModalComponent, LayoutComponent, CommonModule],
+  imports: [RouterOutlet, AddSongModalComponent, LayoutComponent, CommonModule, SiteAlertsComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
@@ -18,9 +20,14 @@ export class AppComponent implements OnInit {
   editMode = false;
   songToEdit: any = null;
 
-  constructor(private modalService: ModalService) { }
+  constructor(
+    private modalService: ModalService,
+    private siteAlertService: SiteAlertService
+  ) { }
 
   ngOnInit() {
+    this.siteAlertService.patchBrowserAlerts();
+
     // Subscribe to modal state changes
     this.modalService.modalState$.subscribe(state => {
       this.isAddSongModalOpen = state.isOpen;

@@ -1,0 +1,24 @@
+:host {
+    display: block;
+    direction: rtl;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.dashboard-placeholder {
+    min-height: 52dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F2F2F2;
+    border-radius: 28px;
+    padding: var(--space-2xl);
+    text-align: center;
+}
+
+.dashboard-placeholder p {
+    margin: 0;
+    color: #404040;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-lg);
+    font-weight: 800;
+}

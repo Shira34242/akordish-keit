@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { NotificationDto } from '../../models/notification.model';
 import { NotificationService } from '../../services/notification.service';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-notifications-page',
@@ -15,6 +16,8 @@ export class NotificationsPageComponent implements OnInit {
   notifications: NotificationDto[] = [];
   isLoading = true;
   errorMessage = '';
+
+  private readonly analytics = inject(AnalyticsService);
 
   constructor(
     private notificationService: NotificationService,
@@ -65,9 +68,14 @@ export class NotificationsPageComponent implements OnInit {
     });
   }
 
+  onNotificationLinkClick(notification: NotificationDto): void {
+    this.analytics.trackButtonClick('notification_link', notification.id, notification.title || notification.message?.slice(0, 50));
+  }
+
   openNotification(notification: NotificationDto): void {
     const openAction = () => {
       if (notification.actionUrl) {
+        this.analytics.trackButtonClick('notification_link', notification.id, notification.title || notification.message?.slice(0, 50));
         this.openActionUrl(notification.actionUrl);
       }
     };

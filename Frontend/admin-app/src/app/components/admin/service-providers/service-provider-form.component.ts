@@ -20,6 +20,8 @@ import {
   CreateServiceProviderTestimonialDto
 } from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 interface PlatformLinkOption {
   platform: SocialPlatform;
@@ -36,6 +38,7 @@ interface PlatformLinkOption {
   styleUrls: ['./service-provider-form.component.css']
 })
 export class ServiceProviderFormComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   @Input() embedded = false;
   @Input() serviceProviderIdInput?: number;
   @Output() close = new EventEmitter<void>();
@@ -385,8 +388,8 @@ export class ServiceProviderFormComponent implements OnInit {
     this.newGalleryImage = { imageUrl: '', caption: '' };
   }
 
-  removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+  async removeGalleryImage(index: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק תמונה זו מהגלריה?')) {
       this.galleryImages?.splice(index, 1);
       // Update display orders
       this.galleryImages?.forEach((img, idx) => {
@@ -525,8 +528,8 @@ export class ServiceProviderFormComponent implements OnInit {
     this.newTestimonial = { clientName: '', text: '' };
   }
 
-  removeTestimonial(index: number): void {
-    if (confirm('האם למחוק את ההמלצה הזו?')) {
+  async removeTestimonial(index: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את ההמלצה הזו?')) {
       this.customerTestimonials.splice(index, 1);
       this.customerTestimonials.forEach((item, idx) => item.order = idx);
     }

@@ -721,6 +721,15 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showReportModal = true;
   }
 
+  openContactAssistant(): void {
+    if (!this.loggedIn) {
+      this.authService.requestLogin(this.router.url);
+      return;
+    }
+    this.quickAddEntryPoint = 'contact';
+    this.showQuickAddAssistant = true;
+  }
+
   closeReportModal(): void {
     this.showReportModal = false;
   }

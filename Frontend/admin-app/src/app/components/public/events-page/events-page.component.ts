@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChildren, ElementRef, QueryList, 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { EventService } from '../../../services/admin/event.service';
+import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
 import { EventCardData, getDisplayArtist } from '../../../utils/event.utils';
 import { EventModalComponent } from '../../shared/event-modal/event-modal.component';
@@ -17,6 +18,7 @@ type FilterMode = 'upcoming' | 'all' | 'past';
 })
 export class EventsPageComponent implements OnInit, AfterViewInit {
   private readonly eventService = inject(EventService);
+  private readonly analytics = inject(AnalyticsService);
 
   @ViewChildren('carouselItem') carouselItems!: QueryList<ElementRef>;
 
@@ -37,6 +39,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   private readonly speedDrag = -0.1;
 
   ngOnInit(): void {
+    this.analytics.trackEventView();
     this.eventService.getEvents(1, 100, undefined, true).subscribe({
       next: (result) => {
         this.allEvents = result.items.map(e => this.toCardData(e));

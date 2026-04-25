@@ -646,7 +646,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.chordRequest = { songName: '', artistName: '' };
     this.contactForm = { fullName: '', email: '', subject: '', message: '' };
     this.contactAttachments = [];
-    this.appendBotStep(initialStep);
+
+    if (this.entryPoint === 'contact') {
+      this.currentMode = 'contact';
+      this.modeOriginStep = 'root';
+      this.autoFillContactFromCurrentUser();
+    } else {
+      this.appendBotStep(initialStep);
+    }
   }
 
   private appendBotStep(step: AssistantStep): void {

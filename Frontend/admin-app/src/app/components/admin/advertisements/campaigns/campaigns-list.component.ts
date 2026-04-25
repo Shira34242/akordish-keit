@@ -7,6 +7,8 @@ import { AdCampaign, CreateAdCampaignRequest, UpdateAdCampaignRequest } from '..
 import { PagedResult } from '../../../../models/pagination.model';
 import { CampaignFormComponent } from './campaign-form.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-campaigns-list',
@@ -16,6 +18,7 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
   styleUrls: ['./campaigns-list.component.css']
 })
 export class CampaignsListComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   private readonly campaignService = inject(AdCampaignService);
   private readonly router = inject(Router);
 
@@ -59,7 +62,7 @@ export class CampaignsListComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number): void {
+  async onPageChange(page: number): Promise<void> {
     this.pageNumber = page;
     this.loadCampaigns();
   }
@@ -160,8 +163,8 @@ export class CampaignsListComponent implements OnInit {
     this.selectedCampaign = undefined;
   }
 
-  deleteCampaign(campaign: AdCampaign) {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את הקמפיין "${campaign.name}"?`)) {
+  async deleteCampaign(campaign: AdCampaign): Promise<void> {
+    if (!(await this.siteAlerts.confirm(`האם אתה בטוח שברצונך למחוק את הקמפיין "${campaign.name}"?`))) {
       return;
     }
 

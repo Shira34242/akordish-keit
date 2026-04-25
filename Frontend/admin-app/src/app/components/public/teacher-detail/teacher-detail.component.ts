@@ -1,8 +1,9 @@
 import {
   Component, OnInit, AfterViewInit, OnDestroy,
-  HostListener, ViewChild, ElementRef, ChangeDetectorRef
+  HostListener, ViewChild, ElementRef, ChangeDetectorRef, inject
 } from '@angular/core';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { AnalyticsService } from '../../../services/analytics.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -31,6 +32,8 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('g3dSection')    g3dSectionRef?: ElementRef<HTMLDivElement>;
   @ViewChild('g3dCardsEl')    g3dCardsElRef?: ElementRef<HTMLDivElement>;
   @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
+
+  private readonly analytics = inject(AnalyticsService);
 
   teacher: TeacherDto | null = null;
   cities: City[] = [];
@@ -491,6 +494,9 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   toggleContact(): void {
     this.contactOpen = !this.contactOpen;
+    if (this.contactOpen && this.teacher) {
+      this.analytics.trackButtonClick('contact', this.teacher.id, this.teacher.displayName);
+    }
   }
 
   get detailsLine(): string {

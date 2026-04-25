@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-export type QuickAddEntryPoint = 'root' | 'index';
+export type QuickAddEntryPoint = 'root' | 'index' | 'contact';
 
 @Injectable({
   providedIn: 'root'

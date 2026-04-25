@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemItem } from '../../../../../services/system-tables.service';
+import { SiteAlertService } from '../../../../../services/site-alert.service';
+
 
 @Component({
     selector: 'app-generic-table',
@@ -11,6 +13,7 @@ import { SystemItem } from '../../../../../services/system-tables.service';
     styleUrls: ['./generic-table.component.css']
 })
 export class GenericTableComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
     @Input() title: string = '';
     @Input() items: SystemItem[] = [];
     @Input() extraColumns: { key: string, label: string, type?: string }[] = [];
@@ -55,8 +58,8 @@ export class GenericTableComponent implements OnInit {
         this.closeModal();
     }
 
-    onDelete(item: SystemItem) {
-        if (confirm('האם אתה בטוח שברצונך למחוק את הפריט?')) {
+    async onDelete(item: SystemItem): Promise<void> {
+        if (await this.siteAlerts.confirm('האם אתה בטוח שברצונך למחוק את הפריט?')) {
             this.delete.emit(item);
         }
     }

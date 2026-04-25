@@ -13,6 +13,8 @@ import { TeachingLanguage, getTeachingLanguageOptions, hasLanguage, toggleLangua
 import { TargetAudience, getTargetAudienceOptions, hasAudience, toggleAudience } from '../../../models/target-audience.enum';
 import { UserSelectionModalComponent } from './user-selection-modal.component';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
+import { SiteAlertService } from '../../../services/site-alert.service';
+
 
 @Component({
   selector: 'app-teacher-form',
@@ -22,6 +24,7 @@ import { FileUploadInputComponent } from '../../shared/file-upload-input/file-up
   styleUrls: ['./teacher-form.component.css']
 })
 export class TeacherFormComponent implements OnInit {
+  private readonly siteAlerts = inject(SiteAlertService);
   @Input() embedded = false;
   @Input() teacherIdInput?: number;
   @Output() close = new EventEmitter<void>();
@@ -493,7 +496,7 @@ export class TeacherFormComponent implements OnInit {
     return true;
   }
 
-  toggleInstrument(instrumentId: number): void {
+  async toggleInstrument(instrumentId: number): Promise<void> {
     const index = this.selectedInstrumentIds.indexOf(instrumentId);
     if (index > -1) {
       this.selectedInstrumentIds.splice(index, 1);
@@ -533,8 +536,8 @@ export class TeacherFormComponent implements OnInit {
     this.showUserSelectionModal = false;
   }
 
-  disconnectUser() {
-    if (confirm('האם אתה בטוח שברצונך לנתק את המשתמש?')) {
+  async disconnectUser(): Promise<void> {
+    if (await this.siteAlerts.confirm('האם אתה בטוח שברצונך לנתק את המשתמש?')) {
       this.userId = undefined;
       this.userName = undefined;
       this.userEmail = undefined;
@@ -612,8 +615,8 @@ export class TeacherFormComponent implements OnInit {
     this.newGalleryImage = { imageUrl: '', caption: '' };
   }
 
-  removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+  async removeGalleryImage(index: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק תמונה זו מהגלריה?')) {
       this.galleryImages?.splice(index, 1);
       // Update display orders
       this.galleryImages?.forEach((img, idx) => {
