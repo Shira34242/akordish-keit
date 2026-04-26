@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef }
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
@@ -116,10 +116,15 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     private systemTablesService: SystemTablesService,
     public authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private quickAddAssistantService: QuickAddAssistantService
   ) {}
 
   ngOnInit(): void {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'teachers') {
+      this.activeTab = 'teachers';
+    }
     this.loadCities();
     this.loadProfessionals();
     this.loadInstrumentsAndTeachers();
