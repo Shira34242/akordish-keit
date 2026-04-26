@@ -442,6 +442,96 @@
       </div>
     </div>
 
+    <!-- Branches -->
+    <div class="form-section">
+      <h2 class="section-title">סניפים</h2>
+      <p class="form-hint" style="margin-bottom: var(--space-base);">הוסף סניפים לעסק — כל סניף מציג כתובת, טלפון, מייל ושעות פתיחה נפרדים.</p>
+
+      <div class="branch-editor">
+        <div class="branch-draft">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">שם הסניף</label>
+              <input
+                type="text"
+                [(ngModel)]="newBranch.name"
+                [ngModelOptions]="{standalone: true}"
+                class="form-input"
+                placeholder="סניף תל אביב"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">כתובת</label>
+              <input
+                type="text"
+                [(ngModel)]="newBranch.address"
+                [ngModelOptions]="{standalone: true}"
+                class="form-input"
+                placeholder="רחוב הרצל 5, תל אביב"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">טלפון</label>
+              <input
+                type="tel"
+                [(ngModel)]="newBranch.phoneNumber"
+                [ngModelOptions]="{standalone: true}"
+                class="form-input"
+                placeholder="03-1234567"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">מייל סניף</label>
+              <input
+                type="email"
+                [(ngModel)]="newBranch.email"
+                [ngModelOptions]="{standalone: true}"
+                class="form-input"
+                placeholder="branch@example.com"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">שעות פתיחה</label>
+            <input
+              type="text"
+              [(ngModel)]="newBranch.openingHours"
+              [ngModelOptions]="{standalone: true}"
+              class="form-input"
+              placeholder="א׳-ה׳ 9:00-19:00, ו׳ 9:00-13:00"
+            />
+          </div>
+          <button type="button" class="btn-secondary" (click)="addBranch()">
+            <span class="material-icons">add_location</span>
+            הוסף סניף
+          </button>
+        </div>
+
+        <div class="branch-list" *ngIf="branches.length > 0">
+          <article class="branch-edit-card" *ngFor="let branch of branches; let i = index">
+            <button type="button" class="media-card-remove" (click)="removeBranch(i)" aria-label="מחיקת סניף">
+              <span class="material-icons">close</span>
+            </button>
+            <strong class="branch-card-name">{{ branch.name }}</strong>
+            <span *ngIf="branch.address" class="branch-card-detail">
+              <span class="material-icons">location_on</span>{{ branch.address }}
+            </span>
+            <span *ngIf="branch.phoneNumber" class="branch-card-detail">
+              <span class="material-icons">phone</span>{{ branch.phoneNumber }}
+            </span>
+            <span *ngIf="branch.email" class="branch-card-detail">
+              <span class="material-icons">email</span>{{ branch.email }}
+            </span>
+            <span *ngIf="branch.openingHours" class="branch-card-detail">
+              <span class="material-icons">schedule</span>{{ branch.openingHours }}
+            </span>
+          </article>
+        </div>
+      </div>
+    </div>
+
     <!-- Display Settings -->
     <div class="form-section">
       <h2 class="section-title">הגדרות תצוגה</h2>

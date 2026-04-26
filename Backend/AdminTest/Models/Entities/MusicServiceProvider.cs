@@ -216,5 +216,10 @@ namespace AkordishKeit.Models.Entities
         /// רשימת בוסטים (קידומים חד-פעמיים) שנרכשו לפרופיל זה
         /// </summary>
         public virtual ICollection<Boost> Boosts { get; set; } = new List<Boost>();
+
+        /// <summary>
+        /// סניפים של בעל המקצוע (לעסקים עם מספר מיקומים)
+        /// </summary>
+        public virtual ICollection<MusicServiceProviderBranch> Branches { get; set; } = new List<MusicServiceProviderBranch>();
     }
 }

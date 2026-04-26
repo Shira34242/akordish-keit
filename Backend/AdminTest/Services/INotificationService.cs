@@ -11,8 +11,8 @@ public interface INotificationService
     Task<int> GetUnreadCountAsync(int userId);
     Task<bool> MarkAsReadAsync(int notificationId, int userId);
     Task MarkAllAsReadAsync(int userId);
-    Task<bool> SoftDeleteAsync(int notificationId, int userId);
-    Task SoftDeleteAllAsync(int userId);
+    Task<bool> DeleteAsync(int notificationId, int userId);
+    Task DeleteAllAsync(int userId);
     Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId);
     Task<BroadcastNotificationResultDto> SendBroadcastAsync(SendBroadcastNotificationDto dto, int createdByUserId);
     Task<List<NotificationGroupDto>> GetGroupsAsync();

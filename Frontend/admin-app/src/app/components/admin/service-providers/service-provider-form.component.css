@@ -70,4 +70,14 @@
 .alert-danger { background: #404040; color: #ffffff; }
 .alert-success { background: #ddff53; color: #000000; }
 
+.branch-editor { display: grid; gap: var(--space-base); margin-top: var(--space-sm); }
+.branch-draft { display: grid; gap: var(--space-base); padding: var(--space-base); border-radius: 18px; background: #F2F2F2; }
+.branch-draft .btn-secondary { display: inline-flex; align-items: center; gap: var(--space-sm); justify-self: start; }
+.branch-draft .btn-secondary .material-icons { font-size: 18px; }
+.branch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-base); }
+.branch-edit-card { position: relative; display: grid; gap: var(--space-sm); padding: var(--space-base); border-radius: 18px; background: #F2F2F2; }
+.branch-card-name { font-family: 'Open Sans', sans-serif; font-size: var(--font-base); font-weight: 800; color: #000000; }
+.branch-card-detail { display: flex; align-items: center; gap: var(--space-sm); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #404040; overflow-wrap: anywhere; }
+.branch-card-detail .material-icons { font-size: 14px; color: #000000; flex: 0 0 auto; }
+
 @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column; } .btn-primary, .btn-secondary { width: 100%; } }

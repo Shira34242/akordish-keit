@@ -126,35 +126,28 @@ public class NotificationService : INotificationService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> SoftDeleteAsync(int notificationId, int userId)
+    public async Task<bool> DeleteAsync(int notificationId, int userId)
     {
         var notification = await _context.Notifications
-            .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId && !n.IsDeleted);
+            .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
 
         if (notification == null)
         {
             return false;
         }
 
-        notification.IsDeleted = true;
-        notification.DeletedAt = DateTime.UtcNow;
+        _context.Notifications.Remove(notification);
         await _context.SaveChangesAsync();
         return true;
     }
 
-    public async Task SoftDeleteAllAsync(int userId)
+    public async Task DeleteAllAsync(int userId)
     {
-        var now = DateTime.UtcNow;
         var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .Where(n => n.UserId == userId)
             .ToListAsync();
 
-        foreach (var notification in notifications)
-        {
-            notification.IsDeleted = true;
-            notification.DeletedAt = now;
-        }
-
+        _context.Notifications.RemoveRange(notifications);
         await _context.SaveChangesAsync();
     }
 

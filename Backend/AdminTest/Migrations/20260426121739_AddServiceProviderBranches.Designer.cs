@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkordishKeit.Migrations
 {
     [DbContext(typeof(AkordishKeitDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260426121739_AddServiceProviderBranches")]
+    partial class AddServiceProviderBranches
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1979,59 +1982,6 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_MusicServiceProviderSocialLinks_ServiceProviderId");
 
                     b.ToTable("MusicServiceProviderSocialLinks", (string)null);
-                });
-
-            modelBuilder.Entity("AkordishKeit.Models.Entities.MusicServiceProviderBranch", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("OpeningHours")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Order")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Order")
-                        .HasDatabaseName("IX_MusicServiceProviderBranches_Order");
-
-                    b.HasIndex("ServiceProviderId")
-                        .HasDatabaseName("IX_MusicServiceProviderBranches_ServiceProviderId");
-
-                    b.ToTable("MusicServiceProviderBranches", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.MusicServiceProviderTestimonial", b =>
@@ -4022,17 +3972,6 @@ namespace AkordishKeit.Migrations
                     b.Navigation("ServiceProvider");
                 });
 
-            modelBuilder.Entity("AkordishKeit.Models.Entities.MusicServiceProviderBranch", b =>
-                {
-                    b.HasOne("AkordishKeit.Models.Entities.MusicServiceProvider", "ServiceProvider")
-                        .WithMany("Branches")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-                });
-
             modelBuilder.Entity("AkordishKeit.Models.Entities.Notification", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.User", "CreatedByUser")
@@ -4399,8 +4338,6 @@ namespace AkordishKeit.Migrations
             modelBuilder.Entity("AkordishKeit.Models.Entities.MusicServiceProvider", b =>
                 {
                     b.Navigation("Boosts");
-
-                    b.Navigation("Branches");
 
                     b.Navigation("Categories");
 

@@ -34,6 +34,7 @@ export interface MusicServiceProviderDto {
   galleryImages: GalleryImageDto[];
   socialLinks: SocialLinkDto[];
   customerTestimonials: ServiceProviderTestimonialDto[];
+  branches: ServiceProviderBranchDto[];
 }
 
 export interface MusicServiceProviderListDto {
@@ -84,6 +85,7 @@ export interface CreateMusicServiceProviderDto {
   galleryImages?: CreateGalleryImageDto[];
   socialLinks?: SocialLinkDto[];
   customerTestimonials?: CreateServiceProviderTestimonialDto[];
+  branches?: CreateServiceProviderBranchDto[];
 }
 
 export interface UpdateMusicServiceProviderDto {
@@ -110,6 +112,26 @@ export interface UpdateMusicServiceProviderDto {
   galleryImages?: CreateGalleryImageDto[];
   socialLinks?: SocialLinkDto[];
   customerTestimonials?: CreateServiceProviderTestimonialDto[];
+  branches?: CreateServiceProviderBranchDto[];
+}
+
+export interface ServiceProviderBranchDto {
+  id: number;
+  name: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
+  openingHours?: string;
+  order: number;
+}
+
+export interface CreateServiceProviderBranchDto {
+  name: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
+  openingHours?: string;
+  order: number;
 }
 
 export interface SocialLinkDto {

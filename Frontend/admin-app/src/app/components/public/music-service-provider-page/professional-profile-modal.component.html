@@ -142,6 +142,45 @@
       <span class="material-icons spotlight-icon">schedule</span>
     </section>
 
+    <section class="branches-section" *ngIf="branches.length > 0">
+      <div class="section-header branches-header">
+        <h2 class="section-title">סניפים</h2>
+      </div>
+      <div class="branches-grid">
+        <article class="branch-card" *ngFor="let branch of branches">
+          <div class="branch-card-top">
+            <span class="branch-icon material-icons">store</span>
+            <strong class="branch-name">{{ branch.name }}</strong>
+          </div>
+          <div class="branch-details">
+            <a *ngIf="branch.address"
+               [href]="'https://waze.com/ul?q=' + encodeUri(branch.address)"
+               target="_blank" rel="noopener"
+               class="branch-detail branch-detail-link">
+              <span class="material-icons">location_on</span>
+              <span>{{ branch.address }}</span>
+            </a>
+            <a *ngIf="branch.phoneNumber"
+               [href]="'tel:' + branch.phoneNumber"
+               class="branch-detail branch-detail-link">
+              <span class="material-icons">phone</span>
+              <span>{{ branch.phoneNumber }}</span>
+            </a>
+            <a *ngIf="branch.email"
+               [href]="'mailto:' + branch.email"
+               class="branch-detail branch-detail-link">
+              <span class="material-icons">email</span>
+              <span>{{ branch.email }}</span>
+            </a>
+            <div *ngIf="branch.openingHours" class="branch-detail">
+              <span class="material-icons">schedule</span>
+              <span>{{ branch.openingHours }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="gallery-section" *ngIf="galleryMediaItems.length > 0">
       <div class="section-header">
         <h2 class="section-title">גלריה</h2>

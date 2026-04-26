@@ -93,7 +93,7 @@ public class NotificationsController : ControllerBase
             return Unauthorized();
         }
 
-        await _notificationService.SoftDeleteAllAsync(userId.Value);
+        await _notificationService.DeleteAllAsync(userId.Value);
         return NoContent();
     }
 
@@ -106,7 +106,7 @@ public class NotificationsController : ControllerBase
             return Unauthorized();
         }
 
-        var success = await _notificationService.SoftDeleteAsync(id, userId.Value);
+        var success = await _notificationService.DeleteAsync(id, userId.Value);
         return success ? NoContent() : NotFound();
     }
 

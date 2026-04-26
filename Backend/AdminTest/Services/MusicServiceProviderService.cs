@@ -100,6 +100,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
+            .Include(sp => sp.Branches)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -114,6 +115,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
+            .Include(sp => sp.Branches)
             .FirstOrDefaultAsync(sp => sp.UserId == userId && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -201,6 +203,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         }
 
         AddCustomerTestimonials(serviceProvider, dto.CustomerTestimonials);
+        AddBranches(serviceProvider, dto.Branches);
 
         _context.ServiceProviders.Add(serviceProvider);
         await _context.SaveChangesAsync();
@@ -215,6 +218,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
+            .Include(sp => sp.Branches)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (serviceProvider == null)
@@ -292,6 +296,9 @@ public class MusicServiceProviderService : IMusicServiceProviderService
 
         serviceProvider.CustomerTestimonials.Clear();
         AddCustomerTestimonials(serviceProvider, dto.CustomerTestimonials);
+
+        serviceProvider.Branches.Clear();
+        AddBranches(serviceProvider, dto.Branches);
 
         await _context.SaveChangesAsync();
 
@@ -427,6 +434,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.GalleryImages)
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
+            .Include(sp => sp.Branches)
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         if (original == null)
@@ -502,6 +510,20 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             });
         }
 
+        foreach (var branch in original.Branches)
+        {
+            newProvider.Branches.Add(new MusicServiceProviderBranch
+            {
+                Name = branch.Name,
+                Address = branch.Address,
+                PhoneNumber = branch.PhoneNumber,
+                Email = branch.Email,
+                OpeningHours = branch.OpeningHours,
+                Order = branch.Order,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
         _context.ServiceProviders.Add(newProvider);
         await _context.SaveChangesAsync();
 
@@ -570,8 +592,39 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 ClientName = t.ClientName,
                 Text = t.Text,
                 Order = t.Order
+            }).ToList(),
+            Branches = entity.Branches.OrderBy(b => b.Order).Select(b => new ServiceProviderBranchDto
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Address = b.Address,
+                PhoneNumber = b.PhoneNumber,
+                Email = b.Email,
+                OpeningHours = b.OpeningHours,
+                Order = b.Order
             }).ToList()
         };
+    }
+
+    private static void AddBranches(
+        MusicServiceProvider serviceProvider,
+        IEnumerable<CreateServiceProviderBranchDto>? branches)
+    {
+        if (branches == null) return;
+
+        foreach (var branchDto in branches.Where(b => !string.IsNullOrWhiteSpace(b.Name)))
+        {
+            serviceProvider.Branches.Add(new MusicServiceProviderBranch
+            {
+                Name = branchDto.Name,
+                Address = branchDto.Address,
+                PhoneNumber = branchDto.PhoneNumber,
+                Email = branchDto.Email,
+                OpeningHours = branchDto.OpeningHours,
+                Order = branchDto.Order,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
     }
 
     private static void AddCustomerTestimonials(

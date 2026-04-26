@@ -17,7 +17,8 @@ import {
   CreateGalleryImageDto,
   SocialLinkDto,
   SocialPlatform,
-  CreateServiceProviderTestimonialDto
+  CreateServiceProviderTestimonialDto,
+  CreateServiceProviderBranchDto
 } from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
@@ -85,6 +86,8 @@ export class ServiceProviderFormComponent implements OnInit {
   socialLinks: SocialLinkDto[] = [];
   customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
   newTestimonial = { clientName: '', text: '' };
+  branches: CreateServiceProviderBranchDto[] = [];
+  newBranch: CreateServiceProviderBranchDto = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
 
   // Available categories, cities, and users loaded from API
   availableCategories: SystemItem[] = [];
@@ -210,6 +213,14 @@ export class ServiceProviderFormComponent implements OnInit {
           text: item.text,
           order: item.order
         })) || [];
+        this.branches = provider.branches?.map(b => ({
+          name: b.name,
+          address: b.address,
+          phoneNumber: b.phoneNumber,
+          email: b.email,
+          openingHours: b.openingHours,
+          order: b.order
+        })) || [];
         this.loading = false;
       },
       error: (error: any) => {
@@ -252,7 +263,8 @@ export class ServiceProviderFormComponent implements OnInit {
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
         galleryImages: this.galleryImages,
         socialLinks: this.socialLinks.filter(link => link.url?.trim()),
-        customerTestimonials: this.customerTestimonials
+        customerTestimonials: this.customerTestimonials,
+        branches: this.branches
       };
 
       this.serviceProviderService.updateServiceProvider(this.serviceProviderId, dto).subscribe({
@@ -306,7 +318,8 @@ export class ServiceProviderFormComponent implements OnInit {
         categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
         galleryImages: this.galleryImages,
         socialLinks: this.socialLinks.filter(link => link.url?.trim()),
-        customerTestimonials: this.customerTestimonials
+        customerTestimonials: this.customerTestimonials,
+        branches: this.branches
       };
 
       this.serviceProviderService.createServiceProvider(dto).subscribe({
@@ -532,6 +545,29 @@ export class ServiceProviderFormComponent implements OnInit {
     if (await this.siteAlerts.confirm('האם למחוק את ההמלצה הזו?')) {
       this.customerTestimonials.splice(index, 1);
       this.customerTestimonials.forEach((item, idx) => item.order = idx);
+    }
+  }
+
+  addBranch(): void {
+    if (!this.newBranch.name.trim()) {
+      alert('נא להזין שם סניף');
+      return;
+    }
+    this.branches.push({
+      name: this.newBranch.name.trim(),
+      address: this.newBranch.address?.trim() || undefined,
+      phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
+      email: this.newBranch.email?.trim() || undefined,
+      openingHours: this.newBranch.openingHours?.trim() || undefined,
+      order: this.branches.length
+    });
+    this.newBranch = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  }
+
+  async removeBranch(index: number): Promise<void> {
+    if (await this.siteAlerts.confirm('האם למחוק את הסניף הזה?')) {
+      this.branches.splice(index, 1);
+      this.branches.forEach((b, idx) => b.order = idx);
     }
   }
 

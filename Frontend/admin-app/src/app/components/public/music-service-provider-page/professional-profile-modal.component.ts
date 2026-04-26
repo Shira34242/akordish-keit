@@ -10,6 +10,7 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
 import {
   MusicServiceProviderDto,
   ServiceProviderParkingType,
+  ServiceProviderBranchDto,
   SocialLinkDto,
   SocialPlatform
 } from '../../../models/music-service-provider.model';
@@ -61,6 +62,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   galleryMediaItems: GalleryMediaItem[] = [];
   activeMedia: GalleryMediaItem | null = null;
   activeVideoUrl: SafeResourceUrl | null = null;
+  branches: ServiceProviderBranchDto[] = [];
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -106,6 +108,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     this.professionalService.getServiceProviderById(professionalId).subscribe({
       next: professional => {
         this.professional = professional;
+        this.branches = professional.branches ?? [];
         this.rebuildGalleryMedia();
         this.loading = false;
         setTimeout(() => {
@@ -422,6 +425,10 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       .map(category => [category.categoryName, category.subCategory].filter(Boolean).join(' · '))
       .filter(Boolean)
       .join(', ');
+  }
+
+  encodeUri(value: string): string {
+    return encodeURIComponent(value);
   }
 
   getShortUrl(url: string): string {

@@ -94,6 +94,7 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<TeacherInstrument> TeacherInstruments { get; set; }
     public DbSet<MusicServiceProviderGalleryImage> ServiceProviderGalleryImages { get; set; }
     public DbSet<MusicServiceProviderSocialLink> ServiceProviderSocialLinks { get; set; }
+    public DbSet<MusicServiceProviderBranch> ServiceProviderBranches { get; set; }
 
     // Subscriptions (חדש!)
     public DbSet<Subscription> Subscriptions { get; set; }
@@ -181,6 +182,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TeacherInstrumentConfiguration());
         modelBuilder.ApplyConfiguration(new MusicServiceProviderGalleryImageConfiguration());
         modelBuilder.ApplyConfiguration(new MusicServiceProviderSocialLinkConfiguration());
+        modelBuilder.ApplyConfiguration(new MusicServiceProviderBranchConfiguration());
 
         // Subscription Configuration (חדש!)
         modelBuilder.ApplyConfiguration(new SubscriptionConfiguration());

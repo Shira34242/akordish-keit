@@ -43,6 +43,7 @@ public class MusicServiceProviderDto
     public List<GalleryImageDto> GalleryImages { get; set; } = new();
     public List<SocialLinkDto> SocialLinks { get; set; } = new();
     public List<ServiceProviderTestimonialDto> CustomerTestimonials { get; set; } = new();
+    public List<ServiceProviderBranchDto> Branches { get; set; } = new();
 }
 
 public class TeacherDto : MusicServiceProviderDto
@@ -56,6 +57,39 @@ public class TeacherDto : MusicServiceProviderDto
     public string? Specializations { get; set; }
     public List<TeacherInstrumentDto> Instruments { get; set; } = new();
     public List<TeacherTestimonialDto> Testimonials { get; set; } = new();
+}
+
+public class ServiceProviderBranchDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Email { get; set; }
+    public string? OpeningHours { get; set; }
+    public int Order { get; set; }
+}
+
+public class CreateServiceProviderBranchDto
+{
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [StringLength(300)]
+    public string? Address { get; set; }
+
+    [StringLength(20)]
+    public string? PhoneNumber { get; set; }
+
+    [StringLength(200)]
+    [EmailAddress]
+    public string? Email { get; set; }
+
+    [StringLength(500)]
+    public string? OpeningHours { get; set; }
+
+    public int Order { get; set; }
 }
 
 public class TeacherTestimonialDto
@@ -168,6 +202,7 @@ public class CreateMusicServiceProviderDto
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
     public List<SocialLinkDto>? SocialLinks { get; set; }
     public List<CreateServiceProviderTestimonialDto>? CustomerTestimonials { get; set; }
+    public List<CreateServiceProviderBranchDto>? Branches { get; set; }
 }
 
 public class CreateTeacherDto : CreateMusicServiceProviderDto
@@ -320,6 +355,7 @@ public class UpdateMusicServiceProviderDto
     public List<CreateGalleryImageDto>? GalleryImages { get; set; }
     public List<SocialLinkDto>? SocialLinks { get; set; }
     public List<CreateServiceProviderTestimonialDto>? CustomerTestimonials { get; set; }
+    public List<CreateServiceProviderBranchDto>? Branches { get; set; }
 }
 
 public class UpdateTeacherDto : UpdateMusicServiceProviderDto

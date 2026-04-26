@@ -245,7 +245,7 @@
     </section>
 
     <!-- תיבת Promo — אינדקס עולם המוזיקה -->
-    <div class="promo-box">
+    <div class="promo-box promo-box--providers">
       <div class="promo-content">
         <h2 class="promo-title">אינדקס עולם המוזיקה</h2>
         <p class="promo-subtitle">המאגר הגדול לנותני שירות במוזיקה היהודית</p>
@@ -257,13 +257,13 @@
     </div>
 
     <!-- בעלי מקצוע -->
-    <section class="home-section" *ngIf="featuredProviders.length > 0">
+    <section class="home-section provider-showcase-section" *ngIf="featuredProviders.length > 0">
       <div class="section-header">
         <h2 class="section-title">בעלי מקצוע</h2>
         <a routerLink="/professionals" class="section-link">לכל בעלי המקצוע ‹</a>
       </div>
-      <div class="persons-scroll">
-        <a class="person-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]">
+      <div class="persons-scroll provider-showcase-scroll">
+        <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
           <div class="person-avatar">
             <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
             <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>

@@ -579,6 +579,165 @@
 }
 
 /* ============================================
+   PROVIDERS SHOWCASE
+============================================ */
+.provider-showcase-section {
+  position: relative;
+  isolation: isolate;
+  margin-top: -8rem;
+  padding-top: calc(8rem + var(--space-xl));
+  padding-bottom: var(--space-3xl);
+}
+
+.provider-showcase-section::before {
+  content: "";
+  position: absolute;
+  inset-inline: -8px;
+  top: 0;
+  bottom: 0;
+  background: #404040;
+  z-index: -2;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10rem);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10rem);
+}
+
+.provider-showcase-section::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.75rem;
+  top: 5.5rem;
+  height: 8rem;
+  background: rgba(64, 64, 64, 0.6);
+  filter: blur(48px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.provider-showcase-section .section-header {
+  margin-bottom: var(--space-lg);
+}
+
+.promo-box--providers {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+.promo-box--providers::before {
+  content: none;
+}
+
+.promo-box--providers::after {
+  content: none;
+}
+
+.provider-showcase-section .section-title,
+.provider-showcase-section .section-link {
+  color: #ffffff;
+}
+
+.provider-showcase-section .section-link {
+  opacity: 0.72;
+}
+
+.provider-showcase-scroll {
+  gap: var(--space-lg);
+  align-items: stretch;
+  padding-bottom: 0;
+}
+
+.provider-showcase-card {
+  width: 13.75rem;
+  min-height: 18.75rem;
+  padding: 0.9rem 0.9rem 1.1rem;
+  border-radius: 2rem;
+  background: #ffffff;
+  border: none;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: right;
+  gap: 0.55rem;
+  box-sizing: border-box;
+}
+
+.provider-showcase-card:hover {
+  opacity: 1;
+}
+
+.provider-showcase-card .person-avatar {
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.02 / 1;
+  border-radius: 1.35rem;
+  background: #F2F2F2;
+  overflow: hidden;
+}
+
+.provider-showcase-card .person-avatar::after {
+  content: "";
+  position: absolute;
+  left: 0.95rem;
+  bottom: 0.95rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1.45rem;
+}
+
+.provider-showcase-card .person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.provider-showcase-card .person-initial {
+  font-size: var(--font-4xl);
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.provider-showcase-card .person-name {
+  width: 100%;
+  margin-top: 0.2rem;
+  font-size: var(--font-lg);
+  line-height: 1.02;
+  text-align: right;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.provider-showcase-card .person-sub {
+  width: 100%;
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: 1.08;
+  text-align: right;
+  color: #404040;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.provider-showcase-card::after {
+  content: attr(data-provider-city);
+  display: block;
+  width: 100%;
+  margin-top: -0.15rem;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 300;
+  line-height: 1.08;
+  text-align: right;
+  color: #404040;
+}
+
+/* ============================================
    PROMO BOX (תיבה צהובה)
 ============================================ */
 .promo-box {
@@ -746,6 +905,16 @@
     min-width: 12.5rem;
   }
 
+  .provider-showcase-card {
+    width: 12.75rem;
+    min-height: 17.5rem;
+  }
+
+  .provider-showcase-section {
+    margin-top: -7rem;
+    padding-top: calc(7rem + var(--space-xl));
+  }
+
   .songs-grid {
     grid-template-columns: 1fr;
   }
@@ -787,6 +956,50 @@
   .news-banner-card {
     flex-basis: calc((100% - var(--space-sm)) / 1.9);
     min-width: 0;
+  }
+
+  .provider-showcase-card {
+    width: 11.5rem;
+    min-height: 15.75rem;
+    padding: var(--space-sm);
+    border-radius: 22px;
+  }
+
+  .provider-showcase-section {
+    margin-top: -6rem;
+    padding-top: calc(6rem + var(--space-xl));
+  }
+
+  .provider-showcase-section::after {
+    inset-inline: 0.5rem;
+    top: 4rem;
+    height: 6rem;
+    filter: blur(32px);
+  }
+
+  .provider-showcase-card .person-avatar {
+    border-radius: 14px;
+  }
+
+  .provider-showcase-card .person-avatar::after {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    left: 10px;
+    bottom: 10px;
+    font-size: 1.5rem;
+  }
+
+  .provider-showcase-card .person-name {
+    font-size: var(--font-base);
+  }
+
+  .provider-showcase-card .person-sub {
+    font-size: var(--font-sm);
+  }
+
+  .provider-showcase-card::after {
+    font-size: var(--font-sm);
   }
 
   .news-banner-card ::ng-deep .news-banner {
