@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
 
@@ -33,10 +33,17 @@ export class ContentStatsComponent implements OnInit {
   constructor(
     private feedbackService: ArticleFeedbackService,
     private analytics: AnalyticsService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'] as Tab;
+      if (tab && ['articles', 'events', 'buttons', 'ads'].includes(tab)) {
+        this.activeTab = tab;
+      }
+    });
     this.applyPreset('30');
   }
 
