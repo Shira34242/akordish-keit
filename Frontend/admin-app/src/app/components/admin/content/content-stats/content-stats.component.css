@@ -2,7 +2,7 @@
 
 .stats-container {
   background: #ffffff;
-  border-radius: 24px;
+  border-radius: 16px;
   overflow: hidden;
   direction: rtl;
 }
@@ -297,6 +297,8 @@
 /* ─── Table ───────────────────────────────────── */
 .table-wrap {
   overflow-x: auto;
+  border-right: 1px solid #f0f0f0;
+  border-left: 1px solid #f0f0f0;
 }
 
 .tab-content .table-wrap {
@@ -314,16 +316,16 @@
 .stats-table th {
   padding: var(--space-sm) var(--space-base);
   text-align: right;
-  font-weight: 600;
+  font-weight: 300;
   font-size: var(--font-xs);
-  color: rgba(0,0,0,0.35);
+  color: rgba(0,0,0,0.4);
   border-bottom: 1px solid #ebebeb;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  letter-spacing: 0.02em;
 }
-.stats-table th .material-icons { font-size: 13px; vertical-align: middle; margin-left: 2px; }
-.stats-table th.sorted { color: #000; }
+.stats-table th.sorted { color: #000; font-weight: 600; }
 
 .stats-table td {
   padding: var(--space-sm) var(--space-base);

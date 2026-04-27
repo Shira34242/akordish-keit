@@ -25,14 +25,13 @@
 .search-input:focus { outline: none; }
 .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 17px; opacity: 0.4; }
 
-.table-container { overflow-x: auto; }
-.clients-table { width: 100%; border-collapse: collapse; }
-.clients-table thead { background: #F2F2F2; }
-.clients-table th { padding: var(--space-base) var(--space-lg); text-align: right; font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: var(--font-sm); color: #000000; white-space: nowrap; }
-.clients-table tbody tr { border-bottom: 1px solid #F2F2F2; transition: background 0.15s; }
+.table-container { overflow-x: auto; border-right: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; }
+.clients-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); font-weight: 300; }
+.clients-table th { padding: var(--space-sm) var(--space-base); text-align: right; font-weight: 300; font-size: var(--font-xs); color: rgba(0,0,0,0.4); border-bottom: 1px solid #ebebeb; white-space: nowrap; letter-spacing: 0.02em; }
+.clients-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
 .clients-table tbody tr:last-child { border-bottom: none; }
-.clients-table tbody tr:hover { background: #F2F2F2; }
-.clients-table td { padding: var(--space-base) var(--space-lg); vertical-align: middle; font-family: 'Open Sans', sans-serif; font-weight: 300; color: #000000; }
+.clients-table tbody tr:hover { background: #fafafa; }
+.clients-table td { padding: var(--space-sm) var(--space-base); vertical-align: middle; color: #000000; }
 
 .client-row { }
 .business-name-cell { }

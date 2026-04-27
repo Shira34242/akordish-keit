@@ -1,107 +1,108 @@
 /* ============================================
-   SAVED LISTS PAGE — רשימות שמורות
-   מבוסס על שפת עיצוב הפרופיל/מורה
+   PLAYLISTS PAGE — הרשימות שלי
 ============================================ */
 
-.saved-page {
+.playlists-page {
   direction: rtl;
   background: #ffffff;
   min-height: 100vh;
-  padding: var(--space-xl) var(--space-lg) var(--space-4xl);
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-weight: 300;
   color: #000000;
+  padding-bottom: var(--space-4xl);
 }
 
 /* ============================================
-   HERO — בהיר, עדין, בלי אייקון גדול
+   HERO BOX — fixed visual background
 ============================================ */
 
-.saved-hero {
-  max-width: 1200px;
-  margin: 0 auto var(--space-2xl);
-  padding: var(--space-xl) var(--space-2xl);
-  background: #F2F2F2;
+.hero-box {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
   border-radius: 28px;
+  background: #404040;
+  z-index: 81;
+  pointer-events: none;
+  will-change: height;
+  overflow: hidden;
+}
+
+/* ============================================
+   HERO CONTENT — normal flow (overlays hero box)
+============================================ */
+
+.hero-content {
+  position: relative;
+  z-index: 82;
+  padding: var(--space-2xl) var(--space-2xl) calc(var(--space-2xl) * 2);
+}
+
+.hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-xl);
   flex-wrap: wrap;
 }
 
-.saved-hero-text {
+.hero-text {
   min-width: 0;
-  flex: 1 1 320px;
+  flex: 1 1 280px;
 }
 
-.saved-hero-title {
+.hero-title {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-3xl);
   font-weight: 800;
+  color: #ffffff;
   line-height: 1.1;
-  color: #000000;
 }
 
-.saved-hero-subtitle {
+.hero-subtitle {
   margin: 0;
   font-size: var(--font-sm);
   font-weight: 300;
-  color: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.6);
   line-height: 1.5;
 }
 
-.saved-hero-stats {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.stat-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 var(--space-base);
-  border-radius: 999px;
-  background: #ffffff;
-  color: #000000;
-  font-size: var(--font-sm);
-  font-weight: 800;
-}
-
-.stat-pill--accent {
-  background: #ddff53;
-}
-
-/* ============================================
-   CONTENT SHELL
-============================================ */
-
-.saved-content {
-  max-width: 1200px;
-  margin: 0 auto;
+.hero-cta-block {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.hero-cta-desc {
+  margin: 0;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+  max-width: 220px;
+}
+
+.hero-cta-arrow {
+  font-size: 18px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 /* ============================================
-   TABS
+   BUTTONS (shared)
 ============================================ */
 
-.tabs-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.filter-btn {
+.btn-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   height: 36px;
   padding: 0 var(--space-lg);
   border: none;
@@ -112,94 +113,22 @@
   font-size: var(--font-sm);
   font-weight: 800;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.filter-btn:hover {
-  background: #ffffff;
-}
-
-.filter-btn.active {
-  background: #000000;
-  color: #ffffff;
-}
-
-/* ============================================
-   SECTION — כללי
-============================================ */
-
-.saved-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-base);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-base);
-  flex-wrap: wrap;
-}
-
-.section-title {
-  margin: 0;
-  font-size: var(--font-lg);
-  font-weight: 800;
-  color: #000000;
-}
-
-.section-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.count-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 var(--space-md);
-  border-radius: 999px;
-  background: #F2F2F2;
-  color: rgba(0, 0, 0, 0.55);
-  font-size: var(--font-xs);
-  font-weight: 800;
-}
-
-/* ============================================
-   BUTTONS
-============================================ */
-
-.btn-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 var(--space-lg);
-  border: none;
-  border-radius: 999px;
-  background: #F2F2F2;
-  color: #000000;
-  font-family: inherit;
-  font-size: var(--font-sm);
-  font-weight: 800;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.15s;
+  text-decoration: none;
 }
 
 .btn-pill:hover:not(:disabled) {
-  background: #ffffff;
+  background: #e4e4e4;
 }
 
 .btn-pill--accent {
   background: #ddff53;
+  color: #000000;
 }
 
 .btn-pill--accent:hover:not(:disabled) {
-  background: #ddff53;
-  transform: scale(1.03);
+  background: #d0f040;
+  transform: scale(1.02);
 }
 
 .btn-pill:disabled {
@@ -207,115 +136,39 @@
   cursor: default;
 }
 
-.row-footer {
+/* ============================================
+   PAGE BODY
+============================================ */
+
+.page-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
   display: flex;
-  justify-content: center;
-  margin-top: var(--space-sm);
+  flex-direction: column;
+  gap: var(--space-2xl);
 }
 
 /* ============================================
-   SONG GRID — משתמש ב-app-song-card
+   SECTION TITLES
 ============================================ */
 
-.song-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-base);
-}
-
-/* ============================================
-   PLAYLIST GRID — כרטיסי רשימה אישית
-============================================ */
-
-.playlist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-base);
-}
-
-.playlist-card {
-  position: relative;
-  background: #F2F2F2;
-  border-radius: 20px;
-  padding: var(--space-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.playlist-card:hover {
-  background: #ebebeb;
-}
-
-.playlist-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  min-width: 0;
-}
-
-.playlist-card-title {
-  margin: 0;
-  font-size: var(--font-base);
+.section-title {
+  margin: 0 0 var(--space-base);
+  font-size: var(--font-lg);
   font-weight: 800;
   color: #000000;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.playlist-card-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  color: rgba(0, 0, 0, 0.5);
-  font-size: var(--font-sm);
-  font-weight: 300;
-}
-
-.playlist-card-meta-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  flex-shrink: 0;
-}
-
-.playlist-card-remove {
-  position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  opacity: 0;
-}
-
-.playlist-card:hover .playlist-card-remove {
-  opacity: 1;
-}
-
-.playlist-card-remove:hover {
-  background: #000000;
-  color: #ddff53;
-}
-
-.playlist-card-remove .material-icons {
-  font-size: 16px;
+.subsection-title {
+  margin: 0 0 var(--space-base);
+  font-size: var(--font-base);
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 /* ============================================
-   CREATE PANEL — פתיחה inline
+   CREATE PANEL
 ============================================ */
 
 .create-panel {
@@ -325,6 +178,7 @@
   padding: var(--space-lg);
   background: #F2F2F2;
   border-radius: 20px;
+  margin-bottom: var(--space-base);
 }
 
 .create-input {
@@ -339,11 +193,12 @@
   font-size: var(--font-base);
   direction: rtl;
   outline: none;
+  box-sizing: border-box;
 }
 
 .create-input:focus {
-  background: #ffffff;
-  box-shadow: inset 0 0 0 2px #ddff53;
+  outline: 2px solid #ddff53;
+  outline-offset: -2px;
 }
 
 .create-toggle {
@@ -374,13 +229,342 @@
   font-size: var(--font-sm);
   color: #000000;
   background: #ddff53;
-  padding: var(--space-xs) var(--space-base);
+  padding: var(--space-xs) var(--space-md);
   border-radius: 999px;
   align-self: flex-start;
 }
 
 /* ============================================
-   CONTENT GRID — כתבות (app-news-banner)
+   PLAYLISTS ROW — horizontal scroll
+============================================ */
+
+.lists-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.playlists-row {
+  display: flex;
+  gap: var(--space-base);
+  overflow-x: auto;
+  padding-bottom: var(--space-sm);
+  scrollbar-width: none;
+  align-items: stretch;
+}
+
+.playlists-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   PLAYLIST CARD
+============================================ */
+
+.pcard {
+  flex-shrink: 0;
+  width: 220px;
+  background: #F2F2F2;
+  border-radius: 20px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.pcard:not(.pcard--add):not(.pcard--empty):hover {
+  background: #ebebeb;
+}
+
+/* ADD CARD */
+.pcard--add {
+  border: 2px dashed rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  background: #ffffff;
+  flex-direction: column;
+}
+
+.pcard--add:hover {
+  background: #F2F2F2;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.pcard-add-icon {
+  font-size: 32px;
+}
+
+/* EMPTY PLACEHOLDER CARD */
+.pcard--empty {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex-direction: column;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: var(--font-sm);
+  font-weight: 300;
+  cursor: default;
+  min-height: 140px;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  background: transparent;
+}
+
+.pcard-empty-icon {
+  font-size: 28px;
+}
+
+/* CARD THUMBNAIL */
+.pcard-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  cursor: pointer;
+  background: #000000;
+  flex-shrink: 0;
+}
+
+.pcard-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.pcard-thumb:hover .pcard-thumb-img {
+  transform: scale(1.04);
+}
+
+.pcard-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.pcard-thumb-placeholder .material-icons {
+  font-size: 48px;
+}
+
+/* SONG GRID THUMBNAIL (2×2) */
+.pcard-song-grid {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.pcard-song-tile {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pcard-song-tile--empty {
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.pcard-song-tile--empty .material-icons {
+  font-size: 22px;
+}
+
+/* IMAGE EDIT INLINE */
+.pcard-image-edit {
+  padding: var(--space-sm) var(--space-md);
+  background: #F2F2F2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.pcard-image-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-family: inherit;
+  font-size: var(--font-xs);
+  direction: ltr;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pcard-image-input:focus {
+  outline: 2px solid #ddff53;
+  outline-offset: -2px;
+}
+
+.pcard-image-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.btn-pill--sm {
+  height: 28px;
+  padding: 0 var(--space-md);
+  font-size: var(--font-xs);
+}
+
+/* CARD BODY */
+.pcard-body {
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.pcard-title {
+  margin: 0 0 6px;
+  font-size: var(--font-base);
+  font-weight: 800;
+  color: #000000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pcard-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: rgba(0, 0, 0, 0.45);
+  font-size: var(--font-xs);
+  font-weight: 300;
+}
+
+.pcard-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+/* ACTION BUTTONS BAR */
+.pcard-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+
+.pcard-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.pcard-action-btn:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.pcard-action-btn .material-icons {
+  font-size: 17px;
+}
+
+/* DOTS MENU */
+.pcard-dots-wrap {
+  position: relative;
+  margin-right: auto;
+  z-index: 400;
+}
+
+.pcard-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1.5px solid #F2F2F2;
+  z-index: 500;
+  min-width: 175px;
+  padding: var(--space-xs);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #000000;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  cursor: pointer;
+  text-align: right;
+  direction: rtl;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: #F2F2F2;
+}
+
+.dropdown-item--danger {
+  color: #c0392b;
+}
+
+.dropdown-item .material-icons {
+  font-size: 17px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.dropdown-item--danger .material-icons {
+  color: #c0392b;
+}
+
+/* ============================================
+   SAVED SECTION
+============================================ */
+
+.saved-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.saved-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+}
+
+/* ============================================
+   CONTENT GRID (כתבות)
 ============================================ */
 
 .content-grid {
@@ -422,7 +606,27 @@
 }
 
 /* ============================================
-   EMPTY STATES
+   SONG GRID
+============================================ */
+
+.song-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-base);
+}
+
+/* ============================================
+   ROW FOOTER
+============================================ */
+
+.row-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-xs);
+}
+
+/* ============================================
+   EMPTY ALL STATE
 ============================================ */
 
 .empty-all {
@@ -440,7 +644,7 @@
 
 .empty-all-icon {
   font-size: 44px;
-  color: rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.2);
 }
 
 .empty-all-title {
@@ -458,30 +662,8 @@
   line-height: 1.5;
 }
 
-.empty-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  width: 100%;
-  min-height: 110px;
-  padding: var(--space-lg);
-  background: #F2F2F2;
-  border-radius: 20px;
-  color: rgba(0, 0, 0, 0.45);
-  font-size: var(--font-sm);
-  font-weight: 300;
-  text-align: center;
-}
-
-.empty-row-icon {
-  font-size: 28px;
-  color: rgba(0, 0, 0, 0.22);
-}
-
 /* ============================================
-   STATE BLOCKS — loading / error
+   STATE BLOCKS (loading / error)
 ============================================ */
 
 .state-block {
@@ -489,7 +671,7 @@
   margin: 0 auto;
   padding: var(--space-3xl) var(--space-lg);
   text-align: center;
-  color: rgba(0, 0, 0, 0.55);
+  color: rgba(0, 0, 0, 0.5);
   font-size: var(--font-sm);
   display: flex;
   flex-direction: column;
@@ -503,10 +685,10 @@
   border-radius: 50%;
   border: 3px solid #F2F2F2;
   border-top-color: #000000;
-  animation: saved-spin 0.8s linear infinite;
+  animation: playlists-spin 0.8s linear infinite;
 }
 
-@keyframes saved-spin {
+@keyframes playlists-spin {
   to { transform: rotate(360deg); }
 }
 
@@ -515,17 +697,16 @@
 ============================================ */
 
 @media (max-width: 900px) {
-  .saved-page {
-    padding: var(--space-lg) var(--space-base) var(--space-3xl);
+  .hero-content {
+    padding: var(--space-md) var(--space-xl) var(--space-xl);
   }
 
-  .saved-hero {
-    padding: var(--space-lg) var(--space-xl);
-    border-radius: 24px;
-  }
-
-  .saved-hero-title {
+  .hero-title {
     font-size: var(--font-2xl);
+  }
+
+  .page-body {
+    padding: var(--space-lg) var(--space-base);
   }
 
   .song-grid {
@@ -534,63 +715,40 @@
 }
 
 @media (max-width: 640px) {
-  .saved-page {
-    padding: var(--space-base) var(--space-sm) var(--space-2xl);
+  .hero-content {
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
   }
 
-  .saved-hero {
-    padding: var(--space-lg);
-    border-radius: 20px;
-    align-items: flex-start;
+  .hero-inner {
     flex-direction: column;
-    gap: var(--space-base);
+    align-items: flex-start;
+    gap: var(--space-md);
   }
 
-  .saved-hero-title {
+  .hero-title {
     font-size: var(--font-xl);
   }
 
-  .saved-hero-stats {
+  .hero-cta-block {
     width: 100%;
   }
 
-  .section-header {
-    align-items: flex-start;
+  .page-body {
+    padding: var(--space-base) var(--space-sm);
+    gap: var(--space-xl);
   }
 
-  .section-tools {
-    width: 100%;
-    justify-content: space-between;
+  .playlists-row {
+    margin: 0 calc(-1 * var(--space-sm));
+    padding: 0 var(--space-sm) var(--space-sm);
   }
 
-  .song-grid,
-  .content-grid {
+  .content-grid,
+  .song-grid {
     grid-template-columns: 1fr;
   }
 
-  .playlist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-
-  .playlist-card-remove {
-    opacity: 1;
-  }
-
-  .tabs-row {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    margin: 0 calc(-1 * var(--space-sm));
-    padding: 0 var(--space-sm);
-    scrollbar-width: none;
-  }
-
-  .tabs-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .filter-btn {
-    flex-shrink: 0;
-    height: 34px;
-    padding: 0 var(--space-base);
+  .pcard {
+    width: 180px;
   }
 }

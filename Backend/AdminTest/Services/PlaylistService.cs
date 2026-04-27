@@ -38,6 +38,12 @@ public class PlaylistService : IPlaylistService
                 IsAdopted = p.IsAdopted,
                 IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
+                ThumbnailSongImages = p.PlaylistSongs
+                    .OrderBy(ps => ps.Order)
+                    .Take(4)
+                    .Where(ps => ps.Song.ImageUrl != null && ps.Song.ImageUrl != "")
+                    .Select(ps => ps.Song.ImageUrl!)
+                    .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })
@@ -107,6 +113,12 @@ public class PlaylistService : IPlaylistService
                 IsAdopted = p.IsAdopted,
                 IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
+                ThumbnailSongImages = p.PlaylistSongs
+                    .OrderBy(ps => ps.Order)
+                    .Take(4)
+                    .Where(ps => ps.Song.ImageUrl != null && ps.Song.ImageUrl != "")
+                    .Select(ps => ps.Song.ImageUrl!)
+                    .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })
@@ -137,6 +149,12 @@ public class PlaylistService : IPlaylistService
                 IsAdopted = p.IsAdopted,
                 IsDefault = p.IsDefault,
                 SongCount = p.PlaylistSongs.Count,
+                ThumbnailSongImages = p.PlaylistSongs
+                    .OrderBy(ps => ps.Order)
+                    .Take(4)
+                    .Where(ps => ps.Song.ImageUrl != null && ps.Song.ImageUrl != "")
+                    .Select(ps => ps.Song.ImageUrl!)
+                    .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })

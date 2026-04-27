@@ -1,21 +1,29 @@
-<div class="saved-page">
-  <!-- HERO — עדין ובהיר -->
-  <header class="saved-hero">
-    <div class="saved-hero-text">
-      <h1 class="saved-hero-title">הרשימות שלי</h1>
-      <p class="saved-hero-subtitle">מקום אחד לכל השמירות — שירים, אקורדים, כתבות ורשימות אישיות.</p>
-    </div>
+<div class="playlists-page">
 
-    <div class="saved-hero-stats" *ngIf="!isLoading && !error && !isEmptyState">
-      <span class="stat-pill stat-pill--accent">{{ totalSavedItems }} שמורים</span>
-      <span class="stat-pill" *ngIf="personalPlaylists.length">{{ personalPlaylists.length }} רשימות אישיות</span>
+  <!-- Fixed visual background (hero) -->
+  <div class="hero-box" #heroBox></div>
+
+  <!-- Hero content (normal flow, overlays the hero box visually) -->
+  <div class="hero-content" #heroContent>
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1 class="hero-title">הרשימות שלי</h1>
+        <p class="hero-subtitle">מקום אחד לכל השמירות — שירים, אקורדים, כתבות ורשימות אישיות.</p>
+      </div>
+      <div class="hero-cta-block">
+        <p class="hero-cta-desc">גלה רשימות שמשתמשים אחרים שיתפו עם הקהילה</p>
+        <a routerLink="/community-playlists" class="btn-pill btn-pill--accent">
+          מאגר רשימות קהילתי
+          <span class="material-icons hero-cta-arrow">arrow_back</span>
+        </a>
+      </div>
     </div>
-  </header>
+  </div>
 
   <!-- LOADING / ERROR -->
   <div class="state-block" *ngIf="isLoading">
     <div class="state-spinner"></div>
-    <p>טוען שמירות...</p>
+    <p>טוען...</p>
   </div>
 
   <div class="state-block" *ngIf="error">
@@ -23,67 +31,14 @@
     <button class="btn-pill btn-pill--accent" type="button" (click)="loadPageData()">נסה שוב</button>
   </div>
 
-  <!-- CONTENT -->
-  <main class="saved-content" *ngIf="!isLoading && !error">
+  <!-- MAIN CONTENT -->
+  <main class="page-body" *ngIf="!isLoading && !error">
 
-    <!-- TABS -->
-    <nav class="tabs-row" *ngIf="!isEmptyState">
-      <button class="filter-btn" type="button" [class.active]="activeTab === 'all'" (click)="setTab('all')">הכל</button>
-      <button class="filter-btn" type="button" [class.active]="activeTab === 'songs'" (click)="setTab('songs')">שירים ורשימות</button>
-      <button class="filter-btn" type="button" [class.active]="activeTab === 'content'" (click)="setTab('content')">כתבות ותוכן</button>
-    </nav>
+    <!-- ===== PLAYLISTS SECTION ===== -->
+    <section class="lists-section">
+      <h2 class="section-title">הרשימות שלי</h2>
 
-    <!-- EMPTY STATE — בלי שמורים בכלל -->
-    <section class="empty-all" *ngIf="isEmptyState">
-      <span class="material-icons empty-all-icon">bookmark_border</span>
-      <h2 class="empty-all-title">עדיין אין לך שמירות</h2>
-      <p class="empty-all-text">שמור שירים, כתבות ותוכן כללי והם יופיעו כאן בצורה מסודרת.</p>
-    </section>
-
-    <!-- SONGS SECTION -->
-    <section class="saved-section"
-             *ngIf="!isEmptyState && (activeTab === 'all' || activeTab === 'songs')">
-      <div class="section-header">
-        <h2 class="section-title">השמורים שלי</h2>
-        <span class="count-badge" *ngIf="savedSongs.length">{{ savedSongs.length }} שירים</span>
-      </div>
-
-      <div class="song-grid" *ngIf="savedSongs.length; else noSavedSongs">
-        <app-song-card
-          *ngFor="let song of visibleSavedSongs"
-          [song]="mapPlaylistSongToCard(song)">
-        </app-song-card>
-      </div>
-
-      <div class="row-footer" *ngIf="activeTab === 'songs' && savedSongs.length > visibleSongCount">
-        <button class="btn-pill" type="button" (click)="showMoreSongs()">הצג עוד</button>
-      </div>
-
-      <ng-template #noSavedSongs>
-        <div class="empty-row">
-          <span class="material-icons empty-row-icon">music_note</span>
-          <span>עדיין לא שמרת שירים</span>
-        </div>
-      </ng-template>
-    </section>
-
-    <!-- PERSONAL PLAYLISTS SECTION -->
-    <section class="saved-section"
-             *ngIf="!isEmptyState && (activeTab === 'all' || activeTab === 'songs')">
-      <div class="section-header">
-        <h2 class="section-title">רשימות אישיות</h2>
-        <div class="section-tools">
-          <span class="count-badge" *ngIf="personalPlaylists.length">{{ personalPlaylists.length }} רשימות</span>
-          <button class="btn-pill btn-pill--accent"
-                  type="button"
-                  (click)="createPlaylist()"
-                  *ngIf="!isCreatingPlaylist">
-            + רשימה חדשה
-          </button>
-        </div>
-      </div>
-
-      <!-- Create panel inline -->
+      <!-- Create panel -->
       <div class="create-panel" *ngIf="isCreatingPlaylist">
         <input
           type="text"
@@ -108,65 +63,151 @@
         <div class="create-error" *ngIf="createPlaylistError">{{ createPlaylistError }}</div>
       </div>
 
-      <div class="playlist-grid" *ngIf="personalPlaylists.length; else noPersonalPlaylists">
-        <article class="playlist-card"
-                 *ngFor="let playlist of personalPlaylists"
-                 (click)="viewPlaylist(playlist.id)">
-          <div class="playlist-card-body">
-            <h3 class="playlist-card-title">{{ playlist.name }}</h3>
-            <div class="playlist-card-meta">
+      <!-- Horizontal scroll row -->
+      <div class="playlists-row">
+
+        <!-- Add card (first item in row) -->
+        <button class="pcard pcard--add" type="button"
+                *ngIf="!isCreatingPlaylist"
+                (click)="createPlaylist()">
+          <span class="material-icons pcard-add-icon">add</span>
+          <span>רשימה חדשה</span>
+        </button>
+
+        <!-- Playlist cards -->
+        <div class="pcard"
+             *ngFor="let playlist of personalPlaylists">
+
+          <!-- Thumbnail -->
+          <div class="pcard-thumb" (click)="viewPlaylist(playlist.id)">
+            <!-- תמונה שהועלתה ידנית -->
+            <img *ngIf="playlist.imageUrl"
+                 class="pcard-thumb-img"
+                 [src]="playlist.imageUrl"
+                 [alt]="playlist.name">
+            <!-- גריד 4 תמונות שירים -->
+            <div *ngIf="!playlist.imageUrl && getSongGridImages(playlist).length > 0"
+                 class="pcard-song-grid">
+              <ng-container *ngFor="let slot of getSongGridSlots(playlist)">
+                <img *ngIf="slot" class="pcard-song-tile" [src]="slot" alt="">
+                <div *ngIf="!slot" class="pcard-song-tile pcard-song-tile--empty">
+                  <span class="material-icons">music_note</span>
+                </div>
+              </ng-container>
+            </div>
+            <!-- placeholder ריק -->
+            <div *ngIf="!playlist.imageUrl && getSongGridImages(playlist).length === 0"
+                 class="pcard-thumb-placeholder">
+              <span class="material-icons">queue_music</span>
+            </div>
+          </div>
+
+          <!-- מסך עריכת תמונה (inline) -->
+          <div class="pcard-image-edit" *ngIf="editingImageId === playlist.id"
+               (click)="$event.stopPropagation()">
+            <input type="url" class="pcard-image-input"
+                   [(ngModel)]="pendingImageUrl"
+                   placeholder="הדבק כתובת URL של תמונה"
+                   (keyup.enter)="savePlaylistImage(playlist.id)">
+            <div class="pcard-image-actions">
+              <button class="btn-pill btn-pill--accent btn-pill--sm" type="button"
+                      (click)="savePlaylistImage(playlist.id)" [disabled]="isSavingImage">
+                {{ isSavingImage ? '...' : 'שמור' }}
+              </button>
+              <button class="btn-pill btn-pill--sm" type="button" (click)="cancelImageEdit()">
+                ביטול
+              </button>
+            </div>
+          </div>
+
+          <!-- Card body -->
+          <div class="pcard-body" (click)="viewPlaylist(playlist.id)">
+            <h3 class="pcard-title">{{ playlist.name }}</h3>
+            <div class="pcard-meta">
               <span>{{ playlist.songCount }} שירים</span>
-              <span class="playlist-card-meta-dot"></span>
+              <span class="pcard-dot"></span>
               <span>{{ playlist.isPublic ? 'ציבורית' : 'פרטית' }}</span>
             </div>
           </div>
-          <button class="playlist-card-remove"
-                  type="button"
-                  (click)="deletePlaylist(playlist.id, $event)"
-                  aria-label="מחק רשימה">
-            <span class="material-icons">close</span>
-          </button>
-        </article>
-      </div>
 
-      <ng-template #noPersonalPlaylists>
-        <div class="empty-row" *ngIf="!isCreatingPlaylist">
-          <span class="material-icons empty-row-icon">queue_music</span>
-          <span>עדיין לא יצרת רשימות אישיות</span>
+          <!-- Action buttons -->
+          <div class="pcard-actions" (click)="$event.stopPropagation()">
+            <div class="pcard-dots-wrap">
+              <button class="pcard-action-btn" type="button"
+                      (click)="toggleDotsMenu(playlist.id, $event)" title="אפשרויות">
+                <span class="material-icons">more_horiz</span>
+              </button>
+              <div class="pcard-dropdown" *ngIf="openDotsMenuId === playlist.id">
+                <button class="dropdown-item" type="button" (click)="printPlaylist(playlist.id)">
+                  <span class="material-icons">menu_book</span>
+                  יצא כספר אקורדים
+                </button>
+                <button class="dropdown-item" type="button" (click)="duplicatePlaylist(playlist.id)">
+                  <span class="material-icons">content_copy</span>
+                  שכפל רשימה
+                </button>
+                <button class="dropdown-item dropdown-item--danger" type="button"
+                        (click)="deletePlaylist(playlist.id, $event)">
+                  <span class="material-icons">delete_outline</span>
+                  מחק רשימה
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </ng-template>
+
+        <!-- Empty placeholder card -->
+        <div class="pcard pcard--empty"
+             *ngIf="personalPlaylists.length === 0 && !isCreatingPlaylist">
+          <span class="material-icons pcard-empty-icon">queue_music</span>
+          <span>עדיין אין רשימות</span>
+        </div>
+
+      </div>
     </section>
 
-    <!-- LIKED CONTENT SECTION -->
-    <section class="saved-section"
-             *ngIf="!isEmptyState && (activeTab === 'all' || activeTab === 'content')">
-      <div class="section-header">
-        <h2 class="section-title">כתבות ותוכן</h2>
-        <span class="count-badge" *ngIf="likedContent.length">{{ likedContent.length }} פריטים</span>
-      </div>
+    <!-- ===== SAVED ITEMS SECTION ===== -->
+    <section class="saved-section" *ngIf="savedSongs.length || likedContent.length">
+      <h2 class="section-title">השמורים שלי</h2>
 
-      <div class="content-grid" *ngIf="likedContent.length; else noSavedContent">
-        <div class="content-item" *ngFor="let content of visibleLikedContent">
-          <app-news-banner [article]="getArticleBannerInput(content)"></app-news-banner>
-          <button class="content-remove"
-                  type="button"
-                  (click)="removeLikedContent(content, $event)"
-                  aria-label="הסר מהשמורים">
-            <span class="material-icons">close</span>
-          </button>
+      <!-- Articles / content FIRST -->
+      <div class="saved-subsection" *ngIf="likedContent.length">
+        <h3 class="subsection-title">כתבות ותוכן</h3>
+        <div class="content-grid">
+          <div class="content-item" *ngFor="let content of visibleLikedContent">
+            <app-news-banner [article]="getArticleBannerInput(content)"></app-news-banner>
+            <button class="content-remove" type="button"
+                    (click)="removeLikedContent(content, $event)"
+                    aria-label="הסר מהשמורים">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+        <div class="row-footer" *ngIf="likedContent.length > visibleContentCount">
+          <button class="btn-pill" type="button" (click)="showMoreContent()">הצג עוד</button>
         </div>
       </div>
 
-      <div class="row-footer" *ngIf="activeTab === 'content' && likedContent.length > visibleContentCount">
-        <button class="btn-pill" type="button" (click)="showMoreContent()">הצג עוד</button>
-      </div>
-
-      <ng-template #noSavedContent>
-        <div class="empty-row">
-          <span class="material-icons empty-row-icon">favorite_border</span>
-          <span>עדיין לא שמרת כתבות או תוכן</span>
+      <!-- Songs (chords) LAST -->
+      <div class="saved-subsection" *ngIf="savedSongs.length">
+        <h3 class="subsection-title">שירים שמורים</h3>
+        <div class="song-grid">
+          <app-song-card
+            *ngFor="let song of visibleSavedSongs"
+            [song]="mapPlaylistSongToCard(song)">
+          </app-song-card>
         </div>
-      </ng-template>
+        <div class="row-footer" *ngIf="savedSongs.length > visibleSongCount">
+          <button class="btn-pill" type="button" (click)="showMoreSongs()">הצג עוד</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full empty state -->
+    <section class="empty-all" *ngIf="isEmptyState">
+      <span class="material-icons empty-all-icon">bookmark_border</span>
+      <h2 class="empty-all-title">עדיין אין לך שמירות</h2>
+      <p class="empty-all-text">שמור שירים, כתבות ותוכן כללי והם יופיעו כאן בצורה מסודרת.</p>
     </section>
 
   </main>

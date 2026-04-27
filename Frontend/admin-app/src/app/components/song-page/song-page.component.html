@@ -684,6 +684,47 @@
     (close)="closeReportModal()">
 </app-report-modal>
 
+<!-- Playlist Navigation Bar -->
+<div class="playlist-nav-bar" *ngIf="playlistNavVisible">
+    <div class="playlist-nav-inner">
+
+        <!-- שיר קודם (מופיע ימינה ב-RTL) -->
+        <ng-container *ngIf="prevPlaylistSong as prev">
+            <button class="playlist-nav-btn prev-btn" (click)="navigateToPlaylistSong(prev.songId)" [title]="prev.songTitle">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                </svg>
+                <span class="nav-song-title">{{ prev.songTitle }}</span>
+            </button>
+            <span class="playlist-nav-sep"></span>
+        </ng-container>
+
+        <!-- שם הרשימה (מרכז) -->
+        <div class="playlist-nav-center">
+            <span class="playlist-nav-label">{{ playlistNavData?.name }}</span>
+        </div>
+
+        <!-- שיר הבא (מופיע שמאלה ב-RTL) -->
+        <ng-container *ngIf="nextPlaylistSong as next">
+            <span class="playlist-nav-sep"></span>
+            <button class="playlist-nav-btn next-btn" (click)="navigateToPlaylistSong(next.songId)" [title]="next.songTitle">
+                <span class="nav-song-title">{{ next.songTitle }}</span>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+            </button>
+        </ng-container>
+
+        <!-- כפתור סגירה -->
+        <button class="playlist-nav-dismiss" (click)="dismissPlaylistNav()" title="סגור">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+        </button>
+
+    </div>
+</div>
+
 <!-- Print Panel -->
 <app-print-panel
     *ngIf="isPrintPanelOpen"

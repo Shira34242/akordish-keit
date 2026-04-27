@@ -26,6 +26,7 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
 import { PlaylistService } from '../../services/playlist.service';
+import { PlaylistDetail } from '../../models/playlist.model';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
 import { SongRatingService } from '../../services/song-rating.service';
 
@@ -98,6 +99,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     canEdit: boolean = false;
     isEditModalOpen: boolean = false;
 
+    // Playlist navigation bar
+    playlistNavData: { name: string; songs: { songId: number; songTitle: string }[] } | null = null;
+    playlistNavDismissed = false;
+    private currentNavPlaylistId: number | null = null;
+
     // Rating State
     ratingAverage: number = 0;
     ratingCount: number = 0;
@@ -144,6 +150,21 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             if (id) {
                 this.songId = +id;
                 this.loadSong(this.songId);
+            }
+        });
+
+        this.route.queryParams.subscribe(queryParams => {
+            const playlistId = queryParams['playlistId'];
+            if (playlistId) {
+                const numId = +playlistId;
+                this.playlistNavDismissed = false;
+                if (numId !== this.currentNavPlaylistId) {
+                    this.currentNavPlaylistId = numId;
+                    this.loadPlaylistNav(numId);
+                }
+            } else {
+                this.currentNavPlaylistId = null;
+                this.playlistNavData = null;
             }
         });
 
@@ -921,6 +942,52 @@ private getKeyIndex(keyName: string): number {
 
         this.similarSongs = uniqueSongs;
         return uniqueSongs.length > 0;
+    }
+
+    loadPlaylistNav(playlistId: number): void {
+        this.playlistService.getPlaylistById(playlistId).subscribe({
+            next: (playlist: PlaylistDetail) => {
+                this.playlistNavData = {
+                    name: playlist.name,
+                    songs: (playlist.songs || [])
+                        .slice()
+                        .sort((a, b) => a.order - b.order)
+                        .map(s => ({ songId: s.songId, songTitle: s.songTitle }))
+                };
+            },
+            error: () => { this.playlistNavData = null; }
+        });
+    }
+
+    dismissPlaylistNav(): void {
+        this.playlistNavDismissed = true;
+    }
+
+    navigateToPlaylistSong(songId: number): void {
+        this.router.navigate(['/song', songId], {
+            queryParams: { playlistId: this.currentNavPlaylistId }
+        });
+    }
+
+    get playlistNavVisible(): boolean {
+        return !!this.playlistNavData && !this.playlistNavDismissed;
+    }
+
+    get currentSongIndexInPlaylist(): number {
+        if (!this.playlistNavData || !this.songId) return -1;
+        return this.playlistNavData.songs.findIndex(s => s.songId === this.songId);
+    }
+
+    get prevPlaylistSong(): { songId: number; songTitle: string } | null {
+        const idx = this.currentSongIndexInPlaylist;
+        if (idx <= 0) return null;
+        return this.playlistNavData!.songs[idx - 1];
+    }
+
+    get nextPlaylistSong(): { songId: number; songTitle: string } | null {
+        const idx = this.currentSongIndexInPlaylist;
+        if (!this.playlistNavData || idx < 0 || idx >= this.playlistNavData.songs.length - 1) return null;
+        return this.playlistNavData.songs[idx + 1];
     }
 
     navigateToSong(id: number): void {

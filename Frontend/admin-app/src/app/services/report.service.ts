@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateReportDto, Report, UpdateReportStatusDto } from '../models/report.model';
+import { ChordRequest, CreateReportDto, Report, UpdateReportStatusDto } from '../models/report.model';
 import { PagedResult } from '../models/pagination.model';
 
 @Injectable({
@@ -36,6 +36,14 @@ export class ReportService {
 
   getReportById(id: number): Observable<Report> {
     return this.http.get<Report>(`${this.apiUrl}/${id}`);
+  }
+
+  getChordRequests(pageNumber: number = 1, pageSize: number = 20): Observable<PagedResult<ChordRequest>> {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<PagedResult<ChordRequest>>(`${this.apiUrl}/chord-requests`, { params });
   }
 
   updateReportStatus(id: number, dto: UpdateReportStatusDto): Observable<{ message: string }> {

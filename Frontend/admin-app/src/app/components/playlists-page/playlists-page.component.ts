@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LikedContent } from '../../models/liked-content.model';
@@ -24,7 +24,15 @@ interface SavedSongCard {
   templateUrl: './playlists-page.component.html',
   styleUrls: ['./playlists-page.component.css']
 })
-export class PlaylistsPageComponent implements OnInit {
+export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestroy {
+
+  @ViewChild('heroBox') heroBox!: ElementRef<HTMLDivElement>;
+  @ViewChild('heroContent') heroContent!: ElementRef<HTMLDivElement>;
+
+  private fullHeroHeight = 0;
+  private heroLayoutDone = false;
+  private rafPending = false;
+
   playlists: Playlist[] = [];
   defaultPlaylist: Playlist | null = null;
   defaultPlaylistDetail: PlaylistDetail | null = null;
@@ -33,12 +41,16 @@ export class PlaylistsPageComponent implements OnInit {
 
   isLoading = false;
   error: string | null = null;
-  activeTab: 'all' | 'songs' | 'content' = 'all';
   isCreatingPlaylist = false;
   isSavingPlaylist = false;
   createPlaylistError: string | null = null;
   newPlaylistName = '';
   newPlaylistIsPublic = true;
+
+  openDotsMenuId: number | null = null;
+  editingImageId: number | null = null;
+  pendingImageUrl = '';
+  isSavingImage = false;
 
   visibleSongCount = 8;
   visibleContentCount = 6;
@@ -46,16 +58,77 @@ export class PlaylistsPageComponent implements OnInit {
   constructor(
     private playlistService: PlaylistService,
     private likedContentService: LikedContentService,
-    private router: Router
+    private router: Router,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
     this.loadPageData();
+
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
+    document.addEventListener('click', this.onDocumentClick);
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.heroLayoutDone && this.heroContent?.nativeElement && this.heroBox?.nativeElement) {
+      this.updateHeroLayout();
+      this.heroLayoutDone = true;
+    }
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onScroll);
+    document.removeEventListener('click', this.onDocumentClick);
+  }
+
+  private onScroll = () => {
+    if (!this.rafPending) {
+      this.rafPending = true;
+      requestAnimationFrame(() => {
+        this.shrinkHero();
+        this.rafPending = false;
+      });
+    }
+  };
+
+  private onDocumentClick = () => {
+    if (this.openDotsMenuId !== null) {
+      this.ngZone.run(() => { this.openDotsMenuId = null; });
+    }
+  };
+
+  private updateHeroLayout(): void {
+    const box = this.heroBox?.nativeElement;
+    const content = this.heroContent?.nativeElement;
+    if (!box || !content) return;
+    const contentRect = content.getBoundingClientRect();
+    const boxTop = 8;
+    const h = Math.round(contentRect.bottom - boxTop + window.scrollY);
+    this.fullHeroHeight = h;
+    box.style.height = h + 'px';
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const box = this.heroBox?.nativeElement;
+    if (!box || this.fullHeroHeight === 0) return;
+    const minH = window.innerWidth <= 600 ? 44 : 56;
+    const newH = Math.max(minH, this.fullHeroHeight - window.scrollY);
+    box.style.height = newH + 'px';
+
+    const content = this.heroContent?.nativeElement;
+    if (content) {
+      const fade = Math.min(1, window.scrollY / 140);
+      content.style.opacity = String(1 - fade);
+    }
   }
 
   loadPageData(): void {
     this.isLoading = true;
     this.error = null;
+    this.heroLayoutDone = false;
 
     this.playlistService.getMyPlaylists().subscribe({
       next: (playlists) => {
@@ -101,12 +174,6 @@ export class PlaylistsPageComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'all' | 'songs' | 'content'): void {
-    this.activeTab = tab;
-    this.visibleSongCount = tab === 'songs' ? 8 : 4;
-    this.visibleContentCount = tab === 'content' ? 6 : 3;
-  }
-
   showMoreSongs(): void {
     this.visibleSongCount += 8;
   }
@@ -115,12 +182,72 @@ export class PlaylistsPageComponent implements OnInit {
     this.visibleContentCount += 6;
   }
 
-  goToSong(songId: number): void {
-    this.router.navigate(['/song', songId]);
-  }
-
   viewPlaylist(id: number): void {
     this.router.navigate(['/playlist', id]);
+  }
+
+  printPlaylist(id: number): void {
+    this.router.navigate(['/playlist', id], { queryParams: { chordBook: 'true' } });
+  }
+
+  toggleDotsMenu(id: number, event: Event): void {
+    event.stopPropagation();
+    this.openDotsMenuId = this.openDotsMenuId === id ? null : id;
+  }
+
+  openImageEdit(id: number, currentUrl: string | undefined, event: Event): void {
+    event.stopPropagation();
+    this.openDotsMenuId = null;
+    this.editingImageId = id;
+    this.pendingImageUrl = currentUrl || '';
+    this.isSavingImage = false;
+  }
+
+  cancelImageEdit(): void {
+    this.editingImageId = null;
+    this.pendingImageUrl = '';
+    this.isSavingImage = false;
+  }
+
+  savePlaylistImage(id: number): void {
+    this.isSavingImage = true;
+    this.playlistService.updatePlaylist(id, { imageUrl: this.pendingImageUrl || undefined }).subscribe({
+      next: (updated) => {
+        const idx = this.personalPlaylists.findIndex(p => p.id === id);
+        if (idx >= 0) {
+          this.personalPlaylists[idx] = { ...this.personalPlaylists[idx], imageUrl: updated.imageUrl };
+        }
+        this.cancelImageEdit();
+      },
+      error: (err) => {
+        console.error('Error updating image:', err);
+        this.isSavingImage = false;
+      }
+    });
+  }
+
+  getSongGridImages(playlist: Playlist): string[] {
+    if (playlist.imageUrl) return [];
+    return (playlist.thumbnailSongImages || []).slice(0, 4);
+  }
+
+  getSongGridSlots(playlist: Playlist): (string | null)[] {
+    const images = this.getSongGridImages(playlist);
+    const slots: (string | null)[] = [...images];
+    while (slots.length < 4) slots.push(null);
+    return slots;
+  }
+
+  duplicatePlaylist(id: number): void {
+    this.openDotsMenuId = null;
+    this.playlistService.duplicatePlaylist(id).subscribe({
+      next: (newPlaylist) => {
+        this.personalPlaylists = [newPlaylist, ...this.personalPlaylists];
+      },
+      error: (err) => {
+        console.error('Error duplicating playlist:', err);
+      }
+    });
   }
 
   createPlaylist(): void {
@@ -169,17 +296,6 @@ export class PlaylistsPageComponent implements OnInit {
     });
   }
 
-  viewLikedContent(content: LikedContent): void {
-    if (content.contentType === 'Article' && content.slug) {
-      this.router.navigate(['/news', content.slug]);
-      return;
-    }
-
-    if (content.contentType === 'BlogPost' && content.slug) {
-      this.router.navigate(['/blog', content.slug]);
-    }
-  }
-
   removeLikedContent(content: LikedContent, event: Event): void {
     event.stopPropagation();
 
@@ -197,6 +313,7 @@ export class PlaylistsPageComponent implements OnInit {
 
   deletePlaylist(id: number, event: Event): void {
     event.stopPropagation();
+    this.openDotsMenuId = null;
 
     if (!confirm('למחוק את הרשימה?')) {
       return;

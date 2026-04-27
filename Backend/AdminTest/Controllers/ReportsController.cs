@@ -48,6 +48,28 @@ public class ReportsController : ControllerBase
         }
     }
 
+    // GET: api/Reports/chord-requests
+    [HttpGet("chord-requests")]
+    [Authorize]
+    public async Task<ActionResult<PagedResult<ChordRequestDto>>> GetChordRequests(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "משתמש לא מורשה" });
+        }
+
+        if (!await _reportService.CanAccessChordRequestsAsync(userId))
+        {
+            return Forbid();
+        }
+
+        var result = await _reportService.GetChordRequestsAsync(pageNumber, pageSize);
+        return Ok(result);
+    }
+
     // GET: api/Reports
     [HttpGet]
     [Authorize(Roles = "Admin")]

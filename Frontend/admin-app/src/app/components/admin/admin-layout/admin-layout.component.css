@@ -324,58 +324,48 @@
 
 :host ::ng-deep .table-container,
 :host ::ng-deep .table-wrap {
-    background: #F2F2F2;
-    border-radius: 24px;
-    padding: var(--space-sm);
     overflow-x: auto;
-    overflow-y: hidden;
+    border-right: 1px solid #f0f0f0;
+    border-left: 1px solid #f0f0f0;
 }
 
 :host ::ng-deep .table-container table,
 :host ::ng-deep .table-wrap table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: #ffffff;
-    border-radius: 18px;
-    overflow: hidden;
-}
-
-:host ::ng-deep .table-container thead,
-:host ::ng-deep .table-wrap thead,
-:host ::ng-deep .table-container th,
-:host ::ng-deep .table-wrap th {
-    background: #F2F2F2;
+    border-collapse: collapse;
+    font-size: var(--font-sm);
+    font-weight: 300;
 }
 
 :host ::ng-deep .table-container th,
 :host ::ng-deep .table-wrap th {
-    color: #404040;
-    font-family: 'Open Sans', sans-serif;
+    padding: var(--space-sm) var(--space-base);
+    text-align: right;
+    font-weight: 300;
     font-size: var(--font-xs);
-    font-weight: 800;
+    color: rgba(0,0,0,0.4);
+    border-bottom: 1px solid #ebebeb;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    background: transparent;
 }
 
 :host ::ng-deep .table-container td,
 :host ::ng-deep .table-wrap td {
-    background: #ffffff;
+    padding: var(--space-sm) var(--space-base);
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
     color: #000000;
 }
 
-:host ::ng-deep .table-container tbody tr,
-:host ::ng-deep .table-wrap tbody tr {
-    border-bottom-color: #F2F2F2;
+:host ::ng-deep .table-container tbody tr:last-child td,
+:host ::ng-deep .table-wrap tbody tr:last-child td {
+    border-bottom: none;
 }
 
 :host ::ng-deep .table-container tbody tr:hover td,
 :host ::ng-deep .table-wrap tbody tr:hover td {
-    background: #F2F2F2;
-}
-
-:host ::ng-deep .table-container .empty-state,
-:host ::ng-deep .table-wrap .empty-state {
-    background: #ffffff;
-    border-radius: 18px;
+    background: #fafafa;
 }
 
 /* Footer */

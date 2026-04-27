@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace AkordishKeit.Models.DTOs;
@@ -16,7 +17,7 @@ public class CreateReportDto
     public int ContentId { get; set; }
 
     [Required(ErrorMessage = "סוג הדיווח הוא שדה חובה")]
-    [RegularExpression("^(ContentError|InappropriateContent|Other)$", ErrorMessage = "סוג הדיווח לא חוקי")]
+    [RegularExpression("^(ContentError|InappropriateContent|Other|ChordRequest)$", ErrorMessage = "סוג הדיווח לא חוקי")]
     public string ReportType { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "תיאור הבעיה הוא שדה חובה")]
@@ -42,6 +43,18 @@ public class ReportDto
     public DateTime? ResolvedAt { get; set; }
     public string? ResolvedByUsername { get; set; }
     public string? AdminNotes { get; set; }
+}
+
+public class ChordRequestDto
+{
+    public int Id { get; set; }
+    public string SongName { get; set; } = string.Empty;
+    public string ArtistName { get; set; } = string.Empty;
+    public int RequestCount { get; set; }
+    public DateTime FirstReportedAt { get; set; }
+    public DateTime LastReportedAt { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public List<int> ReportIds { get; set; } = new();
 }
 
 /// <summary>

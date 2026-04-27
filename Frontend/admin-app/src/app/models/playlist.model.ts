@@ -7,6 +7,7 @@ export interface Playlist {
   isAdopted: boolean;
   isDefault: boolean;
   songCount: number;
+  thumbnailSongImages: string[];
   createdAt: Date;
   updatedAt?: Date;
 }

@@ -39,18 +39,6 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div *ngIf="activeTab === 'articles' && !articlesLoading">
 
-    <div class="sort-select-row">
-      <span class="sort-label">מיון לפי</span>
-      <div class="sort-select-wrap">
-        <select class="sort-select" [value]="sortBy" (change)="setSort($any($event.target).value)">
-          <option value="views">צפיות</option>
-          <option value="likes">לייקים</option>
-          <option value="feedback">פידבק</option>
-        </select>
-        <span class="material-icons sort-arrow">expand_more</span>
-      </div>
-    </div>
-
     <div class="table-wrap">
       <table class="stats-table">
         <thead>
@@ -58,12 +46,8 @@
             <th class="col-rank">#</th>
             <th class="col-title">כתבה</th>
             <th class="col-type">סוג</th>
-            <th class="col-stat" (click)="setSort('views')" [class.sorted]="sortBy === 'views'">
-              <span class="material-icons">visibility</span> צפיות
-            </th>
-            <th class="col-stat" (click)="setSort('likes')" [class.sorted]="sortBy === 'likes'">
-              <span class="material-icons">favorite</span> לייקים
-            </th>
+            <th class="col-stat" (click)="setSort('views')" [class.sorted]="sortBy === 'views'">צפיות</th>
+            <th class="col-stat" (click)="setSort('likes')" [class.sorted]="sortBy === 'likes'">לייקים</th>
             <th class="col-feedback" (click)="setSort('feedback')" [class.sorted]="sortBy === 'feedback'">פידבק</th>
             <th class="col-pct">% כן</th>
           </tr>

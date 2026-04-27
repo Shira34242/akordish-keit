@@ -14,6 +14,7 @@ public class PlaylistDto
     public bool IsAdopted { get; set; }
     public bool IsDefault { get; set; }
     public int SongCount { get; set; }
+    public List<string> ThumbnailSongImages { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

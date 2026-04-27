@@ -1,7 +1,7 @@
 export interface CreateReportDto {
     contentType: 'Song' | 'Article' | 'BlogPost' | 'General';
     contentId: number;
-    reportType: 'ContentError' | 'InappropriateContent' | 'Other';
+    reportType: 'ContentError' | 'InappropriateContent' | 'Other' | 'ChordRequest';
     description: string;
 }
 
@@ -26,10 +26,22 @@ export interface UpdateReportStatusDto {
     adminNotes?: string;
 }
 
+export interface ChordRequest {
+    id: number;
+    songName: string;
+    artistName: string;
+    requestCount: number;
+    firstReportedAt: Date;
+    lastReportedAt: Date;
+    status: 'Pending' | 'Resolved' | 'Dismissed';
+    reportIds: number[];
+}
+
 export const ReportTypeLabels: Record<string, string> = {
     'ContentError': 'טעות בתוכן',
     'InappropriateContent': 'תוכן לא ראוי',
     'Other': 'אחר',
+    'ChordRequest': 'בקשת אקורדים',
     'NewArtist': 'אמן חדש',
     'NewGenre': 'ז\'אנרים שירים',
     'NewTag': 'תגיות שירים',

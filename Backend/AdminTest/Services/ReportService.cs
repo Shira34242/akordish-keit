@@ -4,6 +4,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace AkordishKeit.Services;
 
@@ -36,6 +37,76 @@ public class ReportService : IReportService
         await SendReportNotificationEmailAsync(report);
 
         return report.Id;
+    }
+
+    public async Task<bool> CanAccessChordRequestsAsync(int userId)
+    {
+        var user = await _context.Users
+            .Include(u => u.ServiceProviderProfiles)
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted && u.IsActive);
+
+        if (user == null)
+            return false;
+
+        if (user.Role == UserRole.Admin || user.Role == UserRole.Manager)
+            return true;
+
+        if (user.ContentTag >= UserContentTag.Contributor)
+            return true;
+
+        return user.ServiceProviderProfiles.Any(p => p.UserId == userId && !p.IsDeleted);
+    }
+
+    public async Task<PagedResult<ChordRequestDto>> GetChordRequestsAsync(int pageNumber, int pageSize)
+    {
+        var reports = await _context.ContentReports
+            .Where(r =>
+                r.ContentType == "Song" &&
+                r.ContentId == 0 &&
+                r.Status == "Pending" &&
+                (r.ReportType == "ChordRequest" ||
+                 (r.ReportType == "Other" && r.Description.Contains("בקשת אקורדים"))))
+            .OrderByDescending(r => r.ReportedAt)
+            .ToListAsync();
+
+        var grouped = reports
+            .Select(report => new { Report = report, Request = ParseChordRequest(report.Description) })
+            .Where(item => !string.IsNullOrWhiteSpace(item.Request.SongName))
+            .GroupBy(item => $"{NormalizeRequestText(item.Request.SongName)}|{NormalizeRequestText(item.Request.ArtistName)}")
+            .Select(group =>
+            {
+                var ordered = group.OrderByDescending(item => item.Report.ReportedAt).ToList();
+                var latest = ordered[0];
+
+                return new ChordRequestDto
+                {
+                    Id = latest.Report.Id,
+                    SongName = latest.Request.SongName,
+                    ArtistName = latest.Request.ArtistName,
+                    RequestCount = group.Count(),
+                    FirstReportedAt = group.Min(item => item.Report.ReportedAt),
+                    LastReportedAt = group.Max(item => item.Report.ReportedAt),
+                    Status = "Pending",
+                    ReportIds = ordered.Select(item => item.Report.Id).ToList()
+                };
+            })
+            .OrderByDescending(item => item.RequestCount)
+            .ThenByDescending(item => item.LastReportedAt)
+            .ToList();
+
+        var safePageNumber = Math.Max(1, pageNumber);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
+        return new PagedResult<ChordRequestDto>
+        {
+            Items = grouped
+                .Skip((safePageNumber - 1) * safePageSize)
+                .Take(safePageSize)
+                .ToList(),
+            TotalCount = grouped.Count,
+            PageNumber = safePageNumber,
+            PageSize = safePageSize
+        };
     }
 
     public async Task<PagedResult<ReportDto>> GetReportsAsync(
@@ -305,6 +376,22 @@ public class ReportService : IReportService
         }
 
         return ("תוכן לא נמצא", "#");
+    }
+
+    private static (string SongName, string ArtistName) ParseChordRequest(string description)
+    {
+        var songMatch = Regex.Match(description, @"(?:שיר|לשיר)\s*:\s*(.+?)(?:\s*[—-]\s*אמן\s*:|$)");
+        var artistMatch = Regex.Match(description, @"אמן\s*:\s*(.+)$");
+
+        var songName = songMatch.Success ? songMatch.Groups[1].Value.Trim() : string.Empty;
+        var artistName = artistMatch.Success ? artistMatch.Groups[1].Value.Trim() : string.Empty;
+
+        return (songName, artistName);
+    }
+
+    private static string NormalizeRequestText(string value)
+    {
+        return Regex.Replace(value.Trim().ToLowerInvariant(), @"\s+", " ");
     }
 
     private async Task SendReportNotificationEmailAsync(ContentReport report)

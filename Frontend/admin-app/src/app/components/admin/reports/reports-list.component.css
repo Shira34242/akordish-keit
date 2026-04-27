@@ -27,14 +27,13 @@
 .stat-item { font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: var(--font-sm); color: #000000; background: #ffffff; padding: var(--space-sm) var(--space-base); border-radius: 999px; }
 
 /* Table */
-.table-container { overflow-x: auto; }
-.reports-table { width: 100%; border-collapse: collapse; }
-.reports-table thead { background: #F2F2F2; }
-.reports-table th { padding: var(--space-base) var(--space-lg); text-align: right; font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: var(--font-sm); color: #000000; white-space: nowrap; }
-.reports-table tbody tr { border-bottom: 1px solid #F2F2F2; transition: background 0.15s; }
+.table-container { overflow-x: auto; border-right: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; }
+.reports-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); font-weight: 300; }
+.reports-table th { padding: var(--space-sm) var(--space-base); text-align: right; font-weight: 300; font-size: var(--font-xs); color: rgba(0,0,0,0.4); border-bottom: 1px solid #ebebeb; white-space: nowrap; letter-spacing: 0.02em; }
+.reports-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
 .reports-table tbody tr:last-child { border-bottom: none; }
-.reports-table tbody tr:hover { background: #F2F2F2; }
-.reports-table td { padding: var(--space-base) var(--space-lg); vertical-align: middle; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: var(--font-sm); color: #000000; }
+.reports-table tbody tr:hover { background: #fafafa; }
+.reports-table td { padding: var(--space-sm) var(--space-base); vertical-align: middle; color: #000000; }
 
 /* Report row */
 .report-row { }
