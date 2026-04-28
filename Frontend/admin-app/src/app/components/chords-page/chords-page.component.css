@@ -43,6 +43,18 @@
     will-change: height;
 }
 
+.hero-bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 60vh;
+    width: auto;
+    object-fit: contain;
+    object-position: left top;
+    pointer-events: none;
+    user-select: none;
+}
+
 .hero-collapse-overlay {
     position: absolute;
     inset: -2px;

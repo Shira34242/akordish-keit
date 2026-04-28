@@ -34,7 +34,24 @@ export interface ChordRequest {
     firstReportedAt: Date;
     lastReportedAt: Date;
     status: 'Pending' | 'Resolved' | 'Dismissed';
+    isAdminOnly: boolean;
     reportIds: number[];
+}
+
+export interface ChordRequestMatch {
+    hasMatches: boolean;
+    similarSongs: Array<{
+        id: number;
+        title: string;
+        artistNames: string;
+        imageUrl?: string;
+        viewCount: number;
+    }>;
+}
+
+export interface UpdateChordRequestGroupDto {
+    reportIds: number[];
+    action: 'Close' | 'AdminOnly' | 'Public';
 }
 
 export const ReportTypeLabels: Record<string, string> = {

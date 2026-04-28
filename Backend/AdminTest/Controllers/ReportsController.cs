@@ -66,8 +66,46 @@ public class ReportsController : ControllerBase
             return Forbid();
         }
 
-        var result = await _reportService.GetChordRequestsAsync(pageNumber, pageSize);
+        var result = await _reportService.GetChordRequestsAsync(pageNumber, pageSize, userId);
         return Ok(result);
+    }
+
+    // GET: api/Reports/chord-requests/matches
+    [HttpGet("chord-requests/matches")]
+    public async Task<ActionResult<ChordRequestMatchDto>> FindChordRequestMatches(
+        [FromQuery] string songName,
+        [FromQuery] string? artistName = null)
+    {
+        var result = await _reportService.FindChordRequestMatchesAsync(songName, artistName);
+        return Ok(result);
+    }
+
+    // PATCH: api/Reports/chord-requests/group
+    [HttpPatch("chord-requests/group")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UpdateChordRequestGroup([FromBody] UpdateChordRequestGroupDto dto)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int resolvedByUserId))
+            {
+                return Unauthorized(new { message = "משתמש לא מורשה" });
+            }
+
+            var success = await _reportService.UpdateChordRequestGroupAsync(dto, resolvedByUserId);
+
+            if (!success)
+            {
+                return NotFound(new { message = "בקשה לא נמצאה" });
+            }
+
+            return Ok(new { message = "בקשת האקורדים עודכנה בהצלחה" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "שגיאה בעדכון בקשת האקורדים", error = ex.Message });
+        }
     }
 
     // GET: api/Reports

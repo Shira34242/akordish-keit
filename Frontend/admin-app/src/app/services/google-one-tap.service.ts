@@ -32,6 +32,24 @@ export class GoogleOneTapService {
                 }
             });
         });
+
+        // אם המשתמש כבר מחובר באתר (או מתחבר במהלך הסשן) — לבטל את החלונית של גוגל
+        this.authService.currentUser$.subscribe(user => {
+            if (user) this.cancelOneTapPrompt();
+        });
+    }
+
+    private cancelOneTapPrompt(): void {
+        const tryCancel = () => {
+            const googleApi = (window as any).google?.accounts?.id;
+            if (googleApi?.cancel) {
+                try { googleApi.cancel(); } catch { /* noop */ }
+            }
+        };
+        tryCancel();
+        // ניסיונות חוזרים — לפעמים סקריפט גוגל עדיין לא נטען בזמן הקריאה הראשונה
+        setTimeout(tryCancel, 500);
+        setTimeout(tryCancel, 1500);
     }
 
     static isProcessing(): boolean {

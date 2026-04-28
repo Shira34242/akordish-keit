@@ -180,6 +180,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     return this.isAdmin && !!this.adminEditTarget;
   }
 
+  get canViewChordRequests(): boolean {
+    return !!this.user && (this.isAdmin || (this.user.hasProfessionalProfile ?? false) || (this.user.contentTag ?? 0) >= 2);
+  }
+
   handleLogoClick(): void {
     this.router.navigate(['/']);
   }
@@ -666,6 +670,11 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     if (action === 'admin-edit') {
       this.fabAdminEdit();
+      return;
+    }
+
+    if (action === 'chord-requests') {
+      this.router.navigate(['/chord-requests']);
       return;
     }
 

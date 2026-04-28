@@ -103,7 +103,7 @@
 <div class="content-wrapper">
 
     <!-- 2. Sticky Toolbar -->
-    <div class="sticky-toolbar" [class.sticky]="isToolbarSticky">
+    <div class="sticky-toolbar" *ngIf="!isSheetMusicMode" [class.sticky]="isToolbarSticky">
         <div class="toolbar-content">
 
             <!-- Instruments & Chords — סדר RTL: קלידים | גיטרה | יוקלילי | מילים -->
@@ -307,7 +307,7 @@
     <div class="main-layout">
 
         <div class="song-main-column">
-            <div class="chord-diagrams-panel" *ngIf="showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
+            <div class="chord-diagrams-panel" *ngIf="!isSheetMusicMode && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
                 <div class="chord-diagrams-head">
                     <h3>תרשימי האקורדים בשיר</h3>
                     <p>כאן מוצגים כל האקורדים שמופיעים בשיר לפי הכלי שבחרת.</p>
@@ -324,7 +324,7 @@
             </div>
 
         <!-- Right Column: Lyrics -->
-        <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
+        <div class="lyrics-column" *ngIf="!isSheetMusicMode" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
 
             <!-- Capo Hint -->
@@ -362,8 +362,19 @@
             </app-chord-tooltip>
         </div>
 
+        <div class="sheet-music-page-panel" *ngIf="isSheetMusicMode">
+            <div class="sheet-music-viewer sheet-music-page-viewer">
+                <img *ngIf="isSheetMusicImage && sheetMusicDirectUrl" class="sheet-music-image" [src]="sheetMusicDirectUrl" alt="תווים לשיר">
+                <iframe *ngIf="!isSheetMusicImage && sheetMusicViewerUrl"
+                        class="sheet-music-frame"
+                        [src]="sheetMusicViewerUrl"
+                        title="תווים לשיר">
+                </iframe>
+            </div>
+        </div>
+
         <!-- Rating Section -->
-        <div class="song-rating-section">
+        <div class="song-rating-section" *ngIf="!isSheetMusicMode">
             <p class="rating-title">דרג את השיר</p>
 
             <form class="rating" (submit)="$event.preventDefault()">
@@ -509,16 +520,17 @@
         <!-- Left Column: Sidebar -->
         <div class="sidebar-column">
 
-            <button type="button" class="sidebar-card sheet-music-card" *ngIf="song.sheetMusicUrl" (click)="openSheetMusic()">
-                <span class="sheet-music-title">לשיר זה יש תווים</span>
+            <button type="button" class="sidebar-card sheet-music-card" *ngIf="song.sheetMusicUrl" (click)="isSheetMusicMode ? closeSheetMusic() : openSheetMusic()">
+                <span class="sheet-music-title">{{ isSheetMusicMode ? 'תצוגת תווים' : 'לשיר זה יש תווים' }}</span>
                 <span class="sheet-music-action">
-                    למעבר לתווים
+                    {{ isSheetMusicMode ? 'למעבר לאקורדים' : 'למעבר לתווים' }}
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"/>
                     </svg>
                 </span>
             </button>
 
+            <ng-container *ngIf="!isSheetMusicMode">
             <div class="sidebar-card known-sidebar-card" *ngIf="knownChordSummary as summary">
                 <ng-container *ngIf="summary.totalChords > 0">
                     <div class="known-summary-head">
@@ -627,6 +639,7 @@
                 <h3>הועלה על ידי</h3>
                 <app-content-uploader-badge [profile]="song.uploaderProfile" />
             </div>
+            </ng-container>
 
         </div>
 
@@ -681,32 +694,6 @@
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
             פתח ביוטיוב
-        </a>
-    </div>
-</div>
-
-<!-- Sheet Music Modal -->
-<div class="youtube-modal-backdrop" *ngIf="showSheetMusicModal" (click)="closeSheetMusic()">
-    <div class="youtube-modal-card sheet-music-modal-card" (click)="$event.stopPropagation()">
-        <button class="youtube-modal-close" (click)="closeSheetMusic()" title="סגור">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6 6 18M6 6l12 12"/>
-            </svg>
-        </button>
-        <div class="sheet-music-viewer">
-            <img *ngIf="isSheetMusicImage && sheetMusicDirectUrl" class="sheet-music-image" [src]="sheetMusicDirectUrl" alt="תווים לשיר">
-            <object *ngIf="!isSheetMusicImage && sheetMusicViewerUrl"
-                    class="sheet-music-frame"
-                    [data]="sheetMusicViewerUrl"
-                    type="application/pdf">
-                <a *ngIf="sheetMusicDirectUrl" class="sheet-music-inline-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
-                    פתח קובץ PDF
-                </a>
-            </object>
-        </div>
-        <a *ngIf="sheetMusicDirectUrl" class="sheet-music-open-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
-            פתח קובץ מלא
         </a>
     </div>
 </div>

@@ -843,6 +843,12 @@
   min-height: 104px;
 }
 
+.manage-card--requests {
+  min-height: 104px;
+  background: #F2F2F2;
+  border: none;
+}
+
 .manage-card-col {
   flex: 1;
   display: flex;

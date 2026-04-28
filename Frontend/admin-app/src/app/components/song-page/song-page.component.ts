@@ -91,7 +91,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
-    showSheetMusicModal: boolean = false;
+    isSheetMusicMode: boolean = false;
     sheetMusicViewerUrl: SafeResourceUrl | null = null;
     sheetMusicDirectUrl: string | null = null;
     isSheetMusicImage: boolean = false;
@@ -235,6 +235,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.canEdit = false; 
         this.isEasyMode = false;
         this.showKnownChordSummary = true;
+        this.closeSheetMusic();
 
         this.songService.getSongById(id).subscribe({
             next: (data) => {
@@ -1054,22 +1055,29 @@ private getKeyIndex(keyName: string): number {
 
     openSheetMusic(): void {
         if (!this.song?.sheetMusicUrl) return;
+        this.stopAutoScroll();
+        this.isAutoScroll = false;
         const directUrl = this.song.sheetMusicUrl;
         this.sheetMusicDirectUrl = directUrl;
         this.isSheetMusicImage = this.isImageFileUrl(directUrl);
-        this.sheetMusicViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(directUrl);
-        this.showSheetMusicModal = true;
+        const viewerUrl = this.isSheetMusicImage ? directUrl : this.buildSheetMusicPdfViewerUrl(directUrl);
+        this.sheetMusicViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(viewerUrl);
+        this.isSheetMusicMode = true;
     }
 
     closeSheetMusic(): void {
-        this.showSheetMusicModal = false;
+        this.isSheetMusicMode = false;
         this.sheetMusicViewerUrl = null;
         this.sheetMusicDirectUrl = null;
         this.isSheetMusicImage = false;
     }
 
     private isImageFileUrl(url: string): boolean {
-        return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+        return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url) || /\/image\/upload\//i.test(url);
+    }
+
+    private buildSheetMusicPdfViewerUrl(url: string): string {
+        return `https://localhost:44395/api/Media/pdf-view?url=${encodeURIComponent(url)}`;
     }
 
     private extractYoutubeVideoId(url: string): string | null {

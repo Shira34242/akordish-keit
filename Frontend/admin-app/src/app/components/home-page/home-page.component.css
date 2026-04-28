@@ -737,6 +737,8 @@
 }
 #promo-index {
   background-image: url('/collection-guitars-guitars-are-display-room.png');
+  background-size: auto 100%;
+  background-position: right center;
 }
 .promo-content {
   max-width: 600px;

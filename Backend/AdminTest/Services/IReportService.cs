@@ -6,7 +6,11 @@ public interface IReportService
 {
     Task<int> CreateReportAsync(CreateReportDto dto, int? userId, string? ipAddress);
 
-    Task<PagedResult<ChordRequestDto>> GetChordRequestsAsync(int pageNumber, int pageSize);
+    Task<PagedResult<ChordRequestDto>> GetChordRequestsAsync(int pageNumber, int pageSize, int userId);
+
+    Task<ChordRequestMatchDto> FindChordRequestMatchesAsync(string songName, string? artistName);
+
+    Task<bool> UpdateChordRequestGroupAsync(UpdateChordRequestGroupDto dto, int resolvedByUserId);
 
     Task<bool> CanAccessChordRequestsAsync(int userId);
 

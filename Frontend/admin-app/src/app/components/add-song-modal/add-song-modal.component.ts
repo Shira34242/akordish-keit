@@ -14,6 +14,11 @@ import { extractChords, parseChord } from '../../utils/music-utils';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 
+export interface InitialSongRequest {
+    songName: string;
+    artistName: string;
+}
+
 @Component({
     selector: 'app-add-song-modal',
     standalone: true,
@@ -82,6 +87,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     @Input() editMode: boolean = false;
     @Input() songToEdit: any = null;
     @Input() embedded: boolean = false;
+    @Input() initialSongRequest: InitialSongRequest | null = null;
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -336,12 +342,28 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             this.userChangedOriginalKey = true;
             this.userChangedEasyKey = true;
             this.populateFormForEdit();
+        } else if (this.initialSongRequest) {
+            this.applyInitialSongRequest();
         }
     }
 
     ngAfterViewInit(): void {
         this.scrollModalToTop();
     }
+
+    private applyInitialSongRequest(): void {
+        const songName = this.initialSongRequest?.songName?.trim();
+        const artistName = this.initialSongRequest?.artistName?.trim();
+
+        if (songName) {
+            this.songForm.patchValue({ title: songName });
+        }
+
+        if (artistName) {
+            this.addNewArtist(artistName);
+        }
+    }
+
     populateFormForEdit(): void {
         if (!this.songToEdit) return;
 

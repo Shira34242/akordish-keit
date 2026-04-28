@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { ArticleService } from '../../services/admin/article.service';
@@ -15,6 +16,7 @@ import { CreateArticleDto, ArticleContentType, ArticleStatus } from '../../model
 import { CreateEventDto } from '../../models/event.model';
 import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistListDto } from '../../models/artist.model';
+import { ChordRequestMatch } from '../../models/report.model';
 import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 
 export type QuickAddAction =
@@ -25,6 +27,7 @@ export type QuickAddAction =
   | 'artist-account'
   | 'artist-community'
   | 'contact'
+  | 'chord-requests'
   | 'admin-edit';
 
 type AssistantStep = 'root' | 'content' | 'index' | 'artist';
@@ -67,6 +70,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private readonly artistService = inject(ArtistService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly reportService = inject(ReportService);
+  private readonly router = inject(Router);
 
   @Input() adminEditLabel: string | null = null;
   @Input() entryPoint: QuickAddEntryPoint = 'root';
@@ -90,6 +94,9 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   article: CreateArticleDto = this.createEmptyArticle(ArticleContentType.News);
   event: CreateEventDto = this.createEmptyEvent();
   chordRequest = { songName: '', artistName: '' };
+  chordRequestMatch: ChordRequestMatch | null = null;
+  chordRequestChecked = false;
+  isCheckingChordRequest = false;
 
   contactForm = { fullName: '', email: '', subject: '', message: '' };
   contactAttachments: { file: File; url: string; uploading: boolean; error: boolean }[] = [];
@@ -162,6 +169,11 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
   }
 
+  get canViewChordRequests(): boolean {
+    const user = this.authService.currentUserValue;
+    return !!user && (this.isAdminUser || (user.hasProfessionalProfile ?? false) || (user.contentTag ?? 0) >= 2);
+  }
+
   get filteredProfileSearchResults(): UserWithProfileDto[] {
     const filtered = this.profileSearchResults.filter(profile => {
       if (this.profileTypeFilter === 'all') return true;
@@ -231,6 +243,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.modeOriginStep = this.currentStep;
         this.currentMode = 'chord-request';
         this.chordRequest = { songName: '', artistName: '' };
+        this.chordRequestMatch = null;
+        this.chordRequestChecked = false;
         this.messages.push({
           id: `bot-${this.messages.length + 1}`,
           tone: 'question',
@@ -267,6 +281,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       case 'artist-account':
       case 'artist-community':
       case 'contact':
+      case 'chord-requests':
       case 'admin-edit':
         this.actionSelected.emit(option.action as QuickAddAction);
         break;
@@ -366,7 +381,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   submitChordRequest(): void {
-    if (this.isSubmitting) {
+    if (this.isSubmitting || this.isCheckingChordRequest) {
       return;
     }
 
@@ -380,17 +395,71 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (!this.chordRequestChecked) {
+      this.checkChordRequestMatches();
+      return;
+    }
+
+    this.sendChordRequest();
+  }
+
+  continueChordRequestAnyway(): void {
+    this.chordRequestChecked = true;
+    this.sendChordRequest();
+  }
+
+  resetChordRequestMatch(): void {
+    this.chordRequestMatch = null;
+    this.chordRequestChecked = false;
+  }
+
+  openMatchedSong(songId: number): void {
+    this.close.emit();
+    this.router.navigate(['/song', songId]);
+  }
+
+  private checkChordRequestMatches(): void {
+    this.isCheckingChordRequest = true;
+    this.chordRequestMatch = null;
+
+    this.reportService.findChordRequestMatches(
+      this.chordRequest.songName.trim(),
+      this.chordRequest.artistName.trim()
+    ).subscribe({
+      next: result => {
+        this.isCheckingChordRequest = false;
+        this.chordRequestMatch = result;
+
+        if (result.hasMatches) {
+          this.chordRequestChecked = false;
+          return;
+        }
+
+        this.chordRequestChecked = true;
+        this.sendChordRequest();
+      },
+      error: () => {
+        this.isCheckingChordRequest = false;
+        this.chordRequestChecked = true;
+        this.sendChordRequest();
+      }
+    });
+  }
+
+  private sendChordRequest(): void {
     this.isSubmitting = true;
     const description = `בקשת אקורדים לשיר: ${this.chordRequest.songName.trim()} — אמן: ${this.chordRequest.artistName.trim()}`;
 
     this.reportService.createReport({
       contentType: 'Song',
       contentId: 0,
-      reportType: 'Other',
+      reportType: 'ChordRequest',
       description
     }).subscribe({
       next: () => {
         this.isSubmitting = false;
+        this.chordRequestMatch = null;
+        this.chordRequestChecked = false;
         this.currentMode = 'success';
         this.submittedMessage = 'הבקשה נשלחה! נעשה כמיטב יכולתנו להוסיף את האקורדים בהקדם.';
       },
@@ -644,6 +713,9 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.article = this.createEmptyArticle(ArticleContentType.News);
     this.event = this.createEmptyEvent();
     this.chordRequest = { songName: '', artistName: '' };
+    this.chordRequestMatch = null;
+    this.chordRequestChecked = false;
+    this.isCheckingChordRequest = false;
     this.contactForm = { fullName: '', email: '', subject: '', message: '' };
     this.contactAttachments = [];
 
@@ -729,6 +801,10 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
           { id: 'contact-form', label: 'יצירת קשר', action: 'contact-form', isSecondary: true },
           { id: 'contact', label: 'דיווח', action: 'contact', isSecondary: true }
         );
+
+        if (this.canViewChordRequests) {
+          options.splice(1, 0, { id: 'chord-requests-page', label: 'בקשות אקורדים', action: 'chord-requests' });
+        }
 
         return {
           question: 'איזה תוכן תרצה להוסיף לאתר?',

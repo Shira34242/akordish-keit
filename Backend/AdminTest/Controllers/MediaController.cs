@@ -9,13 +9,15 @@ namespace AkordishKeit.Controllers
     public class MediaController : ControllerBase
     {
         private readonly Cloudinary _cloudinary;
+        private readonly HttpClient _httpClient;
 
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
         private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
         private static readonly string[] DocumentExtensions = { ".pdf" };
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
+        private const long MaxPdfViewBytes = 30 * 1024 * 1024;
 
-        public MediaController(IConfiguration configuration)
+        public MediaController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             var account = new Account(
                 configuration["Cloudinary:CloudName"],
@@ -24,6 +26,7 @@ namespace AkordishKeit.Controllers
             );
             _cloudinary = new Cloudinary(account);
             _cloudinary.Api.Secure = true;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
         [HttpPost("upload")]
@@ -83,6 +86,31 @@ namespace AkordishKeit.Controllers
             return Ok(new { url = uploadResult.SecureUrl.ToString() });
         }
 
+        [HttpGet("pdf-view")]
+        public async Task<IActionResult> ViewPdf([FromQuery] string url)
+        {
+            if (!IsSafePdfUrl(url, out var uri))
+                return BadRequest(new { message = "Invalid PDF URL" });
+
+            using var response = await _httpClient.GetAsync(uri);
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode, new { message = "PDF could not be loaded" });
+
+            if (response.Content.Headers.ContentLength > MaxPdfViewBytes)
+                return BadRequest(new { message = "PDF file is too large" });
+
+            var pdfBytes = await response.Content.ReadAsByteArrayAsync();
+            if (pdfBytes.Length > MaxPdfViewBytes)
+                return BadRequest(new { message = "PDF file is too large" });
+
+            if (!IsPdfContent(pdfBytes))
+                return BadRequest(new { message = "File is not a PDF" });
+
+            Response.Headers.ContentDisposition = "inline";
+            Response.Headers.CacheControl = "public, max-age=3600";
+            return File(pdfBytes, "application/pdf", enableRangeProcessing: true);
+        }
+
         [HttpDelete("delete")]
         public async Task<ActionResult> DeleteMedia([FromQuery] string url)
         {
@@ -121,6 +149,31 @@ namespace AkordishKeit.Controllers
             {
                 return BadRequest(new { message = $"Error deleting file: {ex.Message}" });
             }
+        }
+
+        private static bool IsSafePdfUrl(string url, out Uri uri)
+        {
+            uri = null!;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
+                return false;
+
+            if (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)
+                return false;
+
+            if (parsed.IsLoopback || string.IsNullOrWhiteSpace(parsed.Host))
+                return false;
+
+            uri = parsed;
+            return true;
+        }
+
+        private static bool IsPdfContent(byte[] bytes)
+        {
+            return bytes.Length >= 4
+                && bytes[0] == '%'
+                && bytes[1] == 'P'
+                && bytes[2] == 'D'
+                && bytes[3] == 'F';
         }
     }
 }

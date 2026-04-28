@@ -167,6 +167,10 @@ export class MyProfileComponent implements OnInit {
     return !this.user?.phone || !this.user?.address || !this.user?.birthDate;
   }
 
+  get canViewChordRequests(): boolean {
+    return !!this.user && ((this.user.hasProfessionalProfile ?? false) || (this.user.contentTag ?? 0) >= 2 || this.authService.isAdminOrManager(this.user));
+  }
+
   openProfileModal() {
     this.profileForm = {
       phone: this.user?.phone || '',

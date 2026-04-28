@@ -1,0 +1,103 @@
+<div class="chord-requests-page" dir="rtl">
+  <div class="hero-box" #heroBox></div>
+  <div class="hero-content" #heroContent>
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1 class="hero-title">בקשות לאקורדים</h1>
+        <p class="hero-subtitle">שירים שמחכים שמישהו יעלה להם אקורדים.</p>
+      </div>
+      <div class="hero-cta-block">
+        <p class="hero-cta-desc">בקשות פתוחות</p>
+        <div class="hero-counter">
+          <strong>{{ totalCount }}</strong>
+          <span>שירים</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="requests-content">
+    <div class="requests-toolbar">
+      <div>
+        <h2>שירים שמחכים להעלאה</h2>
+        <p>לחיצה על כרטיס פותחת הוספת אקורדים עם הפרטים בפנים.</p>
+      </div>
+      <button type="button" class="refresh-btn" (click)="loadRequests()" [disabled]="loading">
+        <span class="material-icons">refresh</span>
+        <span>{{ loading ? 'טוען...' : 'רענון' }}</span>
+      </button>
+    </div>
+
+    <div class="state-card" *ngIf="loading">טוען בקשות...</div>
+
+    <div class="state-card" *ngIf="!loading && accessDenied">
+      הדף פתוח רק למורים, נותני שירות או תורמי תוכן מדרגה 2 ומעלה.
+    </div>
+
+    <div class="state-card" *ngIf="!loading && errorMessage">{{ errorMessage }}</div>
+
+    <div class="state-card" *ngIf="!loading && !accessDenied && !errorMessage && requests.length === 0">
+      אין כרגע בקשות פתוחות לאקורדים.
+    </div>
+
+    <div class="requests-grid" *ngIf="!loading && requests.length > 0">
+      <div
+        class="request-card"
+        *ngFor="let request of requests"
+        role="button"
+        tabindex="0"
+        (click)="openAddSong(request)"
+        (keydown.enter)="openAddSong(request)">
+        <span class="request-count">{{ request.requestCount }}</span>
+        <span class="request-meta">בקשות</span>
+        <span class="request-main">
+          <strong>{{ request.songName }}</strong>
+          <small>{{ request.artistName || 'אמן לא צוין' }}</small>
+        </span>
+        <span class="request-date">
+          <span class="material-icons">schedule</span>
+          <span>עודכן {{ formatDate(request.lastReportedAt) }}</span>
+        </span>
+        <span class="request-admin-badge" *ngIf="request.isAdminOnly">מנהל בלבד</span>
+        <span class="request-action">
+          <span class="material-icons">add</span>
+          <span>הוסף אקורדים</span>
+        </span>
+        <span class="request-admin-actions" *ngIf="isAdminUser">
+          <button type="button" class="request-admin-btn" (click)="closeRequest(request, $event)">סגור</button>
+          <button
+            type="button"
+            class="request-admin-btn"
+            *ngIf="!request.isAdminOnly"
+            (click)="moveToAdminOnly(request, $event)">
+            מנהל בלבד
+          </button>
+          <button
+            type="button"
+            class="request-admin-btn"
+            *ngIf="request.isAdminOnly"
+            (click)="restoreToPublic(request, $event)">
+            החזר לתורמים
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <div class="pager" *ngIf="totalCount > pageSize">
+      <button type="button" class="pager-btn" (click)="previousPage()" [disabled]="pageNumber === 1">הקודם</button>
+      <span>עמוד {{ pageNumber }}</span>
+      <button type="button" class="pager-btn" (click)="nextPage()" [disabled]="pageNumber * pageSize >= totalCount">הבא</button>
+    </div>
+  </main>
+</div>
+
+<div class="request-modal-backdrop" *ngIf="selectedRequest" (click)="closeAddSong()">
+  <div class="request-modal-shell" (click)="$event.stopPropagation()">
+    <app-add-song-modal
+      [embedded]="true"
+      [initialSongRequest]="selectedRequest"
+      (close)="closeAddSong()"
+      (songAdded)="onSongAdded()">
+    </app-add-song-modal>
+  </div>
+</div>

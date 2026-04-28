@@ -333,15 +333,49 @@
         <div class="embedded-flow" *ngIf="currentMode === 'chord-request'">
           <div class="smart-form">
             <label class="smart-label">שם השיר</label>
-            <input class="smart-input" [(ngModel)]="chordRequest.songName" placeholder="שם השיר">
+            <input class="smart-input" [(ngModel)]="chordRequest.songName" (input)="resetChordRequestMatch()" placeholder="שם השיר">
 
             <label class="smart-label">שם האמן</label>
-            <input class="smart-input" [(ngModel)]="chordRequest.artistName" placeholder="שם האמן">
+            <input class="smart-input" [(ngModel)]="chordRequest.artistName" (input)="resetChordRequestMatch()" placeholder="שם האמן">
+
+            <div class="chord-match-box" *ngIf="chordRequestMatch?.hasMatches">
+              <div class="chord-match-head">
+                <span class="material-icons">search_check</span>
+                <div>
+                  <strong>מצאנו שיר דומה שכבר קיים באתר</strong>
+                  <p>אפשר לעבור אליו עכשיו, או להמשיך ולשלוח את הבקשה בכל זאת.</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="chord-match-item"
+                *ngFor="let song of chordRequestMatch?.similarSongs"
+                (click)="openMatchedSong(song.id)">
+                <span class="chord-match-thumb" [class.chord-match-thumb-empty]="!song.imageUrl">
+                  <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title">
+                  <span *ngIf="!song.imageUrl" class="material-icons">music_note</span>
+                </span>
+                <span class="chord-match-copy">
+                  <strong>{{ song.title }}</strong>
+                  <small>{{ song.artistNames }}</small>
+                </span>
+                <span class="material-icons">arrow_back</span>
+              </button>
+            </div>
 
             <div class="smart-actions">
               <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
-              <button type="button" class="smart-submit" (click)="submitChordRequest()" [disabled]="isSubmitting">
-                {{ isSubmitting ? 'שולח...' : 'שליחת בקשה' }}
+              <button
+                type="button"
+                class="assistant-chip assistant-chip-muted"
+                *ngIf="chordRequestMatch?.hasMatches"
+                (click)="continueChordRequestAnyway()"
+                [disabled]="isSubmitting">
+                להמשיך בכל זאת
+              </button>
+              <button type="button" class="smart-submit" (click)="submitChordRequest()" [disabled]="isSubmitting || isCheckingChordRequest">
+                {{ isSubmitting ? 'שולח...' : isCheckingChordRequest ? 'בודק...' : 'שליחת בקשה' }}
               </button>
             </div>
           </div>

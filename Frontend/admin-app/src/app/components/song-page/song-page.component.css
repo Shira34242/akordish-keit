@@ -1066,10 +1066,25 @@
     background: #ffffff;
 }
 
+.sheet-music-page-panel {
+    background: #F2F2F2;
+    border-radius: 24px;
+    padding: var(--space-lg);
+    min-height: 76vh;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .sheet-music-viewer {
     width: 100%;
     height: 100%;
     background: #ffffff;
+}
+
+.sheet-music-page-viewer {
+    min-height: 72vh;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 .sheet-music-frame {
@@ -1306,6 +1321,10 @@
     .lyrics-column {
         padding: var(--space-lg);
     }
+
+    .sheet-music-page-panel {
+        padding: var(--space-base);
+    }
 }
 
 /* Extra small screens (phones) */
@@ -1476,6 +1495,17 @@
     .lyrics-column {
         padding: var(--space-base);
         border-radius: 16px;
+    }
+
+    .sheet-music-page-panel {
+        padding: var(--space-md);
+        border-radius: 16px;
+        min-height: 70vh;
+    }
+
+    .sheet-music-page-viewer {
+        min-height: 66vh;
+        border-radius: 12px;
     }
 
     .copy-notification {

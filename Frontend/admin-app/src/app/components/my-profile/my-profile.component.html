@@ -148,6 +148,20 @@
       </div>
     </div>
 
+    @if (canViewChordRequests) {
+      <div class="manage-card manage-card--requests">
+        <div class="manage-card-col">
+          <div>
+            <h3 class="manage-card-title">בקשות לאקורדים</h3>
+            <p class="manage-card-subtitle">שירים שאנשים ביקשו, מוכנים להעלאה מהירה.</p>
+          </div>
+          <div class="manage-card-actions">
+            <a class="manage-btn" routerLink="/chord-requests">פתח רשימה</a>
+          </div>
+        </div>
+      </div>
+    }
+
     <section class="content-section known-chords-section">
       <div class="section-header">
         <h3 class="section-title">האקורדים שאני יודע לנגן:</h3>

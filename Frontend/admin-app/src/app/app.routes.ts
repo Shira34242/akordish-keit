@@ -77,6 +77,12 @@ export const routes: Routes = [
                 title: 'הרשימות שלי - אקורדישקייט'
             },
             {
+                path: 'chord-requests',
+                loadComponent: () => import('./components/chord-requests/chord-requests.component').then(m => m.ChordRequestsComponent),
+                canActivate: [authGuard],
+                title: 'בקשות לאקורדים - אקורדישקייט'
+            },
+            {
                 path: 'community-playlists',
                 loadComponent: () => import('./components/community-playlists/community-playlists').then(m => m.CommunityPlaylistsComponent),
                 title: 'מאגר רשימות קהילתי - אקורדישקייט'

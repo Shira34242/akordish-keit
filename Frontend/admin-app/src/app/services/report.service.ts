@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ChordRequest, CreateReportDto, Report, UpdateReportStatusDto } from '../models/report.model';
+import { ChordRequest, ChordRequestMatch, CreateReportDto, Report, UpdateChordRequestGroupDto, UpdateReportStatusDto } from '../models/report.model';
 import { PagedResult } from '../models/pagination.model';
 
 @Injectable({
@@ -44,6 +44,17 @@ export class ReportService {
       .set('pageSize', pageSize.toString());
 
     return this.http.get<PagedResult<ChordRequest>>(`${this.apiUrl}/chord-requests`, { params });
+  }
+
+  findChordRequestMatches(songName: string, artistName?: string): Observable<ChordRequestMatch> {
+    let params = new HttpParams().set('songName', songName);
+    if (artistName) params = params.set('artistName', artistName);
+
+    return this.http.get<ChordRequestMatch>(`${this.apiUrl}/chord-requests/matches`, { params });
+  }
+
+  updateChordRequestGroup(dto: UpdateChordRequestGroupDto): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.apiUrl}/chord-requests/group`, dto);
   }
 
   updateReportStatus(id: number, dto: UpdateReportStatusDto): Observable<{ message: string }> {

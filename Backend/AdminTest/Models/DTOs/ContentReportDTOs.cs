@@ -54,7 +54,24 @@ public class ChordRequestDto
     public DateTime FirstReportedAt { get; set; }
     public DateTime LastReportedAt { get; set; }
     public string Status { get; set; } = string.Empty;
+    public bool IsAdminOnly { get; set; }
     public List<int> ReportIds { get; set; } = new();
+}
+
+public class ChordRequestMatchDto
+{
+    public bool HasMatches { get; set; }
+    public List<SongBasicDto> SimilarSongs { get; set; } = new();
+}
+
+public class UpdateChordRequestGroupDto
+{
+    [Required(ErrorMessage = "חסרים מזהי בקשות")]
+    public List<int> ReportIds { get; set; } = new();
+
+    [Required(ErrorMessage = "פעולה היא שדה חובה")]
+    [RegularExpression("^(Close|AdminOnly|Public)$", ErrorMessage = "פעולה לא חוקית")]
+    public string Action { get; set; } = string.Empty;
 }
 
 /// <summary>
