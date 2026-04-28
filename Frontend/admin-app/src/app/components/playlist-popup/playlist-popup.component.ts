@@ -18,15 +18,13 @@ export class PlaylistPopupComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() songSaved = new EventEmitter<void>();
 
+  defaultPlaylist: Playlist | null = null;
   personalPlaylists: Playlist[] = [];
   songState: SongPlaylistState = { isInDefault: false, playlistIds: [] };
   selectedPlaylistIds = new Set<number>();
 
   isLoading = false;
   isCreatingNew = false;
-  isRemovingFromDefault = false;
-  showRemoveOptions = false;
-  removeFromPersonalPlaylists = false;
   newPlaylistName = '';
   newPlaylistIsPublic = true;
   error: string | null = null;
@@ -44,7 +42,8 @@ export class PlaylistPopupComponent implements OnInit {
 
     this.playlistService.getMyPlaylists().subscribe({
       next: (playlists) => {
-        this.personalPlaylists = playlists.filter((playlist) => !playlist.isDefault && !playlist.isAdopted);
+        this.defaultPlaylist = playlists.find(p => p.isDefault) ?? null;
+        this.personalPlaylists = playlists.filter(p => !p.isDefault && !p.isAdopted);
         this.loadSongState();
       },
       error: (err) => {
@@ -95,6 +94,33 @@ export class PlaylistPopupComponent implements OnInit {
     });
   }
 
+  onDefaultToggle(): void {
+    this.error = null;
+    if (this.songState.isInDefault) {
+      this.playlistService.removeFromDefaultPlaylist(this.songId, false).subscribe({
+        next: () => {
+          this.songState.isInDefault = false;
+          this.songSaved.emit();
+        },
+        error: (err) => {
+          console.error('Error removing from default:', err);
+          this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר';
+        }
+      });
+    } else {
+      this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
+        next: () => {
+          this.songState.isInDefault = true;
+          this.songSaved.emit();
+        },
+        error: (err) => {
+          console.error('Error saving to default:', err);
+          this.error = err?.message || err?.error?.message || 'לא ניתן לשמור את השיר';
+        }
+      });
+    }
+  }
+
   onPlaylistToggle(playlistId: number, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     this.error = null;
@@ -105,6 +131,12 @@ export class PlaylistPopupComponent implements OnInit {
         next: () => {
           this.selectedPlaylistIds.add(playlistId);
           this.songSaved.emit();
+          if (!this.songState.isInDefault) {
+            this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
+              next: () => { this.songState.isInDefault = true; },
+              error: () => {}
+            });
+          }
         },
         error: (err) => {
           console.error('Error adding song to playlist:', err);
@@ -170,39 +202,6 @@ export class PlaylistPopupComponent implements OnInit {
         this.error = err?.error?.message || err?.message || 'שגיאה ביצירת הרשימה';
       }
     });
-  }
-
-  startRemoveFromDefault(): void {
-    this.showRemoveOptions = true;
-    this.removeFromPersonalPlaylists = false;
-    this.error = null;
-    this.successMessage = null;
-  }
-
-  removeFromDefault(): void {
-    this.isRemovingFromDefault = true;
-
-    this.playlistService.removeFromDefaultPlaylist(this.songId, this.removeFromPersonalPlaylists).subscribe({
-      next: () => {
-        this.songState.isInDefault = false;
-        if (this.removeFromPersonalPlaylists) {
-          this.selectedPlaylistIds.clear();
-        }
-        this.songSaved.emit();
-        this.isRemovingFromDefault = false;
-        this.closePopup();
-      },
-      error: (err) => {
-        console.error('Error removing song from default playlist:', err);
-        this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר מהשמורים שלי';
-        this.isRemovingFromDefault = false;
-      }
-    });
-  }
-
-  cancelRemoveFromDefault(): void {
-    this.showRemoveOptions = false;
-    this.removeFromPersonalPlaylists = false;
   }
 
   closePopup(): void {

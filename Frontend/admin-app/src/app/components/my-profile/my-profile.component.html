@@ -272,35 +272,6 @@
     </section>
     }
 
-    <section class="content-section">
-      <div class="section-header">
-        <h3 class="section-title">תוכן שאהבתי:</h3>
-      </div>
-
-      <div class="content-row">
-        <div class="row-cards-wrap row-cards-wrap--articles">
-          @if (likedContent.length > 0) {
-            @for (item of (likedContent | slice:0:visibleLikedCount); track item.id) {
-              <div class="news-banner-shell news-banner-shell--liked">
-                <app-news-banner [article]="getArticleBannerInput(item)"></app-news-banner>
-                <button type="button" class="liked-remove-btn" (click)="removeLikedContent(item, $event)">
-                  <span class="material-icons">close</span>
-                </button>
-              </div>
-            }
-          } @else {
-            <div class="empty-row-state">
-              <span class="material-icons empty-icon">favorite_border</span>
-              <span>עוד לא שמרת תכנים</span>
-            </div>
-          }
-        </div>
-        @if (likedContent.length > visibleLikedCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreLiked()">הצג עוד</button>
-        }
-      </div>
-    </section>
-
     <div class="saved-lists-row">
       <a routerLink="/my-playlists" class="saved-lists-link">
         למעבר לרשימות שמורות

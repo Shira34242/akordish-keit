@@ -24,8 +24,8 @@ export const appConfig: ApplicationConfig = {
             provider: new GoogleLoginProvider(
               '502970815708-25ubgon2jacu88p1afsg30r45j5bogto.apps.googleusercontent.com', // החליפי ב־Client ID שלך
               {
-                oneTapEnabled: false, // Disable One Tap to avoid FedCM
-                prompt: 'select_account' // Always show account selection
+                oneTapEnabled: true,
+                prompt: 'select_account'
               }
             )
           }

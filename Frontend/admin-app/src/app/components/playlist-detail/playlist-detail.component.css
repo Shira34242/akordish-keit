@@ -338,44 +338,52 @@
 }
 
 /* ============================================
-   HERO BOTTOM ROW
+   HERO LEFT COLUMN (chord book + icon btns)
 ============================================ */
 
-.hero-bottom {
+.hero-left-col {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-sm);
+  margin-inline-start: auto;
   margin-top: auto;
 }
 
 /* CHORD BOOK CARD */
 .chord-book-card {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 999px;
   padding: var(--space-sm) var(--space-md);
-  flex: 1 1 220px;
-  min-width: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-width: 260px;
 }
 
-.chord-book-card-text {
+.chord-book-card:hover {
+  background: #ddff53;
+}
+
+.chord-book-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 0;
   flex: 1;
+  min-width: 0;
 }
 
-.chord-book-card-title {
+.chord-book-title {
   font-size: var(--font-sm);
   font-weight: 800;
   color: #000000;
+  line-height: 1.2;
 }
 
-.chord-book-card-desc {
+.chord-book-desc {
   font-size: var(--font-xs);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.5);
@@ -384,11 +392,18 @@
   text-overflow: ellipsis;
 }
 
+.chord-book-arrow {
+  font-size: 18px;
+  color: rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
 /* ICON BUTTONS */
 .hero-icon-btns {
   display: flex;
   gap: var(--space-xs);
   flex-shrink: 0;
+  align-items: center;
 }
 
 /* ============================================
@@ -770,7 +785,7 @@
     opacity: 1;
   }
 
-  .chord-book-card-desc {
+  .chord-book-desc {
     display: none;
   }
 }

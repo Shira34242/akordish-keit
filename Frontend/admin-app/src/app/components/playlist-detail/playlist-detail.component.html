@@ -123,20 +123,18 @@
             </p>
           </div>
 
-          <!-- Bottom row: chord book card + edit/delete -->
-          <div class="hero-bottom">
+          <!-- Bottom-left column: chord book card above edit/delete -->
+          <div class="hero-left-col">
 
             <!-- Chord book card -->
             <div class="chord-book-card"
-                 *ngIf="!playlist.isDefault && playlist.songs.length > 0">
-              <div class="chord-book-card-text">
-                <span class="chord-book-card-title">ספר אקורדים</span>
-                <span class="chord-book-card-desc">הדפס את כל השירים ברשימה עם האקורדים</span>
+                 *ngIf="!playlist.isDefault && playlist.songs.length > 0"
+                 (click)="showChordBook = true">
+              <div class="chord-book-text">
+                <span class="chord-book-title">הפוך את הרשימה לספר אקורדים</span>
+                <span class="chord-book-desc">כל שירי הרשימה בתצוגת אקורדים, מוכנים להדפסה</span>
               </div>
-              <button class="btn-pill btn-pill--accent btn-pill--sm" type="button"
-                      (click)="showChordBook = true">
-                פתח
-              </button>
+              <span class="material-icons chord-book-arrow">arrow_back</span>
             </div>
 
             <!-- Edit + Delete icon buttons -->

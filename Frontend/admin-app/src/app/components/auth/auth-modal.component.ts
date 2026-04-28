@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../services/auth.service';
+import { GoogleOneTapService } from '../../services/google-one-tap.service';
 
 @Component({
   selector: 'app-auth-modal',
@@ -38,7 +39,7 @@ export class AuthModalComponent {
     // (authState הוא ReplaySubject שמשדר מיד בפתיחת המודל — בלי הבדיקה הזאת
     //  כל פתיחת מודל הייתה מפעילה google-login מחדש אם יש סשן Google פעיל בדפדפן)
     this.socialAuthService.authState.subscribe((user) => {
-      if (user && user.idToken && !this.authService.isLoggedIn) {
+      if (user && user.idToken && !this.authService.isLoggedIn && !GoogleOneTapService.isProcessing()) {
         this.handleGoogleLogin(user.idToken);
       }
     });
@@ -176,13 +177,16 @@ export class AuthModalComponent {
   }
 
   private handleGoogleLogin(idToken: string) {
+    GoogleOneTapService.setProcessing(true);
     this.loading = true;
     this.authService.googleLogin(idToken).subscribe({
       next: (response) => {
+        GoogleOneTapService.setProcessing(false);
         this.loading = false;
         this.authSuccess.emit(response);
       },
       error: (error) => {
+        GoogleOneTapService.setProcessing(false);
         this.loading = false;
         this.errorMessage = error.error?.message || 'שגיאה בכניסה עם Google';
       }

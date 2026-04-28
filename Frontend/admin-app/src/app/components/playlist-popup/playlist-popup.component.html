@@ -1,12 +1,40 @@
 <div class="popup-backdrop" (click)="onBackdropClick($event)">
   <div class="popup-card" (click)="$event.stopPropagation()">
+
     <div class="popup-header">
-      <button class="icon-bookmark-filled" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <button class="icon-bookmark-filled" type="button" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
         </svg>
       </button>
       <h3>ניהול שמירה</h3>
+      <button class="btn-add" type="button" (click)="toggleCreateNew()" [title]="isCreatingNew ? 'ביטול' : 'רשימה חדשה'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line *ngIf="!isCreatingNew" x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="create-new-form" *ngIf="isCreatingNew">
+      <input
+        type="text"
+        class="new-playlist-input"
+        [(ngModel)]="newPlaylistName"
+        placeholder="שם הרשימה החדשה"
+        (keyup.enter)="createNewPlaylist()"
+        autofocus>
+      <div class="privacy-toggle">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="newPlaylistIsPublic" class="toggle-checkbox">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn-create" type="button" (click)="createNewPlaylist()">צור רשימה</button>
+        <button class="btn-cancel" type="button" (click)="toggleCreateNew()">ביטול</button>
+      </div>
     </div>
 
     <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
@@ -14,88 +42,51 @@
 
     <div class="loading-state" *ngIf="isLoading">
       <div class="spinner"></div>
-      <p>טוען רשימות...</p>
     </div>
 
-    <ng-container *ngIf="!isLoading">
-      <div class="status-panel" *ngIf="songState.isInDefault">
-        <div class="status-copy">
-          <strong>השיר שמור ב"השמורים שלי"</strong>
-          <p>אפשר להוסיף אותו גם לרשימות האישיות שלך.</p>
-        </div>
-        <button class="btn-status-remove" type="button" (click)="startRemoveFromDefault()">
-          הסר מהשמורים שלי
-        </button>
-      </div>
+    <ng-container *ngIf="!isLoading && !isCreatingNew">
+      <div class="playlists-list">
 
-      <div class="remove-panel" *ngIf="showRemoveOptions">
-        <label class="remove-checkbox">
-          <input type="checkbox" [(ngModel)]="removeFromPersonalPlaylists">
-          <span>להסיר גם מכל הרשימות האישיות</span>
+        <label class="playlist-toggle" (click)="onDefaultToggle()">
+          <span class="circle-check" [class.circle-check--on]="songState.isInDefault">
+            <svg *ngIf="songState.isInDefault" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="1,5 4.5,8.5 11,1.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="playlist-meta">
+            <span class="playlist-name">{{ defaultPlaylist?.name || 'השמורים שלי' }}</span>
+            <span class="playlist-count">{{ defaultPlaylist?.songCount ?? 0 }} שירים</span>
+          </div>
         </label>
-        <div class="remove-actions">
-          <button class="btn-remove-confirm" type="button" (click)="removeFromDefault()" [disabled]="isRemovingFromDefault">
-            {{ isRemovingFromDefault ? 'מסיר...' : 'אישור הסרה' }}
-          </button>
-          <button class="btn-cancel" type="button" (click)="cancelRemoveFromDefault()">ביטול</button>
-        </div>
-      </div>
-
-      <div class="playlists-list" *ngIf="!isCreatingNew">
-        <p class="section-label">רשימות השירים האישיות שלך</p>
 
         <label class="playlist-toggle" *ngFor="let playlist of personalPlaylists">
+          <span class="circle-check" [class.circle-check--on]="isSelected(playlist.id)">
+            <svg *ngIf="isSelected(playlist.id)" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="1,5 4.5,8.5 11,1.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
           <div class="playlist-meta">
             <span class="playlist-name">{{ playlist.name }}</span>
             <span class="playlist-count">{{ playlist.songCount }} שירים</span>
           </div>
           <input
             type="checkbox"
+            class="hidden-checkbox"
             [checked]="isSelected(playlist.id)"
             (change)="onPlaylistToggle(playlist.id, $event)">
         </label>
 
-        <div class="empty-state" *ngIf="personalPlaylists.length === 0">
-          <p>עדיין אין לך רשימות שירים אישיות.</p>
-        </div>
       </div>
 
-      <div class="create-new-form" *ngIf="isCreatingNew">
-        <input
-          type="text"
-          class="new-playlist-input"
-          [(ngModel)]="newPlaylistName"
-          placeholder="שם הרשימה החדשה"
-          (keyup.enter)="createNewPlaylist()"
-          autofocus>
-
-        <div class="privacy-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" [(ngModel)]="newPlaylistIsPublic" class="toggle-checkbox">
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
-          </label>
+      <div class="popup-footer">
+        <div class="footer-links">
+          <a class="link-archive" routerLink="/community-playlists" (click)="closePopup()">מאגר רשימות</a>
+          <span class="footer-sep">·</span>
+          <a class="link-archive" routerLink="/my-playlists" (click)="closePopup()">הרשימות שלי</a>
         </div>
-
-        <div class="form-actions">
-          <button class="btn-create" type="button" (click)="createNewPlaylist()">צור רשימה</button>
-          <button class="btn-cancel" type="button" (click)="toggleCreateNew()">ביטול</button>
-        </div>
-      </div>
-
-      <div class="popup-actions" *ngIf="!isCreatingNew">
-        <button class="action-btn btn-new-playlist" type="button" (click)="toggleCreateNew()">
-          רשימה חדשה
-        </button>
-
-        <button class="action-btn btn-view-all" routerLink="/community-playlists" (click)="closePopup()">
-          למאגר הקהילתי
-        </button>
-
-        <button class="action-btn btn-my-playlists" routerLink="/my-playlists" (click)="closePopup()">
-          לרשימות שלי
-        </button>
+        <button class="btn-done" type="button" (click)="closePopup()">בוצע</button>
       </div>
     </ng-container>
+
   </div>
 </div>

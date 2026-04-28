@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -12,7 +12,15 @@ import { Playlist } from '../../models/playlist.model';
   templateUrl: './community-playlists.html',
   styleUrls: ['./community-playlists.css']
 })
-export class CommunityPlaylistsComponent implements OnInit {
+export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, OnDestroy {
+
+  @ViewChild('heroBox') heroBox!: ElementRef<HTMLDivElement>;
+  @ViewChild('heroContent') heroContent!: ElementRef<HTMLDivElement>;
+
+  private fullHeroHeight = 0;
+  private heroLayoutDone = false;
+  private rafPending = false;
+
   playlists: Playlist[] = [];
   filteredPlaylists: Playlist[] = [];
   searchTerm: string = '';
@@ -21,16 +29,68 @@ export class CommunityPlaylistsComponent implements OnInit {
 
   constructor(
     private playlistService: PlaylistService,
-    private router: Router
+    private router: Router,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
     this.loadPublicPlaylists();
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.heroLayoutDone && this.heroContent?.nativeElement && this.heroBox?.nativeElement) {
+      this.updateHeroLayout();
+      this.heroLayoutDone = true;
+    }
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onScroll);
+  }
+
+  private onScroll = () => {
+    if (!this.rafPending) {
+      this.rafPending = true;
+      requestAnimationFrame(() => {
+        this.shrinkHero();
+        this.rafPending = false;
+      });
+    }
+  };
+
+  private updateHeroLayout(): void {
+    const box = this.heroBox?.nativeElement;
+    const content = this.heroContent?.nativeElement;
+    if (!box || !content) return;
+    const contentRect = content.getBoundingClientRect();
+    const boxTop = 8;
+    const h = Math.round(contentRect.bottom - boxTop + window.scrollY);
+    this.fullHeroHeight = h;
+    box.style.height = h + 'px';
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const box = this.heroBox?.nativeElement;
+    if (!box || this.fullHeroHeight === 0) return;
+    const minH = window.innerWidth <= 600 ? 44 : 56;
+    const newH = Math.max(minH, this.fullHeroHeight - window.scrollY);
+    box.style.height = newH + 'px';
+
+    const content = this.heroContent?.nativeElement;
+    if (content) {
+      const fade = Math.min(1, window.scrollY / 140);
+      content.style.opacity = String(1 - fade);
+    }
   }
 
   loadPublicPlaylists(): void {
     this.isLoading = true;
     this.error = null;
+    this.heroLayoutDone = false;
 
     this.playlistService.getPublicPlaylists().subscribe({
       next: (playlists) => {
@@ -67,12 +127,24 @@ export class CommunityPlaylistsComponent implements OnInit {
     return playlist.imageUrl || null;
   }
 
+  getSongGridImages(playlist: Playlist): string[] {
+    if (playlist.imageUrl) return [];
+    return (playlist.thumbnailSongImages || []).slice(0, 4);
+  }
+
+  getSongGridSlots(playlist: Playlist): (string | null)[] {
+    const images = this.getSongGridImages(playlist);
+    const slots: (string | null)[] = [...images];
+    while (slots.length < 4) slots.push(null);
+    return slots;
+  }
+
   adoptPlaylist(id: number, event: Event): void {
     event.stopPropagation();
 
     if (confirm('האם לאמץ רשימה זו? תיווצר עותק ברשימות שלך')) {
       this.playlistService.adoptPlaylist(id).subscribe({
-        next: (adoptedPlaylist) => {
+        next: () => {
           this.router.navigate(['/my-playlists']);
         },
         error: (err) => {
