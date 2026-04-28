@@ -93,6 +93,14 @@ export class AuthService {
         );
     }
 
+    refreshSession(): Observable<AuthResponse> {
+        return this.http.get<AuthResponse>(`${this.apiUrl}/me`, {
+            withCredentials: true
+        }).pipe(
+            tap(response => this.saveAuthResponse(response))
+        );
+    }
+
     completeProfile(preferredInstrumentId?: number | null, phone?: string): Observable<User> {
         const body: any = {};
         if (preferredInstrumentId !== undefined && preferredInstrumentId !== null) {
@@ -125,14 +133,18 @@ export class AuthService {
         });
     }
 
-    logout() {
-        // 🔐 מנקה localStorage (cookies ינוקו על ידי הדפדפן כשהם פגי תוקף)
+    clearLocalAuth() {
         localStorage.removeItem('csrf-token');
         localStorage.removeItem('currentUser');
         this.currentUserSubject.next(null);
+    }
 
-        // TODO: אפשר להוסיף endpoint ב-Backend למחיקת cookies
-        // this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true }).subscribe();
+    logout() {
+        this.clearLocalAuth();
+
+        this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true }).subscribe({
+            error: () => {}
+        });
     }
 
     get currentUserValue(): User | null {

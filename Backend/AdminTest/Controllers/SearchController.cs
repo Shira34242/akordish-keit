@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 
 namespace AkordishKeit.Controllers;
@@ -27,6 +28,11 @@ public class SearchController : ControllerBase
             return Ok(new SearchResultsDto());
 
         var term = q.Trim();
+        var searchTokens = term
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(token => token.Length >= 2)
+            .Take(4)
+            .ToArray();
 
         // שלב 2 — חיפוש עמוק לפי מילות השיר (לא כולל שירים שכבר נמצאו בשלב 1 לפי כותרת)
         if (deep)
@@ -95,27 +101,47 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
-        var teachers = await _context.ServiceProviders
-            .Where(p => p.Status == ProfileStatus.Active && p.IsTeacher && !p.IsDeleted && p.DisplayName.Contains(term))
+        var teachersQuery = ApplyServiceProviderSearch(
+            _context.ServiceProviders.Where(p => p.Status == ProfileStatus.Active && p.IsTeacher && !p.IsDeleted),
+            term,
+            searchTokens,
+            includeTeacherFields: true);
+
+        var teachers = await OrderServiceProviderSearchResults(teachersQuery, term)
             .Take(5)
             .Select(p => new SearchItemDto
             {
                 Id = p.Id,
                 Title = p.DisplayName,
-                Subtitle = p.ShortBio,
+                Subtitle = p.Branches
+                    .Where(b =>
+                        b.Name.Contains(term) ||
+                        (b.Address != null && b.Address.Contains(term)))
+                    .Select(b => b.Address != null ? b.Name + " - " + b.Address : b.Name)
+                    .FirstOrDefault() ?? p.ShortBio,
                 ImageUrl = p.ProfileImageUrl,
                 Type = "teacher"
             })
             .ToListAsync();
 
-        var professionals = await _context.ServiceProviders
-            .Where(p => p.Status == ProfileStatus.Active && !p.IsTeacher && !p.IsDeleted && p.DisplayName.Contains(term))
+        var professionalsQuery = ApplyServiceProviderSearch(
+            _context.ServiceProviders.Where(p => p.Status == ProfileStatus.Active && !p.IsTeacher && !p.IsDeleted),
+            term,
+            searchTokens,
+            includeTeacherFields: false);
+
+        var professionals = await OrderServiceProviderSearchResults(professionalsQuery, term)
             .Take(5)
             .Select(p => new SearchItemDto
             {
                 Id = p.Id,
                 Title = p.DisplayName,
-                Subtitle = p.ShortBio,
+                Subtitle = p.Branches
+                    .Where(b =>
+                        b.Name.Contains(term) ||
+                        (b.Address != null && b.Address.Contains(term)))
+                    .Select(b => b.Address != null ? b.Name + " - " + b.Address : b.Name)
+                    .FirstOrDefault() ?? p.ShortBio,
                 ImageUrl = p.ProfileImageUrl,
                 Type = "professional"
             })
@@ -144,5 +170,63 @@ public class SearchController : ControllerBase
             Professionals = professionals,
             Playlists = playlists
         });
+    }
+
+    private IQueryable<MusicServiceProvider> ApplyServiceProviderSearch(
+        IQueryable<MusicServiceProvider> query,
+        string term,
+        string[] searchTokens,
+        bool includeTeacherFields)
+    {
+        var tokens = searchTokens.Length > 0 ? searchTokens : new[] { term };
+
+        foreach (var token in tokens)
+        {
+            var currentToken = token;
+
+            query = query.Where(p =>
+                p.DisplayName.Contains(currentToken) ||
+                (p.ShortBio != null && p.ShortBio.Contains(currentToken)) ||
+                (p.Location != null && p.Location.Contains(currentToken)) ||
+                (p.WorkingHours != null && p.WorkingHours.Contains(currentToken)) ||
+                p.Categories.Any(c =>
+                    c.Category.Name.Contains(currentToken) ||
+                    (c.SubCategory != null && c.SubCategory.Contains(currentToken))) ||
+                p.Branches.Any(b =>
+                    b.Name.Contains(currentToken) ||
+                    (b.Address != null && b.Address.Contains(currentToken)) ||
+                    (b.PhoneNumber != null && b.PhoneNumber.Contains(currentToken)) ||
+                    (b.Email != null && b.Email.Contains(currentToken)) ||
+                    (b.OpeningHours != null && b.OpeningHours.Contains(currentToken))) ||
+                (includeTeacherFields &&
+                    p.TeacherProfile != null &&
+                    ((p.TeacherProfile.Specializations != null && p.TeacherProfile.Specializations.Contains(currentToken)) ||
+                     (p.TeacherProfile.LessonTypes != null && p.TeacherProfile.LessonTypes.Contains(currentToken)) ||
+                     (p.TeacherProfile.Availability != null && p.TeacherProfile.Availability.Contains(currentToken)) ||
+                     p.TeacherProfile.Instruments.Any(i =>
+                        i.Instrument.Name.Contains(currentToken) ||
+                        (i.Instrument.EnglishName != null && i.Instrument.EnglishName.Contains(currentToken))))));
+        }
+
+        return query;
+    }
+
+    private static IOrderedQueryable<MusicServiceProvider> OrderServiceProviderSearchResults(
+        IQueryable<MusicServiceProvider> query,
+        string term)
+    {
+        return query
+            .OrderByDescending(p => p.DisplayName.StartsWith(term))
+            .ThenByDescending(p => p.DisplayName.Contains(term))
+            .ThenByDescending(p => p.Location != null && p.Location.Contains(term))
+            .ThenByDescending(p => p.Branches.Any(b =>
+                b.Name.Contains(term) ||
+                (b.Address != null && b.Address.Contains(term))))
+            .ThenByDescending(p => p.Categories.Any(c =>
+                c.Category.Name.Contains(term) ||
+                (c.SubCategory != null && c.SubCategory.Contains(term))))
+            .ThenByDescending(p => p.IsFeatured)
+            .ThenByDescending(p => p.Tier)
+            .ThenByDescending(p => p.CreatedAt);
     }
 }

@@ -20,6 +20,10 @@ import { QuickAddAssistantService } from '../../../services/quick-add-assistant.
 interface Category {
   id: number;
   name: string;
+  showInQuickCategories?: boolean;
+  quickCategoryLabel?: string;
+  quickCategoryImageUrl?: string;
+  quickCategoryOrder?: number;
 }
 
 interface Instrument {
@@ -90,6 +94,21 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     { id: 0, name: 'עריכת וידאו', hebrewName: 'עריכת וידאו' },
     { id: 0, name: 'הגברה', hebrewName: 'הגברה' }
   ];
+
+  get visibleQuickCategories(): Category[] {
+    const selected = this.categories
+      .filter(category => category.showInQuickCategories)
+      .sort((a, b) =>
+        (a.quickCategoryOrder ?? 0) - (b.quickCategoryOrder ?? 0) ||
+        a.name.localeCompare(b.name, 'he')
+      );
+
+    if (selected.length > 0) return selected;
+
+    return this.quickSearchCategories
+      .map(quick => this.categories.find(category => category.id === quick.id))
+      .filter((category): category is Category => !!category);
+  }
 
   // ─── Teachers data ────────────────────────────────
   allTeachers: TeacherListDto[] = [];
@@ -436,6 +455,24 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       const instrument = this.instruments.find(i => i.name.toLowerCase().includes(name.toLowerCase()));
       if (instrument) { this.selectedInstrumentId = instrument.id; this.onSearch(); }
     }
+  }
+
+  onQuickCategoryClick(category: Category): void {
+    if (this.activeTab !== 'professionals') {
+      this.setTab('professionals');
+    }
+    this.topFilterValue = category.id.toString();
+    this.selectedCategoryId = category.id;
+    this.onSearch();
+  }
+
+  getQuickCategoryLabel(category: Category): string {
+    return category.quickCategoryLabel?.trim() || category.name;
+  }
+
+  getQuickCategoryBackground(category: Category): string | null {
+    const imageUrl = category.quickCategoryImageUrl?.trim();
+    return imageUrl ? `url("${imageUrl.replace(/"/g, '\\"')}")` : null;
   }
 
   // ─── View More — Professionals ────────────────────

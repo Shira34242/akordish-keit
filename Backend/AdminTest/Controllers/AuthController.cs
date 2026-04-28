@@ -5,6 +5,7 @@ using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -46,6 +47,38 @@ namespace AkordishKeit.Controllers
             );
             _cloudinary = new Cloudinary(account);
             _cloudinary.Api.Secure = true;
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<ActionResult<AuthResponse>> Me()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "משתמש לא מזוהה" });
+            }
+
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+            if (user == null || !user.IsActive)
+            {
+                return Unauthorized(new { message = "משתמש לא פעיל" });
+            }
+
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(BuildAuthResponse(user, hasProfessionalProfile, isNewRegistration: false));
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            ExpireCookie("auth-token", httpOnly: true);
+            ExpireCookie("XSRF-TOKEN", httpOnly: false);
+            return Ok(new { message = "התנתקת בהצלחה" });
         }
 
         [HttpPost("google-login")]
@@ -197,39 +230,63 @@ namespace AkordishKeit.Controllers
                 Expires = DateTime.UtcNow.AddDays(expireDays)
             });
 
-            // 3. יצירת CSRF Token
+            return BuildAuthResponse(user, hasProfessionalProfile, isNewRegistration);
+        }
+
+        private AuthResponse BuildAuthResponse(User user, bool hasProfessionalProfile, bool isNewRegistration)
+        {
+            var csrfToken = IssueCsrfToken();
+
+            return new AuthResponse
+            {
+                CsrfToken = csrfToken,
+                User = BuildUserDto(user, hasProfessionalProfile),
+                RequiresProfileCompletion = isNewRegistration
+            };
+        }
+
+        private string IssueCsrfToken()
+        {
             var csrfToken = _csrfTokenService.GenerateToken();
 
-            // 4. שמירת CSRF Token ב-Cookie (קריא על ידי JavaScript)
             Response.Cookies.Append("XSRF-TOKEN", csrfToken, new CookieOptions
             {
-                HttpOnly = false,         // קריא ל-JavaScript (צריך לשלוח בheaders)
+                HttpOnly = false,
                 Secure = true,
-                SameSite = SameSiteMode.None,  // מאפשר cross-origin בdevelopment
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddMinutes(30)
             });
 
-            // 5. החזרת תגובה עם CSRF token (לא JWT!)
-            // RequiresProfileCompletion = true רק בהרשמה חדשה, לא בכניסה חוזרת
-            return new AuthResponse
+            return csrfToken;
+        }
+
+        private UserDto BuildUserDto(User user, bool hasProfessionalProfile = false)
+        {
+            return new UserDto
             {
-                CsrfToken = csrfToken,  // מחזירים CSRF, לא JWT
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    ProfileImageUrl = user.ProfileImageUrl,
-                    Role = user.Role.ToString(),
-                    Level = user.Level,
-                    Points = user.Points,
-                    PreferredInstrumentId = user.PreferredInstrumentId,
-                    HasProfessionalProfile = hasProfessionalProfile,
-                    ContentTag = (int)user.ContentTag,
-                    UploadCount = user.UploadCount
-                },
-                RequiresProfileCompletion = isNewRegistration
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                ProfileImageUrl = user.ProfileImageUrl,
+                Role = user.Role.ToString(),
+                Level = user.Level,
+                Points = user.Points,
+                PreferredInstrumentId = user.PreferredInstrumentId,
+                HasProfessionalProfile = hasProfessionalProfile,
+                ContentTag = (int)user.ContentTag,
+                UploadCount = user.UploadCount
             };
+        }
+
+        private void ExpireCookie(string name, bool httpOnly)
+        {
+            Response.Cookies.Append(name, string.Empty, new CookieOptions
+            {
+                HttpOnly = httpOnly,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(-1)
+            });
         }
 
         [HttpPost("register")]

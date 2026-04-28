@@ -110,15 +110,19 @@ namespace AkordishKeit.Services
 
         public async Task<EventDto> CreateEventAsync(CreateEventDto dto, int? submittedByUserId = null)
         {
+            var eventName = string.IsNullOrWhiteSpace(dto.Name)
+                ? (string.IsNullOrWhiteSpace(dto.ArtistName) ? "הופעה חדשה" : dto.ArtistName.Trim())
+                : dto.Name.Trim();
+
             var eventEntity = new Event
             {
-                Name = dto.Name,
-                Description = dto.Description,
-                ImageUrl = dto.ImageUrl,
-                TicketUrl = dto.TicketUrl,
-                EventDate = dto.EventDate,
-                Location = dto.Location,
-                ArtistName = dto.ArtistName,
+                Name = eventName,
+                Description = dto.Description?.Trim(),
+                ImageUrl = dto.ImageUrl?.Trim() ?? string.Empty,
+                TicketUrl = dto.TicketUrl?.Trim() ?? string.Empty,
+                EventDate = dto.EventDate ?? DateTime.UtcNow,
+                Location = dto.Location?.Trim(),
+                ArtistName = dto.ArtistName?.Trim(),
                 Price = dto.Price,
                 DisplayOrder = dto.DisplayOrder,
                 IsActive = dto.IsActive,

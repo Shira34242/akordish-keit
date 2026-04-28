@@ -30,7 +30,11 @@ export class ValueTablesComponent implements OnInit {
             label: 'קטגוריות נותני שירות ומורים',
             extraColumns: [
                 { key: 'description', label: 'תיאור', type: 'textarea' },
-                { key: 'isActive', label: 'פעיל', type: 'boolean' }
+                { key: 'isActive', label: 'פעיל', type: 'boolean' },
+                { key: 'showInQuickCategories', label: 'הצג ככפתור מהיר', type: 'boolean' },
+                { key: 'quickCategoryLabel', label: 'שם בכפתור' },
+                { key: 'quickCategoryImageUrl', label: 'תמונת רקע', type: 'image' },
+                { key: 'quickCategoryOrder', label: 'סדר', type: 'number' }
             ]
         }
     ];

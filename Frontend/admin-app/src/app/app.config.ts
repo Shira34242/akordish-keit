@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
             provider: new GoogleLoginProvider(
               '502970815708-25ubgon2jacu88p1afsg30r45j5bogto.apps.googleusercontent.com', // החליפי ב־Client ID שלך
               {
-                oneTapEnabled: true,
+                oneTapEnabled: false,
                 prompt: 'select_account'
               }
             )

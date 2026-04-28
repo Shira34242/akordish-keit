@@ -647,6 +647,17 @@
 
 .grid-card { cursor: pointer; }
 
+.songs-strip app-song-card ::ng-deep .song-card,
+.songs-grid app-song-card ::ng-deep .song-card {
+    aspect-ratio: 12 / 5;
+}
+
+.songs-strip app-song-card ::ng-deep .song-card-title,
+.songs-grid app-song-card ::ng-deep .song-card-title {
+    font-size: var(--font-lg);
+    line-height: 1.15;
+}
+
 
 /* ═══════════════════════════════════════════════════════════════
    LOADING + EMPTY STATES

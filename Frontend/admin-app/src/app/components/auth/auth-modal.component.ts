@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../services/auth.service';
 import { GoogleOneTapService } from '../../services/google-one-tap.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-auth-modal',
@@ -30,6 +31,7 @@ export class AuthModalComponent implements OnDestroy {
   // Password strength
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
   passwordErrors: string[] = [];
+  private googleAuthSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -41,7 +43,7 @@ export class AuthModalComponent implements OnDestroy {
     // Listen for Google sign-in — רק אם המשתמש לא כבר מחובר
     // (authState הוא ReplaySubject שמשדר מיד בפתיחת המודל — בלי הבדיקה הזאת
     //  כל פתיחת מודל הייתה מפעילה google-login מחדש אם יש סשן Google פעיל בדפדפן)
-    this.socialAuthService.authState.subscribe((user) => {
+    this.googleAuthSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user && user.idToken && !this.authService.isLoggedIn && !GoogleOneTapService.isProcessing()) {
         this.handleGoogleLogin(user.idToken);
       }
@@ -49,6 +51,7 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.googleAuthSubscription?.unsubscribe();
     GoogleOneTapService.setModalActive(false);
   }
 

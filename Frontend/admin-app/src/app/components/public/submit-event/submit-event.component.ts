@@ -7,6 +7,7 @@ import { ArtistService } from '../../../services/artist.service';
 import { CreateEventDto } from '../../../models/event.model';
 import { ArtistListDto } from '../../../models/artist.model';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
+import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 
 @Component({
   selector: 'app-submit-event',
@@ -19,6 +20,7 @@ export class SubmitEventComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly artistService = inject(ArtistService);
   private readonly router = inject(Router);
+  private readonly quickAddAssistantService = inject(QuickAddAssistantService);
 
   saving = false;
   submitted = false;
@@ -45,7 +47,8 @@ export class SubmitEventComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadArtists();
+    this.quickAddAssistantService.requestOpen('event');
+    this.router.navigate(['/']);
   }
 
   loadArtists(): void {

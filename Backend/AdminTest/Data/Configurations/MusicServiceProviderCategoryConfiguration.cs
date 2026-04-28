@@ -26,9 +26,21 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(c => c.IconUrl)
                 .HasMaxLength(500);
 
+            builder.Property(c => c.QuickCategoryLabel)
+                .HasMaxLength(120);
+
+            builder.Property(c => c.QuickCategoryImageUrl)
+                .HasMaxLength(500);
+
             // Default values
             builder.Property(c => c.IsActive)
                 .HasDefaultValue(true);
+
+            builder.Property(c => c.ShowInQuickCategories)
+                .HasDefaultValue(false);
+
+            builder.Property(c => c.QuickCategoryOrder)
+                .HasDefaultValue(0);
 
             builder.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETDATE()");

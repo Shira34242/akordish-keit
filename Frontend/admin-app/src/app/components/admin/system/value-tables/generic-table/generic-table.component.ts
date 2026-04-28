@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemItem } from '../../../../../services/system-tables.service';
 import { SiteAlertService } from '../../../../../services/site-alert.service';
+import { FileUploadInputComponent } from '../../../../shared/file-upload-input/file-upload-input.component';
 
 
 @Component({
     selector: 'app-generic-table',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, FileUploadInputComponent],
     templateUrl: './generic-table.component.html',
     styleUrls: ['./generic-table.component.css']
 })

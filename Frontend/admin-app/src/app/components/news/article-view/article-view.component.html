@@ -158,6 +158,29 @@
         </div>
         <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
       </div>
+
+      <!-- More content banner -->
+      <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
+        <div class="related-content-header">
+          <span class="related-content-label">תוכן נוסף</span>
+          <h2 class="related-content-title">יכול לעניין אותך</h2>
+        </div>
+
+        <div class="related-content-grid">
+          <app-news-banner
+            *ngFor="let relatedArticle of visibleRelatedArticles"
+            [article]="relatedArticle">
+          </app-news-banner>
+        </div>
+
+        <button
+          *ngIf="hasMoreRelatedArticles"
+          type="button"
+          class="related-content-more"
+          (click)="showMoreRelatedArticles()">
+          הצג עוד
+        </button>
+      </section>
     </div>
 
     <!-- Right Sidebar - Advertisement -->

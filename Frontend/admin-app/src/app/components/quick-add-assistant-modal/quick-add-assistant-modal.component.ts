@@ -339,30 +339,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (!this.event.imageUrl.trim()) {
-      alert('נא לצרף תמונה או קישור לתמונה.');
-      return;
-    }
-
-    if (!this.event.ticketUrl.trim()) {
-      alert('נא להוסיף לינק לכרטיסים.');
-      return;
-    }
-
-    if (!this.event.eventDate) {
-      alert('נא לבחור תאריך.');
-      return;
-    }
-
     this.isSubmitting = true;
     this.event.name = this.event.name?.trim() || this.event.artistName?.trim() || 'הופעה חדשה';
     this.event.artistIds = this.selectedEventArtistIds.length > 0 ? [...this.selectedEventArtistIds] : [];
 
-    this.eventService.submitEvent({
+    const payload: CreateEventDto = {
       ...this.event,
+      eventDate: this.event.eventDate || undefined,
       isActive: false,
       displayOrder: 0
-    }).subscribe({
+    };
+
+    this.eventService.submitEvent(payload).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.currentMode = 'success';
@@ -718,6 +706,28 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       this.currentMode = 'contact';
       this.modeOriginStep = 'root';
       this.autoFillContactFromCurrentUser();
+    } else if (this.entryPoint === 'news') {
+      this.messages.push({
+        id: 'bot-1',
+        tone: 'question',
+        text: 'נפתח טופס קצר להוספת חדשות מוזיקה.'
+      });
+      this.openArticleFlow(ArticleContentType.News);
+    } else if (this.entryPoint === 'article') {
+      this.messages.push({
+        id: 'bot-1',
+        tone: 'question',
+        text: 'נפתח טופס קצר להוספת תוכן.'
+      });
+      this.openArticleFlow(ArticleContentType.Blog);
+    } else if (this.entryPoint === 'event') {
+      this.messages.push({
+        id: 'bot-1',
+        tone: 'question',
+        text: 'נפתח טופס קצר להוספת הופעה.'
+      });
+      this.modeOriginStep = 'root';
+      this.currentMode = 'event';
     } else {
       this.appendBotStep(initialStep);
     }

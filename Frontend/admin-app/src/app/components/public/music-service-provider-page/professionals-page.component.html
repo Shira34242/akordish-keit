@@ -137,6 +137,16 @@
         </button>
       </div>
 
+      <div class="quick-categories quick-categories--hero" *ngIf="activeTab === 'professionals' && visibleQuickCategories.length > 0">
+        <button *ngFor="let cat of visibleQuickCategories"
+                class="quick-cat-btn"
+                [class.has-image]="cat.quickCategoryImageUrl"
+                [style.background-image]="getQuickCategoryBackground(cat)"
+                (click)="onQuickCategoryClick(cat)">
+          <span>{{ getQuickCategoryLabel(cat) }}</span>
+        </button>
+      </div>
+
     </div>
 
     <!-- לחצן הצטרפות — פינה שמאלית-תחתונה בתוך ה-hero -->
@@ -174,29 +184,6 @@
   ════════════════════════════════════════ -->
   <div *ngIf="(activeTab === 'professionals' && !loading) || (activeTab === 'teachers' && !loadingTeachers)"
        class="professionals-content">
-
-    <!-- Quick Categories / Instruments — שורה נגללת של ריבועים -->
-    <div class="quick-categories-strip">
-
-      <!-- בעלי מקצוע: quick categories -->
-      <div class="quick-categories" *ngIf="activeTab === 'professionals'">
-        <button *ngFor="let cat of quickSearchCategories"
-                class="quick-cat-btn"
-                (click)="onQuickSearch(cat.name)">
-          {{ cat.hebrewName }}
-        </button>
-      </div>
-
-      <!-- מורים: quick instruments -->
-      <div class="quick-categories" *ngIf="activeTab === 'teachers'">
-        <button *ngFor="let instr of quickSearchInstruments"
-                class="quick-cat-btn"
-                (click)="onQuickSearch(instr.name)">
-          מורים ל{{ instr.hebrewName }}
-        </button>
-      </div>
-
-    </div>
 
     <!-- ════════════════════
          TAB: בעלי מקצוע

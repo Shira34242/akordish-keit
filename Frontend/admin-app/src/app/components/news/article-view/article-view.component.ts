@@ -6,7 +6,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
-import { ArticleCardComponent } from '../../shared/article-card/article-card.component';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { LikedContentService } from '../../../services/liked-content.service';
 import { AuthService } from '../../../services/auth.service';
 import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
@@ -17,7 +17,7 @@ import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-bad
 @Component({
   selector: 'app-article-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdDisplayComponent, ArticleCardComponent, ReportModalComponent, ContentUploaderBadgeComponent],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent],
   templateUrl: './article-view.component.html',
   styleUrls: ['./article-view.component.css']
 })
@@ -58,6 +58,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   feedbackYesCount = 0;
   feedbackNoCount = 0;
   relatedArticles: Article[] = [];
+  relatedArticlesVisibleCount = 4;
   isReportModalOpen = false;
   fullHeroHeight = 0;
   lightboxIndex: number | null = null;
@@ -72,6 +73,18 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   feedbackCircleSize(type: 'yes' | 'no'): number {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
     return 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+  }
+
+  get visibleRelatedArticles(): Article[] {
+    return this.relatedArticles.slice(0, this.relatedArticlesVisibleCount);
+  }
+
+  get hasMoreRelatedArticles(): boolean {
+    return this.relatedArticlesVisibleCount < this.relatedArticles.length;
+  }
+
+  showMoreRelatedArticles(): void {
+    this.relatedArticlesVisibleCount = Math.min(this.relatedArticlesVisibleCount + 4, this.relatedArticles.length);
   }
 
   ngAfterViewInit(): void { /* hero מאותחל ע"י הסטר */ }
@@ -158,11 +171,12 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   loadRelatedArticles(article: Article): void {
+    this.relatedArticlesVisibleCount = 4;
     // Load articles from the same category and content type, excluding current article
     const categoryId = article.categoryIds && article.categoryIds.length > 0 ? article.categoryIds[0] : undefined;
     this.articleService.getArticles(
       1,
-      6, // Get 6 related articles
+      12, // Get 12 related articles
       undefined,
       categoryId,
       article.contentType,
@@ -172,7 +186,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: (result) => {
           // Filter out the current article
-          this.relatedArticles = result.items.filter(a => a.id !== article.id).slice(0, 6);
+          this.relatedArticles = result.items.filter(a => a.id !== article.id).slice(0, 12);
         },
         error: (error) => {
           console.error('Error loading related articles:', error);

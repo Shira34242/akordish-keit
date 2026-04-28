@@ -126,7 +126,7 @@
   font-size: 7rem;
   font-weight: 700;
   color: #000;
-  margin: 0 0 var(--space-2xl);
+  margin: 0 0 var(--space-lg);
   line-height: 0.9;
   letter-spacing: -2px;
 }
@@ -137,7 +137,7 @@
 .search-container {
   position: relative;
   max-width: 600px;
-  margin: 0 auto var(--space-xl);
+  margin: 0 auto var(--space-lg);
 }
 
 .search-input-wrapper {
@@ -356,8 +356,9 @@
 
 .section-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: var(--space-md);
   margin-bottom: var(--space-base);
 }
 
@@ -366,20 +367,14 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: var(--font-2xl);
+  font-size: var(--font-xl);
   color: #000;
   margin: 0;
 }
 
 /* ============================================
-   SECTION FOOTER CTA — לחצן "לכל ה..." מתחת לתוכן
+   SECTION CTA — לחצן "לכל ה..." בצד שמאל של הכותרת
 ============================================ */
-.section-footer {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--space-md);
-}
-
 .section-cta {
   display: inline-flex;
   align-items: center;
@@ -392,10 +387,11 @@
   color: #000;
   background: #F2F2F2;
   border-radius: 999px;
-  padding: 10px 26px;
+  padding: 8px 22px;
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
   white-space: nowrap;
+  margin-inline-start: auto;
 }
 
 .section-cta:hover {
@@ -650,11 +646,10 @@
 .provider-showcase-section {
   position: relative;
   isolation: isolate;
-  padding-bottom: var(--space-3xl);
 }
 
 .provider-showcase-section .section-header {
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-base);
 }
 
 .promo-box--providers {
@@ -674,7 +669,7 @@
   min-height: 15.75rem;
   padding: 0.75rem 0.75rem 0.9rem;
   border-radius: 1.6rem;
-  background: #ffffff;
+  background: #F2F2F2;
   border: none;
   align-items: stretch;
   justify-content: flex-start;
@@ -693,7 +688,7 @@
   height: auto;
   aspect-ratio: 1.02 / 1;
   border-radius: 1.1rem;
-  background: #F2F2F2;
+  background: #ffffff;
   overflow: hidden;
 }
 
@@ -764,8 +759,8 @@
    PROMO BOX (תיבה צהובה)
 ============================================ */
 .promo-box {
-  margin: var(--space-2xl) 0;
-  min-height: 32vh;
+  margin: var(--space-xl) 0;
+  min-height: 46vh;
   background: #ddff53;
   border-radius: 28px;
   display: flex;
@@ -914,6 +909,20 @@
 
   .hero-quick-links {
     gap: var(--space-base);
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .section-title {
+    font-size: var(--font-lg);
+  }
+
+  .section-cta {
+    padding: 6px 16px;
+    font-size: var(--font-xs);
   }
 
   .content-section {

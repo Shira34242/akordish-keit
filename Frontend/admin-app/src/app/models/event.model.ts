@@ -48,7 +48,7 @@ export interface CreateEventDto {
   description?: string;
   imageUrl: string;
   ticketUrl: string;
-  eventDate: string;
+  eventDate?: string;
   location?: string;
 
   // שם אומן חופשי (טקסט) - למקרה שהאומן לא קיים במערכת

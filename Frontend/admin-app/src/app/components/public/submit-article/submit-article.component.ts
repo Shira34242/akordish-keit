@@ -8,6 +8,7 @@ import { ArtistService } from '../../../services/artist.service';
 import { UserService } from '../../../services/user.service';
 import { ArtistListDto } from '../../../models/artist.model';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
+import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import {
   CreateArticleDto,
   ArticleContentType,
@@ -28,6 +29,7 @@ export class SubmitArticleComponent implements OnInit {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private readonly quickAddAssistantService = inject(QuickAddAssistantService);
 
   // State
   categories: SystemItem[] = [];
@@ -76,14 +78,10 @@ export class SubmitArticleComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadCategories();
-    this.loadArtists();
-    this.autoFillUploaderProfile();
-
     this.route.queryParams.subscribe(params => {
-      if (params['type'] === 'content') {
-        this.article.contentType = ArticleContentType.Blog;
-      }
+      const entryPoint = params['type'] === 'content' ? 'article' : 'news';
+      this.quickAddAssistantService.requestOpen(entryPoint);
+      this.router.navigate(['/']);
     });
   }
 

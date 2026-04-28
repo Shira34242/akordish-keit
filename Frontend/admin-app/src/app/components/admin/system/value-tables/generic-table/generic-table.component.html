@@ -52,6 +52,7 @@
                         <td>
                             <ng-container [ngSwitch]="col.type">
                                 <span *ngSwitchCase="'boolean'">{{ item[col.key] ? 'כן' : 'לא' }}</span>
+                                <span *ngSwitchCase="'image'">{{ item[col.key] ? 'יש תמונה' : 'אין תמונה' }}</span>
                                 <span *ngSwitchDefault>{{ item[col.key] }}</span>
                             </ng-container>
                         </td>
@@ -96,6 +97,12 @@
                         <input type="checkbox" [(ngModel)]="currentItem[col.key]" [id]="'cb_' + col.key">
                         <label [for]="'cb_' + col.key">{{ col.label }}</label>
                     </div>
+                    <app-file-upload-input
+                        *ngSwitchCase="'image'"
+                        [(url)]="currentItem[col.key]"
+                        [placeholder]="'העלה תמונה או הדבק קישור'"
+                        [showPreview]="true">
+                    </app-file-upload-input>
                     <textarea *ngSwitchCase="'textarea'" [(ngModel)]="currentItem[col.key]" class="input" rows="3"></textarea>
                     <input *ngSwitchDefault type="text" [(ngModel)]="currentItem[col.key]" class="input">
                 </ng-container>

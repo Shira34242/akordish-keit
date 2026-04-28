@@ -8,6 +8,7 @@ import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts
 import { SiteAlertService } from './services/site-alert.service';
 import { GoogleOneTapService } from './services/google-one-tap.service';
 import { RequiredFieldFeedbackService } from './services/required-field-feedback.service';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -26,13 +27,17 @@ export class AppComponent implements OnInit {
     private modalService: ModalService,
     private siteAlertService: SiteAlertService,
     private googleOneTapService: GoogleOneTapService,
-    private requiredFieldFeedback: RequiredFieldFeedbackService
+    private requiredFieldFeedback: RequiredFieldFeedbackService,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
     this.siteAlertService.patchBrowserAlerts();
     this.requiredFieldFeedback.initGlobalValidation();
     this.googleOneTapService.init();
+    this.authService.refreshSession().subscribe({
+      error: () => {}
+    });
 
     // Subscribe to modal state changes
     this.modalService.modalState$.subscribe(state => {

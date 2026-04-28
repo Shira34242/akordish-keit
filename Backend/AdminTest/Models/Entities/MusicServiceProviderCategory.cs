@@ -37,6 +37,26 @@ namespace AkordishKeit.Models.Entities
         public bool IsActive { get; set; }
 
         /// <summary>
+        /// האם להציג את הקטגוריה ככפתור מהיר בדף האינדקס
+        /// </summary>
+        public bool ShowInQuickCategories { get; set; }
+
+        /// <summary>
+        /// שם תצוגה קצר לכפתור המהיר. אם ריק, יוצג שם הקטגוריה.
+        /// </summary>
+        public string? QuickCategoryLabel { get; set; }
+
+        /// <summary>
+        /// תמונת רקע לכפתור המהיר
+        /// </summary>
+        public string? QuickCategoryImageUrl { get; set; }
+
+        /// <summary>
+        /// סדר הכפתור המהיר בדף האינדקס
+        /// </summary>
+        public int QuickCategoryOrder { get; set; }
+
+        /// <summary>
         /// תאריך יצירה
         /// </summary>
         public DateTime CreatedAt { get; set; }

@@ -36,6 +36,10 @@ public class MusicServiceProviderCategoryDto
     public string? Description { get; set; }
     public string? IconUrl { get; set; }
     public bool IsActive { get; set; }
+    public bool ShowInQuickCategories { get; set; }
+    public string? QuickCategoryLabel { get; set; }
+    public string? QuickCategoryImageUrl { get; set; }
+    public int QuickCategoryOrder { get; set; }
 }
 
 // DTO for creating/updating MusicServiceProviderCategory
@@ -45,6 +49,10 @@ public class CreateMusicServiceProviderCategoryDto
     public string? Description { get; set; }
     public string? IconUrl { get; set; }
     public bool IsActive { get; set; }
+    public bool ShowInQuickCategories { get; set; }
+    public string? QuickCategoryLabel { get; set; }
+    public string? QuickCategoryImageUrl { get; set; }
+    public int QuickCategoryOrder { get; set; }
 }
 
 // DTO for City

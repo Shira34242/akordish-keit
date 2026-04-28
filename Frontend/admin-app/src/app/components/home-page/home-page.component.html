@@ -163,6 +163,7 @@
     <section class="home-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
         <h2 class="section-title">חדשות המוזיקה</h2>
+        <a routerLink="/music-news" class="section-cta">לכל החדשות ‹</a>
       </div>
       <div class="news-banner-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0">
@@ -196,9 +197,6 @@
           </div>
         </div>
       </div>
-      <div class="section-footer">
-        <a routerLink="/music-news" class="section-cta">לכל החדשות ‹</a>
-      </div>
     </section>
 
     <!-- תיבת Promo — אקורדים -->
@@ -217,12 +215,10 @@
     <section class="home-section" *ngIf="recentSongs.length > 0">
       <div class="section-header">
         <h2 class="section-title">אקורדים שהועלו לאחרונה</h2>
+        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
       </div>
       <div class="songs-grid">
         <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
-      </div>
-      <div class="section-footer">
-        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
       </div>
     </section>
 
@@ -230,12 +226,10 @@
     <section class="home-section" *ngIf="popularSongs.length > 0">
       <div class="section-header">
         <h2 class="section-title">אקורדים פופולאריים</h2>
+        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
       </div>
       <div class="songs-grid">
         <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
-      </div>
-      <div class="section-footer">
-        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
       </div>
     </section>
 
@@ -243,6 +237,7 @@
     <section class="home-section" *ngIf="topArtists.length > 0">
       <div class="section-header">
         <h2 class="section-title">אמנים פופולאריים</h2>
+        <a routerLink="/artists" class="section-cta">לכל האמנים ‹</a>
       </div>
       <div class="artists-loop-row">
         <div class="artists-loop-track">
@@ -250,15 +245,13 @@
           <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist" aria-hidden="true"></app-artist-circle>
         </div>
       </div>
-      <div class="section-footer">
-        <a routerLink="/artists" class="section-cta">לכל האמנים ‹</a>
-      </div>
     </section>
 
     <!-- מורים -->
     <section class="home-section" *ngIf="featuredTeachers.length > 0">
       <div class="section-header">
         <h2 class="section-title">מורים</h2>
+        <a routerLink="/teachers" class="section-cta">לכל המורים ‹</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
         <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
@@ -269,9 +262,6 @@
           <p class="person-name">{{ teacher.displayName }}</p>
           <p class="person-sub">{{ teacher.primaryInstrument || 'מורה למוזיקה' }}</p>
         </a>
-      </div>
-      <div class="section-footer">
-        <a routerLink="/teachers" class="section-cta">לכל המורים ‹</a>
       </div>
     </section>
 
@@ -291,6 +281,7 @@
     <section class="home-section provider-showcase-section" *ngIf="featuredProviders.length > 0">
       <div class="section-header">
         <h2 class="section-title">בעלי מקצוע</h2>
+        <a routerLink="/professionals" class="section-cta">לכל בעלי המקצוע ‹</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
         <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
@@ -302,21 +293,16 @@
           <p class="person-sub">{{ pro.categoryName || 'בעל מקצוע' }}</p>
         </a>
       </div>
-      <div class="section-footer">
-        <a routerLink="/professionals" class="section-cta">לכל בעלי המקצוע ‹</a>
-      </div>
     </section>
 
     <!-- תוכן — כתבות בלוג (לפני הופעות) -->
     <section class="home-section" *ngIf="blogArticles.length > 0">
       <div class="section-header">
         <h2 class="section-title">תוכן</h2>
+        <a routerLink="/articles" class="section-cta">לכל התוכן ‹</a>
       </div>
       <div class="news-grid">
         <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
-      </div>
-      <div class="section-footer">
-        <a routerLink="/articles" class="section-cta">לכל התוכן ‹</a>
       </div>
     </section>
 
@@ -324,6 +310,7 @@
     <section class="home-section" *ngIf="upcomingEvents.length > 0">
       <div class="section-header">
         <h2 class="section-title">הופעות קרובות</h2>
+        <a routerLink="/events" class="section-cta">לכל ההופעות ‹</a>
       </div>
       <div class="events-loop-row">
         <div class="events-loop-track">
@@ -339,9 +326,6 @@
             (cardClick)="openEventModal($event)">
           </app-event-card>
         </div>
-      </div>
-      <div class="section-footer">
-        <a routerLink="/events" class="section-cta">לכל ההופעות ‹</a>
       </div>
     </section>
 

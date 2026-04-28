@@ -44,7 +44,11 @@ public class MusicServiceProviderCategoriesController : ControllerBase
                 Name = c.Name,
                 Description = c.Description,
                 IconUrl = c.IconUrl,
-                IsActive = c.IsActive
+                IsActive = c.IsActive,
+                ShowInQuickCategories = c.ShowInQuickCategories,
+                QuickCategoryLabel = c.QuickCategoryLabel,
+                QuickCategoryImageUrl = c.QuickCategoryImageUrl,
+                QuickCategoryOrder = c.QuickCategoryOrder
             })
             .ToListAsync();
 
@@ -70,7 +74,11 @@ public class MusicServiceProviderCategoriesController : ControllerBase
                 Name = c.Name,
                 Description = c.Description,
                 IconUrl = c.IconUrl,
-                IsActive = c.IsActive
+                IsActive = c.IsActive,
+                ShowInQuickCategories = c.ShowInQuickCategories,
+                QuickCategoryLabel = c.QuickCategoryLabel,
+                QuickCategoryImageUrl = c.QuickCategoryImageUrl,
+                QuickCategoryOrder = c.QuickCategoryOrder
             })
             .FirstOrDefaultAsync();
 
@@ -91,7 +99,11 @@ public class MusicServiceProviderCategoriesController : ControllerBase
             Name = dto.Name,
             Description = dto.Description,
             IconUrl = dto.IconUrl,
-            IsActive = dto.IsActive
+            IsActive = dto.IsActive,
+            ShowInQuickCategories = dto.ShowInQuickCategories,
+            QuickCategoryLabel = dto.QuickCategoryLabel,
+            QuickCategoryImageUrl = dto.QuickCategoryImageUrl,
+            QuickCategoryOrder = dto.QuickCategoryOrder
         };
 
         _context.ServiceProviderCategories.Add(category);
@@ -103,7 +115,11 @@ public class MusicServiceProviderCategoriesController : ControllerBase
             Name = category.Name,
             Description = category.Description,
             IconUrl = category.IconUrl,
-            IsActive = category.IsActive
+            IsActive = category.IsActive,
+            ShowInQuickCategories = category.ShowInQuickCategories,
+            QuickCategoryLabel = category.QuickCategoryLabel,
+            QuickCategoryImageUrl = category.QuickCategoryImageUrl,
+            QuickCategoryOrder = category.QuickCategoryOrder
         };
 
         return CreatedAtAction("GetCategory", new { id = category.Id }, result);
@@ -124,6 +140,10 @@ public class MusicServiceProviderCategoriesController : ControllerBase
         category.Description = dto.Description;
         category.IconUrl = dto.IconUrl;
         category.IsActive = dto.IsActive;
+        category.ShowInQuickCategories = dto.ShowInQuickCategories;
+        category.QuickCategoryLabel = dto.QuickCategoryLabel;
+        category.QuickCategoryImageUrl = dto.QuickCategoryImageUrl;
+        category.QuickCategoryOrder = dto.QuickCategoryOrder;
 
         try
         {

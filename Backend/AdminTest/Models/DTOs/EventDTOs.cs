@@ -7,23 +7,19 @@ namespace AkordishKeit.Models.DTOs
     /// </summary>
     public class CreateEventDto
     {
-        [Required(ErrorMessage = "שם ההופעה הוא שדה חובה")]
         [StringLength(200, ErrorMessage = "שם ההופעה חייב להיות עד 200 תווים")]
         public string Name { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "התיאור חייב להיות עד 1000 תווים")]
         public string? Description { get; set; }
 
-        [Required(ErrorMessage = "תמונת ההופעה היא שדה חובה")]
         [StringLength(500, ErrorMessage = "URL התמונה חייב להיות עד 500 תווים")]
         public string ImageUrl { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "לינק לרכישת כרטיסים הוא שדה חובה")]
         [StringLength(500, ErrorMessage = "URL הכרטיסים חייב להיות עד 500 תווים")]
         public string TicketUrl { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "תאריך ההופעה הוא שדה חובה")]
-        public DateTime EventDate { get; set; }
+        public DateTime? EventDate { get; set; }
 
         [StringLength(200, ErrorMessage = "המיקום חייב להיות עד 200 תווים")]
         public string? Location { get; set; }

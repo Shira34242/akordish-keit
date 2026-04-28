@@ -577,6 +577,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   openAuthModal(): void {
+    if (this.loggedIn) return;
     this.showAuthModal = true;
   }
 
