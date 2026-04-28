@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class RequiredFieldFeedbackService {
   private initialized = false;
+  private readonly invalidForms = new WeakSet<HTMLFormElement>();
   private readonly message = 'שדה חובה';
 
   initGlobalValidation(): void {
@@ -19,6 +20,31 @@ export class RequiredFieldFeedbackService {
       event.preventDefault();
       event.stopImmediatePropagation();
       this.showRequired(firstInvalid);
+    }, true);
+
+    document.addEventListener('invalid', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const form = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
+        ? target.form
+        : null;
+
+      if (!form) {
+        this.showRequired(target);
+        return;
+      }
+
+      if (this.invalidForms.has(form)) return;
+
+      this.invalidForms.add(form);
+      window.setTimeout(() => {
+        this.invalidForms.delete(form);
+        this.validateRequiredFields(form);
+      });
     }, true);
 
     document.addEventListener('input', (event) => this.clearFromEvent(event), true);

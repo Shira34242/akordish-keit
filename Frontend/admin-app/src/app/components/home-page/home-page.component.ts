@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, HostBinding, ViewChild, ElementRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -51,6 +51,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
+
+  @HostBinding('class.is-scrolling') isScrolling = false;
+  private scrollEndTimer?: number;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -154,10 +157,17 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
+    if (this.scrollEndTimer) window.clearTimeout(this.scrollEndTimer);
   }
 
   @HostListener('window:scroll')
   onScroll(): void {
+    this.isScrolling = true;
+    if (this.scrollEndTimer) window.clearTimeout(this.scrollEndTimer);
+    this.scrollEndTimer = window.setTimeout(() => {
+      this.isScrolling = false;
+    }, 180);
+
     if (this.rafPending) return;
     this.rafPending = true;
     requestAnimationFrame(() => {

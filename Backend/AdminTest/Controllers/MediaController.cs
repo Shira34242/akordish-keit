@@ -57,7 +57,7 @@ namespace AkordishKeit.Controllers
                 uploadResult = await _cloudinary.UploadAsync(new RawUploadParams
                 {
                     File = fileDescription,
-                    PublicId = publicId,
+                    PublicId = $"{publicId}{fileExtension}",
                     Overwrite = false
                 });
             }
@@ -92,14 +92,10 @@ namespace AkordishKeit.Controllers
             if (!IsSafePdfUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid PDF URL" });
 
-            using var response = await _httpClient.GetAsync(uri);
-            if (!response.IsSuccessStatusCode)
-                return StatusCode((int)response.StatusCode, new { message = "PDF could not be loaded" });
+            var pdfBytes = await TryLoadPdfBytes(uri);
+            if (pdfBytes == null)
+                return StatusCode(502, new { message = "PDF could not be loaded" });
 
-            if (response.Content.Headers.ContentLength > MaxPdfViewBytes)
-                return BadRequest(new { message = "PDF file is too large" });
-
-            var pdfBytes = await response.Content.ReadAsByteArrayAsync();
             if (pdfBytes.Length > MaxPdfViewBytes)
                 return BadRequest(new { message = "PDF file is too large" });
 
@@ -109,6 +105,55 @@ namespace AkordishKeit.Controllers
             Response.Headers.ContentDisposition = "inline";
             Response.Headers.CacheControl = "public, max-age=3600";
             return File(pdfBytes, "application/pdf", enableRangeProcessing: true);
+        }
+
+        private async Task<byte[]?> TryLoadPdfBytes(Uri uri)
+        {
+            foreach (var candidate in GetPdfFetchCandidates(uri).DistinctBy(candidate => candidate.AbsoluteUri))
+            {
+                using var request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, candidate.AbsoluteUri);
+                request.Headers.UserAgent.ParseAdd("AkordishKeit/1.0");
+                request.Headers.Accept.ParseAdd("application/pdf");
+
+                using var response = await _httpClient.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                    continue;
+
+                if (response.Content.Headers.ContentLength > MaxPdfViewBytes)
+                    return null;
+
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                if (bytes.Length > MaxPdfViewBytes)
+                    return null;
+
+                if (IsPdfContent(bytes))
+                    return bytes;
+            }
+
+            return null;
+        }
+
+        private IEnumerable<Uri> GetPdfFetchCandidates(Uri uri)
+        {
+            yield return uri;
+
+            if (!IsCloudinaryRawUrl(uri, out var publicId))
+                yield break;
+
+            if (!uri.AbsolutePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var withPdfExtension = new UriBuilder(uri)
+                {
+                    Path = $"{uri.AbsolutePath}.pdf"
+                };
+                yield return withPdfExtension.Uri;
+            }
+
+            var publicIdWithoutExtension = Path.ChangeExtension(publicId, null);
+            var expiresAt = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds();
+            var signedUrl = _cloudinary.DownloadPrivate(publicIdWithoutExtension, false, "pdf", "upload", expiresAt, "raw");
+            if (Uri.TryCreate(signedUrl, UriKind.Absolute, out var signedUri))
+                yield return signedUri;
         }
 
         [HttpDelete("delete")]
@@ -165,6 +210,20 @@ namespace AkordishKeit.Controllers
 
             uri = parsed;
             return true;
+        }
+
+        private static bool IsCloudinaryRawUrl(Uri uri, out string publicId)
+        {
+            publicId = string.Empty;
+            if (!uri.Host.EndsWith("res.cloudinary.com", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var pathSegments = uri.AbsolutePath.Split("/raw/upload/", StringSplitOptions.None);
+            if (pathSegments.Length < 2)
+                return false;
+
+            publicId = System.Text.RegularExpressions.Regex.Replace(pathSegments[1], @"^v\d+/", "");
+            return !string.IsNullOrWhiteSpace(publicId);
         }
 
         private static bool IsPdfContent(byte[] bytes)

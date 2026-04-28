@@ -169,11 +169,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
   }
 
-  get canViewChordRequests(): boolean {
-    const user = this.authService.currentUserValue;
-    return !!user && (this.isAdminUser || (user.hasProfessionalProfile ?? false) || (user.contentTag ?? 0) >= 2);
-  }
-
   get filteredProfileSearchResults(): UserWithProfileDto[] {
     const filtered = this.profileSearchResults.filter(profile => {
       if (this.profileTypeFilter === 'all') return true;
@@ -801,10 +796,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
           { id: 'contact-form', label: 'יצירת קשר', action: 'contact-form', isSecondary: true },
           { id: 'contact', label: 'דיווח', action: 'contact', isSecondary: true }
         );
-
-        if (this.canViewChordRequests) {
-          options.splice(1, 0, { id: 'chord-requests-page', label: 'בקשות אקורדים', action: 'chord-requests' });
-        }
 
         return {
           question: 'איזה תוכן תרצה להוסיף לאתר?',

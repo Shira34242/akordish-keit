@@ -3,6 +3,8 @@
    Base: 16px
 ======================================== */
 :root {
+  --color-error: #d93025;
+
   /* Font Sizes */
   --font-xs:   0.75rem;   /* 12px  — תגיות, מטא-מידע, כיתובי תמונה */
   --font-sm:   0.875rem;  /* 14px  — טקסט משני, ניווט, כפתורים */
@@ -57,7 +59,7 @@ app-root {
 
 .ak-required-feedback {
   margin-top: var(--space-xs);
-  color: #000000;
+  color: var(--color-error);
   font-size: var(--font-xs);
   font-weight: 700;
   line-height: var(--lh-small);
@@ -66,5 +68,5 @@ app-root {
 .ak-required-invalid,
 .ak-required-group-invalid .dropdown-trigger,
 .ak-required-group-invalid .dropdown-selected {
-  border-color: #000000 !important;
+  border-color: var(--color-error) !important;
 }
