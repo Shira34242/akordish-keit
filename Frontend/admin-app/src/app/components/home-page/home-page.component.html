@@ -167,24 +167,40 @@
       </div>
       <div class="news-banner-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0">
-          <app-news-banner
-            *ngFor="let article of newsArticlesFirstRow"
-            class="news-banner-card"
-            [article]="article">
-          </app-news-banner>
+          <div class="news-banner-track">
+            <app-news-banner
+              *ngFor="let article of newsArticlesFirstRow"
+              class="news-banner-card"
+              [article]="article">
+            </app-news-banner>
+            <app-news-banner
+              *ngFor="let article of newsArticlesFirstRow"
+              class="news-banner-card"
+              [article]="article"
+              aria-hidden="true">
+            </app-news-banner>
+          </div>
         </div>
         <div class="news-banner-row news-banner-row--bottom" *ngIf="newsArticlesSecondRow.length > 0">
-          <app-news-banner
-            *ngFor="let article of newsArticlesSecondRow"
-            class="news-banner-card"
-            [article]="article">
-          </app-news-banner>
+          <div class="news-banner-track news-banner-track--reverse">
+            <app-news-banner
+              *ngFor="let article of newsArticlesSecondRow"
+              class="news-banner-card"
+              [article]="article">
+            </app-news-banner>
+            <app-news-banner
+              *ngFor="let article of newsArticlesSecondRow"
+              class="news-banner-card"
+              [article]="article"
+              aria-hidden="true">
+            </app-news-banner>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- תיבת Promo — אקורדים -->
-    <div class="promo-box">
+    <div id="promo-chords" class="promo-box">
       <div class="promo-content">
         <h2 class="promo-title">אקורדים</h2>
         <p class="promo-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
@@ -232,8 +248,8 @@
         <h2 class="section-title">מורים</h2>
         <a routerLink="/teachers" class="section-link">לכל המורים ‹</a>
       </div>
-      <div class="persons-scroll">
-        <a class="person-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
+      <div class="persons-scroll provider-showcase-scroll">
+        <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
           <div class="person-avatar">
             <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
             <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
@@ -245,7 +261,7 @@
     </section>
 
     <!-- תיבת Promo — אינדקס עולם המוזיקה -->
-    <div class="promo-box promo-box--providers">
+    <div id="promo-index" class="promo-box promo-box--providers">
       <div class="promo-content">
         <h2 class="promo-title">אינדקס עולם המוזיקה</h2>
         <p class="promo-subtitle">המאגר הגדול לנותני שירות במוזיקה היהודית</p>

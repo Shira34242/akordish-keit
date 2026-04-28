@@ -396,31 +396,39 @@
 }
 
 .news-banner-row {
-  display: flex;
-  gap: var(--space-md);
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
+  overflow: hidden;
   padding-bottom: 4px;
+  direction: ltr;
 }
 
-.news-banner-row::-webkit-scrollbar {
-  display: none;
+.news-banner-track {
+  display: flex;
+  direction: ltr;
+  gap: var(--space-md);
+  width: max-content;
+  animation: marquee-left 45s linear infinite;
 }
 
-.news-banner-row--bottom {
-  padding-inline-start: calc((((100% - (var(--space-md) * 4.5)) / 5.5) / 2) + (var(--space-md) / 2));
+.news-banner-track--reverse {
+  animation-name: marquee-right;
+}
+
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.news-banner-row:hover .news-banner-track {
+  animation-duration: 500s;
 }
 
 .news-banner-card {
-  flex: 0 0 calc((100% - (var(--space-md) * 4.5)) / 5.5);
-  min-width: 13rem;
-  max-width: 21rem;
-  scroll-snap-align: start;
-}
-
-.news-banner-row app-news-banner:last-child {
-  margin-inline-end: clamp(4rem, 8vw, 8rem);
+  flex: 0 0 21rem;
 }
 
 .news-banner-card ::ng-deep .news-banner {
@@ -468,9 +476,20 @@
    SONGS GRID (אקורדים)
 ============================================ */
 .songs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.songs-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.songs-grid app-song-card {
+  flex: 0 0 240px;
 }
 
 /* ============================================
@@ -578,39 +597,14 @@
   text-overflow: ellipsis;
 }
 
+
 /* ============================================
    PROVIDERS SHOWCASE
 ============================================ */
 .provider-showcase-section {
   position: relative;
   isolation: isolate;
-  margin-top: -8rem;
-  padding-top: calc(8rem + var(--space-xl));
   padding-bottom: var(--space-3xl);
-}
-
-.provider-showcase-section::before {
-  content: "";
-  position: absolute;
-  inset-inline: -8px;
-  top: 0;
-  bottom: 0;
-  background: #404040;
-  z-index: -2;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10rem);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 10rem);
-}
-
-.provider-showcase-section::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0.75rem;
-  top: 5.5rem;
-  height: 8rem;
-  background: rgba(64, 64, 64, 0.6);
-  filter: blur(48px);
-  z-index: -1;
-  pointer-events: none;
 }
 
 .provider-showcase-section .section-header {
@@ -621,23 +615,6 @@
   position: relative;
   z-index: 2;
   margin-bottom: 0;
-}
-
-.promo-box--providers::before {
-  content: none;
-}
-
-.promo-box--providers::after {
-  content: none;
-}
-
-.provider-showcase-section .section-title,
-.provider-showcase-section .section-link {
-  color: #ffffff;
-}
-
-.provider-showcase-section .section-link {
-  opacity: 0.72;
 }
 
 .provider-showcase-scroll {
@@ -742,17 +719,25 @@
 ============================================ */
 .promo-box {
   margin: var(--space-4xl) 0;
-  min-height: 25vh;
+  min-height: 38vh;
   background: #ddff53;
   border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  background-image: url('/collection-guitars-guitars-are-display-room.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: var(--space-3xl) var(--space-4xl);
   direction: rtl;
 }
 
+#promo-chords {
+  background-image: url('/artist-composer-creating-new-song-his-electro-guitar-studio.png');
+}
+#promo-index {
+  background-image: url('/collection-guitars-guitars-are-display-room.png');
+}
 .promo-content {
   max-width: 600px;
   text-align: right;
@@ -834,7 +819,8 @@
 
 .events-list app-event-card {
   flex-shrink: 0;
-  width: 155px;
+  width: calc((100% - (var(--space-md) * 7)) / 6);
+  min-width: 8.5rem;
   scroll-snap-align: start;
 }
 
@@ -901,18 +887,12 @@
   }
 
   .news-banner-card {
-    flex-basis: calc((100% - (var(--space-md) * 3)) / 4);
-    min-width: 12.5rem;
+    flex: 0 0 14rem;
   }
 
   .provider-showcase-card {
     width: 12.75rem;
     min-height: 17.5rem;
-  }
-
-  .provider-showcase-section {
-    margin-top: -7rem;
-    padding-top: calc(7rem + var(--space-xl));
   }
 
   .songs-grid {
@@ -954,8 +934,7 @@
   }
 
   .news-banner-card {
-    flex-basis: calc((100% - var(--space-sm)) / 1.9);
-    min-width: 0;
+    flex: 0 0 12rem;
   }
 
   .provider-showcase-card {
@@ -963,18 +942,6 @@
     min-height: 15.75rem;
     padding: var(--space-sm);
     border-radius: 22px;
-  }
-
-  .provider-showcase-section {
-    margin-top: -6rem;
-    padding-top: calc(6rem + var(--space-xl));
-  }
-
-  .provider-showcase-section::after {
-    inset-inline: 0.5rem;
-    top: 4rem;
-    height: 6rem;
-    filter: blur(32px);
   }
 
   .provider-showcase-card .person-avatar {

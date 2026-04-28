@@ -10,7 +10,7 @@
 .song-card {
     background: #F2F2F2;
     border-radius: 16px;
-    aspect-ratio: 4 / 2;
+    aspect-ratio: 4 / 3;
     padding: 10px;
     display: flex;
     flex-direction: row;
