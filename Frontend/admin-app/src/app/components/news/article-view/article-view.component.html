@@ -45,20 +45,38 @@
           </div>
         </div>
 
+        <!-- Audio Section -->
+        <div class="audio-section" *ngIf="article.audioEmbedUrl">
+          <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
+            <div class="audio-player-card">
+              <audio class="audio-player" [src]="article.audioEmbedUrl" controls preload="metadata"></audio>
+              <a
+                class="audio-download-btn"
+                [href]="getAudioDownloadUrl(article.audioEmbedUrl)"
+                download
+                target="_blank"
+                rel="noopener"
+                aria-label="הורדת השיר"
+                title="הורדת השיר">
+                <span class="material-icons">download</span>
+                הורדת השיר
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #audioEmbed>
+            <iframe
+              [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
+              frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              class="audio-frame">
+            </iframe>
+          </ng-template>
+        </div>
+
         <!-- Article Content -->
         <div class="article-content">
           <div [innerHTML]="article.content"></div>
-        </div>
-
-        <!-- Audio Section -->
-        <div class="audio-section" *ngIf="article.audioEmbedUrl">
-          <iframe
-            [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
-            frameborder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            class="audio-frame">
-          </iframe>
         </div>
 
         <!-- Gallery Section -->

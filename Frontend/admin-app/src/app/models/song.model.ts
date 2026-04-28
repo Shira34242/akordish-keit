@@ -33,6 +33,7 @@ export interface AddSongRequest {
     youtubeUrl: string;
     spotifyUrl?: string;
     imageUrl?: string;
+    sheetMusicUrl?: string;
     tags?: TagInput[];  // שונה מ-tagIds
     lyricsWithChords: string;
     originalKeyId: number;
@@ -59,6 +60,7 @@ export interface SongDto {
     youtubeUrl: string;
     spotifyUrl?: string;
     imageUrl?: string;
+    sheetMusicUrl?: string;
     composer?: PersonBasicDto;
     lyricist?: PersonBasicDto;
     arranger?: PersonBasicDto;

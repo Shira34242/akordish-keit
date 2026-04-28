@@ -108,6 +108,7 @@ public class AddSongRequestDto
     public string? SpotifyUrl { get; set; }
 
     public string? ImageUrl { get; set; }
+    public string? SheetMusicUrl { get; set; }
 
     public List<TagInputDto>? Tags { get; set; }
 
@@ -161,6 +162,7 @@ public class UpdateSongRequestDto
     public string? SpotifyUrl { get; set; }
 
     public string? ImageUrl { get; set; }
+    public string? SheetMusicUrl { get; set; }
 
     public List<TagInputDto>? Tags { get; set; }
     public List<GenreInputDto>? Genres { get; set; }
@@ -225,6 +227,7 @@ public class SongDto
     public string YoutubeUrl { get; set; } = string.Empty;
     public string? SpotifyUrl { get; set; }
     public string? ImageUrl { get; set; }
+    public string? SheetMusicUrl { get; set; }
 
     // קרדיטים
     public PersonBasicDto? Composer { get; set; }

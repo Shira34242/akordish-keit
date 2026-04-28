@@ -71,7 +71,7 @@
 
               <div class="artist-profile-fields">
                 <div class="form-group">
-                  <label class="form-label form-label--inline" for="displayName">שם העסק או נותן השירות</label>
+                  <label class="form-label form-label--inline required" for="displayName">שם העסק או נותן השירות</label>
                   <label class="form-label form-label--sr-only" for="displayName">שם העסק או נותן השירות</label>
                   <input type="text" id="displayName" [(ngModel)]="displayName" name="displayName" class="form-input" required placeholder="שם העסק או נותן השירות *" />
                 </div>
@@ -111,8 +111,8 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label form-label--inline">תחום שירות</label>
+            <div class="form-group" data-required-service-category data-required-anchor tabindex="-1">
+              <label class="form-label form-label--inline" [class.required]="!allowUncategorized">תחום שירות</label>
               <label class="form-label form-label--sr-only">תחום שירות</label>
               <div class="custom-dropdown">
                 <div class="dropdown-trigger" (click)="toggleCategoriesDropdown()">
@@ -175,12 +175,12 @@
 
             <div class="form-grid form-grid--contact">
               <div class="form-group">
-                <label class="form-label form-label--inline" for="email">אימייל</label>
+                <label class="form-label form-label--inline required" for="email">אימייל</label>
                 <input type="email" id="email" [(ngModel)]="email" name="email" class="form-input" required placeholder="אימייל *" />
               </div>
 
               <div class="form-group">
-                <label class="form-label form-label--inline" for="phoneNumber">טלפון</label>
+                <label class="form-label form-label--inline required" for="phoneNumber">טלפון</label>
                 <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" class="form-input" required placeholder="טלפון *" />
               </div>
             </div>

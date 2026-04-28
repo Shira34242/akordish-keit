@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewsPageSectionService } from '../../../../services/news-page-section.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { RequiredFieldFeedbackService } from '../../../../services/required-field-feedback.service';
 
 import {
   NewsPageSection,
@@ -24,6 +25,8 @@ interface ContentTypeOption { id: number; name: string; }
 export class NewsPageSectionsMangementComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly service = inject(NewsPageSectionService);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   sections: NewsPageSection[] = [];
   loading = false;
@@ -108,15 +111,15 @@ export class NewsPageSectionsMangementComponent implements OnInit {
 
   saveForm(): void {
     if (!this.formTitle.trim()) {
-      alert('יש להזין כותרת לפס');
+      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[name="sectionTitle"]');
       return;
     }
     if (this.formSectionType === NewsSectionType.ByCategory && !this.formCategoryId) {
-      alert('יש לבחור קטגוריה');
+      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[name="sectionCategory"]');
       return;
     }
     if (this.formSectionType === NewsSectionType.ByContentType && this.formContentTypeId === null) {
-      alert('יש לבחור סוג תוכן');
+      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[name="sectionContentType"]');
       return;
     }
 

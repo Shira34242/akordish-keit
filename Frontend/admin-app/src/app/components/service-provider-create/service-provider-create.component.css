@@ -469,6 +469,10 @@
   position: static;
 }
 
+.form-label.required::after {
+  content: ' *';
+}
+
 .form-input,
 .form-textarea,
 .dropdown-trigger,

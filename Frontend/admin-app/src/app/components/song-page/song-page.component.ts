@@ -91,6 +91,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
+    showSheetMusicModal: boolean = false;
+    sheetMusicViewerUrl: SafeResourceUrl | null = null;
+    sheetMusicDirectUrl: string | null = null;
+    isSheetMusicImage: boolean = false;
 
     // Bookmark State
     isSongSaved: boolean = false;
@@ -1046,6 +1050,26 @@ private getKeyIndex(keyName: string): number {
     closeYoutubeVideo(): void {
         this.showYoutubeModal = false;
         this.youtubeEmbedUrl = null;
+    }
+
+    openSheetMusic(): void {
+        if (!this.song?.sheetMusicUrl) return;
+        const directUrl = this.song.sheetMusicUrl;
+        this.sheetMusicDirectUrl = directUrl;
+        this.isSheetMusicImage = this.isImageFileUrl(directUrl);
+        this.sheetMusicViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(directUrl);
+        this.showSheetMusicModal = true;
+    }
+
+    closeSheetMusic(): void {
+        this.showSheetMusicModal = false;
+        this.sheetMusicViewerUrl = null;
+        this.sheetMusicDirectUrl = null;
+        this.isSheetMusicImage = false;
+    }
+
+    private isImageFileUrl(url: string): boolean {
+        return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
     }
 
     private extractYoutubeVideoId(url: string): string | null {

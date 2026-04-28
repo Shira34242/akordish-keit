@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 export class GoogleOneTapService {
     private initialized = false;
     private static processing = false;
+    private static modalActive = false;
 
     constructor(
         private socialAuthService: SocialAuthService,
@@ -20,6 +21,7 @@ export class GoogleOneTapService {
             if (!user?.idToken) return;
             if (this.authService.isLoggedIn) return;
             if (GoogleOneTapService.processing) return;
+            if (GoogleOneTapService.modalActive) return;
 
             GoogleOneTapService.processing = true;
             this.authService.googleLogin(user.idToken).subscribe({
@@ -38,5 +40,9 @@ export class GoogleOneTapService {
 
     static setProcessing(value: boolean): void {
         GoogleOneTapService.processing = value;
+    }
+
+    static setModalActive(value: boolean): void {
+        GoogleOneTapService.modalActive = value;
     }
 }

@@ -88,6 +88,7 @@ public class SongService : ISongService
                 YouTubeUrl = dto.YoutubeUrl.Trim(),
                 SpotifyUrl = dto.SpotifyUrl?.Trim(),
                 ImageUrl = imageUrl ?? "default-song-image.jpg",
+                SheetMusicUrl = string.IsNullOrWhiteSpace(dto.SheetMusicUrl) ? null : dto.SheetMusicUrl.Trim(),
                 ComposerId = composerId,
                 LyricistId = lyricistId,
                 ArrangerId = arrangerId,
@@ -376,6 +377,7 @@ public class SongService : ISongService
             song.YouTubeUrl = dto.YoutubeUrl.Trim();
             song.SpotifyUrl = dto.SpotifyUrl?.Trim();
             song.ImageUrl = dto.ImageUrl ?? song.ImageUrl;
+            song.SheetMusicUrl = string.IsNullOrWhiteSpace(dto.SheetMusicUrl) ? null : dto.SheetMusicUrl.Trim();
             song.ComposerId = await GetOrCreatePersonAsync(dto.Composer, userId);
             song.LyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);
             song.ArrangerId = await GetOrCreatePersonAsync(dto.Arranger, userId);
@@ -675,6 +677,7 @@ public class SongService : ISongService
                     YoutubeUrl = s.YouTubeUrl,
                     SpotifyUrl = s.SpotifyUrl,
                     ImageUrl = s.ImageUrl,
+                    SheetMusicUrl = s.SheetMusicUrl,
 
                     Composer = s.Composer != null ? new PersonBasicDto
                     {
@@ -796,6 +799,7 @@ public class SongService : ISongService
                 YoutubeUrl = song.YouTubeUrl,
                 SpotifyUrl = song.SpotifyUrl,
                 ImageUrl = song.ImageUrl,
+                SheetMusicUrl = song.SheetMusicUrl,
 
                 Composer = song.Composer != null ? new PersonBasicDto
                 {
@@ -1112,6 +1116,7 @@ public class SongService : ISongService
                 YoutubeUrl = song.YouTubeUrl,
                 SpotifyUrl = song.SpotifyUrl,
                 ImageUrl = song.ImageUrl,
+                SheetMusicUrl = song.SheetMusicUrl,
 
                 Composer = song.Composer != null ? new PersonBasicDto
                 {
@@ -1530,6 +1535,7 @@ public class SongService : ISongService
             YouTubeUrl = original.YouTubeUrl,
             SpotifyUrl = original.SpotifyUrl,
             ImageUrl = original.ImageUrl,
+            SheetMusicUrl = original.SheetMusicUrl,
             ComposerId = original.ComposerId,
             LyricistId = original.LyricistId,
             ArrangerId = original.ArrangerId,

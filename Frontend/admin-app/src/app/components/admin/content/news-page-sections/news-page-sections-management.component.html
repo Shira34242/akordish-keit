@@ -81,8 +81,8 @@
 
       <!-- כותרת -->
       <div class="form-group">
-        <label>כותרת הפס</label>
-        <input type="text" [(ngModel)]="formTitle" placeholder="לדוגמה: פופולאריים" class="form-input" />
+        <label>כותרת הפס *</label>
+        <input type="text" [(ngModel)]="formTitle" name="sectionTitle" placeholder="לדוגמה: פופולאריים" class="form-input" required />
       </div>
 
       <!-- סוג -->
@@ -102,8 +102,8 @@
 
       <!-- קטגוריה -->
       <div class="form-group" *ngIf="formSectionType === NewsSectionType.ByCategory">
-        <label>קטגוריה</label>
-        <select [(ngModel)]="formCategoryId" class="form-input">
+        <label>קטגוריה *</label>
+        <select [(ngModel)]="formCategoryId" name="sectionCategory" class="form-input" required>
           <option [ngValue]="null">-- בחר קטגוריה --</option>
           <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
         </select>
@@ -111,8 +111,8 @@
 
       <!-- סוג תוכן -->
       <div class="form-group" *ngIf="formSectionType === NewsSectionType.ByContentType">
-        <label>סוג תוכן</label>
-        <select [(ngModel)]="formContentTypeId" class="form-input">
+        <label>סוג תוכן *</label>
+        <select [(ngModel)]="formContentTypeId" name="sectionContentType" class="form-input" required>
           <option [ngValue]="null">-- בחר סוג --</option>
           <option *ngFor="let ct of contentTypes" [ngValue]="ct.id">{{ ct.name }}</option>
         </select>

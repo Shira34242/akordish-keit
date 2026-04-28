@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SystemTablesService, SystemItem } from '../../services/system-tables.service';
 import { CitiesService, City } from '../../services/cities.service';
+import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import {
   CreateTeacherDto,
   CreateTeacherInstrumentDto,
@@ -112,7 +113,8 @@ export class TeacherCreateComponent implements OnInit {
     private systemTablesService: SystemTablesService,
     private citiesService: CitiesService,
     public router: Router,
-    private host: ElementRef<HTMLElement>
+    private host: ElementRef<HTMLElement>,
+    private requiredFieldFeedback: RequiredFieldFeedbackService
   ) {}
 
   ngOnInit() {
@@ -293,6 +295,9 @@ export class TeacherCreateComponent implements OnInit {
       this.selectedInstrumentIds.splice(index, 1);
     } else {
       this.selectedInstrumentIds.push(instrumentId);
+    }
+    if (this.selectedInstrumentIds.length > 0) {
+      this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('.instrument-picker'));
     }
   }
 
@@ -530,25 +535,34 @@ export class TeacherCreateComponent implements OnInit {
   validateForm(): boolean {
     if (!this.displayName.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e9\u05dd \u05ea\u05e6\u05d5\u05d2\u05d4';
+      this.showRequiredStep(1, '#displayName');
       return false;
     }
 
     if (!this.email || !this.email.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d0\u05d9\u05de\u05d9\u05d9\u05dc';
+      this.showRequiredStep(2, '#email');
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d8\u05dc\u05e4\u05d5\u05df';
+      this.showRequiredStep(2, '#phoneNumber');
       return false;
     }
 
     if (this.selectedInstrumentIds.length === 0) {
       this.error = '\u05e0\u05d0 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05dc\u05e4\u05d7\u05d5\u05ea \u05db\u05dc\u05d9 \u05e0\u05d2\u05d9\u05e0\u05d4 \u05d0\u05d7\u05d3';
+      this.showRequiredStep(1, '.instrument-picker');
       return false;
     }
 
     return true;
+  }
+
+  private showRequiredStep(step: number, selector: string): void {
+    this.currentStep = step;
+    setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
   }
 
   @HostListener('document:click', ['$event'])

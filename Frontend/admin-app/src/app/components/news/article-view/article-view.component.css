@@ -279,7 +279,7 @@
 
 /* Audio Section */
 .audio-section {
-  padding: 0 var(--space-xl) var(--space-base);
+  padding: var(--space-base) var(--space-xl) 0;
 }
 
 .audio-frame {
@@ -287,6 +287,61 @@
   height: 152px;
   border-radius: 14px;
   display: block;
+}
+
+.audio-player-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0;
+}
+
+.audio-player {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  display: block;
+  background: #ffffff;
+  background-color: #ffffff;
+  color-scheme: light;
+  accent-color: #ddff53;
+  border-radius: 999px;
+}
+
+.audio-player::-webkit-media-controls-enclosure,
+.audio-player::-webkit-media-controls-panel {
+  background-color: #ffffff;
+  border-radius: 999px;
+}
+
+.audio-download-btn {
+  flex: 0 0 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: #000000;
+  color: #ddff53;
+  text-decoration: none;
+  font-size: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.audio-download-btn:hover {
+  background: #ddff53;
+  color: #000000;
+}
+
+.audio-download-btn .material-icons {
+  font-size: 20px;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  display: block;
+  text-align: center;
 }
 
 /* Gallery Section */

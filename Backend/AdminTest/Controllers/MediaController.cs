@@ -11,7 +11,9 @@ namespace AkordishKeit.Controllers
         private readonly Cloudinary _cloudinary;
 
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
-        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp" };
+        private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
+        private static readonly string[] DocumentExtensions = { ".pdf" };
+        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
 
         public MediaController(IConfiguration configuration)
         {
@@ -33,10 +35,10 @@ namespace AkordishKeit.Controllers
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
             if (!AllowedExtensions.Contains(fileExtension))
-                return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP" });
+                return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP, MP3, WAV, M4A, AAC, OGG, PDF" });
 
-            if (file.Length > 10 * 1024 * 1024)
-                return BadRequest(new { message = "File size exceeds 10MB limit" });
+            if (file.Length > 30 * 1024 * 1024)
+                return BadRequest(new { message = "File size exceeds 30MB limit" });
 
             var now = DateTime.UtcNow;
             var folder = $"uploads/{now.Year}/{now.Month:D2}";
@@ -47,7 +49,16 @@ namespace AkordishKeit.Controllers
 
             UploadResult uploadResult;
 
-            if (VideoExtensions.Contains(fileExtension))
+            if (DocumentExtensions.Contains(fileExtension))
+            {
+                uploadResult = await _cloudinary.UploadAsync(new RawUploadParams
+                {
+                    File = fileDescription,
+                    PublicId = publicId,
+                    Overwrite = false
+                });
+            }
+            else if (VideoExtensions.Contains(fileExtension) || AudioExtensions.Contains(fileExtension))
             {
                 uploadResult = await _cloudinary.UploadAsync(new VideoUploadParams
                 {
@@ -90,7 +101,11 @@ namespace AkordishKeit.Controllers
                 var withoutVersion = System.Text.RegularExpressions.Regex.Replace(pathSegments[1], @"^v\d+/", "");
                 var publicId = Path.ChangeExtension(withoutVersion, null);
 
-                var resourceType = uri.AbsolutePath.Contains("/video/") ? ResourceType.Video : ResourceType.Image;
+                var resourceType = uri.AbsolutePath.Contains("/video/")
+                    ? ResourceType.Video
+                    : uri.AbsolutePath.Contains("/raw/")
+                        ? ResourceType.Raw
+                        : ResourceType.Image;
 
                 var deleteResult = await _cloudinary.DestroyAsync(new DeletionParams(publicId)
                 {

@@ -217,6 +217,17 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     return url;
   }
 
+  isAudioFileUrl(url: string | undefined): boolean {
+    return !!url && /\.(mp3|wav|m4a|aac|ogg)(\?.*)?$/i.test(url);
+  }
+
+  getAudioDownloadUrl(url: string | undefined): string {
+    if (!url) return '';
+    if (!url.includes('/upload/')) return url;
+    if (!url.includes('res.cloudinary.com')) return url;
+    return url.replace('/upload/', '/upload/fl_attachment/');
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('he-IL', {
       year: 'numeric',

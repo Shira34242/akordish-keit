@@ -54,3 +54,17 @@ app-root {
   flex-direction: column;
   min-height: 100vh;
 }
+
+.ak-required-feedback {
+  margin-top: var(--space-xs);
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: var(--lh-small);
+}
+
+.ak-required-invalid,
+.ak-required-group-invalid .dropdown-trigger,
+.ak-required-group-invalid .dropdown-selected {
+  border-color: #000000 !important;
+}

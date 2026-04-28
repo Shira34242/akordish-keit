@@ -157,6 +157,15 @@ using (var scope = app.Services.CreateScope())
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Songs]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Songs]', N'SheetMusicUrl') IS NULL
+        BEGIN
+            ALTER TABLE [Songs]
+            ADD [SheetMusicUrl] nvarchar(500) NULL;
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Notifications]', N'U') IS NULL
         BEGIN
             CREATE TABLE [Notifications] (

@@ -471,6 +471,11 @@
   position: static;
 }
 
+.form-label.required::after,
+.section-kicker.required::after {
+  content: ' *';
+}
+
 .form-input,
 .form-textarea,
 .dropdown-trigger,

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
@@ -12,7 +12,7 @@ import { GoogleOneTapService } from '../../services/google-one-tap.service';
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.css']
 })
-export class AuthModalComponent {
+export class AuthModalComponent implements OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() authSuccess = new EventEmitter<any>();
   @Output() forgotPassword = new EventEmitter<void>();
@@ -35,6 +35,9 @@ export class AuthModalComponent {
     private authService: AuthService,
     private socialAuthService: SocialAuthService
   ) {
+    // 🔒 בזמן שהמודל פתוח — One Tap הסרוויס לא יטפל בהתחברות, המודל יטפל
+    GoogleOneTapService.setModalActive(true);
+
     // Listen for Google sign-in — רק אם המשתמש לא כבר מחובר
     // (authState הוא ReplaySubject שמשדר מיד בפתיחת המודל — בלי הבדיקה הזאת
     //  כל פתיחת מודל הייתה מפעילה google-login מחדש אם יש סשן Google פעיל בדפדפן)
@@ -43,6 +46,10 @@ export class AuthModalComponent {
         this.handleGoogleLogin(user.idToken);
       }
     });
+  }
+
+  ngOnDestroy() {
+    GoogleOneTapService.setModalActive(false);
   }
 
   toggleMode() {

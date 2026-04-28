@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ArtistService } from '../../services/artist.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
+import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
 import { UpdateArtistDto } from '../../models/artist.model';
 
@@ -94,7 +95,8 @@ export class ArtistCreateComponent implements OnInit {
     private subscriptionService: SubscriptionService,
     private artistService: ArtistService,
     private router: Router,
-    private host: ElementRef<HTMLElement>
+    private host: ElementRef<HTMLElement>,
+    private requiredFieldFeedback: RequiredFieldFeedbackService
   ) {}
 
   ngOnInit() {
@@ -299,6 +301,8 @@ export class ArtistCreateComponent implements OnInit {
     // Validation
     if (!this.artistForm.name.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05d0\u05ea \u05e9\u05dd \u05d4\u05d0\u05de\u05df';
+      this.currentStep = 1;
+      setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '#artistName'));
       return;
     }
 

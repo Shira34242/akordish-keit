@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SystemTablesService, SystemItem } from '../../services/system-tables.service';
 import { CitiesService, City } from '../../services/cities.service';
+import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import {
   CreateMusicServiceProviderDto,
   ProfileStatus,
@@ -107,7 +108,8 @@ export class ServiceProviderCreateComponent implements OnInit {
     private citiesService: CitiesService,
     private route: ActivatedRoute,
     public router: Router,
-    private host: ElementRef<HTMLElement>
+    private host: ElementRef<HTMLElement>,
+    private requiredFieldFeedback: RequiredFieldFeedbackService
   ) {}
 
   ngOnInit() {
@@ -287,6 +289,7 @@ export class ServiceProviderCreateComponent implements OnInit {
     this.selectedCategoryId = categoryId;
     this.allowUncategorized = false;
     this.categoriesDropdownOpen = false;
+    this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-service-category]'));
   }
 
   // Gallery methods
@@ -428,25 +431,34 @@ export class ServiceProviderCreateComponent implements OnInit {
   validateForm(): boolean {
     if (!this.displayName.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e9\u05dd \u05ea\u05e6\u05d5\u05d2\u05d4';
+      this.showRequiredStep(1, '#displayName');
       return false;
     }
 
     if (!this.email || !this.email.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d0\u05d9\u05de\u05d9\u05d9\u05dc';
+      this.showRequiredStep(2, '#email');
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d8\u05dc\u05e4\u05d5\u05df';
+      this.showRequiredStep(2, '#phoneNumber');
       return false;
     }
 
     if (!this.selectedCategoryId && !this.allowUncategorized) {
       this.error = '\u05e0\u05d0 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d4';
+      this.showRequiredStep(1, '[data-required-service-category]');
       return false;
     }
 
     return true;
+  }
+
+  private showRequiredStep(step: number, selector: string): void {
+    this.currentStep = step;
+    setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
   }
 
   @HostListener('document:click', ['$event'])

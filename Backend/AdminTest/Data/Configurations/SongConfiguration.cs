@@ -30,6 +30,9 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
                .IsRequired()
                .HasMaxLength(500);
 
+        builder.Property(e => e.SheetMusicUrl)
+               .HasMaxLength(500);
+
         builder.Property(e => e.IsApproved)
                .IsRequired()
                .HasDefaultValue(false);

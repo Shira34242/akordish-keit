@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, HostListener, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -14,6 +14,7 @@ import { TargetAudience, getTargetAudienceOptions, hasAudience, toggleAudience }
 import { UserSelectionModalComponent } from './user-selection-modal.component';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 
 
 @Component({
@@ -25,6 +26,8 @@ import { SiteAlertService } from '../../../services/site-alert.service';
 })
 export class TeacherFormComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   @Input() embedded = false;
   @Input() teacherIdInput?: number;
   @Output() close = new EventEmitter<void>();
@@ -489,7 +492,7 @@ export class TeacherFormComponent implements OnInit {
     }
 
     if (this.selectedInstrumentIds.length === 0) {
-      alert('נא לבחור לפחות כלי נגינה אחד');
+      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-instruments]');
       return false;
     }
 
@@ -502,6 +505,9 @@ export class TeacherFormComponent implements OnInit {
       this.selectedInstrumentIds.splice(index, 1);
     } else {
       this.selectedInstrumentIds.push(instrumentId);
+    }
+    if (this.selectedInstrumentIds.length > 0) {
+      this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-admin-instruments]'));
     }
   }
 

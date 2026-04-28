@@ -275,9 +275,14 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">אודיו (Embed URL)</label>
-          <input type="url" class="form-input" [(ngModel)]="article.audioEmbedUrl" name="audioEmbedUrl"
-            placeholder="https://spotify.com/embed/...">
+          <label class="form-label">אודיו / קובץ שמע</label>
+          <app-file-upload-input
+            [(url)]="article.audioEmbedUrl"
+            accept="audio/*"
+            placeholder="https://spotify.com/embed/... או העלאת קובץ"
+            [showPreview]="false"
+          />
+          <small class="help-text">קובץ שמע יוצג כנגן בתוך הכתבה. קישור Embed יוצג כמקור חיצוני.</small>
         </div>
       </div>
     </div>

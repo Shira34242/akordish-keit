@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, OnDestroy, OnInit, Output, HostListener } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeacherService } from '../../../services/teacher.service';
@@ -10,6 +10,7 @@ import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/te
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { AuthService } from '../../../services/auth.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
+import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 
 @Component({
   selector: 'app-become-teacher-form',
@@ -23,6 +24,8 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly citiesService = inject(CitiesService);
   private readonly authService = inject(AuthService);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -195,6 +198,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     } else {
       this.selectedInstrumentIds.push(instrumentId);
     }
+    if (this.selectedInstrumentIds.length > 0) {
+      this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-instruments]'));
+    }
   }
 
   isInstrumentSelected(instrumentId: number): boolean {
@@ -334,15 +340,15 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   validateStep1(): boolean {
     if (!this.displayName.trim()) {
-      alert('נא להזין שם תצוגה');
+      this.showRequiredStep(1, '[name="teacherDisplayName"]');
       return false;
     }
     if (!this.email || !this.email.trim()) {
-      alert('נא להזין אימייל');
+      this.showRequiredStep(1, '[name="teacherEmail"]');
       return false;
     }
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
-      alert('נא להזין טלפון');
+      this.showRequiredStep(1, '[name="teacherPhone"]');
       return false;
     }
     return true;
@@ -350,10 +356,15 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   validateStep2(): boolean {
     if (this.selectedInstrumentIds.length === 0) {
-      alert('נא לבחור לפחות כלי נגינה אחד');
+      this.showRequiredStep(2, '[data-required-instruments]');
       return false;
     }
     return true;
+  }
+
+  private showRequiredStep(step: number, selector: string): void {
+    this.currentStep = step;
+    setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
   }
 
   onSubmit(): void {

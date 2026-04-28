@@ -281,8 +281,8 @@
     <div class="form-section">
       <h2 class="section-title">פרטי הוראה</h2>
 
-      <div class="form-group">
-        <label class="form-label">כלי נגינה</label>
+      <div class="form-group" data-required-admin-instruments data-required-anchor tabindex="-1">
+        <label class="form-label required">כלי נגינה</label>
         <div class="custom-dropdown" [class.open]="instrumentsDropdownOpen">
           <div class="dropdown-trigger" (click)="toggleInstrumentsDropdown()">
             <span class="dropdown-value">

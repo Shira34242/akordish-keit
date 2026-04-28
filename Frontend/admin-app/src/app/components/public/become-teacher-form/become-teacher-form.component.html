@@ -37,17 +37,17 @@
 
         <div class="form-group">
           <label class="form-label">שם תצוגה *</label>
-          <input type="text" class="form-input" [(ngModel)]="displayName" placeholder="שם מלא">
+          <input type="text" class="form-input" [(ngModel)]="displayName" name="teacherDisplayName" placeholder="שם מלא" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">אימייל *</label>
-          <input type="email" class="form-input" [(ngModel)]="email" placeholder="your@email.com">
+          <input type="email" class="form-input" [(ngModel)]="email" name="teacherEmail" placeholder="your@email.com" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">טלפון *</label>
-          <input type="tel" class="form-input" [(ngModel)]="phoneNumber">
+          <input type="tel" class="form-input" [(ngModel)]="phoneNumber" name="teacherPhone" required>
         </div>
 
         <div class="form-group">
@@ -93,7 +93,7 @@
       <div class="form-step" *ngIf="currentStep === 2">
         <h3 class="step-title">פרטי הוראה</h3>
 
-        <div class="form-group">
+        <div class="form-group" data-required-instruments data-required-anchor tabindex="-1">
           <label class="form-label">כלי נגינה *</label>
           <div class="custom-dropdown">
             <div class="dropdown-selected" (click)="toggleInstrumentsDropdown()">

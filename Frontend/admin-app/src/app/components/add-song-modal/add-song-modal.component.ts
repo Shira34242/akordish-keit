@@ -11,11 +11,13 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from '
 import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { extractChords, parseChord } from '../../utils/music-utils';
+import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
+import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 
 @Component({
     selector: 'app-add-song-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, FileUploadInputComponent],
     templateUrl: './add-song-modal.component.html',
     styleUrls: ['./add-song-modal.component.css']
 })
@@ -282,7 +284,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         private songService: SongService,
         private userService: UserService,
         private authService: AuthService,
-        private sanitizer: DomSanitizer
+        private sanitizer: DomSanitizer,
+        private host: ElementRef<HTMLElement>,
+        private requiredFieldFeedback: RequiredFieldFeedbackService
     ) {
         this.songForm = this.fb.group({
             // Step 1: Basic Info
@@ -294,6 +298,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             youtubeUrl: ['', [Validators.required, Validators.pattern(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)]],
             spotifyUrl: ['', [Validators.pattern(/^(https?:\/\/)?(open\.spotify\.com)\/.+$/)]],
             imageUrl: [''],
+            sheetMusicUrl: [''],
 
             // Step 1 (Moved from Step 2): Tags & Genres
             tags: this.fb.array([]),
@@ -346,6 +351,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             youtubeUrl: this.songToEdit.youtubeUrl,
             spotifyUrl: this.songToEdit.spotifyUrl || '',
             imageUrl: this.songToEdit.imageUrl || '',
+            sheetMusicUrl: this.songToEdit.sheetMusicUrl || '',
             lyricsWithChords: this.songToEdit.lyricsWithChords,
             originalKeyId: this.normalizeKeyValue(this.songToEdit.originalKeyId),
             easyKeyId: this.normalizeKeyValue(this.songToEdit.easyKeyId),
@@ -1639,6 +1645,13 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
                     if (!titleValid || !artistsValid || !youtubeValid) {
                         this.songForm.markAllAsTouched();
+                        if (!titleValid) {
+                            this.showRequiredField('[formControlName="title"]');
+                        } else if (!artistsValid) {
+                            this.showRequiredField('[data-required-artists]');
+                        } else {
+                            this.showRequiredField('[formControlName="youtubeUrl"]');
+                        }
                         return;
                     }
                 } else if (this.currentStep === 2) {
@@ -1647,6 +1660,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
                     if (!lyricsValid || !keyValid) {
                         this.songForm.markAllAsTouched();
+                        this.showRequiredField(lyricsValid ? '[formControlName="originalKeyId"]' : '[formControlName="lyricsWithChords"]');
                         return;
                     }
                 }
@@ -1655,6 +1669,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                     const hasVideoSelection = !!this.songForm.get('youtubeUrl')?.value && (!!this.selectedYouTubeResult || this.showManualYoutubeInput);
                     if (!hasVideoSelection) {
                         this.songForm.get('youtubeUrl')?.markAsTouched();
+                        this.showRequiredField('[formControlName="youtubeUrl"]');
                         return;
                     }
 
@@ -1670,6 +1685,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
                     if (!lyricsValid) {
                         this.songForm.get('lyricsWithChords')?.markAsTouched();
+                        this.showRequiredField('[formControlName="lyricsWithChords"]');
                         return;
                     }
 
@@ -1715,6 +1731,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 youtubeUrl: formValue.youtubeUrl,
                 spotifyUrl: formValue.spotifyUrl?.trim() || undefined,
                 imageUrl: formValue.imageUrl,
+                sheetMusicUrl: formValue.sheetMusicUrl?.trim() || undefined,
                 tags: formValue.tags.map((t: any) => ({
                     id: t.id || undefined,
                     name: t.name
@@ -1766,7 +1783,25 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             });
         } else {
             this.songForm.markAllAsTouched();
+            const invalidField = this.getFirstInvalidSongField();
+            if (invalidField) {
+                this.currentStep = invalidField.step;
+                this.showRequiredField(invalidField.selector);
+            }
         }
+    }
+
+    private showRequiredField(selector: string): void {
+        setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
+    }
+
+    private getFirstInvalidSongField(): { step: number; selector: string } | null {
+        if (this.songForm.get('title')?.invalid) return { step: 1, selector: '[formControlName="title"]' };
+        if (this.artistsArray.length === 0) return { step: 1, selector: '[data-required-artists]' };
+        if (this.songForm.get('youtubeUrl')?.invalid) return { step: 1, selector: '[formControlName="youtubeUrl"]' };
+        if (this.songForm.get('lyricsWithChords')?.invalid) return { step: 2, selector: '[formControlName="lyricsWithChords"]' };
+        if (this.songForm.get('originalKeyId')?.invalid) return { step: 2, selector: '[formControlName="originalKeyId"]' };
+        return null;
     }
     get formattedLyrics(): SafeHtml {
         const rawLyrics = this.songForm.get('lyricsWithChords')?.value || '';

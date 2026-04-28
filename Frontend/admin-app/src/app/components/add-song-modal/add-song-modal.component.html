@@ -209,6 +209,17 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label>קובץ תווים (אופציונלי)</label>
+                            <app-file-upload-input
+                                [url]="songForm.get('sheetMusicUrl')?.value"
+                                (urlChange)="songForm.get('sheetMusicUrl')?.setValue($event)"
+                                accept=".pdf,image/*"
+                                placeholder="קישור לקובץ תווים או העלאה"
+                                [showPreview]="false">
+                            </app-file-upload-input>
+                        </div>
+
                         <div class="smart-detect-note">
                             <span>{{ lyricsHelperText }}</span>
                         </div>
@@ -253,13 +264,13 @@
 
                     <div class="preview-inline-editor" *ngIf="isPreviewEditing">
                         <div class="form-group">
-                            <label>שם השיר</label>
+                            <label>שם השיר *</label>
                             <input type="text" formControlName="title" placeholder="שם השיר">
                         </div>
 
                         <div class="form-row">
                             <div class="form-group half">
-                                <label>קישור יוטיוב</label>
+                                <label>קישור יוטיוב *</label>
                                 <input type="text" formControlName="youtubeUrl" placeholder="קישור יוטיוב" (blur)="onYoutubeUrlBlur()">
                             </div>
                             <div class="form-group half">
@@ -269,7 +280,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>אמנים</label>
+                            <label>אמנים *</label>
                             <div class="smart-chip-list" *ngIf="artistsArray.length > 0">
                                 <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index" [class.temporary]="!artist.value.id">
                                     {{ artist.value.name }}
@@ -313,7 +324,7 @@
 
                         <div class="form-row">
                             <div class="form-group half">
-                                <label>סולם מקורי</label>
+                                <label>סולם מקורי *</label>
                                 <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
                                     <option [ngValue]="null">בחר סולם</option>
                                     <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
@@ -383,7 +394,7 @@
                 <!-- Artists -->
                 <div class="form-group">
                     <label>אמנים (עד 5) *</label>
-                    <div class="input-with-chips" [class.disabled]="artistsArray.length >= 5">
+                    <div class="input-with-chips" data-required-artists data-required-anchor tabindex="-1" [class.disabled]="artistsArray.length >= 5">
                         <div class="chip" *ngFor="let artist of artistsArray.controls; let i = index"
                              [class.temporary]="!artist.value.id">
                             {{ artist.value.name }}
@@ -593,12 +604,23 @@
                 <!-- Lyrics first -->
                 <div class="form-group">
                     <textarea formControlName="lyricsWithChords" rows="10"
-                        placeholder="כתוב כאן את המילים והאקורדים..."
+                        placeholder="כתוב כאן את המילים והאקורדים *"
                         (paste)="onLyricsPaste($event)"></textarea>
                     <div class="error"
                         *ngIf="songForm.get('lyricsWithChords')?.invalid && songForm.get('lyricsWithChords')?.touched">
                         שדה חובה (מינימום 10 תווים)
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>קובץ תווים (אופציונלי)</label>
+                    <app-file-upload-input
+                        [url]="songForm.get('sheetMusicUrl')?.value"
+                        (urlChange)="songForm.get('sheetMusicUrl')?.setValue($event)"
+                        accept=".pdf,image/*"
+                        placeholder="קישור לקובץ תווים או העלאה"
+                        [showPreview]="false">
+                    </app-file-upload-input>
                 </div>
 
                 <!-- Keys row -->

@@ -32,17 +32,17 @@
 
         <div class="form-group">
           <label class="form-label">שם תצוגה *</label>
-          <input type="text" class="form-input" [(ngModel)]="displayName" placeholder="שם מלא">
+          <input type="text" class="form-input" [(ngModel)]="displayName" name="professionalDisplayName" placeholder="שם מלא" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">אימייל *</label>
-          <input type="email" class="form-input" [(ngModel)]="email" placeholder="your@email.com">
+          <input type="email" class="form-input" [(ngModel)]="email" name="professionalEmail" placeholder="your@email.com" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">טלפון *</label>
-          <input type="tel" class="form-input" [(ngModel)]="phoneNumber">
+          <input type="tel" class="form-input" [(ngModel)]="phoneNumber" name="professionalPhone" required>
         </div>
 
         <div class="form-group">
@@ -73,7 +73,7 @@
           <input type="text" class="form-input" [(ngModel)]="location" placeholder="רחוב ומספר בית">
         </div>
 
-        <div class="form-group">
+        <div class="form-group" data-required-category data-required-anchor tabindex="-1">
           <label class="form-label">קטגוריה *</label>
           <div class="custom-dropdown">
             <div class="dropdown-selected" (click)="toggleCategoriesDropdown()">

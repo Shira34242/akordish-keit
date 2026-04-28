@@ -2738,6 +2738,10 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("SheetMusicUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)

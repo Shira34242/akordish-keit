@@ -12,6 +12,7 @@ public class Song
     public string YouTubeUrl { get; set; }
     public string? SpotifyUrl { get; set; }
     public string ImageUrl { get; set; }
+    public string? SheetMusicUrl { get; set; }
     public bool IsApproved { get; set; }
     public string LyricsWithChords { get; set; }
     public int OriginalKeyId { get; set; }

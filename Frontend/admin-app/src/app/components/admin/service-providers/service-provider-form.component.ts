@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, HostListener, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, HostListener, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -22,6 +22,7 @@ import {
 } from '../../../models/music-service-provider.model';
 import { UserListDto } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 
 
 interface PlatformLinkOption {
@@ -40,6 +41,8 @@ interface PlatformLinkOption {
 })
 export class ServiceProviderFormComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   @Input() embedded = false;
   @Input() serviceProviderIdInput?: number;
   @Output() close = new EventEmitter<void>();
@@ -367,7 +370,7 @@ export class ServiceProviderFormComponent implements OnInit {
     }
 
     if (!this.selectedCategoryId) {
-      alert('נא לבחור קטגוריה');
+      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-category]');
       return false;
     }
 
@@ -377,6 +380,7 @@ export class ServiceProviderFormComponent implements OnInit {
   selectCategory(categoryId: number): void {
     this.selectedCategoryId = categoryId;
     this.categoryDropdownOpen = false;
+    this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-admin-category]'));
   }
 
   // Gallery methods

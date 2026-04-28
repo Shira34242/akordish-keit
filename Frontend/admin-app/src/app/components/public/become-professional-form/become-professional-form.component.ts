@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, OnDestroy, OnInit, Output, HostListener } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
@@ -7,6 +7,7 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { CreateMusicServiceProviderDto, ProfileStatus, CreateGalleryImageDto, CreateServiceProviderCategoryDto, ServiceProviderParkingType } from '../../../models/music-service-provider.model';
 import { AuthService } from '../../../services/auth.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
+import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 
 interface Category {
   id: number;
@@ -25,6 +26,8 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly citiesService = inject(CitiesService);
   private readonly authService = inject(AuthService);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -165,6 +168,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   selectCategory(categoryId: number): void {
     this.selectedCategoryId = categoryId;
     this.categoriesDropdownOpen = false;
+    this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-category]'));
   }
 
   // Gallery methods
@@ -205,22 +209,27 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   validateStep1(): boolean {
     if (!this.displayName.trim()) {
-      alert('נא להזין שם תצוגה');
+      this.showRequiredStep(1, '[name="professionalDisplayName"]');
       return false;
     }
     if (!this.email || !this.email.trim()) {
-      alert('נא להזין אימייל');
+      this.showRequiredStep(1, '[name="professionalEmail"]');
       return false;
     }
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
-      alert('נא להזין טלפון');
+      this.showRequiredStep(1, '[name="professionalPhone"]');
       return false;
     }
     if (!this.selectedCategoryId) {
-      alert('נא לבחור קטגוריה');
+      this.showRequiredStep(1, '[data-required-category]');
       return false;
     }
     return true;
+  }
+
+  private showRequiredStep(step: number, selector: string): void {
+    this.currentStep = step;
+    setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
   }
 
   onSubmit(): void {
