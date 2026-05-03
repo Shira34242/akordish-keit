@@ -45,7 +45,7 @@ public interface IArticleService
     Task<List<ArticleRankDto>> GetTopContentAsync(int limit = 20);
 
     // ─── My Content ───────────────────────────────────────────
-    Task<List<ArticleDto>> GetMyArticlesAsync(int userId);
+    Task<PagedResult<ArticleDto>> GetMyArticlesAsync(int userId, int pageNumber = 1, int pageSize = 8);
 
     Task<List<ArticleDto>> GetPublishedArticlesByUploaderProfileAsync(string profileType, int profileId, int limit = 12);
 }

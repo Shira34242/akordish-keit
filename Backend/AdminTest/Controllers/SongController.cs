@@ -643,7 +643,7 @@ public class SongsController : ControllerBase
     // ============================================
     [HttpGet("my")]
     [Authorize]
-    public async Task<ActionResult<List<SongBasicDto>>> GetMySongs()
+    public async Task<ActionResult<PagedResult<SongBasicDto>>> GetMySongs([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 8)
     {
         try
         {
@@ -651,8 +651,8 @@ public class SongsController : ControllerBase
             if (!userId.HasValue)
                 return Unauthorized();
 
-            var songs = await _songService.GetMySongsAsync(userId.Value);
-            return Ok(songs);
+            var result = await _songService.GetMySongsAsync(userId.Value, pageNumber, pageSize);
+            return Ok(result);
         }
         catch (Exception ex)
         {

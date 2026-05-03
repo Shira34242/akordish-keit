@@ -100,14 +100,14 @@ namespace AkordishKeit.Controllers
         /// </summary>
         [HttpGet("my")]
         [Authorize]
-        public async Task<ActionResult<List<EventDto>>> GetMyEvents()
+        public async Task<ActionResult<PagedResult<EventDto>>> GetMyEvents([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 8)
         {
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
                 return Unauthorized();
 
-            var events = await _eventService.GetMyEventsAsync(userId.Value);
-            return Ok(events);
+            var result = await _eventService.GetMyEventsAsync(userId.Value, pageNumber, pageSize);
+            return Ok(result);
         }
 
         /// <summary>

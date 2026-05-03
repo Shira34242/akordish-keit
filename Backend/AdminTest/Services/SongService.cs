@@ -1221,7 +1221,7 @@ public class SongService : ISongService
         }
     }
 
-    public async Task<List<SongBasicDto>> GetMySongsAsync(int userId)
+    public async Task<PagedResult<SongBasicDto>> GetMySongsAsync(int userId, int pageNumber = 1, int pageSize = 8)
     {
         try
         {
@@ -1235,13 +1235,18 @@ public class SongService : ISongService
                 .Select(p => p.Id)
                 .ToListAsync();
 
-            return await _context.Songs
+            var query = _context.Songs
                 .Where(s => !s.IsDeleted &&
                     (s.UploadedByUserId == userId ||
                      s.UploaderUserId == userId ||
                      (s.UploaderProfileType == "artist" && s.UploaderProfileId.HasValue && artistIds.Contains(s.UploaderProfileId.Value)) ||
                      (s.UploaderProfileType == "serviceProvider" && s.UploaderProfileId.HasValue && serviceProviderIds.Contains(s.UploaderProfileId.Value))))
-                .OrderByDescending(s => s.CreatedAt)
+                .OrderByDescending(s => s.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Select(s => new SongBasicDto
                 {
                     Id = s.Id,
@@ -1255,6 +1260,14 @@ public class SongService : ISongService
                     CreatedAt = s.CreatedAt
                 })
                 .ToListAsync();
+
+            return new PagedResult<SongBasicDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
         catch (Exception ex)
         {

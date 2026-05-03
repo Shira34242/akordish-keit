@@ -502,7 +502,7 @@ public class ArticleService : IArticleService
 
     // ─── My Content ────────────────────────────────────────────────────────────
 
-    public async Task<List<ArticleDto>> GetMyArticlesAsync(int userId)
+    public async Task<PagedResult<ArticleDto>> GetMyArticlesAsync(int userId, int pageNumber = 1, int pageSize = 8)
     {
         var artistIds = await _context.Artists
             .Where(a => a.UserId == userId && !a.IsDeleted)
@@ -514,13 +514,7 @@ public class ArticleService : IArticleService
             .Select(p => p.Id)
             .ToListAsync();
 
-        var articles = await _context.Articles
-            .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
-            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
-            .Include(a => a.GalleryImages)
-            .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
-            .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
-            .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
+        var query = _context.Articles
             .Where(a =>
                 !a.IsDeleted &&
                 (a.SubmittedByUserId == userId ||
@@ -528,10 +522,27 @@ public class ArticleService : IArticleService
                  (a.UploaderProfileType == "artist" && a.UploaderProfileId.HasValue && artistIds.Contains(a.UploaderProfileId.Value)) ||
                  (a.UploaderProfileType == "serviceProvider" && a.UploaderProfileId.HasValue && serviceProviderIds.Contains(a.UploaderProfileId.Value)) ||
                  a.ArticleArtists.Any(aa => artistIds.Contains(aa.ArtistId))))
-            .OrderByDescending(a => a.CreatedAt)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var articles = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
             .ToListAsync();
 
-        return articles.Select(MapToDto).ToList();
+        return new PagedResult<ArticleDto>
+        {
+            Items = articles.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
     }
 
     public async Task<List<ArticleDto>> GetPublishedArticlesByUploaderProfileAsync(string profileType, int profileId, int limit = 12)
