@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
@@ -18,7 +19,7 @@ interface PagedResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class InstrumentService {
-  private apiUrl = 'https://localhost:44395/api/instruments';
+  private apiUrl = `${environment.apiBaseUrl}/api/instruments`;
   private cache$?: Observable<Instrument[]>;
 
   constructor(private http: HttpClient) {}

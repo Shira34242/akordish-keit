@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
@@ -24,7 +25,7 @@ import { UpcomingEventDto } from '../models/event.model';
     providedIn: 'root'
 })
 export class ArtistService {
-    private apiUrl = 'https://localhost:44395/api/Artists';
+    private apiUrl = `${environment.apiBaseUrl}/api/Artists`;
     private featuredArtistsCache$?: Observable<ArtistListDto[]>;
 
     constructor(private http: HttpClient) { }

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -10,7 +11,7 @@ export interface SongRatingResponse {
 
 @Injectable({ providedIn: 'root' })
 export class SongRatingService {
-  private apiUrl = 'https://localhost:44395/api/Songs';
+  private apiUrl = `${environment.apiBaseUrl}/api/Songs`;
 
   constructor(private http: HttpClient) {}
 

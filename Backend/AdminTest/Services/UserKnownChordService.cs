@@ -164,12 +164,6 @@ public class UserKnownChordService : IUserKnownChordService
 
         await _chordIndexService.EnsureApprovedSongsIndexedAsync();
 
-        var known = await _context.UserKnownChords
-            .Where(kc => kc.UserId == userId && kc.Instrument == normalizedInstrument)
-            .Select(kc => kc.NormalizedChordName)
-            .ToListAsync();
-
-        var knownSet = known.ToHashSet(StringComparer.Ordinal);
         var safePage = Math.Max(1, page);
         var safePageSize = Math.Clamp(pageSize, 1, 50);
         var safeMaxMissing = maxMissing < 0 ? int.MaxValue : Math.Clamp(maxMissing, 0, 99);
@@ -177,113 +171,160 @@ public class UserKnownChordService : IUserKnownChordService
             ? "closest"
             : sortBy.Trim().ToLowerInvariant();
 
-        var chordRows = await _context.SongChords
-            .Where(chord => chord.Song.IsApproved && !chord.Song.IsDeleted)
-            .Select(chord => new
-            {
-                chord.SongId,
-                chord.DisplayChordName,
-                chord.NormalizedChordName
-            })
+        // Load user's known chords (small, indexed query)
+        var knownChords = await _context.UserKnownChords
+            .Where(kc => kc.UserId == userId && kc.Instrument == normalizedInstrument)
+            .Select(kc => kc.NormalizedChordName)
             .ToListAsync();
 
-        var stats = chordRows
-            .GroupBy(chord => chord.SongId)
-            .Select(group =>
+        var baseChords = _context.SongChords
+            .Where(sc => sc.Song.IsApproved && !sc.Song.IsDeleted);
+
+        // Aggregate in DB: distinct chord count per song
+        var totalPerSong = await baseChords
+            .GroupBy(sc => sc.SongId)
+            .Select(g => new { SongId = g.Key, Total = g.GroupBy(sc => sc.NormalizedChordName).Count() })
+            .ToListAsync();
+
+        // Aggregate in DB: distinct missing chord count per song (not in user's known set)
+        var missingPerSong = await baseChords
+            .Where(sc => !knownChords.Contains(sc.NormalizedChordName))
+            .GroupBy(sc => sc.SongId)
+            .Select(g => new { SongId = g.Key, Missing = g.GroupBy(sc => sc.NormalizedChordName).Count() })
+            .ToListAsync();
+
+        var missingBySong = missingPerSong.ToDictionary(x => x.SongId, x => x.Missing);
+
+        // Combine and filter in memory (now working with small count dictionaries, not raw chord rows)
+        var stats = totalPerSong
+            .Where(x => x.Total > 0)
+            .Select(x => new
             {
-                var uniqueChords = group
-                    .GroupBy(chord => chord.NormalizedChordName)
-                    .Select(chordGroup => new
-                    {
-                        Normalized = chordGroup.Key,
-                        Display = chordGroup.First().DisplayChordName
-                    })
-                    .ToList();
-
-                var missing = uniqueChords
-                    .Where(chord => !knownSet.Contains(chord.Normalized))
-                    .Select(chord => chord.Display)
-                    .OrderBy(chord => chord)
-                    .ToList();
-
-                return new
-                {
-                    SongId = group.Key,
-                    TotalChordCount = uniqueChords.Count,
-                    MissingChordNames = missing,
-                    MissingChordCount = missing.Count,
-                    KnownChordCount = uniqueChords.Count - missing.Count
-                };
+                x.SongId,
+                TotalChordCount = x.Total,
+                MissingChordCount = missingBySong.GetValueOrDefault(x.SongId, 0)
             })
-            .Where(song => song.TotalChordCount > 0 && song.MissingChordCount <= safeMaxMissing)
+            .Where(x => x.MissingChordCount <= safeMaxMissing)
             .ToList();
 
-        var songIds = stats.Select(stat => stat.SongId).ToList();
+        if (stats.Count == 0)
+        {
+            return new PagedResult<KnownChordSongMatchDto>
+            {
+                Items = new List<KnownChordSongMatchDto>(),
+                TotalCount = 0,
+                PageNumber = safePage,
+                PageSize = safePageSize
+            };
+        }
+
+        var allMatchingSongIds = stats.Select(x => x.SongId).ToList();
+
+        // For sorts that need extra song columns, fetch only those columns
+        Dictionary<int, int> viewCountById = new();
+        Dictionary<int, string> titleById = new();
+
+        if (normalizedSort == "popular")
+        {
+            viewCountById = await _context.Songs
+                .Where(s => allMatchingSongIds.Contains(s.Id))
+                .Select(s => new { s.Id, s.ViewCount })
+                .ToDictionaryAsync(s => s.Id, s => s.ViewCount);
+        }
+        else if (normalizedSort == "name")
+        {
+            titleById = await _context.Songs
+                .Where(s => allMatchingSongIds.Contains(s.Id))
+                .Select(s => new { s.Id, s.Title })
+                .ToDictionaryAsync(s => s.Id, s => s.Title);
+        }
+
+        var sortedStats = normalizedSort switch
+        {
+            "known" => stats
+                .OrderByDescending(x => x.TotalChordCount - x.MissingChordCount)
+                .ThenBy(x => x.MissingChordCount)
+                .ThenBy(x => x.SongId)
+                .ToList(),
+            "popular" => stats
+                .OrderByDescending(x => viewCountById.GetValueOrDefault(x.SongId, 0))
+                .ThenBy(x => x.MissingChordCount)
+                .ThenBy(x => x.SongId)
+                .ToList(),
+            "name" => stats
+                .OrderBy(x => titleById.GetValueOrDefault(x.SongId, ""))
+                .ThenBy(x => x.MissingChordCount)
+                .ThenBy(x => x.SongId)
+                .ToList(),
+            _ => stats
+                .OrderBy(x => x.MissingChordCount)
+                .ThenByDescending(x => x.TotalChordCount - x.MissingChordCount)
+                .ThenBy(x => x.TotalChordCount)
+                .ThenBy(x => x.SongId)
+                .ToList()
+        };
+
+        var totalCount = sortedStats.Count;
+        var pageStats = sortedStats
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
+            .ToList();
+
+        var pageSongIds = pageStats.Select(x => x.SongId).ToList();
+
+        // Load song details + artists for current page only
         var songs = await _context.Songs
-            .Where(song => songIds.Contains(song.Id))
-            .Include(song => song.SongArtists)
-                .ThenInclude(songArtist => songArtist.Artist)
+            .Where(s => pageSongIds.Contains(s.Id))
+            .Include(s => s.SongArtists)
+                .ThenInclude(sa => sa.Artist)
             .ToListAsync();
 
-        var songsById = songs.ToDictionary(song => song.Id);
-        var allResults = stats
-            .Where(stat => songsById.ContainsKey(stat.SongId))
-            .Select(stat =>
+        // Load missing chord display names for current page songs only
+        var pageMissingChordRows = await _context.SongChords
+            .Where(sc => pageSongIds.Contains(sc.SongId) && !knownChords.Contains(sc.NormalizedChordName))
+            .Select(sc => new { sc.SongId, sc.DisplayChordName, sc.NormalizedChordName })
+            .ToListAsync();
+
+        var missingChordNamesBySong = pageMissingChordRows
+            .GroupBy(x => x.SongId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.GroupBy(x => x.NormalizedChordName)
+                      .Select(ng => ng.First().DisplayChordName)
+                      .OrderBy(name => name)
+                      .ToList()
+            );
+
+        var songsById = songs.ToDictionary(s => s.Id);
+
+        var results = pageStats
+            .Where(x => songsById.ContainsKey(x.SongId))
+            .Select(x =>
             {
-                var song = songsById[stat.SongId];
+                var song = songsById[x.SongId];
                 return new KnownChordSongMatchDto
                 {
                     Id = song.Id,
                     Title = song.Title,
                     ImageUrl = song.ImageUrl,
                     ViewCount = song.ViewCount,
-                    TotalChordCount = stat.TotalChordCount,
-                    KnownChordCount = stat.KnownChordCount,
-                    MissingChordCount = stat.MissingChordCount,
-                    MissingChordNames = stat.MissingChordNames,
-                    KnowsAllChords = stat.MissingChordCount == 0,
+                    TotalChordCount = x.TotalChordCount,
+                    KnownChordCount = x.TotalChordCount - x.MissingChordCount,
+                    MissingChordCount = x.MissingChordCount,
+                    MissingChordNames = missingChordNamesBySong.GetValueOrDefault(x.SongId, new List<string>()),
+                    KnowsAllChords = x.MissingChordCount == 0,
                     Artists = song.SongArtists
-                        .OrderBy(songArtist => songArtist.Order)
-                        .Select(songArtist => new ArtistBasicDto
+                        .OrderBy(sa => sa.Order)
+                        .Select(sa => new ArtistBasicDto
                         {
-                            Id = songArtist.Artist?.Id ?? 0,
-                            Name = songArtist.Artist?.Name ?? songArtist.TempArtistName ?? "Unknown",
-                            EnglishName = songArtist.Artist?.EnglishName,
-                            ImageUrl = songArtist.Artist?.ImageUrl
-                    })
+                            Id = sa.Artist?.Id ?? 0,
+                            Name = sa.Artist?.Name ?? sa.TempArtistName ?? "Unknown",
+                            EnglishName = sa.Artist?.EnglishName,
+                            ImageUrl = sa.Artist?.ImageUrl
+                        })
                         .ToList()
                 };
             })
-            .ToList();
-
-        var sortedResults = normalizedSort switch
-        {
-            "known" => allResults
-                .OrderByDescending(song => song.KnownChordCount)
-                .ThenBy(song => song.MissingChordCount)
-                .ThenBy(song => song.Title)
-                .ToList(),
-            "popular" => allResults
-                .OrderByDescending(song => song.ViewCount)
-                .ThenBy(song => song.MissingChordCount)
-                .ThenBy(song => song.Title)
-                .ToList(),
-            "name" => allResults
-                .OrderBy(song => song.Title)
-                .ThenBy(song => song.MissingChordCount)
-                .ToList(),
-            _ => allResults
-                .OrderBy(song => song.MissingChordCount)
-                .ThenByDescending(song => song.KnownChordCount)
-                .ThenBy(song => song.TotalChordCount)
-                .ThenBy(song => song.Title)
-                .ToList()
-        };
-
-        var totalCount = sortedResults.Count;
-        var results = sortedResults
-            .Skip((safePage - 1) * safePageSize)
-            .Take(safePageSize)
             .ToList();
 
         return new PagedResult<KnownChordSongMatchDto>

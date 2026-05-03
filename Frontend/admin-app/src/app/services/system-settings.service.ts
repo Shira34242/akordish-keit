@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -16,7 +17,7 @@ export interface UpdateSystemSettingDto {
 
 @Injectable({ providedIn: 'root' })
 export class SystemSettingsService {
-  private readonly base = 'https://localhost:44395/api/SystemSettings';
+  private readonly base = `${environment.apiBaseUrl}/api/SystemSettings`;
 
   constructor(private http: HttpClient) {}
 

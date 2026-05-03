@@ -727,8 +727,8 @@ public class SongService : ISongService
                     UploaderUserId = s.UploaderUserId,
                     UploaderProfileType = s.UploaderProfileType,
                     UploaderProfileId = s.UploaderProfileId,
-                    AverageRating = s.Ratings.Any() ? Math.Round(s.Ratings.Average(r => (double)r.Rating), 1) : 0,
-                    RatingCount = s.Ratings.Count()
+                    RatingCount = s.Ratings.Count(),
+                    AverageRating = Math.Round(s.Ratings.Average(r => (double?)r.Rating) ?? 0, 1)
                 })
                 .ToListAsync();
 
@@ -1933,19 +1933,23 @@ public class SongService : ISongService
 
     public async Task<SongRatingResponseDto> GetSongRatingAsync(int songId, int? userId)
     {
-        var ratings = await _context.SongRatings
+        var aggregate = await _context.SongRatings
             .Where(r => r.SongId == songId)
-            .Select(r => new { r.UserId, r.Rating })
-            .ToListAsync();
+            .GroupBy(_ => 1)
+            .Select(g => new { Count = g.Count(), Average = g.Average(r => (double)r.Rating) })
+            .FirstOrDefaultAsync();
 
         int? userRating = null;
         if (userId.HasValue)
-            userRating = ratings.FirstOrDefault(r => r.UserId == userId.Value)?.Rating;
+            userRating = await _context.SongRatings
+                .Where(r => r.SongId == songId && r.UserId == userId.Value)
+                .Select(r => (int?)r.Rating)
+                .FirstOrDefaultAsync();
 
         return new SongRatingResponseDto
         {
-            AverageRating = ratings.Count > 0 ? Math.Round(ratings.Average(r => r.Rating), 1) : 0,
-            RatingCount = ratings.Count,
+            AverageRating = aggregate != null ? Math.Round(aggregate.Average, 1) : 0,
+            RatingCount = aggregate?.Count ?? 0,
             UserRating = userRating
         };
     }

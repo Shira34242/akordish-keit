@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { NewsPageSection, CreateNewsPageSectionDto, UpdateNewsPageSectionDto } from '../models/news-page-section.model';
@@ -8,7 +9,7 @@ import { NewsPageSection, CreateNewsPageSectionDto, UpdateNewsPageSectionDto } f
 })
 export class NewsPageSectionService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'https://localhost:44395/api/NewsPageSections';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/NewsPageSections`;
 
   /**
    * מחזיר את הפסים הפעילים עם הכתבות — לדף חדשות המוזיקה

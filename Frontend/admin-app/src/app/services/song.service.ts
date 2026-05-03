@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
 import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
@@ -8,7 +9,7 @@ import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckRe
 })
 
 export class SongService {
-    private apiUrl = 'https://localhost:44395/api/Songs'; // Adjust port if needed
+    private apiUrl = `${environment.apiBaseUrl}/api/Songs`; // Adjust port if needed
 
     constructor(private http: HttpClient) { }
 
@@ -151,7 +152,7 @@ export class SongService {
         );
     }
     getAllArtists(): Observable<any[]> {
-        return this.http.get<any[]>('https://localhost:44395/api/Artists');
+        return this.http.get<any[]>(`${environment.apiBaseUrl}/api/Artists`);
     }
 
     getGenres(): Observable<any[]> {

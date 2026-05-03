@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Event, CreateEventDto, UpdateEventDto, UpcomingEventDto } from '../../models/event.model';
@@ -9,7 +10,7 @@ import { PagedResult } from '../../models/pagination.model';
 })
 export class EventService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'https://localhost:44395/api/Events';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/Events`;
 
   /**
    * קבלת רשימת הופעות עם סינון וחלוקה לעמודים

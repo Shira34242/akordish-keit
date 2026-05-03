@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 
@@ -28,7 +29,7 @@ export interface AnalyticsDashboard {
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'https://localhost:44395/api/analytics';
+  private readonly base = `${environment.apiBaseUrl}/api/analytics`;
 
   trackEventView(eventId?: number): void {
     this.http.post(`${this.base}/event-view`, { eventId: eventId ?? null })

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
 import { parseChord } from '../utils/music-utils';
@@ -45,7 +46,7 @@ export interface KnownChordSongsResponse {
 
 @Injectable({ providedIn: 'root' })
 export class UserKnownChordService {
-    private apiUrl = 'https://localhost:44395/api/UserKnownChords';
+    private apiUrl = `${environment.apiBaseUrl}/api/UserKnownChords`;
     private loaded = new Set<KnownChordInstrument>();
     private knownByInstrument: Record<KnownChordInstrument, Set<string>> = {
         guitar: new Set<string>(),

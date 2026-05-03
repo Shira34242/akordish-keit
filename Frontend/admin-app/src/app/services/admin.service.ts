@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -20,7 +21,7 @@ export interface RecentJoin {
     providedIn: 'root'
 })
 export class AdminService {
-    private apiUrl = 'https://localhost:44395/api/user'; // Adjust port if needed
+    private apiUrl = `${environment.apiBaseUrl}/api/user`; // Adjust port if needed
 
     constructor(private http: HttpClient) { }
 

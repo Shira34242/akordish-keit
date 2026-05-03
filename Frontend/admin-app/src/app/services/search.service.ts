@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -22,7 +23,7 @@ export interface SearchResults {
 
 @Injectable({ providedIn: 'root' })
 export class SearchService {
-  private apiUrl = 'https://localhost:44395/api/Search';
+  private apiUrl = `${environment.apiBaseUrl}/api/Search`;
 
   constructor(private http: HttpClient) {}
 

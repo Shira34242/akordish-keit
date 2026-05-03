@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -13,7 +14,7 @@ import { PagedResult } from '../models/user.model';
   providedIn: 'root'
 })
 export class MusicServiceProviderService {
-  private apiUrl = `${window.location.hostname === 'localhost' ? 'https://localhost:44395' : ''}/api/MusicServiceProviders`;
+  private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api/MusicServiceProviders`;
 
   constructor(private http: HttpClient) { }
 

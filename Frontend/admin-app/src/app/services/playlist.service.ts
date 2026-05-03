@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -15,7 +16,7 @@ import {
   providedIn: 'root'
 })
 export class PlaylistService {
-  private apiUrl = 'https://localhost:44395/api/Playlists';
+  private apiUrl = `${environment.apiBaseUrl}/api/Playlists`;
 
   constructor(private http: HttpClient) { }
 

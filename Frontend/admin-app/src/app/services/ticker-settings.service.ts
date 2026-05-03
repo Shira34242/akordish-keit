@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { ArticleContentType } from '../models/article.model';
@@ -50,7 +51,7 @@ export const TICKER_DEFAULT: TickerConfig = {
 
 const DRAFT_STORAGE_KEY = 'akordish_ticker_draft_v4';
 const SERVER_KEY = 'hero_news_ticker_config';
-const API_URL = 'https://localhost:44395/api/SystemSettings';
+const API_URL = `${environment.apiBaseUrl}/api/SystemSettings`;
 
 interface ServerSettingValue {
   key: string;

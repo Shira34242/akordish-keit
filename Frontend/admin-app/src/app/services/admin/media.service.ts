@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -6,7 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MediaService {
-  private readonly apiUrl = 'https://localhost:44395/api/Media';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/Media`;
 
   constructor(private http: HttpClient) {}
 

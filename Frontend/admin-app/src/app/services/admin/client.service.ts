@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -13,7 +14,7 @@ import { PagedResult } from '../../models/pagination.model';
 })
 export class ClientService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'https://localhost:44395/api/Clients';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/Clients`;
 
   /**
    * Get all clients with pagination

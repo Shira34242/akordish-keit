@@ -87,6 +87,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     private _lyricsHtmlCache: SafeHtml = '';
     private _lyricsHtmlCacheKey = '';
 
+    // Cache for uniqueTransposedChords
+    private _uniqueChordsCache: string[] = [];
+    private _uniqueChordsCacheKey = '';
+
     // Print Panel State
     isPrintPanelOpen: boolean = false;
 
@@ -595,6 +599,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     /** רשימת אקורדים ייחודיים אחרי טרנספוזיציה — לתרשימים inline */
     get uniqueTransposedChords(): string[] {
         if (!this.song?.lyricsWithChords) return [];
+        const cacheKey = `${this.song.lyricsWithChords}|${this.transposeStep}|${this.isEasyMode}|${this.activePreferFlat}|${this.selectedInstrument}`;
+        if (cacheKey === this._uniqueChordsCacheKey) return this._uniqueChordsCache;
+
         const seen = new Set<string>();
         const result: string[] = [];
         for (const line of this.song.lyricsWithChords.split('\n')) {
@@ -614,6 +621,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 if (!seen.has(key) && this.hasChordData(c)) { seen.add(key); result.push(c); }
             }
         }
+
+        this._uniqueChordsCacheKey = cacheKey;
+        this._uniqueChordsCache = result;
         return result;
     }
 

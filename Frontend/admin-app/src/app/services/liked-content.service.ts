@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LikedContent, AddLikedContentDto } from '../models/liked-content.model';
@@ -7,7 +8,7 @@ import { LikedContent, AddLikedContentDto } from '../models/liked-content.model'
   providedIn: 'root'
 })
 export class LikedContentService {
-  private apiUrl = 'https://localhost:44395/api/LikedContent';
+  private apiUrl = `${environment.apiBaseUrl}/api/LikedContent`;
 
   constructor(private http: HttpClient) {}
 

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ChordRequest, ChordRequestMatch, CreateReportDto, Report, UpdateChordRequestGroupDto, UpdateReportStatusDto } from '../models/report.model';
@@ -8,7 +9,7 @@ import { PagedResult } from '../models/pagination.model';
   providedIn: 'root'
 })
 export class ReportService {
-  private apiUrl = 'https://localhost:44395/api/Reports';
+  private apiUrl = `${environment.apiBaseUrl}/api/Reports`;
 
   constructor(private http: HttpClient) { }
 

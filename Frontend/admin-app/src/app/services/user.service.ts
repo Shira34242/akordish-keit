@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -8,7 +9,7 @@ import { UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } fr
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'https://localhost:44395/api/Users';
+  private apiUrl = `${environment.apiBaseUrl}/api/Users`;
 
   constructor(private http: HttpClient) { }
 
@@ -93,7 +94,7 @@ export class UserService {
   uploadProfileImage(file: File): Observable<string> {
     const form = new FormData();
     form.append('file', file);
-    return this.http.post<{ url: string }>('https://localhost:44395/api/Media/upload', form, { withCredentials: true })
+    return this.http.post<{ url: string }>(`${environment.apiBaseUrl}/api/Media/upload`, form, { withCredentials: true })
       .pipe(map(res => res.url));
   }
 }

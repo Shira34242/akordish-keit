@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -13,7 +14,7 @@ import {
 })
 export class FeaturedContentService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'https://localhost:44395/api/FeaturedContent';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/FeaturedContent`;
 
   /**
    * קבלת כל התוכן המרכזי הפעיל (4 כתבות)

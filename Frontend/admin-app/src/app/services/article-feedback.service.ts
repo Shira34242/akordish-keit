@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -28,7 +29,7 @@ export interface ArticleRank {
 
 @Injectable({ providedIn: 'root' })
 export class ArticleFeedbackService {
-  private apiUrl = 'https://localhost:44395/api/Articles';
+  private apiUrl = `${environment.apiBaseUrl}/api/Articles`;
 
   constructor(private http: HttpClient) {}
 

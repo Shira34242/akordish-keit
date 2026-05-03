@@ -6,7 +6,7 @@ import { SongService } from '../../services/song.service';
 import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MusicalKey } from '../../models/song.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -74,6 +74,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     showSortDropdown: boolean = false;
 
     private searchSubject = new Subject<string>();
+    private searchSubscription?: Subscription;
     private recentlyViewedKey = 'chords-recently-viewed';
 
     get isFiltered(): boolean {
@@ -86,7 +87,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         private knownChordService: UserKnownChordService,
         private router: Router
     ) {
-        this.searchSubject.pipe(
+        this.searchSubscription = this.searchSubject.pipe(
             debounceTime(500),
             distinctUntilChanged()
         ).subscribe(query => {
@@ -126,6 +127,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.scrollObserver?.disconnect();
+        this.searchSubscription?.unsubscribe();
     }
 
     // ─────────────────────────────────────────────
@@ -250,17 +252,17 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private loadMore(): void {
-        if (this.isFiltered || this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
+        if (this.knownChordsMode || this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
         if (this.currentPage >= this.totalPages) return;
         this.isLoadingMore = true;
         this.currentPage++;
         this.songService.getSongs(
-            undefined,
+            this.search || undefined,
             this.currentPage,
             this.pageSize,
-            undefined,
-            undefined,
-            undefined,
+            this.selectedArtistId || undefined,
+            this.selectedGenreId || undefined,
+            this.selectedKeyId || undefined,
             this.sortBy
         ).subscribe({
             next: (res) => {

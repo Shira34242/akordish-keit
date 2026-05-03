@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -22,7 +23,7 @@ export interface PagedResult<T> {
     providedIn: 'root'
 })
 export class SystemTablesService {
-    private apiUrl = `${window.location.hostname === 'localhost' ? 'https://localhost:44395' : ''}/api`;
+    private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api`;
 
     constructor(private http: HttpClient) { }
 

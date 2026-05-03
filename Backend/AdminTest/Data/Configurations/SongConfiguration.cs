@@ -88,6 +88,11 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
                .IsDescending(false, false, true)
                .HasDatabaseName("IX_Songs_Popular");
 
+        // Covers the default listing query: WHERE IsApproved=1 AND IsDeleted=0 ORDER BY CreatedAt DESC
+        builder.HasIndex(e => new { e.IsApproved, e.IsDeleted, e.CreatedAt })
+               .IsDescending(false, false, true)
+               .HasDatabaseName("IX_Songs_Recent");
+
         // Relationships - Composer
         builder.HasOne(s => s.Composer)
                .WithMany(p => p.ComposedSongs)

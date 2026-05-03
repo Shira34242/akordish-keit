@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BoostDto, BoostType } from '../models/subscription.model';
@@ -7,7 +8,7 @@ import { BoostDto, BoostType } from '../models/subscription.model';
   providedIn: 'root'
 })
 export class BoostService {
-  private apiUrl = 'https://localhost:44395/api/Boosts';
+  private apiUrl = `${environment.apiBaseUrl}/api/Boosts`;
 
   constructor(private http: HttpClient) { }
 

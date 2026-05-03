@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -15,7 +16,7 @@ import { SongDto } from '../models/song.model';
   providedIn: 'root'
 })
 export class TeacherService {
-  private apiUrl = `${window.location.hostname === 'localhost' ? 'https://localhost:44395' : ''}/api/Teachers`;
+  private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api/Teachers`;
 
   constructor(private http: HttpClient) { }
 
