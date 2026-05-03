@@ -84,13 +84,13 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   }
 
   get title(): string {
-    return this.kind === 'birthday' ? 'שנפתיע אותך ביומולדת? 🎂' : 'שנכיר קצת יותר? 🎵';
+    return this.kind === 'birthday'
+      ? 'שנפתיע אותך ביומולדת?'
+      : 'כמה פרטים אחרונים להשלמת החוויה באתר';
   }
 
-  get subtitle(): string {
-    return this.kind === 'birthday'
-      ? 'נשמח לשלוח לך ברכה ביום ההולדת'
-      : 'כדי שנוכל להמליץ לך על מורים ובעלי מקצוע באזור שלך';
+  get subtitle(): string | null {
+    return this.kind === 'birthday' ? 'רק חודש ושנה' : null;
   }
 
   get filteredCities(): City[] {

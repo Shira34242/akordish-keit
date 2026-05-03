@@ -6,7 +6,7 @@
 
     <div class="soft-reminder-header">
       <h2>{{ title }}</h2>
-      <p>{{ subtitle }}</p>
+      <p class="soft-reminder-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
     </div>
 
     <form class="soft-reminder-form" (ngSubmit)="onSave()">

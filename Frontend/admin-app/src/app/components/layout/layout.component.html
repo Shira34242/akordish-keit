@@ -327,16 +327,16 @@
                 <li><a routerLink="/events">דף הופעות</a></li>
                 <li><a routerLink="/articles">כתבות תוכן</a></li>
                 <li><a routerLink="/community-playlists">מאגר רשימות שמורות</a></li>
+            </ul>
+            <ul class="footer-col footer-page-links" aria-label="קישורי מידע">
+                <li><a routerLink="/privacy">מדיניות פרטיות</a></li>
+                <li><a routerLink="/terms">תנאי שימוש</a></li>
                 <li><a routerLink="/about">אודות</a></li>
-                <li><a routerLink="/contact">צור קשר</a></li>
             </ul>
             <ul class="footer-col footer-col--tools">
                 <li><a routerLink="/chords/dictionary" class="footer-tag">מילון אקורדים</a></li>
                 <li><button class="footer-tag footer-link-btn" type="button" (click)="handleRandomSongClick()">שיר בהפתעה</button></li>
                 <li><a routerLink="/tuner" class="footer-tag">כיוון גיטרה ויוקלילי</a></li>
-                <li><a routerLink="/privacy" class="footer-tag">מדיניות פרטיות</a></li>
-                <li><a routerLink="/terms" class="footer-tag">תנאי שימוש</a></li>
-                <li><a routerLink="/copyright" class="footer-tag">זכויות יוצרים</a></li>
             </ul>
         </div>
 
@@ -357,11 +357,11 @@
             אתר זה פועל ברשיון אקום
         </span>
         <span class="footer-dot">·</span>
-        <span>אתר זה מכבד זכויות יוצרים — באם זכויותכם נפגעו <button class="footer-legal-link" type="button" (click)="openReportModal()">צרו קשר</button> להסדרת העניין</span>
+        <span>אתר זה מכבד <a routerLink="/copyright" class="footer-legal-link">זכויות יוצרים</a> — באם זכויותכם נפגעו <a routerLink="/contact" class="footer-legal-link">צרו קשר</a> להסדרת העניין</span>
         <span class="footer-dot">·</span>
         <span>© אקורדישקייט. כל הזכויות שמורות</span>
         <span class="footer-dot">·</span>
-        <span>לפרסום ושיתופי פעולה — <button class="footer-legal-link" type="button" (click)="openContactAssistant()">צרו קשר</button></span>
+        <span>לפרסום ושיתופי פעולה — <a routerLink="/contact" class="footer-legal-link">צרו קשר</a></span>
     </div>
 
 </footer>

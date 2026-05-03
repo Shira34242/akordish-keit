@@ -9,8 +9,8 @@ export interface ReminderRequest {
   user: User;
 }
 
-const DAYS_BEFORE_FIRST_REMINDER = 3;
-const DAYS_BEFORE_BIRTHDAY_REMINDER = 14;
+const DAYS_BEFORE_FIRST_REMINDER = 5;
+const DAYS_BEFORE_BIRTHDAY_REMINDER = 21;
 const COOLDOWN_DAYS = 14;
 const MAX_DISMISSALS = 3;
 
@@ -63,19 +63,22 @@ export class ProfileReminderService {
     const daysSinceRegister = this.daysSince(user.createdAt);
     const daysSinceLastReminder = this.daysSince(user.lastProfileReminderAt);
 
-    // cooldown
+    // אם חסר createdAt — לא נציג. מוטב להתעלם מאשר להציג מוקדם מדי.
+    if (daysSinceRegister === null) return null;
+
+    // cooldown אחרי תזכורת קודמת
     if (daysSinceLastReminder !== null && daysSinceLastReminder < COOLDOWN_DAYS) return null;
 
     const missingContact = !user.phone || !user.cityId;
     const missingBirthday = !user.birthDate;
 
-    // תזכורת ראשונה (טלפון + עיר) — אחרי 3 ימים מהרשמה
-    if (missingContact && (daysSinceRegister === null || daysSinceRegister >= DAYS_BEFORE_FIRST_REMINDER)) {
+    // תזכורת ראשונה (טלפון + עיר) — רק אחרי 5 ימים לפחות מההרשמה
+    if (missingContact && daysSinceRegister >= DAYS_BEFORE_FIRST_REMINDER) {
       return 'contact';
     }
 
-    // תזכורת יום הולדת — אחרי 14 ימים, אם פרטי קשר כבר קיימים
-    if (missingBirthday && (daysSinceRegister === null || daysSinceRegister >= DAYS_BEFORE_BIRTHDAY_REMINDER)) {
+    // תזכורת יום הולדת — רק אחרי 21 יום, אם פרטי קשר כבר קיימים
+    if (missingBirthday && daysSinceRegister >= DAYS_BEFORE_BIRTHDAY_REMINDER) {
       return 'birthday';
     }
 

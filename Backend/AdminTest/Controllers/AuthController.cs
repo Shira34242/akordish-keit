@@ -20,6 +20,10 @@ namespace AkordishKeit.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        // תמונת פרופיל אחידה למשתמשים שנרשמו ידנית (ללא Google).
+        // משתמשי Google מקבלים תמונה אמיתית שמורדת מ-Google ל-Cloudinary.
+        private const string DEFAULT_PROFILE_IMAGE_URL = "/default-avatar.svg";
+
         private readonly AkordishKeitDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
@@ -344,6 +348,7 @@ namespace AkordishKeit.Controllers
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = passwordHash,
+                ProfileImageUrl = DEFAULT_PROFILE_IMAGE_URL,
                 Role = UserRole.Regular,
                 Level = 1,
                 Points = 0,

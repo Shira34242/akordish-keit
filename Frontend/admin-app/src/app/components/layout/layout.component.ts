@@ -634,7 +634,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.closeAdditionalDetailsModal();
 
     if (userType === UserType.Regular) {
-      this.router.navigate(['/my-profile']);
+      this.router.navigate(['/']);
       return;
     }
 
