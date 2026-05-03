@@ -324,6 +324,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.newsArticles.length >= 2;
   }
 
+  get loopedUpcomingEvents(): UpcomingEventDto[] {
+    if (this.upcomingEvents.length === 0) return [];
+    return Array.from({ length: 6 }).flatMap(() => this.upcomingEvents);
+  }
+
+  trackByLoopId(index: number, item: { id: number | string }): string {
+    return `${item.id}-${index}`;
+  }
+
   private initParticleEffect(): void {
     if (window.innerWidth < 1025) return;
 

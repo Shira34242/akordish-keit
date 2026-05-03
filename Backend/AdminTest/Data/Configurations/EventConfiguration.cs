@@ -23,6 +23,9 @@ namespace AkordishKeit.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(500);
 
+            builder.Property(e => e.BannerImageUrl)
+                .HasMaxLength(500);
+
             builder.Property(e => e.TicketUrl)
                 .IsRequired()
                 .HasMaxLength(500);

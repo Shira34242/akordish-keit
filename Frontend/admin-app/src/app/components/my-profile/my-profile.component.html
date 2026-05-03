@@ -21,9 +21,9 @@
       <img
         class="profile-avatar"
         [class.profile-avatar--uploading]="uploadingAvatar"
-        [src]="user?.profileImageUrl || '/logo.png'"
+        [src]="user?.profileImageUrl || '/default-avatar.svg'"
         alt="profile image"
-        onerror="this.src='/logo.png'"/>
+        onerror="this.src='/default-avatar.svg'"/>
       <div class="avatar-upload-overlay" *ngIf="uploadingAvatar">
         <span class="avatar-spinner"></span>
       </div>

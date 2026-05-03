@@ -91,6 +91,7 @@ export class EventFormComponent implements OnInit {
     this.loading = true;
     this.eventService.getEvent(this.eventId).subscribe({
       next: (event: Event) => {
+        const taggedArtistIds = event.taggedArtists.map(a => a.artistId);
         // Convert Event to UpdateEventDto
         this.event = {
           name: event.name,
@@ -99,15 +100,16 @@ export class EventFormComponent implements OnInit {
           ticketUrl: event.ticketUrl,
           eventDate: this.formatDateForInput(event.eventDate),
           location: event.location,
-          artistName: event.artistName,
+          artistName: taggedArtistIds.length > 0 ? '' : event.artistName,
           price: event.price,
           displayOrder: event.displayOrder,
           isActive: event.isActive,
-          artistIds: event.taggedArtists.map(a => a.artistId)
+          artistIds: taggedArtistIds
         };
 
         // טעינת האמנים המתוייגים
-        this.selectedArtistIds = event.taggedArtists.map(a => a.artistId);
+        this.selectedArtistIds = taggedArtistIds;
+        this.artistSearchTerm = taggedArtistIds.length > 0 ? '' : (event.artistName ?? '');
 
         this.loading = false;
       },
@@ -124,6 +126,7 @@ export class EventFormComponent implements OnInit {
     this.loading = true;
     this.eventService.getEvent(sourceId).subscribe({
       next: (event: Event) => {
+        const taggedArtistIds = event.taggedArtists.map(a => a.artistId);
         this.event = {
           name: `${event.name} (עותק)`,
           description: event.description,
@@ -131,13 +134,14 @@ export class EventFormComponent implements OnInit {
           ticketUrl: event.ticketUrl,
           eventDate: '',
           location: event.location,
-          artistName: event.artistName,
+          artistName: taggedArtistIds.length > 0 ? '' : event.artistName,
           price: event.price,
           displayOrder: event.displayOrder,
           isActive: true,
-          artistIds: event.taggedArtists.map(a => a.artistId)
+          artistIds: taggedArtistIds
         };
-        this.selectedArtistIds = event.taggedArtists.map(a => a.artistId);
+        this.selectedArtistIds = taggedArtistIds;
+        this.artistSearchTerm = taggedArtistIds.length > 0 ? '' : (event.artistName ?? '');
         this.loading = false;
       },
       error: (error) => {
@@ -162,6 +166,7 @@ export class EventFormComponent implements OnInit {
     } else {
       // לא נבחר - הוסף אותו
       this.selectedArtistIds.push(artistId);
+      this.artistSearchTerm = '';
     }
     // עדכון ה-DTO
     this.event.artistIds = [...this.selectedArtistIds];
@@ -215,10 +220,10 @@ export class EventFormComponent implements OnInit {
     this.saving = true;
 
     // ודא ש-artistIds מעודכן
-    this.event.artistIds = this.selectedArtistIds.length > 0 ? [...this.selectedArtistIds] : [];
+    const payload = this.preparePayload();
 
     if (this.isEditMode && this.eventId) {
-      this.eventService.updateEvent(this.eventId, this.event as UpdateEventDto).subscribe({
+      this.eventService.updateEvent(this.eventId, payload as UpdateEventDto).subscribe({
         next: () => {
           this.saving = false;
           this.goBack();
@@ -230,7 +235,7 @@ export class EventFormComponent implements OnInit {
         }
       });
     } else {
-      this.eventService.createEvent(this.event as CreateEventDto).subscribe({
+      this.eventService.createEvent(payload as CreateEventDto).subscribe({
         next: () => {
           this.saving = false;
           this.goBack();
@@ -245,11 +250,6 @@ export class EventFormComponent implements OnInit {
   }
 
   validateForm(): boolean {
-    if (!this.event.name.trim()) {
-      alert('נא להזין כותרת להופעה');
-      return false;
-    }
-
     if (!this.event.imageUrl.trim()) {
       alert('נא להעלות תמונה להופעה');
       return false;
@@ -266,6 +266,23 @@ export class EventFormComponent implements OnInit {
     }
 
     return true;
+  }
+
+  private preparePayload(): CreateEventDto | UpdateEventDto {
+    const selectedNames = this.selectedArtistIds
+      .map(artistId => this.getArtistName(artistId))
+      .filter(Boolean);
+    const typedArtistName = this.artistSearchTerm.trim();
+    const artistIds = this.selectedArtistIds.length > 0 ? [...this.selectedArtistIds] : [];
+    const artistName = artistIds.length > 0 ? '' : typedArtistName;
+    const fallbackName = selectedNames[0] || artistName || this.event.location || 'הופעה חדשה';
+
+    return {
+      ...this.event,
+      name: this.event.name?.trim() || fallbackName,
+      artistName,
+      artistIds
+    };
   }
 
   goBack(): void {

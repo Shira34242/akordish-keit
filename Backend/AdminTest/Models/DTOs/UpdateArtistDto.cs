@@ -14,18 +14,51 @@ public class UpdateArtistDto
     public string? ImageUrl { get; set; }
     public string? BannerImageUrl { get; set; }
     public string? BannerGifUrl { get; set; }        // רק למשלם
+    /// <summary>"image" | "gif" | "video" — בחירה אחת לבאנר</summary>
+    public string? BannerMediaType { get; set; }
+    /// <summary>עוצמת טשטוש (0-20)</summary>
+    public int? BannerBlur { get; set; }
     public string? WebsiteUrl { get; set; }
     public ArtistStatus? Status { get; set; }        // ניהול סטטוס (Admin)
     public bool? IsPremium { get; set; }             // חשבון משלם (Admin)
 
-    // באנר הופעה
+    // באנר הופעה — legacy
     public string? PerformanceImageUrl { get; set; }
     public string? PerformanceTicketUrl { get; set; }
     public bool? PerformanceIsActive { get; set; }
 
+    /// <summary>
+    /// פרטי האירוע לבאנר ההופעה. אם null = ניקוי הקישור.
+    /// אם EventId קיים – מתעדכן אירוע קיים. אם לא – נוצר חדש.
+    /// בכל מקרה האירוע יוצג גם בדף ההופעות הראשי כהופעה רגילה.
+    /// </summary>
+    public PerformanceEventInputDto? PerformanceEvent { get; set; }
+
     public List<SocialLinkDto>? SocialLinks { get; set; }
     public List<AddGalleryImageDto>? GalleryImages { get; set; }
     public List<AddVideoDto>? Videos { get; set; }
+}
+
+/// <summary>
+/// קלט יצירה/עדכון של אירוע מקושר לבאנר אמן.
+/// המערכת תיצור אירוע מלא ותקשר אותו לאמן.
+/// </summary>
+public class PerformanceEventInputDto
+{
+    /// <summary>אם מסופק – יעדכן אירוע קיים. אם לא – יצור חדש.</summary>
+    public int? EventId { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    /// <summary>תמונה ראשית לדף ההופעות (פוסטר ריבועי)</summary>
+    public string ImageUrl { get; set; } = string.Empty;
+    /// <summary>תמונת באנר רחבה (4:1 בערך) לתצוגה בדף האמן</summary>
+    public string? BannerImageUrl { get; set; }
+    public string TicketUrl { get; set; } = string.Empty;
+    public DateTime EventDate { get; set; }
+    public string? Location { get; set; }
+    public decimal? Price { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 /// <summary>

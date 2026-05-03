@@ -294,14 +294,8 @@
       <div class="events-loop-row">
         <div class="events-loop-track">
           <app-event-card
-            *ngFor="let event of upcomingEvents; trackBy: trackById"
+            *ngFor="let event of loopedUpcomingEvents; trackBy: trackByLoopId"
             [event]="event"
-            (cardClick)="openEventModal($event)">
-          </app-event-card>
-          <app-event-card
-            *ngFor="let event of upcomingEvents; trackBy: trackById"
-            [event]="event"
-            aria-hidden="true"
             (cardClick)="openEventModal($event)">
           </app-event-card>
         </div>

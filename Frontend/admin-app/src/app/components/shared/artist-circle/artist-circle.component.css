@@ -7,10 +7,14 @@
     cursor: pointer;
     text-align: center;
     transition: transform 0.2s;
+    transform-origin: center center;
+    position: relative;
+    z-index: 1;
 }
 
 .artist-circle:hover {
     transform: scale(1.05);
+    z-index: 2;
 }
 
 .image-wrapper {

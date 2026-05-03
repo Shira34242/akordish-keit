@@ -38,6 +38,13 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
         builder.Property(e => e.BannerGifUrl)
                .HasMaxLength(500);
 
+        builder.Property(e => e.BannerMediaType)
+               .HasMaxLength(20);
+
+        builder.Property(e => e.BannerBlur)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.WebsiteUrl)
                .HasMaxLength(500);
 
@@ -138,5 +145,11 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .WithMany(s => s.CoveredArtists)
                .HasForeignKey(a => a.SubscriptionId)
                .OnDelete(DeleteBehavior.NoAction);
+
+        // Performance Event relationship (אירוע מקושר לבאנר אמן)
+        builder.HasOne(a => a.PerformanceEvent)
+               .WithMany()
+               .HasForeignKey(a => a.PerformanceEventId)
+               .OnDelete(DeleteBehavior.SetNull);
     }
 }

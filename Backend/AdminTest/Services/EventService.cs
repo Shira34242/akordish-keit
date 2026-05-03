@@ -25,7 +25,11 @@ namespace AkordishKeit.Services
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
-            var query = _context.Events.AsQueryable();
+            var query = _context.Events
+                .Include(e => e.EventArtists)
+                    .ThenInclude(ea => ea.Artist)
+                .Where(e => !e.IsDeleted)
+                .AsQueryable();
 
             // Apply filters
             if (!string.IsNullOrWhiteSpace(search))
@@ -74,7 +78,7 @@ namespace AkordishKeit.Services
             var eventEntity = await _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
 
             return eventEntity == null ? null : MapToDto(eventEntity);
         }
@@ -87,7 +91,7 @@ namespace AkordishKeit.Services
             var events = await _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .Where(e => e.IsActive && e.EventDate >= oneMonthAgo)
+                .Where(e => !e.IsDeleted && e.IsActive && e.EventDate >= oneMonthAgo)
                 .OrderBy(e => e.EventDate)
                 .ThenBy(e => e.DisplayOrder)
                 .Take(limit)
@@ -119,6 +123,7 @@ namespace AkordishKeit.Services
                 Name = eventName,
                 Description = dto.Description?.Trim(),
                 ImageUrl = dto.ImageUrl?.Trim() ?? string.Empty,
+                BannerImageUrl = string.IsNullOrWhiteSpace(dto.BannerImageUrl) ? null : dto.BannerImageUrl.Trim(),
                 TicketUrl = dto.TicketUrl?.Trim() ?? string.Empty,
                 EventDate = dto.EventDate ?? DateTime.UtcNow,
                 Location = dto.Location?.Trim(),
@@ -178,9 +183,12 @@ namespace AkordishKeit.Services
 
             var wasActive = eventEntity.IsActive;
 
-            eventEntity.Name = dto.Name;
+            eventEntity.Name = string.IsNullOrWhiteSpace(dto.Name)
+                ? (string.IsNullOrWhiteSpace(dto.ArtistName) ? "הופעה חדשה" : dto.ArtistName.Trim())
+                : dto.Name.Trim();
             eventEntity.Description = dto.Description;
             eventEntity.ImageUrl = dto.ImageUrl;
+            eventEntity.BannerImageUrl = string.IsNullOrWhiteSpace(dto.BannerImageUrl) ? null : dto.BannerImageUrl.Trim();
             eventEntity.TicketUrl = dto.TicketUrl;
             eventEntity.EventDate = dto.EventDate;
             eventEntity.Location = dto.Location;
@@ -288,6 +296,7 @@ namespace AkordishKeit.Services
                 Name = eventEntity.Name,
                 Description = eventEntity.Description,
                 ImageUrl = eventEntity.ImageUrl,
+                BannerImageUrl = eventEntity.BannerImageUrl,
                 TicketUrl = eventEntity.TicketUrl,
                 EventDate = eventEntity.EventDate,
                 Location = eventEntity.Location,

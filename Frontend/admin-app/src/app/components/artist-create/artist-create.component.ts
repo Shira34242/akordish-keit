@@ -8,7 +8,7 @@ import { ArtistService } from '../../services/artist.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
-import { UpdateArtistDto } from '../../models/artist.model';
+import { BannerMediaType, PerformanceEventInput, UpdateArtistDto } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 
@@ -22,15 +22,25 @@ interface ArtistFormData {
   websiteUrl: string;
   socialLinks: { platform: number; url: string }[];   // ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¨׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ©׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳³ג€™׳’ג€ֲ¬ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¨׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ
   musicLinks: { platform: number; url: string }[];    // ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ³׳’ג‚¬ג€׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ»׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ³׳’ג‚¬ג€׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¨׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳³ג€™׳’ג€ֲ¬ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ§׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ
-  // Performance banner
-  performanceImageUrl: string;
-  performanceTicketUrl: string;
-  performanceIsActive: boolean;
-  // Premium fields
-  bannerImageUrl?: string;
-  bannerGifUrl?: string;
-  galleryImages?: { imageUrl: string; caption: string; displayOrder: number }[];
-  videos?: { videoUrl: string; title: string; displayOrder: number }[];
+  // Performance event (full)
+  performance: {
+    enabled: boolean;
+    name: string;
+    description: string;
+    eventDate: string;        // datetime-local
+    location: string;
+    price: number | null;
+    ticketUrl: string;
+    imageUrl: string;         // poster (square)
+    bannerImageUrl: string;   // banner (wide 4:1)
+    isActive: boolean;
+  };
+  // Banner
+  bannerMediaType: BannerMediaType;
+  bannerUrl: string;
+  bannerBlur: number;
+  // Premium fields - gallery (unified)
+  galleryItems?: { kind: 'image' | 'video'; imageUrl?: string; caption?: string; videoUrl?: string; title?: string; displayOrder: number }[];
 }
 
 interface PlatformLinkOption {
@@ -60,7 +70,8 @@ export class ArtistCreateComponent implements OnInit {
   error = '';
   subscription?: SubscriptionDto;
   isPremium = false;
-  bannerMediaMode: 'image' | 'gif' = 'image';
+
+  readonly GALLERY_MIN_ITEMS = 5;
 
   private readonly langService = inject(LanguageService);
 
@@ -91,11 +102,22 @@ export class ArtistCreateComponent implements OnInit {
     websiteUrl: '',
     socialLinks: [],
     musicLinks: [],
-    performanceImageUrl: '',
-    performanceTicketUrl: '',
-    performanceIsActive: false,
-    galleryImages: [],
-    videos: []
+    performance: {
+      enabled: false,
+      name: '',
+      description: '',
+      eventDate: '',
+      location: '',
+      price: null,
+      ticketUrl: '',
+      imageUrl: '',
+      bannerImageUrl: '',
+      isActive: true
+    },
+    bannerMediaType: 'image',
+    bannerUrl: '',
+    bannerBlur: 0,
+    galleryItems: []
   };
 
   constructor(
@@ -210,39 +232,39 @@ export class ArtistCreateComponent implements OnInit {
   }
 
   addGalleryImage() {
-    if (!this.artistForm.galleryImages) {
-      this.artistForm.galleryImages = [];
-    }
-    this.artistForm.galleryImages.push({
+    if (!this.artistForm.galleryItems) this.artistForm.galleryItems = [];
+    this.artistForm.galleryItems.push({
+      kind: 'image',
       imageUrl: '',
       caption: '',
-      displayOrder: this.artistForm.galleryImages.length
+      displayOrder: this.artistForm.galleryItems.length
     });
   }
 
-  removeGalleryImage(index: number) {
-    this.artistForm.galleryImages?.splice(index, 1);
-    this.artistForm.galleryImages?.forEach((image, order) => image.displayOrder = order);
-  }
-
-  addVideo() {
-    if (!this.artistForm.videos) {
-      this.artistForm.videos = [];
-    }
-    this.artistForm.videos.push({
+  addGalleryVideo() {
+    if (!this.artistForm.galleryItems) this.artistForm.galleryItems = [];
+    this.artistForm.galleryItems.push({
+      kind: 'video',
       videoUrl: '',
       title: '',
-      displayOrder: this.artistForm.videos.length
+      displayOrder: this.artistForm.galleryItems.length
     });
   }
 
-  removeVideo(index: number) {
-    this.artistForm.videos?.splice(index, 1);
-    this.artistForm.videos?.forEach((video, order) => video.displayOrder = order);
+  removeGalleryItem(index: number) {
+    this.artistForm.galleryItems?.splice(index, 1);
+    this.artistForm.galleryItems?.forEach((it, order) => it.displayOrder = order);
   }
 
-  setBannerMediaMode(mode: 'image' | 'gif'): void {
-    this.bannerMediaMode = mode;
+  get galleryItemsCount(): number {
+    return (this.artistForm.galleryItems || []).filter(it => {
+      if (it.kind === 'image') return !!it.imageUrl?.trim();
+      return !!it.videoUrl?.trim();
+    }).length;
+  }
+
+  setBannerType(mode: BannerMediaType): void {
+    this.artistForm.bannerMediaType = mode;
   }
 
   getPlatformLink(links: { platform: number; url: string }[], platform: number): string {
@@ -278,7 +300,8 @@ export class ArtistCreateComponent implements OnInit {
   }
 
   private syncBannerMediaMode(): void {
-    this.bannerMediaMode = this.artistForm.bannerGifUrl ? 'gif' : 'image';
+    // ברירת מחדל — תמונה. נשמר לגבי תאימות לאחור.
+    this.artistForm.bannerMediaType = this.artistForm.bannerMediaType || 'image';
   }
 
   getSocialPlatformName(platform: number): string {
@@ -328,23 +351,43 @@ export class ArtistCreateComponent implements OnInit {
         url: link.url.trim()
       }));
 
-    const galleryImages = (this.artistForm.galleryImages || [])
-      .filter(image => image.imageUrl?.trim())
-      .map((image, index) => ({
-        imageUrl: image.imageUrl.trim(),
-        caption: image.caption?.trim() || undefined,
+    const items = this.artistForm.galleryItems || [];
+    const galleryImages = items
+      .filter(it => it.kind === 'image' && it.imageUrl?.trim())
+      .map((it, index) => ({
+        imageUrl: it.imageUrl!.trim(),
+        caption: it.caption?.trim() || undefined,
         displayOrder: index
       }));
 
-    const videos = (this.artistForm.videos || [])
-      .filter(video => video.videoUrl?.trim())
-      .map((video, index) => ({
-        videoUrl: video.videoUrl.trim(),
-        title: video.title?.trim() || undefined,
+    const videos = items
+      .filter(it => it.kind === 'video' && it.videoUrl?.trim())
+      .map((it, index) => ({
+        videoUrl: it.videoUrl!.trim(),
+        title: it.title?.trim() || undefined,
         displayOrder: index
       }));
+
+    const performance: PerformanceEventInput | null = this.artistForm.performance.enabled
+      && this.artistForm.performance.name?.trim()
+      && this.artistForm.performance.eventDate
+      ? {
+          name: this.artistForm.performance.name.trim(),
+          description: this.artistForm.performance.description?.trim() || undefined,
+          imageUrl: this.artistForm.performance.imageUrl?.trim() || '',
+          bannerImageUrl: this.artistForm.performance.bannerImageUrl?.trim() || undefined,
+          ticketUrl: this.artistForm.performance.ticketUrl?.trim() || '',
+          eventDate: new Date(this.artistForm.performance.eventDate).toISOString(),
+          location: this.artistForm.performance.location?.trim() || undefined,
+          price: this.artistForm.performance.price ?? null,
+          isActive: this.artistForm.performance.isActive
+        }
+      : null;
 
     // ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ³ײ²ֲ·׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ-DTO ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ©׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳³ג€™׳’ג€ֲ¬ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ
+    const bannerType = this.artistForm.bannerMediaType;
+    const bannerUrl = this.artistForm.bannerUrl?.trim();
+
     const dto: UpdateArtistDto = {
       name: this.artistForm.name.trim(),
       englishName: this.artistForm.englishName?.trim() || undefined,
@@ -355,12 +398,13 @@ export class ArtistCreateComponent implements OnInit {
       socialLinks: allLinks.length > 0
         ? allLinks
         : undefined,
-      performanceImageUrl: this.artistForm.performanceImageUrl?.trim() || undefined,
-      performanceTicketUrl: this.artistForm.performanceTicketUrl?.trim() || undefined,
-      performanceIsActive: this.artistForm.performanceIsActive,
+      performanceIsActive: this.artistForm.performance.enabled,
+      performanceEvent: performance,
       // ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ©׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ³׳’ג‚¬ג€׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¨׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ - ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ©׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¨׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¡׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ¡ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ ׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¢׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ³׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ
-      bannerImageUrl: this.artistForm.bannerImageUrl?.trim() || undefined,
-      bannerGifUrl: this.artistForm.bannerGifUrl?.trim() || undefined,
+      bannerImageUrl: bannerType === 'image' && bannerUrl ? bannerUrl : undefined,
+      bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') && bannerUrl ? bannerUrl : undefined,
+      bannerMediaType: bannerUrl ? bannerType : null,
+      bannerBlur: Number(this.artistForm.bannerBlur) || 0,
       galleryImages: galleryImages.length > 0
         ? galleryImages
         : undefined,

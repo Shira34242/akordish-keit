@@ -100,7 +100,7 @@
               <span class="material-icons">panorama</span>
               <div>
                 <strong>{{ 'artist_create.banner_label' | translate }}</strong>
-                <p>{{ 'artist_create.banner_hint' | translate }}</p>
+                <p>בחרי סוג אחד בלבד — תמונה / GIF / וידאו</p>
               </div>
             </div>
 
@@ -108,33 +108,59 @@
               <button
                 type="button"
                 class="media-toggle-btn"
-                [class.active]="bannerMediaMode === 'image'"
-                (click)="setBannerMediaMode('image')">
-                {{ 'artist_create.banner_image' | translate }}
+                [class.active]="artistForm.bannerMediaType === 'image'"
+                (click)="setBannerType('image')">
+                תמונה
               </button>
               <button
                 type="button"
                 class="media-toggle-btn"
-                [class.active]="bannerMediaMode === 'gif'"
-                (click)="setBannerMediaMode('gif')">
-                {{ 'artist_create.banner_gif' | translate }}
+                [class.active]="artistForm.bannerMediaType === 'gif'"
+                (click)="setBannerType('gif')">
+                GIF
+              </button>
+              <button
+                type="button"
+                class="media-toggle-btn"
+                [class.active]="artistForm.bannerMediaType === 'video'"
+                (click)="setBannerType('video')">
+                וידאו
               </button>
             </div>
 
             <app-file-upload-input
-              *ngIf="bannerMediaMode === 'image'"
-              [(url)]="artistForm.bannerImageUrl"
+              *ngIf="artistForm.bannerMediaType === 'image'"
+              [(url)]="artistForm.bannerUrl"
               [placeholder]="'artist_create.paste_banner_url' | translate"
               [showPreview]="true"
             />
-
             <app-file-upload-input
-              *ngIf="bannerMediaMode === 'gif'"
-              [(url)]="artistForm.bannerGifUrl"
-              accept="image/*,video/mp4,video/webm"
+              *ngIf="artistForm.bannerMediaType === 'gif'"
+              [(url)]="artistForm.bannerUrl"
+              accept="image/gif,image/*"
               [placeholder]="'artist_create.paste_gif_url' | translate"
               [showPreview]="false"
             />
+            <app-file-upload-input
+              *ngIf="artistForm.bannerMediaType === 'video'"
+              [(url)]="artistForm.bannerUrl"
+              accept="video/mp4,video/webm"
+              placeholder="https://example.com/banner.mp4"
+              [showPreview]="false"
+            />
+
+            <label class="form-label" style="margin-top: 12px;">טשטוש על הבאנר ({{ artistForm.bannerBlur }})</label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              [(ngModel)]="artistForm.bannerBlur"
+              name="bannerBlur"
+              class="form-range"
+              style="width: 100%;"
+            />
+            <small class="form-hint">0 = ללא טשטוש, 20 = טשטוש חזק. שימושי כדי שהשם והפרטים שלך יבלטו מעל התמונה.</small>
           </div>
 
           <div class="form-group">
@@ -242,7 +268,11 @@
           </div>
 
           <div class="section-kicker">{{ 'artist_create.gallery_kicker' | translate }}</div>
-          <p class="section-description section-description--compact">{{ 'artist_create.gallery_desc' | translate }}</p>
+          <p class="section-description section-description--compact">
+            {{ 'artist_create.gallery_desc' | translate }}
+            הגלריה תוצג בדף האמן רק כשיש לפחות {{ GALLERY_MIN_ITEMS }} פריטים (תמונות וסרטונים יחד).
+            יש לך כרגע <strong>{{ galleryItemsCount }}</strong> פריטים.
+          </p>
 
           <div class="media-grid">
             <button type="button" class="media-add-card" (click)="addGalleryImage()">
@@ -251,100 +281,143 @@
               <span>{{ 'artist_create.add_image_hint' | translate }}</span>
             </button>
 
-            <button type="button" class="media-add-card media-add-card--video" (click)="addVideo()">
+            <button type="button" class="media-add-card media-add-card--video" (click)="addGalleryVideo()">
               <span class="material-icons">smart_display</span>
               <strong>{{ 'artist_create.add_video' | translate }}</strong>
               <span>{{ 'artist_create.add_video_hint' | translate }}</span>
             </button>
 
-            <div *ngFor="let image of artistForm.galleryImages; let i = index" class="media-card">
-              <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" [attr.aria-label]="'artist_create.remove_image' | translate">
+            <div *ngFor="let item of artistForm.galleryItems; let i = index" class="media-card" [class.media-card--video]="item.kind === 'video'">
+              <button type="button" class="media-card-remove" (click)="removeGalleryItem(i)" aria-label="הסר">
                 <span class="material-icons">close</span>
               </button>
 
-              <div class="media-card-preview" [class.has-image]="image.imageUrl">
-                <img *ngIf="image.imageUrl" [src]="image.imageUrl" [alt]="image.caption || ('artist_create.gallery_img_alt' | translate)" />
-                <span *ngIf="!image.imageUrl" class="material-icons">image</span>
-              </div>
+              <ng-container *ngIf="item.kind === 'image'">
+                <div class="media-card-preview" [class.has-image]="item.imageUrl">
+                  <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.caption || ('artist_create.gallery_img_alt' | translate)" />
+                  <span *ngIf="!item.imageUrl" class="material-icons">image</span>
+                </div>
+                <app-file-upload-input
+                  [(url)]="item.imageUrl"
+                  [placeholder]="'artist_create.paste_photo_url' | translate"
+                  [showPreview]="false"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="item.caption"
+                  [name]="'gallery_caption_' + i"
+                  class="form-input"
+                  [placeholder]="'artist_create.caption_placeholder' | translate"
+                />
+              </ng-container>
 
-              <app-file-upload-input
-                [(url)]="image.imageUrl"
-                [placeholder]="'artist_create.paste_photo_url' | translate"
-                [showPreview]="false"
-              />
-
-              <input
-                type="text"
-                [(ngModel)]="image.caption"
-                [name]="'gallery_caption_' + i"
-                class="form-input"
-                [placeholder]="'artist_create.caption_placeholder' | translate"
-              />
-            </div>
-
-            <div *ngFor="let video of artistForm.videos; let i = index" class="media-card media-card--video">
-              <button type="button" class="media-card-remove" (click)="removeVideo(i)" [attr.aria-label]="'artist_create.remove_video' | translate">
-                <span class="material-icons">close</span>
-              </button>
-
-              <div class="media-card-preview media-card-preview--video">
-                <span class="material-icons">smart_display</span>
-              </div>
-
-              <input
-                type="text"
-                [(ngModel)]="video.title"
-                [name]="'video_title_' + i"
-                class="form-input"
-                [placeholder]="'artist_create.video_title_placeholder' | translate"
-              />
-
-              <input
-                type="url"
-                [(ngModel)]="video.videoUrl"
-                [name]="'video_url_' + i"
-                class="form-input"
-                [placeholder]="'artist_create.paste_video_url' | translate"
-              />
+              <ng-container *ngIf="item.kind === 'video'">
+                <div class="media-card-preview media-card-preview--video">
+                  <span class="material-icons">smart_display</span>
+                </div>
+                <input
+                  type="text"
+                  [(ngModel)]="item.title"
+                  [name]="'gallery_title_' + i"
+                  class="form-input"
+                  [placeholder]="'artist_create.video_title_placeholder' | translate"
+                />
+                <input
+                  type="url"
+                  [(ngModel)]="item.videoUrl"
+                  [name]="'gallery_videoUrl_' + i"
+                  class="form-input"
+                  [placeholder]="'artist_create.paste_video_url' | translate"
+                />
+              </ng-container>
             </div>
           </div>
 
           <div class="section-kicker section-kicker--spaced">{{ 'artist_create.performance_kicker' | translate }}</div>
-          <p class="section-description section-description--compact">{{ 'artist_create.performance_desc' | translate }}</p>
+          <p class="section-description section-description--compact">
+            {{ 'artist_create.performance_desc' | translate }}
+            ההופעה תופיע גם בדף ההופעות הראשי באתר. נדרשות 2 תמונות:
+            פוסטר ריבועי לדף ההופעות ותמונת באנר רחבה (4:1) לדף האמן.
+          </p>
 
           <div class="performance-card">
             <div class="upload-shell upload-shell--performance">
               <div class="upload-shell-head upload-shell-head--banner">
                 <span class="material-icons">campaign</span>
                 <div>
-                  <strong>{{ 'artist_create.perf_banner_label' | translate }}</strong>
-                  <p>{{ 'artist_create.perf_banner_hint' | translate }}</p>
+                  <strong>הוספת הופעה לבאנר האמן</strong>
+                  <p>הופעה מלאה — תוצג בדף ההופעות וגם כבאנר בדף האמן</p>
                 </div>
               </div>
-
-              <app-file-upload-input
-                [(url)]="artistForm.performanceImageUrl"
-                [placeholder]="'artist_create.perf_banner_placeholder' | translate"
-                [showPreview]="true"
-              />
-
-              <input
-                type="url"
-                [(ngModel)]="artistForm.performanceTicketUrl"
-                name="performanceTicketUrl"
-                class="form-input"
-                [placeholder]="'artist_create.perf_ticket_placeholder' | translate"
-              />
 
               <label class="toggle-row">
                 <input
                   type="checkbox"
-                  [(ngModel)]="artistForm.performanceIsActive"
-                  name="performanceIsActive"
+                  [(ngModel)]="artistForm.performance.enabled"
+                  name="performanceEnabled"
                   class="form-checkbox"
                 />
-                <span>{{ 'artist_create.perf_show_banner' | translate }}</span>
+                <span>הצג באנר הופעה בדף האמן ובדף ההופעות</span>
               </label>
+
+              <ng-container *ngIf="artistForm.performance.enabled">
+                <input
+                  type="text"
+                  [(ngModel)]="artistForm.performance.name"
+                  name="perfName"
+                  class="form-input"
+                  placeholder="שם ההופעה..."
+                />
+                <input
+                  type="datetime-local"
+                  [(ngModel)]="artistForm.performance.eventDate"
+                  name="perfDate"
+                  class="form-input"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="artistForm.performance.location"
+                  name="perfLocation"
+                  class="form-input"
+                  placeholder="מיקום (עיר / מקום)..."
+                />
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="artistForm.performance.price"
+                  name="perfPrice"
+                  class="form-input"
+                  placeholder="מחיר (אופציונלי)"
+                />
+                <textarea
+                  [(ngModel)]="artistForm.performance.description"
+                  name="perfDescription"
+                  class="form-textarea"
+                  rows="2"
+                  placeholder="תיאור ההופעה (אופציונלי)..."
+                ></textarea>
+                <input
+                  type="url"
+                  [(ngModel)]="artistForm.performance.ticketUrl"
+                  name="performanceTicketUrl"
+                  class="form-input"
+                  [placeholder]="'artist_create.perf_ticket_placeholder' | translate"
+                />
+
+                <label class="form-label" style="margin-top: 8px;">פוסטר ריבועי (לדף ההופעות)</label>
+                <app-file-upload-input
+                  [(url)]="artistForm.performance.imageUrl"
+                  placeholder="https://example.com/poster.jpg"
+                  [showPreview]="true"
+                />
+
+                <label class="form-label" style="margin-top: 8px;">תמונת באנר רחבה 4:1 (לדף האמן)</label>
+                <app-file-upload-input
+                  [(url)]="artistForm.performance.bannerImageUrl"
+                  placeholder="https://example.com/banner.jpg"
+                  [showPreview]="true"
+                />
+              </ng-container>
             </div>
           </div>
         </div>

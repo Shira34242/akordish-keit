@@ -6,12 +6,20 @@ export interface EventCardData {
   eventDate: string;
   location?: string;
   artistName?: string;
+  taggedArtists?: EventCardArtist[];
   taggedArtistNames?: string[];
   eventStatus: string;
   daysUntilEvent?: number;
   isPast?: boolean;
   isApproved?: boolean;
   description?: string;
+}
+
+export interface EventCardArtist {
+  artistId: number;
+  artistName: string;
+  artistImageUrl?: string;
+  filterKey?: string;
 }
 
 export function getDisplayArtist(event: {

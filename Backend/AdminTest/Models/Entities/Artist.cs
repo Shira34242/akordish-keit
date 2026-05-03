@@ -15,8 +15,18 @@ public class Artist
 
     // תמונות
     public string? ImageUrl { get; set; }            // תמונת פרופיל
-    public string? BannerImageUrl { get; set; }      // תמונת באנר רגילה (לכולם)
-    public string? BannerGifUrl { get; set; }        // GIF/וידאו לבאנר (משלם בלבד)
+    public string? BannerImageUrl { get; set; }      // תמונת באנר (אם BannerMediaType = "image")
+    public string? BannerGifUrl { get; set; }        // GIF/וידאו לבאנר (אם BannerMediaType = "gif"/"video")
+
+    /// <summary>
+    /// סוג מדיית הבאנר: "image" / "gif" / "video" (בחירה אחת בלבד)
+    /// </summary>
+    public string? BannerMediaType { get; set; }
+
+    /// <summary>
+    /// עוצמת טשטוש לבאנר (0-20)
+    /// </summary>
+    public int BannerBlur { get; set; } = 0;
 
     public string? WebsiteUrl { get; set; }
     public bool IsVerified { get; set; }
@@ -51,9 +61,15 @@ public class Artist
     public int? PersonId { get; set; }
 
     // באנר הופעה (תמונה + קישור לכרטיסים)
-    public string? PerformanceImageUrl { get; set; }  // תמונת הבאנר
-    public string? PerformanceTicketUrl { get; set; } // קישור לכרטיסים
-    public bool PerformanceIsActive { get; set; } = false; // מוצג/מוסתר
+    public string? PerformanceImageUrl { get; set; }  // legacy — לא בשימוש בזרימה החדשה
+    public string? PerformanceTicketUrl { get; set; } // legacy — לא בשימוש בזרימה החדשה
+    public bool PerformanceIsActive { get; set; } = false; // האם להציג את באנר ההופעה בדף האמן
+
+    /// <summary>
+    /// קישור לאירוע (Event) שיוצג כבאנר ההופעה בדף האמן.
+    /// האירוע עצמו מוצג גם בדף ההופעות הראשי כהופעה רגילה.
+    /// </summary>
+    public int? PerformanceEventId { get; set; }
 
     // תאריכים
     public DateTime CreatedAt { get; set; }
@@ -64,6 +80,7 @@ public class Artist
     public virtual User? User { get; set; }
     public virtual Person? Person { get; set; }
     public virtual Subscription? Subscription { get; set; }  // 🆕 המנוי שמממן את הפרופיל
+    public virtual Event? PerformanceEvent { get; set; }     // אירוע מקושר לבאנר ההופעה
     public virtual ICollection<SongArtist> SongArtists { get; set; }
     public virtual ICollection<ArtistSocialLink> SocialLinks { get; set; }
     public virtual ICollection<ArtistGalleryImage> GalleryImages { get; set; }

@@ -16,6 +16,9 @@ namespace AkordishKeit.Models.DTOs
         [StringLength(500, ErrorMessage = "URL התמונה חייב להיות עד 500 תווים")]
         public string ImageUrl { get; set; } = string.Empty;
 
+        [StringLength(500, ErrorMessage = "URL תמונת הבאנר חייב להיות עד 500 תווים")]
+        public string? BannerImageUrl { get; set; }
+
         [StringLength(500, ErrorMessage = "URL הכרטיסים חייב להיות עד 500 תווים")]
         public string TicketUrl { get; set; } = string.Empty;
 
@@ -58,6 +61,9 @@ namespace AkordishKeit.Models.DTOs
         [StringLength(500, ErrorMessage = "URL התמונה חייב להיות עד 500 תווים")]
         public string ImageUrl { get; set; } = string.Empty;
 
+        [StringLength(500, ErrorMessage = "URL תמונת הבאנר חייב להיות עד 500 תווים")]
+        public string? BannerImageUrl { get; set; }
+
         [Required(ErrorMessage = "לינק לרכישת כרטיסים הוא שדה חובה")]
         [StringLength(500, ErrorMessage = "URL הכרטיסים חייב להיות עד 500 תווים")]
         public string TicketUrl { get; set; } = string.Empty;
@@ -96,6 +102,7 @@ namespace AkordishKeit.Models.DTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
+        public string? BannerImageUrl { get; set; }
         public string TicketUrl { get; set; } = string.Empty;
         public DateTime EventDate { get; set; }
         public string? Location { get; set; }

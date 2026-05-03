@@ -87,7 +87,78 @@
     height: 26px;
 }
 
+.nav-link:hover,
+.site-sub-nav-item:hover {
+    background: #F2F2F2;
+}
+
 .nav-link.active {
+    font-weight: 700;
+}
+
+.site-nav-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    border-radius: 999px;
+    flex-shrink: 0;
+    direction: ltr;
+}
+
+.site-nav-group.active .nav-parent {
+    font-weight: 700;
+}
+
+.site-nav-submenu {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    max-width: 0;
+    height: 34px;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width 0.22s ease, opacity 0.12s ease;
+    white-space: nowrap;
+    pointer-events: none;
+    direction: rtl;
+}
+
+.site-nav-group:hover .site-nav-submenu,
+.header-left-group:hover .site-nav-submenu,
+.mobile-nav-scroll:hover .site-nav-submenu {
+    max-width: min(38vw, 22rem);
+    padding: 0 var(--space-xs);
+    opacity: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    pointer-events: all;
+    transition: max-width 0.44s cubic-bezier(0.2, 0.82, 0.22, 1), opacity 0.22s ease 0.08s;
+}
+
+.site-nav-submenu::-webkit-scrollbar {
+    display: none;
+}
+
+.site-sub-nav-item {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 var(--space-md);
+    border-radius: 999px;
+    color: #000000;
+    text-decoration: none;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-sm);
+    font-weight: 500;
+}
+
+.site-sub-nav-item:hover,
+.site-sub-nav-item.active-sub {
+    color: #000000;
+}
+
+.site-sub-nav-item.active-sub {
     font-weight: 700;
 }
 
@@ -843,6 +914,10 @@
     /* nav pills במובייל — RTL כדי שבית יהיה בימין */
     .mobile-main-nav {
         direction: rtl;
+    }
+
+    .mobile-main-nav .site-nav-group:hover .site-nav-submenu {
+        max-width: 78vw;
     }
 }
 

@@ -525,8 +525,11 @@
    ARTISTS LOOP ROW (אמנים — לולאה)
 ============================================ */
 .artists-loop-row {
-  overflow: hidden;
-  padding-bottom: var(--space-sm);
+  /* הגבלה אופקית בלבד כדי שהגדלה ב-hover (scale 1.05) לא תיחתך אנכית */
+  overflow-x: clip;
+  overflow-y: visible;
+  padding-top: var(--space-sm);
+  padding-bottom: var(--space-md);
   direction: ltr;
 }
 

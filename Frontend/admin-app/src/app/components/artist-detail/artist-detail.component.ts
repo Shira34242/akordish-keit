@@ -9,16 +9,18 @@ import { ArtistPageService } from '../../services/artist-page.service';
 import { Artist, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
-import { UpcomingEventDto } from '../../models/event.model';
+import { Event as EventModel, UpcomingEventDto } from '../../models/event.model';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
+import { EventCardComponent } from '../shared/event-card/event-card.component';
+import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-artist-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent, ArtistEditModalComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, ArtistEditModalComponent, EventCardComponent, EventModalComponent],
   templateUrl: './artist-detail.component.html',
   styleUrls: ['./artist-detail.component.css']
 })
@@ -35,6 +37,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   songs: SongDto[] = [];
   articles: Article[] = [];
   events: UpcomingEventDto[] = [];
+  selectedEvent: UpcomingEventDto | null = null;
 
   loading = true;
   loadingSongs = false;
@@ -336,7 +339,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     section.removeEventListener('touchmove', this.g3dOnTouchMove);
 
     const baseItems = this.galleryItems;
-    if (baseItems.length === 0) return;
+    if (baseItems.length < this.GALLERY_MIN_ITEMS) return;
     this.g3dBaseCount = baseItems.length;
     this.g3dActiveIndex = 0;
 
@@ -553,6 +556,18 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  openEventModal(event: UpcomingEventDto): void {
+    this.selectedEvent = event;
+  }
+
+  closeEventModal(): void {
+    this.selectedEvent = null;
+  }
+
+  trackEventById(_index: number, event: UpcomingEventDto): number {
+    return event.id;
+  }
+
   loadEvents(artistId: number): void {
     this.loadingEvents = true;
     this.artistService.getArtistEvents(artistId).subscribe({
@@ -581,10 +596,46 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => this.checkBioOverflow(), 0);
   }
 
+  readonly GALLERY_MIN_ITEMS = 5;
+
   get heroBannerSrc(): string {
     if (!this.artist) return '';
+    const type = this.artist.bannerMediaType;
+    if (type === 'gif' || type === 'video') return this.artist.bannerGifUrl || '';
+    if (type === 'image') return this.artist.bannerImageUrl || '';
+    // fallback לתאימות אחורה: אם אין סוג, ננסה לזהות
     if (this.artist.isPremium && this.artist.bannerGifUrl) return this.artist.bannerGifUrl;
     return this.artist.bannerImageUrl || '';
+  }
+
+  get heroBannerIsVideo(): boolean {
+    if (!this.artist) return false;
+    if (this.artist.bannerMediaType === 'video') return true;
+    const url = this.heroBannerSrc;
+    return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url);
+  }
+
+  get heroBannerBlur(): number {
+    return Math.max(0, Math.min(20, this.artist?.bannerBlur ?? 0));
+  }
+
+  get galleryShouldShow(): boolean {
+    return this.galleryItems.length >= this.GALLERY_MIN_ITEMS;
+  }
+
+  get performanceBannerImage(): string | null {
+    if (!this.artist) return null;
+    if (!this.artist.performanceIsActive) return null;
+    const ev = this.artist.performanceEvent;
+    if (ev?.bannerImageUrl) return ev.bannerImageUrl;
+    if (ev?.imageUrl) return ev.imageUrl;
+    // legacy
+    return this.artist.performanceImageUrl || null;
+  }
+
+  get performanceBannerLink(): string {
+    if (!this.artist) return '#';
+    return this.artist.performanceEvent?.ticketUrl || this.artist.performanceTicketUrl || '#';
   }
 
   get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
