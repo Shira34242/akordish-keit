@@ -6,12 +6,14 @@ import { EventService } from '../../../../services/admin/event.service';
 import { Event } from '../../../../models/event.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { EventCardData } from '../../../../utils/event.utils';
+import { EventModalComponent } from '../../../shared/event-modal/event-modal.component';
 
 
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EventModalComponent],
   templateUrl: './events-list.component.html',
   styleUrls: ['./events-list.component.css']
 })
@@ -23,6 +25,8 @@ export class EventsListComponent implements OnInit {
   // State
   events: Event[] = [];
   loading = false;
+  savingStatusId: number | null = null;
+  selectedEventPreview: EventCardData | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view', mode); }
 
@@ -34,7 +38,7 @@ export class EventsListComponent implements OnInit {
 
   // Filters
   searchTerm = '';
-  showActiveOnly = true;
+  statusFilter: 'all' | 'active' | 'draft' = 'all';
 
   ngOnInit(): void {
     this.loadEvents();
@@ -47,7 +51,7 @@ export class EventsListComponent implements OnInit {
       this.currentPage,
       this.pageSize,
       this.searchTerm || undefined,
-      this.showActiveOnly ? true : undefined
+      this.getActiveFilter()
     ).subscribe({
       next: (result: PagedResult<Event>) => {
         this.events = result.items;
@@ -67,9 +71,15 @@ export class EventsListComponent implements OnInit {
     this.loadEvents();
   }
 
-  onActiveFilterChange(): void {
+  onStatusFilterChange(): void {
     this.currentPage = 1;
     this.loadEvents();
+  }
+
+  private getActiveFilter(): boolean | undefined {
+    if (this.statusFilter === 'active') return true;
+    if (this.statusFilter === 'draft') return false;
+    return undefined;
   }
 
   onPageChange(page: number): void {
@@ -87,6 +97,58 @@ export class EventsListComponent implements OnInit {
 
   duplicateEvent(event: Event): void {
     this.router.navigate(['/admin/content/events/new'], { queryParams: { duplicate: event.id } });
+  }
+
+  previewEvent(event: Event): void {
+    this.selectedEventPreview = {
+      id: event.id,
+      name: event.name,
+      imageUrl: event.imageUrl,
+      ticketUrl: event.ticketUrl,
+      eventDate: event.eventDate,
+      location: event.location,
+      artistName: event.artistName,
+      taggedArtists: event.taggedArtists,
+      taggedArtistNames: event.taggedArtists?.map(artist => artist.artistName) ?? [],
+      eventStatus: event.eventStatus,
+      daysUntilEvent: event.daysUntilEvent,
+      isPast: event.isPast,
+      description: event.description
+    };
+  }
+
+  setEventStatus(event: Event, isActive: boolean): void {
+    if (event.isActive === isActive || this.savingStatusId === event.id) {
+      return;
+    }
+
+    this.savingStatusId = event.id;
+    this.eventService.updateEvent(event.id, {
+      name: event.name,
+      description: event.description,
+      imageUrl: event.imageUrl,
+      bannerImageUrl: event.bannerImageUrl,
+      ticketUrl: event.ticketUrl,
+      eventDate: event.eventDate,
+      location: event.location,
+      artistName: event.taggedArtists?.length ? '' : event.artistName,
+      artistIds: event.taggedArtists?.map(artist => artist.artistId) ?? [],
+      price: event.price,
+      displayOrder: event.displayOrder,
+      isActive
+    }).subscribe({
+      next: (updated) => {
+        event.isActive = updated.isActive;
+        event.updatedAt = updated.updatedAt;
+        this.savingStatusId = null;
+        this.loadEvents();
+      },
+      error: (error) => {
+        console.error('Error updating event status:', error);
+        alert('שגיאה בעדכון סטטוס ההופעה');
+        this.savingStatusId = null;
+      }
+    });
   }
 
   async deleteEvent(event: Event): Promise<void> {
@@ -115,8 +177,13 @@ export class EventsListComponent implements OnInit {
   }
 
   getEventStatusClass(event: Event): string {
+    if (!event.isActive) return 'badge-secondary';
     if (event.isPast) return 'badge-danger';
     if (event.eventStatus === 'היום') return 'badge-success';
     return 'badge-warning';
+  }
+
+  getAdminStatusLabel(event: Event): string {
+    return event.isActive ? 'מאושר' : 'טיוטה / לא מאושר';
   }
 }

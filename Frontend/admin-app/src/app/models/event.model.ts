@@ -6,6 +6,7 @@ export interface Event {
   name: string;
   description?: string;
   imageUrl: string;
+  bannerImageUrl?: string;
   ticketUrl: string;
   eventDate: string; // ISO 8601 date string
   location?: string;
@@ -47,6 +48,7 @@ export interface CreateEventDto {
   name: string;
   description?: string;
   imageUrl: string;
+  bannerImageUrl?: string;
   ticketUrl: string;
   eventDate?: string;
   location?: string;
@@ -69,6 +71,7 @@ export interface UpdateEventDto {
   name: string;
   description?: string;
   imageUrl: string;
+  bannerImageUrl?: string;
   ticketUrl: string;
   eventDate: string;
   location?: string;

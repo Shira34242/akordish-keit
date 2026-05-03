@@ -12,13 +12,13 @@
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
-                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         imgFallback>
+                    <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-avatar-img"
+                         imgFallback="/default-avatar.svg">
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
-                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                imgFallback>
+                            <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-menu-avatar"
+                                imgFallback="/default-avatar.svg">
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -64,13 +64,13 @@
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
-                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         imgFallback>
+                    <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-avatar-img"
+                         imgFallback="/default-avatar.svg">
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
-                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                imgFallback>
+                            <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-menu-avatar"
+                                imgFallback="/default-avatar.svg">
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -114,7 +114,13 @@
                 <ul class="main-nav mobile-main-nav">
                     <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
                     <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
-                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">{{ 'nav.news' | translate }}</a></li>
+                    <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+                        <a class="nav-link nav-parent" routerLink="/music-news">{{ 'nav.news' | translate }}</a>
+                        <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
+                            <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">תוכן</a>
+                            <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
+                        </div>
+                    </li>
                 </ul>
             </div>
             <a class="btn-music-index" routerLink="/professionals">
@@ -127,13 +133,13 @@
             </button>
             <ng-container *ngIf="loggedIn && user">
                 <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
-                    <img [src]="user.profileImageUrl" alt="Profile" class="user-avatar-img"
-                         imgFallback>
+                    <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-avatar-img"
+                         imgFallback="/default-avatar.svg">
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <div class="user-menu-header">
-                            <img [src]="user.profileImageUrl" alt="Profile" class="user-menu-avatar"
-                                imgFallback>
+                            <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-menu-avatar"
+                                imgFallback="/default-avatar.svg">
                             <div class="user-menu-info">
                                 <div class="user-menu-name">{{ user.username }}</div>
                                 <div class="user-menu-email">{{ user.email }}</div>
@@ -178,7 +184,13 @@
                     <ul class="main-nav">
                         <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
                         <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
-                        <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">{{ 'nav.news' | translate }}</a></li>
+                        <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+                            <a class="nav-link nav-parent" routerLink="/music-news">{{ 'nav.news' | translate }}</a>
+                            <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
+                                <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">תוכן</a>
+                                <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </nav>

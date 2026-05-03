@@ -15,16 +15,24 @@ public class ArtistDetailDto
     public string? ImageUrl { get; set; }
     public string? BannerImageUrl { get; set; }
     public string? BannerGifUrl { get; set; }
+    /// <summary>"image" | "gif" | "video" — איזה מהשדות לעיל פעיל</summary>
+    public string? BannerMediaType { get; set; }
+    /// <summary>עוצמת טשטוש (0-20)</summary>
+    public int BannerBlur { get; set; }
     public string? WebsiteUrl { get; set; }
     public bool IsVerified { get; set; }
     public bool IsPremium { get; set; }
     public ArtistStatus Status { get; set; }
     public int? UserId { get; set; }
 
-    // באנר הופעה
+    // באנר הופעה (legacy + חדש)
     public string? PerformanceImageUrl { get; set; }
     public string? PerformanceTicketUrl { get; set; }
     public bool PerformanceIsActive { get; set; }
+
+    /// <summary>אירוע מקושר לבאנר ההופעה (אם קיים)</summary>
+    public int? PerformanceEventId { get; set; }
+    public PerformanceEventDetailsDto? PerformanceEvent { get; set; }
 
     // מדיה
     public List<ArtistGalleryImageDto> GalleryImages { get; set; } = new();
@@ -85,4 +93,21 @@ public class SocialLinkDto
     public int? Id { get; set; }  // null עבור קישורים חדשים
     public SocialPlatform Platform { get; set; }
     public string Url { get; set; }
+}
+
+/// <summary>
+/// פרטי אירוע (Event) המקושר לבאנר ההופעה של אמן
+/// </summary>
+public class PerformanceEventDetailsDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+    public string? BannerImageUrl { get; set; }
+    public string TicketUrl { get; set; } = string.Empty;
+    public DateTime EventDate { get; set; }
+    public string? Location { get; set; }
+    public decimal? Price { get; set; }
+    public bool IsActive { get; set; }
 }

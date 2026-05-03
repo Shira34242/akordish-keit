@@ -5,6 +5,8 @@
 // ========================================
 // Artist - מודל מלא של אומן
 // ========================================
+export type BannerMediaType = 'image' | 'gif' | 'video';
+
 export interface Artist {
   id: number;
   name: string;
@@ -12,8 +14,10 @@ export interface Artist {
   shortBio?: string;              // תיאור קצר (1-3 שורות)
   biography?: string;              // ביוגרפיה ארוכה
   imageUrl?: string;               // תמונת פרופיל
-  bannerImageUrl?: string;         // תמונת באנר רגילה (לכולם)
-  bannerGifUrl?: string;           // GIF/וידאו לבאנר (משלם בלבד)
+  bannerImageUrl?: string;         // תמונת באנר רגילה (אם bannerMediaType = 'image')
+  bannerGifUrl?: string;           // GIF/וידאו לבאנר (אם bannerMediaType = 'gif'/'video')
+  bannerMediaType?: BannerMediaType | null;  // איזה מבין הבאנרים פעיל (אחד בלבד)
+  bannerBlur?: number;             // 0-20, עוצמת טשטוש על הבאנר
   websiteUrl?: string;             // אתר אישי
   isVerified: boolean;             // אומן מאומת
   isPremium: boolean;              // חשבון משלם (deprecated - use tier)
@@ -27,10 +31,14 @@ export interface Artist {
   videos: ArtistVideo[];                // וידאו מוטמע (משלם)
   socialLinks: SocialLink[];            // רשתות חברתיות
 
-  // באנר הופעה
+  // באנר הופעה (legacy)
   performanceImageUrl?: string;
   performanceTicketUrl?: string;
   performanceIsActive: boolean;
+
+  // אירוע מקושר לבאנר ההופעה (חדש)
+  performanceEventId?: number | null;
+  performanceEvent?: PerformanceEventDetails | null;
 
   // סטטיסטיקות
   songCount: number;               // כמות שירים
@@ -128,15 +136,52 @@ export interface UpdateArtistDto {
   imageUrl?: string;
   bannerImageUrl?: string;
   bannerGifUrl?: string;           // רק למשלם
+  bannerMediaType?: BannerMediaType | null;
+  bannerBlur?: number;             // 0-20
   websiteUrl?: string;
   status?: ArtistStatus;           // ניהול סטטוס (Admin)
   isPremium?: boolean;             // חשבון משלם (Admin)
   performanceImageUrl?: string;
   performanceTicketUrl?: string;
   performanceIsActive?: boolean;
+  /** null מנתק את האירוע. הגדרת אובייקט יוצרת/מעדכנת אירוע. */
+  performanceEvent?: PerformanceEventInput | null;
   socialLinks?: SocialLink[];      // קישורי רשתות חברתיות
   galleryImages?: AddGalleryImageDto[];  // תמונות גלריה
   videos?: AddVideoDto[];          // סרטונים
+}
+
+/**
+ * פרטי אירוע מקושר לבאנר אמן (לקריאה — מהשרת)
+ */
+export interface PerformanceEventDetails {
+  id: number;
+  name: string;
+  description?: string;
+  imageUrl: string;
+  bannerImageUrl?: string | null;
+  ticketUrl: string;
+  eventDate: string;
+  location?: string;
+  price?: number | null;
+  isActive: boolean;
+}
+
+/**
+ * פרטי אירוע מקושר לבאנר אמן (לכתיבה — אל השרת)
+ */
+export interface PerformanceEventInput {
+  /** אם קיים — מעדכנים אירוע קיים. אם לא — יוצרים חדש. */
+  eventId?: number;
+  name: string;
+  description?: string;
+  imageUrl: string;
+  bannerImageUrl?: string;
+  ticketUrl: string;
+  eventDate: string;        // ISO string
+  location?: string;
+  price?: number | null;
+  isActive: boolean;
 }
 
 /**

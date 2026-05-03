@@ -753,6 +753,11 @@ namespace AkordishKeit.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BannerBlur")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("BannerGifUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -760,6 +765,10 @@ namespace AkordishKeit.Migrations
                     b.Property<string>("BannerImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("BannerMediaType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Biography")
                         .HasMaxLength(3000)
@@ -811,6 +820,9 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("PerformanceEventId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PerformanceImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -855,6 +867,8 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_Artists_Name");
+
+                    b.HasIndex("PerformanceEventId");
 
                     b.HasIndex("PersonId")
                         .HasDatabaseName("IX_Artists_PersonId");
@@ -1281,6 +1295,10 @@ namespace AkordishKeit.Migrations
                     b.Property<string>("ArtistName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("BannerImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -3831,6 +3849,11 @@ namespace AkordishKeit.Migrations
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.Artist", b =>
                 {
+                    b.HasOne("AkordishKeit.Models.Entities.Event", "PerformanceEvent")
+                        .WithMany()
+                        .HasForeignKey("PerformanceEventId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("AkordishKeit.Models.Entities.Person", "Person")
                         .WithMany("Artists")
                         .HasForeignKey("PersonId")
@@ -3845,6 +3868,8 @@ namespace AkordishKeit.Migrations
                         .WithOne("ManagedArtist")
                         .HasForeignKey("AkordishKeit.Models.Entities.Artist", "UserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PerformanceEvent");
 
                     b.Navigation("Person");
 

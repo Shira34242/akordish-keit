@@ -6,15 +6,28 @@
   (mouseleave)="onMouseUp()"
   (touchstart)="onTouchStart($event)"
   (touchmove)="onTouchMove($event)"
-  (touchend)="onMouseUp()">
+  (touchend)="onTouchEnd()">
 
   <div class="events-header">
-    <h1 class="events-title">{{ 'events.title' | translate }}</h1>
-    <div class="filter-pills">
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'all'"      (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'past'"     (click)="setFilter('past')">{{ 'events.filter_past' | translate }}</button>
+    <div class="artists-filter" *ngIf="artistFilters.length > 0" aria-label="סינון לפי אמן">
+      <button
+        type="button"
+        class="artist-filter"
+        *ngFor="let artist of artistFilters"
+        [class.artist-filter--active]="selectedArtistKey === (artist.artistId > 0 ? artist.artistId : artist.filterKey)"
+        [attr.aria-pressed]="selectedArtistKey === (artist.artistId > 0 ? artist.artistId : artist.filterKey)"
+        (click)="selectArtist(artist)">
+        <span class="artist-filter__image-wrap">
+          <img
+            class="artist-filter__image"
+            [src]="artist.artistImageUrl || 'assets/default-artist.png'"
+            [alt]="artist.artistName"
+            draggable="false">
+        </span>
+        <span class="artist-filter__name">{{ artist.artistName }}</span>
+      </button>
     </div>
+    <h1 class="events-title events-title--fallback" *ngIf="artistFilters.length === 0">{{ 'events.title' | translate }}</h1>
   </div>
 
   <div *ngIf="loading" class="state-center">
@@ -26,11 +39,11 @@
     <p class="empty-text">{{ 'events.empty' | translate }}</p>
   </div>
 
-  <div class="carousel" *ngIf="!loading && filteredEvents.length > 0">
+  <div class="carousel" [class.carousel--repositioning]="isRepositioning" *ngIf="!loading && carouselEvents.length > 0">
     <div
       class="carousel-item"
       #carouselItem
-      *ngFor="let event of filteredEvents; let i = index; trackBy: trackById"
+      *ngFor="let event of carouselEvents; let i = index; trackBy: trackById"
       (click)="onItemClick(i, event)">
 
       <div class="carousel-box">
@@ -64,10 +77,10 @@
     </div>
   </div>
 
-  <nav class="tab-bar">
-    <a class="tab-bar__item" routerLink="/music-news">{{ 'events.tab_news' | translate }}</a>
-    <a class="tab-bar__item" routerLink="/blog">{{ 'events.tab_blog' | translate }}</a>
-    <a class="tab-bar__item tab-bar__item--active" routerLink="/events">{{ 'events.tab_events' | translate }}</a>
+  <nav class="event-filter-bar" aria-label="סינון הופעות לפי זמן">
+    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
+    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'all'" (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>
+    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'past'" (click)="setFilter('past')">{{ 'events.filter_past' | translate }}</button>
   </nav>
 
 </div>

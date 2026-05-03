@@ -99,23 +99,53 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">תמונת באנר</label>
+          <label class="form-label">באנר אמן (בחירה אחת בלבד)</label>
+          <div class="banner-type-toggle" role="tablist">
+            <button type="button" class="banner-type-btn"
+                    [class.active]="editForm.bannerMediaType === 'image'"
+                    (click)="setBannerType('image')">תמונה</button>
+            <button type="button" class="banner-type-btn"
+                    [class.active]="editForm.bannerMediaType === 'gif'"
+                    (click)="setBannerType('gif')">GIF</button>
+            <button type="button" class="banner-type-btn"
+                    [class.active]="editForm.bannerMediaType === 'video'"
+                    (click)="setBannerType('video')">וידאו</button>
+          </div>
+
           <app-file-upload-input
-            [(url)]="editForm.bannerImageUrl"
+            *ngIf="editForm.bannerMediaType === 'image'"
+            [(url)]="editForm.bannerUrl"
             placeholder="https://example.com/banner.jpg"
           />
-          <small class="form-hint">תמונת רקע לדף האומן (מומלץ 1920x400)</small>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">באנר GIF/וידאו</label>
           <app-file-upload-input
-            [(url)]="editForm.bannerGifUrl"
-            accept="image/*,video/mp4,video/webm"
+            *ngIf="editForm.bannerMediaType === 'gif'"
+            [(url)]="editForm.bannerUrl"
+            accept="image/gif,image/*"
             placeholder="https://example.com/banner.gif"
             [showPreview]="false"
           />
-          <small class="form-hint">GIF או וידאו אנימציה לבאנר</small>
+          <app-file-upload-input
+            *ngIf="editForm.bannerMediaType === 'video'"
+            [(url)]="editForm.bannerUrl"
+            accept="video/mp4,video/webm"
+            placeholder="https://example.com/banner.mp4"
+            [showPreview]="false"
+          />
+          <small class="form-hint">סוג אחד בלבד — תמונה או GIF או וידאו (מומלץ 1920×400)</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">טשטוש על הבאנר ({{ editForm.bannerBlur }})</label>
+          <input
+            type="range"
+            min="0"
+            max="20"
+            step="1"
+            [(ngModel)]="editForm.bannerBlur"
+            name="bannerBlur"
+            class="form-range"
+          />
+          <small class="form-hint">0 = ללא טשטוש, 20 = טשטוש חזק. מועיל כדי להבליט את פרטי האמן מעל הבאנר.</small>
         </div>
 
         <div class="form-group">
@@ -197,146 +227,143 @@
         </button>
       </div>
 
-      <!-- Performance Banner -->
+      <!-- Performance Banner = Full Event + Banner Image -->
       <div class="form-section">
-        <h2 class="section-title">באנר הופעה</h2>
-        <p class="section-desc">תמונת פרסומת להופעה שתוצג מעל הביוגרפיה</p>
+        <h2 class="section-title">באנר הופעה (אירוע מלא)</h2>
+        <p class="section-desc">
+          באנר ההופעה ייווצר כהופעה מלאה במערכת — היא תוצג גם בדף ההופעות הראשי וגם בבאנר של דף האמן.
+          נדרשות 2 תמונות: פוסטר ריבועי לדף ההופעות + תמונת באנר רחבה (4:1) לדף האמן.
+        </p>
 
         <div class="form-group">
-          <label class="form-label">תמונת הבאנר</label>
-          <app-file-upload-input
-            [(url)]="editForm.performanceImageUrl"
-            placeholder="https://example.com/show.jpg"
-          />
-          <small class="form-hint">יחס מומלץ: 4:1 רוחב-גובה (לדוגמה 1200×300 פיקסל). הבאנר מוצג נמוך ורחב בדף האמן.</small>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">קישור לרכישת כרטיסים</label>
-          <input
-            type="url"
-            [(ngModel)]="editForm.performanceTicketUrl"
-            name="performanceTicketUrl"
-            class="form-input"
-            placeholder="https://tickets.example.com/..."
-          />
-        </div>
-
-        <div class="form-group">
-          <div class="checkbox-wrapper" [class.checked]="editForm.performanceIsActive">
+          <div class="checkbox-wrapper" [class.checked]="editForm.performance.enabled">
             <input
               type="checkbox"
-              [(ngModel)]="editForm.performanceIsActive"
-              name="performanceIsActive"
-              id="performanceIsActive"
+              [(ngModel)]="editForm.performance.enabled"
+              name="performanceEnabled"
+              id="performanceEnabled"
             />
-            <span>הצג באנר בדף האומן</span>
+            <span>הצג באנר הופעה בדף האמן</span>
           </div>
         </div>
-      </div>
 
-      <!-- Gallery Images -->
-      <div class="form-section">
-        <h2 class="section-title">גלריית תמונות</h2>
-
-        <div *ngFor="let image of editForm.galleryImages; let i = index" class="gallery-item">
-            <div class="form-row">
-              <div class="form-group" style="flex: 2;">
-                <label class="form-label">קישור לתמונה</label>
-                <app-file-upload-input
-                  [(url)]="image.imageUrl"
-                  placeholder="https://..."
-                  [showPreview]="false"
-                />
-              </div>
-
-              <div class="form-group" style="flex: 2;">
-                <label class="form-label">כיתוב (אופציונלי)</label>
-                <input
-                  type="text"
-                  [(ngModel)]="image.caption"
-                  [name]="'gallery_caption_' + i"
-                  class="form-input"
-                  placeholder="תיאור התמונה..."
-                />
-              </div>
-
-              <div class="form-group" style="flex: 0.5;">
-                <label class="form-label">סדר</label>
-                <div style="display: flex; gap: 10px;">
-                  <input
-                    type="number"
-                    [(ngModel)]="image.displayOrder"
-                    [name]="'gallery_order_' + i"
-                    class="form-input"
-                    min="0"
-                    style="flex: 1;"
-                  />
-                  <button type="button" class="btn-remove" (click)="removeGalleryImage(i)">
-                    <span class="material-icons">delete</span>
-                  </button>
-                </div>
-              </div>
+        <ng-container *ngIf="editForm.performance.enabled">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">שם ההופעה</label>
+              <input type="text" [(ngModel)]="editForm.performance.name" name="perfName" class="form-input" placeholder="שם ההופעה..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">תאריך ושעה</label>
+              <input type="datetime-local" [(ngModel)]="editForm.performance.eventDate" name="perfDate" class="form-input" />
             </div>
           </div>
 
-        <button type="button" class="btn-add" (click)="addGalleryImage()">
-          <span class="material-icons">add</span>
-          הוסף תמונה לגלריה
-        </button>
-      </div>
-
-      <!-- Videos -->
-      <div class="form-section">
-        <h2 class="section-title">סרטונים</h2>
-
-        <div *ngFor="let video of editForm.videos; let i = index" class="video-item">
-            <div class="form-row">
-              <div class="form-group" style="flex: 2;">
-                <label class="form-label">קישור לסרטון</label>
-                <input
-                  type="url"
-                  [(ngModel)]="video.videoUrl"
-                  [name]="'video_url_' + i"
-                  class="form-input"
-                  placeholder="https://youtube.com/..."
-                />
-              </div>
-
-              <div class="form-group" style="flex: 2;">
-                <label class="form-label">כותרת (אופציונלי)</label>
-                <input
-                  type="text"
-                  [(ngModel)]="video.title"
-                  [name]="'video_title_' + i"
-                  class="form-input"
-                  placeholder="שם הסרטון..."
-                />
-              </div>
-
-              <div class="form-group" style="flex: 0.5;">
-                <label class="form-label">סדר</label>
-                <div style="display: flex; gap: 10px;">
-                  <input
-                    type="number"
-                    [(ngModel)]="video.displayOrder"
-                    [name]="'video_order_' + i"
-                    class="form-input"
-                    min="0"
-                    style="flex: 1;"
-                  />
-                  <button type="button" class="btn-remove" (click)="removeVideo(i)">
-                    <span class="material-icons">delete</span>
-                  </button>
-                </div>
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">מיקום</label>
+              <input type="text" [(ngModel)]="editForm.performance.location" name="perfLocation" class="form-input" placeholder="עיר / מקום..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">מחיר (אופציונלי)</label>
+              <input type="number" min="0" [(ngModel)]="editForm.performance.price" name="perfPrice" class="form-input" placeholder="₪" />
             </div>
           </div>
 
-        <button type="button" class="btn-add" (click)="addVideo()">
-          <span class="material-icons">add</span>
-          הוסף סרטון
-        </button>
+          <div class="form-group">
+            <label class="form-label">תיאור (אופציונלי)</label>
+            <textarea [(ngModel)]="editForm.performance.description" name="perfDescription" class="form-textarea" rows="3" placeholder="תיאור ההופעה..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">קישור לרכישת כרטיסים</label>
+            <input type="url" [(ngModel)]="editForm.performance.ticketUrl" name="perfTicketUrl" class="form-input" placeholder="https://tickets.example.com/..." />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">פוסטר ההופעה (ריבועי - לדף ההופעות)</label>
+            <app-file-upload-input
+              [(url)]="editForm.performance.imageUrl"
+              placeholder="https://example.com/poster.jpg"
+            />
+            <small class="form-hint">יחס מומלץ: 1:1 ריבוע, ייצוג בכרטיסי הופעות.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">תמונת באנר (רחבה - לדף האמן)</label>
+            <app-file-upload-input
+              [(url)]="editForm.performance.bannerImageUrl"
+              placeholder="https://example.com/banner.jpg"
+            />
+            <small class="form-hint">יחס מומלץ: 4:1 (למשל 1200×300). מוצג כבאנר נמוך ורחב מתחת לפרופיל האמן.</small>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Gallery (Images + Videos unified) -->
+      <div class="form-section">
+        <h2 class="section-title">גלריה (תמונות וסרטונים)</h2>
+        <p class="section-desc">
+          הגלריה תוצג בדף האמן רק אם יש לפחות {{ GALLERY_MIN_ITEMS }} פריטים (תמונות וסרטונים יחד).
+          נכון להיום: <strong>{{ galleryItemsCount }}</strong> פריטים.
+          <span *ngIf="galleryItemsCount > 0 && galleryItemsCount < GALLERY_MIN_ITEMS" class="warn-text">
+            — הוסיפי עוד {{ GALLERY_MIN_ITEMS - galleryItemsCount }} כדי שהגלריה תוצג.
+          </span>
+        </p>
+
+        <div *ngFor="let item of editForm.galleryItems; let i = index" class="gallery-item">
+          <div class="form-row">
+            <div class="form-group" style="flex: 0 0 110px;">
+              <label class="form-label">סוג</label>
+              <select [(ngModel)]="item.kind" [name]="'gallery_kind_' + i" class="form-select">
+                <option value="image">תמונה</option>
+                <option value="video">וידאו</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'image'">
+              <label class="form-label">קישור לתמונה</label>
+              <app-file-upload-input
+                [(url)]="item.imageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
+            </div>
+
+            <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'image'">
+              <label class="form-label">כיתוב (אופציונלי)</label>
+              <input type="text" [(ngModel)]="item.caption" [name]="'gallery_caption_' + i" class="form-input" placeholder="תיאור התמונה..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'video'">
+              <label class="form-label">קישור לסרטון</label>
+              <input type="url" [(ngModel)]="item.videoUrl" [name]="'gallery_videoUrl_' + i" class="form-input" placeholder="https://youtube.com/..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'video'">
+              <label class="form-label">כותרת (אופציונלי)</label>
+              <input type="text" [(ngModel)]="item.title" [name]="'gallery_title_' + i" class="form-input" placeholder="שם הסרטון..." />
+            </div>
+
+            <div class="form-group" style="flex: 0 0 60px;">
+              <label class="form-label">&nbsp;</label>
+              <button type="button" class="btn-remove" (click)="removeGalleryItem(i)" aria-label="הסר">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn-add" (click)="addGalleryImage()">
+            <span class="material-icons">add_photo_alternate</span>
+            הוסף תמונה
+          </button>
+          <button type="button" class="btn-add" (click)="addGalleryVideo()">
+            <span class="material-icons">smart_display</span>
+            הוסף סרטון
+          </button>
+        </div>
       </div>
 
       <!-- Status & Settings -->

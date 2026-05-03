@@ -21,9 +21,15 @@ namespace AkordishKeit.Models.Entities
         public string? Description { get; set; }
 
         /// <summary>
-        /// תמונת ההופעה
+        /// תמונת ההופעה (פוסטר ריבועי לדף ההופעות הראשי)
         /// </summary>
         public string ImageUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// תמונת באנר רחבה (יחס 4:1 בערך) — לתצוגה בדף האמן.
+        /// מתמלא רק כשההופעה מקושרת כבאנר אמן.
+        /// </summary>
+        public string? BannerImageUrl { get; set; }
 
         /// <summary>
         /// לינק לרכישת כרטיסים

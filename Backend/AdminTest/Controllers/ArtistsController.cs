@@ -190,6 +190,7 @@ public class ArtistsController : ControllerBase
                 .Include(a => a.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(a => a.Videos.OrderBy(v => v.DisplayOrder))
                 .Include(a => a.SocialLinks)
+                .Include(a => a.PerformanceEvent)
                 .Where(a => a.Id == id && !a.IsDeleted)
                 .FirstOrDefaultAsync();
 
@@ -218,6 +219,8 @@ public class ArtistsController : ControllerBase
                 ImageUrl = artist.ImageUrl,
                 BannerImageUrl = artist.BannerImageUrl,
                 BannerGifUrl = artist.BannerGifUrl,
+                BannerMediaType = artist.BannerMediaType,
+                BannerBlur = artist.BannerBlur,
                 WebsiteUrl = artist.WebsiteUrl,
                 IsVerified = artist.IsVerified,
                 IsPremium = artist.IsPremium,
@@ -226,6 +229,20 @@ public class ArtistsController : ControllerBase
                 PerformanceImageUrl = artist.PerformanceImageUrl,
                 PerformanceTicketUrl = artist.PerformanceTicketUrl,
                 PerformanceIsActive = artist.PerformanceIsActive,
+                PerformanceEventId = artist.PerformanceEventId,
+                PerformanceEvent = artist.PerformanceEvent == null ? null : new PerformanceEventDetailsDto
+                {
+                    Id = artist.PerformanceEvent.Id,
+                    Name = artist.PerformanceEvent.Name,
+                    Description = artist.PerformanceEvent.Description,
+                    ImageUrl = artist.PerformanceEvent.ImageUrl,
+                    BannerImageUrl = artist.PerformanceEvent.BannerImageUrl,
+                    TicketUrl = artist.PerformanceEvent.TicketUrl,
+                    EventDate = artist.PerformanceEvent.EventDate,
+                    Location = artist.PerformanceEvent.Location,
+                    Price = artist.PerformanceEvent.Price,
+                    IsActive = artist.PerformanceEvent.IsActive
+                },
                 GalleryImages = artist.GalleryImages.Select(gi => new ArtistGalleryImageDto
                 {
                     Id = gi.Id,
@@ -448,13 +465,19 @@ public class ArtistsController : ControllerBase
             artist.ImageUrl = dto.ImageUrl;
             artist.BannerImageUrl = dto.BannerImageUrl;
             artist.BannerGifUrl = dto.BannerGifUrl;  // Admin יכול לעדכן לכולם
+            artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
+            if (dto.BannerBlur.HasValue)
+                artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
             artist.WebsiteUrl = dto.WebsiteUrl;
 
-            // עדכון באנר הופעה
+            // עדכון באנר הופעה (legacy)
             artist.PerformanceImageUrl = dto.PerformanceImageUrl;
             artist.PerformanceTicketUrl = dto.PerformanceTicketUrl;
             if (dto.PerformanceIsActive.HasValue)
                 artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
+
+            // עדכון אירוע מקושר לבאנר
+            await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
 
             // רק Admin יכול לעדכן סטטוס ו-Premium
             if (isAdmin)
@@ -837,10 +860,20 @@ public class ArtistsController : ControllerBase
             {
                 artist.BannerImageUrl = dto.BannerImageUrl;
                 artist.BannerGifUrl = dto.BannerGifUrl;
+                artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
+                if (dto.BannerBlur.HasValue)
+                    artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
             }
 
             _context.Artists.Add(artist);
             await _context.SaveChangesAsync();
+
+            // סנכרון אירוע מקושר (רק למשלם)
+            if (isPremium)
+            {
+                await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
+                await _context.SaveChangesAsync();
+            }
 
             // הוספת קישורים לרשתות חברתיות
             if (dto.SocialLinks != null && dto.SocialLinks.Any())
@@ -980,6 +1013,8 @@ public class ArtistsController : ControllerBase
                 ImageUrl = dto.ImageUrl,
                 BannerImageUrl = dto.BannerImageUrl,
                 BannerGifUrl = dto.BannerGifUrl,
+                BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType),
+                BannerBlur = dto.BannerBlur.HasValue ? Math.Clamp(dto.BannerBlur.Value, 0, 20) : 0,
                 WebsiteUrl = dto.WebsiteUrl,
                 Status = dto.Status ?? ArtistStatus.Pending,
                 IsPremium = dto.IsPremium ?? false,
@@ -993,6 +1028,10 @@ public class ArtistsController : ControllerBase
             };
 
             _context.Artists.Add(artist);
+            await _context.SaveChangesAsync();
+
+            // סנכרון אירוע מקושר (אחרי שמרנו את האמן כדי לקבל ID)
+            await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
             await _context.SaveChangesAsync();
 
             // הוספת קישורים לרשתות חברתיות
@@ -1258,6 +1297,96 @@ public class ArtistsController : ControllerBase
         {
             return StatusCode(500, $"שגיאה בשכפול אומן: {ex.Message}");
         }
+    }
+
+    // ========================================
+    // Helpers - באנר ואירוע מקושר
+    // ========================================
+
+    private static string? NormalizeBannerMediaType(string? type)
+    {
+        if (string.IsNullOrWhiteSpace(type)) return null;
+        var t = type.Trim().ToLowerInvariant();
+        return t switch
+        {
+            "image" or "gif" or "video" => t,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// יצירה/עדכון/ניתוק של אירוע מקושר לבאנר אמן.
+    /// כשהאירוע נוצר/מעודכן, מבטיחים שהוא מתויג כ-EventArtist של האמן
+    /// כדי שיופיע גם בדף ההופעות הראשי וגם בדף האמן עצמו.
+    /// </summary>
+    private async Task SyncPerformanceEventAsync(Artist artist, PerformanceEventInputDto? input)
+    {
+        if (input == null)
+        {
+            // ניתוק האירוע (ללא מחיקה — האירוע עצמו נשמר במערכת)
+            artist.PerformanceEventId = null;
+            return;
+        }
+
+        Event? eventEntity = null;
+
+        if (input.EventId.HasValue)
+        {
+            eventEntity = await _context.Events
+                .Include(e => e.EventArtists)
+                .FirstOrDefaultAsync(e => e.Id == input.EventId.Value && !e.IsDeleted);
+        }
+
+        if (eventEntity == null)
+        {
+            eventEntity = new Event
+            {
+                Name = string.IsNullOrWhiteSpace(input.Name) ? artist.Name : input.Name.Trim(),
+                Description = input.Description?.Trim(),
+                ImageUrl = input.ImageUrl?.Trim() ?? string.Empty,
+                BannerImageUrl = string.IsNullOrWhiteSpace(input.BannerImageUrl) ? null : input.BannerImageUrl.Trim(),
+                TicketUrl = input.TicketUrl?.Trim() ?? string.Empty,
+                EventDate = input.EventDate,
+                Location = input.Location?.Trim(),
+                Price = input.Price,
+                ArtistName = artist.Name,
+                IsActive = input.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                EventArtists = new List<EventArtist>()
+            };
+            _context.Events.Add(eventEntity);
+            await _context.SaveChangesAsync(); // לקבל Id
+        }
+        else
+        {
+            eventEntity.Name = string.IsNullOrWhiteSpace(input.Name) ? eventEntity.Name : input.Name.Trim();
+            eventEntity.Description = input.Description?.Trim();
+            if (!string.IsNullOrWhiteSpace(input.ImageUrl))
+                eventEntity.ImageUrl = input.ImageUrl.Trim();
+            eventEntity.BannerImageUrl = string.IsNullOrWhiteSpace(input.BannerImageUrl) ? null : input.BannerImageUrl.Trim();
+            if (!string.IsNullOrWhiteSpace(input.TicketUrl))
+                eventEntity.TicketUrl = input.TicketUrl.Trim();
+            eventEntity.EventDate = input.EventDate;
+            eventEntity.Location = input.Location?.Trim();
+            eventEntity.Price = input.Price;
+            eventEntity.IsActive = input.IsActive;
+            eventEntity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        // לוודא תיוג של האמן באירוע
+        var alreadyTagged = await _context.EventArtists
+            .AnyAsync(ea => ea.EventId == eventEntity.Id && ea.ArtistId == artist.Id);
+        if (!alreadyTagged && artist.Id > 0)
+        {
+            _context.EventArtists.Add(new EventArtist
+            {
+                EventId = eventEntity.Id,
+                ArtistId = artist.Id,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        artist.PerformanceEventId = eventEntity.Id;
     }
 
     /// <summary>

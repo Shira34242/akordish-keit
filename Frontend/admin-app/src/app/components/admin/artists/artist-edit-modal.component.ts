@@ -3,7 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
-import { Artist, ArtistStatus, UpdateArtistDto } from '../../../models/artist.model';
+import {
+  Artist,
+  ArtistStatus,
+  BannerMediaType,
+  PerformanceEventInput,
+  UpdateArtistDto
+} from '../../../models/artist.model';
 
 interface SocialLinkForm {
   id?: number;
@@ -11,18 +17,30 @@ interface SocialLinkForm {
   url: string;
 }
 
-interface GalleryImageForm {
+type GalleryItemKind = 'image' | 'video';
+
+interface GalleryItemForm {
   id?: number;
-  imageUrl: string;
+  kind: GalleryItemKind;
+  imageUrl?: string;
   caption?: string;
+  videoUrl?: string;
+  title?: string;
   displayOrder: number;
 }
 
-interface VideoForm {
-  id?: number;
-  videoUrl: string;
-  title?: string;
-  displayOrder: number;
+interface PerformanceEventForm {
+  enabled: boolean;
+  eventId?: number;
+  name: string;
+  description: string;
+  imageUrl: string;        // פוסטר ריבועי לדף ההופעות
+  bannerImageUrl: string;  // באנר רחב לדף האמן
+  ticketUrl: string;
+  eventDate: string;       // datetime-local
+  location: string;
+  price: number | null;
+  isActive: boolean;
 }
 
 @Component({
@@ -45,6 +63,8 @@ export class ArtistEditModalComponent implements OnInit {
 
   readonly MUSIC_PLATFORMS = [3, 7, 8]; // YouTube, Spotify, Zing
 
+  readonly GALLERY_MIN_ITEMS = 5;
+
   // Edit form
   editForm = {
     name: '',
@@ -52,18 +72,28 @@ export class ArtistEditModalComponent implements OnInit {
     shortBio: '',
     biography: '',
     imageUrl: '',
-    bannerImageUrl: '',
-    bannerGifUrl: '',
+    bannerMediaType: 'image' as BannerMediaType,
+    bannerUrl: '',           // URL פעיל אחד לפי הסוג
+    bannerBlur: 0,
     websiteUrl: '',
     status: ArtistStatus.Pending,
     isPremium: false,
     socialLinks: [] as SocialLinkForm[],
     musicLinks: [] as SocialLinkForm[],
-    performanceImageUrl: '',
-    performanceTicketUrl: '',
-    performanceIsActive: false,
-    galleryImages: [] as GalleryImageForm[],
-    videos: [] as VideoForm[]
+    galleryItems: [] as GalleryItemForm[],
+    performance: {
+      enabled: false,
+      eventId: undefined,
+      name: '',
+      description: '',
+      imageUrl: '',
+      bannerImageUrl: '',
+      ticketUrl: '',
+      eventDate: '',
+      location: '',
+      price: null,
+      isActive: true
+    } as PerformanceEventForm
   };
 
   ArtistStatus = ArtistStatus;
@@ -87,14 +117,55 @@ export class ArtistEditModalComponent implements OnInit {
     this.artistService.getArtistById(this.artistId).subscribe({
       next: (artist) => {
         this.artist = artist;
+        const bannerType: BannerMediaType = (artist.bannerMediaType as BannerMediaType)
+          || (artist.bannerGifUrl ? 'gif' : 'image');
+        const bannerUrl = bannerType === 'image' ? (artist.bannerImageUrl || '') : (artist.bannerGifUrl || '');
+
+        const galleryItems: GalleryItemForm[] = [];
+        (artist.galleryImages || []).forEach((img, idx) => {
+          galleryItems.push({
+            id: img.id,
+            kind: 'image',
+            imageUrl: img.imageUrl,
+            caption: img.caption,
+            displayOrder: img.displayOrder ?? idx
+          });
+        });
+        (artist.videos || []).forEach((vid, idx) => {
+          galleryItems.push({
+            id: vid.id,
+            kind: 'video',
+            videoUrl: vid.videoUrl,
+            title: vid.title,
+            displayOrder: (vid.displayOrder ?? idx) + 1000
+          });
+        });
+        galleryItems.sort((a, b) => a.displayOrder - b.displayOrder);
+
+        const ev = artist.performanceEvent;
+        const performance: PerformanceEventForm = {
+          enabled: !!(artist.performanceIsActive && ev),
+          eventId: ev?.id,
+          name: ev?.name || '',
+          description: ev?.description || '',
+          imageUrl: ev?.imageUrl || artist.performanceImageUrl || '',
+          bannerImageUrl: ev?.bannerImageUrl || artist.performanceImageUrl || '',
+          ticketUrl: ev?.ticketUrl || artist.performanceTicketUrl || '',
+          eventDate: ev?.eventDate ? this.toLocalDateInput(ev.eventDate) : '',
+          location: ev?.location || '',
+          price: ev?.price ?? null,
+          isActive: ev?.isActive ?? true
+        };
+
         this.editForm = {
           name: artist.name || '',
           englishName: artist.englishName || '',
           shortBio: artist.shortBio || '',
           biography: artist.biography || '',
           imageUrl: artist.imageUrl || '',
-          bannerImageUrl: artist.bannerImageUrl || '',
-          bannerGifUrl: artist.bannerGifUrl || '',
+          bannerMediaType: bannerType,
+          bannerUrl: bannerUrl,
+          bannerBlur: artist.bannerBlur ?? 0,
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
@@ -108,21 +179,8 @@ export class ArtistEditModalComponent implements OnInit {
             platform: link.platform,
             url: link.url
           })) || [],
-          performanceImageUrl: artist.performanceImageUrl || '',
-          performanceTicketUrl: artist.performanceTicketUrl || '',
-          performanceIsActive: artist.performanceIsActive ?? false,
-          galleryImages: artist.galleryImages?.map(img => ({
-            id: img.id,
-            imageUrl: img.imageUrl,
-            caption: img.caption,
-            displayOrder: img.displayOrder
-          })) || [],
-          videos: artist.videos?.map(video => ({
-            id: video.id,
-            videoUrl: video.videoUrl,
-            title: video.title,
-            displayOrder: video.displayOrder
-          })) || []
+          galleryItems,
+          performance
         };
         this.loading = false;
       },
@@ -145,19 +203,25 @@ export class ArtistEditModalComponent implements OnInit {
 
     this.saving = true;
     this.error = null;
-    const commonPayload = {
+
+    const bannerType = this.editForm.bannerMediaType;
+    const bannerUrl = this.optionalText(this.editForm.bannerUrl);
+
+    const commonPayload: Partial<UpdateArtistDto> = {
       englishName: this.optionalText(this.editForm.englishName),
       shortBio: this.optionalText(this.editForm.shortBio),
       biography: this.optionalText(this.editForm.biography),
       imageUrl: this.optionalText(this.editForm.imageUrl),
-      bannerImageUrl: this.optionalText(this.editForm.bannerImageUrl),
-      bannerGifUrl: this.optionalText(this.editForm.bannerGifUrl),
+      // רק שדה אחד מתאים מתמלא — בחירה אחת בלבד
+      bannerImageUrl: bannerType === 'image' ? bannerUrl : undefined,
+      bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') ? bannerUrl : undefined,
+      bannerMediaType: bannerUrl ? bannerType : null,
+      bannerBlur: Number(this.editForm.bannerBlur) || 0,
       websiteUrl: this.optionalText(this.editForm.websiteUrl),
       status: Number(this.editForm.status),
       isPremium: this.editForm.isPremium,
-      performanceImageUrl: this.optionalText(this.editForm.performanceImageUrl),
-      performanceTicketUrl: this.optionalText(this.editForm.performanceTicketUrl),
-      performanceIsActive: this.editForm.performanceIsActive,
+      performanceIsActive: this.editForm.performance.enabled,
+      performanceEvent: this.buildPerformanceEvent(),
       socialLinks: this.normalizedLinks(),
       galleryImages: this.normalizedGalleryImages(),
       videos: this.normalizedVideos()
@@ -223,30 +287,67 @@ export class ArtistEditModalComponent implements OnInit {
     this.editForm.musicLinks.splice(index, 1);
   }
 
-  // Gallery Images Management
+  // Gallery Management (תמונות + וידאו תחת אזור אחד)
   addGalleryImage(): void {
-    this.editForm.galleryImages.push({
+    this.editForm.galleryItems.push({
+      kind: 'image',
       imageUrl: '',
       caption: '',
-      displayOrder: this.editForm.galleryImages.length
+      displayOrder: this.editForm.galleryItems.length
     });
   }
 
-  removeGalleryImage(index: number): void {
-    this.editForm.galleryImages.splice(index, 1);
-  }
-
-  // Videos Management
-  addVideo(): void {
-    this.editForm.videos.push({
+  addGalleryVideo(): void {
+    this.editForm.galleryItems.push({
+      kind: 'video',
       videoUrl: '',
       title: '',
-      displayOrder: this.editForm.videos.length
+      displayOrder: this.editForm.galleryItems.length
     });
   }
 
-  removeVideo(index: number): void {
-    this.editForm.videos.splice(index, 1);
+  removeGalleryItem(index: number): void {
+    this.editForm.galleryItems.splice(index, 1);
+  }
+
+  get galleryItemsCount(): number {
+    return this.editForm.galleryItems.filter(it => {
+      if (it.kind === 'image') return !!it.imageUrl?.trim();
+      return !!it.videoUrl?.trim();
+    }).length;
+  }
+
+  setBannerType(type: BannerMediaType): void {
+    this.editForm.bannerMediaType = type;
+  }
+
+  private toLocalDateInput(iso: string): string {
+    // ISO -> "yyyy-MM-ddTHH:mm" לטופס datetime-local
+    try {
+      const d = new Date(iso);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch {
+      return '';
+    }
+  }
+
+  private buildPerformanceEvent(): PerformanceEventInput | null {
+    const p = this.editForm.performance;
+    if (!p.enabled) return null;
+    if (!p.name?.trim() || !p.eventDate) return null;
+    return {
+      eventId: p.eventId,
+      name: p.name.trim(),
+      description: p.description?.trim() || undefined,
+      imageUrl: p.imageUrl?.trim() || '',
+      bannerImageUrl: p.bannerImageUrl?.trim() || undefined,
+      ticketUrl: p.ticketUrl?.trim() || '',
+      eventDate: new Date(p.eventDate).toISOString(),
+      location: p.location?.trim() || undefined,
+      price: p.price ?? null,
+      isActive: p.isActive
+    };
   }
 
   private optionalText(value: string | undefined): string | undefined {
@@ -268,21 +369,21 @@ export class ArtistEditModalComponent implements OnInit {
   }
 
   private normalizedGalleryImages() {
-    return this.editForm.galleryImages
-      .filter(img => img.imageUrl?.trim())
-      .map((img, index) => ({
-        imageUrl: img.imageUrl.trim(),
-        caption: this.optionalText(img.caption),
+    return this.editForm.galleryItems
+      .filter(it => it.kind === 'image' && it.imageUrl?.trim())
+      .map((it, index) => ({
+        imageUrl: it.imageUrl!.trim(),
+        caption: this.optionalText(it.caption),
         displayOrder: index
       }));
   }
 
   private normalizedVideos() {
-    return this.editForm.videos
-      .filter(video => video.videoUrl?.trim())
-      .map((video, index) => ({
-        videoUrl: video.videoUrl.trim(),
-        title: this.optionalText(video.title),
+    return this.editForm.galleryItems
+      .filter(it => it.kind === 'video' && it.videoUrl?.trim())
+      .map((it, index) => ({
+        videoUrl: it.videoUrl!.trim(),
+        title: this.optionalText(it.title),
         displayOrder: index
       }));
   }

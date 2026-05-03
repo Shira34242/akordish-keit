@@ -225,6 +225,35 @@
 /* Dynamic List Items */
 .social-link-item, .gallery-item, .video-item { padding: var(--space-base); background: #F2F2F2; border-radius: 16px; margin-bottom: var(--space-md); }
 
+/* Banner Type Toggle */
+.banner-type-toggle {
+  display: inline-flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  background: #F2F2F2;
+  padding: 4px;
+  border-radius: 999px;
+}
+.banner-type-btn {
+  padding: var(--space-sm) var(--space-base);
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  color: #000;
+  transition: background 0.15s;
+}
+.banner-type-btn.active { background: #000; color: #ddff53; }
+
+/* Range Input */
+.form-range { width: 100%; }
+
+.warn-text { color: #404040; font-weight: 800; }
+.section-desc { font-size: var(--font-sm); color: #404040; margin: 0 0 var(--space-md); line-height: 1.5; }
+
 /* Readonly */
 .form-input.readonly, .form-textarea.readonly { background: #F2F2F2; color: #000000; cursor: not-allowed; opacity: 0.7; }
 
