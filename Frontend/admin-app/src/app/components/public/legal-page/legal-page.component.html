@@ -1,0 +1,21 @@
+<section class="legal-page">
+  <div class="legal-page__inner">
+    <a class="legal-page__back" routerLink="/">חזרה לאתר</a>
+
+    <header class="legal-page__header">
+      <span class="legal-page__eyebrow">מידע רשמי</span>
+      <h1>{{ page.title }}</h1>
+      <p>{{ page.description }}</p>
+      <button *ngIf="isContactPage" type="button" class="legal-page__primary" (click)="openContactForm()">
+        פתיחת טופס צור קשר
+      </button>
+    </header>
+
+    <div class="legal-page__content">
+      <section class="legal-page__section" *ngFor="let section of page.sections">
+        <h2>{{ section.title }}</h2>
+        <p>{{ section.body }}</p>
+      </section>
+    </div>
+  </div>
+</section>

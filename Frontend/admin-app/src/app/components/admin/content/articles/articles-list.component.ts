@@ -7,12 +7,13 @@ import { SystemTablesService, SystemItem } from '../../../../services/system-tab
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../../models/article.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { FeaturedContentManagementComponent } from '../featured-content/featured-content-management.component';
 
 
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent],
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
@@ -26,7 +27,9 @@ export class ArticlesListComponent implements OnInit {
   articles: Article[] = [];
   categories: SystemItem[] = [];
   loading = false;
-  activeTab: 'news' | 'blog' = 'news';
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
+  activeTab: 'news' | 'blog' | 'featured' = 'news';
 
   // Pagination
   currentPage = 1;
@@ -83,10 +86,12 @@ export class ArticlesListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'news' | 'blog'): void {
+  switchTab(tab: 'news' | 'blog' | 'featured'): void {
     this.activeTab = tab;
     this.currentPage = 1;
-    this.loadArticles();
+    if (tab !== 'featured') {
+      this.loadArticles();
+    }
   }
 
   onSearch(): void {

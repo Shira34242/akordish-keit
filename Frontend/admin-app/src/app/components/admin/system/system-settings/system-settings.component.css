@@ -37,25 +37,25 @@
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-base);
-  border-radius: 12px;
+  border-radius: 999px;
   margin-bottom: var(--space-base);
   font-size: var(--font-sm);
 }
 
-.alert-error { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb; }
+.alert-error { background: #F2F2F2; color: #000; border: none; }
 
 /* Settings List */
 .settings-list { display: flex; flex-direction: column; gap: var(--space-sm); }
 
 .setting-card {
-  background: #ffffff;
-  border-radius: 16px;
+  background: #F2F2F2;
+  border-radius: 24px;
   padding: var(--space-base) var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-base);
-  border: 1px solid #F2F2F2;
+  border: none;
 }
 
 .setting-info { flex: 1; min-width: 0; }

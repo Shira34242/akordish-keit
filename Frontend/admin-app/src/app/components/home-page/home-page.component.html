@@ -41,7 +41,7 @@
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
             <span class="search-group-label">שירים ואקורדים</span>
             <div class="search-result-item" *ngFor="let item of searchResults.songs" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-song.png'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -53,7 +53,7 @@
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
             <span class="search-group-label">אמנים</span>
             <div class="search-result-item" *ngFor="let item of searchResults.artists" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-artist.png'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
               </div>
@@ -64,7 +64,7 @@
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">כתבות</span>
             <div class="search-result-item" *ngFor="let item of searchResults.articles" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-article.png'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -76,7 +76,7 @@
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">מורים</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-avatar.png'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -88,7 +88,7 @@
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">בעלי מקצוע</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-avatar.png'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -100,7 +100,7 @@
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
             <span class="search-group-label">רשימות שמורות</span>
             <div class="search-result-item" *ngFor="let item of searchResults.playlists" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-playlist.png'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -115,7 +115,7 @@
               <span class="search-lyrics-badge">חיפוש עמוק</span>
             </span>
             <div class="search-result-item" *ngFor="let item of lyricsMatches" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-song.png'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>

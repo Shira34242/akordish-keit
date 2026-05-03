@@ -218,6 +218,15 @@
 
         <div class="embedded-flow" *ngIf="currentMode === 'event'">
           <div class="smart-form">
+            <label class="smart-label">שם ההופעה</label>
+            <input class="smart-input" [(ngModel)]="event.name" placeholder="שם ההופעה">
+
+            <label class="smart-label">תאריך ושעה</label>
+            <input class="smart-input" type="datetime-local" [(ngModel)]="event.eventDate">
+
+            <label class="smart-label">מיקום</label>
+            <input class="smart-input" [(ngModel)]="event.location" placeholder="אולם, עיר או כתובת">
+
             <div class="smart-media-card">
               <div class="smart-media-head">
                 <label class="smart-label smart-media-label">תמונה</label>
@@ -248,9 +257,6 @@
 
             <label class="smart-label">לינק לכרטיסים (לא חובה)</label>
             <input class="smart-input" [(ngModel)]="event.ticketUrl" placeholder="https://...">
-
-            <label class="smart-label">תאריך (לא חובה)</label>
-            <input class="smart-input" type="datetime-local" [(ngModel)]="event.eventDate">
 
             <div class="smart-tag-block">
               <label class="smart-label">תיוג אמן מהאתר</label>
@@ -300,16 +306,8 @@
 
             <div class="smart-optional-grid" *ngIf="showEventOptional">
               <div>
-                <label class="smart-label">כותרת ההופעה</label>
-                <input class="smart-input" [(ngModel)]="event.name" placeholder="לא חובה">
-              </div>
-              <div>
                 <label class="smart-label">שם אמן</label>
                 <input class="smart-input" [(ngModel)]="event.artistName" placeholder="לא חובה">
-              </div>
-              <div>
-                <label class="smart-label">מיקום</label>
-                <input class="smart-input" [(ngModel)]="event.location" placeholder="לא חובה">
               </div>
               <div>
                 <label class="smart-label">מחיר</label>

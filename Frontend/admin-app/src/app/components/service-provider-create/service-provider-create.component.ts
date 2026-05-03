@@ -370,32 +370,42 @@ export class ServiceProviderCreateComponent implements OnInit {
     this.error = '';
 
     const currentUser = this.authService.currentUserValue;
+    const normalizedGalleryImages = this.galleryImages
+      .filter(image => image.imageUrl?.trim())
+      .map((image, index) => ({
+        ...image,
+        imageUrl: image.imageUrl.trim(),
+        caption: image.caption?.trim() || '',
+        order: index
+      }));
 
     const dto: CreateMusicServiceProviderDto = {
       userId: currentUser?.id,
-      displayName: this.displayName,
-      shortBio: this.shortBio,
-      fullDescription: this.fullDescription,
+      displayName: this.displayName.trim(),
+      shortBio: this.shortBio?.trim() || undefined,
+      fullDescription: this.fullDescription?.trim() || undefined,
       isTeacher: false,
       cityId: this.cityId,
-      location: this.location,
-      phoneNumber: this.phoneNumber,
+      location: this.location?.trim() || undefined,
+      phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
-      email: this.email,
+      email: this.email.trim(),
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-      profileImageUrl: this.profileImageUrl,
-      videoUrl: this.videoUrl,
+      profileImageUrl: this.profileImageUrl?.trim() || undefined,
+      videoUrl: this.videoUrl?.trim() || undefined,
       yearsOfExperience: this.yearsOfExperience,
-      workingHours: this.workingHours,
+      workingHours: this.workingHours?.trim() || undefined,
       isFeatured: false,
       status: ProfileStatus.Pending,
       categories: this.selectedCategoryId ? [{
         categoryId: this.selectedCategoryId,
         subCategory: undefined
       } as CreateServiceProviderCategoryDto] : [],
-      galleryImages: this.galleryImages,
-      socialLinks: this.socialLinks.filter(link => link.url?.trim()),
+      galleryImages: normalizedGalleryImages,
+      socialLinks: this.socialLinks
+        .filter(link => link.url?.trim())
+        .map(link => ({ ...link, url: link.url.trim() })),
       customerTestimonials: this.customerTestimonials
     };
 

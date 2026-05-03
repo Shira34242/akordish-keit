@@ -12,6 +12,7 @@ import { Article } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-artist-detail',
@@ -103,7 +104,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
-    private artistPageService: ArtistPageService
+    private artistPageService: ArtistPageService,
+    private seo: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -159,6 +161,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (artist) => {
         this.artist = artist;
         this.loading = false;
+        this.applySeo(artist);
         this.artistPageService.setOwnerId(artist.userId ?? null);
         this.loadSongs(id);
         this.loadArticles(id);
@@ -175,6 +178,38 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loading = false;
         this.router.navigate(['/']);
       }
+    });
+  }
+
+  private applySeo(artist: Artist): void {
+    const path = `/artist/${artist.id}`;
+    const rawDescription = artist.shortBio || artist.biography || `דף האמן של ${artist.name} באקורדישקייט, כולל שירים, אקורדים, כתבות והופעות.`;
+    const description = rawDescription.replace(/\s+/g, ' ').trim().slice(0, 160);
+
+    this.seo.set({
+      title: `${artist.name} - אקורדים, שירים ועדכונים`,
+      description,
+      path,
+      imageUrl: artist.imageUrl || artist.bannerImageUrl,
+      type: 'profile',
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'אמנים', path: '/artists' },
+          { name: artist.name, path }
+        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'MusicGroup',
+          name: artist.name,
+          alternateName: artist.englishName || undefined,
+          description,
+          image: artist.imageUrl ? this.seo.absoluteUrl(artist.imageUrl) : undefined,
+          url: this.seo.absoluteUrl(path),
+          sameAs: artist.socialLinks?.map(link => link.url).filter(Boolean)
+        }
+      ]
     });
   }
 

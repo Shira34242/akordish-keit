@@ -16,11 +16,17 @@
       <button class="tab" [class.active]="activeTab === 'blog'" (click)="switchTab('blog')">
         בלוג
       </button>
+      <button class="tab" [class.active]="activeTab === 'featured'" (click)="switchTab('featured')">
+        מרכזי
+      </button>
     </div>
   </div>
 
+  <!-- Featured Content (tab: מרכזי) -->
+  <app-featured-content-management *ngIf="activeTab === 'featured'"></app-featured-content-management>
+
   <!-- Actions Bar -->
-  <div class="actions-bar">
+  <div class="actions-bar" *ngIf="activeTab !== 'featured'">
     <!-- Search -->
     <div class="search-box">
       <input type="text" placeholder="חיפוש לפי כותרת, תקציר או slug..." [(ngModel)]="searchTerm" (input)="onSearch()"
@@ -62,8 +68,41 @@
     </button>
   </div>
 
+  <!-- Controls Bar -->
+  <div class="list-controls" *ngIf="!loading && activeTab !== 'featured'">
+    <span class="results-info">{{ totalItems }} פריטים</span>
+    <div class="view-controls">
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="data-grid" *ngIf="!loading && articles.length > 0 && activeTab !== 'featured' && viewMode === 'grid'">
+    <div class="grid-card" *ngFor="let article of articles">
+      <div class="grid-card-avatar">
+        <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" [alt]="article.title">
+        <span *ngIf="!article.featuredImageUrl" class="material-icons" style="font-size:28px">article</span>
+      </div>
+      <div class="grid-card-name">{{ article.title }}</div>
+      <div class="grid-card-sub">{{ article.authorName }}</div>
+      <div class="grid-card-badges">
+        <span class="badge" [ngClass]="getStatusClass(article.status)">{{ getStatusName(article.status) }}</span>
+      </div>
+      <div class="grid-card-actions">
+        <button class="btn-action" (click)="viewArticle(article)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="editArticle(article.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" (click)="deleteArticle(article)" title="מחיקה"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Table -->
-  <div class="table-container">
+  <div class="table-container" *ngIf="activeTab !== 'featured' && viewMode === 'list'">
     <div *ngIf="loading" class="loading-state">
       <div class="spinner"></div>
       <p>טוען נתונים...</p>
@@ -180,7 +219,7 @@
   </div>
 
   <!-- Pagination -->
-  <div *ngIf="!loading && totalPages > 1" class="pagination">
+  <div *ngIf="!loading && totalPages > 1 && activeTab !== 'featured'" class="pagination">
     <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
       ←
     </button>

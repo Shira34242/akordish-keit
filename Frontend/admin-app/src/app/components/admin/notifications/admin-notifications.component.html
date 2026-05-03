@@ -1,13 +1,4 @@
 <section class="admin-notifications">
-  <header class="page-header">
-    <div>
-      <p class="eyebrow">מרכז הודעות</p>
-      <h1>צ׳אטים וקבוצות</h1>
-      <p>ניהול הודעות אישי וקבוצתי במבנה קל, נקי ודומה לאפליקציית צ׳אט.</p>
-    </div>
-    <span class="page-chip">{{ totalUsers }} משתמשים</span>
-  </header>
-
   <div class="chat-shell">
     <aside class="users-panel">
       <div class="wa-topbar">
@@ -67,6 +58,8 @@
 
           <button type="button" class="filter-clear-button" (click)="clearFilters()">ניקוי</button>
         </div>
+        <span class="filter-count" *ngIf="sidebarMode === 'chats'">{{ totalUsers }} משתמשים</span>
+        <span class="filter-count" *ngIf="sidebarMode === 'groups'">{{ visibleGroups.length }} קבוצות</span>
       </section>
 
       <div class="users-state" *ngIf="isLoadingUsers && sidebarMode === 'chats'">טוען משתמשים...</div>

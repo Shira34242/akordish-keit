@@ -1,9 +1,18 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .management-layout {
-  max-width: 1600px;
-  margin: 0 auto;
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
   direction: rtl;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .section-switcher {
@@ -91,6 +100,10 @@
 
 .layout-content {
   animation: fadeIn 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 :host ::ng-deep .layout-content > .admin-notifications > .page-header,

@@ -48,9 +48,17 @@
     </div>
   </div>
 
-  <!-- Results Info -->
-  <div class="results-info" *ngIf="!loading && !error">
-    נמצאו {{ totalCount }} אומנים
+  <!-- Controls Bar -->
+  <div class="list-controls" *ngIf="!loading && !error">
+    <span class="results-info">{{ totalCount }} אומנים</span>
+    <div class="view-controls">
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -64,8 +72,30 @@
     {{ error }}
   </div>
 
+  <!-- Grid View -->
+  <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
+    <div class="grid-card" *ngFor="let artist of artists">
+      <div class="grid-card-avatar">
+        <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.name" imgFallback>
+        <span *ngIf="!artist.imageUrl">{{ artist.name.charAt(0) }}</span>
+      </div>
+      <div class="grid-card-name">{{ artist.name }}</div>
+      <div class="grid-card-sub" *ngIf="artist.shortBio">{{ artist.shortBio }}</div>
+      <div class="grid-card-badges">
+        <span class="badge" [ngClass]="getStatusBadgeClass(artist.status)">{{ getStatusLabel(artist.status) }}</span>
+        <span *ngIf="artist.isPremium" class="badge badge-premium">Premium</span>
+      </div>
+      <div class="grid-card-actions">
+        <button class="btn-action" (click)="viewArtist(artist.id)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="editArtist(artist.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" (click)="deleteArtist(artist.id)" title="מחיקה"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+    <div class="no-data" *ngIf="artists.length === 0">לא נמצאו אומנים</div>
+  </div>
+
   <!-- Artists Table -->
-  <div class="table-container" *ngIf="!loading && !error">
+  <div class="table-container" *ngIf="!loading && !error && viewMode === 'list'">
     <table class="artists-table">
       <thead>
         <tr>

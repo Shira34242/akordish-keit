@@ -23,6 +23,8 @@ export class EventsListComponent implements OnInit {
   // State
   events: Event[] = [];
   loading = false;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view', mode); }
 
   // Pagination
   currentPage = 1;

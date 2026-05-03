@@ -23,6 +23,9 @@ public class User
     public string? Address { get; set; }
     public DateTime? BirthDate { get; set; }
 
+    /// <summary>מזהה עיר (FK לטבלת Cities — עתידית; כיום שמורה רק כמספר לתאימות עם CitiesController הקיים)</summary>
+    public int? CityId { get; set; }
+
     // ════════════════════════════════════
     //          פרופיל אישי
     // ════════════════════════════════════
@@ -48,6 +51,25 @@ public class User
 
     public int? PreferredInstrumentId { get; set; }
 
+    /// <summary>שם כלי שלא קיים ברשימה (טקסט חופשי כשהמשתמש בחר "אחר")</summary>
+    public string? OtherInstrumentName { get; set; }
+
+    /// <summary>רמת ניגון כללית (לכל כליו של המשתמש)</summary>
+    public InstrumentLevel? InstrumentLevel { get; set; }
+
+    // ════════════════════════════════════
+    //          תזכורות השלמת פרופיל
+    // ════════════════════════════════════
+
+    /// <summary>מתי הוצגה תזכורת אחרונה להשלמת פרופיל (רך — לא חוסם)</summary>
+    public DateTime? LastProfileReminderAt { get; set; }
+
+    /// <summary>כמה פעמים המשתמש דחה תזכורת. אחרי 3 — לא נציג שוב</summary>
+    public int ProfileReminderDismissCount { get; set; } = 0;
+
+    /// <summary>ספירת ביקורים (login) — משמש לקביעת מתי להציג תזכורת</summary>
+    public int VisitCount { get; set; } = 0;
+
     // ════════════════════════════════════
     //          תג תרומת תוכן
     // ════════════════════════════════════
@@ -66,6 +88,9 @@ public class User
     // ════════════════════════════════════
 
     public virtual Instrument? PreferredInstrument { get; set; }
+
+    /// <summary>כלי הנגינה שהמשתמש מנגן עליהם (Many-to-Many דרך UserInstruments)</summary>
+    public virtual ICollection<UserInstrument> Instruments { get; set; } = new List<UserInstrument>();
 
     /// <summary>
     /// פרופילי בעל מקצוע/מורה (1:Many)

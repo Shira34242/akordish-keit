@@ -25,6 +25,8 @@ export class ClientsListComponent implements OnInit {
   clients: Client[] = [];
   filteredClients: Client[] = [];
   loading = false;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-clients-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-clients-view', mode); }
   searchTerm = '';
   activeTab: 'campaigns' | 'spots' | 'clients' = 'clients';
 

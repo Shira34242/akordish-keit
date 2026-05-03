@@ -20,6 +20,8 @@ export class UsersListComponent implements OnInit {
   users: UserListDto[] = [];
   loading = false;
   error: string | null = null;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-users-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-users-view', mode); }
 
   // Pagination
   currentPage = 1;

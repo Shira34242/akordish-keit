@@ -41,9 +41,17 @@
     </div>
   </div>
 
-  <!-- Results Info -->
-  <div class="results-info" *ngIf="!loading && !error">
-    נמצאו {{ totalCount }} מורים
+  <!-- Controls Bar -->
+  <div class="list-controls" *ngIf="!loading && !error">
+    <span class="results-info">{{ totalCount }} מורים</span>
+    <div class="view-controls">
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -57,13 +65,30 @@
     {{ error }}
   </div>
 
-  <!-- Results Count -->
-  <div class="results-info" *ngIf="!loading && !error">
-    <span>נמצאו {{ totalCount }} מורים</span>
+  <!-- Grid View -->
+  <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
+    <div class="grid-card" *ngFor="let teacher of teachers">
+      <div class="grid-card-avatar">
+        <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName" imgFallback>
+        <span *ngIf="!teacher.profileImageUrl">{{ teacher.displayName.charAt(0) }}</span>
+      </div>
+      <div class="grid-card-name">{{ teacher.displayName }}</div>
+      <div class="grid-card-sub">{{ getLocationDisplay(teacher) }}</div>
+      <div class="grid-card-badges">
+        <span class="badge" [ngClass]="getStatusBadgeClass(teacher.status)">{{ getStatusLabel(teacher.status) }}</span>
+        <span *ngIf="teacher.isFeatured" class="badge badge-star">מומלץ</span>
+      </div>
+      <div class="grid-card-actions">
+        <button class="btn-action" (click)="viewTeacher(teacher.id)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="editTeacher(teacher.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" (click)="deleteTeacher(teacher.id)" title="מחיקה"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+    <div class="no-data" *ngIf="teachers.length === 0">לא נמצאו מורים</div>
   </div>
 
   <!-- Teachers Table -->
-  <div class="table-container" *ngIf="!loading && !error">
+  <div class="table-container" *ngIf="!loading && !error && viewMode === 'list'">
     <table class="teachers-table">
       <thead>
         <tr>

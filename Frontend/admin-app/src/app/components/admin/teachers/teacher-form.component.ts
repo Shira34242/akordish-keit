@@ -366,36 +366,39 @@ export class TeacherFormComponent implements OnInit {
     }
 
     this.saving = true;
+    const commonPayload = {
+      displayName: this.displayName.trim(),
+      shortBio: this.optionalText(this.shortBio),
+      fullDescription: this.optionalText(this.fullDescription),
+      cityId: this.cityId,
+      location: this.optionalText(this.location),
+      phoneNumber: this.phoneNumber.trim(),
+      whatsAppNumber: this.optionalText(this.whatsAppNumber),
+      email: this.email.trim(),
+      websiteUrl: this.optionalText(this.websiteUrl),
+      bannerImageUrl: this.optionalText(this.bannerImageUrl),
+      profileImageUrl: this.optionalText(this.profileImageUrl),
+      videoUrl: this.optionalText(this.videoUrl),
+      yearsOfExperience: this.yearsOfExperience || undefined,
+      workingHours: this.optionalText(this.workingHours),
+      isFeatured: this.isFeatured,
+      status: this.status,
+      priceList: this.optionalText(this.priceList),
+      languages: this.arrayToFlags(this.selectedLanguages),
+      targetAudience: this.arrayToFlags(this.selectedAudiences),
+      availability: this.optionalText(this.availability),
+      education: this.optionalText(this.education),
+      lessonTypes: this.optionalText(this.lessonTypes),
+      specializations: this.optionalText(this.specializations),
+      instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
+      galleryImages: this.normalizedGalleryImages(),
+      testimonials: this.normalizedTestimonials(),
+      socialLinks: this.normalizedSocialLinks()
+    };
 
     if (this.isEditMode && this.teacherId) {
       const dto: UpdateTeacherDto = {
-        displayName: this.displayName,
-        shortBio: this.shortBio,
-        fullDescription: this.fullDescription,
-        cityId: this.cityId,
-        location: this.location,
-        phoneNumber: this.phoneNumber,
-        whatsAppNumber: this.whatsAppNumber,
-        email: this.email,
-        websiteUrl: this.websiteUrl?.trim() || undefined,
-        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-        profileImageUrl: this.profileImageUrl,
-        videoUrl: this.videoUrl,
-        yearsOfExperience: this.yearsOfExperience,
-        workingHours: this.workingHours,
-        isFeatured: this.isFeatured,
-        status: this.status,
-        priceList: this.priceList,
-        languages: this.arrayToFlags(this.selectedLanguages),
-        targetAudience: this.arrayToFlags(this.selectedAudiences),
-        availability: this.availability,
-        education: this.education,
-        lessonTypes: this.lessonTypes,
-        specializations: this.specializations,
-        instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
-        galleryImages: this.galleryImages,
-        testimonials: this.testimonials,
-        socialLinks: this.socialLinks.filter(link => link.url?.trim())
+        ...commonPayload
       };
 
       this.teacherService.updateTeacher(this.teacherId, dto).subscribe({
@@ -420,35 +423,9 @@ export class TeacherFormComponent implements OnInit {
       });
     } else {
       const dto: CreateTeacherDto = {
+        ...commonPayload,
         userId: this.userId,
-        displayName: this.displayName,
-        shortBio: this.shortBio,
-        fullDescription: this.fullDescription,
         isTeacher: true,
-        cityId: this.cityId,
-        location: this.location,
-        phoneNumber: this.phoneNumber,
-        whatsAppNumber: this.whatsAppNumber,
-        email: this.email,
-        websiteUrl: this.websiteUrl?.trim() || undefined,
-        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-        profileImageUrl: this.profileImageUrl,
-        videoUrl: this.videoUrl,
-        yearsOfExperience: this.yearsOfExperience,
-        workingHours: this.workingHours,
-        isFeatured: this.isFeatured,
-        status: this.status,
-        priceList: this.priceList,
-        languages: this.arrayToFlags(this.selectedLanguages),
-        targetAudience: this.arrayToFlags(this.selectedAudiences),
-        availability: this.availability,
-        education: this.education,
-        lessonTypes: this.lessonTypes,
-        specializations: this.specializations,
-        instruments: this.selectedInstrumentIds.map(id => ({ instrumentId: id, isPrimary: false } as CreateTeacherInstrumentDto)),
-        galleryImages: this.galleryImages,
-        testimonials: this.testimonials,
-        socialLinks: this.socialLinks.filter(link => link.url?.trim())
       };
 
       this.teacherService.createTeacher(dto).subscribe({
@@ -698,6 +675,41 @@ export class TeacherFormComponent implements OnInit {
 
   removeSocialLink(index: number): void {
     this.socialLinks.splice(index, 1);
+  }
+
+  private optionalText(value: string | undefined): string | undefined {
+    const trimmed = value?.trim();
+    return trimmed || undefined;
+  }
+
+  private normalizedGalleryImages(): CreateGalleryImageDto[] {
+    return this.galleryImages
+      .filter(img => img.imageUrl?.trim())
+      .map((img, index) => ({
+        imageUrl: img.imageUrl.trim(),
+        caption: this.optionalText(img.caption),
+        order: index
+      }));
+  }
+
+  private normalizedTestimonials(): CreateTeacherTestimonialDto[] {
+    return this.testimonials
+      .filter(item => item.text?.trim())
+      .map((item, index) => ({
+        studentName: this.optionalText(item.studentName),
+        text: item.text.trim(),
+        order: index
+      }));
+  }
+
+  private normalizedSocialLinks(): SocialLinkDto[] {
+    return this.socialLinks
+      .filter(link => link.url?.trim())
+      .map(link => ({
+        id: link.id,
+        platform: link.platform,
+        url: link.url.trim()
+      }));
   }
 
   goBack(): void {

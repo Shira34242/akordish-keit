@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
+export interface UserInstrumentRef {
+    id: number;
+    name: string;
+    englishName?: string | null;
+}
+
 export interface User {
     id: number;
     username: string;
@@ -12,12 +18,36 @@ export interface User {
     level: number;
     points: number;
     preferredInstrumentId?: number | null;
+    instruments?: UserInstrumentRef[];
+    otherInstrumentName?: string | null;
+    instrumentLevel?: number | null;   // 1=Beginner, 2=Intermediate, 3=Professional
     hasProfessionalProfile?: boolean;
     phone?: string | null;
     address?: string | null;
+    cityId?: number | null;
     birthDate?: string | null;
     contentTag?: number;   // 0=None, 1=מתחיל, 2=תורם, 3=תורם מוביל
     uploadCount?: number;
+    createdAt?: string;
+    lastProfileReminderAt?: string | null;
+    profileReminderDismissCount?: number;
+    visitCount?: number;
+}
+
+export interface CompleteProfilePayload {
+    instrumentIds?: number[];
+    otherInstrumentName?: string | null;
+    instrumentLevel?: number | null;
+    userType?: string | null;
+    phone?: string | null;
+}
+
+export interface UpdateSoftProfilePayload {
+    phone?: string | null;
+    cityId?: number | null;
+    address?: string | null;
+    birthMonth?: number | null;
+    birthYear?: number | null;
 }
 
 export interface AuthResponse {
@@ -101,19 +131,62 @@ export class AuthService {
         );
     }
 
-    completeProfile(preferredInstrumentId?: number | null, phone?: string): Observable<User> {
-        const body: any = {};
-        if (preferredInstrumentId !== undefined && preferredInstrumentId !== null) {
-            body.preferredInstrumentId = preferredInstrumentId;
+    completeProfile(payload: CompleteProfilePayload): Observable<User> {
+        const body: Record<string, unknown> = {};
+        if (payload.instrumentIds && payload.instrumentIds.length > 0) {
+            body['instrumentIds'] = payload.instrumentIds;
         }
-        if (phone) {
-            body.phone = phone;
+        if (payload.otherInstrumentName !== undefined && payload.otherInstrumentName !== null) {
+            body['otherInstrumentName'] = payload.otherInstrumentName;
+        }
+        if (payload.instrumentLevel !== undefined && payload.instrumentLevel !== null) {
+            body['instrumentLevel'] = payload.instrumentLevel;
+        }
+        if (payload.userType) {
+            body['userType'] = payload.userType;
+        }
+        if (payload.phone) {
+            body['phone'] = payload.phone;
         }
 
-        return this.http.put<User>(`${this.apiUrl}/complete-profile`, body).pipe(
+        return this.http.put<User>(`${this.apiUrl}/complete-profile`, body, {
+            withCredentials: true
+        }).pipe(
             tap(user => {
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 this.currentUserSubject.next(user);
+            })
+        );
+    }
+
+    updateSoftProfile(payload: UpdateSoftProfilePayload): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/update-soft-profile`, payload, {
+            withCredentials: true
+        }).pipe(
+            tap(user => {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.currentUserSubject.next(user);
+            })
+        );
+    }
+
+    dismissProfileReminder(): Observable<{ lastProfileReminderAt: string; profileReminderDismissCount: number }> {
+        return this.http.post<{ lastProfileReminderAt: string; profileReminderDismissCount: number }>(
+            `${this.apiUrl}/dismiss-profile-reminder`,
+            {},
+            { withCredentials: true }
+        ).pipe(
+            tap(result => {
+                const current = this.currentUserSubject.value;
+                if (current) {
+                    const updated: User = {
+                        ...current,
+                        lastProfileReminderAt: result.lastProfileReminderAt,
+                        profileReminderDismissCount: result.profileReminderDismissCount
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(updated));
+                    this.currentUserSubject.next(updated);
+                }
             })
         );
     }

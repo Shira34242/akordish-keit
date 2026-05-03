@@ -12,7 +12,8 @@
 .admin-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background: #ffffff;
 }
 
@@ -30,6 +31,7 @@
     position: sticky;
     top: 0;
     z-index: 1000;
+    border-bottom: 1px solid #F2F2F2;
 }
 
 .header-inner {
@@ -220,7 +222,11 @@
 /* Main Content */
 .admin-main {
     flex: 1;
-    padding: var(--space-2xl);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-lg) var(--space-2xl);
     max-width: 1600px;
     margin: 0 auto;
     width: 100%;
@@ -368,15 +374,254 @@
     background: #fafafa;
 }
 
-/* Footer */
-.admin-footer {
-    text-align: center;
-    padding: var(--space-xl);
-    color: #ffffff;
-    font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
+
+/* ─── Global visual corrections across all admin pages ─── */
+
+/* Page headers: remove card boxing on white background */
+:host ::ng-deep .page-header {
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding-top: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Dashboard wrapper: remove self-contained background and padding */
+:host ::ng-deep .dashboard {
+    background: transparent !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+}
+
+/* Cards: remove heavy black borders, soft radius */
+:host ::ng-deep .kpi-card,
+:host ::ng-deep .dash-card,
+:host ::ng-deep .stat-card,
+:host ::ng-deep .recent-card,
+:host ::ng-deep .setting-card {
+    background: #F2F2F2 !important;
+    border: none !important;
+    border-radius: 24px !important;
+}
+:host ::ng-deep .kpi-card.kpi-accent { background: #ddff53 !important; }
+
+/* Quick nav links: remove border */
+:host ::ng-deep .quick-link { border: none !important; }
+
+/* Avatars and badges: remove borders */
+:host ::ng-deep .join-avatar { border: none !important; }
+:host ::ng-deep .badge-total { border: none !important; }
+
+/* Input borders: subtle gray instead of heavy black */
+:host ::ng-deep .form-control { border-color: #F2F2F2 !important; }
+:host ::ng-deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]) {
+    border-color: #F2F2F2 !important;
+}
+:host ::ng-deep select { border-color: #F2F2F2 !important; }
+:host ::ng-deep textarea { border-color: #F2F2F2 !important; }
+
+/* Form sections: white cards → gray cards */
+:host ::ng-deep .form-section {
+    background: #F2F2F2 !important;
+    border: none !important;
+    border-radius: 24px !important;
+}
+
+/* Stats and content containers: remove self-contained white wrappers */
+:host ::ng-deep .stats-container,
+:host ::ng-deep .featured-container,
+:host ::ng-deep .news-container,
+:host ::ng-deep .ticker-container {
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+/* Transparent containers — no white-on-white card effect */
+:host ::ng-deep .pagination-container,
+:host ::ng-deep .loading-container {
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Table: remove redundant side borders */
+:host ::ng-deep .table-container,
+:host ::ng-deep .table-wrap {
+    border-right: none !important;
+    border-left: none !important;
+}
+
+/* Table row hover: use F2F2F2 instead of near-white fafafa */
+:host ::ng-deep .table-container tbody tr:hover td,
+:host ::ng-deep .table-wrap tbody tr:hover td,
+:host ::ng-deep table tbody tr:hover td {
+    background: #F2F2F2 !important;
+}
+
+/* Section headers (system, value-tables etc): consistent sizing */
+:host ::ng-deep .page-title,
+:host ::ng-deep .section-title {
+    font-size: var(--font-xl) !important;
+    font-weight: 800 !important;
+    color: #000 !important;
+    margin: 0 0 var(--space-base) !important;
+}
+
+/* ─── List controls bar (results + view toggle) ──────────── */
+:host ::ng-deep .list-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-base);
+    margin-bottom: var(--space-base);
+}
+
+:host ::ng-deep .list-controls .results-info {
+    margin: 0;
     font-size: var(--font-xs);
-    background: #404040;
+    color: #404040;
+}
+
+/* ─── View Toggle ─────────────────────────────────────────── */
+:host ::ng-deep .view-controls {
+    display: inline-flex;
+    background: #F2F2F2;
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+:host ::ng-deep .view-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #404040;
+    transition: background 0.12s, color 0.12s;
+}
+
+:host ::ng-deep .view-btn.active {
+    background: #ffffff;
+    color: #000;
+}
+
+:host ::ng-deep .view-btn .material-icons { font-size: 17px; }
+
+/* ─── Modern table: rows feel like items, not a grid ─────── */
+:host ::ng-deep table {
+    border-collapse: separate !important;
+    border-spacing: 0 3px !important;
+}
+
+:host ::ng-deep table thead th {
+    padding-bottom: var(--space-sm) !important;
+    font-size: var(--font-xs) !important;
+    color: #404040 !important;
+    font-weight: 300 !important;
+    border-bottom: none !important;
+    background: transparent !important;
+}
+
+:host ::ng-deep table tbody tr td {
+    background: #F2F2F2;
+    border-bottom: none !important;
+    padding: var(--space-sm) var(--space-base) !important;
+}
+
+:host ::ng-deep table tbody tr td:first-child {
+    border-radius: 0 16px 16px 0;
+}
+
+:host ::ng-deep table tbody tr td:last-child {
+    border-radius: 16px 0 0 16px;
+}
+
+:host ::ng-deep table tbody tr:hover td { background: #e8e8e8 !important; }
+
+:host ::ng-deep table tbody tr:last-child td { border-bottom: none !important; }
+
+/* ─── Grid view ───────────────────────────────────────────── */
+:host ::ng-deep .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+    gap: var(--space-base);
+}
+
+:host ::ng-deep .grid-card {
+    background: #F2F2F2;
+    border-radius: 24px;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    transition: background 0.12s;
+}
+
+:host ::ng-deep .grid-card:hover { background: #e8e8e8; }
+
+:host ::ng-deep .grid-card-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-base);
+    font-weight: 800;
+    color: #000;
+    overflow: hidden;
+    margin-bottom: var(--space-sm);
+    flex-shrink: 0;
+}
+
+:host ::ng-deep .grid-card-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+:host ::ng-deep .grid-card-name {
+    font-size: var(--font-sm);
+    font-weight: 800;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:host ::ng-deep .grid-card-sub {
+    font-size: var(--font-xs);
+    color: #404040;
+    font-weight: 300;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:host ::ng-deep .grid-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: var(--space-xs);
+}
+
+:host ::ng-deep .grid-card-actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: var(--space-sm);
 }
 
 /* Responsive */

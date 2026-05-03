@@ -29,6 +29,7 @@ import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail } from '../../models/playlist.model';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
 import { SongRatingService } from '../../services/song-rating.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
     selector: 'app-song-page',
@@ -135,6 +136,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private playlistService: PlaylistService,
         private knownChordService: UserKnownChordService,
         private songRatingService: SongRatingService,
+        private seo: SeoService,
     ) { }
 
     handleRandomSongClick(): void {
@@ -241,6 +243,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             next: (data) => {
                 this.song = data;
                 this.isLoading = false;
+                this.applySeo();
 
                 this.preferFlat = analyzePreferFlat(
                     this.song.lyricsWithChords,
@@ -297,6 +300,46 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.isSongSaved = false;
             }
         });
+    }
+
+    private applySeo(): void {
+        if (!this.song || !this.songId) return;
+        const artistName = this.getArtistNames();
+        const title = artistName ? `${this.song.title} - ${artistName} אקורדים` : `${this.song.title} אקורדים`;
+        const description = artistName
+            ? `אקורדים לשיר ${this.song.title} של ${artistName}, כולל מילים, סולם וכלי עזר לנגינה.`
+            : `אקורדים לשיר ${this.song.title}, כולל מילים, סולם וכלי עזר לנגינה.`;
+        const path = `/song/${this.songId}`;
+
+        this.seo.set({
+            title,
+            description,
+            path,
+            imageUrl: this.song.imageUrl,
+            structuredData: [
+                this.seo.organizationSchema(),
+                this.seo.breadcrumbSchema([
+                    { name: 'בית', path: '/' },
+                    { name: 'אקורדים', path: '/chords' },
+                    { name: this.song.title, path }
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'MusicRecording',
+                    name: this.song.title,
+                    byArtist: artistName ? { '@type': 'MusicGroup', name: artistName } : undefined,
+                    image: this.song.imageUrl ? this.seo.absoluteUrl(this.song.imageUrl) : undefined,
+                    url: this.seo.absoluteUrl(path)
+                }
+            ]
+        });
+    }
+
+    private getArtistNames(): string {
+        if (this.song?.artists?.length) {
+            return this.song.artists.map((artist: any) => artist.name).filter(Boolean).join(', ');
+        }
+        return this.song?.artistName || '';
     }
 
     checkEditPermission(songId: number) {

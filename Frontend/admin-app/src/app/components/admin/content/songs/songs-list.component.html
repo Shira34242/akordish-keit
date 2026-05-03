@@ -38,8 +38,43 @@
     </button>
   </div>
 
+  <!-- Controls Bar -->
+  <div class="list-controls" *ngIf="!loading">
+    <span class="results-info">{{ totalItems }} שירים</span>
+    <div class="view-controls">
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="data-grid" *ngIf="!loading && songs.length > 0 && viewMode === 'grid'">
+    <div class="grid-card" *ngFor="let song of songs">
+      <div class="grid-card-avatar">
+        <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title">
+        <span *ngIf="!song.imageUrl" class="material-icons" style="font-size:28px">music_note</span>
+      </div>
+      <div class="grid-card-name">{{ song.title }}</div>
+      <div class="grid-card-sub">{{ formatArtists(song) }}</div>
+      <div class="grid-card-badges">
+        <span class="badge" [class.badge-success]="song.isApproved" [class.badge-warning]="!song.isApproved">
+          {{ song.isApproved ? 'מאושר' : 'ממתין' }}
+        </span>
+      </div>
+      <div class="grid-card-actions">
+        <button class="btn-action" (click)="viewSong(song.id)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="editSong(song.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" (click)="deleteSong(song)" title="מחיקה"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Table -->
-  <div class="table-container">
+  <div class="table-container" *ngIf="viewMode === 'list'">
     <div *ngIf="loading" class="loading-state">
       <div class="spinner"></div>
       <p>טוען נתונים...</p>
@@ -160,15 +195,6 @@
         </tr>
       </tbody>
     </table>
- <app-pagination
-      [totalCount]="totalCount"
-      [pageNumber]="pageNumber"
-      [pageSize]="pageSize"
-      [totalPages]="totalPages"
-      [hasPreviousPage]="hasPreviousPage"
-      [hasNextPage]="hasNextPage"
-      (pageChange)="onPageChange($event)">
-    </app-pagination>
     <!-- Empty State -->
     <div *ngIf="!loading && songs.length === 0" class="empty-state">
       <div class="empty-icon"><span class="material-icons">music_note</span></div>
@@ -181,32 +207,14 @@
     </div>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!loading && totalPages > 1" class="pagination">
-    <button
-      class="page-btn"
-      [disabled]="currentPage === 1"
-      (click)="onPageChange(currentPage - 1)">
-      ←
-    </button>
-
-    <button
-      *ngFor="let page of pages"
-      class="page-btn"
-      [class.active]="page === currentPage"
-      (click)="onPageChange(page)">
-      {{ page }}
-    </button>
-
-    <button
-      class="page-btn"
-      [disabled]="currentPage === totalPages"
-      (click)="onPageChange(currentPage + 1)">
-      →
-    </button>
-
-    <div class="pagination-info">
-      {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalItems) }} מתוך {{ totalItems }}
-    </div>
-  </div>
+  <app-pagination
+    *ngIf="!loading && songs.length > 0"
+    [totalCount]="totalCount"
+    [pageNumber]="pageNumber"
+    [pageSize]="pageSize"
+    [totalPages]="totalPages"
+    [hasPreviousPage]="hasPreviousPage"
+    [hasNextPage]="hasNextPage"
+    (pageChange)="onPageChange($event)">
+  </app-pagination>
 </div>

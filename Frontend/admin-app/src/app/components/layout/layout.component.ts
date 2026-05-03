@@ -13,6 +13,8 @@ import { AddSongModalComponent } from '../add-song-modal/add-song-modal.componen
 import { QuickAddAction, QuickAddAssistantModalComponent } from '../quick-add-assistant-modal/quick-add-assistant-modal.component';
 import { AuthModalComponent } from '../auth/auth-modal.component';
 import { AdditionalDetailsModalComponent, UserType } from '../auth/additional-details-modal.component';
+import { ProfileSoftReminderModalComponent } from '../auth/profile-soft-reminder-modal.component';
+import { ProfileReminderService, ReminderKind } from '../../services/profile-reminder.service';
 import { ForgotPasswordModalComponent } from '../auth/forgot-password-modal.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
@@ -32,6 +34,7 @@ import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/qui
     QuickAddAssistantModalComponent,
     AuthModalComponent,
     AdditionalDetailsModalComponent,
+    ProfileSoftReminderModalComponent,
     ForgotPasswordModalComponent,
     ReportModalComponent,
     TeacherCreateComponent,
@@ -69,6 +72,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   showAuthModal = false;
   showAdditionalDetailsModal = false;
+  showSoftReminderModal = false;
+  softReminderKind: ReminderKind = 'contact';
+  softReminderUser: User | null = null;
   showForgotPasswordModal = false;
   showReportModal = false;
   showTeacherCreateModal = false;
@@ -90,7 +96,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private artistPageService: ArtistPageService,
     private contentPageService: ContentPageService,
     private notificationService: NotificationService,
-    private quickAddAssistantService: QuickAddAssistantService
+    private quickAddAssistantService: QuickAddAssistantService,
+    private profileReminderService: ProfileReminderService
   ) {}
 
   @HostListener('window:scroll')
@@ -128,6 +135,14 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       }
     });
 
+    this.profileReminderService.request$.subscribe(req => {
+      if (req && !this.showAdditionalDetailsModal && !this.showAuthModal) {
+        this.softReminderKind = req.kind;
+        this.softReminderUser = req.user;
+        this.showSoftReminderModal = true;
+      }
+    });
+
     this.notificationService.unreadCount$.subscribe(count => {
       this.unreadNotificationCount = count;
     });
@@ -156,6 +171,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.updateAdminEditTarget(event.urlAfterRedirects);
         if (this.loggedIn) {
           this.notificationService.refreshUnreadCount();
+          this.profileReminderService.checkAndShow();
         }
       }
     });
@@ -598,6 +614,15 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     if (returnUrl && returnUrl !== '/') {
       this.router.navigate([returnUrl]);
     }
+
+    // אחרי לוגין רגיל (משתמש קיים) — נבדוק אם להציג תזכורת רכה
+    setTimeout(() => this.profileReminderService.checkAndShow(), 1500);
+  }
+
+  closeSoftReminderModal(): void {
+    this.showSoftReminderModal = false;
+    this.softReminderUser = null;
+    this.profileReminderService.clearRequest();
   }
 
   closeAdditionalDetailsModal(): void {

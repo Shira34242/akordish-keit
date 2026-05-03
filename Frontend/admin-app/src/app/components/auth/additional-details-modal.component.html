@@ -11,47 +11,96 @@
     <ng-container *ngIf="currentStep === 'instrument'">
       <div class="modal-header">
         <h2>כמה פרטים קטנים להשלמת החוויה</h2>
-        <p class="subtitle">מנגנ/ת על משהו?</p>
+        <p class="subtitle">על אילו כלים את/ה מנגנ/ת? (אפשר לבחור כמה)</p>
       </div>
 
-      <div class="instrument-cards">
-        <div
-          class="instrument-card has-image piano"
-          [class.selected]="selectedInstrument === 'piano'"
-          (click)="selectedInstrument = 'piano'"
-        >
-          <span class="card-label">קלידים</span>
-        </div>
-        <div
-          class="instrument-card has-image guitar"
-          [class.selected]="selectedInstrument === 'guitar'"
-          (click)="selectedInstrument = 'guitar'"
-        >
-          <span class="card-label">גיטרה</span>
-        </div>
-        <div
-          class="instrument-card"
-          [class.selected]="selectedInstrument === 'other'"
-          (click)="selectedInstrument = 'other'"
-        >
-          <span class="card-label">אחר</span>
-        </div>
-        <div
-          class="instrument-card"
-          [class.selected]="selectedInstrument === 'none'"
-          (click)="selectedInstrument = 'none'"
-        >
-          <span class="card-label">לא מנגנ/ת</span>
-        </div>
-      </div>
+      <!-- Loading state -->
+      <div *ngIf="instrumentsLoading" class="instruments-loading">טוען רשימת כלים...</div>
 
-      <div class="level-pills">
-        <button class="level-pill" [class.selected]="selectedLevel === 'מתחיל/ה'" (click)="selectedLevel = 'מתחיל/ה'">מתחיל/ה</button>
-        <button class="level-pill" [class.selected]="selectedLevel === 'מתקדם/ת'" (click)="selectedLevel = 'מתקדם/ת'">מתקדם/ת</button>
-        <button class="level-pill" [class.selected]="selectedLevel === 'מקצועי/ת'" (click)="selectedLevel = 'מקצועי/ת'">מקצועי/ת</button>
-      </div>
+      <ng-container *ngIf="!instrumentsLoading">
+        <!-- Featured cards (Piano, Guitar, Keyboard, Drums) -->
+        <div class="instrument-cards">
+          <div
+            *ngFor="let inst of featuredInstruments"
+            class="instrument-card has-image"
+            [class.piano]="inst.englishName === 'Piano'"
+            [class.guitar]="inst.englishName === 'Guitar'"
+            [class.selected]="isInstrumentSelected(inst.id)"
+            [class.disabled]="selectedNone"
+            (click)="!selectedNone && toggleInstrument(inst.id)"
+          >
+            <span class="card-label">{{ inst.name }}</span>
+          </div>
+        </div>
 
-      <button class="continue-btn" (click)="onContinue()">המשך &lt;</button>
+        <!-- Full list toggle -->
+        <button
+          type="button"
+          class="full-list-toggle"
+          (click)="toggleFullList()"
+          [disabled]="selectedNone"
+        >
+          {{ showFullList ? 'הסתר רשימה מלאה' : 'הצג עוד כלים' }}
+        </button>
+
+        <!-- Full list as chips -->
+        <div class="instrument-chips" *ngIf="showFullList && !selectedNone">
+          <button
+            type="button"
+            *ngFor="let inst of otherListInstruments"
+            class="instrument-chip"
+            [class.selected]="isInstrumentSelected(inst.id)"
+            (click)="toggleInstrument(inst.id)"
+          >
+            {{ inst.name }}
+          </button>
+        </div>
+
+        <!-- "Other" toggle -->
+        <div class="other-row">
+          <button
+            type="button"
+            class="other-toggle"
+            [class.selected]="showOther"
+            [disabled]="selectedNone"
+            (click)="toggleOther()"
+          >
+            + אחר
+          </button>
+          <input
+            *ngIf="showOther"
+            type="text"
+            class="other-input"
+            placeholder="איזה כלי?"
+            maxlength="50"
+            [(ngModel)]="otherInstrumentName"
+          />
+        </div>
+
+        <!-- "I don't play" -->
+        <p
+          class="no-instrument"
+          [class.active]="selectedNone"
+          (click)="toggleNone()"
+        >
+          {{ selectedNone ? '✓ ' : '' }}לא מנגנ/ת על שום כלי
+        </p>
+
+        <!-- Level pills (hidden when "none" selected) -->
+        <div class="level-pills" *ngIf="!selectedNone">
+          <button class="level-pill" [class.selected]="selectedLevel === 1" (click)="selectedLevel = 1">מתחיל/ה</button>
+          <button class="level-pill" [class.selected]="selectedLevel === 2" (click)="selectedLevel = 2">מתקדם/ת</button>
+          <button class="level-pill" [class.selected]="selectedLevel === 3" (click)="selectedLevel = 3">מקצועי/ת</button>
+        </div>
+
+        <button
+          class="continue-btn"
+          (click)="onContinue()"
+          [disabled]="!hasInstrumentChoice"
+        >
+          המשך &lt;
+        </button>
+      </ng-container>
 
       <div class="dots">
         <span class="dot"></span>
@@ -70,7 +119,6 @@
       </div>
 
       <div class="user-type-cards">
-        <!-- HTML reversed so LTR flex shows RTL order: אמן(right) → מורה → בעל מקצוע → משתמש(left) -->
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.Regular"

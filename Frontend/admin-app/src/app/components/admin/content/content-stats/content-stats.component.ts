@@ -136,6 +136,6 @@ export class ContentStatsComponent implements OnInit {
 
   get periodLabel(): string {
     const presetMap: Record<string, string> = { '7': '7 ימים', '30': '30 יום', '90': '90 יום', '365': 'שנה' };
-    return this.activePreset ? presetMap[this.activePreset] : `${this.dateFrom} — ${this.dateTo}`;
+    return this.activePreset ? presetMap[this.activePreset] : `${this.dateFrom} - ${this.dateTo}`;
   }
 }

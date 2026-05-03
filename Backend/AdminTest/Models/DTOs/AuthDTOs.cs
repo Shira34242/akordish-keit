@@ -44,11 +44,49 @@ namespace AkordishKeit.Models.DTOs
 
     public class CompleteProfileRequest
     {
+        /// <summary>מערך מזהי כלי הנגינה שבחר המשתמש</summary>
+        public List<int>? InstrumentIds { get; set; }
+
+        /// <summary>טקסט חופשי כשהמשתמש בחר "אחר"</summary>
+        [StringLength(50, ErrorMessage = "שם הכלי ארוך מדי")]
+        public string? OtherInstrumentName { get; set; }
+
+        /// <summary>רמת ניגון כללית (1=Beginner, 2=Intermediate, 3=Professional)</summary>
+        public int? InstrumentLevel { get; set; }
+
+        /// <summary>סוג משתמש שנבחר (לתצוגה במודל; השמירה בפועל ב-AuthController)</summary>
+        public string? UserType { get; set; }
+
+        // שדות ישנים (תאימות לאחור — אופציונליים)
         public int? PreferredInstrumentId { get; set; }
 
         [Phone(ErrorMessage = "מספר טלפון לא תקין")]
         [StringLength(20, ErrorMessage = "מספר טלפון ארוך מדי")]
         public string? Phone { get; set; }
+    }
+
+    /// <summary>
+    /// בקשה לעדכון פרטי פרופיל "רכים" (תזכורת לאחר זמן)
+    /// כל השדות אופציונליים — נשמרים רק אלה שנשלחו
+    /// </summary>
+    public class UpdateSoftProfileRequest
+    {
+        [Phone(ErrorMessage = "מספר טלפון לא תקין")]
+        [StringLength(20, ErrorMessage = "מספר טלפון ארוך מדי")]
+        public string? Phone { get; set; }
+
+        public int? CityId { get; set; }
+
+        [StringLength(255, ErrorMessage = "כתובת ארוכה מדי")]
+        public string? Address { get; set; }
+
+        /// <summary>חודש לידה (1-12) — אופציונלי</summary>
+        [Range(1, 12, ErrorMessage = "חודש לידה לא תקין")]
+        public int? BirthMonth { get; set; }
+
+        /// <summary>שנת לידה (4 ספרות) — אופציונלי</summary>
+        [Range(1900, 2100, ErrorMessage = "שנת לידה לא תקינה")]
+        public int? BirthYear { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -121,6 +159,27 @@ namespace AkordishKeit.Models.DTOs
         [System.Text.Json.Serialization.JsonPropertyName("preferredInstrumentId")]
         public int? PreferredInstrumentId { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("instruments")]
+        public List<InstrumentDto> Instruments { get; set; } = new();
+
+        [System.Text.Json.Serialization.JsonPropertyName("otherInstrumentName")]
+        public string? OtherInstrumentName { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("instrumentLevel")]
+        public int? InstrumentLevel { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("phone")]
+        public string? Phone { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("address")]
+        public string? Address { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("cityId")]
+        public int? CityId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("birthDate")]
+        public DateTime? BirthDate { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("hasProfessionalProfile")]
         public bool HasProfessionalProfile { get; set; }
 
@@ -129,5 +188,18 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("uploadCount")]
         public int UploadCount { get; set; }
+
+        /// <summary>תאריך הרשמה — לקביעת מתי להציג תזכורות</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lastProfileReminderAt")]
+        public DateTime? LastProfileReminderAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("profileReminderDismissCount")]
+        public int ProfileReminderDismissCount { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("visitCount")]
+        public int VisitCount { get; set; }
     }
 }

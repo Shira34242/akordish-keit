@@ -339,13 +339,30 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (!this.event.name.trim()) {
+      alert('נא לכתוב שם הופעה.');
+      return;
+    }
+
+    if (!this.event.eventDate) {
+      alert('נא לבחור תאריך ושעה להופעה.');
+      return;
+    }
+
+    const eventLocation = this.event.location?.trim();
+    if (!eventLocation) {
+      alert('נא לכתוב מיקום להופעה.');
+      return;
+    }
+
     this.isSubmitting = true;
-    this.event.name = this.event.name?.trim() || this.event.artistName?.trim() || 'הופעה חדשה';
+    this.event.name = this.event.name.trim();
+    this.event.location = eventLocation;
+    this.event.artistName = this.event.artistName?.trim() || '';
     this.event.artistIds = this.selectedEventArtistIds.length > 0 ? [...this.selectedEventArtistIds] : [];
 
     const payload: CreateEventDto = {
       ...this.event,
-      eventDate: this.event.eventDate || undefined,
       isActive: false,
       displayOrder: 0
     };

@@ -13,9 +13,8 @@
 
 /* Page Header */
 .page-header {
-  background: #ffffff;
-  padding: var(--space-xl) var(--space-2xl);
-  border-radius: 24px;
+  background: transparent;
+  padding: 0 0 var(--space-base);
 }
 
 .page-header h1 {
@@ -42,7 +41,7 @@
 }
 
 .stat-card {
-  background: #ffffff;
+  background: #F2F2F2;
   border-radius: 24px;
   padding: var(--space-xl) var(--space-lg);
   display: flex;
@@ -79,7 +78,7 @@
 
 /* Recent Card */
 .recent-card {
-  background: #ffffff;
+  background: #F2F2F2;
   border-radius: 24px;
   padding: var(--space-xl);
 }

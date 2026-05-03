@@ -1,0 +1,126 @@
+.soft-reminder-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.soft-reminder-modal {
+  position: relative;
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+}
+
+.soft-reminder-close {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #404040;
+}
+
+.soft-reminder-header h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.soft-reminder-header p {
+  margin: 0 0 20px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.soft-reminder-form,
+.soft-reminder-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.soft-reminder-form {
+  gap: 16px;
+}
+
+.soft-reminder-form input,
+.soft-reminder-form select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
+}
+
+.city-field {
+  position: relative;
+}
+
+.city-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 2;
+  max-height: 210px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.city-dropdown button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.city-dropdown button:hover {
+  background: #f4f4f4;
+}
+
+.soft-reminder-error {
+  margin: 0;
+  color: #b42318;
+}
+
+.soft-reminder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-primary,
+.btn-secondary {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 0 16px;
+  border: 1px solid #d8d8d8;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #ddff53;
+  border-color: #ddff53;
+  color: #202020;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #404040;
+}

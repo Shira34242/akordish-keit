@@ -4,7 +4,7 @@
   direction: rtl;
 }
 
-.page-header {
+.ticker-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -12,7 +12,7 @@
   margin-bottom: var(--space-xl);
 }
 
-.page-header h2,
+.ticker-header h2,
 .panel-head h3,
 .control-card h3 {
   margin: 0;
@@ -22,7 +22,7 @@
   font-variation-settings: "wdth" 100;
 }
 
-.page-header h2 {
+.ticker-header h2 {
   font-size: var(--font-2xl);
 }
 
@@ -362,7 +362,7 @@ input[type="range"] {
     padding: var(--space-base);
   }
 
-  .page-header {
+  .ticker-header {
     flex-direction: column;
   }
 

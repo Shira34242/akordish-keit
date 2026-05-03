@@ -3415,10 +3415,14 @@ namespace AkordishKeit.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("CityId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ContentTag")
                         .HasColumnType("int");
@@ -3442,6 +3446,9 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("InstrumentLevel")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -3455,6 +3462,9 @@ namespace AkordishKeit.Migrations
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("LastProfileReminderAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("LastUploadDate")
                         .HasColumnType("datetime2");
 
@@ -3462,6 +3472,10 @@ namespace AkordishKeit.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1);
+
+                    b.Property<string>("OtherInstrumentName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
@@ -3478,6 +3492,11 @@ namespace AkordishKeit.Migrations
 
                     b.Property<int?>("PreferredInstrumentId")
                         .HasColumnType("int");
+
+                    b.Property<int>("ProfileReminderDismissCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("ProfileImageUrl")
                         .HasMaxLength(500)
@@ -3499,7 +3518,15 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("VisitCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CityId")
+                        .HasDatabaseName("IX_Users_CityId");
 
                     b.HasIndex("Email")
                         .IsUnique()
@@ -3518,6 +3545,37 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserInstrument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InstrumentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstrumentId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "InstrumentId")
+                        .IsUnique();
+
+                    b.ToTable("UserInstruments", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.UserKnownChord", b =>
@@ -4349,6 +4407,25 @@ namespace AkordishKeit.Migrations
                     b.Navigation("PreferredInstrument");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserInstrument", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Instrument", "Instrument")
+                        .WithMany()
+                        .HasForeignKey("InstrumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany("Instruments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Instrument");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.UserKnownChord", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.User", "User")
@@ -4503,6 +4580,8 @@ namespace AkordishKeit.Migrations
             modelBuilder.Entity("AkordishKeit.Models.Entities.User", b =>
                 {
                     b.Navigation("Favorites");
+
+                    b.Navigation("Instruments");
 
                     b.Navigation("ManagedArtist");
 

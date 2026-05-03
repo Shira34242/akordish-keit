@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /my-profile
+Disallow: /my-playlists
+Disallow: /notifications
+Disallow: /subscription
+Disallow: /chord-requests
+
+Sitemap: /sitemap.xml

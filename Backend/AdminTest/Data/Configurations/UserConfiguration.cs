@@ -36,6 +36,23 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.Phone)
                .HasMaxLength(20);
 
+        builder.Property(e => e.Address)
+               .HasMaxLength(255);
+
+        builder.Property(e => e.OtherInstrumentName)
+               .HasMaxLength(50);
+
+        builder.Property(e => e.InstrumentLevel)
+               .HasConversion<int?>();
+
+        builder.Property(e => e.ProfileReminderDismissCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
+        builder.Property(e => e.VisitCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.Role)
                .IsRequired()
                .HasDefaultValue(UserRole.Regular);
@@ -80,6 +97,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(e => e.PreferredInstrumentId)
                .HasDatabaseName("IX_Users_PreferredInstrumentId");
+
+        builder.HasIndex(e => e.CityId)
+               .HasDatabaseName("IX_Users_CityId");
 
         // Relationships
 

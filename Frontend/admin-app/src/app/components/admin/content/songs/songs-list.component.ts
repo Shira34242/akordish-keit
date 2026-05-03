@@ -25,6 +25,8 @@ export class SongsListComponent implements OnInit {
   // State
   songs: SongDto[] = [];
   loading = false;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
   // Pagination
   currentPage = 1;
@@ -72,6 +74,10 @@ export class SongsListComponent implements OnInit {
         this.songs = result.songs || result.items || result.data || [];
         this.totalItems = result.totalCount || result.total || 0;
         this.totalPages = result.totalPages || Math.ceil(this.totalItems / this.pageSize);
+        this.totalCount = this.totalItems;
+        this.pageNumber = this.currentPage;
+        this.hasPreviousPage = result.hasPreviousPage ?? (this.currentPage > 1);
+        this.hasNextPage = result.hasNextPage ?? (this.currentPage < this.totalPages);
         this.loading = false;
       },
       error: (error) => {
@@ -182,26 +188,4 @@ export class SongsListComponent implements OnInit {
       this.loadSongs();
     }
   }
-
-  get pages(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfWindow = Math.floor(maxPagesToShow / 2);
-
-    let startPage = Math.max(1, this.currentPage - halfWindow);
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  }
-
-  // Expose Math to template
-  readonly Math = Math;
 }

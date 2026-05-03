@@ -241,33 +241,36 @@ export class ServiceProviderFormComponent implements OnInit {
     }
 
     this.saving = true;
+    const commonPayload = {
+      displayName: this.displayName.trim(),
+      shortBio: this.optionalText(this.shortBio),
+      fullDescription: this.optionalText(this.fullDescription),
+      cityId: this.cityId,
+      location: this.optionalText(this.location),
+      phoneNumber: this.phoneNumber.trim(),
+      whatsAppNumber: this.optionalText(this.whatsAppNumber),
+      email: this.email.trim(),
+      websiteUrl: this.optionalText(this.websiteUrl),
+      bannerImageUrl: this.optionalText(this.bannerImageUrl),
+      profileImageUrl: this.optionalText(this.profileImageUrl),
+      videoUrl: this.optionalText(this.videoUrl),
+      yearsOfExperience: this.yearsOfExperience || undefined,
+      workingHours: this.optionalText(this.workingHours),
+      parkingType: this.parkingType,
+      hasAccessibleEntrance: this.hasAccessibleEntrance,
+      isAnash: this.isAnash,
+      isFeatured: this.isFeatured,
+      status: this.status,
+      categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
+      galleryImages: this.normalizedGalleryImages(),
+      socialLinks: this.normalizedSocialLinks(),
+      customerTestimonials: this.normalizedTestimonials(),
+      branches: this.normalizedBranches()
+    };
 
     if (this.isEditMode && this.serviceProviderId) {
       const dto: UpdateMusicServiceProviderDto = {
-        displayName: this.displayName,
-        shortBio: this.shortBio || undefined,
-        fullDescription: this.fullDescription || undefined,
-        cityId: this.cityId,
-        location: this.location || undefined,
-        phoneNumber: this.phoneNumber,
-        whatsAppNumber: this.whatsAppNumber || undefined,
-        email: this.email,
-        websiteUrl: this.websiteUrl?.trim() || undefined,
-        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-        profileImageUrl: this.profileImageUrl?.trim() || undefined,
-        videoUrl: this.videoUrl?.trim() || undefined,
-        yearsOfExperience: this.yearsOfExperience || undefined,
-        workingHours: this.workingHours || undefined,
-        parkingType: this.parkingType,
-        hasAccessibleEntrance: this.hasAccessibleEntrance,
-        isAnash: this.isAnash,
-        isFeatured: this.isFeatured,
-        status: this.status,
-        categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
-        galleryImages: this.galleryImages,
-        socialLinks: this.socialLinks.filter(link => link.url?.trim()),
-        customerTestimonials: this.customerTestimonials,
-        branches: this.branches
+        ...commonPayload
       };
 
       this.serviceProviderService.updateServiceProvider(this.serviceProviderId, dto).subscribe({
@@ -297,32 +300,9 @@ export class ServiceProviderFormComponent implements OnInit {
       });
     } else {
       const dto: CreateMusicServiceProviderDto = {
+        ...commonPayload,
         userId: this.userId,
-        displayName: this.displayName,
-        shortBio: this.shortBio || undefined,
-        fullDescription: this.fullDescription || undefined,
         isTeacher: false, // Always false for professionals
-        cityId: this.cityId,
-        location: this.location || undefined,
-        phoneNumber: this.phoneNumber,
-        whatsAppNumber: this.whatsAppNumber || undefined,
-        email: this.email,
-        websiteUrl: this.websiteUrl?.trim() || undefined,
-        bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-        profileImageUrl: this.profileImageUrl?.trim() || undefined,
-        videoUrl: this.videoUrl?.trim() || undefined,
-        yearsOfExperience: this.yearsOfExperience || undefined,
-        workingHours: this.workingHours || undefined,
-        parkingType: this.parkingType,
-        hasAccessibleEntrance: this.hasAccessibleEntrance,
-        isAnash: this.isAnash,
-        isFeatured: this.isFeatured,
-        status: this.status,
-        categories: this.selectedCategoryId ? [{ categoryId: this.selectedCategoryId } as CreateServiceProviderCategoryDto] : [],
-        galleryImages: this.galleryImages,
-        socialLinks: this.socialLinks.filter(link => link.url?.trim()),
-        customerTestimonials: this.customerTestimonials,
-        branches: this.branches
       };
 
       this.serviceProviderService.createServiceProvider(dto).subscribe({
@@ -573,6 +553,54 @@ export class ServiceProviderFormComponent implements OnInit {
       this.branches.splice(index, 1);
       this.branches.forEach((b, idx) => b.order = idx);
     }
+  }
+
+  private optionalText(value: string | undefined): string | undefined {
+    const trimmed = value?.trim();
+    return trimmed || undefined;
+  }
+
+  private normalizedGalleryImages(): CreateGalleryImageDto[] {
+    return this.galleryImages
+      .filter(img => img.imageUrl?.trim())
+      .map((img, index) => ({
+        imageUrl: img.imageUrl.trim(),
+        caption: this.optionalText(img.caption),
+        order: index
+      }));
+  }
+
+  private normalizedSocialLinks(): SocialLinkDto[] {
+    return this.socialLinks
+      .filter(link => link.url?.trim())
+      .map(link => ({
+        id: link.id,
+        platform: link.platform,
+        url: link.url.trim()
+      }));
+  }
+
+  private normalizedTestimonials(): CreateServiceProviderTestimonialDto[] {
+    return this.customerTestimonials
+      .filter(item => item.text?.trim())
+      .map((item, index) => ({
+        clientName: this.optionalText(item.clientName),
+        text: item.text.trim(),
+        order: index
+      }));
+  }
+
+  private normalizedBranches(): CreateServiceProviderBranchDto[] {
+    return this.branches
+      .filter(branch => branch.name?.trim())
+      .map((branch, index) => ({
+        name: branch.name.trim(),
+        address: this.optionalText(branch.address),
+        phoneNumber: this.optionalText(branch.phoneNumber),
+        email: this.optionalText(branch.email),
+        openingHours: this.optionalText(branch.openingHours),
+        order: index
+      }));
   }
 
   private closeAllDropdowns(): void {

@@ -33,9 +33,6 @@
                         <div class="nav-submenu" aria-label="סוגי תוכן">
                             <a routerLink="/admin/content/songs" routerLinkActive="active-sub" class="sub-nav-item">אקורדים</a>
                             <a routerLink="/admin/content/articles" routerLinkActive="active-sub" class="sub-nav-item">כתבות</a>
-                            <a routerLink="/admin/content/featured" routerLinkActive="active-sub" class="sub-nav-item">מרכזי</a>
-                            <a routerLink="/admin/content/news-sections" routerLinkActive="active-sub" class="sub-nav-item">פסי חדשות</a>
-                            <a routerLink="/admin/content/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>
                             <a routerLink="/admin/content/events" routerLinkActive="active-sub" class="sub-nav-item">הופעות</a>
                         </div>
                     </div>
@@ -62,9 +59,15 @@
                             <a routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">דיווחים</a>
                         </div>
                     </div>
-                    <a routerLink="/admin/system" routerLinkActive="active" class="nav-item">
-                        <span>מערכת</span>
-                    </a>
+                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                        <a routerLink="/admin/system" class="nav-item nav-parent">
+                            <span>מערכת</span>
+                        </a>
+                        <div class="nav-submenu" aria-label="הגדרות מערכת">
+                            <a routerLink="/admin/system/news-sections" routerLinkActive="active-sub" class="sub-nav-item">פסי חדשות</a>
+                            <a routerLink="/admin/system/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>
+                        </div>
+                    </div>
                 </nav>
             </div>
 
@@ -82,8 +85,4 @@
         <router-outlet></router-outlet>
     </main>
 
-    <!-- Admin Footer -->
-    <footer class="admin-footer">
-        <p>© 2025 אקורדישקייט - מערכת ניהול מתקדמת</p>
-    </footer>
 </div>

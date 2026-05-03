@@ -13,6 +13,7 @@ import { ReportModalComponent } from '../../shared/report-modal/report-modal.com
 import { ContentPageService } from '../../../services/content-page.service';
 import { ArticleFeedbackService } from '../../../services/article-feedback.service';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
+import { SeoService } from '../../../services/seo.service';
 
 @Component({
   selector: 'app-article-view',
@@ -31,6 +32,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly contentPageService = inject(ContentPageService);
   private readonly feedbackService = inject(ArticleFeedbackService);
   private readonly authService = inject(AuthService);
+  private readonly seo = inject(SeoService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -138,6 +140,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         next: (article) => {
           this.article = article;
           this.contentPageService.setCurrentArticle(article.id);
+          this.applySeo(article);
 
           // Increment view count
           this.articleService.incrementView(article.id)
@@ -192,6 +195,40 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
           console.error('Error loading related articles:', error);
         }
       });
+  }
+
+  private applySeo(article: Article): void {
+    const path = article.canonicalUrl || `/news/${article.slug}`;
+    const description = article.metaDescription || article.subtitle || this.stripHtml(article.content).slice(0, 155);
+    this.seo.set({
+      title: article.metaTitle || article.title,
+      description,
+      path,
+      imageUrl: article.featuredImageUrl,
+      type: 'article',
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'חדשות המוזיקה', path: '/music-news' },
+          { name: article.title, path }
+        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.title,
+          description,
+          image: article.featuredImageUrl ? this.seo.absoluteUrl(article.featuredImageUrl) : undefined,
+          datePublished: article.publishDate,
+          author: article.authorName ? { '@type': 'Person', name: article.authorName } : undefined,
+          mainEntityOfPage: this.seo.absoluteUrl(path)
+        }
+      ]
+    });
+  }
+
+  private stripHtml(value: string | undefined): string {
+    return (value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   getCategoryName(): string {

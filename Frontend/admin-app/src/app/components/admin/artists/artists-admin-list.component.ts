@@ -23,6 +23,8 @@ export class ArtistsAdminListComponent implements OnInit {
   artists: ArtistListDto[] = [];
   loading = false;
   error: string | null = null;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-artists-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-artists-view', mode); }
 
   // Modal state
   showEditModal = false;

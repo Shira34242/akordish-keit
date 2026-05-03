@@ -1,5 +1,5 @@
 <div class="ticker-admin" dir="rtl">
-  <header class="page-header">
+  <header class="ticker-header">
     <div>
       <h2>פס חדשות הירו</h2>
       <p class="subtitle">בנייה מחדש של הפס: מיקום, תנועה, טקסט ועיצוב במקום אחד</p>
@@ -10,7 +10,7 @@
       <span class="status-pill saved" *ngIf="saved">נשמר לכולם</span>
       <span class="status-pill error" *ngIf="saveError">לא נשמר</span>
 
-      <button class="btn-primary" type="button" [disabled]="saving || !dirty" (click)="saveForEveryone()">
+      <button class="btn-primary" type="button" [disabled]="saving" (click)="saveForEveryone()">
         <span class="material-symbols-outlined">save</span>
         {{ saving ? 'שומר...' : 'שמור לכולם' }}
       </button>

@@ -9,6 +9,7 @@ import { AdDisplayComponent } from '../../public/ad-display/ad-display.component
 import { LikedContentService } from '../../../services/liked-content.service';
 import { AuthService } from '../../../services/auth.service';
 import { ContentPageService } from '../../../services/content-page.service';
+import { SeoService } from '../../../services/seo.service';
 
 @Component({
   
@@ -27,6 +28,7 @@ export class BlogPostViewComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly contentPageService = inject(ContentPageService);
   private readonly authService = inject(AuthService);
+  private readonly seo = inject(SeoService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -52,6 +54,7 @@ export class BlogPostViewComponent implements OnInit {
         next: (article) => {
           this.article = article;
           this.contentPageService.setCurrentArticle(article.id);
+          this.applySeo(article);
 
           // Increment view count
           this.articleService.incrementView(article.id)
@@ -81,6 +84,40 @@ export class BlogPostViewComponent implements OnInit {
   getCategoryName(): string {
     if (!this.article) return '';
     return this.article.categoryNames.join(', ') || '';
+  }
+
+  private applySeo(article: Article): void {
+    const path = article.canonicalUrl || `/blog/${article.slug}`;
+    const description = article.metaDescription || article.subtitle || this.stripHtml(article.content).slice(0, 155);
+    this.seo.set({
+      title: article.metaTitle || article.title,
+      description,
+      path,
+      imageUrl: article.featuredImageUrl,
+      type: 'article',
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'בלוג', path: '/blog' },
+          { name: article.title, path }
+        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: article.title,
+          description,
+          image: article.featuredImageUrl ? this.seo.absoluteUrl(article.featuredImageUrl) : undefined,
+          datePublished: article.publishDate,
+          author: article.authorName ? { '@type': 'Person', name: article.authorName } : undefined,
+          mainEntityOfPage: this.seo.absoluteUrl(path)
+        }
+      ]
+    });
+  }
+
+  private stripHtml(value: string | undefined): string {
+    return (value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   convertToYouTubeEmbedUrl(url: string): string {

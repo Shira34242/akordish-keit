@@ -1,13 +1,18 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, LOCALE_ID } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { registerLocaleData } from '@angular/common';
+import localeHe from '@angular/common/locales/he';
 import { routes } from './app.routes';
 import { SocialLoginModule, SocialAuthServiceConfig, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { authInterceptor } from './services/auth-interceptor';
 import { errorInterceptor } from './services/error.interceptor';
 
+registerLocaleData(localeHe, 'he-IL');
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'he-IL' },
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     // 🔒 Interceptors: authInterceptor מוסיף טוקן, errorInterceptor מטפל בשגיאות
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),

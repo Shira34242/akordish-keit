@@ -62,6 +62,8 @@ namespace AkordishKeit.Controllers
             var user = await _context.Users
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
                 .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
             if (user == null || !user.IsActive)
@@ -100,6 +102,8 @@ namespace AkordishKeit.Controllers
             var user = await _context.Users
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
                 .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
 
             bool isNewGoogleUser = user == null;
@@ -149,6 +153,7 @@ namespace AkordishKeit.Controllers
                     user.ProfileImageUrl = profileImageUrl;
                 }
                 user.LastLoginAt = DateTime.UtcNow;
+                user.VisitCount++;
                 await _context.SaveChangesAsync();
             }
 
@@ -262,6 +267,16 @@ namespace AkordishKeit.Controllers
 
         private UserDto BuildUserDto(User user, bool hasProfessionalProfile = false)
         {
+            var instruments = user.Instruments?
+                .Where(ui => ui.Instrument != null)
+                .Select(ui => new InstrumentDto
+                {
+                    Id = ui.Instrument.Id,
+                    Name = ui.Instrument.Name,
+                    EnglishName = ui.Instrument.EnglishName
+                })
+                .ToList() ?? new List<InstrumentDto>();
+
             return new UserDto
             {
                 Id = user.Id,
@@ -272,9 +287,20 @@ namespace AkordishKeit.Controllers
                 Level = user.Level,
                 Points = user.Points,
                 PreferredInstrumentId = user.PreferredInstrumentId,
+                Instruments = instruments,
+                OtherInstrumentName = user.OtherInstrumentName,
+                InstrumentLevel = user.InstrumentLevel.HasValue ? (int)user.InstrumentLevel.Value : (int?)null,
+                Phone = user.Phone,
+                Address = user.Address,
+                CityId = user.CityId,
+                BirthDate = user.BirthDate,
                 HasProfessionalProfile = hasProfessionalProfile,
                 ContentTag = (int)user.ContentTag,
-                UploadCount = user.UploadCount
+                UploadCount = user.UploadCount,
+                CreatedAt = user.CreatedAt,
+                LastProfileReminderAt = user.LastProfileReminderAt,
+                ProfileReminderDismissCount = user.ProfileReminderDismissCount,
+                VisitCount = user.VisitCount
             };
         }
 
@@ -346,6 +372,8 @@ namespace AkordishKeit.Controllers
             var user = await _context.Users
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
                 .FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
             if (user == null)
@@ -373,6 +401,7 @@ namespace AkordishKeit.Controllers
 
             // 5. Update last login
             user.LastLoginAt = DateTime.UtcNow;
+            user.VisitCount++;
             await _context.SaveChangesAsync();
 
             // 6. 🔐 שימוש באימות מאובטח עם Cookies - כניסה חוזרת, אל תציג שאלות onboarding
@@ -380,6 +409,7 @@ namespace AkordishKeit.Controllers
             return Ok(HandleSecureAuthentication(user, hasProfessionalProfile, isNewRegistration: false));
         }
 
+        [Authorize]
         [HttpPut("complete-profile")]
         public async Task<ActionResult<UserDto>> CompleteProfile([FromBody] CompleteProfileRequest request)
         {
@@ -390,19 +420,81 @@ namespace AkordishKeit.Controllers
                 return Unauthorized(new { message = "משתמש לא מזוהה" });
             }
 
-            // Find user
-            var user = await _context.Users.FindAsync(userId);
+            // Find user (with instruments collection for replacement)
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
             if (user == null)
             {
                 return NotFound(new { message = "משתמש לא נמצא" });
             }
 
-            // Update profile
-            if (request.PreferredInstrumentId.HasValue)
+            // 1. Multi-instrument selection — replace existing
+            if (request.InstrumentIds != null)
             {
+                // Validate that all instrument IDs exist
+                var requestedIds = request.InstrumentIds.Distinct().ToList();
+                if (requestedIds.Any())
+                {
+                    var existingIds = await _context.Instruments
+                        .Where(i => requestedIds.Contains(i.Id))
+                        .Select(i => i.Id)
+                        .ToListAsync();
+
+                    var invalid = requestedIds.Except(existingIds).ToList();
+                    if (invalid.Any())
+                    {
+                        return BadRequest(new { message = $"מזהי כלי נגינה לא תקינים: {string.Join(",", invalid)}" });
+                    }
+                }
+
+                // Remove old links
+                if (user.Instruments.Any())
+                {
+                    _context.UserInstruments.RemoveRange(user.Instruments);
+                }
+
+                // Add new links — first one marked as primary
+                user.Instruments = requestedIds
+                    .Select((id, index) => new UserInstrument
+                    {
+                        UserId = user.Id,
+                        InstrumentId = id,
+                        IsPrimary = index == 0
+                    })
+                    .ToList();
+
+                // Sync legacy single-instrument field for backward compatibility
+                user.PreferredInstrumentId = requestedIds.FirstOrDefault() == 0 ? null : requestedIds.First();
+            }
+            else if (request.PreferredInstrumentId.HasValue)
+            {
+                // Backward compat: single instrument id
                 user.PreferredInstrumentId = request.PreferredInstrumentId.Value;
             }
 
+            // 2. "Other" instrument free text
+            if (request.OtherInstrumentName != null)
+            {
+                user.OtherInstrumentName = string.IsNullOrWhiteSpace(request.OtherInstrumentName)
+                    ? null
+                    : request.OtherInstrumentName.Trim();
+            }
+
+            // 3. Instrument level (general)
+            if (request.InstrumentLevel.HasValue)
+            {
+                if (Enum.IsDefined(typeof(InstrumentLevel), request.InstrumentLevel.Value))
+                {
+                    user.InstrumentLevel = (InstrumentLevel)request.InstrumentLevel.Value;
+                }
+            }
+
+            // 4. Phone (legacy field — initial-completion may still send it)
             if (!string.IsNullOrEmpty(request.Phone))
             {
                 user.Phone = request.Phone;
@@ -411,18 +503,99 @@ namespace AkordishKeit.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(new UserDto
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(BuildUserDto(user, hasProfessionalProfile));
+        }
+
+        /// <summary>
+        /// עדכון פרטי פרופיל "רכים" — נשלח מתזכורת לאחר זמן.
+        /// כל השדות אופציונליים — נשמרים רק אלה שנשלחו (חלקי).
+        /// </summary>
+        [Authorize]
+        [HttpPut("update-soft-profile")]
+        public async Task<ActionResult<UserDto>> UpdateSoftProfile([FromBody] UpdateSoftProfileRequest request)
+        {
+            if (!ModelState.IsValid)
             {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                ProfileImageUrl = user.ProfileImageUrl,
-                Role = user.Role.ToString(),
-                Level = user.Level,
-                Points = user.Points,
-                PreferredInstrumentId = user.PreferredInstrumentId,
-                ContentTag = (int)user.ContentTag,
-                UploadCount = user.UploadCount
+                return BadRequest(ModelState);
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "משתמש לא מזוהה" });
+            }
+
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "משתמש לא נמצא" });
+            }
+
+            if (request.Phone != null)
+            {
+                user.Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim();
+            }
+
+            if (request.CityId.HasValue)
+            {
+                user.CityId = request.CityId.Value;
+            }
+
+            if (request.Address != null)
+            {
+                user.Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim();
+            }
+
+            // Birth date — store as YYYY-MM-01 (day intentionally fixed; we only collect month+year)
+            if (request.BirthMonth.HasValue && request.BirthYear.HasValue)
+            {
+                user.BirthDate = new DateTime(request.BirthYear.Value, request.BirthMonth.Value, 1);
+            }
+
+            // Mark reminder as resolved (so we don't keep nagging immediately after they updated)
+            user.LastProfileReminderAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(BuildUserDto(user, hasProfessionalProfile));
+        }
+
+        /// <summary>
+        /// המשתמש לחץ "אזכיר לי בפעם אחרת" בתזכורת.
+        /// מעדכן את LastProfileReminderAt ומעלה את מונה הדחיות.
+        /// </summary>
+        [Authorize]
+        [HttpPost("dismiss-profile-reminder")]
+        public async Task<IActionResult> DismissProfileReminder()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "משתמש לא מזוהה" });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "משתמש לא נמצא" });
+            }
+
+            user.LastProfileReminderAt = DateTime.UtcNow;
+            user.ProfileReminderDismissCount++;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                lastProfileReminderAt = user.LastProfileReminderAt,
+                profileReminderDismissCount = user.ProfileReminderDismissCount
             });
         }
 

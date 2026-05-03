@@ -22,6 +22,8 @@ export class ServiceProvidersListComponent implements OnInit {
   providers: MusicServiceProviderListDto[] = [];
   loading = false;
   error: string | null = null;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-providers-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-providers-view', mode); }
 
   currentPage = 1;
   pageSize = 25;

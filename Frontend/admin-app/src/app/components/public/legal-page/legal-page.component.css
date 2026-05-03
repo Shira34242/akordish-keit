@@ -1,0 +1,109 @@
+:host {
+  display: block;
+  direction: rtl;
+}
+
+.legal-page {
+  background: #ffffff;
+  color: #000000;
+  min-height: 70vh;
+  padding: var(--space-4xl) var(--space-lg);
+}
+
+.legal-page__inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.legal-page__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  text-decoration: none;
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.legal-page__back:hover {
+  background: #ddff53;
+}
+
+.legal-page__header {
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.legal-page__eyebrow {
+  display: inline-flex;
+  padding: var(--space-xs) var(--space-base);
+  border-radius: 999px;
+  background: #ddff53;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.legal-page__header h1 {
+  margin: var(--space-base) 0 var(--space-md);
+  font-size: var(--font-4xl);
+  line-height: var(--lh-heading);
+  font-weight: 800;
+}
+
+.legal-page__header p,
+.legal-page__section p {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: var(--lh-body);
+  font-weight: 300;
+}
+
+.legal-page__primary {
+  min-height: 34px;
+  margin-top: var(--space-lg);
+  padding: 0 var(--space-base);
+  border: 0;
+  border-radius: 999px;
+  background: #ddff53;
+  color: #000000;
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.legal-page__primary:hover {
+  opacity: 0.82;
+}
+
+.legal-page__content {
+  display: grid;
+  gap: var(--space-base);
+}
+
+.legal-page__section {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: var(--space-lg);
+}
+
+.legal-page__section h2 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-lg);
+  line-height: var(--lh-heading);
+  font-weight: 800;
+}
+
+@media (max-width: 600px) {
+  .legal-page {
+    padding: var(--space-3xl) var(--space-base);
+  }
+
+  .legal-page__header h1 {
+    font-size: var(--font-3xl);
+  }
+}

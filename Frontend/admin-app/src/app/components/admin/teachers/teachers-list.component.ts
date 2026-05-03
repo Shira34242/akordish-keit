@@ -22,6 +22,8 @@ export class TeachersListComponent implements OnInit {
   teachers: TeacherListDto[] = [];
   loading = false;
   error: string | null = null;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-teachers-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-teachers-view', mode); }
   cities: City[] = [];
  
   // Pagination

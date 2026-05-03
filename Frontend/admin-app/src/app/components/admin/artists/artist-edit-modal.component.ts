@@ -145,42 +145,28 @@ export class ArtistEditModalComponent implements OnInit {
 
     this.saving = true;
     this.error = null;
+    const commonPayload = {
+      englishName: this.optionalText(this.editForm.englishName),
+      shortBio: this.optionalText(this.editForm.shortBio),
+      biography: this.optionalText(this.editForm.biography),
+      imageUrl: this.optionalText(this.editForm.imageUrl),
+      bannerImageUrl: this.optionalText(this.editForm.bannerImageUrl),
+      bannerGifUrl: this.optionalText(this.editForm.bannerGifUrl),
+      websiteUrl: this.optionalText(this.editForm.websiteUrl),
+      status: Number(this.editForm.status),
+      isPremium: this.editForm.isPremium,
+      performanceImageUrl: this.optionalText(this.editForm.performanceImageUrl),
+      performanceTicketUrl: this.optionalText(this.editForm.performanceTicketUrl),
+      performanceIsActive: this.editForm.performanceIsActive,
+      socialLinks: this.normalizedLinks(),
+      galleryImages: this.normalizedGalleryImages(),
+      videos: this.normalizedVideos()
+    };
 
     if (this.isEditMode && this.artistId) {
       // Update existing artist
-      const allLinks = [
-        ...this.editForm.socialLinks,
-        ...this.editForm.musicLinks
-      ].filter(l => l.url?.trim());
-
       const updateDto: UpdateArtistDto = {
-        englishName: this.editForm.englishName || undefined,
-        shortBio: this.editForm.shortBio || undefined,
-        biography: this.editForm.biography || undefined,
-        imageUrl: this.editForm.imageUrl || undefined,
-        bannerImageUrl: this.editForm.bannerImageUrl || undefined,
-        bannerGifUrl: this.editForm.bannerGifUrl || undefined,
-        websiteUrl: this.editForm.websiteUrl || undefined,
-        status: Number(this.editForm.status),
-        isPremium: this.editForm.isPremium,
-        performanceImageUrl: this.editForm.performanceImageUrl || undefined,
-        performanceTicketUrl: this.editForm.performanceTicketUrl || undefined,
-        performanceIsActive: this.editForm.performanceIsActive,
-        socialLinks: allLinks.map(link => ({
-          id: link.id,
-          platform: Number(link.platform),
-          url: link.url
-        })),
-        galleryImages: this.editForm.galleryImages.filter(img => img.imageUrl?.trim()).map(img => ({
-          imageUrl: img.imageUrl,
-          caption: img.caption,
-          displayOrder: img.displayOrder
-        })),
-        videos: this.editForm.videos.filter(video => video.videoUrl?.trim()).map(video => ({
-          videoUrl: video.videoUrl,
-          title: video.title,
-          displayOrder: video.displayOrder
-        }))
+        ...commonPayload
       };
 
       this.artistService.updateArtist(this.artistId, updateDto).subscribe({
@@ -197,39 +183,9 @@ export class ArtistEditModalComponent implements OnInit {
       });
     } else {
       // Create new artist
-      const createAllLinks = [
-        ...this.editForm.socialLinks,
-        ...this.editForm.musicLinks
-      ].filter(l => l.url?.trim());
-
       const createDto: any = {
-        name: this.editForm.name,
-        englishName: this.editForm.englishName || undefined,
-        shortBio: this.editForm.shortBio || undefined,
-        biography: this.editForm.biography || undefined,
-        imageUrl: this.editForm.imageUrl || undefined,
-        bannerImageUrl: this.editForm.bannerImageUrl || undefined,
-        bannerGifUrl: this.editForm.bannerGifUrl || undefined,
-        websiteUrl: this.editForm.websiteUrl || undefined,
-        status: Number(this.editForm.status),
-        isPremium: this.editForm.isPremium,
-        performanceImageUrl: this.editForm.performanceImageUrl || undefined,
-        performanceTicketUrl: this.editForm.performanceTicketUrl || undefined,
-        performanceIsActive: this.editForm.performanceIsActive,
-        socialLinks: createAllLinks.map(link => ({
-          platform: Number(link.platform),
-          url: link.url
-        })),
-        galleryImages: this.editForm.galleryImages.filter(img => img.imageUrl?.trim()).map(img => ({
-          imageUrl: img.imageUrl,
-          caption: img.caption,
-          displayOrder: img.displayOrder
-        })),
-        videos: this.editForm.videos.filter(video => video.videoUrl?.trim()).map(video => ({
-          videoUrl: video.videoUrl,
-          title: video.title,
-          displayOrder: video.displayOrder
-        }))
+        ...commonPayload,
+        name: this.editForm.name.trim()
       };
 
       console.log('Creating artist with DTO:', createDto);
@@ -291,6 +247,44 @@ export class ArtistEditModalComponent implements OnInit {
 
   removeVideo(index: number): void {
     this.editForm.videos.splice(index, 1);
+  }
+
+  private optionalText(value: string | undefined): string | undefined {
+    const trimmed = value?.trim();
+    return trimmed || undefined;
+  }
+
+  private normalizedLinks() {
+    return [
+      ...this.editForm.socialLinks,
+      ...this.editForm.musicLinks
+    ]
+      .filter(link => link.url?.trim())
+      .map(link => ({
+        id: link.id,
+        platform: Number(link.platform),
+        url: link.url.trim()
+      }));
+  }
+
+  private normalizedGalleryImages() {
+    return this.editForm.galleryImages
+      .filter(img => img.imageUrl?.trim())
+      .map((img, index) => ({
+        imageUrl: img.imageUrl.trim(),
+        caption: this.optionalText(img.caption),
+        displayOrder: index
+      }));
+  }
+
+  private normalizedVideos() {
+    return this.editForm.videos
+      .filter(video => video.videoUrl?.trim())
+      .map((video, index) => ({
+        videoUrl: video.videoUrl.trim(),
+        title: this.optionalText(video.title),
+        displayOrder: index
+      }));
   }
 
   // Helper Methods

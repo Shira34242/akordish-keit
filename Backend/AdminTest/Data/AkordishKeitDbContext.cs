@@ -31,6 +31,7 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<SongRating> SongRatings { get; set; }
     public DbSet<Instrument> Instruments { get; set; }
+    public DbSet<UserInstrument> UserInstruments { get; set; }
     public DbSet<ContentSubmission> ContentSubmissions { get; set; }
     public DbSet<SongArtist> SongArtists { get; set; }
     // Social
@@ -134,6 +135,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ArticleArtistConfiguration());
         modelBuilder.ApplyConfiguration(new EventArtistConfiguration());
         modelBuilder.ApplyConfiguration(new InstrumentConfiguration());
+        modelBuilder.ApplyConfiguration(new UserInstrumentConfiguration());
 
         // Advertisement Configurations
         modelBuilder.ApplyConfiguration(new ClientConfiguration());

@@ -10,9 +10,8 @@
 
 /* Page Header */
 .page-header {
-  background: #ffffff;
-  padding: var(--space-xl) var(--space-2xl);
-  border-radius: 24px;
+  background: transparent;
+  padding: 0 0 var(--space-base);
   margin-bottom: var(--space-base);
   display: flex;
   justify-content: space-between;
@@ -51,7 +50,7 @@
 .form-control {
   width: 100%;
   padding: var(--space-md) var(--space-base);
-  border: 2px solid #000000;
+  border: 2px solid #F2F2F2;
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
@@ -185,9 +184,7 @@
   align-items: center;
   gap: var(--space-sm);
   margin-top: var(--space-base);
-  padding: var(--space-lg);
-  background: #ffffff;
-  border-radius: 24px;
+  padding: var(--space-lg) 0;
 }
 
 .btn-pagination {
@@ -222,8 +219,6 @@
 .loading-container {
   text-align: center;
   padding: var(--space-3xl) var(--space-lg);
-  background: #ffffff;
-  border-radius: 24px;
 }
 
 .loading-container p { font-weight: 300; color: #000000; margin-top: var(--space-base); }

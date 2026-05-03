@@ -467,40 +467,50 @@ export class TeacherCreateComponent implements OnInit {
     this.error = '';
 
     const currentUser = this.authService.currentUserValue;
+    const normalizedGalleryImages = this.galleryImages
+      .filter(image => image.imageUrl?.trim())
+      .map((image, index) => ({
+        ...image,
+        imageUrl: image.imageUrl.trim(),
+        caption: image.caption?.trim() || '',
+        order: index
+      }));
 
     const dto: CreateTeacherDto = {
       userId: currentUser?.id,
-      displayName: this.displayName,
-      shortBio: this.shortBio,
-      fullDescription: this.fullDescription,
+      displayName: this.displayName.trim(),
+      shortBio: this.shortBio?.trim() || undefined,
+      fullDescription: this.fullDescription?.trim() || undefined,
       isTeacher: true,
       cityId: this.cityId,
-      location: this.location,
-      phoneNumber: this.phoneNumber,
+      location: this.location?.trim() || undefined,
+      phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
-      email: this.email,
+      email: this.email.trim(),
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
-      profileImageUrl: this.profileImageUrl,
-      videoUrl: this.videoUrl,
+      profileImageUrl: this.profileImageUrl?.trim() || undefined,
+      videoUrl: this.videoUrl?.trim() || undefined,
       yearsOfExperience: this.yearsOfExperience,
-      workingHours: this.workingHours,
+      workingHours: this.workingHours?.trim() || undefined,
       isFeatured: false,
       status: ProfileStatus.Pending,
-      priceList: this.priceList,
+      priceList: this.priceList?.trim() || undefined,
       languages: this.arrayToFlags(this.selectedLanguages),
       targetAudience: this.arrayToFlags(this.selectedAudiences),
-      availability: this.availability,
-      education: this.education,
-      lessonTypes: this.lessonTypes,
-      specializations: this.specializations,
+      availability: this.availability?.trim() || undefined,
+      education: this.education?.trim() || undefined,
+      lessonTypes: this.lessonTypes?.trim() || undefined,
+      specializations: this.specializations?.trim() || undefined,
       instruments: this.selectedInstrumentIds.map(id => ({
         instrumentId: id,
         isPrimary: false
       } as CreateTeacherInstrumentDto)),
-      galleryImages: this.galleryImages,
+      galleryImages: normalizedGalleryImages,
       testimonials: this.testimonials,
-      socialLinks: this.socialLinks.filter(link => link.url?.trim())
+      socialLinks: this.socialLinks
+        .filter(link => link.url?.trim())
+        .map(link => ({ ...link, url: link.url.trim() }))
     };
 
     this.teacherService.createTeacherProfile(dto).subscribe({

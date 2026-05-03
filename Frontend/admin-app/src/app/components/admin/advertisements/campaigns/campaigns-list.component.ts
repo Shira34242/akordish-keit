@@ -25,6 +25,8 @@ export class CampaignsListComponent implements OnInit {
   campaigns: AdCampaign[] = [];
   filteredCampaigns: AdCampaign[] = [];
   loading = false;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-campaigns-view') as 'list' | 'grid') || 'list';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-campaigns-view', mode); }
   searchTerm = '';
   activeTab: 'campaigns' | 'spots' | 'clients' = 'campaigns';
 
