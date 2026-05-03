@@ -98,12 +98,12 @@ public class ArticlesController : ControllerBase
     // GET: api/Articles/my
     [HttpGet("my")]
     [Authorize]
-    public async Task<ActionResult<List<ArticleDto>>> GetMyArticles()
+    public async Task<ActionResult<PagedResult<ArticleDto>>> GetMyArticles([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 8)
     {
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized();
-        var articles = await _articleService.GetMyArticlesAsync(userId.Value);
-        return Ok(articles);
+        var result = await _articleService.GetMyArticlesAsync(userId.Value, pageNumber, pageSize);
+        return Ok(result);
     }
 
     // POST: api/Articles

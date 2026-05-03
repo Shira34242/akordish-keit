@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { PagedResult } from '../models/pagination.model';
 
 export interface ArticleDto {
   id: number;
@@ -21,7 +22,8 @@ export class ArticleService {
 
   constructor(private http: HttpClient) {}
 
-  getMyArticles(): Observable<ArticleDto[]> {
-    return this.http.get<ArticleDto[]>(`${this.apiUrl}/my`, { withCredentials: true });
+  getMyArticles(pageNumber: number = 1, pageSize: number = 8): Observable<PagedResult<ArticleDto>> {
+    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    return this.http.get<PagedResult<ArticleDto>>(`${this.apiUrl}/my`, { params, withCredentials: true });
   }
 }

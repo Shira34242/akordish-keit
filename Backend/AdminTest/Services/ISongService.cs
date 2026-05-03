@@ -49,7 +49,7 @@ public interface ISongService
     /// <summary>
     /// Get all songs uploaded by a specific user (including unapproved)
     /// </summary>
-    Task<List<SongBasicDto>> GetMySongsAsync(int userId);
+    Task<PagedResult<SongBasicDto>> GetMySongsAsync(int userId, int pageNumber = 1, int pageSize = 8);
 
     Task<List<SongDto>> GetApprovedSongsByUploaderProfileAsync(string profileType, int profileId, int limit = 12);
 

@@ -43,6 +43,6 @@ namespace AkordishKeit.Services
         /// <summary>
         /// הופעות שהמשתמש הגיש
         /// </summary>
-        Task<List<EventDto>> GetMyEventsAsync(int userId);
+        Task<PagedResult<EventDto>> GetMyEventsAsync(int userId, int pageNumber = 1, int pageSize = 8);
     }
 }

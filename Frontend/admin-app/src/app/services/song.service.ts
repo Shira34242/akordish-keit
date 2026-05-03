@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
 import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
+import { PagedResult } from '../models/pagination.model';
 
 @Injectable({
     providedIn: 'root'
@@ -93,8 +94,9 @@ export class SongService {
         return this.http.get<any>(this.apiUrl, { params });
     }
 
-    getMySongs(): Observable<SongBasicDto[]> {
-        return this.http.get<SongBasicDto[]>(`${this.apiUrl}/my`);
+    getMySongs(pageNumber: number = 1, pageSize: number = 8): Observable<PagedResult<SongBasicDto>> {
+        const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+        return this.http.get<PagedResult<SongBasicDto>>(`${this.apiUrl}/my`, { params });
     }
 
     getSongById(id: number): Observable<any> {

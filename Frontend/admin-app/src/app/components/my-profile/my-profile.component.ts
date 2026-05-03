@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { PagedResult } from '../../models/pagination.model';
 import { AuthService, User } from '../../services/auth.service';
 import { LikedContentService } from '../../services/liked-content.service';
 import { LikedContent } from '../../models/liked-content.model';
@@ -66,7 +67,8 @@ interface ProfileArticleCard {
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
 })
-export class MyProfileComponent implements OnInit {
+export class MyProfileComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
 
   readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
@@ -115,9 +117,15 @@ export class MyProfileComponent implements OnInit {
   pageLoadError = false;
   heroCollapsed = false;
   togglingPageId: number | null = null;
-  visibleSongCount = 4;
-  visibleArticleCount = 4;
-  visibleEventCount = 4;
+  songsPage = 1;
+  articlesPage = 1;
+  eventsPage = 1;
+  hasMoreSongs = false;
+  hasMoreArticles = false;
+  hasMoreEvents = false;
+  isLoadingMoreSongs = false;
+  isLoadingMoreArticles = false;
+  isLoadingMoreEvents = false;
   visibleLikedCount = 4;
 
   showAccountTypeModal = false;
@@ -260,23 +268,30 @@ export class MyProfileComponent implements OnInit {
   }
 
   private loadMySongs() {
-    this.songService.getMySongs().subscribe({
-      next: (songs) => { this.mySongs = songs.map(song => this.toProfileSongCard(song)); },
+    this.songService.getMySongs(this.songsPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.mySongs = result.items.map((song: any) => this.toProfileSongCard(song));
+        this.hasMoreSongs = result.hasNextPage;
+      },
       error: () => { this.mySongs = []; }
     });
   }
 
   private loadMyArticles() {
-    this.articleService.getMyArticles().subscribe({
-      next: (articles) => { this.myArticles = articles.map(article => this.toProfileArticleCard(article)); },
+    this.articleService.getMyArticles(this.articlesPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.myArticles = result.items.map((article: any) => this.toProfileArticleCard(article));
+        this.hasMoreArticles = result.hasNextPage;
+      },
       error: () => { this.myArticles = []; }
     });
   }
 
   private loadMyEvents() {
-    this.eventService.getMyEvents().subscribe({
-      next: (events) => {
-        this.myEvents = events.map(event => this.toEventCardData(event));
+    this.eventService.getMyEvents(this.eventsPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.myEvents = result.items.map((event: any) => this.toEventCardData(event));
+        this.hasMoreEvents = result.hasNextPage;
       },
       error: () => { this.myEvents = []; }
     });
@@ -814,15 +829,50 @@ export class MyProfileComponent implements OnInit {
   }
 
   showMoreSongs(): void {
-    this.visibleSongCount += 4;
+    if (this.isLoadingMoreSongs || !this.hasMoreSongs) return;
+    this.isLoadingMoreSongs = true;
+    this.songsPage++;
+    this.songService.getMySongs(this.songsPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.mySongs = [...this.mySongs, ...result.items.map((s: any) => this.toProfileSongCard(s))];
+        this.hasMoreSongs = result.hasNextPage;
+        this.isLoadingMoreSongs = false;
+      },
+      error: () => { this.isLoadingMoreSongs = false; }
+    });
   }
 
   showMoreArticles(): void {
-    this.visibleArticleCount += 4;
+    if (this.isLoadingMoreArticles || !this.hasMoreArticles) return;
+    this.isLoadingMoreArticles = true;
+    this.articlesPage++;
+    this.articleService.getMyArticles(this.articlesPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.myArticles = [...this.myArticles, ...result.items.map((a: any) => this.toProfileArticleCard(a))];
+        this.hasMoreArticles = result.hasNextPage;
+        this.isLoadingMoreArticles = false;
+      },
+      error: () => { this.isLoadingMoreArticles = false; }
+    });
   }
 
   showMoreEvents(): void {
-    this.visibleEventCount += 4;
+    if (this.isLoadingMoreEvents || !this.hasMoreEvents) return;
+    this.isLoadingMoreEvents = true;
+    this.eventsPage++;
+    this.eventService.getMyEvents(this.eventsPage).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.myEvents = [...this.myEvents, ...result.items.map((e: any) => this.toEventCardData(e))];
+        this.hasMoreEvents = result.hasNextPage;
+        this.isLoadingMoreEvents = false;
+      },
+      error: () => { this.isLoadingMoreEvents = false; }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   showMoreLiked(): void {

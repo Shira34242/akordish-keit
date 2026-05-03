@@ -215,7 +215,7 @@
         <div class="row-label-strip">{{ 'profile.content_chords' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--songs">
           @if (mySongs.length > 0) {
-            @for (song of (mySongs | slice:0:visibleSongCount); track song.id) {
+            @for (song of mySongs; track song.id) {
               <div class="song-card-shell">
                 @if (song.isApproved === false) {
                   <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
@@ -230,8 +230,8 @@
             </div>
           }
         </div>
-        @if (mySongs.length > visibleSongCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreSongs()">{{ 'profile.show_more' | translate }}</button>
+        @if (hasMoreSongs) {
+          <button class="show-more-btn" type="button" (click)="showMoreSongs()" [disabled]="isLoadingMoreSongs">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
 
@@ -239,7 +239,7 @@
         <div class="row-label-strip">{{ 'profile.content_articles' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--articles">
           @if (myArticles.length > 0) {
-            @for (article of (myArticles | slice:0:visibleArticleCount); track article.id) {
+            @for (article of myArticles; track article.id) {
               <div class="news-banner-shell">
                 @if (!isArticleApproved(article)) {
                   <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
@@ -254,8 +254,8 @@
             </div>
           }
         </div>
-        @if (myArticles.length > visibleArticleCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreArticles()">{{ 'profile.show_more' | translate }}</button>
+        @if (hasMoreArticles) {
+          <button class="show-more-btn" type="button" (click)="showMoreArticles()" [disabled]="isLoadingMoreArticles">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
 
@@ -263,7 +263,7 @@
         <div class="row-label-strip">{{ 'profile.content_events' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--events">
           @if (myEvents.length > 0) {
-            @for (event of (myEvents | slice:0:visibleEventCount); track event.id) {
+            @for (event of myEvents; track event.id) {
               <div class="event-card-shell">
                 @if (event.isApproved === false) {
                   <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
@@ -278,8 +278,8 @@
             </div>
           }
         </div>
-        @if (myEvents.length > visibleEventCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreEvents()">{{ 'profile.show_more' | translate }}</button>
+        @if (hasMoreEvents) {
+          <button class="show-more-btn" type="button" (click)="showMoreEvents()" [disabled]="isLoadingMoreEvents">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
     </section>

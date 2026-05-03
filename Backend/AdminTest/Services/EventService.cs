@@ -254,23 +254,34 @@ namespace AkordishKeit.Services
             return true;
         }
 
-        public async Task<List<EventDto>> GetMyEventsAsync(int userId)
+        public async Task<PagedResult<EventDto>> GetMyEventsAsync(int userId, int pageNumber = 1, int pageSize = 8)
         {
             var artistIds = await _context.Artists
                 .Where(a => a.UserId == userId && !a.IsDeleted)
                 .Select(a => a.Id)
                 .ToListAsync();
 
-            var events = await _context.Events
-                .Include(e => e.EventArtists)
-                    .ThenInclude(ea => ea.Artist)
+            var query = _context.Events
                 .Where(e => !e.IsDeleted &&
                     (e.SubmittedByUserId == userId ||
                      e.EventArtists.Any(ea => artistIds.Contains(ea.ArtistId))))
-                .OrderByDescending(e => e.CreatedAt)
+                .OrderByDescending(e => e.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var events = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Include(e => e.EventArtists)
+                    .ThenInclude(ea => ea.Artist)
                 .ToListAsync();
 
-            return events.Select(MapToDto).ToList();
+            return new PagedResult<EventDto>
+            {
+                Items = events.Select(MapToDto).ToList(),
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
         // Helper methods
