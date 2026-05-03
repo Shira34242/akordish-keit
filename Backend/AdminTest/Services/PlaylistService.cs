@@ -97,12 +97,41 @@ public class PlaylistService : IPlaylistService
 
     public async Task<List<PlaylistDto>> GetRecentPlaylistsAsync(int userId, int count = 2)
     {
-        // מוודא שרשימת ברירת המחדל קיימת
         await EnsureDefaultPlaylistAsync(userId);
 
-        // קבלת הרשימות: ברירת המחדל תמיד ראשונה, ואחריה האחרונות לפי זמן
-        var allPlaylists = await _context.Playlists
-            .Where(p => p.UserId == userId)
+        // שולף את רשימת ברירת המחדל ישירות מה-DB
+        var defaultPlaylist = await _context.Playlists
+            .Where(p => p.UserId == userId && p.IsDefault)
+            .Select(p => new PlaylistDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                ImageUrl = p.ImageUrl,
+                IsPublic = p.IsPublic,
+                IsAdopted = p.IsAdopted,
+                IsDefault = p.IsDefault,
+                SongCount = p.PlaylistSongs.Count,
+                ThumbnailSongImages = p.PlaylistSongs
+                    .OrderBy(ps => ps.Order)
+                    .Take(4)
+                    .Where(ps => ps.Song.ImageUrl != null && ps.Song.ImageUrl != "")
+                    .Select(ps => ps.Song.ImageUrl!)
+                    .ToList(),
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt
+            })
+            .FirstOrDefaultAsync();
+
+        var recentCount = count - (defaultPlaylist != null ? 1 : 0);
+        if (recentCount <= 0)
+            return defaultPlaylist != null ? new List<PlaylistDto> { defaultPlaylist } : new List<PlaylistDto>();
+
+        // שולף רק את הרשימות הנחוצות, ממוינות ב-DB
+        var others = await _context.Playlists
+            .Where(p => p.UserId == userId && !p.IsDefault)
+            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+            .Take(recentCount)
             .Select(p => new PlaylistDto
             {
                 Id = p.Id,
@@ -124,21 +153,23 @@ public class PlaylistService : IPlaylistService
             })
             .ToListAsync();
 
-        var defaultPlaylist = allPlaylists.Where(p => p.IsDefault).ToList();
-        var others = allPlaylists
-            .Where(p => !p.IsDefault)
-            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
-            .Take(count - defaultPlaylist.Count)
-            .ToList();
-
-        return defaultPlaylist.Concat(others).ToList();
+        var result = new List<PlaylistDto>();
+        if (defaultPlaylist != null) result.Add(defaultPlaylist);
+        result.AddRange(others);
+        return result;
     }
 
-    public async Task<List<PlaylistDto>> GetPublicPlaylistsAsync()
+    public async Task<PagedResult<PlaylistDto>> GetPublicPlaylistsAsync(int page = 1, int pageSize = 20)
     {
-        return await _context.Playlists
+        var query = _context.Playlists
             .Where(p => p.IsPublic)
-            .OrderByDescending(p => p.CreatedAt)
+            .OrderByDescending(p => p.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(p => new PlaylistDto
             {
                 Id = p.Id,
@@ -159,6 +190,14 @@ public class PlaylistService : IPlaylistService
                 UpdatedAt = p.UpdatedAt
             })
             .ToListAsync();
+
+        return new PagedResult<PlaylistDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = page,
+            PageSize = pageSize
+        };
     }
 
     private const int MaxPlaylistsPerUser = 4;
@@ -360,14 +399,12 @@ public class PlaylistService : IPlaylistService
             .Where(ps => ps.PlaylistId == playlistId)
             .ToListAsync();
 
-        // עדכון הסדר לפי המערך שהתקבל
+        // O(n) במקום O(n²): Dictionary לחיפוש מהיר
+        var songMap = playlistSongs.ToDictionary(ps => ps.SongId);
         for (int i = 0; i < songIds.Count; i++)
         {
-            var playlistSong = playlistSongs.FirstOrDefault(ps => ps.SongId == songIds[i]);
-            if (playlistSong != null)
-            {
+            if (songMap.TryGetValue(songIds[i], out var playlistSong))
                 playlistSong.Order = i + 1;
-            }
         }
 
         // עדכון UpdatedAt של הרשימה
@@ -529,7 +566,6 @@ public class PlaylistService : IPlaylistService
             return existingSavedPlaylist;
         }
 
-        // יוצר את רשימת ברירת המחדל בפעם הראשונה
         var defaultPlaylist = new Playlist
         {
             UserId = userId,
@@ -542,7 +578,20 @@ public class PlaylistService : IPlaylistService
         };
 
         _context.Playlists.Add(defaultPlaylist);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // race condition: בקשה מקבילה כבר יצרה את הרשימה
+            _context.Entry(defaultPlaylist).State = EntityState.Detached;
+            var concurrent = await _context.Playlists
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.IsDefault);
+            if (concurrent != null) return concurrent;
+            throw;
+        }
 
         return defaultPlaylist;
     }
@@ -581,25 +630,43 @@ public class PlaylistService : IPlaylistService
         var defaultPlaylist = await EnsureDefaultPlaylistAsync(userId);
         var removed = await RemoveSongFromPlaylistAsync(defaultPlaylist.Id, songId, userId);
 
-        if (!removed)
-        {
-            return false;
-        }
+        if (!removed) return false;
+        if (!removeFromPersonalPlaylists) return true;
 
-        if (!removeFromPersonalPlaylists)
-        {
-            return true;
-        }
-
-        var personalPlaylistIds = await _context.Playlists
-            .Where(p => p.UserId == userId && !p.IsDefault && !p.IsAdopted)
-            .Select(p => p.Id)
+        // טוענים את כל הרשומות לשחרור בשאילתה אחת
+        var toRemove = await _context.PlaylistSongs
+            .Where(ps => ps.SongId == songId &&
+                         ps.Playlist.UserId == userId &&
+                         !ps.Playlist.IsDefault &&
+                         !ps.Playlist.IsAdopted)
+            .Include(ps => ps.Playlist)
             .ToListAsync();
 
-        foreach (var playlistId in personalPlaylistIds)
+        if (!toRemove.Any()) return true;
+
+        var affectedPlaylistIds = toRemove.Select(ps => ps.PlaylistId).Distinct().ToList();
+
+        _context.PlaylistSongs.RemoveRange(toRemove);
+
+        foreach (var ps in toRemove)
+            ps.Playlist.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        // סידור מחדש של הסדרים בכל רשימה שהושפעה
+        foreach (var playlistId in affectedPlaylistIds)
         {
-            await RemoveSongFromPlaylistAsync(playlistId, songId, userId);
+            var remaining = await _context.PlaylistSongs
+                .Where(ps => ps.PlaylistId == playlistId)
+                .OrderBy(ps => ps.Order)
+                .ToListAsync();
+
+            for (int i = 0; i < remaining.Count; i++)
+                remaining[i].Order = i + 1;
         }
+
+        if (affectedPlaylistIds.Any())
+            await _context.SaveChangesAsync();
 
         return true;
     }

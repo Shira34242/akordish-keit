@@ -21,9 +21,9 @@ public interface IPlaylistService
     Task<List<PlaylistDto>> GetRecentPlaylistsAsync(int userId, int count = 2);
 
     /// <summary>
-    /// קבלת כל הרשימות הציבוריות של כל המשתמשים (למאגר הקהילתי)
+    /// קבלת רשימות ציבוריות עם פייג'ינג (למאגר הקהילתי)
     /// </summary>
-    Task<List<PlaylistDto>> GetPublicPlaylistsAsync();
+    Task<PagedResult<PlaylistDto>> GetPublicPlaylistsAsync(int page = 1, int pageSize = 20);
 
     /// <summary>
     /// יצירת רשימת השמעה חדשה

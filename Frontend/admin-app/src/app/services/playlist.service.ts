@@ -9,7 +9,8 @@ import {
   UpdatePlaylistDto,
   ReorderPlaylistDto,
   SongPlaylistState,
-  RemoveFromDefaultPlaylistDto
+  RemoveFromDefaultPlaylistDto,
+  PagedResult
 } from '../models/playlist.model';
 
 @Injectable({
@@ -42,10 +43,12 @@ export class PlaylistService {
   }
 
   /**
-   * קבלת כל הרשימות הציבוריות (מאגר קהילתי)
+   * קבלת רשימות ציבוריות עם פייג'ינג (מאגר קהילתי)
    */
-  getPublicPlaylists(): Observable<Playlist[]> {
-    return this.http.get<Playlist[]>(`${this.apiUrl}/public`);
+  getPublicPlaylists(page: number = 1, pageSize: number = 20): Observable<PagedResult<Playlist>> {
+    return this.http.get<PagedResult<Playlist>>(`${this.apiUrl}/public`, {
+      params: { page: page.toString(), pageSize: pageSize.toString() }
+    });
   }
 
   /**

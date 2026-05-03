@@ -8,7 +8,7 @@
     <div class="hero-inner">
       <div class="hero-text">
         <h1 class="hero-title">מאגר רשימות קהילתי</h1>
-        <p class="hero-subtitle">{{ playlists.length }} רשימות ציבוריות שמשתמשים שיתפו עם הקהילה</p>
+        <p class="hero-subtitle">{{ totalCount }} רשימות ציבוריות שמשתמשים שיתפו עם הקהילה</p>
       </div>
       <div class="hero-cta-block">
         <p class="hero-cta-desc">חזור לרשימות האישיות שלך</p>
@@ -117,6 +117,16 @@
         </div>
 
       </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="load-more-wrap" *ngIf="hasNextPage && !searchTerm">
+      <button class="btn-pill btn-pill--outline" type="button"
+              [disabled]="isLoadingMore"
+              (click)="loadMore()">
+        <span *ngIf="!isLoadingMore">טען עוד רשימות</span>
+        <span *ngIf="isLoadingMore">טוען...</span>
+      </button>
     </div>
 
   </main>

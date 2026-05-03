@@ -47,6 +47,13 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
         builder.HasIndex(p => p.CreatedAt)
             .HasDatabaseName("IX_Playlists_CreatedAt");
 
+        // אינדקסים לשיפור ביצועים
+        builder.HasIndex(p => new { p.IsPublic, p.CreatedAt })
+            .HasDatabaseName("IX_Playlists_IsPublic_CreatedAt");
+
+        builder.HasIndex(p => new { p.UserId, p.IsPublic })
+            .HasDatabaseName("IX_Playlists_UserId_IsPublic");
+
         // Relationships
         builder.HasOne(p => p.User)
             .WithMany()

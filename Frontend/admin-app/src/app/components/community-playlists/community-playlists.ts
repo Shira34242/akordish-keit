@@ -25,6 +25,11 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
   filteredPlaylists: Playlist[] = [];
   searchTerm: string = '';
   isLoading = false;
+  isLoadingMore = false;
+  hasNextPage = false;
+  totalCount = 0;
+  private currentPage = 1;
+  private readonly pageSize = 20;
   error: string | null = null;
 
   constructor(
@@ -91,17 +96,42 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
     this.isLoading = true;
     this.error = null;
     this.heroLayoutDone = false;
+    this.currentPage = 1;
 
-    this.playlistService.getPublicPlaylists().subscribe({
-      next: (playlists) => {
-        this.playlists = playlists;
-        this.filteredPlaylists = playlists;
+    this.playlistService.getPublicPlaylists(1, this.pageSize).subscribe({
+      next: (result) => {
+        this.playlists = result.items;
+        this.filteredPlaylists = result.items;
+        this.hasNextPage = result.hasNextPage;
+        this.totalCount = result.totalCount;
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading public playlists:', err);
         this.error = 'שגיאה בטעינת רשימות המאגר הקהילתי';
         this.isLoading = false;
+      }
+    });
+  }
+
+  loadMore(): void {
+    if (!this.hasNextPage || this.isLoadingMore) return;
+
+    this.isLoadingMore = true;
+    this.currentPage++;
+
+    this.playlistService.getPublicPlaylists(this.currentPage, this.pageSize).subscribe({
+      next: (result) => {
+        this.playlists = [...this.playlists, ...result.items];
+        this.hasNextPage = result.hasNextPage;
+        this.totalCount = result.totalCount;
+        this.isLoadingMore = false;
+        this.filterPlaylists();
+      },
+      error: (err) => {
+        console.error('Error loading more playlists:', err);
+        this.currentPage--;
+        this.isLoadingMore = false;
       }
     });
   }

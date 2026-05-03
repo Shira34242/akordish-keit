@@ -69,10 +69,15 @@ public class PlaylistsController : ControllerBase
 
     [HttpGet("public")]
     [AllowAnonymous]
-    public async Task<ActionResult<List<PlaylistDto>>> GetPublicPlaylists()
+    public async Task<ActionResult<PagedResult<PlaylistDto>>> GetPublicPlaylists(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var playlists = await _playlistService.GetPublicPlaylistsAsync();
-        return Ok(playlists);
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+        var result = await _playlistService.GetPublicPlaylistsAsync(page, pageSize);
+        return Ok(result);
     }
 
     [HttpPost]
