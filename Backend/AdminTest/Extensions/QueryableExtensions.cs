@@ -13,6 +13,9 @@ public static class QueryableExtensions
         int pageNumber,
         int pageSize)
     {
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var totalCount = await query.CountAsync();
 
         var items = await query

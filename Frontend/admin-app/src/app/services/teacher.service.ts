@@ -15,7 +15,7 @@ import { SongDto } from '../models/song.model';
   providedIn: 'root'
 })
 export class TeacherService {
-  private apiUrl = 'https://localhost:44395/api/Teachers';
+  private apiUrl = `${window.location.hostname === 'localhost' ? 'https://localhost:44395' : ''}/api/Teachers`;
 
   constructor(private http: HttpClient) { }
 
@@ -25,7 +25,10 @@ export class TeacherService {
     status?: number,
     isFeatured?: boolean,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = 10,
+    cityId?: number,
+    targetAudience?: number,
+    language?: number
   ): Observable<PagedResult<TeacherListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -36,6 +39,15 @@ export class TeacherService {
     }
     if (instrumentId !== undefined && instrumentId !== null) {
       params = params.set('instrumentId', instrumentId.toString());
+    }
+    if (cityId !== undefined && cityId !== null) {
+      params = params.set('cityId', cityId.toString());
+    }
+    if (targetAudience !== undefined && targetAudience !== null) {
+      params = params.set('targetAudience', targetAudience.toString());
+    }
+    if (language !== undefined && language !== null) {
+      params = params.set('language', language.toString());
     }
     if (status !== undefined && status !== null) {
       params = params.set('status', status.toString());

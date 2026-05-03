@@ -8,6 +8,8 @@ public interface ITeacherService
         string? search,
         int? instrumentId,
         int? cityId,
+        int? targetAudience,
+        int? language,
         int? status,
         bool? isFeatured,
         int pageNumber,

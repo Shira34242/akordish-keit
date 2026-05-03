@@ -51,6 +51,10 @@ namespace AkordishKeit.Data.Configurations
                 .WithOne(tt => tt.Teacher)
                 .HasForeignKey(tt => tt.TeacherId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes for public teacher filters
+            builder.HasIndex(t => t.TargetAudience);
+            builder.HasIndex(t => t.Languages);
         }
     }
 }

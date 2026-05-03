@@ -148,6 +148,10 @@ namespace AkordishKeit.Data.Configurations
             builder.HasIndex(sp => sp.Status);
             builder.HasIndex(sp => sp.IsFeatured);
             builder.HasIndex(sp => sp.IsDeleted);
+            builder.HasIndex(sp => sp.CityId)
+                .HasDatabaseName("IX_ServiceProviders_CityId");
+            builder.HasIndex(sp => new { sp.IsDeleted, sp.Status, sp.IsTeacher, sp.IsFeatured, sp.Tier, sp.CreatedAt })
+                .HasDatabaseName("IX_ServiceProviders_PublicIndex");
         }
     }
 }

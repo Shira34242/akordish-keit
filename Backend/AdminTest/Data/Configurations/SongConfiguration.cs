@@ -84,6 +84,10 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
         builder.HasIndex(e => new { e.UploaderProfileType, e.UploaderProfileId })
                .HasDatabaseName("IX_Songs_UploaderProfile");
 
+        builder.HasIndex(e => new { e.IsApproved, e.IsDeleted, e.ViewCount })
+               .IsDescending(false, false, true)
+               .HasDatabaseName("IX_Songs_Popular");
+
         // Relationships - Composer
         builder.HasOne(s => s.Composer)
                .WithMany(p => p.ComposedSongs)

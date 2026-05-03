@@ -22,12 +22,15 @@ public class TeacherService : ITeacherService
         string? search,
         int? instrumentId,
         int? cityId,
+        int? targetAudience,
+        int? language,
         int? status,
         bool? isFeatured,
         int pageNumber,
         int pageSize)
     {
         var query = _context.Teachers
+            .AsNoTracking()
             .Include(t => t.ServiceProvider)
                 .ThenInclude(sp => sp.User)
             .Include(t => t.ServiceProvider.Categories)
@@ -42,8 +45,8 @@ public class TeacherService : ITeacherService
         {
             query = query.Where(t =>
                 t.ServiceProvider.DisplayName.Contains(search) ||
-                t.ServiceProvider.User.Username.Contains(search) ||
-                t.ServiceProvider.User.Email.Contains(search));
+                (t.ServiceProvider.User != null && t.ServiceProvider.User.Username.Contains(search)) ||
+                (t.ServiceProvider.User != null && t.ServiceProvider.User.Email.Contains(search)));
         }
 
         if (instrumentId.HasValue)
@@ -54,6 +57,18 @@ public class TeacherService : ITeacherService
         if (cityId.HasValue)
         {
             query = query.Where(t => t.ServiceProvider.CityId == cityId.Value);
+        }
+
+        if (targetAudience.HasValue && targetAudience.Value != 0)
+        {
+            var selectedAudience = (TargetAudience)targetAudience.Value;
+            query = query.Where(t => t.TargetAudience.HasValue && (t.TargetAudience.Value & selectedAudience) != 0);
+        }
+
+        if (language.HasValue && language.Value != 0)
+        {
+            var selectedLanguage = (TeachingLanguage)language.Value;
+            query = query.Where(t => t.Languages.HasValue && (t.Languages.Value & selectedLanguage) != 0);
         }
 
         if (status.HasValue)

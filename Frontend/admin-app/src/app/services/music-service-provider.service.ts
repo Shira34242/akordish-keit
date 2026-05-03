@@ -13,7 +13,7 @@ import { PagedResult } from '../models/user.model';
   providedIn: 'root'
 })
 export class MusicServiceProviderService {
-  private apiUrl = 'https://localhost:44395/api/MusicServiceProviders';
+  private apiUrl = `${window.location.hostname === 'localhost' ? 'https://localhost:44395' : ''}/api/MusicServiceProviders`;
 
   constructor(private http: HttpClient) { }
 

@@ -43,6 +43,10 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
   private fullHeroHeight = 0;
   private rafPending = false;
+  private readonly stripPageSize = 10;
+  private readonly catalogPageSize = 24;
+  private readonly searchPageSize = 40;
+  private readonly scrollLoadOffset = 700;
 
   // ─── Tab ─────────────────────────────────────────
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -87,6 +91,11 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   isFiltered: boolean = false;
   filteredProfessionals: MusicServiceProviderListDto[] = [];
   loading: boolean = true;
+  loadingMoreProfessionals = false;
+  additionalProfessionalsPage = 1;
+  additionalProfessionalsTotal = 0;
+  filteredProfessionalsPage = 1;
+  filteredProfessionalsTotal = 0;
 
   quickSearchCategories = [
     { id: 0, name: 'חנויות מוזיקה', hebrewName: 'חנויות מוזיקה' },
@@ -120,6 +129,13 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   isFilteredTeachers: boolean = false;
   filteredTeachers: TeacherListDto[] = [];
   loadingTeachers: boolean = true;
+  loadingMoreTeachers = false;
+  additionalTeachersPage = 1;
+  additionalTeachersTotal = 0;
+  filteredTeachersPage = 1;
+  filteredTeachersTotal = 0;
+  private cityNameById = new Map<number, string>();
+  private instrumentNameById = new Map<number, string>();
 
   quickSearchInstruments = [
     { id: 0, name: 'גיטרה', hebrewName: 'גיטרה' },
@@ -159,6 +175,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     this.rafPending = true;
     requestAnimationFrame(() => {
       this.shrinkHero();
+      this.loadMoreWhenNearBottom();
       this.rafPending = false;
     });
   }
@@ -263,7 +280,10 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   // ─── Cities ───────────────────────────────────────
   loadCities(): void {
     this.citiesService.getCities().subscribe({
-      next: (cities) => { this.cities = cities.filter(c => c.isActive); },
+      next: (cities) => {
+        this.cities = cities.filter(c => c.isActive);
+        this.cityNameById = new Map(this.cities.map(city => [city.id, city.name]));
+      },
       error: (err) => console.error('Error loading cities:', err)
     });
   }
@@ -282,17 +302,17 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         const recordingStudioCat = this.categories.find(c => c.name.includes('אולפני הקלטות'));
         const amplificationCat = this.categories.find(c => c.name.includes('הגברה'));
         return forkJoin({
-          featured: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 10),
+          featured: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, this.stripPageSize),
           musicStores: musicStoreCat
-            ? this.professionalService.getServiceProviders(undefined, musicStoreCat.id, undefined, 1, undefined, false, 1, 10)
+            ? this.professionalService.getServiceProviders(undefined, musicStoreCat.id, undefined, 1, undefined, false, 1, this.stripPageSize)
             : of({ items: [], data: [] } as any),
           recordingStudios: recordingStudioCat
-            ? this.professionalService.getServiceProviders(undefined, recordingStudioCat.id, undefined, 1, undefined, false, 1, 10)
+            ? this.professionalService.getServiceProviders(undefined, recordingStudioCat.id, undefined, 1, undefined, false, 1, this.stripPageSize)
             : of({ items: [], data: [] } as any),
           amplification: amplificationCat
-            ? this.professionalService.getServiceProviders(undefined, amplificationCat.id, undefined, 1, undefined, false, 1, 10)
+            ? this.professionalService.getServiceProviders(undefined, amplificationCat.id, undefined, 1, undefined, false, 1, this.stripPageSize)
             : of({ items: [], data: [] } as any),
-          catalog: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 20)
+          catalog: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, this.catalogPageSize)
         });
       })
     ).subscribe({
@@ -302,6 +322,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.recordingStudios = results.recordingStudios.items || results.recordingStudios.data || [];
         this.amplification = results.amplification.items || results.amplification.data || [];
         this.additionalProfessionals = results.catalog.items || results.catalog.data || [];
+        this.additionalProfessionalsPage = results.catalog.pageNumber || 1;
+        this.additionalProfessionalsTotal = results.catalog.totalCount || this.additionalProfessionals.length;
         this.loading = false;
       },
       error: (err) => { console.error('Error loading professionals:', err); this.loading = false; }
@@ -311,32 +333,42 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   // ─── Load Instruments + Teachers (together to avoid race) ────
   loadInstrumentsAndTeachers(): void {
     this.loadingTeachers = true;
-    forkJoin({
-      instruments: this.systemTablesService.getItems('instruments', 1, 100),
-      featured: this.teacherService.getTeachers(undefined, undefined, 1, true, 1, 10),
-      all: this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 200)
-    }).subscribe({
-      next: (results: any) => {
-        this.instruments = results.instruments.items || results.instruments || [];
+    this.systemTablesService.getItems('instruments', 1, 100).pipe(
+      switchMap((instrumentResponse: any) => {
+        this.instruments = instrumentResponse.items || instrumentResponse || [];
+        this.instrumentNameById = new Map(this.instruments.map(instrument => [instrument.id, instrument.name]));
         this.quickSearchInstruments.forEach(quick => {
           const instrument = this.instruments.find(i => i.name.toLowerCase().includes(quick.name.toLowerCase()));
           if (instrument) quick.id = instrument.id;
         });
 
+        const organId = this.findInstrumentId('אורגן');
+        const soundId = this.findInstrumentId('סאונד');
+        const vocalId = this.findInstrumentId('פיתוח קול');
+
+        return forkJoin({
+          featured: this.teacherService.getTeachers(undefined, undefined, 1, true, 1, this.stripPageSize),
+          organ: organId
+            ? this.teacherService.getTeachers(undefined, organId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          sound: soundId
+            ? this.teacherService.getTeachers(undefined, soundId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          vocal: vocalId
+            ? this.teacherService.getTeachers(undefined, vocalId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          catalog: this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, this.catalogPageSize)
+        });
+      })
+    ).subscribe({
+      next: (results: any) => {
         this.featuredTeachers = results.featured.items || results.featured.data || [];
-        this.allTeachers = results.all.items || results.all.data || [];
-
-        this.organTeachers = this.filterTeachersByInstrument(this.allTeachers, 'אורגן');
-        this.soundTeachers = this.filterTeachersByInstrument(this.allTeachers, 'סאונד');
-        this.vocalTeachers = this.filterTeachersByInstrument(this.allTeachers, 'פיתוח קול');
-
-        const categorizedIds = new Set([
-          ...this.featuredTeachers.map(t => t.id),
-          ...this.organTeachers.map(t => t.id),
-          ...this.soundTeachers.map(t => t.id),
-          ...this.vocalTeachers.map(t => t.id)
-        ]);
-        this.additionalTeachers = this.allTeachers.filter(t => !categorizedIds.has(t.id));
+        this.organTeachers = results.organ.items || results.organ.data || [];
+        this.soundTeachers = results.sound.items || results.sound.data || [];
+        this.vocalTeachers = results.vocal.items || results.vocal.data || [];
+        this.additionalTeachers = results.catalog.items || results.catalog.data || [];
+        this.additionalTeachersPage = results.catalog.pageNumber || 1;
+        this.additionalTeachersTotal = results.catalog.totalCount || this.additionalTeachers.length;
         this.loadingTeachers = false;
       },
       error: (err) => { console.error('Error loading teachers:', err); this.loadingTeachers = false; }
@@ -348,6 +380,10 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     if (!instrument) return [];
     const filtered = teachers.filter(t => t.instrumentIds && t.instrumentIds.includes(instrument.id));
     return limit > 0 ? filtered.slice(0, limit) : filtered;
+  }
+
+  private findInstrumentId(instrumentName: string): number | undefined {
+    return this.instruments.find(i => i.name.toLowerCase().includes(instrumentName.toLowerCase()))?.id;
   }
 
   // ─── Search ───────────────────────────────────────
@@ -367,16 +403,22 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     if (!hasActiveFilter) {
       this.isFiltered = false;
       this.filteredProfessionals = [];
+      this.filteredProfessionalsPage = 1;
+      this.filteredProfessionalsTotal = 0;
       return;
     }
     this.isFiltered = true;
+    this.filteredProfessionalsPage = 1;
     this.professionalService.getServiceProviders(
       this.searchTerm || undefined,
       this.selectedCategoryId || undefined,
       this.selectedCityId || undefined,
-      1, undefined, false, 1, 50
+      1, undefined, false, 1, this.searchPageSize
     ).subscribe({
-      next: (response: any) => { this.filteredProfessionals = response.items || response.data || []; },
+      next: (response: any) => {
+        this.filteredProfessionals = response.items || response.data || [];
+        this.filteredProfessionalsTotal = response.totalCount || this.filteredProfessionals.length;
+      },
       error: (err) => console.error('Error filtering professionals:', err)
     });
   }
@@ -391,10 +433,29 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     if (!hasActiveFilter) {
       this.isFilteredTeachers = false;
       this.filteredTeachers = [];
+      this.filteredTeachersPage = 1;
+      this.filteredTeachersTotal = 0;
       return;
     }
     this.isFilteredTeachers = true;
-    this.filteredTeachers = this.applyTeacherFilters(this.allTeachers);
+    this.filteredTeachersPage = 1;
+    this.teacherService.getTeachers(
+      this.searchTerm || undefined,
+      this.selectedInstrumentId || undefined,
+      1,
+      undefined,
+      1,
+      this.searchPageSize,
+      this.selectedCityId || undefined,
+      this.selectedTargetAudience || undefined,
+      this.selectedLanguage || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.filteredTeachers = response.items || response.data || [];
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachers.length;
+      },
+      error: (err) => console.error('Error filtering teachers:', err)
+    });
   }
 
   private applyTeacherFilters(teachers: TeacherListDto[]): TeacherListDto[] {
@@ -434,16 +495,21 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   clearFilters(): void {
     this.searchTerm = '';
     this.selectedCityId = null;
+    this.topFilterValue = 'all';
     if (this.activeTab === 'professionals') {
       this.selectedCategoryId = null;
       this.isFiltered = false;
       this.filteredProfessionals = [];
+      this.filteredProfessionalsPage = 1;
+      this.filteredProfessionalsTotal = 0;
     } else {
       this.selectedInstrumentId = null;
       this.selectedTargetAudience = null;
       this.selectedLanguage = null;
       this.isFilteredTeachers = false;
       this.filteredTeachers = [];
+      this.filteredTeachersPage = 1;
+      this.filteredTeachersTotal = 0;
     }
   }
 
@@ -481,8 +547,12 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     let categoryId: number | undefined;
     switch (section) {
       case 'featured':
-        this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, 50).subscribe({
-          next: (response: any) => { this.filteredProfessionals = response.items || response.data || []; }
+        this.filteredProfessionalsPage = 1;
+        this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, this.searchPageSize).subscribe({
+          next: (response: any) => {
+            this.filteredProfessionals = response.items || response.data || [];
+            this.filteredProfessionalsTotal = response.totalCount || this.filteredProfessionals.length;
+          }
         });
         break;
       case 'musicStores':
@@ -504,31 +574,167 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   }
 
   private loadFilteredSection(categoryId: number): void {
-    this.professionalService.getServiceProviders(undefined, categoryId, undefined, 1, undefined, false, 1, 50).subscribe({
-      next: (response: any) => { this.filteredProfessionals = response.items || response.data || []; }
+    this.filteredProfessionalsPage = 1;
+    this.professionalService.getServiceProviders(undefined, categoryId, undefined, 1, undefined, false, 1, this.searchPageSize).subscribe({
+      next: (response: any) => {
+        this.filteredProfessionals = response.items || response.data || [];
+        this.filteredProfessionalsTotal = response.totalCount || this.filteredProfessionals.length;
+      }
     });
   }
 
   // ─── View More — Teachers ─────────────────────────
   onViewMoreTeachers(category: string): void {
     this.isFilteredTeachers = true;
+    this.filteredTeachersPage = 1;
+    let instrumentId: number | undefined;
+    let featured: boolean | undefined;
     switch (category) {
       case 'featured':
-        this.filteredTeachers = this.allTeachers.filter(t => t.isFeatured);
+        featured = true;
         break;
       case 'organ':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'אורגן', 0);
+        instrumentId = this.findInstrumentId('אורגן');
         break;
       case 'sound':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'סאונד', 0);
+        instrumentId = this.findInstrumentId('סאונד');
         break;
       case 'vocal':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'פיתוח קול', 0);
+        instrumentId = this.findInstrumentId('פיתוח קול');
         break;
       default:
-        this.filteredTeachers = [...this.allTeachers];
+        break;
     }
+    this.teacherService.getTeachers(undefined, instrumentId, 1, featured, 1, this.searchPageSize).subscribe({
+      next: (response: any) => {
+        this.filteredTeachers = response.items || response.data || [];
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachers.length;
+      },
+      error: (err) => console.error('Error loading teacher section:', err)
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private loadMoreWhenNearBottom(): void {
+    const distanceFromBottom = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+    if (distanceFromBottom > this.scrollLoadOffset) return;
+
+    if (this.activeTab === 'professionals') {
+      if (this.isFiltered) {
+        this.loadMoreFilteredProfessionals();
+      } else {
+        this.loadMoreCatalogProfessionals();
+        this.loadMoreCatalogTeachers();
+      }
+      return;
+    }
+
+    if (this.isFilteredTeachers) {
+      this.loadMoreFilteredTeachers();
+    } else {
+      this.loadMoreCatalogTeachers();
+    }
+  }
+
+  private loadMoreCatalogProfessionals(): void {
+    if (this.loadingMoreProfessionals || this.additionalProfessionals.length >= this.additionalProfessionalsTotal) return;
+    this.loadingMoreProfessionals = true;
+    const nextPage = this.additionalProfessionalsPage + 1;
+    this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, nextPage, this.catalogPageSize).subscribe({
+      next: (response: any) => {
+        this.appendUniqueProfessionals(this.additionalProfessionals, response.items || response.data || []);
+        this.additionalProfessionalsPage = response.pageNumber || nextPage;
+        this.additionalProfessionalsTotal = response.totalCount || this.additionalProfessionalsTotal;
+        this.loadingMoreProfessionals = false;
+      },
+      error: (err) => {
+        console.error('Error loading more professionals:', err);
+        this.loadingMoreProfessionals = false;
+      }
+    });
+  }
+
+  private loadMoreFilteredProfessionals(): void {
+    if (this.loadingMoreProfessionals || this.filteredProfessionals.length >= this.filteredProfessionalsTotal) return;
+    this.loadingMoreProfessionals = true;
+    const nextPage = this.filteredProfessionalsPage + 1;
+    this.professionalService.getServiceProviders(
+      this.searchTerm || undefined,
+      this.selectedCategoryId || undefined,
+      this.selectedCityId || undefined,
+      1,
+      undefined,
+      false,
+      nextPage,
+      this.searchPageSize
+    ).subscribe({
+      next: (response: any) => {
+        this.appendUniqueProfessionals(this.filteredProfessionals, response.items || response.data || []);
+        this.filteredProfessionalsPage = response.pageNumber || nextPage;
+        this.filteredProfessionalsTotal = response.totalCount || this.filteredProfessionalsTotal;
+        this.loadingMoreProfessionals = false;
+      },
+      error: (err) => {
+        console.error('Error loading more filtered professionals:', err);
+        this.loadingMoreProfessionals = false;
+      }
+    });
+  }
+
+  private loadMoreCatalogTeachers(): void {
+    if (this.loadingMoreTeachers || this.additionalTeachers.length >= this.additionalTeachersTotal) return;
+    this.loadingMoreTeachers = true;
+    const nextPage = this.additionalTeachersPage + 1;
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, nextPage, this.catalogPageSize).subscribe({
+      next: (response: any) => {
+        this.appendUniqueTeachers(this.additionalTeachers, response.items || response.data || []);
+        this.additionalTeachersPage = response.pageNumber || nextPage;
+        this.additionalTeachersTotal = response.totalCount || this.additionalTeachersTotal;
+        this.loadingMoreTeachers = false;
+      },
+      error: (err) => {
+        console.error('Error loading more teachers:', err);
+        this.loadingMoreTeachers = false;
+      }
+    });
+  }
+
+  private loadMoreFilteredTeachers(): void {
+    if (this.loadingMoreTeachers || this.filteredTeachers.length >= this.filteredTeachersTotal) return;
+    this.loadingMoreTeachers = true;
+    const nextPage = this.filteredTeachersPage + 1;
+    this.teacherService.getTeachers(
+      this.searchTerm || undefined,
+      this.selectedInstrumentId || undefined,
+      1,
+      undefined,
+      nextPage,
+      this.searchPageSize,
+      this.selectedCityId || undefined,
+      this.selectedTargetAudience || undefined,
+      this.selectedLanguage || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.appendUniqueTeachers(this.filteredTeachers, response.items || response.data || []);
+        this.filteredTeachersPage = response.pageNumber || nextPage;
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachersTotal;
+        this.loadingMoreTeachers = false;
+      },
+      error: (err) => {
+        console.error('Error loading more filtered teachers:', err);
+        this.loadingMoreTeachers = false;
+      }
+    });
+  }
+
+  private appendUniqueProfessionals(target: MusicServiceProviderListDto[], items: MusicServiceProviderListDto[]): void {
+    const existingIds = new Set(target.map(item => item.id));
+    target.push(...items.filter(item => !existingIds.has(item.id)));
+  }
+
+  private appendUniqueTeachers(target: TeacherListDto[], items: TeacherListDto[]): void {
+    const existingIds = new Set(target.map(item => item.id));
+    target.push(...items.filter(item => !existingIds.has(item.id)));
   }
 
   // ─── Navigation ───────────────────────────────────
@@ -563,18 +769,41 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   // ─── Helpers ──────────────────────────────────────
   getCityName(cityId?: number): string {
     if (!cityId) return '';
-    return this.cities.find(c => c.id === cityId)?.name || '';
+    return this.cityNameById.get(cityId) || '';
   }
 
   getTeacherInstruments(teacher: TeacherListDto): string {
     if (!teacher.instrumentIds || teacher.instrumentIds.length === 0) return '';
     const names = teacher.instrumentIds
-      .map(id => this.instruments.find(i => i.id === id)?.name)
+      .map(id => this.instrumentNameById.get(id))
       .filter((n): n is string => !!n);
+    if (names.length === 0) return '';
+    if (names.length === 1) return `מורה ל${names[0]}`;
+    return `מורה ל${names.slice(0, -1).join(', ')} ו${names[names.length - 1]}`;
     if (names.length === 0) return '';
     if (names.length === 1) return `׳׳•׳¨׳” ׳${names[0]}`;
     const last = names[names.length - 1];
     return `׳׳•׳¨׳” ׳${names.slice(0, -1).join(', ')} ׳•${last}`;
+  }
+
+  trackByProfessionalId(_index: number, professional: MusicServiceProviderListDto): number {
+    return professional.id;
+  }
+
+  trackByTeacherId(_index: number, teacher: TeacherListDto): number {
+    return teacher.id;
+  }
+
+  trackByCategoryId(_index: number, category: Category): number {
+    return category.id;
+  }
+
+  trackByCityId(_index: number, city: City): number {
+    return city.id;
+  }
+
+  trackByInstrumentId(_index: number, instrument: Instrument): number {
+    return instrument.id;
   }
 
   private closeAllDropdowns(): void {

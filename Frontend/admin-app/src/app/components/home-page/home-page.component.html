@@ -34,7 +34,7 @@
 
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_songs' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.songs" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.songs; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -45,7 +45,7 @@
 
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_artists' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.artists" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.artists; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -55,7 +55,7 @@
 
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.articles" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -66,7 +66,7 @@
 
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.teachers" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -77,7 +77,7 @@
 
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.professionals" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -88,7 +88,7 @@
 
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_playlists' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.playlists" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.playlists; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -102,7 +102,7 @@
               {{ 'home.search_by_lyrics' | translate }}
               <span class="search-lyrics-badge">{{ 'home.search_deep_label' | translate }}</span>
             </span>
-            <div class="search-result-item" *ngFor="let item of lyricsMatches" (click)="navigateToResult(item)">
+            <div class="search-result-item" *ngFor="let item of lyricsMatches; trackBy: trackById" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -147,16 +147,25 @@
         <h2 class="section-title">{{ 'home.news_title' | translate }}</h2>
         <a routerLink="/music-news" class="section-link">{{ 'home.news_link' | translate }}</a>
       </div>
-      <div class="news-banner-stack">
+
+      <div *ngIf="!useScrollingNewsBanner" class="news-grid">
+        <app-news-banner
+          *ngFor="let article of newsArticles; trackBy: trackById"
+          class="news-banner-card"
+          [article]="article">
+        </app-news-banner>
+      </div>
+
+      <div *ngIf="useScrollingNewsBanner" class="news-banner-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0">
           <div class="news-banner-track">
             <app-news-banner
-              *ngFor="let article of newsArticlesFirstRow"
+              *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
               class="news-banner-card"
               [article]="article">
             </app-news-banner>
             <app-news-banner
-              *ngFor="let article of newsArticlesFirstRow"
+              *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
               class="news-banner-card"
               [article]="article"
               aria-hidden="true">
@@ -166,12 +175,12 @@
         <div class="news-banner-row news-banner-row--bottom" *ngIf="newsArticlesSecondRow.length > 0">
           <div class="news-banner-track news-banner-track--reverse">
             <app-news-banner
-              *ngFor="let article of newsArticlesSecondRow"
+              *ngFor="let article of newsArticlesSecondRow; trackBy: trackById"
               class="news-banner-card"
               [article]="article">
             </app-news-banner>
             <app-news-banner
-              *ngFor="let article of newsArticlesSecondRow"
+              *ngFor="let article of newsArticlesSecondRow; trackBy: trackById"
               class="news-banner-card"
               [article]="article"
               aria-hidden="true">
@@ -197,7 +206,7 @@
         <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
       </div>
       <div class="songs-grid">
-        <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
+        <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
@@ -206,7 +215,7 @@
         <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
       </div>
       <div class="songs-grid">
-        <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
+        <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
@@ -217,8 +226,8 @@
       </div>
       <div class="artists-loop-row">
         <div class="artists-loop-track">
-          <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist"></app-artist-circle>
-          <app-artist-circle *ngFor="let artist of topArtists" [artist]="artist" aria-hidden="true"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of topArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of topArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
         </div>
       </div>
     </section>
@@ -229,7 +238,7 @@
         <a routerLink="/teachers" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
-        <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
+        <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
           <div class="person-avatar">
             <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
             <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
@@ -257,7 +266,7 @@
         <a routerLink="/professionals" class="section-link">{{ 'home.professionals_link' | translate }}</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
-        <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
+        <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
           <div class="person-avatar">
             <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
             <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
@@ -273,7 +282,7 @@
         <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
       </div>
       <div class="news-grid">
-        <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
+        <app-news-banner *ngFor="let article of blogArticles; trackBy: trackById" [article]="article"></app-news-banner>
       </div>
     </section>
 
@@ -285,12 +294,12 @@
       <div class="events-loop-row">
         <div class="events-loop-track">
           <app-event-card
-            *ngFor="let event of upcomingEvents"
+            *ngFor="let event of upcomingEvents; trackBy: trackById"
             [event]="event"
             (cardClick)="openEventModal($event)">
           </app-event-card>
           <app-event-card
-            *ngFor="let event of upcomingEvents"
+            *ngFor="let event of upcomingEvents; trackBy: trackById"
             [event]="event"
             aria-hidden="true"
             (cardClick)="openEventModal($event)">
@@ -305,7 +314,7 @@
         <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>
       </div>
       <div class="news-grid">
-        <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
+        <app-news-banner *ngFor="let article of blogArticles; trackBy: trackById" [article]="article"></app-news-banner>
       </div>
     </section>
 

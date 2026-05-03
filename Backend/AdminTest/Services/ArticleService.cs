@@ -30,6 +30,7 @@ public class ArticleService : IArticleService
         int pageSize)
     {
         var query = _context.Articles
+            .AsNoTracking()
             .Include(a => a.ArticleCategories)
                 .ThenInclude(ac => ac.Category)
             .Include(a => a.ArticleTags)
@@ -67,6 +68,7 @@ public class ArticleService : IArticleService
     public async Task<ArticleDto?> GetArticleByIdAsync(int id)
     {
         var article = await _context.Articles
+            .AsNoTracking()
             .Include(a => a.ArticleCategories)
                 .ThenInclude(ac => ac.Category)
             .Include(a => a.ArticleTags)
@@ -86,6 +88,7 @@ public class ArticleService : IArticleService
     public async Task<ArticleDto?> GetArticleBySlugAsync(string slug)
     {
         var article = await _context.Articles
+            .AsNoTracking()
             .Include(a => a.ArticleCategories)
                 .ThenInclude(ac => ac.Category)
             .Include(a => a.ArticleTags)
@@ -105,6 +108,7 @@ public class ArticleService : IArticleService
     public async Task<List<ArticleDto>> GetFeaturedArticlesAsync(int? contentType, int limit)
     {
         var query = _context.Articles
+            .AsNoTracking()
             .Where(a => a.IsFeatured && a.Status == (int)ArticleStatus.Published && a.PublishDate <= DateTime.UtcNow)
             .AsQueryable();
 

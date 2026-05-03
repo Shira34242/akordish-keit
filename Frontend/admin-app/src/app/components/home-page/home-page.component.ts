@@ -1,8 +1,9 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, HostBinding, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, HostBinding, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
 import { ArticleService } from '../../services/admin/article.service';
@@ -63,6 +64,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   isSearchingDeep = false;
   showSearchResults = false;
   private searchSubject = new Subject<string>();
+  private readonly destroyRef = inject(DestroyRef);
 
   recentSongs: any[] = [];
   popularSongs: any[] = [];
@@ -107,7 +109,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
           return of(null);
         }
         return this.searchService.search(query);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(results => {
       this.searchResults = results;
       this.showSearchResults = this.searchQuery.length >= 2;
@@ -116,7 +119,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (results && this.searchQuery.length >= 2) {
         const queryAtLaunch = this.searchQuery;
         this.isSearchingDeep = true;
-        this.searchService.searchDeep(queryAtLaunch).subscribe(deepResults => {
+        this.searchService.searchDeep(queryAtLaunch).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe(deepResults => {
           // לא מעדכנים אם המשתמש כבר החליף את החיפוש
           if (this.searchQuery !== queryAtLaunch) return;
           this.isSearchingDeep = false;
@@ -131,7 +134,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   handleRandomSongClick(): void {
-    this.songService.getRandomSong().subscribe({
+    this.songService.getRandomSong().pipe(take(1)).subscribe({
       next: (song: any) => {
         if (song?.id) {
           this.router.navigate(['/song', song.id]);
@@ -213,49 +216,49 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadContent() {
-    this.songService.getSongs(undefined, 1, 8).subscribe({
+    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
     });
 
-    this.songService.getPopularSongs(8).subscribe({
+    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (songs: any[]) => { this.popularSongs = songs; },
       error: (err) => console.error('loadContent: popular songs', err)
     });
 
-    this.artistService.getTopArtists(12).subscribe({
+    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
 
-    this.artistService.getFeaturedArtists(12).subscribe({
+    this.artistService.getFeaturedArtists(12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (artists: any[]) => { this.featuredArtists = artists; },
       error: (err) => console.error('loadContent: featured artists', err)
     });
 
     this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
-      .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => { this.newsArticles = res.items || []; },
         error: (err) => console.error('loadContent: news articles', err)
       });
 
     this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-      .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => { this.blogArticles = res.items || []; },
         error: (err) => console.error('loadContent: blog articles', err)
       });
 
-    this.eventService.getUpcomingEvents(6).subscribe({
+    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
       error: (err) => console.error('loadContent: events', err)
     });
 
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).subscribe({
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => { this.featuredTeachers = res.items || []; },
       error: (err) => console.error('loadContent: teachers', err)
     });
 
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).subscribe({
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
     });
@@ -269,7 +272,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSearchResults = false;
 
     if (item.type === 'article') {
-      this.articleService.getArticle(item.id).subscribe({
+      this.articleService.getArticle(item.id).pipe(take(1)).subscribe({
         next: article => {
           const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
           this.router.navigate([route, article.slug]);
@@ -292,6 +295,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (base) this.router.navigate([base, item.id]);
   }
 
+  trackById(_index: number, item: { id: number | string }): number | string {
+    return item.id;
+  }
+
   get hasNoResults(): boolean {
     if (this.isSearchingDeep) return false;
     if (this.lyricsMatches.length > 0) return false;
@@ -311,6 +318,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get newsArticlesSecondRow(): Article[] {
     return this.newsArticles.slice(this.newsBannerRowSize, this.newsBannerRowSize * 2);
+  }
+
+  get useScrollingNewsBanner(): boolean {
+    return this.newsArticles.length >= 2;
   }
 
   private initParticleEffect(): void {

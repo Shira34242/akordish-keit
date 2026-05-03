@@ -29,6 +29,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         int pageSize)
     {
         var query = _context.ServiceProviders
+            .AsNoTracking()
             .Include(sp => sp.User)
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)

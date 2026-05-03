@@ -36,7 +36,7 @@
                     (click)="setTopFilter('all'); showCategoryDropdown = false">כל הקטגוריות</button>
             <button class="filter-option" [class.active]="topFilterValue === 'teachers'"
                     (click)="setTopFilter('teachers'); showCategoryDropdown = false">מורים</button>
-            <button class="filter-option" *ngFor="let cat of categories"
+            <button class="filter-option" *ngFor="let cat of categories; trackBy: trackByCategoryId"
                     [class.active]="topFilterValue === cat.id.toString()"
                     (click)="setTopFilter(cat.id.toString()); showCategoryDropdown = false">{{ cat.name }}</button>
           </div>
@@ -65,7 +65,7 @@
           <div class="filter-dropdown" *ngIf="showCityDropdown" (click)="$event.stopPropagation()">
             <button class="filter-option" [class.active]="selectedCityId === null"
                     (click)="selectedCityId = null; onSearch(); showCityDropdown = false">כל הערים</button>
-            <button class="filter-option" *ngFor="let city of cities"
+            <button class="filter-option" *ngFor="let city of cities; trackBy: trackByCityId"
                     [class.active]="selectedCityId === city.id"
                     (click)="selectedCityId = city.id; onSearch(); showCityDropdown = false">{{ city.name }}</button>
           </div>
@@ -84,7 +84,7 @@
             <div class="filter-dropdown" *ngIf="showInstrumentDropdown" (click)="$event.stopPropagation()">
               <button class="filter-option" [class.active]="selectedInstrumentId === null"
                       (click)="selectedInstrumentId = null; onSearch(); showInstrumentDropdown = false">כל כלי הנגינה</button>
-              <button class="filter-option" *ngFor="let instr of instruments"
+              <button class="filter-option" *ngFor="let instr of instruments; trackBy: trackByInstrumentId"
                       [class.active]="selectedInstrumentId === instr.id"
                       (click)="selectedInstrumentId = instr.id; onSearch(); showInstrumentDropdown = false">{{ instr.name }}</button>
             </div>
@@ -138,7 +138,7 @@
       </div>
 
       <div class="quick-categories quick-categories--hero" *ngIf="activeTab === 'professionals' && visibleQuickCategories.length > 0">
-        <button *ngFor="let cat of visibleQuickCategories"
+        <button *ngFor="let cat of visibleQuickCategories; trackBy: trackByCategoryId"
                 class="quick-cat-btn"
                 [class.has-image]="cat.quickCategoryImageUrl"
                 [style.background-image]="getQuickCategoryBackground(cat)"
@@ -196,7 +196,7 @@
           <span class="section-tag section-tag--accent">נמצאו {{ filteredProfessionals.length }} תוצאות</span>
         </div>
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
-          <div class="prof-card" *ngFor="let p of filteredProfessionals" (click)="viewProfessional(p.id)">
+          <div class="prof-card" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
@@ -227,7 +227,7 @@
             <button class="btn-show-all" (click)="onViewMore('featured')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of featuredProfessionals" (click)="viewProfessional(p.id)">
+            <div class="prof-card" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
@@ -251,7 +251,7 @@
             <button class="btn-show-all" (click)="setTopFilter('teachers')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of featuredTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
@@ -275,7 +275,7 @@
             <button class="btn-show-all" (click)="onViewMore('musicStores')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of musicStores" (click)="viewProfessional(p.id)">
+            <div class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
@@ -298,7 +298,7 @@
             <button class="btn-show-all" (click)="onViewMore('recordingStudios')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of recordingStudios" (click)="viewProfessional(p.id)">
+            <div class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
@@ -321,7 +321,7 @@
             <button class="btn-show-all" (click)="onViewMore('amplification')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of amplification" (click)="viewProfessional(p.id)">
+            <div class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
@@ -346,7 +346,7 @@
           <span class="total-badge">{{ additionalProfessionals.length + additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
-          <div class="prof-card" *ngFor="let p of additionalProfessionals" (click)="viewProfessional(p.id)">
+          <div class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
             </div>
@@ -359,7 +359,7 @@
               </div>
             </div>
           </div>
-          <div class="prof-card" *ngFor="let t of additionalTeachers" (click)="viewTeacher(t.id)">
+          <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
             </div>
@@ -395,7 +395,7 @@
           <span class="section-tag section-tag--accent">נמצאו {{ filteredTeachers.length }} מורים</span>
         </div>
         <div class="professionals-grid" *ngIf="filteredTeachers.length > 0">
-          <div class="prof-card" *ngFor="let t of filteredTeachers" (click)="viewTeacher(t.id)">
+          <div class="prof-card" *ngFor="let t of filteredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
@@ -426,7 +426,7 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('featured')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of featuredTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
@@ -450,7 +450,7 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('organ')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of organTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
@@ -473,7 +473,7 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('sound')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of soundTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
@@ -496,7 +496,7 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('vocal')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of vocalTeachers" (click)="viewTeacher(t.id)">
+            <div class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
@@ -521,7 +521,7 @@
           <span class="total-badge">{{ additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
-          <div class="prof-card" *ngFor="let t of additionalTeachers" (click)="viewTeacher(t.id)">
+          <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
             </div>

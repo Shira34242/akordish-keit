@@ -39,13 +39,15 @@ public class TeachersController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] int? instrumentId = null,
         [FromQuery] int? cityId = null,
+        [FromQuery] int? targetAudience = null,
+        [FromQuery] int? language = null,
         [FromQuery] int? status = null,
         [FromQuery] bool? isFeatured = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
         var result = await _service.GetTeachersAsync(
-            search, instrumentId, cityId, status, isFeatured, pageNumber, pageSize);
+            search, instrumentId, cityId, targetAudience, language, status, isFeatured, pageNumber, pageSize);
 
         return Ok(result);
     }

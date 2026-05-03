@@ -1071,8 +1071,23 @@ public class SongService : ISongService
     {
         try
         {
-            var song = await _context.Songs
+            var count = await _context.Songs
                 .Where(s => !s.IsDeleted && s.IsApproved)
+                .CountAsync();
+
+            if (count == 0) return null;
+
+            var randomId = await _context.Songs
+                .Where(s => !s.IsDeleted && s.IsApproved)
+                .OrderBy(s => s.Id)
+                .Skip(Random.Shared.Next(count))
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+
+            if (randomId == 0) return null;
+
+            var song = await _context.Songs
+                .Where(s => s.Id == randomId)
                 .Include(s => s.SongArtists)
                     .ThenInclude(sa => sa.Artist)
                 .Include(s => s.OriginalKey)
@@ -1084,7 +1099,6 @@ public class SongService : ISongService
                     .ThenInclude(sg => sg.Genre)
                 .Include(s => s.SongTags)
                     .ThenInclude(st => st.Tag)
-                .OrderBy(s => Guid.NewGuid()) // Random order
                 .FirstOrDefaultAsync();
 
             if (song == null)
@@ -1251,24 +1265,90 @@ public class SongService : ISongService
 
     public async Task<List<SongDto>> GetApprovedSongsByUploaderProfileAsync(string profileType, int profileId, int limit = 12)
     {
-        var songIds = await _context.Songs
+        var songs = await _context.Songs
             .Where(s => !s.IsDeleted
                 && s.IsApproved
                 && s.UploaderProfileType == profileType
                 && s.UploaderProfileId == profileId)
             .OrderByDescending(s => s.CreatedAt)
             .Take(limit)
-            .Select(s => s.Id)
+            .Include(s => s.SongArtists)
+                .ThenInclude(sa => sa.Artist)
+            .Include(s => s.OriginalKey)
+            .Include(s => s.EasyKey)
+            .Include(s => s.Composer)
+            .Include(s => s.Lyricist)
+            .Include(s => s.Arranger)
+            .Include(s => s.SongGenres)
+                .ThenInclude(sg => sg.Genre)
+            .Include(s => s.SongTags)
+                .ThenInclude(st => st.Tag)
+            .Include(s => s.UploaderUser)
+                .ThenInclude(u => u!.ManagedArtist)
+            .Include(s => s.UploaderUser)
+                .ThenInclude(u => u!.ServiceProviderProfiles)
             .ToListAsync();
 
-        var songs = new List<SongDto>();
-        foreach (var songId in songIds)
+        return songs.Select(song => new SongDto
         {
-            var song = await GetSongByIdAsync(songId);
-            if (song != null) songs.Add(song);
-        }
-
-        return songs;
+            Id = song.Id,
+            Title = song.Title,
+            Artists = song.SongArtists
+                .OrderBy(sa => sa.Order)
+                .Select(sa => new ArtistBasicDto
+                {
+                    Id = sa.Artist != null ? sa.Artist.Id : 0,
+                    Name = sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown",
+                    EnglishName = sa.Artist?.EnglishName,
+                    ImageUrl = sa.Artist?.ImageUrl
+                })
+                .ToList(),
+            LyricsWithChords = song.LyricsWithChords,
+            OriginalKeyId = song.OriginalKeyId,
+            OriginalKeyName = song.OriginalKey.Name,
+            EasyKeyId = song.EasyKeyId,
+            EasyKeyName = song.EasyKey?.Name,
+            YoutubeUrl = song.YouTubeUrl,
+            SpotifyUrl = song.SpotifyUrl,
+            ImageUrl = song.ImageUrl,
+            SheetMusicUrl = song.SheetMusicUrl,
+            Composer = song.Composer != null ? new PersonBasicDto
+            {
+                Id = song.Composer.Id,
+                Name = song.Composer.Name,
+                EnglishName = song.Composer.EnglishName
+            } : null,
+            Lyricist = song.Lyricist != null ? new PersonBasicDto
+            {
+                Id = song.Lyricist.Id,
+                Name = song.Lyricist.Name,
+                EnglishName = song.Lyricist.EnglishName
+            } : null,
+            Arranger = song.Arranger != null ? new PersonBasicDto
+            {
+                Id = song.Arranger.Id,
+                Name = song.Arranger.Name,
+                EnglishName = song.Arranger.EnglishName
+            } : null,
+            Genres = song.SongGenres
+                .Select(sg => new GenreDto { Id = sg.Genre.Id, Name = sg.Genre.Name })
+                .ToList(),
+            Tags = song.SongTags
+                .Select(st => new TagDto { Id = st.Tag.Id, Name = st.Tag.Name })
+                .ToList(),
+            IsApproved = song.IsApproved,
+            ViewCount = song.ViewCount,
+            PlayCount = song.PlayCount,
+            Language = song.Language,
+            DurationSeconds = song.DurationSeconds,
+            CreatedAt = song.CreatedAt,
+            UpdatedAt = song.UpdatedAt,
+            UploadedByUserId = song.UploadedByUserId,
+            UploaderUserId = song.UploaderUserId,
+            UploaderProfileType = song.UploaderProfileType,
+            UploaderProfileId = song.UploaderProfileId,
+            UploaderProfile = ResolveUploaderProfile(song.UploaderUser, song.UploaderProfileType, song.UploaderProfileId)
+        }).ToList();
     }
 
     // ============================================
@@ -1444,11 +1524,10 @@ public class SongService : ISongService
         try
         {
             var songs = await _context.Songs
+                .AsNoTracking()
                 .Where(s => !s.IsDeleted && s.IsApproved)
                 .OrderByDescending(s => s.ViewCount)
                 .Take(limit)
-                .Include(s => s.SongArtists)
-                    .ThenInclude(sa => sa.Artist)
                 .Select(s => new SongBasicDto
                 {
                     Id = s.Id,
