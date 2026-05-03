@@ -282,12 +282,20 @@
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-list">
-        <app-event-card
-          *ngFor="let event of upcomingEvents"
-          [event]="event"
-          (cardClick)="openEventModal($event)">
-        </app-event-card>
+      <div class="events-loop-row">
+        <div class="events-loop-track">
+          <app-event-card
+            *ngFor="let event of upcomingEvents"
+            [event]="event"
+            (cardClick)="openEventModal($event)">
+          </app-event-card>
+          <app-event-card
+            *ngFor="let event of upcomingEvents"
+            [event]="event"
+            aria-hidden="true"
+            (cardClick)="openEventModal($event)">
+          </app-event-card>
+        </div>
       </div>
     </section>
 

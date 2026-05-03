@@ -689,7 +689,7 @@
 </div>
 
 <!-- Sheet Music Modal -->
-<div class="youtube-modal-backdrop" *ngIf="showSheetMusicModal" (click)="closeSheetMusic()">
+<div class="youtube-modal-backdrop" *ngIf="isSheetMusicMode" (click)="closeSheetMusic()">
     <div class="youtube-modal-card sheet-music-modal-card" (click)="$event.stopPropagation()">
         <button class="youtube-modal-close" (click)="closeSheetMusic()" [title]="'song.close' | translate">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
