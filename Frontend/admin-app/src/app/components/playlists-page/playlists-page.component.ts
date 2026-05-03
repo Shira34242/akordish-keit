@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LikedContent } from '../../models/liked-content.model';
@@ -9,6 +9,8 @@ import { LikedContentService } from '../../services/liked-content.service';
 import { PlaylistService } from '../../services/playlist.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 interface SavedSongCard {
   id: number;
@@ -20,7 +22,7 @@ interface SavedSongCard {
 @Component({
   selector: 'app-playlists-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent, TranslatePipe],
   templateUrl: './playlists-page.component.html',
   styleUrls: ['./playlists-page.component.css']
 })
@@ -29,6 +31,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
   @ViewChild('heroBox') heroBox!: ElementRef<HTMLDivElement>;
   @ViewChild('heroContent') heroContent!: ElementRef<HTMLDivElement>;
 
+  private readonly langService = inject(LanguageService);
   private fullHeroHeight = 0;
   private heroLayoutDone = false;
   private rafPending = false;
@@ -154,7 +157,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
       },
       error: (err) => {
         console.error('Error loading playlists:', err);
-        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת הרשימות';
+        this.error = err?.message || err?.error?.message || this.langService.translate('playlists.error_load');
         this.isLoading = false;
       }
     });
@@ -268,7 +271,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
 
   submitCreatePlaylist(): void {
     if (!this.newPlaylistName.trim()) {
-      this.createPlaylistError = 'יש להזין שם לרשימה';
+      this.createPlaylistError = this.langService.translate('playlists.error_name');
       return;
     }
 
@@ -291,7 +294,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
       error: (err) => {
         console.error('Error creating playlist:', err);
         this.isSavingPlaylist = false;
-        this.createPlaylistError = err?.error?.message || err?.message || 'שגיאה ביצירת הרשימה';
+        this.createPlaylistError = err?.error?.message || err?.message || this.langService.translate('playlists.error_create');
       }
     });
   }
@@ -315,7 +318,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
     event.stopPropagation();
     this.openDotsMenuId = null;
 
-    if (!confirm('למחוק את הרשימה?')) {
+    if (!confirm(this.langService.translate('playlists.confirm_delete'))) {
       return;
     }
 

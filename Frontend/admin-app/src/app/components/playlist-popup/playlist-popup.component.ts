@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CreatePlaylistDto, Playlist, SongPlaylistState } from '../../models/playlist.model';
 import { PlaylistService } from '../../services/playlist.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-playlist-popup',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
   templateUrl: './playlist-popup.component.html',
   styleUrls: ['./playlist-popup.component.css']
 })
@@ -30,6 +32,8 @@ export class PlaylistPopupComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
 
+  private readonly langService = inject(LanguageService);
+
   constructor(private playlistService: PlaylistService) {}
 
   ngOnInit(): void {
@@ -48,7 +52,7 @@ export class PlaylistPopupComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading playlists:', err);
-        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת הרשימות';
+        this.error = err?.message || err?.error?.message || this.langService.translate('popup.error_load');
         this.isLoading = false;
       }
     });
@@ -69,7 +73,7 @@ export class PlaylistPopupComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading song state:', err);
-        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת מצב השמירה';
+        this.error = err?.message || err?.error?.message || this.langService.translate('popup.error_state');
         this.isLoading = false;
       }
     });
@@ -79,7 +83,7 @@ export class PlaylistPopupComponent implements OnInit {
     this.playlistService.saveToDefaultPlaylist(this.songId).subscribe({
       next: () => {
         this.songState.isInDefault = true;
-        this.successMessage = 'השיר נשמר ב"השמורים שלי"';
+        this.successMessage = this.langService.translate('popup.saved_default');
         this.songSaved.emit();
         this.isLoading = false;
       },
@@ -87,8 +91,8 @@ export class PlaylistPopupComponent implements OnInit {
         console.error('Error saving to default playlist:', err);
         this.error =
           err.status === 400
-            ? 'השיר כבר שמור ב"השמורים שלי"'
-            : err?.message || err?.error?.message || 'שגיאה בשמירת השיר';
+            ? this.langService.translate('popup.already_saved')
+            : err?.message || err?.error?.message || this.langService.translate('popup.error_save');
         this.isLoading = false;
       }
     });
@@ -104,7 +108,7 @@ export class PlaylistPopupComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error removing from default:', err);
-          this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר';
+          this.error = err?.message || err?.error?.message || this.langService.translate('popup.error_remove');
         }
       });
     } else {
@@ -115,7 +119,7 @@ export class PlaylistPopupComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error saving to default:', err);
-          this.error = err?.message || err?.error?.message || 'לא ניתן לשמור את השיר';
+          this.error = err?.message || err?.error?.message || this.langService.translate('popup.error_add');
         }
       });
     }
@@ -140,7 +144,7 @@ export class PlaylistPopupComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error adding song to playlist:', err);
-          this.error = err?.error?.message || err?.message || 'לא ניתן להוסיף את השיר לרשימה';
+          this.error = err?.error?.message || err?.message || this.langService.translate('popup.error_playlist_add');
           (event.target as HTMLInputElement).checked = false;
         }
       });
@@ -153,7 +157,7 @@ export class PlaylistPopupComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error removing song from playlist:', err);
-        this.error = err?.message || err?.error?.message || 'לא ניתן להסיר את השיר מהרשימה';
+        this.error = err?.message || err?.error?.message || this.langService.translate('popup.error_playlist_remove');
         (event.target as HTMLInputElement).checked = true;
       }
     });
@@ -169,7 +173,7 @@ export class PlaylistPopupComponent implements OnInit {
 
   createNewPlaylist(): void {
     if (!this.newPlaylistName.trim()) {
-      this.error = 'יש להזין שם לרשימה';
+      this.error = this.langService.translate('popup.error_name');
       return;
     }
 
@@ -183,7 +187,7 @@ export class PlaylistPopupComponent implements OnInit {
         this.personalPlaylists = [playlist, ...this.personalPlaylists];
         this.isCreatingNew = false;
         this.newPlaylistName = '';
-        this.successMessage = 'הרשימה נוצרה בהצלחה';
+        this.successMessage = this.langService.translate('popup.created_ok');
 
         this.playlistService.addSongToPlaylist(playlist.id, this.songId).subscribe({
           next: () => {
@@ -193,13 +197,13 @@ export class PlaylistPopupComponent implements OnInit {
           error: (err) => {
             console.error('Error adding song to newly created playlist:', err);
             this.error =
-              err?.message || err?.error?.message || 'הרשימה נוצרה אבל לא הצלחנו להוסיף אליה את השיר';
+              err?.message || err?.error?.message || this.langService.translate('popup.error_song_added');
           }
         });
       },
       error: (err) => {
         console.error('Error creating playlist:', err);
-        this.error = err?.error?.message || err?.message || 'שגיאה ביצירת הרשימה';
+        this.error = err?.error?.message || err?.message || this.langService.translate('popup.error_create');
       }
     });
   }

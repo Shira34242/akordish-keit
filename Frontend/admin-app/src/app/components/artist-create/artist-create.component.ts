@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,6 +9,8 @@ import { FileUploadInputComponent } from '../shared/file-upload-input/file-uploa
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
 import { UpdateArtistDto } from '../../models/artist.model';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 interface ArtistFormData {
   userId: number;
@@ -41,7 +43,7 @@ interface PlatformLinkOption {
 @Component({
   selector: 'app-artist-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadInputComponent],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent, TranslatePipe],
   templateUrl: './artist-create.component.html',
   styleUrls: ['./artist-create.component.css']
 })
@@ -60,18 +62,24 @@ export class ArtistCreateComponent implements OnInit {
   isPremium = false;
   bannerMediaMode: 'image' | 'gif' = 'image';
 
-  readonly socialPlatformOptions: PlatformLinkOption[] = [
-    { platform: 1, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
-    { platform: 2, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
-    { platform: 4, label: 'TikTok', icon: 'music_note', placeholder: 'הדבק קישור לטיקטוק' },
-    { platform: 6, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'הדבק קישור ל-X / Twitter' }
-  ];
+  private readonly langService = inject(LanguageService);
 
-  readonly musicPlatformOptions: PlatformLinkOption[] = [
-    { platform: 3, label: 'YouTube', icon: 'smart_display', placeholder: 'הדבק קישור ליוטיוב' },
-    { platform: 7, label: 'Spotify', icon: 'album', placeholder: 'הדבק קישור לספוטיפיי' },
-    { platform: 8, label: 'Zing', icon: 'library_music', placeholder: 'הדבק קישור לזינג' }
-  ];
+  get socialPlatformOptions(): PlatformLinkOption[] {
+    return [
+      { platform: 1, label: 'Instagram', icon: 'photo_camera', placeholder: this.langService.translate('artist_create.platform_instagram') },
+      { platform: 2, label: 'Facebook', icon: 'thumb_up', placeholder: this.langService.translate('artist_create.platform_facebook') },
+      { platform: 4, label: 'TikTok', icon: 'music_note', placeholder: this.langService.translate('artist_create.platform_tiktok') },
+      { platform: 6, label: 'Twitter / X', icon: 'alternate_email', placeholder: this.langService.translate('artist_create.platform_twitter') },
+    ];
+  }
+
+  get musicPlatformOptions(): PlatformLinkOption[] {
+    return [
+      { platform: 3, label: 'YouTube', icon: 'smart_display', placeholder: this.langService.translate('artist_create.platform_youtube') },
+      { platform: 7, label: 'Spotify', icon: 'album', placeholder: this.langService.translate('artist_create.platform_spotify') },
+      { platform: 8, label: 'Zing', icon: 'library_music', placeholder: this.langService.translate('artist_create.platform_zing') },
+    ];
+  }
 
   artistForm: ArtistFormData = {
     userId: 0,

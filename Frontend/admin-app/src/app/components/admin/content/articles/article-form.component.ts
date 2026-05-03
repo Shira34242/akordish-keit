@@ -367,12 +367,13 @@ export class ArticleFormComponent implements OnInit {
   }
 
   generateSlug(text: string): string {
-    return text
+    const cleaned = text
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-      .trim();
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return cleaned || `article-${Date.now()}`;
   }
 
   calculateReadTime(): void {

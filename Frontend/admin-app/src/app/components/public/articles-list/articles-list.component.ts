@@ -6,11 +6,13 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, NewsBannerComponent, TranslatePipe],
   templateUrl: './articles-list.component.html',
   styleUrl: './articles-list.component.css'
 })
@@ -19,6 +21,7 @@ export class ArticlesListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly langService = inject(LanguageService);
 
   articles: Article[] = [];
   isLoading = true;
@@ -33,30 +36,32 @@ export class ArticlesListComponent implements OnInit {
   categoryName = '';
   searchTerm = '';
 
-  // All available categories for dropdown
-  categories = [
-    { id: ArticleCategory.General, name: 'כללי' },
-    { id: ArticleCategory.News, name: 'חדשות' },
-    { id: ArticleCategory.Reviews, name: 'ביקורות' },
-    { id: ArticleCategory.Interviews, name: 'ראיונות' },
-    { id: ArticleCategory.Features, name: 'מאמרים' },
-    { id: ArticleCategory.LiveReports, name: 'כיסויי הופעות' },
-    { id: ArticleCategory.AlbumReviews, name: 'ביקורות אלבומים' },
-    { id: ArticleCategory.MusicTech, name: 'טכנולוגיה מוזיקלית' },
-    { id: ArticleCategory.Education, name: 'לימודי מוזיקה' },
-    { id: ArticleCategory.Popular, name: 'פופולאריים' },
-    { id: ArticleCategory.Clips, name: 'קליפים' },
-    { id: ArticleCategory.Blog, name: 'בלוג' },
-    { id: ArticleCategory.Opinion, name: 'דעה' },
-    { id: ArticleCategory.Charts, name: 'מצעדים' },
-    { id: ArticleCategory.BehindTheScenes, name: 'מאחורי הקלעים' }
-  ];
+  get categories(): Array<{ id: ArticleCategory; key: string }> {
+    return [
+      { id: ArticleCategory.General, key: 'articles.cat_general' },
+      { id: ArticleCategory.News, key: 'articles.cat_news' },
+      { id: ArticleCategory.Reviews, key: 'articles.cat_reviews' },
+      { id: ArticleCategory.Interviews, key: 'articles.cat_interviews' },
+      { id: ArticleCategory.Features, key: 'articles.cat_features' },
+      { id: ArticleCategory.LiveReports, key: 'articles.cat_live' },
+      { id: ArticleCategory.AlbumReviews, key: 'articles.cat_album_reviews' },
+      { id: ArticleCategory.MusicTech, key: 'articles.cat_music_tech' },
+      { id: ArticleCategory.Education, key: 'articles.cat_education' },
+      { id: ArticleCategory.Popular, key: 'articles.cat_popular' },
+      { id: ArticleCategory.Clips, key: 'articles.cat_clips' },
+      { id: ArticleCategory.Blog, key: 'articles.cat_blog' },
+      { id: ArticleCategory.Opinion, key: 'articles.cat_opinion' },
+      { id: ArticleCategory.Charts, key: 'articles.cat_charts' },
+      { id: ArticleCategory.BehindTheScenes, key: 'articles.cat_behind' }
+    ];
+  }
 
-  // Content types for dropdown
-  contentTypes = [
-    { id: ArticleContentType.News, name: 'חדשות' },
-    { id: ArticleContentType.Blog, name: 'בלוג' }
-  ];
+  get contentTypes(): Array<{ id: ArticleContentType; key: string }> {
+    return [
+      { id: ArticleContentType.News, key: 'articles.type_news' },
+      { id: ArticleContentType.Blog, key: 'articles.type_blog' }
+    ];
+  }
 
   ngOnInit(): void {
     this.route.queryParams
@@ -116,25 +121,26 @@ export class ArticlesListComponent implements OnInit {
   }
 
   private getCategoryName(categoryId: ArticleCategory): string {
-    const categoryNames: { [key: number]: string } = {
-      [ArticleCategory.General]: 'כללי',
-      [ArticleCategory.News]: 'חדשות',
-      [ArticleCategory.Reviews]: 'ביקורות',
-      [ArticleCategory.Interviews]: 'ראיונות',
-      [ArticleCategory.Features]: 'מאמרים',
-      [ArticleCategory.LiveReports]: 'כיסויי הופעות',
-      [ArticleCategory.AlbumReviews]: 'ביקורות אלבומים',
-      [ArticleCategory.MusicTech]: 'טכנולוגיה מוזיקלית',
-      [ArticleCategory.Education]: 'לימודי מוזיקה',
-      [ArticleCategory.Popular]: 'פופולאריים',
-      [ArticleCategory.Clips]: 'קליפים',
-      [ArticleCategory.Blog]: 'בלוג',
-      [ArticleCategory.Opinion]: 'דעה',
-      [ArticleCategory.Charts]: 'מצעדים',
-      [ArticleCategory.BehindTheScenes]: 'מאחורי הקלעים'
+    const categoryKeys: { [key: number]: string } = {
+      [ArticleCategory.General]: 'articles.cat_general',
+      [ArticleCategory.News]: 'articles.cat_news',
+      [ArticleCategory.Reviews]: 'articles.cat_reviews',
+      [ArticleCategory.Interviews]: 'articles.cat_interviews',
+      [ArticleCategory.Features]: 'articles.cat_features',
+      [ArticleCategory.LiveReports]: 'articles.cat_live',
+      [ArticleCategory.AlbumReviews]: 'articles.cat_album_reviews',
+      [ArticleCategory.MusicTech]: 'articles.cat_music_tech',
+      [ArticleCategory.Education]: 'articles.cat_education',
+      [ArticleCategory.Popular]: 'articles.cat_popular',
+      [ArticleCategory.Clips]: 'articles.cat_clips',
+      [ArticleCategory.Blog]: 'articles.cat_blog',
+      [ArticleCategory.Opinion]: 'articles.cat_opinion',
+      [ArticleCategory.Charts]: 'articles.cat_charts',
+      [ArticleCategory.BehindTheScenes]: 'articles.cat_behind'
     };
 
-    return categoryNames[categoryId] || 'כתבות';
+    const key = categoryKeys[categoryId];
+    return key ? this.langService.translate(key) : this.langService.translate('articles.count_suffix');
   }
 
   navigateToArticle(article: Article): void {

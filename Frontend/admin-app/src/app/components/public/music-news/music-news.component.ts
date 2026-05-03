@@ -7,11 +7,12 @@ import { FeaturedContentService } from '../../../services/admin/featured-content
 import { ArticleService } from '../../../services/admin/article.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
 import { Article, ArticleContentType } from '../../../models/article.model';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-music-news',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, TranslatePipe],
   templateUrl: './music-news.component.html',
   styleUrl: './music-news.component.css'
 })

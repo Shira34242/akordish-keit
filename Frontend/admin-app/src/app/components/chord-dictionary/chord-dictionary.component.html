@@ -59,7 +59,7 @@
                         </button>
                         <div class="drop-panel" *ngIf="showRootDrop">
                             <button class="drop-item" [class.active]="selectedRoot === null"
-                                    (click)="selectRoot(null)">כל השורשים</button>
+                                    (click)="selectRoot(null)">{{ 'dict.all_roots' | translate }}</button>
                             <button *ngFor="let r of roots" class="drop-item"
                                     [class.active]="selectedRoot === r.key"
                                     (click)="selectRoot(r.key)" dir="ltr">{{ r.display }}</button>
@@ -75,7 +75,7 @@
                             <svg class="fbtn-chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="drop-panel" *ngIf="showSuffixDrop">
-                            <button class="drop-item" [class.active]="selectedSuffix === null" (click)="selectSuffix(null)">כל הסוגים</button>
+                            <button class="drop-item" [class.active]="selectedSuffix === null" (click)="selectSuffix(null)">{{ 'dict.all_types' | translate }}</button>
                             <button *ngFor="let s of suffixes" class="drop-item"
                                     [class.active]="selectedSuffix === s.key"
                                     (click)="selectSuffix(s.key)" dir="ltr">{{ s.label }}</button>
@@ -125,12 +125,12 @@
 
         <div class="bass-notice" *ngIf="!isSearching && selectedBass !== null && getAvailableChords().length === 0">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
-            אקורדי סלאש עם צליל בס זה לא קיימים במאגר כרגע
+            {{ 'dict.no_bass_chords' | translate }}
         </div>
 
         <div class="bass-notice" *ngIf="isSearching && searchResults.length === 0">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
-            לא נמצא אקורד "{{ chordSearch }}" במאגר עבור הכלי הנוכחי
+            {{ 'dict.no_chord_prefix' | translate }} "{{ chordSearch }}" {{ 'dict.no_chord_suffix' | translate }}
         </div>
 
         <!-- #3 Chord grid — gray, no border, centered content -->
@@ -214,10 +214,10 @@
                 <div class="detail-header-left">
                     <h2 class="detail-chord-name" dir="ltr">{{ selectedChord }}</h2>
                     <span class="detail-instr-label">
-                        {{ selectedInstrument === 'guitar' ? 'גיטרה' : selectedInstrument === 'piano' ? 'קלידים' : 'יוקלילי' }}
+                        {{ selectedInstrument === 'guitar' ? ('dict.instr_guitar' | translate) : selectedInstrument === 'piano' ? ('dict.instr_piano' | translate) : ('dict.instr_ukulele' | translate) }}
                     </span>
                 </div>
-                <button class="detail-close" (click)="clearDetail()" aria-label="סגור">
+                <button class="detail-close" (click)="clearDetail()" [attr.aria-label]="'shared.close' | translate">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M18 6 6 18M6 6l12 12"/>
                     </svg>
@@ -367,7 +367,7 @@
                         <svg *ngIf="isPlayingDetail" viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                             <rect x="4" y="4" width="5" height="16"/><rect x="15" y="4" width="5" height="16"/>
                         </svg>
-                        {{ isPlayingDetail ? 'מנגן...' : 'השמע אקורד' }}
+                        {{ isPlayingDetail ? ('dict.playing' | translate) : ('dict.play_chord' | translate) }}
                     </button>
 
                     <button
@@ -375,30 +375,30 @@
                         [class.known]="isSelectedChordKnown"
                         [disabled]="isSavingKnownChord"
                         (click)="toggleSelectedKnownChord()"
-                        [title]="isSelectedChordKnown ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'">
+                        [title]="isSelectedChordKnown ? ('dict.title_known' | translate) : ('dict.title_unknown' | translate)">
                         <span class="detail-known-mark">{{ isSelectedChordKnown ? '✓' : '+' }}</span>
-                        <span>{{ isSelectedChordKnown ? 'ברשימת האקורדים שאני יודע' : 'הוסף לאקורדים שאני יודע' }}</span>
+                        <span>{{ isSelectedChordKnown ? ('dict.known_yes' | translate) : ('dict.known_no' | translate) }}</span>
                     </button>
 
                     <!-- #7 Finger legend — clean numbered circles -->
                     <div class="hand-wrap" *ngIf="selectedInstrument !== 'piano'">
-                        <p class="hand-title">מספור אצבעות</p>
+                        <p class="hand-title">{{ 'dict.fingers_title' | translate }}</p>
                         <svg viewBox="0 0 168 62" width="168" height="62" class="hand-svg">
                             <circle cx="21"  cy="21" r="18" fill="#000"/>
                             <text x="21"  y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">1</text>
-                            <text x="21"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">אצבע</text>
+                            <text x="21"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">{{ 'dict.finger_1' | translate }}</text>
 
                             <circle cx="63"  cy="21" r="18" fill="#000"/>
                             <text x="63"  y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">2</text>
-                            <text x="63"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">אמה</text>
+                            <text x="63"  y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">{{ 'dict.finger_2' | translate }}</text>
 
                             <circle cx="105" cy="21" r="18" fill="#000"/>
                             <text x="105" y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">3</text>
-                            <text x="105" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">קמיצה</text>
+                            <text x="105" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">{{ 'dict.finger_3' | translate }}</text>
 
                             <circle cx="147" cy="21" r="18" fill="#000"/>
                             <text x="147" y="26.5" text-anchor="middle" font-size="16" font-weight="800" font-family="Arial" fill="#ddff53">4</text>
-                            <text x="147" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">זרת</text>
+                            <text x="147" y="52"   text-anchor="middle" font-size="10" font-family="Arial" fill="#404040">{{ 'dict.finger_4' | translate }}</text>
                         </svg>
                     </div>
 
@@ -411,25 +411,24 @@
 
                     <div class="intro-block">
                         <p class="intro-line" *ngIf="chordDetail.hebrewNotes.length > 0">
-                            האקורד {{ selectedChord }} המוצג כאן מכיל את הצלילים:
+                            {{ 'dict.notes_pre' | translate }} {{ selectedChord }} {{ 'dict.notes_mid' | translate }}
                             <strong>{{ chordDetail.hebrewNotes.join(', ') }}</strong>.
                         </p>
                         <p class="intro-line" *ngIf="chordDetail.rootHebrew">
-                            שורש האקורד הינו <strong dir="ltr">{{ detailRoot }}</strong> ({{ chordDetail.rootHebrew }}).
+                            {{ 'dict.root_pre' | translate }} <strong dir="ltr">{{ detailRoot }}</strong> ({{ chordDetail.rootHebrew }}).
                         </p>
                         <p class="intro-line" *ngIf="chordDetail.scaleName">
-                            הסולם ממנו לקוח האקורד הינו <strong>{{ chordDetail.scaleName }}</strong>,
-                            והדרגות מהסולם הן: <span class="mono">{{ chordDetail.degrees }}</span>.
+                            {{ 'dict.scale_pre' | translate }} <strong>{{ chordDetail.scaleName }}</strong>{{ 'dict.scale_and' | translate }} <span class="mono">{{ chordDetail.degrees }}</span>.
                         </p>
                     </div>
 
                     <div class="info-block" *ngIf="chordDetail.fingerLines.length > 0">
-                        <div class="info-label">הנחת אצבעות</div>
+                        <div class="info-label">{{ 'dict.placement_title' | translate }}</div>
                         <p class="finger-intro" *ngIf="selectedInstrument !== 'piano'">
-                            לנגינת האקורד {{ selectedChord }} המוצג למעלה, יש להניח את האצבעות באופן הבא:
+                            {{ 'dict.guitar_placement_pre' | translate }} {{ selectedChord }} {{ 'dict.guitar_placement_mid' | translate }}
                         </p>
                         <p class="finger-intro" *ngIf="selectedInstrument === 'piano'">
-                            לחצו בו-זמנית על כל המקשים המסומנים בצהוב.
+                            {{ 'dict.piano_press' | translate }}
                         </p>
                         <ul class="finger-list" *ngIf="selectedInstrument !== 'piano'">
                             <li *ngFor="let line of chordDetail.fingerLines"
@@ -440,7 +439,7 @@
                     </div>
 
                     <div class="info-block" *ngIf="selectedInstrument === 'piano' && chordDetail.hebrewNotes.length > 0">
-                        <div class="info-label">מקשים לנגינה</div>
+                        <div class="info-label">{{ 'dict.keys_title' | translate }}</div>
                         <div class="notes-row">
                             <span class="note-tag" *ngFor="let n of chordDetail.hebrewNotes">{{ n }}</span>
                         </div>

@@ -1,9 +1,11 @@
 import {
     Component, OnInit, AfterViewInit, OnDestroy,
-    HostListener, ViewChild, ElementRef, NgZone
+    HostListener, ViewChild, ElementRef, NgZone, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export interface StringInfo {
     number: number;
@@ -33,7 +35,7 @@ const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 
 @Component({
     selector: 'app-tuner',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, TranslatePipe],
     templateUrl: './tuner.component.html',
     styleUrls: ['./tuner.component.css']
 })
@@ -83,8 +85,12 @@ export class TunerComponent implements OnInit, AfterViewInit, OnDestroy {
         return this.instrument === 'guitar' ? GUITAR_STRINGS : UKULELE_STRINGS;
     }
 
+    private readonly langService = inject(LanguageService);
+
     get heroTitle(): string {
-        return this.instrument === 'guitar' ? 'כיוון גיטרה' : 'כיוון יוקלילי';
+        return this.instrument === 'guitar'
+            ? this.langService.translate('tuner.hero_guitar')
+            : this.langService.translate('tuner.hero_ukulele');
     }
 
     get activeStringInfo(): StringInfo | null {
@@ -110,7 +116,7 @@ export class TunerComponent implements OnInit, AfterViewInit, OnDestroy {
     /** Human-readable cents label */
     get centsLabel(): string {
         if (!this.micListening || !this.detectedNote) return '';
-        if (this.isInTune) return 'מכוון ✓';
+        if (this.isInTune) return this.langService.translate('tuner.in_tune');
         const sign = this.detectedCents > 0 ? '+' : '';
         return sign + this.detectedCents + ' cents';
     }
@@ -271,9 +277,9 @@ export class TunerComponent implements OnInit, AfterViewInit, OnDestroy {
         } catch (err: any) {
             this.micLoading = false;
             if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-                this.micError = 'הגישה למיקרופון נדחתה. אפשרו גישה בהגדרות הדפדפן ונסו שוב.';
+                this.micError = this.langService.translate('tuner.mic_denied');
             } else {
-                this.micError = 'לא ניתן לגשת למיקרופון. בדקו שהמכשיר מחובר ונסו שוב.';
+                this.micError = this.langService.translate('tuner.mic_error');
             }
         }
     }

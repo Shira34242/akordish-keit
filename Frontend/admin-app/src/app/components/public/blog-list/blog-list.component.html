@@ -1,20 +1,17 @@
-<div class="blog-list-page" dir="rtl">
+<div class="blog-list-page">
 
-  <!-- Loading -->
   <div *ngIf="isLoading" class="page-loading">
     <div class="spinner"></div>
   </div>
 
-  <!-- Error states -->
   <div *ngIf="loadFailed" class="page-error">
-    <p>טעינת הבלוג נכשלה. אנא בדקו את החיבור ונסו שנית.</p>
+    <p>{{ 'blog.load_failed' | translate }}</p>
   </div>
 
   <div *ngIf="hasError && !loadFailed" class="page-error">
-    <p>אין פוסטים בבלוג להצגה כרגע.</p>
+    <p>{{ 'blog.no_content' | translate }}</p>
   </div>
 
-  <!-- Content -->
   <ng-container *ngIf="!isLoading && !hasError && !loadFailed">
     <div class="news-content">
       <div class="managed-grid" *ngIf="managedArticles.length > 0">
@@ -44,11 +41,10 @@
     </div>
   </ng-container>
 
-  <!-- Floating Tab Navigation -->
-  <nav class="tab-bar" dir="rtl">
-    <a class="tab-bar__item" routerLink="/music-news">חדשות</a>
-    <a class="tab-bar__item tab-bar__item--active" routerLink="/blog">בלוג</a>
-    <a class="tab-bar__item" routerLink="/events">הופעות</a>
+  <nav class="tab-bar">
+    <a class="tab-bar__item" routerLink="/music-news">{{ 'events.tab_news' | translate }}</a>
+    <a class="tab-bar__item tab-bar__item--active" routerLink="/blog">{{ 'events.tab_blog' | translate }}</a>
+    <a class="tab-bar__item" routerLink="/events">{{ 'events.tab_events' | translate }}</a>
   </nav>
 
 </div>

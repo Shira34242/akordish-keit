@@ -4,11 +4,13 @@ import { Router, RouterModule } from '@angular/router';
 import { NotificationDto } from '../../models/notification.model';
 import { NotificationService } from '../../services/notification.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-notifications-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe],
   templateUrl: './notifications-page.component.html',
   styleUrls: ['./notifications-page.component.css']
 })
@@ -18,6 +20,7 @@ export class NotificationsPageComponent implements OnInit {
   errorMessage = '';
 
   private readonly analytics = inject(AnalyticsService);
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private notificationService: NotificationService,
@@ -42,7 +45,7 @@ export class NotificationsPageComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'לא הצלחנו לטעון את ההתראות כרגע.';
+        this.errorMessage = this.langService.translate('notif_page.error');
         this.isLoading = false;
       }
     });

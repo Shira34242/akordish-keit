@@ -37,7 +37,7 @@
           </button>
 
           <ng-container *ngIf="secondaryOptions.length > 0">
-            <span class="assistant-secondary-label">או שתרצו</span>
+            <span class="assistant-secondary-label">{{ 'fab.secondary_label' | translate }}</span>
             <button
               type="button"
               class="assistant-chip assistant-chip-muted"
@@ -58,47 +58,47 @@
 
         <div class="embedded-flow" *ngIf="currentMode === 'article'">
           <div class="smart-form">
-            <label class="smart-label">כותרת</label>
-            <input class="smart-input" [(ngModel)]="article.title" placeholder="כתוב כותרת קצרה וברורה">
+            <label class="smart-label">{{ 'fab.article_title' | translate }}</label>
+            <input class="smart-input" [(ngModel)]="article.title" [placeholder]="'fab.article_title' | translate">
 
-            <label class="smart-label">תוכן</label>
-            <textarea class="smart-textarea" [(ngModel)]="article.content" rows="10" placeholder="כתוב כאן את התוכן"></textarea>
+            <label class="smart-label">{{ 'fab.article_content' | translate }}</label>
+            <textarea class="smart-textarea" [(ngModel)]="article.content" rows="10" [placeholder]="'fab.article_content' | translate"></textarea>
 
             <div class="smart-media-grid">
               <div class="smart-media-card">
                 <div class="smart-media-head">
-                  <label class="smart-label smart-media-label">וידאו מיוטיוב</label>
-                  <span class="smart-media-note">אפשר לצרף קישור לוידאו</span>
+                  <label class="smart-label smart-media-label">{{ 'fab.video_youtube' | translate }}</label>
+                  <span class="smart-media-note">{{ 'fab.video_note' | translate }}</span>
                 </div>
                 <input class="smart-input" [(ngModel)]="article.videoEmbedUrl" placeholder="https://youtube.com/...">
               </div>
 
               <div class="smart-media-card">
                 <div class="smart-media-head">
-                  <label class="smart-label smart-media-label">תמונה</label>
-                  <span class="smart-media-note">אפשר להעלות, להדביק קישור או לקחת מהוידאו</span>
+                  <label class="smart-label smart-media-label">{{ 'fab.image' | translate }}</label>
+                  <span class="smart-media-note">{{ 'fab.image_note_article' | translate }}</span>
                 </div>
 
                 <div class="smart-media-actions">
                   <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="isUploadingArticleImage">
                     <input type="file" accept="image/*" hidden (change)="onArticleImageSelected($event)">
                     <span class="material-icons">{{ isUploadingArticleImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
-                    <span>{{ isUploadingArticleImage ? 'מעלה...' : 'העלאת תמונה' }}</span>
+                    <span>{{ isUploadingArticleImage ? ('fab.uploading' | translate) : ('fab.upload_image' | translate) }}</span>
                   </label>
 
                   <button type="button" class="assistant-chip assistant-chip-muted" (click)="showArticleImageLinkInput = !showArticleImageLinkInput">
-                    קישור לתמונה
+                    {{ 'fab.image_link' | translate }}
                   </button>
 
                   <button type="button" class="assistant-chip assistant-chip-muted" *ngIf="canUseVideoThumbnail" (click)="useVideoThumbnail()">
-                    לקחת מהוידאו
+                    {{ 'fab.use_video_thumb' | translate }}
                   </button>
                 </div>
 
                 <input *ngIf="showArticleImageLinkInput" class="smart-input smart-media-link-input" [(ngModel)]="article.featuredImageUrl" placeholder="https://...">
 
                 <div class="smart-image-preview" *ngIf="article.featuredImageUrl">
-                  <img [src]="article.featuredImageUrl" alt="תמונה לתוכן">
+                  <img [src]="article.featuredImageUrl" alt="image">
                   <button type="button" class="smart-image-clear" (click)="clearArticleImage()">
                     <span class="material-icons">close</span>
                   </button>
@@ -107,12 +107,12 @@
             </div>
 
             <div class="smart-tag-block" *ngIf="isProfessionalNonAdmin || isAdminUser">
-              <label class="smart-label">{{ isAdminUser ? 'שיוך התוכן למעלה התוכן' : 'האם לתייג את התוכן על שמך' }}</label>
+              <label class="smart-label">{{ isAdminUser ? ('fab.tag_content' | translate) : ('fab.tag_myself' | translate) }}</label>
 
               <div *ngIf="isProfessionalNonAdmin" class="tag-myself-wrapper">
                 <label class="smart-checkbox-row">
                   <input type="checkbox" [(ngModel)]="tagAsMyself" (change)="onTagAsMyselfChange()">
-                  <span>כן, לתייג על שמי</span>
+                  <span>{{ 'fab.tag_myself_yes' | translate }}</span>
                 </label>
 
                 <div *ngIf="tagAsMyself && selectedUploaderProfile" class="selected-profile-tag">
@@ -151,15 +151,15 @@
                 <div *ngIf="!selectedUploaderProfile" class="profile-search-wrapper">
                   <div class="admin-profile-tools">
                     <select class="smart-input admin-profile-select" [(ngModel)]="profileTypeFilter" (change)="onProfileFilterChange()">
-                      <option value="all">כולם</option>
-                      <option value="teacher">מורים</option>
-                      <option value="serviceProvider">נותני שירות</option>
-                      <option value="artist">אמנים</option>
-                      <option value="user">חברים רגילים</option>
+                      <option value="all">{{ 'fab.filter_all' | translate }}</option>
+                      <option value="teacher">{{ 'fab.filter_teachers' | translate }}</option>
+                      <option value="serviceProvider">{{ 'fab.filter_providers' | translate }}</option>
+                      <option value="artist">{{ 'fab.filter_artists' | translate }}</option>
+                      <option value="user">{{ 'fab.filter_users' | translate }}</option>
                     </select>
                     <select class="smart-input admin-profile-select" [(ngModel)]="profileSort">
-                      <option value="name">מיון לפי שם</option>
-                      <option value="type">מיון לפי סוג</option>
+                      <option value="name">{{ 'fab.sort_name' | translate }}</option>
+                      <option value="type">{{ 'fab.sort_type' | translate }}</option>
                     </select>
                   </div>
                   <input
@@ -168,7 +168,7 @@
                     [(ngModel)]="profileSearchQuery"
                     (input)="onProfileSearchInput()"
                     (focus)="onProfileSearchInput()"
-                    placeholder="חפש לפי שם ברשימה שנבחרה">
+                    [placeholder]="'fab.search_profile' | translate">
 
                   <div *ngIf="showProfileDropdown && filteredProfileSearchResults.length > 0" class="profile-dropdown">
                     <div *ngFor="let profile of filteredProfileSearchResults" class="profile-dropdown-item" (click)="selectUploaderProfile(profile)">
@@ -182,7 +182,7 @@
                   </div>
 
                   <div *ngIf="showProfileDropdown && !profileSearchLoading && filteredProfileSearchResults.length === 0" class="profile-dropdown">
-                    <div class="profile-dropdown-empty">לא נמצאו תוצאות</div>
+                    <div class="profile-dropdown-empty">{{ 'fab.no_results' | translate }}</div>
                   </div>
                 </div>
               </div>
@@ -194,23 +194,23 @@
 
             <div class="smart-optional-grid" *ngIf="showArticleOptional">
               <div>
-                <label class="smart-label">כותרת משנה</label>
-                <input class="smart-input" [(ngModel)]="article.subtitle" placeholder="לא חובה">
+                <label class="smart-label">{{ 'fab.article_subtitle' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="article.subtitle" [placeholder]="'fab.optional_hint' | translate">
               </div>
               <div>
-                <label class="smart-label">שם הכותב</label>
-                <input class="smart-input" [(ngModel)]="article.authorName" placeholder="לא חובה">
+                <label class="smart-label">{{ 'fab.author_name' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="article.authorName" [placeholder]="'fab.optional_hint' | translate">
               </div>
               <div>
-                <label class="smart-label">תקציר קצר</label>
-                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="article.shortDescription" rows="3" placeholder="לא חובה"></textarea>
+                <label class="smart-label">{{ 'fab.short_desc' | translate }}</label>
+                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="article.shortDescription" rows="3" [placeholder]="'fab.optional_hint' | translate"></textarea>
               </div>
             </div>
 
             <div class="smart-actions">
-              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitArticle()" [disabled]="isSubmitting">
-                {{ isSubmitting ? 'שולח...' : 'שליחה לאישור' }}
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_approval' | translate) }}
               </button>
             </div>
           </div>
@@ -229,37 +229,41 @@
 
             <div class="smart-media-card">
               <div class="smart-media-head">
-                <label class="smart-label smart-media-label">תמונה</label>
-                <span class="smart-media-note">אפשר להעלות תמונה או להדביק קישור, לא חובה</span>
+                <label class="smart-label smart-media-label">{{ 'fab.image' | translate }}</label>
+                <span class="smart-media-note">{{ 'fab.image_note_event' | translate }}</span>
               </div>
 
               <div class="smart-media-actions">
                 <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="isUploadingEventImage">
                   <input type="file" accept="image/*" hidden (change)="onEventImageSelected($event)">
                   <span class="material-icons">{{ isUploadingEventImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
-                  <span>{{ isUploadingEventImage ? 'מעלה...' : 'העלאת תמונה' }}</span>
+                  <span>{{ isUploadingEventImage ? ('fab.uploading' | translate) : ('fab.upload_image' | translate) }}</span>
                 </label>
 
                 <button type="button" class="assistant-chip assistant-chip-muted" (click)="showEventImageLinkInput = !showEventImageLinkInput">
-                  קישור לתמונה
+                  {{ 'fab.image_link' | translate }}
                 </button>
               </div>
 
               <input *ngIf="showEventImageLinkInput" class="smart-input smart-media-link-input" [(ngModel)]="event.imageUrl" placeholder="https://...">
 
               <div class="smart-image-preview" *ngIf="event.imageUrl">
-                <img [src]="event.imageUrl" alt="תמונת הופעה">
+                <img [src]="event.imageUrl" alt="event image">
                 <button type="button" class="smart-image-clear" (click)="clearEventImage()">
                   <span class="material-icons">close</span>
                 </button>
               </div>
             </div>
 
-            <label class="smart-label">לינק לכרטיסים (לא חובה)</label>
+            <label class="smart-label">{{ 'fab.event_ticket_link' | translate }}</label>
             <input class="smart-input" [(ngModel)]="event.ticketUrl" placeholder="https://...">
 
+            <label class="smart-label">{{ 'fab.event_date' | translate }}</label>
+            <input class="smart-input" type="datetime-local" [(ngModel)]="event.eventDate">
+
+
             <div class="smart-tag-block">
-              <label class="smart-label">תיוג אמן מהאתר</label>
+              <label class="smart-label">{{ 'fab.event_tag_artist' | translate }}</label>
 
               <div class="smart-tag-selection" *ngIf="selectedEventArtistIds.length > 0">
                 <div class="selected-profile-tag" *ngFor="let artistId of selectedEventArtistIds">
@@ -267,7 +271,7 @@
                   <span *ngIf="!getEventArtistImage(artistId)" class="profile-tag-avatar profile-tag-initial">{{ getEventArtistName(artistId).charAt(0) }}</span>
                   <div class="profile-tag-info">
                     <span class="profile-tag-name">{{ getEventArtistName(artistId) }}</span>
-                    <span class="profile-tag-type">אמן</span>
+                    <span class="profile-tag-type">{{ 'fab.event_artist_type' | translate }}</span>
                   </div>
                   <button type="button" class="btn-clear-profile" (click)="removeEventArtist(artistId)">
                     <span class="material-icons">close</span>
@@ -281,7 +285,7 @@
                   class="smart-input"
                   [(ngModel)]="eventArtistSearchQuery"
                   (focus)="onEventArtistSearchFocus()"
-                  placeholder="חפש אמן לתיוג">
+                  [placeholder]="'fab.search_artist' | translate">
 
                 <div *ngIf="showEventArtistDropdown && filteredEventArtists.length > 0" class="profile-dropdown">
                   <div *ngFor="let artist of filteredEventArtists" class="profile-dropdown-item" (click)="selectEventArtist(artist)">
@@ -289,13 +293,13 @@
                     <span *ngIf="!artist.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ artist.name.charAt(0) }}</span>
                     <div class="profile-dropdown-info">
                       <span class="profile-dropdown-name">{{ artist.name }}</span>
-                      <span class="profile-dropdown-type">אמן</span>
+                      <span class="profile-dropdown-type">{{ 'fab.event_artist_type' | translate }}</span>
                     </div>
                   </div>
                 </div>
 
                 <div *ngIf="showEventArtistDropdown && !isLoadingEventArtists && filteredEventArtists.length === 0 && eventArtistSearchQuery" class="profile-dropdown">
-                  <div class="profile-dropdown-empty">לא נמצאו אמנים</div>
+                  <div class="profile-dropdown-empty">{{ 'fab.no_artists' | translate }}</div>
                 </div>
               </div>
             </div>
@@ -306,23 +310,31 @@
 
             <div class="smart-optional-grid" *ngIf="showEventOptional">
               <div>
-                <label class="smart-label">שם אמן</label>
-                <input class="smart-input" [(ngModel)]="event.artistName" placeholder="לא חובה">
+                <label class="smart-label">{{ 'fab.event_name' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="event.name" [placeholder]="'fab.optional_hint' | translate">
               </div>
               <div>
-                <label class="smart-label">מחיר</label>
-                <input class="smart-input" type="number" [(ngModel)]="event.price" placeholder="לא חובה">
+                <label class="smart-label">{{ 'fab.event_artist_name' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="event.artistName" [placeholder]="'fab.optional_hint' | translate">
+              </div>
+              <div>
+                <label class="smart-label">{{ 'fab.event_location' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="event.location" [placeholder]="'fab.optional_hint' | translate">
+              </div>
+              <div>
+                <label class="smart-label">{{ 'fab.event_price' | translate }}</label>
+                <input class="smart-input" type="number" [(ngModel)]="event.price" [placeholder]="'fab.optional_hint' | translate">
               </div>
               <div class="smart-optional-full">
-                <label class="smart-label">תיאור קצר</label>
-                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="event.description" rows="3" placeholder="לא חובה"></textarea>
+                <label class="smart-label">{{ 'fab.event_description' | translate }}</label>
+                <textarea class="smart-textarea smart-textarea-small" [(ngModel)]="event.description" rows="3" [placeholder]="'fab.optional_hint' | translate"></textarea>
               </div>
             </div>
 
             <div class="smart-actions">
-              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitEvent()" [disabled]="isSubmitting">
-                {{ isSubmitting ? 'שולח...' : 'שליחה לאישור' }}
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_approval' | translate) }}
               </button>
             </div>
           </div>
@@ -330,50 +342,16 @@
 
         <div class="embedded-flow" *ngIf="currentMode === 'chord-request'">
           <div class="smart-form">
-            <label class="smart-label">שם השיר</label>
-            <input class="smart-input" [(ngModel)]="chordRequest.songName" (input)="resetChordRequestMatch()" placeholder="שם השיר">
+            <label class="smart-label">{{ 'fab.chord_song_name' | translate }}</label>
+            <input class="smart-input" [(ngModel)]="chordRequest.songName" [placeholder]="'fab.chord_song_name' | translate">
 
-            <label class="smart-label">שם האמן</label>
-            <input class="smart-input" [(ngModel)]="chordRequest.artistName" (input)="resetChordRequestMatch()" placeholder="שם האמן">
-
-            <div class="chord-match-box" *ngIf="chordRequestMatch?.hasMatches">
-              <div class="chord-match-head">
-                <span class="material-icons">search_check</span>
-                <div>
-                  <strong>מצאנו שיר דומה שכבר קיים באתר</strong>
-                  <p>אפשר לעבור אליו עכשיו, או להמשיך ולשלוח את הבקשה בכל זאת.</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                class="chord-match-item"
-                *ngFor="let song of chordRequestMatch?.similarSongs"
-                (click)="openMatchedSong(song.id)">
-                <span class="chord-match-thumb" [class.chord-match-thumb-empty]="!song.imageUrl">
-                  <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title">
-                  <span *ngIf="!song.imageUrl" class="material-icons">music_note</span>
-                </span>
-                <span class="chord-match-copy">
-                  <strong>{{ song.title }}</strong>
-                  <small>{{ song.artistNames }}</small>
-                </span>
-                <span class="material-icons">arrow_back</span>
-              </button>
-            </div>
+            <label class="smart-label">{{ 'fab.chord_artist_name' | translate }}</label>
+            <input class="smart-input" [(ngModel)]="chordRequest.artistName" [placeholder]="'fab.chord_artist_name' | translate">
 
             <div class="smart-actions">
-              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
-              <button
-                type="button"
-                class="assistant-chip assistant-chip-muted"
-                *ngIf="chordRequestMatch?.hasMatches"
-                (click)="continueChordRequestAnyway()"
-                [disabled]="isSubmitting">
-                להמשיך בכל זאת
-              </button>
-              <button type="button" class="smart-submit" (click)="submitChordRequest()" [disabled]="isSubmitting || isCheckingChordRequest">
-                {{ isSubmitting ? 'שולח...' : isCheckingChordRequest ? 'בודק...' : 'שליחת בקשה' }}
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
+              <button type="button" class="smart-submit" (click)="submitChordRequest()" [disabled]="isSubmitting">
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_request' | translate) }}
               </button>
             </div>
           </div>
@@ -384,31 +362,31 @@
 
             <div class="smart-contact-row">
               <div>
-                <label class="smart-label">שם מלא</label>
-                <input class="smart-input" [(ngModel)]="contactForm.fullName" placeholder="שם מלא">
+                <label class="smart-label">{{ 'fab.contact_full_name' | translate }}</label>
+                <input class="smart-input" [(ngModel)]="contactForm.fullName" [placeholder]="'fab.contact_full_name' | translate">
               </div>
               <div>
-                <label class="smart-label">אימייל</label>
-                <input class="smart-input" type="email" [(ngModel)]="contactForm.email" placeholder="כתובת אימייל">
+                <label class="smart-label">{{ 'fab.contact_email' | translate }}</label>
+                <input class="smart-input" type="email" [(ngModel)]="contactForm.email" [placeholder]="'fab.contact_email' | translate">
               </div>
             </div>
 
-            <label class="smart-label">נושא</label>
+            <label class="smart-label">{{ 'fab.contact_subject' | translate }}</label>
             <select class="smart-input smart-select" [(ngModel)]="contactForm.subject">
-              <option value="" disabled>בחר נושא</option>
-              <option value="שאלה כללית">שאלה כללית</option>
-              <option value="בעיה טכנית">בעיה טכנית</option>
-              <option value="שיתוף פעולה">שיתוף פעולה</option>
-              <option value="הצעה לשיפור">הצעה לשיפור</option>
-              <option value="אחר">אחר</option>
+              <option value="" disabled>{{ 'fab.contact_select_subject' | translate }}</option>
+              <option value="שאלה כללית">{{ 'fab.contact_subject_general' | translate }}</option>
+              <option value="בעיה טכנית">{{ 'fab.contact_subject_tech' | translate }}</option>
+              <option value="שיתוף פעולה">{{ 'fab.contact_subject_partner' | translate }}</option>
+              <option value="הצעה לשיפור">{{ 'fab.contact_subject_improve' | translate }}</option>
+              <option value="אחר">{{ 'fab.contact_subject_other' | translate }}</option>
             </select>
 
-            <label class="smart-label">הודעה</label>
-            <textarea class="smart-textarea" [(ngModel)]="contactForm.message" rows="5" placeholder="כתבו את ההודעה כאן..."></textarea>
+            <label class="smart-label">{{ 'fab.contact_message' | translate }}</label>
+            <textarea class="smart-textarea" [(ngModel)]="contactForm.message" rows="5" [placeholder]="'fab.contact_message_placeholder' | translate"></textarea>
 
             <div class="smart-media-card">
               <div class="smart-media-head">
-                <label class="smart-label smart-media-label">קבצים מצורפים</label>
+                <label class="smart-label smart-media-label">{{ 'fab.contact_attachments' | translate }}</label>
                 <span class="smart-media-note">עד {{ CONTACT_MAX_FILES }} קבצים, {{ CONTACT_MAX_FILE_MB }}MB לקובץ</span>
               </div>
 
@@ -416,7 +394,7 @@
                 <label class="smart-upload-chip" [class.smart-upload-chip-disabled]="contactAttachments.length >= CONTACT_MAX_FILES">
                   <input type="file" multiple hidden (change)="onContactFileSelected($event)" [disabled]="contactAttachments.length >= CONTACT_MAX_FILES">
                   <span class="material-icons">attach_file</span>
-                  <span>צרף קובץ</span>
+                  <span>{{ 'fab.contact_attach_file' | translate }}</span>
                 </label>
               </div>
 
@@ -426,8 +404,8 @@
                     {{ att.error ? 'error_outline' : att.uploading ? 'hourglass_top' : getContactFileIcon(att.file) }}
                   </span>
                   <span class="contact-att-name">{{ att.file.name }}</span>
-                  <span class="contact-att-status" *ngIf="att.uploading">מעלה...</span>
-                  <span class="contact-att-status contact-att-status-error" *ngIf="att.error">שגיאה</span>
+                  <span class="contact-att-status" *ngIf="att.uploading">{{ 'fab.uploading' | translate }}</span>
+                  <span class="contact-att-status contact-att-status-error" *ngIf="att.error">Error</span>
                   <button type="button" class="btn-clear-profile" (click)="removeContactAttachment(i)">
                     <span class="material-icons">close</span>
                   </button>
@@ -436,9 +414,9 @@
             </div>
 
             <div class="smart-actions">
-              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">חזרה</button>
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitContact()" [disabled]="isSubmitting || isContactUploading">
-                {{ isSubmitting ? 'שולח...' : 'שליחה' }}
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_contact' | translate) }}
               </button>
             </div>
 
@@ -451,7 +429,7 @@
             <div class="smart-bubble smart-bubble-question">{{ submittedMessage }}</div>
           </div>
           <div class="smart-actions smart-actions-success">
-            <button type="button" class="smart-submit" (click)="closeModal()">סגירה</button>
+            <button type="button" class="smart-submit" (click)="closeModal()">{{ 'fab.close' | translate }}</button>
           </div>
         </div>
       </div>

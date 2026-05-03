@@ -17,15 +17,14 @@
     <div class="hero-content-area">
         <div class="hero-content">
 
-            <!-- כותרת ותיאור -->
-            <h1 class="hero-title">אקורדים</h1>
-            <p class="hero-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
+            <h1 class="hero-title">{{ 'chords.title' | translate }}</h1>
+            <p class="hero-subtitle">{{ 'chords.subtitle' | translate }}</p>
 
             <!-- שדה חיפוש + כפתור מיון -->
             <div class="search-row">
                 <div class="search-wrap">
                     <input type="text"
-                           placeholder="חפש שיר, אמן או מילים..."
+                           [placeholder]="'chords.search_placeholder' | translate"
                            [ngModel]="search"
                            (input)="onSearch($event)"
                            class="search-input">
@@ -40,42 +39,41 @@
                     <svg class="sort-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <path d="M3 6h18M7 12h10M11 18h2"/>
                     </svg>
-                    <!-- תפריט מיון מותאם -->
                     <div class="sort-dropdown" *ngIf="showSortDropdown" (click)="$event.stopPropagation()">
                         <button class="sort-option" [class.active]="sortBy === 'date'"
-                                (click)="sortBy = 'date'; onFilterChange(); showSortDropdown = false">חדש → ישן</button>
+                                (click)="sortBy = 'date'; onFilterChange(); showSortDropdown = false">{{ 'chords.sort_newest' | translate }}</button>
                         <button class="sort-option" [class.active]="sortBy === 'views'"
-                                (click)="sortBy = 'views'; onFilterChange(); showSortDropdown = false">הכי נצפה</button>
+                                (click)="sortBy = 'views'; onFilterChange(); showSortDropdown = false">{{ 'chords.sort_most_viewed' | translate }}</button>
                         <button class="sort-option" [class.active]="sortBy === 'name'"
-                                (click)="sortBy = 'name'; onFilterChange(); showSortDropdown = false">א–ת</button>
+                                (click)="sortBy = 'name'; onFilterChange(); showSortDropdown = false">{{ 'chords.sort_az' | translate }}</button>
                     </div>
                 </div>
             </div>
 
-            <!-- קישורים עדינים מתחת לחיפוש -->
+            <!-- quick links -->
             <div class="dict-entry-wrap" *ngIf="!knownChordsMode">
                 <button class="dict-entry-btn known-entry-btn"
                         [class.active]="knownChordsMode"
                         (click)="toggleKnownChordsMode()">
-                    שירים שאני יודע לנגן
+                    {{ 'chords.songs_i_can_play' | translate }}
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"/>
                     </svg>
                 </button>
                 <a routerLink="/chords/dictionary" class="dict-entry-btn">
-                    מילון האקורדים
+                    {{ 'chords.chord_dictionary' | translate }}
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"/>
                     </svg>
                 </a>
                 <a routerLink="/tuner" class="dict-entry-btn">
-                    כיוון גיטרה ויוקלילי
+                    {{ 'chords.tuner' | translate }}
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"/>
                     </svg>
                 </a>
                 <button (click)="handleRandomSongClick()" class="dict-entry-btn">
-                    שיר בהפתעה
+                    {{ 'chords.random_song' | translate }}
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6"/>
                     </svg>
@@ -84,16 +82,16 @@
 
             <div class="known-filter-wrap" *ngIf="knownChordsMode">
                 <div class="known-filter-note">
-                    <strong>שירים שקרובים לאקורדים שאני יודע לנגן</strong>
-                    <span>החישוב בודק את האקורדים שסימנת מול האקורדים בכל שיר. אפשר להוסיף אקורדים דרך סימון + בתרשים אקורד או דרך הפרופיל.</span>
+                    <strong>{{ 'chords.known_filter_title' | translate }}</strong>
+                    <span>{{ 'chords.known_filter_sub' | translate }}</span>
                 </div>
 
                 <div class="known-filter-bar">
-                    <div class="known-instrument-group" aria-label="בחירת כלי">
+                    <div class="known-instrument-group" [attr.aria-label]="'chords.sort_exact' | translate">
                         <button class="known-instrument-btn"
                                 [class.active]="knownInstrument === 'guitar'"
                                 (click)="setKnownInstrument('guitar')"
-                                title="גיטרה">
+                                title="Guitar">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="1 -12 511.99887 511" fill="currentColor">
                                 <path d="m458.457031.5-173.089843 173.257812c-3.390626-27.449218 11.734374-58.269531 23.042968-76.867187 6.582032-10.816406 6.21875-24.027344-.945312-34.476563-7.152344-10.429687-19.324219-15.519531-31.765625-13.285156-21.292969 3.824219-51.707031 13.417969-75.683594 37.390625-13.042969 13.042969-21.066406 31.382813-28.148437 47.5625-5.152344 11.773438-10.480469 23.949219-15.734376 29.003907l-.273437.269531c-16.121094 16.121093-37.671875 21.6875-60.484375 27.578125-22.648438 5.847656-46.066406 11.894531-63.402344 29.230468-21.03125 21.019532-32.085937 46.753907-31.972656 74.417969.167969 40.558594 23.269531 84.148438 66.8125 126.082031 40.777344 42.339844 83.589844 65.105469 123.828125 65.832032.644531.011718 1.28125.015625 1.925781.015625 27.9375 0 53.714844-11.03125 74.652344-31.976563 17.210938-17.210937 22.902344-39.980468 28.410156-61.996094 5.726563-22.894531 11.132813-44.515624 28.515625-61.898437l.269531-.273437c2.9375-3.054688 11.523438-7.246094 19.097657-10.941407 18.070312-8.820312 40.554687-19.792969 54.835937-42.164062 5.851563-9.167969 6.195313-20.773438.898438-30.289063-5.308594-9.527344-15.410156-15.371094-26.261719-15.207031-17.613281.222656-42.5625-2.136719-66.660156-22.386719l168.714843-168.878906h36.960938v-40zm-84.9375 271.257812c-.003906 0-.007812 0-.011719 0 .003907.003907.007813 0 .011719 0zm-49.757812-7.203124c9.210937 3.105468 17.960937 4.910156 25.863281 5.941406-7.199219 4.949218-15.503906 9-23.660156 12.980468-11.511719 5.621094-22.390625 10.929688-30.230469 19.003907-25.113281 25.191406-32.765625 55.773437-38.910156 80.351562-4.566407 18.265625-8.511719 34.039063-17.894531 43.417969-13.945313 13.953125-29.523438 20.554688-47.566407 20.25-29.042969-.523438-63.128906-19.644531-95.984375-53.835938l-.5625-.566406c-35.230468-33.847656-54.695312-68.539062-54.816406-97.683594-.066406-16.996093 6.742188-32.460937 20.253906-45.964843 9.621094-9.621094 26.074219-13.867188 45.121094-18.789063 25.703125-6.636718 54.828125-14.15625 78.640625-37.890625 10.894531-10.558593 17.503906-25.664062 24.5-41.652343 5.9375-13.570313 12.078125-27.605469 19.789063-35.316407 10.898437-10.902343 24.167968-17.597656 36.425781-21.714843-21.765625 42.617187-25.710938 81.632812-11.515625 112.855468l-34.304688 34.339844-18.714844-18.867188-28.398437 28.171876 65.007813 65.527343 28.394531-28.171875-18.117188-18.265625 30.886719-30.914062c13.78125 12.175781 29.117188 21.167969 45.792969 26.792969zm-180.5625 13.332031 65.003906 65.527343-28.394531 28.171876-65.007813-65.527344zm0 0"/>
                             </svg>
@@ -101,7 +99,7 @@
                         <button class="known-instrument-btn"
                                 [class.active]="knownInstrument === 'piano'"
                                 (click)="setKnownInstrument('piano')"
-                                title="פסנתר">
+                                title="Piano">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18.5 8c-1.4 0-2.6-.8-3.2-2A6.87 6.87 0 0 0 2 9v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8.5C22 9.6 20.4 8 18.5 8"/>
@@ -115,7 +113,7 @@
                         <button class="known-instrument-btn"
                                 [class.active]="knownInstrument === 'ukulele'"
                                 (click)="setKnownInstrument('ukulele')"
-                                title="יוקלילי">
+                                title="Ukulele">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m11.9 12.1 4.514-4.514"/>
@@ -127,13 +125,13 @@
                         </button>
                     </div>
 
-                    <div class="known-sort-group" aria-label="מיון">
-                        <button class="known-filter-chip" [class.active]="knownSortBy === 'exact'" (click)="setKnownSort('exact')">בדיוק כמו שאני יודע לנגן</button>
-                        <button class="known-filter-chip" [class.active]="knownSortBy === 'closest'" (click)="setKnownSort('closest')">הכי קרוב למה שאני יודע</button>
-                        <button class="known-filter-chip" [class.active]="knownSortBy === 'popular'" (click)="setKnownSort('popular')">פופולרי</button>
+                    <div class="known-sort-group" aria-label="sort">
+                        <button class="known-filter-chip" [class.active]="knownSortBy === 'exact'" (click)="setKnownSort('exact')">{{ 'chords.sort_exact' | translate }}</button>
+                        <button class="known-filter-chip" [class.active]="knownSortBy === 'closest'" (click)="setKnownSort('closest')">{{ 'chords.sort_closest' | translate }}</button>
+                        <button class="known-filter-chip" [class.active]="knownSortBy === 'popular'" (click)="setKnownSort('popular')">{{ 'chords.sort_popular' | translate }}</button>
                     </div>
 
-                    <button class="known-close-btn" (click)="closeKnownChordsMode()" title="סגור מצב">
+                    <button class="known-close-btn" (click)="closeKnownChordsMode()">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M18 6 6 18M6 6l12 12"/>
                         </svg>
@@ -147,7 +145,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M18 6 6 18M6 6l12 12"/>
                     </svg>
-                    נקה סינונים
+                    {{ 'chords.clear_filters' | translate }}
                 </button>
             </div>
 
@@ -160,7 +158,7 @@
     ═══════════════════════════════════════════ -->
     <div class="chords-content">
 
-        <!-- Artists Strip — פס אמנים -->
+        <!-- Artists Strip -->
         <div class="artists-section" *ngIf="artists.length > 0">
             <div class="artists-strip">
                 <div class="artist-item"
@@ -178,18 +176,18 @@
             </div>
         </div>
 
-        <!-- FILTERED: תוצאות לפני הסקשנים -->
+        <!-- FILTERED: search results -->
         <ng-container *ngIf="isFiltered">
             <div class="results-section">
                 <div class="section-header">
                     <span class="section-tag section-tag--accent">
-                        נמצאו {{ totalCount }} תוצאות
+                        {{ 'chords.results_prefix' | translate }} {{ totalCount }} {{ 'chords.results_suffix' | translate }}
                         <ng-container *ngIf="artistSearchText"> — {{ artistSearchText }}</ng-container>
                     </span>
                 </div>
                 <div class="loading-spinner" *ngIf="isLoading">
                     <div class="spinner"></div>
-                    <p>טוען...</p>
+                    <p>{{ 'chords.loading' | translate }}</p>
                 </div>
                 <div class="songs-grid" *ngIf="!isLoading && songs.length > 0">
                     <div class="grid-card" *ngFor="let song of songs" (click)="saveToRecent(song)">
@@ -197,27 +195,26 @@
                     </div>
                 </div>
                 <div class="no-results" *ngIf="!isLoading && songs.length === 0">
-                    <p>לא נמצאו תוצאות</p>
-                    <button class="btn-secondary" *ngIf="!knownChordsMode" (click)="clearFilters()">נקה סינונים</button>
+                    <p>{{ 'chords.no_results' | translate }}</p>
+                    <button class="btn-secondary" *ngIf="!knownChordsMode" (click)="clearFilters()">{{ 'chords.clear_filters' | translate }}</button>
                 </div>
                 <div class="pagination" *ngIf="totalPages > 1">
-                    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">הקודם</button>
+                    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">{{ 'chords.prev' | translate }}</button>
                     <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-                    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">הבא</button>
+                    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">{{ 'chords.next' | translate }}</button>
                 </div>
             </div>
         </ng-container>
 
-        <!-- Category Sections — תמיד מוצגים -->
+        <!-- Category Sections -->
         <div class="sections-area">
 
-            <!-- נוספו לאחרונה -->
             <div class="section" *ngIf="recentSongs.length > 0">
                 <div class="section-header">
-                    <span class="section-tag section-tag--accent">נוספו לאחרונה</span>
+                    <span class="section-tag section-tag--accent">{{ 'chords.section_recent' | translate }}</span>
                 </div>
                 <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(recentStrip, false)" aria-label="הקודם">
+                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(recentStrip, false)" [attr.aria-label]="'chords.prev' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #recentStrip>
@@ -225,19 +222,18 @@
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(recentStrip, true)" aria-label="הבא">
+                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(recentStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- פופולאריים עכשיו -->
             <div class="section" *ngIf="popularSongs.length > 0">
                 <div class="section-header">
-                    <span class="section-tag section-tag--accent">פופולאריים עכשיו</span>
+                    <span class="section-tag section-tag--accent">{{ 'chords.section_popular' | translate }}</span>
                 </div>
                 <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(popularStrip, false)" aria-label="הקודם">
+                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(popularStrip, false)" [attr.aria-label]="'chords.prev' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #popularStrip>
@@ -245,19 +241,18 @@
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(popularStrip, true)" aria-label="הבא">
+                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(popularStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- הנצפים ביותר -->
             <div class="section" *ngIf="mostViewedSongs.length > 0">
                 <div class="section-header">
-                    <span class="section-tag section-tag--accent">הנצפים ביותר</span>
+                    <span class="section-tag section-tag--accent">{{ 'chords.section_most_viewed' | translate }}</span>
                 </div>
                 <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(mostViewedStrip, false)" aria-label="הקודם">
+                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(mostViewedStrip, false)" [attr.aria-label]="'chords.prev' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #mostViewedStrip>
@@ -265,19 +260,18 @@
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(mostViewedStrip, true)" aria-label="הבא">
+                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(mostViewedStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- לא תרצו לפספס -->
             <div class="section" *ngIf="dontMissSongs.length > 0">
                 <div class="section-header">
-                    <span class="section-tag section-tag--accent">לא תרצו לפספס</span>
+                    <span class="section-tag section-tag--accent">{{ 'chords.section_dont_miss' | translate }}</span>
                 </div>
                 <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(dontMissStrip, false)" aria-label="הקודם">
+                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(dontMissStrip, false)" [attr.aria-label]="'chords.prev' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #dontMissStrip>
@@ -285,19 +279,18 @@
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(dontMissStrip, true)" aria-label="הבא">
+                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(dontMissStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- צפית לאחרונה -->
             <div class="section" *ngIf="recentlyViewedSongs.length > 0">
                 <div class="section-header">
-                    <span class="section-tag section-tag--secondary">צפית לאחרונה</span>
+                    <span class="section-tag section-tag--secondary">{{ 'chords.section_recently_viewed' | translate }}</span>
                 </div>
                 <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(recentlyViewedStrip, false)" aria-label="הקודם">
+                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(recentlyViewedStrip, false)" [attr.aria-label]="'chords.prev' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #recentlyViewedStrip>
@@ -305,7 +298,7 @@
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(recentlyViewedStrip, true)" aria-label="הבא">
+                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(recentlyViewedStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
@@ -313,16 +306,16 @@
 
         </div>
 
-        <!-- Catalog — כל האקורדים (ללא סינון) -->
+        <!-- Catalog — all chords (unfiltered) -->
         <ng-container *ngIf="!isFiltered">
             <div class="catalog-section">
                 <div class="section-header">
-                    <span class="section-tag section-tag--secondary">כל האקורדים</span>
+                    <span class="section-tag section-tag--secondary">{{ 'chords.section_all' | translate }}</span>
                     <span class="total-badge" *ngIf="totalCount > 0">{{ totalCount }}</span>
                 </div>
                 <div class="loading-spinner" *ngIf="isLoading && songs.length === 0">
                     <div class="spinner"></div>
-                    <p>טוען...</p>
+                    <p>{{ 'chords.loading' | translate }}</p>
                 </div>
                 <div class="songs-grid" *ngIf="songs.length > 0">
                     <div class="grid-card" *ngFor="let song of songs" (click)="saveToRecent(song)">

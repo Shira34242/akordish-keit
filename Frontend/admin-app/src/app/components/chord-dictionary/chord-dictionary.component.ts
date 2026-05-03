@@ -1,5 +1,5 @@
 import {
-    Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef
+    Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -8,6 +8,8 @@ import { ChordPlayerService } from '../../services/chord-player.service';
 import { UserKnownChordService } from '../../services/user-known-chord.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export type Instrument = 'guitar' | 'piano' | 'ukulele';
 
@@ -33,7 +35,7 @@ export interface ChordDetail {
 @Component({
     selector: 'app-chord-dictionary',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, TranslatePipe],
     templateUrl: './chord-dictionary.component.html',
     styleUrls: ['./chord-dictionary.component.css']
 })
@@ -64,11 +66,13 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     pianoLargeWidth  = 0;
     pianoLargeActive = new Set<number>();
 
-    readonly instruments: { key: Instrument; label: string }[] = [
-        { key: 'guitar',  label: 'גיטרה' },
-        { key: 'piano',   label: 'קלידים' },
-        { key: 'ukulele', label: 'יוקלילי' },
-    ];
+    get instruments(): { key: Instrument; label: string }[] {
+        return [
+            { key: 'guitar',  label: this.langService.translate('dict.instr_guitar') },
+            { key: 'piano',   label: this.langService.translate('dict.instr_piano') },
+            { key: 'ukulele', label: this.langService.translate('dict.instr_ukulele') },
+        ];
+    }
 
     readonly roots = [
         { key: 'A',  display: 'A' },
@@ -104,8 +108,9 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         { key: 'm7b5',  label: 'm7b5' },
     ];
 
-    readonly bassNotes = [
-        { key: null,  display: 'ללא בס' },
+    get bassNotes() {
+        return [
+        { key: null,  display: this.langService.translate('dict.no_bass') },
         { key: 'A',   display: 'A' },
         { key: 'A#',  display: 'A# / B♭' },
         { key: 'B',   display: 'B' },
@@ -118,7 +123,8 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         { key: 'F#',  display: 'F# / G♭' },
         { key: 'G',   display: 'G' },
         { key: 'G#',  display: 'G# / A♭' },
-    ];
+        ];
+    }
 
     private readonly CHORD_THEORY: { [s: string]: ChordTheory } = {
         '':     { intervals: [0, 4, 7],         scaleName: 'Major',           degrees: '1, 3, 5' },
@@ -153,9 +159,14 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         'G#': 'סול♯', 'Ab': 'לה♭', 'A': 'לה', 'A#': 'לה♯', 'Bb': 'סי♭', 'B': 'סי'
     };
 
-    private readonly FINGER_NAME: { [n: number]: string } = {
-        1: 'אצבע מורה', 2: 'אמה', 3: 'קמיצה', 4: 'זרת'
-    };
+    private get FINGER_NAME(): { [n: number]: string } {
+        return {
+            1: this.langService.translate('dict.finger_name_1'),
+            2: this.langService.translate('dict.finger_2'),
+            3: this.langService.translate('dict.finger_3'),
+            4: this.langService.translate('dict.finger_4'),
+        };
+    }
 
     private readonly G_STR_NAME = ['E','A','D','G','B','e'];
     private readonly G_STR_NUM  = [6, 5, 4, 3, 2, 1];
@@ -401,11 +412,13 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         this.knownChordService.ensureLoaded(this.selectedInstrument).subscribe();
     }
 
+    private readonly langService = inject(LanguageService);
+
     get heroTitle(): string {
         const map: Record<Instrument, string> = {
-            guitar:  'מילון אקורדים לגיטרה',
-            piano:   'מילון אקורדים לקלידים',
-            ukulele: 'מילון אקורדים ליוקלילי',
+            guitar:  this.langService.translate('dict.title_guitar'),
+            piano:   this.langService.translate('dict.title_piano'),
+            ukulele: this.langService.translate('dict.title_ukulele'),
         };
         return map[this.selectedInstrument];
     }

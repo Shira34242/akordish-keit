@@ -28,28 +28,33 @@
                         <ul class="user-menu-list">
                             <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
-                                <span>ניהול</span>
+                                <span>{{ 'user.admin' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">person</span>
-                                <span>הפרופיל שלי</span>
+                                <span>{{ 'user.profile' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
-                                <span>הרשימות שלי</span>
+                                <span>{{ 'user.playlists' | translate }}</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
-                                <span>התנתקות</span>
+                                <span>{{ 'user.logout' | translate }}</span>
                             </li>
                         </ul>
                     </div>
                 </div>
             </ng-container>
             <ng-template #loginBtn>
-                <button class="btn-login header-desktop-only" (click)="openAuthModal()">כניסה</button>
+                <button class="btn-login header-desktop-only" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-template>
+            <button class="btn-lang-toggle header-desktop-only" (click)="langService.toggle()"   *ngIf="false">
+                <span [class.lang-active]="currentLang === 'he'">עב</span>
+                <span class="lang-sep">|</span>
+                <span [class.lang-active]="currentLang === 'en'">EN</span>
+            </button>
         </div>
 
         <div class="header-mobile-actions" *ngIf="!showMobileMenu">
@@ -75,41 +80,46 @@
                         <ul class="user-menu-list">
                             <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
-                                <span>ניהול</span>
+                                <span>{{ 'user.admin' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">person</span>
-                                <span>הפרופיל שלי</span>
+                                <span>{{ 'user.profile' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
-                                <span>הרשימות שלי</span>
+                                <span>{{ 'user.playlists' | translate }}</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
-                                <span>התנתקות</span>
+                                <span>{{ 'user.logout' | translate }}</span>
                             </li>
                         </ul>
                     </div>
                 </div>
             </ng-container>
             <ng-template #loginBtnMobile>
-                <button class="btn-login" (click)="openAuthModal()">כניסה</button>
+                <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-template>
+            <button class="btn-lang-toggle" (click)="langService.toggle()">
+                <span [class.lang-active]="currentLang === 'he'">עב</span>
+                <span class="lang-sep">|</span>
+                <span [class.lang-active]="currentLang === 'en'">EN</span>
+            </button>
         </div>
 
         <div class="mobile-nav-scroll" *ngIf="showMobileMenu">
             <div class="nav-pills">
                 <ul class="main-nav mobile-main-nav">
-                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
-                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
-                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
+                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
+                    <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">{{ 'nav.news' | translate }}</a></li>
                 </ul>
             </div>
             <a class="btn-music-index" routerLink="/professionals">
                 <span class="material-icons index-search-icon">search</span>
-                <span class="btn-music-index-text">אינדקס</span>
+                <span class="btn-music-index-text">{{ 'nav.index_short' | translate }}</span>
             </a>
             <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
                 <span class="material-icons">notifications</span>
@@ -133,43 +143,48 @@
                         <ul class="user-menu-list">
                             <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
-                                <span>ניהול</span>
+                                <span>{{ 'user.admin' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-profile" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">person</span>
-                                <span>הפרופיל שלי</span>
+                                <span>{{ 'user.profile' | translate }}</span>
                             </li>
                             <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
-                                <span>הרשימות שלי</span>
+                                <span>{{ 'user.playlists' | translate }}</span>
                             </li>
                             <div class="user-menu-divider"></div>
                             <li class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
-                                <span>התנתקות</span>
+                                <span>{{ 'user.logout' | translate }}</span>
                             </li>
                         </ul>
                     </div>
                 </div>
             </ng-container>
             <ng-container *ngIf="!loggedIn || !user">
-                <button class="btn-login" (click)="openAuthModal()">כניסה</button>
+                <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-container>
+            <button class="btn-lang-toggle" (click)="langService.toggle()">
+                <span [class.lang-active]="currentLang === 'he'">עב</span>
+                <span class="lang-sep">|</span>
+                <span [class.lang-active]="currentLang === 'en'">EN</span>
+            </button>
         </div>
 
         <div class="header-left-group">
              <nav class="desktop-nav">
                 <div class="nav-pills">
                     <ul class="main-nav">
-                        <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a></li>
-                        <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a></li>
-                        <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">חדשות המוזיקה</a></li>
+                        <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
+                        <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
+                        <li><a class="nav-link" routerLink="/music-news" routerLinkActive="active">{{ 'nav.news' | translate }}</a></li>
                     </ul>
                 </div>
             </nav>
             <a class="btn-music-index" [class.btn-music-index--collapsed]="isScrolled" routerLink="/professionals">
                 <span class="material-icons index-search-icon">search</span>
-                <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
+                <span class="btn-music-index-text">{{ 'nav.index_full' | translate }}</span>
             </a>
         </div>
 
@@ -177,11 +192,11 @@
 </header>
 
 <section class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
-    <div class="notifications-popup-state notifications-popup-bubble" *ngIf="notificationsPreviewLoading">טוען התראות...</div>
+    <div class="notifications-popup-state notifications-popup-bubble" *ngIf="notificationsPreviewLoading">{{ 'notif.loading' | translate }}</div>
     <div class="notifications-popup-state notifications-popup-bubble" *ngIf="!notificationsPreviewLoading && notificationsPreviewError">{{ notificationsPreviewError }}</div>
 
     <div class="notifications-popup-empty notifications-popup-bubble" *ngIf="!notificationsPreviewLoading && !notificationsPreviewError && notificationsPreview.length === 0">
-        אין התראות חדשות כרגע.
+        {{ 'notif.empty' | translate }}
     </div>
 
     <div class="notifications-popup-list" *ngIf="!notificationsPreviewLoading && notificationsPreview.length > 0">
@@ -195,18 +210,18 @@
                 [class.unread]="!notification.isRead"
                 (click)="openNotificationFromPopup($event, notification)">
                 <span class="popup-item-content">
-                    <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
+                    <span class="notification-marketing-tag" *ngIf="notification.category === 7">{{ 'notif.marketing' | translate }}</span>
                     <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                     <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
                     <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                         <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                     </a>
                     <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
-                    <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                    <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">{{ 'notif.media' | translate }}</span>
                     <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
                         <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                             <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
-                            <span>{{ item.label || 'צירוף' }}</span>
+                            <span>{{ item.label || ('notif.attachment' | translate) }}</span>
                         </a>
                     </span>
                 </span>
@@ -216,9 +231,9 @@
 
     <footer class="notifications-popup-actions">
         <button type="button" class="popup-primary-button" (click)="goToNotificationsPage($event)">
-            לכל ההתראות
+            {{ 'notif.all' | translate }}
         </button>
-        <button type="button" class="popup-icon-button" (click)="closeNotificationsPopup()" aria-label="סגור" title="סגור">
+        <button type="button" class="popup-icon-button" (click)="closeNotificationsPopup()" [attr.aria-label]="'notif.close' | translate" [title]="'notif.close' | translate">
             <span class="material-icons">close</span>
         </button>
     </footer>
@@ -226,11 +241,11 @@
 
 <section class="notifications-center-overlay" *ngIf="showNotificationsCenterModal" (click)="closeNotificationsCenter()">
     <aside class="notifications-center-modal" (click)="$event.stopPropagation()">
-        <div class="notifications-center-state" *ngIf="notificationsCenterLoading">טוען התראות...</div>
+        <div class="notifications-center-state" *ngIf="notificationsCenterLoading">{{ 'notif.loading' | translate }}</div>
         <div class="notifications-center-state" *ngIf="!notificationsCenterLoading && notificationsCenterError">{{ notificationsCenterError }}</div>
 
         <div class="notifications-center-empty" *ngIf="!notificationsCenterLoading && !notificationsCenterError && notificationsCenter.length === 0">
-            אין התראות כרגע.
+            {{ 'notif.center_empty' | translate }}
         </div>
 
         <div class="notifications-chat-list" *ngIf="!notificationsCenterLoading && notificationsCenter.length > 0">
@@ -244,18 +259,18 @@
                     [class.unread]="!notification.isRead"
                     (click)="openNotificationFromCenter(notification)">
                     <span class="notifications-chat-content">
-                        <span class="notification-marketing-tag" *ngIf="notification.category === 7">תוכן שיווקי</span>
+                        <span class="notification-marketing-tag" *ngIf="notification.category === 7">{{ 'notif.marketing' | translate }}</span>
                         <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                         <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
                         <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                             <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                         </a>
                         <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
-                        <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">מצורפת מדיה</span>
+                        <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">{{ 'notif.media' | translate }}</span>
                         <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
                             <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                                 <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
-                                <span>{{ item.label || 'צירוף' }}</span>
+                                <span>{{ item.label || ('notif.attachment' | translate) }}</span>
                             </a>
                         </span>
                     </span>
@@ -265,9 +280,9 @@
 
         <footer class="notifications-center-actions">
             <button type="button" class="popup-primary-button" *ngIf="notificationsCenter.length > 0" (click)="deleteAllCenterNotifications($event)">
-                מחיקת ההיסטוריה
+                {{ 'notif.clear_history' | translate }}
             </button>
-            <button type="button" class="popup-icon-button" (click)="closeNotificationsCenter()" aria-label="סגור" title="סגור">
+            <button type="button" class="popup-icon-button" (click)="closeNotificationsCenter()" [attr.aria-label]="'notif.close' | translate" [title]="'notif.close' | translate">
                 <span class="material-icons">close</span>
             </button>
         </footer>
@@ -319,14 +334,14 @@
 
         <div class="footer-nav">
             <ul class="footer-col">
-                <li><a routerLink="/">דף הבית</a></li>
-                <li><a routerLink="/chords">אקורדים</a></li>
-                <li><a routerLink="/professionals">אינדקס</a></li>
-                <li><a routerLink="/music-news">חדשות מוזיקה</a></li>
-                <li><a routerLink="/artists">דף אמנים</a></li>
-                <li><a routerLink="/events">דף הופעות</a></li>
-                <li><a routerLink="/articles">כתבות תוכן</a></li>
-                <li><a routerLink="/community-playlists">מאגר רשימות שמורות</a></li>
+                <li><a routerLink="/">{{ 'footer.home' | translate }}</a></li>
+                <li><a routerLink="/chords">{{ 'footer.chords' | translate }}</a></li>
+                <li><a routerLink="/professionals">{{ 'footer.index' | translate }}</a></li>
+                <li><a routerLink="/music-news">{{ 'footer.music_news' | translate }}</a></li>
+                <li><a routerLink="/artists">{{ 'footer.artists' | translate }}</a></li>
+                <li><a routerLink="/events">{{ 'footer.events' | translate }}</a></li>
+                <li><a routerLink="/articles">{{ 'footer.articles' | translate }}</a></li>
+                <li><a routerLink="/community-playlists">{{ 'footer.playlists' | translate }}</a></li>
             </ul>
             <ul class="footer-col footer-page-links" aria-label="קישורי מידע">
                 <li><a routerLink="/privacy">מדיניות פרטיות</a></li>
@@ -334,18 +349,18 @@
                 <li><a routerLink="/about">אודות</a></li>
             </ul>
             <ul class="footer-col footer-col--tools">
-                <li><a routerLink="/chords/dictionary" class="footer-tag">מילון אקורדים</a></li>
-                <li><button class="footer-tag footer-link-btn" type="button" (click)="handleRandomSongClick()">שיר בהפתעה</button></li>
-                <li><a routerLink="/tuner" class="footer-tag">כיוון גיטרה ויוקלילי</a></li>
+                <li><a routerLink="/chords/dictionary" class="footer-tag">{{ 'footer.chord_dict' | translate }}</a></li>
+                <li><button class="footer-tag footer-link-btn" type="button" (click)="handleRandomSongClick()">{{ 'footer.random_song' | translate }}</button></li>
+                <li><a routerLink="/tuner" class="footer-tag">{{ 'footer.tuner' | translate }}</a></li>
             </ul>
         </div>
 
         <div class="footer-newsletter">
-            <p class="footer-newsletter-label">הישאר מעודכן</p>
-            <p class="footer-newsletter-sub">שירים, אמנים וכתבות ישירות למייל</p>
+            <p class="footer-newsletter-label">{{ 'footer.newsletter_title' | translate }}</p>
+            <p class="footer-newsletter-sub">{{ 'footer.newsletter_sub' | translate }}</p>
             <div class="footer-newsletter-form">
-                <input type="email" placeholder="כתובת מייל" class="footer-newsletter-input" />
-                <button class="footer-newsletter-btn" type="button">הרשמה</button>
+                <input type="email" [placeholder]="'footer.newsletter_placeholder' | translate" class="footer-newsletter-input" />
+                <button class="footer-newsletter-btn" type="button">{{ 'footer.newsletter_btn' | translate }}</button>
             </div>
         </div>
 
@@ -354,14 +369,14 @@
     <div class="footer-legal">
         <span class="footer-acum">
             <img src="/acum-logo.png" alt="אקו&quot;ם" class="footer-acum-logo" (error)="$event.target.style.display='none'" />
-            אתר זה פועל ברשיון אקום
+            {{ 'footer.acum' | translate }}
         </span>
         <span class="footer-dot">·</span>
-        <span>אתר זה מכבד <a routerLink="/copyright" class="footer-legal-link">זכויות יוצרים</a> — באם זכויותכם נפגעו <a routerLink="/contact" class="footer-legal-link">צרו קשר</a> להסדרת העניין</span>
+        <span>{{ 'footer.rights_notice' | translate }} <button class="footer-legal-link" type="button" (click)="openReportModal()">{{ 'footer.contact' | translate }}</button> {{ 'footer.rights_resolve' | translate }}</span>
         <span class="footer-dot">·</span>
-        <span>© אקורדישקייט. כל הזכויות שמורות</span>
+        <span>{{ 'footer.copyright' | translate }}</span>
         <span class="footer-dot">·</span>
-        <span>לפרסום ושיתופי פעולה — <a routerLink="/contact" class="footer-legal-link">צרו קשר</a></span>
+        <span>{{ 'footer.advertising' | translate }} <button class="footer-legal-link" type="button" (click)="openContactAssistant()">{{ 'footer.contact' | translate }}</button></span>
     </div>
 
 </footer>
@@ -400,6 +415,6 @@
     [isOpen]="showReportModal"
     [contentType]="'General'"
     [contentId]="0"
-    contentTitle="הודעה כללית למערכת"
+    [contentTitle]="'notif.general_report_title' | translate"
     (close)="closeReportModal()">
 </app-report-modal>

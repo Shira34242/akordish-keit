@@ -1,4 +1,4 @@
-<div class="articles-page" dir="rtl">
+<div class="articles-page">
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="loading-container">
@@ -9,7 +9,7 @@
 
     <!-- Page Header -->
     <div class="page-header">
-      <h1 class="page-title">{{ categoryName || 'כל הכתבות' }}</h1>
+      <h1 class="page-title">{{ categoryName || ('articles.all_title' | translate) }}</h1>
     </div>
 
     <!-- Filter Bar -->
@@ -17,27 +17,27 @@
       <input
         type="text"
         [(ngModel)]="searchTerm"
-        placeholder="חיפוש..."
+        [placeholder]="'articles.search_placeholder' | translate"
         class="filter-input"
         (keyup.enter)="applyFilters()"
       >
       <select [(ngModel)]="categoryId" class="filter-select">
-        <option [value]="undefined">כל הקטגוריות</option>
-        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        <option [value]="undefined">{{ 'articles.all_categories' | translate }}</option>
+        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.key | translate }}</option>
       </select>
       <select [(ngModel)]="contentType" class="filter-select">
-        <option [value]="undefined">כל הסוגים</option>
-        <option *ngFor="let type of contentTypes" [value]="type.id">{{ type.name }}</option>
+        <option [value]="undefined">{{ 'articles.all_types' | translate }}</option>
+        <option *ngFor="let type of contentTypes" [value]="type.id">{{ type.key | translate }}</option>
       </select>
       <div class="filter-actions">
-        <button class="btn-search" (click)="applyFilters()">חיפוש</button>
-        <button class="btn-reset" (click)="resetFilters()">איפוס</button>
+        <button class="btn-search" (click)="applyFilters()">{{ 'shared.search' | translate }}</button>
+        <button class="btn-reset" (click)="resetFilters()">{{ 'shared.reset' | translate }}</button>
       </div>
     </section>
 
     <!-- Results count -->
     <div class="results-count" *ngIf="totalCount > 0">
-      {{ totalCount }} כתבות
+      {{ totalCount }} {{ 'articles.count_suffix' | translate }}
     </div>
 
     <!-- Articles Grid -->
@@ -50,7 +50,7 @@
 
     <!-- No Results -->
     <div *ngIf="articles.length === 0" class="no-results">
-      <p>לא נמצאו כתבות</p>
+      <p>{{ 'articles.no_results' | translate }}</p>
     </div>
 
     <!-- Pagination -->

@@ -7,8 +7,8 @@
           <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
         </svg>
       </button>
-      <h3>ניהול שמירה</h3>
-      <button class="btn-add" type="button" (click)="toggleCreateNew()" [title]="isCreatingNew ? 'ביטול' : 'רשימה חדשה'">
+      <h3>{{ 'popup.title' | translate }}</h3>
+      <button class="btn-add" type="button" (click)="toggleCreateNew()" [title]="isCreatingNew ? ('shared.cancel' | translate) : ('popup.new_list' | translate)">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line *ngIf="!isCreatingNew" x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -21,19 +21,19 @@
         type="text"
         class="new-playlist-input"
         [(ngModel)]="newPlaylistName"
-        placeholder="שם הרשימה החדשה"
+        [placeholder]="'popup.name_placeholder' | translate"
         (keyup.enter)="createNewPlaylist()"
         autofocus>
       <div class="privacy-toggle">
         <label class="toggle-label">
           <input type="checkbox" [(ngModel)]="newPlaylistIsPublic" class="toggle-checkbox">
           <span class="toggle-slider"></span>
-          <span class="toggle-text">{{ newPlaylistIsPublic ? 'רשימה ציבורית' : 'רשימה פרטית' }}</span>
+          <span class="toggle-text">{{ newPlaylistIsPublic ? ('popup.public' | translate) : ('popup.private' | translate) }}</span>
         </label>
       </div>
       <div class="form-actions">
-        <button class="btn-create" type="button" (click)="createNewPlaylist()">צור רשימה</button>
-        <button class="btn-cancel" type="button" (click)="toggleCreateNew()">ביטול</button>
+        <button class="btn-create" type="button" (click)="createNewPlaylist()">{{ 'popup.create' | translate }}</button>
+        <button class="btn-cancel" type="button" (click)="toggleCreateNew()">{{ 'shared.cancel' | translate }}</button>
       </div>
     </div>
 
@@ -54,8 +54,8 @@
             </svg>
           </span>
           <div class="playlist-meta">
-            <span class="playlist-name">{{ defaultPlaylist?.name || 'השמורים שלי' }}</span>
-            <span class="playlist-count">{{ defaultPlaylist?.songCount ?? 0 }} שירים</span>
+            <span class="playlist-name">{{ defaultPlaylist?.name || ('popup.default_playlist' | translate) }}</span>
+            <span class="playlist-count">{{ defaultPlaylist?.songCount ?? 0 }} {{ 'popup.songs_suffix' | translate }}</span>
           </div>
         </label>
 
@@ -67,7 +67,7 @@
           </span>
           <div class="playlist-meta">
             <span class="playlist-name">{{ playlist.name }}</span>
-            <span class="playlist-count">{{ playlist.songCount }} שירים</span>
+            <span class="playlist-count">{{ playlist.songCount }} {{ 'popup.songs_suffix' | translate }}</span>
           </div>
           <input
             type="checkbox"
@@ -80,11 +80,11 @@
 
       <div class="popup-footer">
         <div class="footer-links">
-          <a class="link-archive" routerLink="/community-playlists" (click)="closePopup()">מאגר רשימות</a>
+          <a class="link-archive" routerLink="/community-playlists" (click)="closePopup()">{{ 'popup.community' | translate }}</a>
           <span class="footer-sep">·</span>
-          <a class="link-archive" routerLink="/my-playlists" (click)="closePopup()">הרשימות שלי</a>
+          <a class="link-archive" routerLink="/my-playlists" (click)="closePopup()">{{ 'popup.my_playlists' | translate }}</a>
         </div>
-        <button class="btn-done" type="button" (click)="closePopup()">בוצע</button>
+        <button class="btn-done" type="button" (click)="closePopup()">{{ 'popup.done' | translate }}</button>
       </div>
     </ng-container>
 

@@ -16,7 +16,6 @@ html {
   font-weight: 300;
   font-variation-settings: "wdth" 100;
   background-color: #F2F2F2;
-  direction: rtl;
   height: 100%;
   scrollbar-width: thin;
   scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);

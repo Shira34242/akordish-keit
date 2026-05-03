@@ -728,6 +728,34 @@
     transition: color 0.18s;
 }
 
+/* Language Toggle */
+.btn-lang-toggle {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    background: #ffffff;
+    border-radius: 50px;
+    border: none;
+    padding: 0 var(--space-md);
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-xs);
+    font-weight: 700;
+    color: #404040;
+    cursor: pointer;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.lang-sep {
+    color: #ccc;
+    font-weight: 300;
+}
+
+.lang-active {
+    color: #000;
+}
+
 /* Login Button */
 .btn-login {
     background: #ddff53;
@@ -1232,6 +1260,91 @@
 
     .footer-dot {
         display: none;
+    }
+}
+
+/* ============================================
+   LTR OVERRIDES (English mode)
+============================================ */
+html[dir="ltr"] .main-header {
+    direction: ltr;
+}
+
+html[dir="ltr"] .header-inner {
+    direction: ltr;
+}
+
+/* On desktop: swap order so nav is on the left, user menu is on the right */
+@media (min-width: 769px) {
+    html[dir="ltr"] .header-right {
+        order: 2;
+    }
+
+    html[dir="ltr"] .header-left-group {
+        order: 1;
+    }
+}
+
+html[dir="ltr"] .header-left-group {
+    direction: ltr;
+}
+
+html[dir="ltr"] .btn-music-index {
+    direction: ltr;
+}
+
+html[dir="ltr"] .user-menu {
+    direction: ltr;
+}
+
+html[dir="ltr"] .user-menu-header {
+    direction: ltr;
+}
+
+html[dir="ltr"] .user-menu-info {
+    text-align: left;
+}
+
+html[dir="ltr"] .user-menu-item {
+    direction: ltr;
+}
+
+html[dir="ltr"] .notifications-popup {
+    direction: ltr;
+}
+
+html[dir="ltr"] .notifications-popup-item {
+    text-align: left;
+}
+
+html[dir="ltr"] .notifications-center-overlay {
+    direction: ltr;
+}
+
+html[dir="ltr"] .notifications-chat-bubble {
+    text-align: left;
+}
+
+html[dir="ltr"] .main-footer {
+    direction: ltr;
+}
+
+html[dir="ltr"] .footer-legal {
+    direction: ltr;
+}
+
+html[dir="ltr"] .footer-newsletter-input {
+    direction: ltr;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    html[dir="ltr"] .mobile-nav-scroll {
+        direction: ltr;
+    }
+
+    html[dir="ltr"] .mobile-main-nav {
+        direction: ltr;
     }
 }
 

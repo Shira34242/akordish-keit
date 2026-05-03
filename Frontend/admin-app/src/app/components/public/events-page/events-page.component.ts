@@ -6,13 +6,14 @@ import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
 import { EventCardData, getDisplayArtist } from '../../../utils/event.utils';
 import { EventModalComponent } from '../../shared/event-modal/event-modal.component';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 type FilterMode = 'upcoming' | 'all' | 'past';
 
 @Component({
   selector: 'app-events-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, EventModalComponent],
+  imports: [CommonModule, RouterModule, EventModalComponent, TranslatePipe],
   templateUrl: './events-page.component.html',
   styleUrls: ['./events-page.component.css']
 })

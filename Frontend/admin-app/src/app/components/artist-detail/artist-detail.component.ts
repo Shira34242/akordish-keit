@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, ChangeDetectorRef, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -12,6 +12,7 @@ import { Article } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
+import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
 
 @Component({
@@ -51,6 +52,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   bioOverflows = false;
 
   SocialPlatform = SocialPlatform;
+
+  private readonly langService = inject(LanguageService);
+  private readonly seo = inject(SeoService);
 
   // עריכת דף אמן
   showEditModal = false;
@@ -104,8 +108,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
-    private artistPageService: ArtistPageService,
-    private seo: SeoService
+    private artistPageService: ArtistPageService
   ) {}
 
   ngOnInit(): void {
@@ -616,10 +619,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       [SocialPlatform.Twitter]: 'Twitter / X',
       [SocialPlatform.TikTok]: 'TikTok',
       [SocialPlatform.Spotify]: 'Spotify',
-      [SocialPlatform.Website]: 'אתר',
+      [SocialPlatform.Website]: this.langService.translate('teacher.social_website'),
       [SocialPlatform.Zing]: 'Zing'
     };
-    return names[platform] || 'קישור';
+    return names[platform] || this.langService.translate('teacher.social_link');
   }
 
   getSocialIconSvg(platform: SocialPlatform): SafeHtml {

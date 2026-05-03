@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionSt
 import { CommonModule } from '@angular/common';
 import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/event.utils';
 import { AnalyticsService } from '../../../services/analytics.service';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-event-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './event-modal.component.html',
   styleUrls: ['./event-modal.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

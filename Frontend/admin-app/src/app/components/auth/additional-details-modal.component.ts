@@ -2,7 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { Instrument, InstrumentService } from '../../services/instrument.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 export enum UserType {
   Regular = 'regular',
@@ -16,7 +16,7 @@ const FEATURED_NAMES = ['פסנתר', 'גיטרה', 'קלידים', 'תופים'
 @Component({
   selector: 'app-additional-details-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './additional-details-modal.component.html',
   styleUrls: ['./additional-details-modal.component.css']
 })

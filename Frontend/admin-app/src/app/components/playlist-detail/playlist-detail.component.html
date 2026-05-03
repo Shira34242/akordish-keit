@@ -1,34 +1,26 @@
 <div class="detail-page" *ngIf="playlist; else loadingOrError">
 
-  <!-- Fixed visual hero background -->
   <div class="hero-box" #heroBox></div>
 
-  <!-- Hero content (normal flow) -->
   <div class="hero-content" #heroContent>
     <div class="hero-inner">
 
-      <!-- Back -->
       <a class="btn-back" routerLink="/my-playlists">
         <span class="material-icons">arrow_forward</span>
-        חזרה לרשימות
+        {{ 'playlist.back' | translate }}
       </a>
 
-      <!-- Main hero row: thumbnail + info -->
       <div class="hero-main">
 
-        <!-- Thumbnail -->
         <div class="hero-thumb-wrap">
 
-          <!-- Thumbnail box -->
           <div class="hero-thumb">
 
-            <!-- Custom image -->
             <img *ngIf="playlist.imageUrl"
                  [src]="playlist.imageUrl"
                  [alt]="playlist.name"
                  (error)="$event.target.src=getDefaultImage()">
 
-            <!-- 2x2 song grid -->
             <div *ngIf="!playlist.imageUrl && thumbnailSlots.length > 0" class="thumb-song-grid">
               <ng-container *ngFor="let slot of thumbnailSlots">
                 <img *ngIf="slot" class="thumb-song-tile" [src]="slot" alt="">
@@ -38,113 +30,103 @@
               </ng-container>
             </div>
 
-            <!-- Placeholder -->
             <div *ngIf="!playlist.imageUrl && thumbnailSlots.length === 0" class="thumb-placeholder">
               <span class="material-icons">queue_music</span>
             </div>
 
-            <!-- Edit image button -->
             <button class="thumb-edit-btn" type="button"
                     *ngIf="isOwner() && !playlist.isDefault && !editingImage"
-                    (click)="openImageEdit()" title="עדכן תמונה">
+                    (click)="openImageEdit()" [title]="'shared.save' | translate">
               <span class="material-icons">edit</span>
             </button>
           </div>
 
-          <!-- Image edit inline -->
           <div class="image-edit-panel" *ngIf="editingImage">
             <input type="url" class="image-edit-input"
                    [(ngModel)]="pendingImageUrl"
-                   placeholder="הדבק URL של תמונה"
+                   [placeholder]="'playlist.image_placeholder' | translate"
                    (keyup.enter)="savePlaylistImage()">
             <div class="image-edit-actions">
               <button class="btn-pill btn-pill--accent btn-pill--sm" type="button"
                       (click)="savePlaylistImage()" [disabled]="isSavingImage">
-                {{ isSavingImage ? '...' : 'שמור' }}
+                {{ isSavingImage ? '...' : ('shared.save' | translate) }}
               </button>
               <button class="btn-pill btn-pill--sm" type="button" (click)="cancelImageEdit()">
-                ביטול
+                {{ 'shared.cancel' | translate }}
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Info + actions -->
         <div class="hero-info">
 
-          <!-- Edit form -->
           <div class="edit-form" *ngIf="isEditing">
             <input type="text" class="edit-name-input"
                    [(ngModel)]="editedName"
-                   placeholder="שם הרשימה"
+                   [placeholder]="'playlist.name_placeholder' | translate"
                    (keyup.enter)="saveEdit()">
             <textarea class="edit-desc-input"
                       [(ngModel)]="editedDescription"
-                      placeholder="תיאור (אופציונלי)"
+                      [placeholder]="'playlist.desc_placeholder' | translate"
                       rows="2"></textarea>
             <div class="edit-form-actions">
-              <button class="btn-pill btn-pill--accent" type="button" (click)="saveEdit()">שמור</button>
-              <button class="btn-pill" type="button" (click)="toggleEdit()">ביטול</button>
+              <button class="btn-pill btn-pill--accent" type="button" (click)="saveEdit()">{{ 'shared.save' | translate }}</button>
+              <button class="btn-pill" type="button" (click)="toggleEdit()">{{ 'shared.cancel' | translate }}</button>
             </div>
           </div>
 
-          <!-- View mode -->
           <div class="hero-view" *ngIf="!isEditing">
             <div class="hero-name-row">
               <h1 class="hero-name">{{ playlist.name }}</h1>
-              <span class="badge-default" *ngIf="playlist.isDefault">ברירת מחדל</span>
+              <span class="badge-default" *ngIf="playlist.isDefault">{{ 'playlist.default_badge' | translate }}</span>
             </div>
             <p class="hero-desc" *ngIf="playlist.description">{{ playlist.description }}</p>
             <div class="hero-meta">
-              <span>{{ playlist.songs.length }} שירים</span>
+              <span>{{ playlist.songs.length }} {{ 'shared.songs_suffix' | translate }}</span>
               <span class="meta-dot"></span>
               <span>{{ playlist.createdAt | date:'d.M.yyyy' }}</span>
             </div>
           </div>
 
-          <!-- Visibility segmented control -->
           <div class="visibility-wrap" *ngIf="isOwner() && !playlist.isDefault">
             <div class="visibility-toggle">
               <button class="toggle-opt" type="button"
                       [class.toggle-opt--active]="playlist.isPublic"
                       (click)="!playlist.isPublic && togglePublic()"
                       [disabled]="isTogglingPublic">
-                ציבורית
+                {{ 'playlist.public' | translate }}
               </button>
               <button class="toggle-opt" type="button"
                       [class.toggle-opt--active]="!playlist.isPublic"
                       (click)="playlist.isPublic && togglePublic()"
                       [disabled]="isTogglingPublic">
-                פרטית
+                {{ 'playlist.private' | translate }}
               </button>
             </div>
             <p class="visibility-hint">
-              {{ playlist.isPublic ? 'הרשימה גלויה לכל משתמשי האתר' : 'הרשימה גלויה רק לך' }}
+              {{ playlist.isPublic ? ('playlist.public_hint' | translate) : ('playlist.private_hint' | translate) }}
             </p>
           </div>
 
-          <!-- Bottom-left column: chord book card above edit/delete -->
           <div class="hero-left-col">
 
-            <!-- Chord book card -->
             <div class="chord-book-card"
                  *ngIf="!playlist.isDefault && playlist.songs.length > 0"
                  (click)="showChordBook = true">
               <div class="chord-book-text">
-                <span class="chord-book-title">הפוך את הרשימה לספר אקורדים</span>
-                <span class="chord-book-desc">כל שירי הרשימה בתצוגת אקורדים, מוכנים להדפסה</span>
+                <span class="chord-book-title">{{ 'playlist.chord_book_title' | translate }}</span>
+                <span class="chord-book-desc">{{ 'playlist.chord_book_desc' | translate }}</span>
               </div>
               <span class="material-icons chord-book-arrow">arrow_back</span>
             </div>
 
-            <!-- Edit + Delete icon buttons -->
             <div class="hero-icon-btns" *ngIf="isOwner() && !playlist.isDefault && !isEditing">
               <button class="btn-icon" type="button"
-                      (click)="toggleEdit()" title="ערוך">
+                      (click)="toggleEdit()" [title]="'shared.save' | translate">
                 <span class="material-icons">edit</span>
               </button>
               <button class="btn-icon btn-icon--danger" type="button"
-                      (click)="deletePlaylist()" title="מחק">
+                      (click)="deletePlaylist()" [title]="'playlists.delete' | translate">
                 <span class="material-icons">delete_outline</span>
               </button>
             </div>
@@ -157,23 +139,20 @@
     </div>
   </div>
 
-  <!-- Songs -->
   <main class="detail-body">
 
-    <!-- Empty state -->
     <div class="empty-state" *ngIf="playlist.songs.length === 0">
       <span class="material-icons empty-icon">queue_music</span>
-      <h3>הרשימה ריקה</h3>
-      <p>הוסף שירים לרשימה מדף השיר</p>
+      <h3>{{ 'playlist.empty' | translate }}</h3>
+      <p>{{ 'playlist.empty_desc' | translate }}</p>
     </div>
 
-    <!-- Songs table -->
     <div class="songs-table" *ngIf="playlist.songs.length > 0">
       <div class="table-header">
         <span class="col-num">#</span>
-        <span class="col-song">שיר</span>
-        <span class="col-artist">אמן</span>
-        <span class="col-added">נוסף</span>
+        <span class="col-song">{{ 'playlist.col_song' | translate }}</span>
+        <span class="col-artist">{{ 'playlist.col_artist' | translate }}</span>
+        <span class="col-added">{{ 'playlist.col_added' | translate }}</span>
         <span class="col-act"></span>
       </div>
 
@@ -197,7 +176,7 @@
           <button class="btn-remove" type="button"
                   *ngIf="isOwner()"
                   (click)="removeSong(song.songId); $event.stopPropagation()"
-                  title="הסר">
+                  [title]="'playlist.remove' | translate">
             <span class="material-icons">close</span>
           </button>
         </div>
@@ -209,7 +188,6 @@
 
 </div>
 
-<!-- ספר אקורדים -->
 <app-chord-book-panel
   *ngIf="showChordBook && playlist && !playlist.isDefault"
   [playlist]="playlist"
@@ -219,10 +197,10 @@
 <ng-template #loadingOrError>
   <div class="state-block" *ngIf="isLoading">
     <div class="state-spinner"></div>
-    <p>טוען רשימה...</p>
+    <p>{{ 'playlist.loading' | translate }}</p>
   </div>
   <div class="state-block" *ngIf="error && !isLoading">
     <p>{{ error }}</p>
-    <button class="btn-pill btn-pill--accent" type="button" (click)="loadPlaylist()">נסה שוב</button>
+    <button class="btn-pill btn-pill--accent" type="button" (click)="loadPlaylist()">{{ 'shared.try_again' | translate }}</button>
   </div>
 </ng-template>

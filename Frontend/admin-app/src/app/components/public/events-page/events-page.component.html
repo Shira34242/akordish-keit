@@ -1,5 +1,4 @@
 <div class="events-page"
-  dir="rtl"
   (wheel)="onWheel($event)"
   (mousedown)="onMouseDown($event)"
   (mousemove)="onMouseMove($event)"
@@ -9,28 +8,24 @@
   (touchmove)="onTouchMove($event)"
   (touchend)="onMouseUp()">
 
-  <!-- Title + filters -->
   <div class="events-header">
-    <h1 class="events-title">הופעות</h1>
+    <h1 class="events-title">{{ 'events.title' | translate }}</h1>
     <div class="filter-pills">
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">קרובות</button>
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'all'"      (click)="setFilter('all')">הכל</button>
-      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'past'"     (click)="setFilter('past')">שעברו</button>
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'all'"      (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>
+      <button class="filter-pill" [class.filter-pill--active]="filterMode === 'past'"     (click)="setFilter('past')">{{ 'events.filter_past' | translate }}</button>
     </div>
   </div>
 
-  <!-- Loading -->
   <div *ngIf="loading" class="state-center">
     <div class="spinner"></div>
   </div>
 
-  <!-- Empty -->
   <div *ngIf="!loading && filteredEvents.length === 0" class="state-center">
     <span class="material-icons empty-icon">local_activity</span>
-    <p class="empty-text">אין הופעות להצגה</p>
+    <p class="empty-text">{{ 'events.empty' | translate }}</p>
   </div>
 
-  <!-- Carousel -->
   <div class="carousel" *ngIf="!loading && filteredEvents.length > 0">
     <div
       class="carousel-item"
@@ -45,7 +40,7 @@
         </div>
 
         <span class="slide-badge" [class.slide-badge--past]="event.isPast">
-          {{ event.isPast ? 'הסתיים' : event.eventStatus }}
+          {{ event.isPast ? ('shared.ended' | translate) : event.eventStatus }}
         </span>
 
         <div class="slide-info">
@@ -61,7 +56,7 @@
              target="_blank" rel="noopener"
              class="slide-ticket"
              (click)="$event.stopPropagation()">
-            לכרטיסים
+            {{ 'events.tickets' | translate }}
           </a>
         </div>
       </div>
@@ -69,11 +64,10 @@
     </div>
   </div>
 
-  <!-- Floating Tab Navigation -->
-  <nav class="tab-bar" dir="rtl">
-    <a class="tab-bar__item" routerLink="/music-news">חדשות</a>
-    <a class="tab-bar__item" routerLink="/blog">בלוג</a>
-    <a class="tab-bar__item tab-bar__item--active" routerLink="/events">הופעות</a>
+  <nav class="tab-bar">
+    <a class="tab-bar__item" routerLink="/music-news">{{ 'events.tab_news' | translate }}</a>
+    <a class="tab-bar__item" routerLink="/blog">{{ 'events.tab_blog' | translate }}</a>
+    <a class="tab-bar__item tab-bar__item--active" routerLink="/events">{{ 'events.tab_events' | translate }}</a>
   </nav>
 
 </div>

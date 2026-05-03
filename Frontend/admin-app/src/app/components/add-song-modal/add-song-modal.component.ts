@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormArray } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,6 +13,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { extractChords, parseChord } from '../../utils/music-utils';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export interface InitialSongRequest {
     songName: string;
@@ -22,7 +24,7 @@ export interface InitialSongRequest {
 @Component({
     selector: 'app-add-song-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, FileUploadInputComponent],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, FileUploadInputComponent, TranslatePipe],
     templateUrl: './add-song-modal.component.html',
     styleUrls: ['./add-song-modal.component.css']
 })
@@ -166,30 +168,30 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     }
 
     get smartStepLabel(): string {
-        return `שלב ${this.currentStep} מתוך ${this.totalSteps}`;
+        return `${this.currentStep} / ${this.totalSteps}`;
     }
 
     get smartHeaderTitle(): string {
         switch (this.currentStep) {
             case 1:
-                return 'מתחילים מבחירת השיר';
+                return this.langService.translate('song_modal.smart_step1_title');
             case 2:
-                return 'מוסיפים מילים ואקורדים';
+                return this.langService.translate('song_modal.smart_step2_title');
             case 3:
-                return 'בודקים לפני שליחה';
+                return this.langService.translate('song_modal.smart_step3_title');
             default:
-                return 'הוספת שיר';
+                return this.langService.translate('song_modal.add_short');
         }
     }
 
     get smartHeaderDescription(): string {
         switch (this.currentStep) {
             case 1:
-                return 'כותבים שם שיר או מדביקים קישור, ואני מסדר את הפתיחה.';
+                return this.langService.translate('song_modal.smart_step1_desc');
             case 2:
-                return 'מדביקים את התוכן, ואני מזהה סולם ומכין תצוגה.';
+                return this.langService.translate('song_modal.smart_step2_desc');
             case 3:
-                return 'עוברים על הפרטים פעם אחרונה ושולחים.';
+                return this.langService.translate('song_modal.smart_step3_desc');
             default:
                 return '';
         }
@@ -197,19 +199,19 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     get stepOneHelperText(): string {
         if (this.hasSelectedVideo) {
-            return 'אם זה לא השיר הנכון, אפשר לבחור שיר אחר.';
+            return this.langService.translate('song_modal.helper_wrong_song');
         }
 
         if (this.isSearchingYouTube) {
-            return 'מחפש עכשיו תוצאות ביוטיוב...';
+            return this.langService.translate('song_modal.helper_searching_yt');
         }
 
         if (this.showManualYoutubeInput) {
-            return this.isLoadingMetadata ? 'שולף עכשיו את התמונה והפרטים מהקישור.' : '';
+            return this.isLoadingMetadata ? this.langService.translate('song_modal.helper_loading_meta') : '';
         }
 
         if (this.hasSearchedYouTube && this.youtubeSearchResults.length === 0) {
-            return 'לא נמצאה התאמה טובה. אפשר לנסות ניסוח אחר או לבחור בהדבקת קישור ידנית.';
+            return this.langService.translate('song_modal.helper_no_results');
         }
 
         return '';
@@ -217,7 +219,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     get lyricsHelperText(): string {
         if (this.isDetectingOriginalKey || this.isDetectingEasyKey) {
-            return 'מזהה עכשיו סולם מקורי וסולם קל.';
+            return this.langService.translate('song_modal.helper_detecting_key');
         }
 
         return '';
@@ -225,7 +227,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     get smartPreviewMessage(): string {
         const title = this.songForm.get('title')?.value;
-        return title ? `הכול כמעט מוכן. בודקים את "${title}" ושולחים לאישור.` : 'הכול כמעט מוכן. בודקים את הפרטים ושולחים לאישור.';
+        return title
+            ? `${this.langService.translate('song_modal.preview_ready_pre')} "${title}" ${this.langService.translate('song_modal.preview_ready_suf')}`
+            : this.langService.translate('song_modal.preview_ready');
     }
 
     get selectedArtistsLabel(): string {
@@ -245,14 +249,14 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     get smartPrimaryActionLabel(): string {
         if (this.currentStep === 2) {
-            return 'בדיקה ותצוגה';
+            return this.langService.translate('song_modal.action_preview');
         }
 
         if (this.currentStep === 3) {
-            return this.isSubmitting ? 'שומר...' : 'שליחה לאישור';
+            return this.isSubmitting ? this.langService.translate('song_modal.saving') : this.langService.translate('song_modal.submit_approval');
         }
 
-        return 'המשך';
+        return this.langService.translate('song_modal.next');
     }
 
     get isProfessionalNonAdmin(): boolean {
@@ -284,6 +288,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     private tagSearch$ = new Subject<string>();
     private genreSearch$ = new Subject<string>();
     private composerSearch$ = new Subject<string>();
+
+    private readonly langService = inject(LanguageService);
 
     constructor(
         private fb: FormBuilder,
@@ -666,15 +672,15 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     }
 
     getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
-        if (type === 'artist') return 'אמן';
-        if (type === 'user') return 'חבר רגיל';
-        if (type === 'serviceProvider') return isTeacher ? 'מורה' : 'נותן שירות';
-        return type === 'artist' ? 'אמן' : 'מורה / בעל מקצוע';
+        if (type === 'artist') return this.langService.translate('song_modal.profile_artist');
+        if (type === 'user') return this.langService.translate('song_modal.profile_user');
+        if (type === 'serviceProvider') return isTeacher ? this.langService.translate('song_modal.profile_teacher') : this.langService.translate('song_modal.profile_service');
+        return type === 'artist' ? this.langService.translate('song_modal.profile_artist') : this.langService.translate('song_modal.profile_pro');
     }
 
     getProfileConnectionLabel(profile: UserWithProfileDto | null): string {
         return profile && profile.profileType !== 'user' && !profile.userId
-            ? ' · לא מקושר לחשבון'
+            ? this.langService.translate('song_modal.not_linked')
             : '';
     }
 
@@ -1786,20 +1792,23 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 next: (res) => {
                     this.isSubmitting = false;
                     if (res.success) {
-                        const message = this.editMode ? 'השיר עודכן בהצלחה!' : 'נשלח לאישור מנהל. תודה.';
-                        this.successMessage = this.editMode ? 'השיר עודכן בהצלחה' : 'נשלח לבדיקת מנהל';
+                        this.successMessage = this.editMode
+                            ? this.langService.translate('song_modal.success_updated')
+                            : this.langService.translate('song_modal.success_sent');
                         this.showInlineSuccess = true;
                         this.scrollModalToTop();
                         this.songAdded.emit();
                     } else {
-                        alert('שגיאה: ' + res.message);
+                        alert(this.langService.translate('song_modal.error_prefix') + ': ' + res.message);
                     }
                 },
                 error: (err) => {
                     this.isSubmitting = false;
                     console.error('Full error:', err);
                     console.error('Error details:', err.error);
-                    const message = this.editMode ? 'אירעה שגיאה בעדכון השיר' : 'אירעה שגיאה בשמירת השיר';
+                    const message = this.editMode
+                        ? this.langService.translate('song_modal.error_update')
+                        : this.langService.translate('song_modal.error_save');
                     alert(message);
                 }
             });

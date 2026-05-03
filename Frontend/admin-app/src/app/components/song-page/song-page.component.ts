@@ -30,11 +30,12 @@ import { PlaylistDetail } from '../../models/playlist.model';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
 import { SongRatingService } from '../../services/song-rating.service';
 import { SeoService } from '../../services/seo.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, TranslatePipe],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })

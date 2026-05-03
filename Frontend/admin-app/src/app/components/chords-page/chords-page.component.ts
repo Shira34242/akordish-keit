@@ -9,11 +9,12 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MusicalKey } from '../../models/song.model';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
     selector: 'app-chords-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent],
+    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, TranslatePipe],
     templateUrl: './chords-page.component.html',
     styleUrls: ['./chords-page.component.css']
 })

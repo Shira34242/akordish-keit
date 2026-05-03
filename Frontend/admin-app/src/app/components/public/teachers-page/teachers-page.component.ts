@@ -13,6 +13,7 @@ import { BecomeTeacherFormComponent } from '../become-teacher-form/become-teache
 import { AuthService } from '../../../services/auth.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 interface Instrument {
   id: number;
@@ -29,7 +30,7 @@ interface TeacherBanner {
 @Component({
   selector: 'app-teachers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective],
+  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective, TranslatePipe],
   templateUrl: './teachers-page.component.html',
   styleUrls: ['./teachers-page.component.css']
 })

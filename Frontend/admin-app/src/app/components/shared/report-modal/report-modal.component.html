@@ -1,7 +1,6 @@
 <div *ngIf="isOpen" class="modal-backdrop" (click)="handleBackdropClick($event)">
     <div class="modal-container">
 
-        <!-- Close Button -->
         <button class="close-btn" (click)="closeModal()" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -10,7 +9,6 @@
             </svg>
         </button>
 
-        <!-- Success State -->
         <div *ngIf="showSuccess" class="success-state">
             <div class="success-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
@@ -18,14 +16,12 @@
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
-            <h3>הדיווח נשלח!</h3>
-            <p>תודה, נטפל בכך בהקדם</p>
+            <h3>{{ 'report.sent' | translate }}</h3>
+            <p>{{ 'report.thanks' | translate }}</p>
         </div>
 
-        <!-- Form -->
         <form *ngIf="!showSuccess" (ngSubmit)="submitReport()">
 
-            <!-- Header -->
             <div class="modal-header">
                 <div class="header-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -36,14 +32,13 @@
                     </svg>
                 </div>
                 <div>
-                    <h2 class="modal-title">דיווח על בעיה</h2>
+                    <h2 class="modal-title">{{ 'report.title' | translate }}</h2>
                     <p class="modal-subtitle" *ngIf="contentTitle">{{ contentTitle }}</p>
                 </div>
             </div>
 
-            <!-- Report Type Chips -->
             <div class="form-section">
-                <p class="section-label">מה הבעיה?</p>
+                <p class="section-label">{{ 'report.what_problem' | translate }}</p>
                 <div class="chip-group">
                     <label *ngFor="let type of reportTypes" class="chip">
                         <input type="radio" name="reportType" [value]="type.value"
@@ -53,25 +48,22 @@
                 </div>
             </div>
 
-            <!-- Description -->
             <div class="form-section">
-                <p class="section-label">פירוט <span class="required">*</span></p>
+                <p class="section-label">{{ 'report.detail' | translate }} <span class="required">*</span></p>
                 <textarea class="form-textarea" [(ngModel)]="description" name="description" rows="4"
-                    placeholder="תאר את הבעיה בקצרה..." [disabled]="isSubmitting"
+                    [placeholder]="'report.placeholder' | translate" [disabled]="isSubmitting"
                     maxlength="1000"></textarea>
                 <span class="char-count">{{ description.length }} / 1000</span>
             </div>
 
-            <!-- Error -->
             <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-            <!-- Actions -->
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting">
-                    ביטול
+                    {{ 'shared.cancel' | translate }}
                 </button>
                 <button type="submit" class="btn-submit" [disabled]="isSubmitting || description.length < 10">
-                    {{ isSubmitting ? 'שולח...' : 'שליחה' }}
+                    {{ isSubmitting ? ('report.sending' | translate) : ('report.submit' | translate) }}
                 </button>
             </div>
 

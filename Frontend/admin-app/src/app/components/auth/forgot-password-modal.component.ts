@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 export enum RecoveryMethod {
   Email = 'email',
@@ -11,7 +12,7 @@ export enum RecoveryMethod {
 @Component({
   selector: 'app-forgot-password-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './forgot-password-modal.component.html',
   styleUrls: ['./forgot-password-modal.component.css']
 })

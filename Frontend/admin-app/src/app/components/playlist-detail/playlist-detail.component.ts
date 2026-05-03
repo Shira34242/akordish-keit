@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,11 +6,13 @@ import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail, UpdatePlaylistDto } from '../../models/playlist.model';
 import { AuthService } from '../../services/auth.service';
 import { ChordBookPanelComponent } from './chord-book-panel/chord-book-panel.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-playlist-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ChordBookPanelComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ChordBookPanelComponent, TranslatePipe],
   templateUrl: './playlist-detail.component.html',
   styleUrls: ['./playlist-detail.component.css']
 })
@@ -39,6 +41,8 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   isSavingImage = false;
 
   isTogglingPublic = false;
+
+  private readonly langService = inject(LanguageService);
 
   get thumbnailSlots(): (string | null)[] {
     if (this.playlist?.imageUrl) return [];
@@ -138,7 +142,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
       },
       error: (err) => {
         console.error('Error loading playlist:', err);
-        this.error = 'שגיאה בטעינת הרשימה';
+        this.error = this.langService.translate('playlist.error_load');
         this.isLoading = false;
       }
     });
@@ -213,7 +217,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   }
 
   removeSong(songId: number): void {
-    if (confirm('להסיר שיר זה מהרשימה?')) {
+    if (confirm(this.langService.translate('playlist.confirm_remove'))) {
       this.playlistService.removeSongFromPlaylist(this.playlistId, songId).subscribe({
         next: () => this.loadPlaylist(),
         error: (err) => console.error('Error removing song:', err)
@@ -228,7 +232,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   }
 
   deletePlaylist(): void {
-    if (confirm('למחוק את הרשימה לצמיתות?')) {
+    if (confirm(this.langService.translate('playlist.confirm_delete'))) {
       this.playlistService.deletePlaylist(this.playlistId).subscribe({
         next: () => this.router.navigate(['/my-playlists']),
         error: (err) => console.error('Error deleting playlist:', err)

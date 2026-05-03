@@ -1,28 +1,23 @@
 <div class="home-view">
 
-  <!-- White top mask -->
   <div class="top-scroll-mask"></div>
 
-  <!-- פס חדשות אלכסוני - שכבת הירו שנגללת עם הדף -->
   <div class="hero-ticker-layer">
     <app-news-ticker></app-news-ticker>
   </div>
 
-  <!-- Hero Background — fixed, shrinks on scroll -->
   <div class="hero-bg" #heroBg>
     <canvas #heroCanvas class="hero-canvas"></canvas>
     <div class="hero-overlay"></div>
     <div class="hero-collapse-overlay"></div>
   </div>
 
-  <!-- Hero Content Area (relative — יוצר גובה בפלוו הרגיל) -->
   <div class="hero-content-area">
     <div class="hero-content">
 
-      <p class="hero-subtitle">הבית של המוזיקה היהודית.</p>
+      <p class="hero-subtitle">{{ 'home.subtitle' | translate }}</p>
       <h1 class="hero-title">אקורדישקייט</h1>
 
-      <!-- Search Bar -->
       <div class="search-container">
         <div class="search-input-wrapper">
           <span class="material-icons search-icon-mat">search</span>
@@ -31,15 +26,14 @@
             [(ngModel)]="searchQuery"
             (input)="onSearchInput(searchQuery)"
             (blur)="onSearchBlur()"
-            placeholder="חפשו שירים, אקורדים, מילים, מורים, או כל דבר מהאתר"
+            [placeholder]="'home.search_placeholder' | translate"
             class="search-input">
         </div>
 
         <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults">
 
-          <!-- שירים ואקורדים -->
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
-            <span class="search-group-label">שירים ואקורדים</span>
+            <span class="search-group-label">{{ 'home.search_songs' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.songs" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
@@ -49,9 +43,8 @@
             </div>
           </div>
 
-          <!-- אמנים -->
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
-            <span class="search-group-label">אמנים</span>
+            <span class="search-group-label">{{ 'home.search_artists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.artists" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
@@ -60,9 +53,8 @@
             </div>
           </div>
 
-          <!-- כתבות -->
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
-            <span class="search-group-label">כתבות</span>
+            <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.articles" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
@@ -72,9 +64,8 @@
             </div>
           </div>
 
-          <!-- מורים -->
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
-            <span class="search-group-label">מורים</span>
+            <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
@@ -84,9 +75,8 @@
             </div>
           </div>
 
-          <!-- בעלי מקצוע -->
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
-            <span class="search-group-label">בעלי מקצוע</span>
+            <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
@@ -96,9 +86,8 @@
             </div>
           </div>
 
-          <!-- רשימות שמורות -->
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
-            <span class="search-group-label">רשימות שמורות</span>
+            <span class="search-group-label">{{ 'home.search_playlists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.playlists" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
@@ -108,11 +97,10 @@
             </div>
           </div>
 
-          <!-- שירים לפי מילות השיר (שלב 2) -->
           <div *ngIf="lyricsMatches.length > 0" class="search-group">
             <span class="search-group-label">
-              שירים לפי מילות השיר
-              <span class="search-lyrics-badge">חיפוש עמוק</span>
+              {{ 'home.search_by_lyrics' | translate }}
+              <span class="search-lyrics-badge">{{ 'home.search_deep_label' | translate }}</span>
             </span>
             <div class="search-result-item" *ngFor="let item of lyricsMatches" (click)="navigateToResult(item)">
               <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
@@ -123,47 +111,41 @@
             </div>
           </div>
 
-          <!-- טעינת חיפוש עמוק -->
           <div class="search-deep-loading" *ngIf="isSearchingDeep">
             <span class="search-deep-dot"></span>
             <span class="search-deep-dot"></span>
             <span class="search-deep-dot"></span>
-            <span class="search-deep-label">מחפש במילות השיר...</span>
+            <span class="search-deep-label">{{ 'home.searching_deep' | translate }}</span>
           </div>
 
-          <!-- אין תוצאות -->
           <div class="no-results" *ngIf="hasNoResults">
-            לא נמצאו תוצאות עבור "{{ searchQuery }}"
+            {{ 'home.no_results' | translate }} "{{ searchQuery }}"
           </div>
 
         </div>
       </div>
 
-      <!-- Quick Links -->
       <div class="hero-quick-links">
-        <a routerLink="/chords/dictionary" class="quick-link">למילון האקורדים ›</a>
-        <a routerLink="/tuner" class="quick-link">כיוון גיטרה ויוקלילי ›</a>
-        <a routerLink="/artists" class="quick-link">לרשימות האמנים ›</a>
+        <a routerLink="/chords/dictionary" class="quick-link">{{ 'home.quick_dict' | translate }}</a>
+        <a routerLink="/tuner" class="quick-link">{{ 'home.quick_tuner' | translate }}</a>
+        <a routerLink="/artists" class="quick-link">{{ 'home.quick_artists' | translate }}</a>
       </div>
 
     </div>
 
-    <!-- Scroll Down Icon -->
     <div class="hero-scroll-indicator">
       <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><clipPath id="clip0_151_1786"><path d="m0 0h24v24h-24z"/></clipPath><g clip-path="url(#clip0_151_1786)" stroke="#222" stroke-width="1.5"><path d="m5 10c0-3.86599 3.13401-7 7-7 3.866 0 7 3.13401 7 7v4c0 3.866-3.134 7-7 7-3.86599 0-7-3.134-7-7z"/><path d="m10 14 2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
     </div>
 
   </div>
 
-  <!-- Page Content -->
   <div class="content-section">
     <div class="page-content">
 
-    <!-- חדשות המוזיקה -->
     <section class="home-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
-        <h2 class="section-title">חדשות המוזיקה</h2>
-        <a routerLink="/music-news" class="section-cta">לכל החדשות ‹</a>
+        <h2 class="section-title">{{ 'home.news_title' | translate }}</h2>
+        <a routerLink="/music-news" class="section-link">{{ 'home.news_link' | translate }}</a>
       </div>
       <div class="news-banner-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0">
@@ -199,45 +181,39 @@
       </div>
     </section>
 
-    <!-- תיבת Promo — אקורדים -->
     <div id="promo-chords" class="promo-box">
       <div class="promo-content">
-        <h2 class="promo-title">אקורדים</h2>
-        <p class="promo-subtitle">מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית</p>
+        <h2 class="promo-title">{{ 'home.promo_chords_title' | translate }}</h2>
+        <p class="promo-subtitle">{{ 'home.promo_chords_sub' | translate }}</p>
         <div class="promo-actions">
-          <a routerLink="/chords" class="promo-btn">לכל האקורדים ‹</a>
-          <button (click)="handleRandomSongClick()" class="promo-btn promo-btn-secondary">שיר בהפתעה</button>
+          <a routerLink="/chords" class="promo-btn">{{ 'home.promo_chords_link' | translate }}</a>
+          <button (click)="handleRandomSongClick()" class="promo-btn promo-btn-secondary">{{ 'home.promo_chords_random' | translate }}</button>
         </div>
       </div>
     </div>
 
-    <!-- אקורדים שהועלו לאחרונה -->
-    <section class="home-section" *ngIf="recentSongs.length > 0">
+    <section class="home-section">
       <div class="section-header">
-        <h2 class="section-title">אקורדים שהועלו לאחרונה</h2>
-        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
+        <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
       </div>
       <div class="songs-grid">
         <app-song-card *ngFor="let song of recentSongs" [song]="song"></app-song-card>
       </div>
     </section>
 
-    <!-- אקורדים פופולאריים -->
-    <section class="home-section" *ngIf="popularSongs.length > 0">
+    <section class="home-section">
       <div class="section-header">
-        <h2 class="section-title">אקורדים פופולאריים</h2>
-        <a routerLink="/chords" class="section-cta">לכל האקורדים ‹</a>
+        <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
       </div>
       <div class="songs-grid">
         <app-song-card *ngFor="let song of popularSongs" [song]="song"></app-song-card>
       </div>
     </section>
 
-    <!-- אמנים פופולאריים -->
-    <section class="home-section" *ngIf="topArtists.length > 0">
+    <section class="home-section">
       <div class="section-header">
-        <h2 class="section-title">אמנים פופולאריים</h2>
-        <a routerLink="/artists" class="section-cta">לכל האמנים ‹</a>
+        <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
+        <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
       </div>
       <div class="artists-loop-row">
         <div class="artists-loop-track">
@@ -247,11 +223,10 @@
       </div>
     </section>
 
-    <!-- מורים -->
     <section class="home-section" *ngIf="featuredTeachers.length > 0">
       <div class="section-header">
-        <h2 class="section-title">מורים</h2>
-        <a routerLink="/teachers" class="section-cta">לכל המורים ‹</a>
+        <h2 class="section-title">{{ 'home.teachers_title' | translate }}</h2>
+        <a routerLink="/teachers" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
         <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers" [routerLink]="['/teacher', teacher.id]">
@@ -260,28 +235,26 @@
             <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
           </div>
           <p class="person-name">{{ teacher.displayName }}</p>
-          <p class="person-sub">{{ teacher.primaryInstrument || 'מורה למוזיקה' }}</p>
+          <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
         </a>
       </div>
     </section>
 
-    <!-- תיבת Promo — אינדקס עולם המוזיקה -->
     <div id="promo-index" class="promo-box promo-box--providers">
       <div class="promo-content">
-        <h2 class="promo-title">אינדקס עולם המוזיקה</h2>
-        <p class="promo-subtitle">המאגר הגדול לנותני שירות במוזיקה היהודית</p>
+        <h2 class="promo-title">{{ 'home.promo_index_title' | translate }}</h2>
+        <p class="promo-subtitle">{{ 'home.promo_index_sub' | translate }}</p>
         <div class="promo-actions">
-          <a routerLink="/professionals" class="promo-btn">לאינדקס ‹</a>
-          <button type="button" (click)="handleJoinIndexClick()" class="promo-btn promo-btn-secondary">הצטרף לאינדקס ‹</button>
+          <a routerLink="/professionals" class="promo-btn">{{ 'home.promo_index_link' | translate }}</a>
+          <button type="button" (click)="handleJoinIndexClick()" class="promo-btn promo-btn-secondary">{{ 'home.promo_index_join' | translate }}</button>
         </div>
       </div>
     </div>
 
-    <!-- בעלי מקצוע -->
     <section class="home-section provider-showcase-section" *ngIf="featuredProviders.length > 0">
       <div class="section-header">
-        <h2 class="section-title">בעלי מקצוע</h2>
-        <a routerLink="/professionals" class="section-cta">לכל בעלי המקצוע ‹</a>
+        <h2 class="section-title">{{ 'home.professionals_title' | translate }}</h2>
+        <a routerLink="/professionals" class="section-link">{{ 'home.professionals_link' | translate }}</a>
       </div>
       <div class="persons-scroll provider-showcase-scroll">
         <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
@@ -290,46 +263,45 @@
             <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
           </div>
           <p class="person-name">{{ pro.displayName }}</p>
-          <p class="person-sub">{{ pro.categoryName || 'בעל מקצוע' }}</p>
+          <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
         </a>
       </div>
     </section>
 
-    <!-- תוכן — כתבות בלוג (לפני הופעות) -->
-    <section class="home-section" *ngIf="blogArticles.length > 0">
+    <section class="home-section" *ngIf="featuredArtists.length > 0">
       <div class="section-header">
-        <h2 class="section-title">תוכן</h2>
-        <a routerLink="/articles" class="section-cta">לכל התוכן ‹</a>
+        <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
       </div>
       <div class="news-grid">
         <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
       </div>
     </section>
 
-    <!-- הופעות קרובות -->
     <section class="home-section" *ngIf="upcomingEvents.length > 0">
       <div class="section-header">
-        <h2 class="section-title">הופעות קרובות</h2>
-        <a routerLink="/events" class="section-cta">לכל ההופעות ‹</a>
+        <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
+        <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row">
-        <div class="events-loop-track">
-          <app-event-card
-            *ngFor="let event of upcomingEvents"
-            [event]="event"
-            (cardClick)="openEventModal($event)">
-          </app-event-card>
-          <app-event-card
-            *ngFor="let event of upcomingEvents"
-            [event]="event"
-            aria-hidden="true"
-            (cardClick)="openEventModal($event)">
-          </app-event-card>
-        </div>
+      <div class="events-list">
+        <app-event-card
+          *ngFor="let event of upcomingEvents"
+          [event]="event"
+          (cardClick)="openEventModal($event)">
+        </app-event-card>
       </div>
     </section>
 
-    </div><!-- /page-content -->
+    <section class="home-section" *ngIf="blogArticles.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
+        <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>
+      </div>
+      <div class="news-grid">
+        <app-news-banner *ngFor="let article of blogArticles" [article]="article"></app-news-banner>
+      </div>
+    </section>
+
+    </div>
   </div>
 </div>
 
@@ -337,4 +309,3 @@
   [event]="selectedEventModal"
   (close)="selectedEventModal = null">
 </app-event-modal>
-

@@ -1,7 +1,7 @@
-<div class="profile-page" dir="rtl">
+<div class="profile-page">
   <div class="profile-hero" [class.profile-hero--collapsed]="heroCollapsed">
-    <h1 class="profile-title">הפרופיל שלי</h1>
-    <p class="profile-subtitle">פרטים אישיים לניהול החשבון — אינם מוצגים בפרופיל הציבורי</p>
+    <h1 class="profile-title">{{ 'profile.title' | translate }}</h1>
+    <p class="profile-subtitle">{{ 'profile.subtitle' | translate }}</p>
 
     <div class="avatar-wrapper">
       <svg class="progress-ring" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -22,12 +22,12 @@
         class="profile-avatar"
         [class.profile-avatar--uploading]="uploadingAvatar"
         [src]="user?.profileImageUrl || '/logo.png'"
-        alt="תמונת פרופיל"
+        alt="profile image"
         onerror="this.src='/logo.png'"/>
       <div class="avatar-upload-overlay" *ngIf="uploadingAvatar">
         <span class="avatar-spinner"></span>
       </div>
-      <button class="edit-avatar-btn" title="שינוי תמונה" (click)="triggerAvatarUpload()" [disabled]="uploadingAvatar">
+      <button class="edit-avatar-btn" (click)="triggerAvatarUpload()" [disabled]="uploadingAvatar">
         <span class="material-icons">{{ uploadingAvatar ? 'hourglass_empty' : 'person' }}</span>
       </button>
       <input
@@ -40,7 +40,7 @@
 
     <div class="level-badges-row">
       <span class="level-label">
-        דרגה {{ getLevelNumber() }}
+        {{ 'profile.level' | translate }} {{ getLevelNumber() }}
         <span class="material-icons info-icon">info</span>
       </span>
     </div>
@@ -53,8 +53,8 @@
       <p class="profile-phone">{{ user?.phone }}</p>
     }
     <div class="profile-tags">
-      <span class="profile-tag">גיטרה</span>
-      <span class="profile-tag">אורגן</span>
+      <span class="profile-tag">{{ 'profile.instrument_guitar' | translate }}</span>
+      <span class="profile-tag">{{ 'profile.instrument_piano' | translate }}</span>
       <span class="profile-tag">{{ getLevelName() }}</span>
     </div>
   </div>
@@ -63,17 +63,17 @@
     @if (profileIncomplete) {
       <div class="completion-banner" (click)="openProfileModal()">
         <div class="completion-banner-text">
-          <p>עוד כמה פרטים קטנים להשלמת הפרופיל</p>
-          <p>כדי שנוכל להציג לכם תוצאות מדויקות יותר</p>
-          <span class="completion-banner-cta">להשלמת הפרטים &lt;</span>
+          <p>{{ 'profile.completion_title' | translate }}</p>
+          <p>{{ 'profile.completion_sub' | translate }}</p>
+          <span class="completion-banner-cta">{{ 'profile.completion_cta' | translate }}</span>
         </div>
       </div>
     }
 
     @if (myPages.length === 0) {
       <div class="manage-card manage-card--empty">
-        <p class="manage-empty-text">עדיין אין לך דף באתר</p>
-        <button class="manage-account-link" (click)="openManageAccountFlow()">הוסף דף +</button>
+        <p class="manage-empty-text">{{ 'profile.no_page' | translate }}</p>
+        <button class="manage-account-link" (click)="openManageAccountFlow()">{{ 'profile.add_page' | translate }}</button>
       </div>
     }
 
@@ -81,22 +81,22 @@
       <div class="manage-card manage-card--page">
         <div class="manage-card-col">
           <div>
-            <h3 class="manage-card-title">ניהול הדף שלך באתר</h3>
-            <p class="manage-card-subtitle">העמוד שמוצג לחברי האתר</p>
+            <h3 class="manage-card-title">{{ 'profile.manage_page_title' | translate }}</h3>
+            <p class="manage-card-subtitle">{{ 'profile.manage_page_sub' | translate }}</p>
           </div>
           <div class="manage-card-actions">
-            <button class="manage-btn" (click)="openEditPageModal(page)">ערוך דף</button>
-            <a class="manage-btn" [routerLink]="getViewPageUrl(page)">צפה בדף</a>
+            <button class="manage-btn" (click)="openEditPageModal(page)">{{ 'profile.edit_page' | translate }}</button>
+            <a class="manage-btn" [routerLink]="getViewPageUrl(page)">{{ 'profile.view_page' | translate }}</a>
           </div>
         </div>
         <div class="manage-card-col manage-card-col--info">
           <div class="manage-info-list">
             <div class="manage-info-item">
-              <span class="manage-info-label">סוג דף:</span>
+              <span class="manage-info-label">{{ 'profile.page_type' | translate }}</span>
               <span class="manage-info-value">{{ getPageLabel(page) }}</span>
             </div>
             <div class="manage-info-item">
-              <span class="manage-info-label">סטטוס:</span>
+              <span class="manage-info-label">{{ 'profile.status' | translate }}</span>
               <span class="status-value">
                 <span class="status-dot" [ngClass]="getPageStatusClass(page)"></span>
                 {{ getPageStatusLabel(page) }}
@@ -109,9 +109,9 @@
               [class.manage-account-link--off]="isPageActive(page)"
               (click)="togglePageVisibility(page)"
               [disabled]="!canTogglePage(page) || togglingPageId === page.profileId">
-              {{ togglingPageId === page.profileId ? 'שומר...' : (isPageActive(page) ? 'כבה דף' : 'הפעל דף') }}
+              {{ togglingPageId === page.profileId ? ('profile.saving' | translate) : (isPageActive(page) ? ('profile.disable_page' | translate) : ('profile.enable_page' | translate)) }}
             </button>
-            <button class="manage-account-link" (click)="openManageAccountFlow()">לשינוי סוג חשבון &gt;</button>
+            <button class="manage-account-link" (click)="openManageAccountFlow()">{{ 'profile.change_account_type' | translate }}</button>
           </div>
         </div>
       </div>
@@ -120,31 +120,31 @@
     <div class="manage-card manage-card--subscription">
       <div class="manage-card-col">
         <div>
-          <h3 class="manage-card-title">מינויים ותשלומים</h3>
-          <p class="manage-card-subtitle">ניהול המינויים שלך והיסטוריית תשלומים</p>
+          <h3 class="manage-card-title">{{ 'profile.subscriptions_title' | translate }}</h3>
+          <p class="manage-card-subtitle">{{ 'profile.subscriptions_sub' | translate }}</p>
         </div>
         <div class="manage-card-actions">
           @if (canUpgradeSubscription()) {
-            <button class="manage-account-link" (click)="navigateToUpgrade()">שדרג מנוי</button>
+            <button class="manage-account-link" (click)="navigateToUpgrade()">{{ 'profile.upgrade' | translate }}</button>
           }
-          <a class="manage-btn" routerLink="/subscription/status">לניהול</a>
+          <a class="manage-btn" routerLink="/subscription/status">{{ 'profile.manage' | translate }}</a>
         </div>
       </div>
       <div class="manage-card-col manage-card-col--info">
         <div class="manage-info-list">
           <div class="manage-info-item">
-            <span class="manage-info-label">חשבון:</span>
+            <span class="manage-info-label">{{ 'profile.account' | translate }}</span>
             <span class="sub-plan-badge" [ngClass]="getSubscriptionBadgeClass()">{{ getSubscriptionBadgeText() }}</span>
           </div>
           <div class="manage-info-item">
-            <span class="manage-info-label">סטטוס:</span>
+            <span class="manage-info-label">{{ 'profile.status' | translate }}</span>
             <span class="sub-status-value">
               <span class="status-dot" [ngClass]="getSubscriptionStatusDotClass()"></span>
               {{ getSafeSubscriptionStatusText() }}
             </span>
           </div>
         </div>
-        <a routerLink="/subscription/status" class="manage-account-link">לניהול</a>
+        <a routerLink="/subscription/status" class="manage-account-link">{{ 'profile.manage' | translate }}</a>
       </div>
     </div>
 
@@ -164,7 +164,7 @@
 
     <section class="content-section known-chords-section">
       <div class="section-header">
-        <h3 class="section-title">האקורדים שאני יודע לנגן:</h3>
+        <h3 class="section-title">{{ 'profile.known_chords_title' | translate }}</h3>
       </div>
 
       <div class="known-chords-board">
@@ -176,29 +176,28 @@
                 <button
                   class="known-basic-btn"
                   (click)="addBasicKnownChords(instrument)"
-                  [title]="getMissingBasicChordCount(instrument) > 0 ? 'יוסיף ' + getMissingBasicChordCount(instrument) + ' אקורדים בסיסיים' : 'כל האקורדים הבסיסיים כבר נוספו'"
                   [disabled]="quickAddingBasic[instrument] || getMissingBasicChordCount(instrument) === 0">
-                  {{ quickAddingBasic[instrument] ? 'מוסיף...' : getMissingBasicChordCount(instrument) === 0 ? 'הבסיסיים נוספו' : 'הוסף בסיסיים' }}
+                  {{ quickAddingBasic[instrument] ? ('profile.adding' | translate) : getMissingBasicChordCount(instrument) === 0 ? ('profile.basics_added' | translate) : ('profile.add_basics' | translate) }}
                 </button>
                 <button
                   class="known-clear-btn"
                   *ngIf="getKnownChordsForInstrument(instrument).length > 0"
                   (click)="removeAllKnownChords(instrument)"
                   [disabled]="quickRemovingAll[instrument]">
-                  {{ quickRemovingAll[instrument] ? 'מוחק...' : 'מחק הכל' }}
+                  {{ quickRemovingAll[instrument] ? ('profile.removing' | translate) : ('profile.remove_all' | translate) }}
                 </button>
               </div>
             </div>
             <div class="known-chords-list">
               @if (getKnownChordsForInstrument(instrument).length > 0) {
                 @for (chord of getKnownChordsForInstrument(instrument); track chord.id) {
-                  <button class="known-chord-pill" (click)="removeKnownChord(chord)" [title]="'הסרה: ' + chord.chordName">
+                  <button class="known-chord-pill" (click)="removeKnownChord(chord)">
                     {{ chord.chordName }}
                     <span class="material-icons known-chord-remove">close</span>
                   </button>
                 }
               } @else {
-                <span class="known-chords-empty">עדיין לא סומנו אקורדים</span>
+                <span class="known-chords-empty">{{ 'profile.no_chords' | translate }}</span>
               }
             </div>
           </div>
@@ -209,17 +208,17 @@
     @if (hasUploadedContent()) {
     <section class="content-section">
       <div class="section-header">
-        <h3 class="section-title">תכנים שהעליתי:</h3>
+        <h3 class="section-title">{{ 'profile.my_content_title' | translate }}</h3>
       </div>
 
       <div class="content-row">
-        <div class="row-label-strip">אקורדים</div>
+        <div class="row-label-strip">{{ 'profile.content_chords' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--songs">
           @if (mySongs.length > 0) {
             @for (song of (mySongs | slice:0:visibleSongCount); track song.id) {
               <div class="song-card-shell">
                 @if (song.isApproved === false) {
-                  <span class="pending-badge">ממתין לאישור</span>
+                  <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
                 }
                 <app-song-card [song]="song"></app-song-card>
               </div>
@@ -227,23 +226,23 @@
           } @else {
             <div class="empty-row-state">
               <span class="material-icons empty-icon">music_note</span>
-              <span>עוד לא העלית אקורדים</span>
+              <span>{{ 'profile.no_songs' | translate }}</span>
             </div>
           }
         </div>
         @if (mySongs.length > visibleSongCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreSongs()">הצג עוד</button>
+          <button class="show-more-btn" type="button" (click)="showMoreSongs()">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
 
       <div class="content-row">
-        <div class="row-label-strip">כתבות ובלוג</div>
+        <div class="row-label-strip">{{ 'profile.content_articles' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--articles">
           @if (myArticles.length > 0) {
             @for (article of (myArticles | slice:0:visibleArticleCount); track article.id) {
               <div class="news-banner-shell">
                 @if (!isArticleApproved(article)) {
-                  <span class="pending-badge">ממתין לאישור</span>
+                  <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
                 }
                 <app-news-banner [article]="getArticleBannerInput(article)"></app-news-banner>
               </div>
@@ -251,23 +250,23 @@
           } @else {
             <div class="empty-row-state">
               <span class="material-icons empty-icon">article</span>
-              <span>עוד לא העלית כתבות או בלוג</span>
+              <span>{{ 'profile.no_articles' | translate }}</span>
             </div>
           }
         </div>
         @if (myArticles.length > visibleArticleCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreArticles()">הצג עוד</button>
+          <button class="show-more-btn" type="button" (click)="showMoreArticles()">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
 
       <div class="content-row">
-        <div class="row-label-strip">הופעות</div>
+        <div class="row-label-strip">{{ 'profile.content_events' | translate }}</div>
         <div class="row-cards-wrap row-cards-wrap--events">
           @if (myEvents.length > 0) {
             @for (event of (myEvents | slice:0:visibleEventCount); track event.id) {
               <div class="event-card-shell">
                 @if (event.isApproved === false) {
-                  <span class="pending-badge">ממתין לאישור</span>
+                  <span class="pending-badge">{{ 'profile.pending' | translate }}</span>
                 }
                 <app-event-card [event]="event" (cardClick)="openEventModal($event)"></app-event-card>
               </div>
@@ -275,12 +274,12 @@
           } @else {
             <div class="empty-row-state">
               <span class="material-icons empty-icon">event</span>
-              <span>עוד לא העלית הופעות</span>
+              <span>{{ 'profile.no_events' | translate }}</span>
             </div>
           }
         </div>
         @if (myEvents.length > visibleEventCount) {
-          <button class="show-more-btn" type="button" (click)="showMoreEvents()">הצג עוד</button>
+          <button class="show-more-btn" type="button" (click)="showMoreEvents()">{{ 'profile.show_more' | translate }}</button>
         }
       </div>
     </section>
@@ -288,7 +287,7 @@
 
     <div class="saved-lists-row">
       <a routerLink="/my-playlists" class="saved-lists-link">
-        למעבר לרשימות שמורות
+        {{ 'profile.go_to_playlists' | translate }}
         <span class="material-icons arrow-icon">chevron_left</span>
       </a>
     </div>
@@ -324,30 +323,30 @@
       <button class="modal-close" (click)="closeProfileModal()">
         <span class="material-icons">close</span>
       </button>
-      <h2 class="modal-title">השלמת פרטים אישיים</h2>
-      <p class="modal-subtitle">הפרטים לא יוצגו בפרופיל הציבורי</p>
+      <h2 class="modal-title">{{ 'profile.modal_title' | translate }}</h2>
+      <p class="modal-subtitle">{{ 'profile.modal_sub' | translate }}</p>
 
       <div class="modal-form">
         <div class="form-group">
-          <label>מייל</label>
+          <label>{{ 'profile.label_email' | translate }}</label>
           <input type="email" [value]="user?.email" disabled class="form-input form-input--disabled"/>
         </div>
         <div class="form-group">
-          <label>טלפון</label>
+          <label>{{ 'profile.label_phone' | translate }}</label>
           <input type="tel" [(ngModel)]="profileForm.phone" placeholder="050-0000000" class="form-input"/>
         </div>
         <div class="form-group">
-          <label>כתובת</label>
-          <input type="text" [(ngModel)]="profileForm.address" placeholder="עיר, רחוב ומספר" class="form-input"/>
+          <label>{{ 'profile.label_address' | translate }}</label>
+          <input type="text" [(ngModel)]="profileForm.address" [placeholder]="'profile.address_placeholder' | translate" class="form-input"/>
         </div>
         <div class="form-group">
-          <label>תאריך לידה</label>
+          <label>{{ 'profile.label_birthdate' | translate }}</label>
           <input type="date" [(ngModel)]="profileForm.birthDate" class="form-input"/>
         </div>
       </div>
 
       <button class="modal-save-btn" (click)="saveProfile()" [disabled]="profileSaving">
-        {{ profileSaving ? 'שומר...' : 'שמור' }}
+        {{ profileSaving ? ('profile.saving' | translate) : ('profile.save' | translate) }}
       </button>
     </div>
   </div>
@@ -363,7 +362,7 @@
       <p class="modal-subtitle">{{ accountWarningSubtitle }}</p>
       <div class="account-warning-actions">
         <button type="button" class="manage-account-link" (click)="leaveCurrentPage()" [disabled]="leavingCurrentPage">
-          {{ leavingCurrentPage ? 'מנתק...' : accountWarningContinueLabel }}
+          {{ leavingCurrentPage ? ('profile.disconnecting' | translate) : accountWarningContinueLabel }}
         </button>
         <button type="button" class="manage-btn" (click)="closeAccountTypeModal()" [disabled]="leavingCurrentPage">
           {{ accountWarningCancelLabel }}

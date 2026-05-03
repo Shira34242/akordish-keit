@@ -1,13 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../../services/report.service';
 import { CreateReportDto, ReportTypeLabels } from '../../../models/report.model';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-report-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './report-modal.component.html',
   styleUrls: ['./report-modal.component.css']
 })
@@ -19,17 +21,22 @@ export class ReportModalComponent implements OnInit {
 
   @Output() close = new EventEmitter<void>();
 
+  private readonly langService = inject(LanguageService);
+
   selectedReportType: 'ContentError' | 'InappropriateContent' | 'Other' = 'ContentError';
   description: string = '';
   isSubmitting: boolean = false;
   showSuccess: boolean = false;
   errorMessage: string = '';
 
-  reportTypes = [
-    { value: 'ContentError' as const, label: 'טעות בתוכן' },
-    { value: 'InappropriateContent' as const, label: 'תוכן לא ראוי' },
-    { value: 'Other' as const, label: 'אחר' }
-  ];
+  get reportTypes() {
+    const t = (k: string) => this.langService.translate(k);
+    return [
+      { value: 'ContentError' as const, label: t('report.type_error') },
+      { value: 'InappropriateContent' as const, label: t('report.type_inappropriate') },
+      { value: 'Other' as const, label: t('report.type_other') }
+    ];
+  }
 
   constructor(private reportService: ReportService) {}
 
@@ -47,7 +54,7 @@ export class ReportModalComponent implements OnInit {
 
   submitReport(): void {
     if (!this.description.trim() || this.description.length < 10) {
-      this.errorMessage = 'נא לתאר את הבעיה בעשרה תווים לפחות';
+      this.errorMessage = this.langService.translate('report.validation');
       return;
     }
 
@@ -69,7 +76,7 @@ export class ReportModalComponent implements OnInit {
         }, 2000);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'שגיאה בשליחת הדיווח';
+        this.errorMessage = error.error?.message || this.langService.translate('report.error_submit');
         this.isSubmitting = false;
       },
       complete: () => {

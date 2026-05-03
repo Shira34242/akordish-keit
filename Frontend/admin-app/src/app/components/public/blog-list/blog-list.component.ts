@@ -5,11 +5,12 @@ import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleContentType } from '../../../models/article.model';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, TranslatePipe],
   templateUrl: './blog-list.component.html',
   styleUrl: './blog-list.component.css'
 })

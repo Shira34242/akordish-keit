@@ -25,6 +25,8 @@ import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { EventCardData } from '../../utils/event.utils';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 interface ProfileSongCard {
   id: number;
@@ -58,7 +60,8 @@ interface ProfileArticleCard {
     SongCardComponent,
     NewsBannerComponent,
     EventCardComponent,
-    EventModalComponent
+    EventModalComponent,
+    TranslatePipe
   ],
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
@@ -132,7 +135,8 @@ export class MyProfileComponent implements OnInit {
     private userKnownChordService: UserKnownChordService,
     private subscriptionService: SubscriptionService,
     private router: Router,
-    private quickAddAssistantService: QuickAddAssistantService
+    private quickAddAssistantService: QuickAddAssistantService,
+    public langService: LanguageService
   ) {}
 
   ngOnInit() {
@@ -363,22 +367,16 @@ export class MyProfileComponent implements OnInit {
   }
 
   getSafeInstrumentLabel(instrument: KnownChordInstrument): string {
-    const labels: Record<KnownChordInstrument, string> = {
-      guitar: 'גיטרה',
-      piano: 'פסנתר',
-      ukulele: 'יוקלילי'
+    const keys: Record<KnownChordInstrument, string> = {
+      guitar: 'profile.instrument_guitar',
+      piano: 'profile.instrument_piano',
+      ukulele: 'profile.instrument_ukulele'
     };
-
-    return labels[instrument];
+    return this.langService.translate(keys[instrument]);
   }
 
   getInstrumentLabel(instrument: KnownChordInstrument): string {
-    const labels: Record<KnownChordInstrument, string> = {
-      guitar: 'גיטרה',
-      piano: 'פסנתר',
-      ukulele: 'יוקלילי'
-    };
-    return labels[instrument];
+    return this.getSafeInstrumentLabel(instrument);
   }
 
   getMissingBasicChordCount(instrument: KnownChordInstrument): number {
@@ -426,7 +424,7 @@ export class MyProfileComponent implements OnInit {
     const chords = this.getKnownChordsForInstrument(instrument);
     if (chords.length === 0 || this.quickRemovingAll[instrument]) return;
 
-    const confirmed = window.confirm(`למחוק את כל האקורדים שסומנו עבור ${this.getInstrumentLabel(instrument)}?`);
+    const confirmed = window.confirm(`${this.langService.translate('profile.confirm_remove_all')} ${this.getInstrumentLabel(instrument)}?`);
     if (!confirmed) return;
 
     this.quickRemovingAll[instrument] = true;
@@ -479,36 +477,20 @@ export class MyProfileComponent implements OnInit {
   }
 
   getSubscriptionStatusText(): string {
-    if (!this.subscription) return 'חינמי';
-    switch (this.subscription.status) {
-      case SubscriptionStatus.Active: return 'פעיל';
-      case SubscriptionStatus.Trial: return 'ניסיון חינם';
-      case SubscriptionStatus.PendingPayment: return 'ממתין לתשלום';
-      case SubscriptionStatus.Cancelled: return 'בוטל';
-      case SubscriptionStatus.Expired: return 'פג תוקף';
-      case SubscriptionStatus.Suspended: return 'מושהה';
-      default: return 'לא פעיל';
-    }
+    return this.getSafeSubscriptionStatusText();
   }
 
   getSafeSubscriptionStatusText(): string {
-    if (!this.subscription) return 'חינמי';
-
+    const t = (k: string) => this.langService.translate(k);
+    if (!this.subscription) return t('profile.sub_free');
     switch (this.subscription.status) {
-      case SubscriptionStatus.Active:
-        return 'פעיל';
-      case SubscriptionStatus.Trial:
-        return 'ניסיון חינם';
-      case SubscriptionStatus.PendingPayment:
-        return 'ממתין לתשלום';
-      case SubscriptionStatus.Cancelled:
-        return 'בוטל';
-      case SubscriptionStatus.Expired:
-        return 'פג תוקף';
-      case SubscriptionStatus.Suspended:
-        return 'מושהה';
-      default:
-        return 'לא פעיל';
+      case SubscriptionStatus.Active: return t('profile.sub_active');
+      case SubscriptionStatus.Trial: return t('profile.sub_trial');
+      case SubscriptionStatus.PendingPayment: return t('profile.sub_pending');
+      case SubscriptionStatus.Cancelled: return t('profile.sub_cancelled');
+      case SubscriptionStatus.Expired: return t('profile.sub_expired');
+      case SubscriptionStatus.Suspended: return t('profile.sub_suspended');
+      default: return t('profile.sub_inactive');
     }
   }
 
@@ -591,10 +573,10 @@ export class MyProfileComponent implements OnInit {
   }
 
   getPageLabel(page: UserWithProfileDto): string {
-    if (page.profileType === 'artist') return 'אמן';
-    if (page.isTeacher) return 'מורה למוזיקה';
+    if (page.profileType === 'artist') return this.langService.translate('profile.page_type_artist');
+    if (page.isTeacher) return this.langService.translate('profile.page_type_teacher');
     if (page.categories?.length > 0) return page.categories[0];
-    return 'בעל מקצוע';
+    return this.langService.translate('profile.page_type_provider');
   }
 
   getPageStatusClass(page?: UserWithProfileDto): string {
@@ -606,9 +588,9 @@ export class MyProfileComponent implements OnInit {
 
   getPageStatusLabel(page?: UserWithProfileDto): string {
     const status = (page ?? this.myPageInfo)?.status;
-    if (status === 'Active') return 'העמוד פעיל';
-    if (status === 'Pending') return 'ממתין לאישור';
-    return 'העמוד כבוי';
+    if (status === 'Active') return this.langService.translate('profile.page_active');
+    if (status === 'Pending') return this.langService.translate('profile.page_pending_approval');
+    return this.langService.translate('profile.page_off');
   }
 
   isPageActive(page: UserWithProfileDto): boolean {
@@ -707,7 +689,7 @@ export class MyProfileComponent implements OnInit {
   }
 
   getPageTypeName(): string {
-    return this.myPageInfo ? this.getPageLabel(this.myPageInfo) : 'משתמש רגיל';
+    return this.myPageInfo ? this.getPageLabel(this.myPageInfo) : this.langService.translate('profile.page_type_user');
   }
 
   getEditPageUrl(page?: UserWithProfileDto): string {
@@ -744,13 +726,13 @@ export class MyProfileComponent implements OnInit {
   }
 
   getLevelName(): string {
-    const names: Record<number, string> = {
-      0: 'משתמש רשום',
-      1: 'מתחיל',
-      2: 'תורם',
-      3: 'תורם מוביל'
+    const keys: Record<number, string> = {
+      0: 'profile.level_0',
+      1: 'profile.level_1',
+      2: 'profile.level_2',
+      3: 'profile.level_3'
     };
-    return names[this.getLevelNumber()];
+    return this.langService.translate(keys[this.getLevelNumber()]);
   }
 
   getDashOffset(): number {
@@ -786,7 +768,9 @@ export class MyProfileComponent implements OnInit {
   }
 
   getArticleTypeLabel(contentType?: number | string): string {
-    return this.isBlogContent(contentType) ? 'בלוג' : 'כתבה';
+    return this.isBlogContent(contentType)
+      ? this.langService.translate('profile.type_blog')
+      : this.langService.translate('profile.type_article');
   }
 
   isArticleApproved(article: ProfileArticleCard): boolean {

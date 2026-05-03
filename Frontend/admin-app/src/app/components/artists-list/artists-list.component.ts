@@ -6,11 +6,12 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ArtistService } from '../../services/artist.service';
 import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-artists-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
   templateUrl: './artists-list.component.html',
   styleUrls: ['./artists-list.component.css']
 })

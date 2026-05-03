@@ -18,6 +18,8 @@ import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistListDto } from '../../models/artist.model';
 import { ChordRequestMatch } from '../../models/report.model';
 import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export type QuickAddAction =
   | 'index-teacher'
@@ -57,7 +59,7 @@ interface AssistantStepDefinition {
 @Component({
   selector: 'app-quick-add-assistant-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddSongModalComponent],
+  imports: [CommonModule, FormsModule, AddSongModalComponent, TranslatePipe],
   templateUrl: './quick-add-assistant-modal.component.html',
   styleUrls: ['./quick-add-assistant-modal.component.css']
 })
@@ -71,6 +73,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
+  private readonly langService = inject(LanguageService);
 
   @Input() adminEditLabel: string | null = null;
   @Input() entryPoint: QuickAddEntryPoint = 'root';
@@ -154,11 +157,11 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   get articleOptionalLabel(): string {
-    return 'עוד כמה פרטים להשלמת החוויה, לא חובה';
+    return this.langService.translate('fab.optional_label');
   }
 
   get eventOptionalLabel(): string {
-    return 'עוד כמה פרטים להשלמת החוויה, לא חובה';
+    return this.langService.translate('fab.optional_label');
   }
 
   get isAdminUser(): boolean {
@@ -231,7 +234,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.messages.push({
           id: `bot-${this.messages.length + 1}`,
           tone: 'question',
-          text: 'מעולה, נמשיך להוספת אקורדים.'
+          text: this.langService.translate('fab.song_selected')
         });
         break;
       case 'chord-request':
@@ -243,7 +246,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.messages.push({
           id: `bot-${this.messages.length + 1}`,
           tone: 'question',
-          text: 'איזה שיר תרצה שנוסיף אקורדים עבורו?'
+          text: this.langService.translate('fab.chord_request_question')
         });
         break;
       case 'contact-form':
@@ -324,8 +327,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.isSubmitting = false;
         this.currentMode = 'success';
         this.submittedMessage = this.article.contentType === ArticleContentType.News
-          ? 'החדשה נשלחה לאישור מנהל.'
-          : 'התוכן נשלח לאישור מנהל.';
+          ? this.langService.translate('fab.success_news')
+          : this.langService.translate('fab.success_article');
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -371,7 +374,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       next: () => {
         this.isSubmitting = false;
         this.currentMode = 'success';
-        this.submittedMessage = 'ההופעה נשלחה לאישור מנהל.';
+        this.submittedMessage = this.langService.translate('fab.success_event');
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -461,7 +464,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.chordRequestMatch = null;
         this.chordRequestChecked = false;
         this.currentMode = 'success';
-        this.submittedMessage = 'הבקשה נשלחה! נעשה כמיטב יכולתנו להוסיף את האקורדים בהקדם.';
+        this.submittedMessage = this.langService.translate('fab.success_chord_request');
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -472,7 +475,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
   onSongAdded(): void {
     this.currentMode = 'success';
-    this.submittedMessage = 'השיר נשלח לאישור מנהל.';
+    this.submittedMessage = this.langService.translate('fab.success_song');
   }
 
   closeModal(): void {
@@ -633,15 +636,16 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
-    if (type === 'artist') return 'אמן';
-    if (type === 'user') return 'חבר רגיל';
-    if (type === 'serviceProvider') return isTeacher ? 'מורה' : 'נותן שירות';
-    return type === 'artist' ? 'אמן' : 'מורה / נותן שירות';
+    const t = (k: string) => this.langService.translate(k);
+    if (type === 'artist') return t('fab.profile_type_artist');
+    if (type === 'user') return t('fab.profile_type_user');
+    if (type === 'serviceProvider') return isTeacher ? t('fab.profile_type_teacher') : t('fab.profile_type_provider');
+    return t('fab.profile_type_general');
   }
 
   getProfileConnectionLabel(profile: UserWithProfileDto | null): string {
     return profile && profile.profileType !== 'user' && !profile.userId
-      ? ' · לא מקושר לחשבון'
+      ? this.langService.translate('fab.not_linked')
       : '';
   }
 
@@ -769,13 +773,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   private getStepDefinition(step: AssistantStep): AssistantStepDefinition {
+    const t = (k: string) => this.langService.translate(k);
     switch (step) {
       case 'content':
         return {
-          question: 'מעולה, איזה תוכן תרצה להוסיף?',
+          question: t('fab.content_question'),
           options: [
-            { id: 'content-news', label: 'חדשות מוזיקה', action: 'content-news' },
-            { id: 'content-article', label: 'תוכן אחר', action: 'content-article' }
+            { id: 'content-news', label: t('fab.opt_news'), action: 'content-news' },
+            { id: 'content-article', label: t('fab.opt_blog'), action: 'content-article' }
           ]
         };
       case 'index': {
@@ -786,20 +791,20 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         }));
 
         return {
-          question: 'הבנתי, איזה פרופיל תרצה לאינדקס?',
+          question: t('fab.index_question'),
           options: [
-            { id: 'index-teacher', label: 'מורה למוזיקה', action: 'index-teacher' },
+            { id: 'index-teacher', label: t('fab.opt_teacher'), action: 'index-teacher' },
             ...professionalOptions,
-            { id: 'index-service-provider-general', label: 'אחר', action: 'index-service-provider-general' }
+            { id: 'index-service-provider-general', label: t('fab.opt_other'), action: 'index-service-provider-general' }
           ]
         };
       }
       case 'artist':
         return {
-          question: 'איך תרצה להוסיף את האמן?',
+          question: t('fab.artist_question'),
           options: [
-            { id: 'artist-account', label: 'להפוך לחשבון אמן', action: 'artist-account' },
-            { id: 'artist-community', label: 'להוסיף אמן ללא בעלות חשבון', action: 'artist-community' }
+            { id: 'artist-account', label: t('fab.opt_artist_account'), action: 'artist-account' },
+            { id: 'artist-community', label: t('fab.opt_artist_community'), action: 'artist-community' }
           ]
         };
       default: {
@@ -814,19 +819,19 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         }
 
         options.push(
-          { id: 'song', label: 'אקורדים', action: 'song' },
-          { id: 'content', label: 'תוכן', nextStep: 'content' },
-          { id: 'event', label: 'הופעה', action: 'event' },
-          { id: 'index', label: 'פרופיל לאינדקס', nextStep: 'index' },
-          { id: 'artist', label: 'אמן', nextStep: 'artist' },
-          { id: 'chord-request', label: 'לבקש אקורדים לשיר', action: 'chord-request', isSecondary: true },
-          { id: 'contact-form', label: 'יצירת קשר', action: 'contact-form', isSecondary: true },
-          { id: 'contact', label: 'דיווח', action: 'contact', isSecondary: true }
+          { id: 'song', label: t('fab.opt_chords'), action: 'song' },
+          { id: 'content', label: t('fab.opt_content'), nextStep: 'content' },
+          { id: 'event', label: t('fab.opt_event'), action: 'event' },
+          { id: 'index', label: t('fab.opt_index'), nextStep: 'index' },
+          { id: 'artist', label: t('fab.opt_artist'), nextStep: 'artist' },
+          { id: 'chord-request', label: t('fab.opt_chord_request'), action: 'chord-request', isSecondary: true },
+          { id: 'contact-form', label: t('fab.opt_contact_form'), action: 'contact-form', isSecondary: true },
+          { id: 'contact', label: t('fab.opt_report'), action: 'contact', isSecondary: true }
         );
 
         return {
-          question: 'איזה תוכן תרצה להוסיף לאתר?',
-          helper: 'הוספת תוכן לאתר מתוגמלת בתג מיוחד ואפשרויות בלעדיות באתר לחברים מתקדמים.',
+          question: t('fab.root_question'),
+          helper: t('fab.root_helper'),
           options
         };
       }
@@ -966,7 +971,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       next: () => {
         this.isSubmitting = false;
         this.currentMode = 'success';
-        this.submittedMessage = 'ההודעה נשלחה! נחזור אליכם בהקדם.';
+        this.submittedMessage = this.langService.translate('fab.success_contact');
       },
       error: (error) => {
         this.isSubmitting = false;

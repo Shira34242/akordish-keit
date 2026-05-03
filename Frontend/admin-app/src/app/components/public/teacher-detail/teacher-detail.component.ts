@@ -17,11 +17,13 @@ import { Article } from '../../../models/article.model';
 import { SongDto } from '../../../models/song.model';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-teacher-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective, TranslatePipe],
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })
@@ -34,6 +36,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
 
   private readonly analytics = inject(AnalyticsService);
+  private readonly langService = inject(LanguageService);
 
   teacher: TeacherDto | null = null;
   cities: City[] = [];
@@ -437,7 +440,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
         type: 'video',
         videoUrl: this.teacher.videoUrl,
         imageUrl: this.getVideoThumbnailUrl(this.teacher.videoUrl) || this.heroBannerSrc || this.teacher.profileImageUrl || '/logo.png',
-        caption: 'סרטון היכרות'
+        caption: this.langService.translate('teacher.video_caption')
       });
     }
 
@@ -467,19 +470,21 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   get heroRole(): string {
     if (!this.teacher) return '';
     const instruments = this.getInstrumentNames();
-    return instruments ? `מורה ל${instruments}` : 'מורה למוזיקה';
+    return instruments
+      ? this.langService.translate('teacher.role_prefix') + instruments
+      : this.langService.translate('teacher.role_generic');
   }
 
   get infoCards(): Array<{ label: string; value: string }> {
     if (!this.teacher) return [];
     const cards: Array<{ label: string; value: string }> = [];
 
-    if (this.teacher.education) cards.push({ label: 'השכלה', value: this.teacher.education });
-    if (this.teacher.lessonTypes) cards.push({ label: 'סוגי שיעורים', value: this.teacher.lessonTypes });
-    if (this.teacher.availability) cards.push({ label: 'זמינות', value: this.teacher.availability });
-    if (this.teacher.workingHours) cards.push({ label: 'שעות פעילות', value: this.teacher.workingHours });
-    if (this.teacher.priceList) cards.push({ label: 'מחירון', value: this.teacher.priceList });
-    if (this.teacher.specializations) cards.push({ label: 'התמחויות', value: this.teacher.specializations });
+    if (this.teacher.education) cards.push({ label: this.langService.translate('teacher.info_education'), value: this.teacher.education });
+    if (this.teacher.lessonTypes) cards.push({ label: this.langService.translate('teacher.info_lessons'), value: this.teacher.lessonTypes });
+    if (this.teacher.availability) cards.push({ label: this.langService.translate('teacher.info_availability'), value: this.teacher.availability });
+    if (this.teacher.workingHours) cards.push({ label: this.langService.translate('teacher.info_hours'), value: this.teacher.workingHours });
+    if (this.teacher.priceList) cards.push({ label: this.langService.translate('teacher.info_price'), value: this.teacher.priceList });
+    if (this.teacher.specializations) cards.push({ label: this.langService.translate('teacher.info_specializations'), value: this.teacher.specializations });
 
     return cards;
   }
@@ -503,7 +508,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     if (!this.teacher) return '';
     const parts: string[] = [];
     if (this.teacher.shortBio) parts.push(this.teacher.shortBio);
-    if (this.teacher.yearsOfExperience) parts.push(`מעל ${this.teacher.yearsOfExperience} שנות ניסיון`);
+    if (this.teacher.yearsOfExperience) parts.push(this.langService.translate('teacher.experience_prefix') + this.teacher.yearsOfExperience + ' ' + this.langService.translate('teacher.experience_suffix'));
     if (this.teacher.education) parts.push(this.teacher.education);
     if (this.teacher.languages) parts.push(this.getLanguagesDisplay(this.teacher.languages));
     if (this.teacher.lessonTypes) parts.push(this.teacher.lessonTypes);
@@ -650,26 +655,26 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   getLanguagesDisplay(languages?: TeachingLanguage): string {
     if (!languages) return '';
     const list: string[] = [];
-    if (languages & TeachingLanguage.Hebrew)  list.push('עברית');
-    if (languages & TeachingLanguage.English) list.push('אנגלית');
-    if (languages & TeachingLanguage.Russian) list.push('רוסית');
-    if (languages & TeachingLanguage.French)  list.push('צרפתית');
-    if (languages & TeachingLanguage.Spanish) list.push('ספרדית');
-    if (languages & TeachingLanguage.Arabic)  list.push('ערבית');
+    if (languages & TeachingLanguage.Hebrew)  list.push(this.langService.translate('teacher.lang_hebrew'));
+    if (languages & TeachingLanguage.English) list.push(this.langService.translate('teacher.lang_english'));
+    if (languages & TeachingLanguage.Russian) list.push(this.langService.translate('teacher.lang_russian'));
+    if (languages & TeachingLanguage.French)  list.push(this.langService.translate('teacher.lang_french'));
+    if (languages & TeachingLanguage.Spanish) list.push(this.langService.translate('teacher.lang_spanish'));
+    if (languages & TeachingLanguage.Arabic)  list.push(this.langService.translate('teacher.lang_arabic'));
     return list.join(', ');
   }
 
   getTargetAudienceList(audience?: TargetAudience): string[] {
     if (!audience) return [];
     const list: string[] = [];
-    if (audience & TargetAudience.Children)     list.push('ילדים');
-    if (audience & TargetAudience.Teenagers)    list.push('נוער');
-    if (audience & TargetAudience.Adults)       list.push('מבוגרים');
-    if (audience & TargetAudience.Seniors)      list.push('גיל הזהב');
-    if (audience & TargetAudience.Beginners)    list.push('מתחילים');
-    if (audience & TargetAudience.Intermediate) list.push('בינוניים');
-    if (audience & TargetAudience.Advanced)     list.push('מתקדמים');
-    if (audience & TargetAudience.Professional) list.push('מקצועיים');
+    if (audience & TargetAudience.Children)     list.push(this.langService.translate('teacher.audience_children'));
+    if (audience & TargetAudience.Teenagers)    list.push(this.langService.translate('teacher.audience_teenagers'));
+    if (audience & TargetAudience.Adults)       list.push(this.langService.translate('teacher.audience_adults'));
+    if (audience & TargetAudience.Seniors)      list.push(this.langService.translate('teacher.audience_seniors'));
+    if (audience & TargetAudience.Beginners)    list.push(this.langService.translate('teacher.audience_beginners'));
+    if (audience & TargetAudience.Intermediate) list.push(this.langService.translate('teacher.audience_intermediate'));
+    if (audience & TargetAudience.Advanced)     list.push(this.langService.translate('teacher.audience_advanced'));
+    if (audience & TargetAudience.Professional) list.push(this.langService.translate('teacher.audience_professional'));
     return list;
   }
 
@@ -683,7 +688,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   getWhatsAppUrl(phoneNumber: string): string {
     const normalizedNumber = this.normalizeWhatsAppNumber(phoneNumber);
-    const message = encodeURIComponent('הי, הגעתי דרך אתר אקורדישקייט');
+    const message = encodeURIComponent(this.langService.translate('teacher.whatsapp_msg'));
     return `https://wa.me/${normalizedNumber}?text=${message}`;
   }
 
@@ -709,11 +714,11 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       [SocialPlatform.Twitter]: 'Twitter / X',
       [SocialPlatform.TikTok]: 'TikTok',
       [SocialPlatform.Spotify]: 'Spotify',
-      [SocialPlatform.Website]: 'אתר',
+      [SocialPlatform.Website]: this.langService.translate('teacher.social_website'),
       [SocialPlatform.Zing]: 'Zing'
     };
 
-    return names[platform] || 'קישור';
+    return names[platform] || this.langService.translate('teacher.social_link');
   }
 
   getSocialIconSvg(platform: SocialPlatform): SafeHtml {

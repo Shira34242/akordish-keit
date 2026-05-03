@@ -1,7 +1,7 @@
 <div class="pagination-container" *ngIf="totalPages > 1">
   <div class="pagination-info">
     <span class="info-text">
-      מציג {{ startItem }}-{{ endItem }} מתוך {{ totalCount }}
+      {{ 'paginate.showing' | translate }} {{ startItem }}-{{ endItem }} {{ 'paginate.of' | translate }} {{ totalCount }}
     </span>
   </div>
 
@@ -10,7 +10,7 @@
       class="pagination-btn"
       [disabled]="!hasPreviousPage"
       (click)="onFirstPage()"
-      title="עמוד ראשון">
+      [title]="'paginate.first_page' | translate">
       ⟪
     </button>
 
@@ -18,7 +18,7 @@
       class="pagination-btn"
       [disabled]="!hasPreviousPage"
       (click)="onPreviousPage()"
-      title="עמוד קודם">
+      [title]="'paginate.prev_page' | translate">
       ‹
     </button>
 
@@ -38,7 +38,7 @@
       class="pagination-btn"
       [disabled]="!hasNextPage"
       (click)="onNextPage()"
-      title="עמוד הבא">
+      [title]="'paginate.next_page' | translate">
       ›
     </button>
 
@@ -46,7 +46,7 @@
       class="pagination-btn"
       [disabled]="!hasNextPage"
       (click)="onLastPage()"
-      title="עמוד אחרון">
+      [title]="'paginate.last_page' | translate">
       ⟫
     </button>
   </div>

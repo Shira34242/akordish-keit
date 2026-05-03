@@ -1,7 +1,6 @@
 <div *ngIf="event" class="modal-backdrop" (click)="close.emit()">
-  <div class="modal-container" (click)="$event.stopPropagation()" dir="rtl">
+  <div class="modal-container" (click)="$event.stopPropagation()">
 
-    <!-- תמונה ממלאת את כל המודל -->
     <img
       *ngIf="event.imageUrl"
       [src]="event.imageUrl"
@@ -11,17 +10,15 @@
       <span class="material-icons">music_note</span>
     </div>
 
-    <!-- Overlay עליון: badge + סגירה -->
     <div class="modal-top-bar">
       <span class="overlay-pill overlay-pill--badge" [class.overlay-pill--past]="isPast">
-        {{ isPast ? 'הסתיים' : event.eventStatus }}
+        {{ isPast ? ('shared.ended' | translate) : event.eventStatus }}
       </span>
-      <button class="overlay-pill overlay-pill--close" (click)="close.emit()" aria-label="סגור">
+      <button class="overlay-pill overlay-pill--close" (click)="close.emit()" [attr.aria-label]="'shared.close' | translate">
         <span class="material-icons">close</span>
       </button>
     </div>
 
-    <!-- Overlay תחתון: פרטים + כפתור -->
     <div class="modal-bottom-bar">
       <div class="modal-info">
         <h2 class="modal-name">{{ event.name }}</h2>
@@ -39,7 +36,7 @@
         rel="noopener noreferrer"
         class="modal-ticket-btn"
         (click)="onTicketClick()">
-        לכרטיסים ›
+        {{ 'shared.tickets' | translate }} ›
       </a>
     </div>
 

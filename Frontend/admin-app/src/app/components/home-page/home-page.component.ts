@@ -22,6 +22,7 @@ import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 interface HeroParticle {
   x: number; y: number;
@@ -42,7 +43,8 @@ interface HeroParticle {
     NewsBannerComponent,
     NewsTickerComponent,
     EventCardComponent,
-    EventModalComponent
+    EventModalComponent,
+    TranslatePipe
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']

@@ -23,6 +23,8 @@ import { ArtistCreateComponent } from '../artist-create/artist-create.component'
 import { NotificationService } from '../../services/notification.service';
 import { NotificationDto } from '../../models/notification.model';
 import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
+import { LanguageService, Lang } from '../../services/language.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-layout',
@@ -41,7 +43,8 @@ import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/qui
     ServiceProviderCreateComponent,
     ArtistCreateComponent,
     RouterModule,
-    ImgFallbackDirective
+    ImgFallbackDirective,
+    TranslatePipe
   ],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.css']
@@ -50,6 +53,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   user: User | null = null;
   socialUser: SocialUser | null = null;
   loggedIn = false;
+  currentLang: Lang = 'he';
   showUserMenu = false;
   showAddSongModal = false;
   showMobileMenu = false;
@@ -97,7 +101,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private contentPageService: ContentPageService,
     private notificationService: NotificationService,
     private quickAddAssistantService: QuickAddAssistantService,
-    private profileReminderService: ProfileReminderService
+    private profileReminderService: ProfileReminderService,
+    public langService: LanguageService
   ) {}
 
   @HostListener('window:scroll')
@@ -180,6 +185,10 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     this.contentPageService.currentArticleId$.subscribe(id => {
       this.currentArticleId = id;
+    });
+
+    this.langService.lang$.subscribe(lang => {
+      this.currentLang = lang;
     });
   }
 
@@ -466,9 +475,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   formatNotificationDateOnly(dateValue: string): string {
-    return new Intl.DateTimeFormat('he-IL', {
-      dateStyle: 'medium'
-    }).format(new Date(dateValue));
+    const locale = this.langService.currentLang === 'he' ? 'he-IL' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(dateValue));
   }
 
   shouldShowNotificationTitle(notification: NotificationDto): boolean {
@@ -507,7 +515,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.markPreviewAsSeen();
       },
       error: () => {
-        this.notificationsPreviewError = 'לא הצלחנו לטעון התראות.';
+        this.notificationsPreviewError = this.langService.translate('notif.error');
         this.notificationsPreviewLoading = false;
       }
     });
@@ -562,7 +570,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.notificationsCenterLoading = false;
       },
       error: () => {
-        this.notificationsCenterError = 'לא הצלחנו לטעון התראות.';
+        this.notificationsCenterError = this.langService.translate('notif.error');
         this.notificationsCenterLoading = false;
       }
     });

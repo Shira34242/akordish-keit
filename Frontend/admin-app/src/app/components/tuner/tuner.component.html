@@ -13,7 +13,7 @@
         <div class="hero-inner">
 
             <h1 class="hero-title">{{ heroTitle }}</h1>
-            <p class="hero-sub">כיוון לפי שמיעה ועם מיקרופון</p>
+            <p class="hero-sub">{{ 'tuner.sub' | translate }}</p>
 
             <!-- Instrument toggle -->
             <div class="instrument-tabs">
@@ -22,7 +22,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="1 -12 511.99887 511" fill="currentColor">
                         <path d="m458.457031.5-173.089843 173.257812c-3.390626-27.449218 11.734374-58.269531 23.042968-76.867187 6.582032-10.816406 6.21875-24.027344-.945312-34.476563-7.152344-10.429687-19.324219-15.519531-31.765625-13.285156-21.292969 3.824219-51.707031 13.417969-75.683594 37.390625-13.042969 13.042969-21.066406 31.382813-28.148437 47.5625-5.152344 11.773438-10.480469 23.949219-15.734376 29.003907l-.273437.269531c-16.121094 16.121093-37.671875 21.6875-60.484375 27.578125-22.648438 5.847656-46.066406 11.894531-63.402344 29.230468-21.03125 21.019532-32.085937 46.753907-31.972656 74.417969.167969 40.558594 23.269531 84.148438 66.8125 126.082031 40.777344 42.339844 83.589844 65.105469 123.828125 65.832032.644531.011718 1.28125.015625 1.925781.015625 27.9375 0 53.714844-11.03125 74.652344-31.976563 17.210938-17.210937 22.902344-39.980468 28.410156-61.996094 5.726563-22.894531 11.132813-44.515624 28.515625-61.898437l.269531-.273437c2.9375-3.054688 11.523438-7.246094 19.097657-10.941407 18.070312-8.820312 40.554687-19.792969 54.835937-42.164062 5.851563-9.167969 6.195313-20.773438.898438-30.289063-5.308594-9.527344-15.410156-15.371094-26.261719-15.207031-17.613281.222656-42.5625-2.136719-66.660156-22.386719l168.714843-168.878906h36.960938v-40z"/>
                     </svg>
-                    גיטרה
+                    {{ 'tuner.guitar' | translate }}
                 </button>
                 <button class="tab-btn" [class.active]="instrument === 'ukulele'"
                         (click)="setInstrument('ukulele')">
@@ -34,7 +34,7 @@
                         <path d="M8.2 9.9C8.7 8.8 9.8 8 11 8c2.8 0 5 2.2 5 5 0 1.2-.8 2.3-1.9 2.8l-.9.4A2 2 0 0 0 12 18a4 4 0 0 1-4 4c-3.3 0-6-2.7-6-6a4 4 0 0 1 4-4 2 2 0 0 0 1.8-1.2z"/>
                         <circle cx="11.5" cy="12.5" r=".5" fill="currentColor"/>
                     </svg>
-                    יוקלילי
+                    {{ 'tuner.ukulele' | translate }}
                 </button>
             </div>
 
@@ -47,9 +47,9 @@
         <!-- ─── Instructions ─── -->
         <div class="instructions-card">
             <p class="instructions-text">
-                <strong>כיוון לפי שמיעה:</strong>
-                לחצו על שם המיתר כדי לשמוע את הצליל הנכון שלו, ואז כווּנוּ את הגיטרה בסיבוב מפתחות הכיוון עד שהמיתר שלכם ישמע כמו הצליל שנשמע.
-                <ng-container *ngIf="instrument === 'guitar'"> כיוון גיטרה דורש יכולת שמיעה מוסיקלית ברמה בסיסית.</ng-container>
+                <strong>{{ 'tuner.instructions_ear' | translate }}</strong>
+                {{ 'tuner.instructions_text' | translate }}
+                <ng-container *ngIf="instrument === 'guitar'"> {{ 'tuner.guitar_ear_note' | translate }}</ng-container>
             </p>
         </div>
 
@@ -87,7 +87,7 @@
                     <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                 </svg>
 
-                <span>{{ micLoading ? 'מתחבר...' : (micActive ? 'עצור מיקרופון' : 'כיוון עם מיקרופון') }}</span>
+                <span>{{ micLoading ? ('tuner.connecting' | translate) : (micActive ? ('tuner.stop_mic' | translate) : ('tuner.start_mic' | translate)) }}</span>
             </button>
 
             <!-- Error -->
@@ -105,10 +105,10 @@
 
                 <!-- Target string hint -->
                 <p class="meter-hint" *ngIf="activeStringInfo">
-                    מכוונים מיתר {{ activeStringInfo.number }} — <span dir="ltr">{{ activeStringInfo.note }}</span>
+                    {{ 'tuner.tuning_string' | translate }} {{ activeStringInfo.number }} — <span dir="ltr">{{ activeStringInfo.note }}</span>
                 </p>
                 <p class="meter-hint" *ngIf="!activeStringInfo">
-                    בחרו מיתר מהרשימה למטה ונגנו אותו
+                    {{ 'tuner.pick_string' | translate }}
                 </p>
 
                 <!-- Note display -->
@@ -118,9 +118,9 @@
                     </div>
                     <div class="det-status">
                         <span *ngIf="!micListening" class="listening-dot-label">
-                            <span class="listening-dot"></span>מאזין...
+                            <span class="listening-dot"></span>{{ 'tuner.listening' | translate }}
                         </span>
-                        <span *ngIf="micListening && inTuneClass" class="in-tune-label">מכוון ✓</span>
+                        <span *ngIf="micListening && inTuneClass" class="in-tune-label">{{ 'tuner.in_tune' | translate }}</span>
                         <span *ngIf="micListening && !inTuneClass && detectedNote" class="cents-label" dir="ltr">
                             {{ detectedCents > 0 ? '+' : '' }}{{ detectedCents }} cents
                         </span>
@@ -203,7 +203,7 @@
 
         <!-- ─── Tuning Guide ─── -->
         <div class="tuning-guide">
-            <h2 class="guide-title">כיוון {{ instrument === 'guitar' ? 'גיטרה' : 'יוקלילי' }} סטנדרטי</h2>
+            <h2 class="guide-title">{{ instrument === 'guitar' ? ('tuner.guide_title_guitar' | translate) : ('tuner.guide_title_ukulele' | translate) }}</h2>
             <div class="guide-strings">
                 <div *ngFor="let str of currentStrings" class="guide-item">
                     <span class="guide-num">{{ str.number }}</span>
@@ -212,12 +212,12 @@
                 </div>
             </div>
             <p class="guide-hint">
-                כוונו כל מיתר עד שהצליל תואם לצליל שבכלי זה.
+                {{ 'tuner.guide_hint' | translate }}
                 <ng-container *ngIf="instrument === 'guitar'">
-                    מיתר 6 הוא העבה ביותר (E2), מיתר 1 הוא הדק ביותר (E4).
+                    {{ 'tuner.guitar_guide' | translate }}
                 </ng-container>
                 <ng-container *ngIf="instrument === 'ukulele'">
-                    מיתר 4 הוא העבה ביותר (G4), מיתר 1 הוא הדק ביותר (A4).
+                    {{ 'tuner.ukulele_guide' | translate }}
                 </ng-container>
             </p>
         </div>

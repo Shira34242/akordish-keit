@@ -1,22 +1,22 @@
 <div class="artist-create" [class.embedded-mode]="embedded">
   <div class="loading" *ngIf="loading">
     <div class="spinner"></div>
-    <p>טוען...</p>
+    <p>{{ 'shared.loading' | translate }}</p>
   </div>
 
   <div class="floating-nav floating-nav--top" *ngIf="!loading && !submitted">
-    <div class="step-dots-nav" aria-label="שלבי הטופס">
-      <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" aria-label="פרופיל">
+    <div class="step-dots-nav" [attr.aria-label]="'artist_create.form_steps' | translate">
+      <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" [attr.aria-label]="'artist_create.step_profile' | translate">
         <span class="step-dot-core"></span>
-        <span class="step-dot-label" *ngIf="currentStep === 1">פרופיל</span>
+        <span class="step-dot-label" *ngIf="currentStep === 1">{{ 'artist_create.step_profile' | translate }}</span>
       </button>
-      <button type="button" class="step-dot" [class.active]="currentStep === 2" (click)="goToStep(2)" aria-label="קישורים">
+      <button type="button" class="step-dot" [class.active]="currentStep === 2" (click)="goToStep(2)" [attr.aria-label]="'artist_create.step_links' | translate">
         <span class="step-dot-core"></span>
-        <span class="step-dot-label" *ngIf="currentStep === 2">קישורים</span>
+        <span class="step-dot-label" *ngIf="currentStep === 2">{{ 'artist_create.step_links' | translate }}</span>
       </button>
-      <button type="button" class="step-dot" [class.active]="currentStep === 3" (click)="goToStep(3)" aria-label="מדיה">
+      <button type="button" class="step-dot" [class.active]="currentStep === 3" (click)="goToStep(3)" [attr.aria-label]="'artist_create.step_media' | translate">
         <span class="step-dot-core"></span>
-        <span class="step-dot-label" *ngIf="currentStep === 3">מדיה</span>
+        <span class="step-dot-label" *ngIf="currentStep === 3">{{ 'artist_create.step_media' | translate }}</span>
       </button>
     </div>
   </div>
@@ -27,11 +27,11 @@
     </div>
 
     <div class="success-state" *ngIf="submitted">
-      <h2>דף האמן נשלח לבדיקה</h2>
-      <p>הפרטים הועברו למנהל. אם תרצה, אפשר עכשיו להמשיך לבחירת מנוי כדי לפתוח אפשרויות מתקדמות בדף.</p>
+      <h2>{{ 'artist_create.success_title' | translate }}</h2>
+      <p>{{ 'artist_create.success_text' | translate }}</p>
       <div class="success-actions">
-        <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">בחירת מנוי</button>
-        <button type="button" class="btn-cancel" (click)="finishFlow()">סיום</button>
+        <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">{{ 'artist_create.choose_plan' | translate }}</button>
+        <button type="button" class="btn-cancel" (click)="finishFlow()">{{ 'artist_create.finish' | translate }}</button>
       </div>
     </div>
 
@@ -40,11 +40,11 @@
         <div class="form-section" *ngIf="currentStep === 1">
           <div class="section-head">
             <div class="step-intro">
-              <div class="guided-badge">דף אמן</div>
-              <p class="section-intro-text">נתחיל מהלב של הפרופיל, כמו שהוא ירגיש בדף.</p>
+              <div class="guided-badge">{{ 'artist_create.badge' | translate }}</div>
+              <p class="section-intro-text">{{ 'artist_create.step1_intro' | translate }}</p>
             </div>
-            <h2>פרופיל ראשוני</h2>
-            <p class="section-description">תמונה, שמות ותוכן פתיחה שמייצרים רושם חי, נקי ומדויק כבר מההתחלה.</p>
+            <h2>{{ 'artist_create.step1_title' | translate }}</h2>
+            <p class="section-description">{{ 'artist_create.step1_desc' | translate }}</p>
           </div>
 
           <div class="artist-profile-hero">
@@ -53,13 +53,13 @@
                 <div class="upload-shell-head">
                   <span class="material-icons">add_photo_alternate</span>
                   <div>
-                    <strong>תמונת פרופיל</strong>
-                    <p>תמונה נקייה וברורה שתהיה הפנים של הדף.</p>
+                    <strong>{{ 'artist_create.profile_photo_label' | translate }}</strong>
+                    <p>{{ 'artist_create.profile_photo_hint' | translate }}</p>
                   </div>
                 </div>
                 <app-file-upload-input
                   [(url)]="artistForm.imageUrl"
-                  placeholder="הדבק כאן קישור לתמונה"
+                  [placeholder]="'artist_create.paste_photo_url' | translate"
                   [showPreview]="true"
                 />
               </div>
@@ -67,22 +67,22 @@
 
             <div class="artist-profile-fields">
               <div class="form-group">
-                <label class="form-label form-label--inline required" for="artistName">שם בעברית</label>
-                <label class="form-label form-label--sr-only" for="artistName">שם האמן</label>
+                <label class="form-label form-label--inline required" for="artistName">{{ 'artist_create.name_he' | translate }}</label>
+                <label class="form-label form-label--sr-only" for="artistName">{{ 'artist_create.name_he' | translate }}</label>
                 <input
                   id="artistName"
                   type="text"
                   [(ngModel)]="artistForm.name"
                   name="name"
                   class="form-input"
-                  placeholder="שם האמן בעברית *"
+                  [placeholder]="'artist_create.name_he_placeholder' | translate"
                   required
                 />
               </div>
 
               <div class="form-group">
-                <label class="form-label form-label--inline" for="artistEnglishName">שם באנגלית</label>
-                <label class="form-label form-label--sr-only" for="artistEnglishName">שם באנגלית</label>
+                <label class="form-label form-label--inline" for="artistEnglishName">{{ 'artist_create.name_en' | translate }}</label>
+                <label class="form-label form-label--sr-only" for="artistEnglishName">{{ 'artist_create.name_en' | translate }}</label>
                 <input
                   id="artistEnglishName"
                   type="text"
@@ -99,32 +99,32 @@
             <div class="upload-shell-head upload-shell-head--banner">
               <span class="material-icons">panorama</span>
               <div>
-                <strong>תמונת פתיחה</strong>
-                <p>הרקע הרחב שמופיע בראש הדף. מומלץ יחס רוחב רחב, למשל 1920x400.</p>
+                <strong>{{ 'artist_create.banner_label' | translate }}</strong>
+                <p>{{ 'artist_create.banner_hint' | translate }}</p>
               </div>
             </div>
 
-            <div class="media-toggle" role="tablist" aria-label="סוג מדיה לבאנר">
+            <div class="media-toggle" role="tablist" [attr.aria-label]="'artist_create.banner_media_type' | translate">
               <button
                 type="button"
                 class="media-toggle-btn"
                 [class.active]="bannerMediaMode === 'image'"
                 (click)="setBannerMediaMode('image')">
-                תמונה רגילה
+                {{ 'artist_create.banner_image' | translate }}
               </button>
               <button
                 type="button"
                 class="media-toggle-btn"
                 [class.active]="bannerMediaMode === 'gif'"
                 (click)="setBannerMediaMode('gif')">
-                GIF / אנימציה
+                {{ 'artist_create.banner_gif' | translate }}
               </button>
             </div>
 
             <app-file-upload-input
               *ngIf="bannerMediaMode === 'image'"
               [(url)]="artistForm.bannerImageUrl"
-              placeholder="הדבק כאן קישור לבאנר"
+              [placeholder]="'artist_create.paste_banner_url' | translate"
               [showPreview]="true"
             />
 
@@ -132,14 +132,14 @@
               *ngIf="bannerMediaMode === 'gif'"
               [(url)]="artistForm.bannerGifUrl"
               accept="image/*,video/mp4,video/webm"
-              placeholder="הדבק כאן קישור ל-GIF או וידאו קצר"
+              [placeholder]="'artist_create.paste_gif_url' | translate"
               [showPreview]="false"
             />
           </div>
 
           <div class="form-group">
-            <label class="form-label form-label--inline" for="artistShortBio">תיאור קצר</label>
-            <label class="form-label form-label--sr-only" for="artistShortBio">תיאור קצר</label>
+            <label class="form-label form-label--inline" for="artistShortBio">{{ 'artist_create.short_desc_label' | translate }}</label>
+            <label class="form-label form-label--sr-only" for="artistShortBio">{{ 'artist_create.short_desc_label' | translate }}</label>
             <textarea
               id="artistShortBio"
               [(ngModel)]="artistForm.shortBio"
@@ -147,7 +147,7 @@
               class="form-textarea"
               rows="3"
               maxlength="300"
-              placeholder="תיאור קצר: משפט או שניים שמספרים מי אתה ומה הסאונד או הסיפור שלך."
+              [placeholder]="'artist_create.short_desc_placeholder' | translate"
             ></textarea>
             <span class="char-counter" [class.warning]="getCharCount(artistForm.shortBio) > 250">
               {{ getCharCount(artistForm.shortBio) }}/300
@@ -155,8 +155,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label form-label--inline" for="artistBiography">ביוגרפיה</label>
-            <label class="form-label form-label--sr-only" for="artistBiography">ביוגרפיה</label>
+            <label class="form-label form-label--inline" for="artistBiography">{{ 'artist_create.bio_label' | translate }}</label>
+            <label class="form-label form-label--sr-only" for="artistBiography">{{ 'artist_create.bio_label' | translate }}</label>
             <textarea
               id="artistBiography"
               [(ngModel)]="artistForm.biography"
@@ -164,7 +164,7 @@
               class="form-textarea form-textarea--bio"
               rows="6"
               maxlength="3000"
-              placeholder="ביוגרפיה: אפשר לספר כאן על הדרך, ההשפעות, היצירה והנקודות שחשוב לך שיכירו."
+              [placeholder]="'artist_create.bio_placeholder' | translate"
             ></textarea>
             <span class="char-counter" [class.warning]="getCharCount(artistForm.biography) > 2700">
               {{ getCharCount(artistForm.biography) }}/3000
@@ -174,24 +174,24 @@
 
         <div class="form-section" *ngIf="currentStep === 2">
           <div class="section-head">
-            <h2>קישורים</h2>
-            <p class="section-description">כאן מחברים את הדף שלך לעולם שממשיך מחוץ לאתר, בצורה ברורה ולא עמוסה.</p>
+            <h2>{{ 'artist_create.step_links' | translate }}</h2>
+            <p class="section-description">{{ 'artist_create.step2_desc' | translate }}</p>
           </div>
 
           <div class="form-group">
-            <label class="form-label form-label--sr-only" for="artistWebsite">אתר אישי</label>
+            <label class="form-label form-label--sr-only" for="artistWebsite">{{ 'artist_create.website_sr' | translate }}</label>
             <input
               id="artistWebsite"
               type="url"
               [(ngModel)]="artistForm.websiteUrl"
               name="websiteUrl"
               class="form-input"
-              placeholder="אתר אישי - https://example.com"
+              [placeholder]="'artist_create.website_placeholder' | translate"
             />
           </div>
 
-          <div class="section-kicker">רשתות חברתיות</div>
-          <p class="section-description section-description--compact">הקישורים שמובילים ישר לעמודים החיים והיומיומיים שלך.</p>
+          <div class="section-kicker">{{ 'artist_create.social_kicker' | translate }}</div>
+          <p class="section-description section-description--compact">{{ 'artist_create.social_desc' | translate }}</p>
 
           <div class="link-list">
             <div class="link-row" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform">
@@ -212,8 +212,8 @@
             </div>
           </div>
 
-          <div class="section-kicker section-kicker--spaced">פלטפורמות מוזיקה</div>
-          <p class="section-description section-description--compact">קישורים ישירים להאזנה, צפייה ומעבר מהיר למקומות החשובים.</p>
+          <div class="section-kicker section-kicker--spaced">{{ 'artist_create.music_kicker' | translate }}</div>
+          <p class="section-description section-description--compact">{{ 'artist_create.music_desc' | translate }}</p>
 
           <div class="link-list">
             <div class="link-row" *ngFor="let option of musicPlatformOptions; trackBy: trackByPlatform">
@@ -237,39 +237,39 @@
 
         <div class="form-section" *ngIf="currentStep === 3">
           <div class="section-head">
-            <h2>מדיה</h2>
-            <p class="section-description">גלריה חיה, סרטונים ותוכן קידומי מסודר בצורה קלילה ומזמינה.</p>
+            <h2>{{ 'artist_create.step_media' | translate }}</h2>
+            <p class="section-description">{{ 'artist_create.step3_desc' | translate }}</p>
           </div>
 
-          <div class="section-kicker">גלריית מדיה</div>
-          <p class="section-description section-description--compact">אוסף תמונות שמרחיב את הסיפור הוויזואלי שלך מעבר לתמונה הראשית.</p>
+          <div class="section-kicker">{{ 'artist_create.gallery_kicker' | translate }}</div>
+          <p class="section-description section-description--compact">{{ 'artist_create.gallery_desc' | translate }}</p>
 
           <div class="media-grid">
             <button type="button" class="media-add-card" (click)="addGalleryImage()">
               <span class="material-icons">add_photo_alternate</span>
-              <strong>הוסף תמונה</strong>
-              <span>קוביה חדשה לגלריה</span>
+              <strong>{{ 'artist_create.add_image' | translate }}</strong>
+              <span>{{ 'artist_create.add_image_hint' | translate }}</span>
             </button>
 
             <button type="button" class="media-add-card media-add-card--video" (click)="addVideo()">
               <span class="material-icons">smart_display</span>
-              <strong>הוסף סרטון</strong>
-              <span>כחלק מהגלריה המורחבת</span>
+              <strong>{{ 'artist_create.add_video' | translate }}</strong>
+              <span>{{ 'artist_create.add_video_hint' | translate }}</span>
             </button>
 
             <div *ngFor="let image of artistForm.galleryImages; let i = index" class="media-card">
-              <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" aria-label="מחיקת תמונה">
+              <button type="button" class="media-card-remove" (click)="removeGalleryImage(i)" [attr.aria-label]="'artist_create.remove_image' | translate">
                 <span class="material-icons">close</span>
               </button>
 
               <div class="media-card-preview" [class.has-image]="image.imageUrl">
-                <img *ngIf="image.imageUrl" [src]="image.imageUrl" [alt]="image.caption || 'תמונה בגלריה'" />
+                <img *ngIf="image.imageUrl" [src]="image.imageUrl" [alt]="image.caption || ('artist_create.gallery_img_alt' | translate)" />
                 <span *ngIf="!image.imageUrl" class="material-icons">image</span>
               </div>
 
               <app-file-upload-input
                 [(url)]="image.imageUrl"
-                placeholder="הדבק כאן קישור לתמונה"
+                [placeholder]="'artist_create.paste_photo_url' | translate"
                 [showPreview]="false"
               />
 
@@ -278,12 +278,12 @@
                 [(ngModel)]="image.caption"
                 [name]="'gallery_caption_' + i"
                 class="form-input"
-                placeholder="כיתוב קצר, אם צריך"
+                [placeholder]="'artist_create.caption_placeholder' | translate"
               />
             </div>
 
             <div *ngFor="let video of artistForm.videos; let i = index" class="media-card media-card--video">
-              <button type="button" class="media-card-remove" (click)="removeVideo(i)" aria-label="מחיקת סרטון">
+              <button type="button" class="media-card-remove" (click)="removeVideo(i)" [attr.aria-label]="'artist_create.remove_video' | translate">
                 <span class="material-icons">close</span>
               </button>
 
@@ -296,7 +296,7 @@
                 [(ngModel)]="video.title"
                 [name]="'video_title_' + i"
                 class="form-input"
-                placeholder="כותרת הסרטון"
+                [placeholder]="'artist_create.video_title_placeholder' | translate"
               />
 
               <input
@@ -304,27 +304,27 @@
                 [(ngModel)]="video.videoUrl"
                 [name]="'video_url_' + i"
                 class="form-input"
-                placeholder="הדבק כאן קישור לסרטון"
+                [placeholder]="'artist_create.paste_video_url' | translate"
               />
             </div>
           </div>
 
-          <div class="section-kicker section-kicker--spaced">הופעה</div>
-          <p class="section-description section-description--compact">אם יש הופעה לקדם, אפשר להוסיף כאן בלוק בולט ועדין אחרי הגלריה.</p>
+          <div class="section-kicker section-kicker--spaced">{{ 'artist_create.performance_kicker' | translate }}</div>
+          <p class="section-description section-description--compact">{{ 'artist_create.performance_desc' | translate }}</p>
 
           <div class="performance-card">
             <div class="upload-shell upload-shell--performance">
               <div class="upload-shell-head upload-shell-head--banner">
                 <span class="material-icons">campaign</span>
                 <div>
-                  <strong>באנר הופעה</strong>
-                  <p>מומלץ להעלות תמונה רחבה שמציגה את המופע בצורה ברורה.</p>
+                  <strong>{{ 'artist_create.perf_banner_label' | translate }}</strong>
+                  <p>{{ 'artist_create.perf_banner_hint' | translate }}</p>
                 </div>
               </div>
 
               <app-file-upload-input
                 [(url)]="artistForm.performanceImageUrl"
-                placeholder="הדבק כאן קישור לבאנר ההופעה"
+                [placeholder]="'artist_create.perf_banner_placeholder' | translate"
                 [showPreview]="true"
               />
 
@@ -333,7 +333,7 @@
                 [(ngModel)]="artistForm.performanceTicketUrl"
                 name="performanceTicketUrl"
                 class="form-input"
-                placeholder="קישור לרכישת כרטיסים"
+                [placeholder]="'artist_create.perf_ticket_placeholder' | translate"
               />
 
               <label class="toggle-row">
@@ -343,7 +343,7 @@
                   name="performanceIsActive"
                   class="form-checkbox"
                 />
-                <span>להציג את באנר ההופעה בדף האמן</span>
+                <span>{{ 'artist_create.perf_show_banner' | translate }}</span>
               </label>
             </div>
           </div>
@@ -354,25 +354,25 @@
 
   <div class="floating-nav floating-nav--bottom" *ngIf="!loading && !submitted">
     <div class="form-actions">
-      <button type="button" class="btn-cancel btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
+      <button type="button" class="btn-cancel btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" [attr.aria-label]="'artist_create.back_to_chat' | translate">
         <span class="material-icons">arrow_forward</span>
       </button>
       <button type="button" class="btn-cancel btn-action" *ngIf="embedded" (click)="cancel()" [disabled]="saving">
         <span class="material-icons">close</span>
-        <span>סגירה</span>
+        <span>{{ 'fab.close' | translate }}</span>
       </button>
       <button type="button" class="btn-cancel btn-action" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
         <span class="material-icons">arrow_forward</span>
-        <span>חזרה</span>
+        <span>{{ 'artist_create.prev' | translate }}</span>
       </button>
       <button type="button" class="btn-cancel btn-action" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
         <span class="material-icons">arrow_back</span>
-        <span>המשך</span>
+        <span>{{ 'artist_create.next' | translate }}</span>
       </button>
       <button type="submit" class="btn-submit btn-action" *ngIf="currentStep === totalSteps" [disabled]="saving" form="artistCreateForm">
         <span class="material-icons" *ngIf="!saving">north_east</span>
-        <span *ngIf="saving">שולח...</span>
-        <span *ngIf="!saving">שליחה</span>
+        <span *ngIf="saving">{{ 'fab.submitting' | translate }}</span>
+        <span *ngIf="!saving">{{ 'artist_create.submit' | translate }}</span>
       </button>
     </div>
   </div>

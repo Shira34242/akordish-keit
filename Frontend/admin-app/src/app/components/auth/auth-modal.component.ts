@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../services/auth.service';
-import { GoogleOneTapService } from '../../services/google-one-tap.service';
 import { Subscription } from 'rxjs';
+import { GoogleOneTapService } from '../../services/google-one-tap.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, GoogleSigninButtonModule],
+  imports: [CommonModule, FormsModule, GoogleSigninButtonModule, TranslatePipe],
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.css']
 })

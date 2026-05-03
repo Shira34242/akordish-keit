@@ -1,106 +1,54 @@
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
 
-    <!-- Close Button -->
     <button class="close-btn" (click)="onClose()">✕</button>
 
-    <!-- Error Message -->
     <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-    <!-- ======== STEP 1: Instrument & Level ======== -->
     <ng-container *ngIf="currentStep === 'instrument'">
       <div class="modal-header">
-        <h2>כמה פרטים קטנים להשלמת החוויה</h2>
-        <p class="subtitle">על אילו כלים את/ה מנגנ/ת? (אפשר לבחור כמה)</p>
+        <h2>{{ 'details.step1_title' | translate }}</h2>
+        <p class="subtitle">{{ 'details.step1_sub' | translate }}</p>
       </div>
 
-      <!-- Loading state -->
-      <div *ngIf="instrumentsLoading" class="instruments-loading">טוען רשימת כלים...</div>
-
-      <ng-container *ngIf="!instrumentsLoading">
-        <!-- Featured cards (Piano, Guitar, Keyboard, Drums) -->
-        <div class="instrument-cards">
-          <div
-            *ngFor="let inst of featuredInstruments"
-            class="instrument-card has-image"
-            [class.piano]="inst.englishName === 'Piano'"
-            [class.guitar]="inst.englishName === 'Guitar'"
-            [class.selected]="isInstrumentSelected(inst.id)"
-            [class.disabled]="selectedNone"
-            (click)="!selectedNone && toggleInstrument(inst.id)"
-          >
-            <span class="card-label">{{ inst.name }}</span>
-          </div>
-        </div>
-
-        <!-- Full list toggle -->
-        <button
-          type="button"
-          class="full-list-toggle"
-          (click)="toggleFullList()"
-          [disabled]="selectedNone"
+      <div class="instrument-cards">
+        <div
+          class="instrument-card has-image piano"
+          [class.selected]="selectedInstrument === 'piano'"
+          (click)="selectedInstrument = 'piano'"
         >
-          {{ showFullList ? 'הסתר רשימה מלאה' : 'הצג עוד כלים' }}
-        </button>
-
-        <!-- Full list as chips -->
-        <div class="instrument-chips" *ngIf="showFullList && !selectedNone">
-          <button
-            type="button"
-            *ngFor="let inst of otherListInstruments"
-            class="instrument-chip"
-            [class.selected]="isInstrumentSelected(inst.id)"
-            (click)="toggleInstrument(inst.id)"
-          >
-            {{ inst.name }}
-          </button>
+          <span class="card-label">{{ 'details.piano' | translate }}</span>
         </div>
-
-        <!-- "Other" toggle -->
-        <div class="other-row">
-          <button
-            type="button"
-            class="other-toggle"
-            [class.selected]="showOther"
-            [disabled]="selectedNone"
-            (click)="toggleOther()"
-          >
-            + אחר
-          </button>
-          <input
-            *ngIf="showOther"
-            type="text"
-            class="other-input"
-            placeholder="איזה כלי?"
-            maxlength="50"
-            [(ngModel)]="otherInstrumentName"
-          />
-        </div>
-
-        <!-- "I don't play" -->
-        <p
-          class="no-instrument"
-          [class.active]="selectedNone"
-          (click)="toggleNone()"
+        <div
+          class="instrument-card has-image guitar"
+          [class.selected]="selectedInstrument === 'guitar'"
+          (click)="selectedInstrument = 'guitar'"
         >
-          {{ selectedNone ? '✓ ' : '' }}לא מנגנ/ת על שום כלי
-        </p>
-
-        <!-- Level pills (hidden when "none" selected) -->
-        <div class="level-pills" *ngIf="!selectedNone">
-          <button class="level-pill" [class.selected]="selectedLevel === 1" (click)="selectedLevel = 1">מתחיל/ה</button>
-          <button class="level-pill" [class.selected]="selectedLevel === 2" (click)="selectedLevel = 2">מתקדם/ת</button>
-          <button class="level-pill" [class.selected]="selectedLevel === 3" (click)="selectedLevel = 3">מקצועי/ת</button>
+          <span class="card-label">{{ 'details.guitar' | translate }}</span>
         </div>
-
-        <button
-          class="continue-btn"
-          (click)="onContinue()"
-          [disabled]="!hasInstrumentChoice"
+        <div
+          class="instrument-card"
+          [class.selected]="selectedInstrument === 'other'"
+          (click)="selectedInstrument = 'other'"
         >
-          המשך &lt;
-        </button>
-      </ng-container>
+          <span class="card-label">{{ 'details.other_instrument' | translate }}</span>
+        </div>
+        <div
+          class="instrument-card"
+          [class.selected]="selectedInstrument === 'none'"
+          (click)="selectedInstrument = 'none'"
+        >
+          <span class="card-label">{{ 'details.no_instrument' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="level-pills">
+        <button class="level-pill" [class.selected]="selectedLevel === 'מתחיל/ה'" (click)="selectedLevel = 'מתחיל/ה'">{{ 'details.beginner' | translate }}</button>
+        <button class="level-pill" [class.selected]="selectedLevel === 'מתקדם/ת'" (click)="selectedLevel = 'מתקדם/ת'">{{ 'details.intermediate' | translate }}</button>
+        <button class="level-pill" [class.selected]="selectedLevel === 'מקצועי/ת'" (click)="selectedLevel = 'מקצועי/ת'">{{ 'details.professional' | translate }}</button>
+      </div>
+
+      <button class="continue-btn" (click)="onContinue()">{{ 'details.continue' | translate }}</button>
 
       <div class="dots">
         <span class="dot"></span>
@@ -108,14 +56,13 @@
         <span class="dot"></span>
       </div>
 
-      <a class="skip-link" (click)="onClose()">דלג לאתר</a>
+      <a class="skip-link" (click)="onClose()">{{ 'details.skip' | translate }}</a>
     </ng-container>
 
-    <!-- ======== STEP 2: User Type ======== -->
     <ng-container *ngIf="currentStep === 'userType'">
       <div class="modal-header">
-        <h2>איך תרצה/י להשתמש באקורדישקייט?</h2>
-        <p class="subtitle">ניתן לשנות גם אחר כך</p>
+        <h2>{{ 'details.step2_title' | translate }}</h2>
+        <p class="subtitle">{{ 'details.step2_sub' | translate }}</p>
       </div>
 
       <div class="user-type-cards">
@@ -124,37 +71,37 @@
           [class.selected]="selectedUserType === UserType.Regular"
           (click)="selectedUserType = UserType.Regular"
         >
-          <span class="type-title">משתמש רגיל</span>
-          <span class="type-desc">לגלות מוזיקה, לנגן, ללמוד ולהנות</span>
+          <span class="type-title">{{ 'details.regular_user' | translate }}</span>
+          <span class="type-desc">{{ 'details.regular_desc' | translate }}</span>
         </div>
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.ServiceProvider"
           (click)="selectedUserType = UserType.ServiceProvider"
         >
-          <span class="type-title">בעל מקצוע</span>
-          <span class="type-desc">להציע שירותים מוזיקליים ולהופיע באינדקס</span>
+          <span class="type-title">{{ 'details.professional_user' | translate }}</span>
+          <span class="type-desc">{{ 'details.professional_desc' | translate }}</span>
         </div>
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.Teacher"
           (click)="selectedUserType = UserType.Teacher"
         >
-          <span class="type-title">מורה</span>
-          <span class="type-desc">להציע שיעורים ולהופיע באינדקס המורים</span>
+          <span class="type-title">{{ 'details.teacher_user' | translate }}</span>
+          <span class="type-desc">{{ 'details.teacher_desc' | translate }}</span>
         </div>
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.Artist"
           (click)="selectedUserType = UserType.Artist"
         >
-          <span class="type-title">אמן</span>
-          <span class="type-desc">לשתף תוכן ולנהל דף אמן משלך</span>
+          <span class="type-title">{{ 'details.artist_user' | translate }}</span>
+          <span class="type-desc">{{ 'details.artist_desc' | translate }}</span>
         </div>
       </div>
 
       <button class="continue-btn" (click)="onFinish()" [disabled]="loading">
-        <span *ngIf="!loading">המשך &lt;</span>
+        <span *ngIf="!loading">{{ 'details.continue' | translate }}</span>
         <span *ngIf="loading" class="spinner"></span>
       </button>
 
