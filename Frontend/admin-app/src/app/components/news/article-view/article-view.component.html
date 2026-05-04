@@ -89,6 +89,12 @@
           </div>
         </div>
 
+        <!-- Credits -->
+        <p class="article-credits" *ngIf="article.imageCredit">
+          <span>קרדיטים:</span>
+          {{ article.imageCredit }}
+        </p>
+
         <!-- Lightbox -->
         <div class="lightbox-overlay" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">
           <button class="lightbox-close" (click)="closeLightbox()">

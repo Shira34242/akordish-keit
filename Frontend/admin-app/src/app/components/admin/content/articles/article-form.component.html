@@ -274,6 +274,7 @@
             <div *ngIf="!selectedProfile" class="profile-search-wrapper">
               <div class="admin-profile-tools">
                 <select class="form-input admin-profile-select" [(ngModel)]="profileTypeFilter" name="profileTypeFilter" (change)="onProfileFilterChange()">
+                  <option value="none">אף אחד</option>
                   <option value="all">כולם</option>
                   <option value="teacher">מורים</option>
                   <option value="serviceProvider">נותני שירות</option>
@@ -333,9 +334,10 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">קרדיט צילום</label>
+          <label class="form-label">קרדיטים</label>
           <input type="text" class="form-input" [(ngModel)]="article.imageCredit" name="imageCredit"
-            placeholder="צלם/מקור התמונה...">
+            placeholder="קרדיט צילום / מקור / תודה קצרה...">
+          <small class="help-text">יוצג כשורת טקסט עדינה בתחתית הכתבה.</small>
         </div>
       </div>
 

@@ -1,11 +1,11 @@
 <div class="articles-page">
 
   <!-- Loading -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="loading-spinner"></div>
+  <div *ngIf="isLoading" class="page-loading">
+    <div class="spinner"></div>
   </div>
 
-  <div *ngIf="!isLoading" class="page-content">
+  <div *ngIf="!isLoading" class="news-content">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -42,10 +42,12 @@
 
     <!-- Articles Grid -->
     <section class="articles-grid" *ngIf="articles.length > 0">
-      <app-news-banner
-        *ngFor="let article of articles"
-        [article]="article">
-      </app-news-banner>
+      <div
+        class="article-cell"
+        *ngFor="let article of articles; let i = index"
+        [ngClass]="getCellClass(i)">
+        <app-news-banner [article]="article"></app-news-banner>
+      </div>
     </section>
 
     <!-- No Results -->

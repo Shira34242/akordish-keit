@@ -148,6 +148,29 @@ export class ArticlesListComponent implements OnInit {
     this.router.navigate([route, article.slug]);
   }
 
+  getCellClass(index: number): string {
+    if (index === 0) {
+      return 'sc-feature-main';
+    }
+
+    if (index === 1) {
+      return 'sc-feature-side';
+    }
+
+    const patterns = [
+      'sc-third',
+      'sc-third',
+      'sc-third',
+      'sc-duo-narrow',
+      'sc-duo-wide',
+      'sc-third-tall',
+      'sc-third-tall',
+      'sc-third-tall'
+    ];
+
+    return patterns[(index - 2) % patterns.length];
+  }
+
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
 

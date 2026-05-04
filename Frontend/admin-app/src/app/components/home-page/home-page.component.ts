@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, HostBinding, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
+import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
@@ -45,7 +46,8 @@ interface HeroParticle {
     NewsTickerComponent,
     EventCardComponent,
     EventModalComponent,
-    TranslatePipe
+    TranslatePipe,
+    AutoScrollDirective
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
@@ -54,9 +56,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
-
-  @HostBinding('class.is-scrolling') isScrolling = false;
-  private scrollEndTimer?: number;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -77,7 +76,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
 
-  readonly newsBannerRowSize = 6;
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -162,17 +160,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
-    if (this.scrollEndTimer) window.clearTimeout(this.scrollEndTimer);
   }
 
   @HostListener('window:scroll')
   onScroll(): void {
-    this.isScrolling = true;
-    if (this.scrollEndTimer) window.clearTimeout(this.scrollEndTimer);
-    this.scrollEndTimer = window.setTimeout(() => {
-      this.isScrolling = false;
-    }, 180);
-
     if (this.rafPending) return;
     this.rafPending = true;
     requestAnimationFrame(() => {
@@ -242,7 +233,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         error: (err) => console.error('loadContent: news articles', err)
       });
 
-    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => { this.blogArticles = res.items || []; },
         error: (err) => console.error('loadContent: blog articles', err)
@@ -312,25 +303,34 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 200);
   }
 
+  private splitForRows(articles: Article[]): { top: Article[]; bottom: Article[] } {
+    if (articles.length <= 1) return { top: articles, bottom: [] };
+    const half = Math.ceil(articles.length / 2);
+    return { top: articles.slice(0, half), bottom: articles.slice(half) };
+  }
+
   get newsArticlesFirstRow(): Article[] {
-    return this.newsArticles.slice(0, this.newsBannerRowSize);
+    return this.splitForRows(this.newsArticles).top;
   }
 
   get newsArticlesSecondRow(): Article[] {
-    return this.newsArticles.slice(this.newsBannerRowSize, this.newsBannerRowSize * 2);
+    return this.splitForRows(this.newsArticles).bottom;
   }
 
   get useScrollingNewsBanner(): boolean {
     return this.newsArticles.length >= 2;
   }
 
-  get loopedUpcomingEvents(): UpcomingEventDto[] {
-    if (this.upcomingEvents.length === 0) return [];
-    return Array.from({ length: 6 }).flatMap(() => this.upcomingEvents);
+  get blogArticlesFirstRow(): Article[] {
+    return this.splitForRows(this.blogArticles).top;
   }
 
-  trackByLoopId(index: number, item: { id: number | string }): string {
-    return `${item.id}-${index}`;
+  get blogArticlesSecondRow(): Article[] {
+    return this.splitForRows(this.blogArticles).bottom;
+  }
+
+  get useScrollingBlogBanner(): boolean {
+    return this.blogArticles.length >= 2;
   }
 
   private initParticleEffect(): void {

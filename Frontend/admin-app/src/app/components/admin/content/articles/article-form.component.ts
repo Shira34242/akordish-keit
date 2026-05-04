@@ -72,7 +72,7 @@ export class ArticleFormComponent implements OnInit {
   profileSearchLoading = false;
   selectedProfile: UserWithProfileDto | null = null;
   myUploaderProfiles: UserWithProfileDto[] = [];
-  profileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+  profileTypeFilter: 'none' | 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'none';
   profileSort: 'name' | 'type' = 'name';
   showProfileDropdown = false;
   tagAsMyself = true;
@@ -87,6 +87,8 @@ export class ArticleFormComponent implements OnInit {
   }
 
   get filteredProfileSearchResults(): UserWithProfileDto[] {
+    if (this.profileTypeFilter === 'none') return [];
+
     const filtered = this.profileSearchResults.filter(profile => {
       if (this.profileTypeFilter === 'all') return true;
       if (this.profileTypeFilter === 'user') return profile.profileType === 'user';
@@ -217,6 +219,7 @@ export class ArticleFormComponent implements OnInit {
   initializeUploaderSelector(): void {
     if (this.isAdminUser) {
       this.tagAsMyself = false;
+      this.profileTypeFilter = 'none';
       this.clearProfile();
       this.onProfileFilterChange();
       return;
@@ -260,6 +263,11 @@ export class ArticleFormComponent implements OnInit {
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(q => {
+        if (this.profileTypeFilter === 'none') {
+          this.profileSearchLoading = false;
+          return of([]);
+        }
+
         this.profileSearchLoading = true;
         return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter);
       })
@@ -279,6 +287,14 @@ export class ArticleFormComponent implements OnInit {
 
   onProfileFilterChange(): void {
     this.clearProfile();
+
+    if (this.profileTypeFilter === 'none') {
+      this.profileSearchLoading = false;
+      this.profileSearchResults = [];
+      this.showProfileDropdown = false;
+      return;
+    }
+
     this.profileSearchLoading = true;
     this.userService.searchUsersWithProfiles('', 100, this.profileTypeFilter)
       .pipe(catchError(() => of([])))

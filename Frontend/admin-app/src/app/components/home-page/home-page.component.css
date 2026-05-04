@@ -126,8 +126,8 @@
   font-size: 7rem;
   font-weight: 700;
   color: #000;
-  margin: 0 0 var(--space-lg);
-  line-height: 0.9;
+  margin: -0.15em 0 var(--space-lg);
+  line-height: 0.85;
   letter-spacing: -2px;
 }
 
@@ -373,30 +373,22 @@
 }
 
 /* ============================================
-   SECTION CTA — לחצן "לכל ה..." בצד שמאל של הכותרת
+   SECTION LINK — קישור "לכל ה..." מינימליסטי בצד שמאל
 ============================================ */
-.section-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.section-link {
   font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
+  font-weight: 400;
   font-size: var(--font-sm);
   color: #000;
-  background: #F2F2F2;
-  border-radius: 999px;
-  padding: 8px 22px;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
   white-space: nowrap;
   margin-inline-start: auto;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
-.section-cta:hover {
-  background: #000;
-  color: #ddff53;
+.section-link:hover {
+  opacity: 1;
 }
 
 /* ============================================
@@ -409,9 +401,18 @@
 }
 
 .news-banner-row {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 4px;
   direction: ltr;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.news-banner-row::-webkit-scrollbar {
+  display: none;
 }
 
 .news-banner-track {
@@ -419,30 +420,6 @@
   direction: ltr;
   gap: var(--space-md);
   width: max-content;
-  animation: marquee-left 45s linear infinite;
-}
-
-.news-banner-track--reverse {
-  animation-name: marquee-right;
-}
-
-@keyframes marquee-left {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-@keyframes marquee-right {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
-}
-
-.news-banner-row:hover .news-banner-track {
-  animation-play-state: paused;
-}
-
-/* בזמן גלילה — להמשיך לזוז גם אם העכבר נמצא במקרה מעל הלולאה */
-:host(.is-scrolling) .news-banner-row:hover .news-banner-track {
-  animation-play-state: running;
 }
 
 .news-banner-card {
@@ -525,12 +502,19 @@
    ARTISTS LOOP ROW (אמנים — לולאה)
 ============================================ */
 .artists-loop-row {
-  /* הגבלה אופקית בלבד כדי שהגדלה ב-hover (scale 1.05) לא תיחתך אנכית */
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-top: var(--space-sm);
   padding-bottom: var(--space-md);
   direction: ltr;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.artists-loop-row::-webkit-scrollbar {
+  display: none;
 }
 
 .artists-loop-track {
@@ -538,19 +522,6 @@
   direction: ltr;
   gap: var(--space-base);
   width: max-content;
-  animation: marquee-left 80s linear infinite;
-}
-
-.artists-loop-track--reverse {
-  animation-name: marquee-right;
-}
-
-.artists-loop-row:hover .artists-loop-track {
-  animation-play-state: paused;
-}
-
-:host(.is-scrolling) .artists-loop-row:hover .artists-loop-track {
-  animation-play-state: running;
 }
 
 /* ============================================
@@ -848,9 +819,18 @@
    עיצוב הכרטיסים נמצא ב-EventCardComponent
 ============================================ */
 .events-loop-row {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 4px;
   direction: ltr;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.events-loop-row::-webkit-scrollbar {
+  display: none;
 }
 
 .events-loop-track {
@@ -858,19 +838,6 @@
   direction: ltr;
   gap: var(--space-md);
   width: max-content;
-  animation: marquee-left 70s linear infinite;
-}
-
-.events-loop-track--reverse {
-  animation-name: marquee-right;
-}
-
-.events-loop-row:hover .events-loop-track {
-  animation-play-state: paused;
-}
-
-:host(.is-scrolling) .events-loop-row:hover .events-loop-track {
-  animation-play-state: running;
 }
 
 .events-loop-track app-event-card {
@@ -923,8 +890,7 @@
     font-size: var(--font-lg);
   }
 
-  .section-cta {
-    padding: 6px 16px;
+  .section-link {
     font-size: var(--font-xs);
   }
 

@@ -152,7 +152,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     public authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private quickAddAssistantService: QuickAddAssistantService
+    private quickAddAssistantService: QuickAddAssistantService,
+    private hostRef: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
@@ -207,6 +208,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     const minHeight = 56;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
+    // משתף את גובה ה-hero הנוכחי עם ה-CSS, כדי שלחצן ה-"להצטרפות" יצמד לפינה הצהובה התחתונה
+    this.hostRef.nativeElement.style.setProperty('--hero-height', newHeight + 'px');
     const overlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (overlay) {
       const range = this.fullHeroHeight - minHeight;

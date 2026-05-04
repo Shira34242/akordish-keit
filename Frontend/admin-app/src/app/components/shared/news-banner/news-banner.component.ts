@@ -12,6 +12,7 @@ import { Article, ArticleContentType } from '../../../models/article.model';
 })
 export class NewsBannerComponent {
   @Input() article!: Article;
+  @Input() showDescription = true;
 
   constructor(private router: Router) {}
 

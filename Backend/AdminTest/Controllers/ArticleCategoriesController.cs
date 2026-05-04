@@ -148,8 +148,8 @@ public class ArticleCategoriesController : ControllerBase
         var category = await _context.ArticleCategories.FindAsync(id);
         if (category == null) return NotFound();
 
-        _context.ArticleCategories.Remove(category);
-        await _context.SaveChangesAsync();
+        await DeleteCategoriesAndDetachReferencesAsync(new[] { id });
+
         return NoContent();
     }
 
@@ -163,9 +163,68 @@ public class ArticleCategoriesController : ControllerBase
             .Where(c => dto.Ids.Contains(c.Id))
             .ToListAsync();
 
-        _context.ArticleCategories.RemoveRange(categories);
-        await _context.SaveChangesAsync();
+        var categoryIds = categories.Select(c => c.Id).ToArray();
+        await DeleteCategoriesAndDetachReferencesAsync(categoryIds);
 
         return Ok(new { deletedCount = categories.Count });
+    }
+
+    private async Task DeleteCategoriesAndDetachReferencesAsync(int[] categoryIds)
+    {
+        var ids = categoryIds.Distinct().ToArray();
+        if (ids.Length == 0) return;
+
+        var idList = string.Join(",", ids);
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        await _context.Database.ExecuteSqlRawAsync($@"
+DECLARE @dropLegacyArticleCategoryFks nvarchar(max) = N'';
+
+SELECT @dropLegacyArticleCategoryFks +=
+    N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(parentTable.schema_id)) + N'.' + QUOTENAME(parentTable.name) +
+    N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';'
+FROM sys.foreign_keys fk
+JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+JOIN sys.tables parentTable ON parentTable.object_id = fk.parent_object_id
+JOIN sys.tables referencedTable ON referencedTable.object_id = fk.referenced_object_id
+WHERE parentTable.name = N'Articles'
+  AND referencedTable.name = N'ArticleCategories';
+
+IF @dropLegacyArticleCategoryFks <> N''
+BEGIN
+    EXEC sp_executesql @dropLegacyArticleCategoryFks;
+END
+
+IF OBJECT_ID(N'Articles', N'U') IS NOT NULL
+   AND COL_LENGTH(N'Articles', N'CategoryId') IS NOT NULL
+   AND COLUMNPROPERTY(OBJECT_ID(N'Articles'), N'CategoryId', 'AllowsNull') = 1
+BEGIN
+    UPDATE [Articles]
+    SET [CategoryId] = NULL
+    WHERE [CategoryId] IN ({idList});
+END
+
+IF OBJECT_ID(N'ArticleArticleCategories', N'U') IS NOT NULL
+BEGIN
+    DELETE FROM [ArticleArticleCategories]
+    WHERE [CategoryId] IN ({idList});
+END
+
+IF OBJECT_ID(N'NewsPageSections', N'U') IS NOT NULL
+   AND COL_LENGTH(N'NewsPageSections', N'CategoryId') IS NOT NULL
+BEGIN
+    UPDATE [NewsPageSections]
+    SET [CategoryId] = NULL
+    WHERE [CategoryId] IN ({idList});
+END
+
+IF OBJECT_ID(N'ArticleCategories', N'U') IS NOT NULL
+BEGIN
+    DELETE FROM [ArticleCategories]
+    WHERE [Id] IN ({idList});
+END");
+
+        await transaction.CommitAsync();
     }
 }
