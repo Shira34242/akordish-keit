@@ -452,8 +452,12 @@ public class ArtistsController : ControllerBase
             if (artist == null)
                 return NotFound("אומן לא נמצא");
 
-            // TODO: בדיקת הרשאות - רק Admin או האומן עצמו
             var isAdmin = User.IsInRole("Admin");
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(userIdClaim, out var currentUserId);
+
+            if (!isAdmin && artist.UserId != currentUserId)
+                return Forbid();
             var wasActive = artist.Status == ArtistStatus.Active;
 
             // עדכון שדות בסיסיים

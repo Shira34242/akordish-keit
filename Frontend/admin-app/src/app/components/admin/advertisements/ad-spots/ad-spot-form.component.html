@@ -95,8 +95,8 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-cancel" (click)="onCancel()">ביטול</button>
-        <button type="submit" class="btn btn-save" [disabled]="adSpotForm.invalid">
-          {{ isEditMode ? 'שמור שינויים' : 'הוסף שטח פרסום' }}
+        <button type="submit" class="btn btn-save" [disabled]="adSpotForm.invalid || saving">
+          {{ saving ? 'שומר...' : (isEditMode ? 'שמור שינויים' : 'הוסף שטח פרסום') }}
         </button>
       </div>
     </form>

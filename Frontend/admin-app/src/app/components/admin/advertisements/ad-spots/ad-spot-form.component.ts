@@ -13,6 +13,7 @@ import { AdSpot, CreateAdSpotRequest, UpdateAdSpotRequest } from '../../../../mo
 export class AdSpotFormComponent implements OnInit, OnChanges {
   @Input() adSpot?: AdSpot;
   @Input() show = false;
+  @Input() saving = false;
   @Output() save = new EventEmitter<CreateAdSpotRequest | UpdateAdSpotRequest>();
   @Output() cancel = new EventEmitter<void>();
 

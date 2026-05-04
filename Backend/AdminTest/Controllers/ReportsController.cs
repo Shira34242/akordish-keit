@@ -72,6 +72,7 @@ public class ReportsController : ControllerBase
 
     // GET: api/Reports/chord-requests/matches
     [HttpGet("chord-requests/matches")]
+    [Authorize]
     public async Task<ActionResult<ChordRequestMatchDto>> FindChordRequestMatches(
         [FromQuery] string songName,
         [FromQuery] string? artistName = null)

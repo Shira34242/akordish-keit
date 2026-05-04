@@ -14,6 +14,7 @@ import { FileUploadInputComponent } from '../../../shared/file-upload-input/file
 export class ClientFormComponent implements OnInit, OnChanges {
   @Input() client?: Client;
   @Input() show = false;
+  @Input() saving = false;
   @Output() save = new EventEmitter<CreateClientRequest | UpdateClientRequest>();
   @Output() cancel = new EventEmitter<void>();
 

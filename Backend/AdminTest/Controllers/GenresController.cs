@@ -113,7 +113,7 @@ public class GenresController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!GenreExists(id))
+            if (!await _context.Genres.AnyAsync(e => e.Id == id))
             {
                 return NotFound();
             }
@@ -176,8 +176,4 @@ public class GenresController : ControllerBase
         return Ok(new { deletedCount = genres.Count });
     }
 
-    private bool GenreExists(int id)
-    {
-        return _context.Genres.Any(e => e.Id == id);
-    }
 }

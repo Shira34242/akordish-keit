@@ -36,16 +36,14 @@ namespace AkordishKeit.Controllers
             }
 
             var campaignsQuery = query
-                .Include(c => c.AdSpot)
-                .Include(c => c.Client)
                 .Select(c => new AdCampaignDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     AdSpotId = c.AdSpotId,
-                    AdSpotName = c.AdSpot.Name,
+                    AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -76,16 +74,14 @@ namespace AkordishKeit.Controllers
 
             var campaigns = await _context.AdCampaigns
                 .Where(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now)
-                .Include(c => c.AdSpot)
-                .Include(c => c.Client)
                 .Select(c => new AdCampaignDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     AdSpotId = c.AdSpotId,
-                    AdSpotName = c.AdSpot.Name,
+                    AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -115,16 +111,14 @@ namespace AkordishKeit.Controllers
 
             var campaign = await _context.AdCampaigns
                 .Where(c => c.Id == id)
-                .Include(c => c.AdSpot)
-                .Include(c => c.Client)
                 .Select(c => new AdCampaignDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     AdSpotId = c.AdSpotId,
-                    AdSpotName = c.AdSpot.Name,
+                    AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -158,16 +152,14 @@ namespace AkordishKeit.Controllers
 
             var campaigns = await _context.AdCampaigns
                 .Where(c => c.AdSpotId == spotId)
-                .Include(c => c.AdSpot)
-                .Include(c => c.Client)
                 .Select(c => new AdCampaignDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     AdSpotId = c.AdSpotId,
-                    AdSpotName = c.AdSpot.Name,
+                    AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -191,22 +183,23 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/client/5
         [HttpGet("client/{clientId}")]
-        public async Task<ActionResult<IEnumerable<AdCampaignDto>>> GetCampaignsByClient(int clientId)
+        public async Task<ActionResult<PagedResult<AdCampaignDto>>> GetCampaignsByClient(
+            int clientId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20)
         {
             var now = DateTime.UtcNow;
 
-            var campaigns = await _context.AdCampaigns
+            var query = _context.AdCampaigns
                 .Where(c => c.ClientId == clientId)
-                .Include(c => c.AdSpot)
-                .Include(c => c.Client)
                 .Select(c => new AdCampaignDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     AdSpotId = c.AdSpotId,
-                    AdSpotName = c.AdSpot.Name,
+                    AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -222,10 +215,10 @@ namespace AkordishKeit.Controllers
                     DaysRemaining = c.EndDate > now ? (int)(c.EndDate - now).TotalDays : 0,
                     ClickThroughRate = c.ViewCount > 0 ? (double)c.ClickCount / c.ViewCount * 100 : 0
                 })
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
+                .OrderByDescending(c => c.CreatedAt);
 
-            return Ok(campaigns);
+            var pagedResult = await query.ToPagedResultAsync(pageNumber, pageSize);
+            return Ok(pagedResult);
         }
 
         // GET: api/AdCampaigns/stats

@@ -194,6 +194,7 @@
 <app-client-form
   [show]="showClientForm"
   [client]="selectedClient"
+  [saving]="saving"
   (save)="onSaveClient($event)"
   (cancel)="onCancelClientForm()">
 </app-client-form>

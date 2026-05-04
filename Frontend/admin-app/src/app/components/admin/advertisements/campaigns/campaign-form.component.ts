@@ -25,6 +25,7 @@ import { FileUploadInputComponent } from '../../../shared/file-upload-input/file
 export class CampaignFormComponent implements OnInit, OnChanges {
   @Input() campaign?: AdCampaign;
   @Input() show = false;
+  @Input() saving = false;
   @Output() save = new EventEmitter<CreateAdCampaignRequest | UpdateAdCampaignRequest>();
   @Output() cancel = new EventEmitter<void>();
 

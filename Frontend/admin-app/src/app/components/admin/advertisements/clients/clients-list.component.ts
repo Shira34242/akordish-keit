@@ -25,6 +25,7 @@ export class ClientsListComponent implements OnInit {
   clients: Client[] = [];
   filteredClients: Client[] = [];
   loading = false;
+  saving = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-clients-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-clients-view', mode); }
   searchTerm = '';
@@ -98,26 +99,29 @@ export class ClientsListComponent implements OnInit {
   }
 
   onSaveClient(clientData: CreateClientRequest | UpdateClientRequest) {
+    this.saving = true;
     if (this.selectedClient) {
-      // Edit mode
       this.clientService.updateClient(this.selectedClient.id, clientData as UpdateClientRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showClientForm = false;
           this.loadClients();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error updating client:', error);
           alert('שגיאה בעדכון הלקוח');
         }
       });
     } else {
-      // Create mode
       this.clientService.createClient(clientData as CreateClientRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showClientForm = false;
           this.loadClients();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error creating client:', error);
           alert('שגיאה ביצירת הלקוח');
         }

@@ -25,6 +25,7 @@ export class CampaignsListComponent implements OnInit {
   campaigns: AdCampaign[] = [];
   filteredCampaigns: AdCampaign[] = [];
   loading = false;
+  saving = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-campaigns-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-campaigns-view', mode); }
   searchTerm = '';
@@ -124,30 +125,31 @@ export class CampaignsListComponent implements OnInit {
   }
 
   onSaveCampaign(campaignData: CreateAdCampaignRequest | UpdateAdCampaignRequest) {
+    this.saving = true;
     if (this.selectedCampaign) {
-      // Edit mode
       this.campaignService.updateCampaign(this.selectedCampaign.id, campaignData as UpdateAdCampaignRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showCampaignForm = false;
           this.loadCampaigns();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error updating campaign:', error);
           alert('שגיאה בעדכון הקמפיין');
         }
       });
     } else {
-      // Create mode
       this.campaignService.createCampaign(campaignData as CreateAdCampaignRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showCampaignForm = false;
           this.loadCampaigns();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error creating campaign:', error);
-          console.error('Error details:', error.error);
           if (error.error?.errors) {
-            console.error('Validation errors:', error.error.errors);
             const errorMessages = Object.entries(error.error.errors)
               .map(([field, messages]: [string, any]) => `${field}: ${messages.join(', ')}`)
               .join('\n');

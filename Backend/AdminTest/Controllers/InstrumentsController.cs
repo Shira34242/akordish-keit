@@ -118,7 +118,7 @@ public class InstrumentsController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!InstrumentExists(id))
+            if (!await _context.Instruments.AnyAsync(e => e.Id == id))
             {
                 return NotFound();
             }
@@ -168,8 +168,4 @@ public class InstrumentsController : ControllerBase
         return Ok(new { deletedCount = instruments.Count });
     }
 
-    private bool InstrumentExists(int id)
-    {
-        return _context.Instruments.Any(e => e.Id == id);
-    }
 }

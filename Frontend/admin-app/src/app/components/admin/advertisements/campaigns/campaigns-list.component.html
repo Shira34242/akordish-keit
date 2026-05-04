@@ -199,6 +199,7 @@
 <app-campaign-form
   [show]="showCampaignForm"
   [campaign]="selectedCampaign"
+  [saving]="saving"
   (save)="onSaveCampaign($event)"
   (cancel)="onCancelCampaignForm()">
 </app-campaign-form>

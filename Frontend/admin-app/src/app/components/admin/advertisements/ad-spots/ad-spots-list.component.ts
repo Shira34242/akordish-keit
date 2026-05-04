@@ -25,6 +25,7 @@ export class AdSpotsListComponent implements OnInit {
   adSpots: AdSpot[] = [];
   filteredAdSpots: AdSpot[] = [];
   loading = false;
+  saving = false;
   searchTerm = '';
   activeTab: 'campaigns' | 'spots' | 'clients' = 'spots';
 
@@ -118,26 +119,29 @@ export class AdSpotsListComponent implements OnInit {
   }
 
   onSaveAdSpot(spotData: CreateAdSpotRequest | UpdateAdSpotRequest) {
+    this.saving = true;
     if (this.selectedAdSpot) {
-      // Edit mode
       this.adSpotService.updateAdSpot(this.selectedAdSpot.id, spotData as UpdateAdSpotRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showAdSpotForm = false;
           this.loadAdSpots();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error updating ad spot:', error);
           alert('שגיאה בעדכון שטח הפרסום');
         }
       });
     } else {
-      // Create mode
       this.adSpotService.createAdSpot(spotData as CreateAdSpotRequest).subscribe({
         next: () => {
+          this.saving = false;
           this.showAdSpotForm = false;
           this.loadAdSpots();
         },
         error: (error) => {
+          this.saving = false;
           console.error('Error creating ad spot:', error);
           alert('שגיאה ביצירת שטח פרסום');
         }
