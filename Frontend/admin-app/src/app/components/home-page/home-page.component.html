@@ -229,23 +229,6 @@
       </div>
     </section>
 
-    <section class="home-section" *ngIf="featuredTeachers.length > 0">
-      <div class="section-header">
-        <h2 class="section-title">{{ 'home.teachers_title' | translate }}</h2>
-        <a routerLink="/teachers" class="section-link">{{ 'home.teachers_link' | translate }}</a>
-      </div>
-      <div class="persons-scroll provider-showcase-scroll">
-        <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
-          <div class="person-avatar">
-            <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
-            <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
-          </div>
-          <p class="person-name">{{ teacher.displayName }}</p>
-          <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
-        </a>
-      </div>
-    </section>
-
     <div id="promo-index" class="promo-box promo-box--providers">
       <div class="promo-content">
         <h2 class="promo-title">{{ 'home.promo_index_title' | translate }}</h2>
@@ -257,20 +240,40 @@
       </div>
     </div>
 
-    <section class="home-section provider-showcase-section" *ngIf="featuredProviders.length > 0">
+    <section class="home-section index-showcase-section" *ngIf="featuredTeachers.length > 0 || featuredProviders.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.professionals_title' | translate }}</h2>
-        <a routerLink="/professionals" class="section-link">{{ 'home.professionals_link' | translate }}</a>
+        <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
+        <a routerLink="/professionals" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
-      <div class="persons-scroll provider-showcase-scroll">
-        <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''">
-          <div class="person-avatar">
-            <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
-            <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
+      <div class="index-showcase-stack">
+        <div class="index-showcase-row" *ngIf="featuredTeachers.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+          <div class="index-showcase-track">
+            <ng-container *ngFor="let copy of [0, 1, 2]">
+              <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
+                <div class="person-avatar">
+                  <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
+                  <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
+                </div>
+                <p class="person-name">{{ teacher.displayName }}</p>
+                <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
+              </a>
+            </ng-container>
           </div>
-          <p class="person-name">{{ pro.displayName }}</p>
-          <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
-        </a>
+        </div>
+        <div class="index-showcase-row" *ngIf="featuredProviders.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="3">
+          <div class="index-showcase-track">
+            <ng-container *ngFor="let copy of [0, 1, 2]">
+              <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
+                <div class="person-avatar">
+                  <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
+                  <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
+                </div>
+                <p class="person-name">{{ pro.displayName }}</p>
+                <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
+              </a>
+            </ng-container>
+          </div>
+        </div>
       </div>
     </section>
 

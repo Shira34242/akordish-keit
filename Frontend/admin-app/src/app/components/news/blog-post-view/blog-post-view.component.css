@@ -227,6 +227,21 @@
   height: 100%;
 }
 
+/* Featured Image Section (when no video) */
+.featured-image-section {
+  width: 100%;
+  padding: 6px 6px 0;
+}
+
+.featured-image-inline {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  object-fit: cover;
+  max-height: 450px;
+}
+
 /* Article Content */
 .article-content {
   padding: var(--space-xl);
@@ -824,6 +839,10 @@
   }
 
   .video-wrapper {
+    border-radius: 10px;
+  }
+
+  .featured-image-inline {
     border-radius: 10px;
   }
 

@@ -615,17 +615,49 @@
 
 
 /* ============================================
-   PROVIDERS SHOWCASE
+   INDEX SHOWCASE (מורים + בעלי מקצוע מאוחד)
 ============================================ */
-.provider-showcase-section {
+.index-showcase-section {
   position: relative;
   isolation: isolate;
 }
 
-.provider-showcase-section .section-header {
+.index-showcase-section .section-header {
   margin-bottom: var(--space-base);
 }
 
+.index-showcase-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.index-showcase-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  direction: ltr;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.index-showcase-row::-webkit-scrollbar {
+  display: none;
+}
+
+.index-showcase-track {
+  display: flex;
+  direction: ltr;
+  gap: var(--space-lg);
+  width: max-content;
+  align-items: stretch;
+}
+
+/* ============================================
+   PROVIDERS SHOWCASE (סגנונות כרטיסים)
+============================================ */
 .promo-box--providers {
   position: relative;
   z-index: 2;

@@ -542,12 +542,13 @@
 .testimonial-bubble::after {
   content: "";
   position: absolute;
-  right: -6px;
-  bottom: 0;
-  width: 14px;
-  height: 14px;
+  right: 8px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
   background: #F2F2F2;
-  border-bottom-left-radius: 14px;
+  border-radius: 0 2px 0 0;
+  transform: rotate(45deg);
 }
 
 .testimonial-card p {
