@@ -1,32 +1,36 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleCategory } from '../../../models/article.model';
+import { Article, ArticleCategory, ArticleStatus } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { LikedContentService } from '../../../services/liked-content.service';
 import { AuthService } from '../../../services/auth.service';
+import { ReportModalComponent } from '../../shared/report-modal/report-modal.component';
 import { ContentPageService } from '../../../services/content-page.service';
+import { ArticleFeedbackService } from '../../../services/article-feedback.service';
+import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { SeoService } from '../../../services/seo.service';
 
 @Component({
-  
   selector: 'app-blog-post-view',
   standalone: true,
-  imports: [CommonModule, AdDisplayComponent],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent],
   templateUrl: './blog-post-view.component.html',
   styleUrls: ['./blog-post-view.component.css']
 })
-export class BlogPostViewComponent implements OnInit {
+export class BlogPostViewComponent implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly sanitizer = inject(DomSanitizer);
+  readonly sanitizer = inject(DomSanitizer);
   private readonly articleService = inject(ArticleService);
   private readonly likedContentService = inject(LikedContentService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly contentPageService = inject(ContentPageService);
+  private readonly feedbackService = inject(ArticleFeedbackService);
   private readonly authService = inject(AuthService);
   private readonly seo = inject(SeoService);
 
@@ -34,12 +38,94 @@ export class BlogPostViewComponent implements OnInit {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
   }
 
+  private _heroEl: ElementRef<HTMLElement> | undefined;
+
+  /* סטר — מופעל ברגע ש-*ngIf הופך true ואלמנט ה-hero מופיע ב-DOM */
+  @ViewChild('articleHero')
+  set heroEl(el: ElementRef<HTMLElement> | undefined) {
+    this._heroEl = el;
+    if (el) {
+      this.fullHeroHeight = window.innerHeight - 16;
+      el.nativeElement.style.height = this.fullHeroHeight + 'px';
+      this.shrinkHero();
+    }
+  }
+
   article: Article | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
   isFavorite = false;
+  feedbackGiven = false;
+  feedbackChoice: 'yes' | 'no' | null = null;
+  feedbackYesCount = 0;
+  feedbackNoCount = 0;
+  relatedArticles: Article[] = [];
+  relatedArticlesVisibleCount = 4;
+  isReportModalOpen = false;
+  fullHeroHeight = 0;
+  lightboxIndex: number | null = null;
+
+  feedbackPct(type: 'yes' | 'no'): number {
+    const total = this.feedbackYesCount + this.feedbackNoCount;
+    if (total === 0) return 50;
+    const count = type === 'yes' ? this.feedbackYesCount : this.feedbackNoCount;
+    return Math.round((count / total) * 100);
+  }
+
+  feedbackCircleSize(type: 'yes' | 'no'): number {
+    const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
+    return 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+  }
+
+  get visibleRelatedArticles(): Article[] {
+    return this.relatedArticles.slice(0, this.relatedArticlesVisibleCount);
+  }
+
+  get hasMoreRelatedArticles(): boolean {
+    return this.relatedArticlesVisibleCount < this.relatedArticles.length;
+  }
+
+  showMoreRelatedArticles(): void {
+    this.relatedArticlesVisibleCount = Math.min(this.relatedArticlesVisibleCount + 4, this.relatedArticles.length);
+  }
+
+  ngAfterViewInit(): void { /* hero מאותחל ע"י הסטר */ }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    this.shrinkHero();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.fullHeroHeight = window.innerHeight - 16;
+    this.shrinkHero();
+  }
+
+  shrinkHero(): void {
+    const hero = this._heroEl?.nativeElement;
+    if (!hero || this.fullHeroHeight === 0) return;
+
+    const minHeight = 56; /* גובה ה-navbar — hero מתכווץ לשורת הכותרת */
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    hero.style.height = newHeight + 'px';
+
+    const progress = Math.min(1, window.scrollY / 160);
+    const content = hero.querySelector('.hero-content') as HTMLElement | null;
+    if (content) content.style.opacity = String(1 - progress);
+
+    const collapseOverlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
+  }
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadArticle(slug);
@@ -67,13 +153,19 @@ export class BlogPostViewComponent implements OnInit {
             this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
           }
 
+          // Load related articles
+          this.loadRelatedArticles(article);
+
           // Check if blog post is liked
           this.checkIfLiked(article.id);
+
+          // Load feedback counts
+          this.loadFeedback(article.id);
 
           this.loading = false;
         },
         error: (error) => {
-          console.error('Error loading article:', error);
+          console.error('Error loading blog post:', error);
           this.loading = false;
           // Navigate back to home on error
           this.router.navigate(['/']);
@@ -81,9 +173,28 @@ export class BlogPostViewComponent implements OnInit {
       });
   }
 
-  getCategoryName(): string {
-    if (!this.article) return '';
-    return this.article.categoryNames.join(', ') || '';
+  loadRelatedArticles(article: Article): void {
+    this.relatedArticlesVisibleCount = 4;
+    // Load articles from the same category and content type, excluding current article
+    const categoryId = article.categoryIds && article.categoryIds.length > 0 ? article.categoryIds[0] : undefined;
+    this.articleService.getArticles(
+      1,
+      12, // Get 12 related articles
+      undefined,
+      categoryId,
+      article.contentType,
+      ArticleStatus.Published,
+      undefined
+    ).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          // Filter out the current article
+          this.relatedArticles = result.items.filter(a => a.id !== article.id).slice(0, 12);
+        },
+        error: (error) => {
+          console.error('Error loading related articles:', error);
+        }
+      });
   }
 
   private applySeo(article: Article): void {
@@ -120,6 +231,11 @@ export class BlogPostViewComponent implements OnInit {
     return (value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
+  getCategoryName(): string {
+    if (!this.article) return '';
+    return this.article.categoryNames.join(', ') || '';
+  }
+
   convertToYouTubeEmbedUrl(url: string): string {
     if (!url) return url;
 
@@ -152,6 +268,17 @@ export class BlogPostViewComponent implements OnInit {
     return url;
   }
 
+  isAudioFileUrl(url: string | undefined): boolean {
+    return !!url && /\.(mp3|wav|m4a|aac|ogg)(\?.*)?$/i.test(url);
+  }
+
+  getAudioDownloadUrl(url: string | undefined): string {
+    if (!url) return '';
+    if (!url.includes('/upload/')) return url;
+    if (!url.includes('res.cloudinary.com')) return url;
+    return url.replace('/upload/', '/upload/fl_attachment/');
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('he-IL', {
       year: 'numeric',
@@ -161,7 +288,7 @@ export class BlogPostViewComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/articles']);
+    this.router.navigate(['/blog']);
   }
 
   // Share article
@@ -238,10 +365,89 @@ export class BlogPostViewComponent implements OnInit {
     }
   }
 
-  // Report error
-  reportError(): void {
-    // TODO: Implement report error functionality
-    alert('תודה על הדיווח! נטפל בכך בהקדם.');
-    console.log('Error reported for article:', this.article?.id);
+  // ─── Feedback ─────────────────────────────────────────────────────────────
+
+  loadFeedback(articleId: number): void {
+    this.feedbackService.getFeedback(articleId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+          if (result.hasVoted) {
+            this.feedbackGiven = true;
+            this.feedbackChoice = result.userChoice ? 'yes' : 'no';
+          }
+        },
+        error: () => { /* silent — feedback is non-critical */ }
+      });
+  }
+
+  giveFeedbackYes(): void {
+    if (this.feedbackGiven || !this.article) return;
+    this.feedbackGiven = true;
+    this.feedbackChoice = 'yes';
+    this.feedbackService.submitFeedback(this.article.id, true)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+        },
+        error: () => {
+          this.feedbackGiven = false;
+          this.feedbackChoice = null;
+        }
+      });
+  }
+
+  giveFeedbackNo(): void {
+    if (this.feedbackGiven || !this.article) return;
+    this.feedbackGiven = true;
+    this.feedbackChoice = 'no';
+    this.feedbackService.submitFeedback(this.article.id, false)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.feedbackYesCount = result.yesCount;
+          this.feedbackNoCount = result.noCount;
+        },
+        error: () => {
+          this.feedbackGiven = false;
+          this.feedbackChoice = null;
+        }
+      });
+  }
+
+  // Lightbox
+  openLightbox(index: number): void {
+    this.lightboxIndex = index;
+  }
+
+  closeLightbox(): void {
+    this.lightboxIndex = null;
+  }
+
+  lightboxStep(dir: 1 | -1): void {
+    if (this.lightboxIndex === null || !this.article) return;
+    const len = this.article.galleryImages.length;
+    this.lightboxIndex = (this.lightboxIndex + dir + len) % len;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    if (this.lightboxIndex === null) return;
+    if (e.key === 'ArrowLeft') this.lightboxStep(1);
+    if (e.key === 'ArrowRight') this.lightboxStep(-1);
+    if (e.key === 'Escape') this.closeLightbox();
+  }
+
+  // Report Modal
+  openReportModal(): void {
+    this.isReportModalOpen = true;
+  }
+
+  closeReportModal(): void {
+    this.isReportModalOpen = false;
   }
 }

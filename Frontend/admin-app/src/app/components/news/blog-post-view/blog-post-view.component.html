@@ -1,66 +1,192 @@
 <div class="blog-post-container" *ngIf="!loading && article">
-  <!-- Content with Sidebars -->
+  <!-- מסכה עליונה — מסתירה את ה-hero מעל -->
+  <div class="top-scroll-mask"></div>
+
+  <!-- Hero Section with Background Image -->
+  <div class="article-hero" #articleHero [style.backgroundImage]="'url(' + article.featuredImageUrl + ')'">
+    <div class="hero-collapse-overlay"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="category-badge">{{ getCategoryName() }}</span>
+      <h1 class="article-title">{{ article.title }}</h1>
+      <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+      <div class="article-meta">
+        <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }} • </span>
+        <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
+      </div>
+
+      <!-- Share and Favorite Icons -->
+      <div class="article-actions">
+          <span class="material-icons" (click)="shareArticle()" title="שתף">share</span>
+          <span class="material-icons" [class.active]="isFavorite" (click)="toggleFavorite()" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
+          <span class="material-icons" (click)="openReportModal()" title="דווח על טעות">report</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacer for fixed hero -->
+  <div class="hero-spacer"></div>
+
+  <!-- Content Container with Video and Text - WITH SIDEBARS -->
   <div class="content-with-sidebars">
-    <!-- Left Sidebar - Advertisement -->
-    <aside class="sidebar sidebar-left">
-      <app-ad-display
-        spotTechnicalId="blog-post-left">
-      </app-ad-display>
-    </aside>
 
     <!-- Main Content Box -->
-    <div class="content-wrapper">
+    <div class="content-container">
       <div class="content-box">
-        <!-- Featured Image with Title Overlay -->
-        <div class="featured-image-section">
-          <img [src]="article.featuredImageUrl" [alt]="article.title" class="featured-image">
-          <div class="image-overlay"></div>
-          <div class="image-content">
-            <span class="category-badge">{{ getCategoryName() }}</span>
-            <h1 class="article-title">{{ article.title }}</h1>
-            <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
+        <!-- Video Section -->
+        <div class="video-section" *ngIf="safeVideoUrl">
+          <div class="video-wrapper">
+            <iframe
+              [src]="safeVideoUrl"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
           </div>
         </div>
 
-        <!-- Article Actions and Meta -->
-        <div class="article-header">
-          <div class="article-meta">
-            <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }}</span>
-            <span class="meta-separator" *ngIf="article.authorName">•</span>
-            <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
-            <span class="meta-separator">•</span>
-            <span class="meta-item">{{ article.viewCount }} צפיות</span>
-          </div>
-          <div class="article-actions">
-            <span class="material-icons action-icon" (click)="toggleFavorite()" [class.active]="isFavorite" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">
-              {{ isFavorite ? 'favorite' : 'favorite_border' }}
-            </span>
-            <span class="material-icons action-icon" (click)="shareArticle()" title="שיתוף">
-              share
-            </span>
-            <span class="material-icons action-icon" (click)="reportError()" title="דיווח על טעות">
-              flag
-            </span>
-          </div>
+        <!-- Audio Section -->
+        <div class="audio-section" *ngIf="article.audioEmbedUrl">
+          <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
+            <div class="audio-player-card">
+              <audio class="audio-player" [src]="article.audioEmbedUrl" controls preload="metadata"></audio>
+              <a
+                class="audio-download-btn"
+                [href]="getAudioDownloadUrl(article.audioEmbedUrl)"
+                download
+                target="_blank"
+                rel="noopener"
+                aria-label="הורדת השיר"
+                title="הורדת השיר">
+                <span class="material-icons">download</span>
+                הורדת השיר
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #audioEmbed>
+            <iframe
+              [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
+              frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              class="audio-frame">
+            </iframe>
+          </ng-template>
         </div>
-
-      <!-- Video Section (if exists) -->
-      <div class="video-section" *ngIf="safeVideoUrl">
-        <div class="video-wrapper">
-          <iframe
-            [src]="safeVideoUrl"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen>
-          </iframe>
-        </div>
-      </div>
 
         <!-- Article Content -->
         <div class="article-content">
           <div [innerHTML]="article.content"></div>
         </div>
+
+        <!-- Gallery Section -->
+        <div class="gallery-section" *ngIf="article.galleryImages && article.galleryImages.length > 0">
+          <div class="gallery-grid">
+            <div class="gallery-item" *ngFor="let img of article.galleryImages; let i = index" (click)="openLightbox(i)">
+              <img [src]="img.imageUrl" [alt]="img.caption || article.title" class="gallery-img">
+              <p class="gallery-caption" *ngIf="img.caption">{{ img.caption }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credits -->
+        <p class="article-credits" *ngIf="article.imageCredit">
+          <span>קרדיטים:</span>
+          {{ article.imageCredit }}
+        </p>
+
+        <!-- Lightbox -->
+        <div class="lightbox-overlay" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">
+          <button class="lightbox-close" (click)="closeLightbox()">
+            <span class="material-icons">close</span>
+          </button>
+          <button class="lightbox-nav lightbox-prev" (click)="$event.stopPropagation(); lightboxStep(-1)" *ngIf="article.galleryImages.length > 1">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div class="lightbox-content" (click)="$event.stopPropagation()">
+            <img [src]="article.galleryImages[lightboxIndex!].imageUrl" [alt]="article.galleryImages[lightboxIndex!].caption || article.title" class="lightbox-img">
+            <p class="lightbox-caption" *ngIf="article.galleryImages[lightboxIndex!].caption">{{ article.galleryImages[lightboxIndex!].caption }}</p>
+            <span class="lightbox-counter">{{ lightboxIndex! + 1 }} / {{ article.galleryImages.length }}</span>
+          </div>
+          <button class="lightbox-nav lightbox-next" (click)="$event.stopPropagation(); lightboxStep(1)" *ngIf="article.galleryImages.length > 1">
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+
+        <!-- Tagged Artists -->
+        <div class="tagged-artists-section" *ngIf="article.taggedArtists && article.taggedArtists.length > 0">
+          <a *ngFor="let artist of article.taggedArtists"
+             [routerLink]="['/artist', artist.artistId]"
+             class="artist-link">{{ artist.artistName }}</a>
+        </div>
+
+        <!-- Uploader Badge -->
+        <div *ngIf="article.uploaderProfile" class="uploader-badge-wrapper">
+          <app-content-uploader-badge [profile]="article.uploaderProfile" />
+        </div>
       </div>
+
+      <!-- Feedback Section -->
+      <div class="feedback-section-outside">
+        <p class="feedback-title">האם התוכן עניין אותך?</p>
+        <div class="feedback-circles">
+
+          <!-- כן -->
+          <div class="feedback-circle-item">
+            <button
+              class="feedback-circle"
+              [class.chosen-yes]="feedbackChoice === 'yes'"
+              [style.width.px]="feedbackCircleSize('yes')"
+              [style.height.px]="feedbackCircleSize('yes')"
+              (click)="giveFeedbackYes()"
+              [disabled]="feedbackGiven">
+              <span class="material-icons">thumb_up</span>
+              <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('yes') }}%</span>
+            </button>
+            <span class="circle-label">כן</span>
+          </div>
+
+          <!-- לא -->
+          <div class="feedback-circle-item">
+            <button
+              class="feedback-circle"
+              [class.chosen-no]="feedbackChoice === 'no'"
+              [style.width.px]="feedbackCircleSize('no')"
+              [style.height.px]="feedbackCircleSize('no')"
+              (click)="giveFeedbackNo()"
+              [disabled]="feedbackGiven">
+              <span class="material-icons">thumb_down</span>
+              <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('no') }}%</span>
+            </button>
+            <span class="circle-label">לא</span>
+          </div>
+
+        </div>
+        <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
+      </div>
+
+      <!-- More content banner -->
+      <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
+        <div class="related-content-header">
+          <span class="related-content-label">תוכן נוסף</span>
+          <h2 class="related-content-title">יכול לעניין אותך</h2>
+        </div>
+
+        <div class="related-content-grid">
+          <app-news-banner
+            *ngFor="let relatedArticle of visibleRelatedArticles"
+            [article]="relatedArticle">
+          </app-news-banner>
+        </div>
+
+        <button
+          *ngIf="hasMoreRelatedArticles"
+          type="button"
+          class="related-content-more"
+          (click)="showMoreRelatedArticles()">
+          הצג עוד
+        </button>
+      </section>
     </div>
 
     <!-- Right Sidebar - Advertisement -->
@@ -77,3 +203,12 @@
   <div class="spinner"></div>
   <p>טוען תוכן...</p>
 </div>
+
+<!-- Report Modal -->
+<app-report-modal
+  [isOpen]="isReportModalOpen"
+  [contentType]="'Article'"
+  [contentId]="article?.id || 0"
+  [contentTitle]="article?.title"
+  (close)="closeReportModal()">
+</app-report-modal>
