@@ -187,6 +187,27 @@ public class MusicServiceProviderCategoriesController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("bulk-delete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
+    {
+        if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
+
+        var categories = await _context.ServiceProviderCategories.Where(c => dto.Ids.Contains(c.Id)).ToListAsync();
+        _context.ServiceProviderCategories.RemoveRange(categories);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            return BadRequest("לא ניתן למחוק חלק מהפריטים (ייתכן שהם בשימוש)");
+        }
+
+        return Ok(new { deletedCount = categories.Count });
+    }
+
     private bool CategoryExists(int id)
     {
         return _context.ServiceProviderCategories.Any(e => e.Id == id);

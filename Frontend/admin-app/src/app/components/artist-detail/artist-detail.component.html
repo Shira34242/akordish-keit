@@ -10,19 +10,20 @@
   <div class="top-scroll-mask"></div>
 
   <!-- Hero Background (fixed, מתכווץ בגלילה) -->
-  <div class="artist-hero-bg" #artistHeroBg
-       [style.backgroundImage]="(heroBannerSrc && !heroBannerIsVideo) ? 'url(' + heroBannerSrc + ')' : null"
-       [style.--hero-blur.px]="heroBannerBlur">
+  <div class="artist-hero-bg" #artistHeroBg>
+    <!-- מדיית באנר (תמונה / וידאו) — ה-filter מוחל ישירות על האלמנט הזה -->
+    <div *ngIf="heroBannerSrc && !heroBannerIsVideo"
+         class="hero-bg-media hero-bg-media--image"
+         [style.backgroundImage]="'url(' + heroBannerSrc + ')'"
+         [style.filter]="heroBannerBlur > 0 ? 'blur(' + heroBannerBlur + 'px)' : null"></div>
     <video *ngIf="heroBannerSrc && heroBannerIsVideo"
-           class="hero-video-bg"
+           class="hero-bg-media hero-bg-media--video"
            [src]="heroBannerSrc"
+           [style.filter]="heroBannerBlur > 0 ? 'blur(' + heroBannerBlur + 'px)' : null"
            autoplay
            muted
            loop
            playsinline></video>
-    <div class="hero-blur-layer" *ngIf="heroBannerSrc && heroBannerBlur > 0"
-         [style.backdrop-filter]="'blur(' + heroBannerBlur + 'px)'"
-         [style.-webkit-backdrop-filter]="'blur(' + heroBannerBlur + 'px)'"></div>
     <div class="hero-overlay-right" *ngIf="heroBannerSrc"></div>
     <div class="hero-collapse-overlay"></div>
 

@@ -22,6 +22,15 @@ import {
   ArticleStatus
 } from '../../../../models/article.model';
 
+interface CategoryWithSection extends SystemItem {
+  section?: number; // 0 = News, 1 = Content
+}
+
+interface SelectedTag {
+  id: number;
+  name: string;
+}
+
 @Component({
   selector: 'app-article-form',
   standalone: true,
@@ -40,8 +49,16 @@ export class ArticleFormComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   // State
-  categories: SystemItem[] = [];
+  categories: CategoryWithSection[] = [];
   artists: ArtistListDto[] = [];
+
+  // Tag state
+  selectedTags: SelectedTag[] = [];
+  popularTags: SelectedTag[] = [];
+  tagSearchQuery = '';
+  tagSearchResults: SelectedTag[] = [];
+  showTagDropdown = false;
+  private tagSearch$ = new Subject<string>();
   isEditMode = false;
   articleId?: number;
   loading = false;
@@ -92,9 +109,6 @@ export class ArticleFormComponent implements OnInit {
   // Gallery state
   newGalleryImage = { imageUrl: '', caption: '' };
 
-  // Categories collapse state
-  categoriesExpanded = false;
-
   // Artists collapse state
   artistsExpanded = false;
 
@@ -135,7 +149,9 @@ export class ArticleFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadArtists();
+    this.loadPopularTags();
     this.initProfileSearch();
+    this.initTagSearch();
 
     // Check if we're in edit mode
     this.route.params.subscribe(params => {
@@ -144,6 +160,15 @@ export class ArticleFormComponent implements OnInit {
         this.articleId = +params['id'];
         this.loadArticle();
       } else {
+        this.isEditMode = false;
+        this.articleId = undefined;
+        this.article = this.createEmptyArticle(this.article.contentType);
+        this.selectedProfile = null;
+        this.profileSearchQuery = '';
+        this.selectedTags = [];
+        this.tagSearchQuery = '';
+        this.artistsExpanded = false;
+        this.newGalleryImage = { imageUrl: '', caption: '' };
         this.initializeUploaderSelector();
       }
     });
@@ -154,6 +179,39 @@ export class ArticleFormComponent implements OnInit {
         this.article.contentType = ArticleContentType.Blog;
       }
     });
+  }
+
+  private createEmptyArticle(contentType: ArticleContentType): CreateArticleDto {
+    return {
+      title: '',
+      subtitle: '',
+      content: '',
+      featuredImageUrl: '',
+      authorName: '',
+      categoryIds: [],
+      contentType,
+      slug: '',
+      canonicalUrl: '',
+      videoEmbedUrl: '',
+      audioEmbedUrl: '',
+      imageCredit: '',
+      shortDescription: '',
+      isFeatured: false,
+      displayOrder: 0,
+      status: ArticleStatus.Draft,
+      scheduledDate: undefined,
+      isPremium: false,
+      metaTitle: '',
+      metaDescription: '',
+      openGraphImageUrl: '',
+      readTimeMinutes: undefined,
+      tagIds: [],
+      galleryImages: [],
+      artistIds: [],
+      uploaderUserId: undefined,
+      uploaderProfileType: undefined,
+      uploaderProfileId: undefined
+    };
   }
 
   initializeUploaderSelector(): void {
@@ -257,6 +315,9 @@ export class ArticleFormComponent implements OnInit {
     if (!target.closest('.profile-search-wrapper')) {
       this.showProfileDropdown = false;
     }
+    if (!target.closest('.tag-input-wrapper')) {
+      this.showTagDropdown = false;
+    }
   }
 
   getProfileTypeLabel(type: string, isTeacher: boolean = false): string {
@@ -290,6 +351,82 @@ export class ArticleFormComponent implements OnInit {
     });
   }
 
+  loadPopularTags(): void {
+    this.systemTablesService.getPopularTags(20).subscribe({
+      next: (tags) => { this.popularTags = tags.map(t => ({ id: t.id, name: t.name })); },
+      error: (err) => console.error('Error loading popular tags', err)
+    });
+  }
+
+  initTagSearch(): void {
+    this.tagSearch$.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      switchMap(q => this.systemTablesService.searchTags(q, 8).pipe(catchError(() => of([] as SystemItem[]))))
+    ).subscribe(results => {
+      this.tagSearchResults = results.map(r => ({ id: r.id, name: r.name }));
+      this.showTagDropdown = this.tagSearchQuery.trim().length > 0;
+    });
+  }
+
+  onTagSearchInput(): void {
+    this.tagSearch$.next(this.tagSearchQuery);
+  }
+
+  isTagSelected(tagId: number): boolean {
+    return this.selectedTags.some(t => t.id === tagId);
+  }
+
+  selectTag(tag: SelectedTag): void {
+    if (this.isTagSelected(tag.id)) return;
+    this.selectedTags.push(tag);
+    this.article.tagIds = this.selectedTags.map(t => t.id);
+    this.tagSearchQuery = '';
+    this.tagSearchResults = [];
+    this.showTagDropdown = false;
+  }
+
+  removeTag(tagId: number): void {
+    this.selectedTags = this.selectedTags.filter(t => t.id !== tagId);
+    this.article.tagIds = this.selectedTags.map(t => t.id);
+  }
+
+  addTagFromInput(): void {
+    const name = this.tagSearchQuery.trim();
+    if (!name) return;
+
+    const existing = this.tagSearchResults.find(t => t.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      this.selectTag(existing);
+      return;
+    }
+
+    this.systemTablesService.findOrCreateTag(name).subscribe({
+      next: (tag) => {
+        this.selectTag({ id: tag.id, name: tag.name });
+        if (!this.popularTags.some(p => p.id === tag.id)) {
+          this.popularTags = [{ id: tag.id, name: tag.name }, ...this.popularTags];
+        }
+      },
+      error: (err) => console.error('Error creating tag', err)
+    });
+  }
+
+  // אזור באתר נגזר מהקטגוריות שנבחרו: אם יש קטגוריה אחת לפחות "חדשות מוזיקה" → news, אחרת → blog
+  get derivedSlugBase(): 'news' | 'blog' {
+    if (!this.article.categoryIds || this.article.categoryIds.length === 0) return 'news';
+    const hasNews = this.categories.some(c => this.article.categoryIds.includes(c.id) && (c.section ?? 0) === 0);
+    return hasNews ? 'news' : 'blog';
+  }
+
+  get newsCategories(): CategoryWithSection[] {
+    return this.categories.filter(c => (c.section ?? 0) === 0);
+  }
+
+  get contentCategories(): CategoryWithSection[] {
+    return this.categories.filter(c => (c.section ?? 0) === 1);
+  }
+
   loadArticle(): void {
     if (!this.articleId) return;
 
@@ -319,7 +456,7 @@ export class ArticleFormComponent implements OnInit {
           metaDescription: data.metaDescription || '',
           openGraphImageUrl: data.openGraphImageUrl || '',
           readTimeMinutes: data.readTimeMinutes,
-          tagIds: [],
+          tagIds: data.tagIds || [],
           galleryImages: data.galleryImages.map(img => ({
             imageUrl: img.imageUrl,
             caption: img.caption || '',
@@ -330,6 +467,10 @@ export class ArticleFormComponent implements OnInit {
           uploaderProfileType: data.uploaderProfileType,
           uploaderProfileId: data.uploaderProfileId
         };
+        // Populate selectedTags from the loaded article (tagIds + tag names)
+        const ids = data.tagIds || [];
+        const names = data.tags || [];
+        this.selectedTags = ids.map((id, idx) => ({ id, name: names[idx] ?? `#${id}` }));
         if (data.uploaderProfile) {
           this.selectedProfile = {
             userId: data.uploaderUserId,
@@ -399,7 +540,7 @@ export class ArticleFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating article:', error);
-          alert('שגיאה בעדכון הכתבה: ' + (error.error?.message || error.message));
+          alert('שגיאה בעדכון הכתבה: ' + this.getArticleErrorMessage(error));
           this.saving = false;
         }
       });
@@ -411,7 +552,7 @@ export class ArticleFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating article:', error);
-          alert('שגיאה ביצירת הכתבה: ' + (error.error?.message || error.message));
+          alert('שגיאה ביצירת הכתבה: ' + this.getArticleErrorMessage(error));
           this.saving = false;
         }
       });
@@ -434,7 +575,35 @@ export class ArticleFormComponent implements OnInit {
       return false;
     }
 
+    if (!this.article.categoryIds || this.article.categoryIds.length === 0) {
+      alert('נא לבחור לפחות קטגוריה אחת');
+      return false;
+    }
+
     return true;
+  }
+
+  private getArticleErrorMessage(error: any): string {
+    if (error?.error?.message) {
+      return error.error.message;
+    }
+
+    if (error?.error?.errors) {
+      return this.formatValidationErrors(error.error.errors);
+    }
+
+    if (error?.originalError?.error?.errors) {
+      return this.formatValidationErrors(error.originalError.error.errors);
+    }
+
+    return error?.message || 'שגיאה לא ידועה';
+  }
+
+  private formatValidationErrors(errors: Record<string, string[]>): string {
+    const messages = Object.entries(errors)
+      .flatMap(([field, fieldErrors]) => fieldErrors.map(message => `${field}: ${message}`));
+
+    return messages.length > 0 ? messages.join('\n') : 'יש שדות לא תקינים בטופס';
   }
 
   goBack(): void {
@@ -453,22 +622,6 @@ export class ArticleFormComponent implements OnInit {
     } else {
       this.article.categoryIds.push(categoryId);
     }
-  }
-
-  toggleCategoriesExpanded(): void {
-    this.categoriesExpanded = !this.categoriesExpanded;
-  }
-
-  getVisibleCategories(): SystemItem[] {
-    if (this.categoriesExpanded) {
-      return this.categories;
-    }
-    // Show only first 3 categories when collapsed
-    return this.categories.slice(0, 3);
-  }
-
-  get hasMoreCategories(): boolean {
-    return this.categories.length > 3;
   }
 
   // Artist selection methods

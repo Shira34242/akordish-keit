@@ -282,6 +282,11 @@ export const routes: Routes = [
                 children: [
                     { path: '', redirectTo: 'songs', pathMatch: 'full' },
                     {
+                        path: 'smart-add',
+                        redirectTo: '/admin/system/smart-add',
+                        pathMatch: 'full'
+                    },
+                    {
                         path: 'songs',
                         loadComponent: () => import('./components/admin/content/songs/songs-list.component').then(m => m.SongsListComponent),
                         title: 'ניהול שירים - אקורדישקייט'
@@ -393,6 +398,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/admin/system/system-layout/system-layout.component').then(m => m.SystemLayoutComponent),
                 children: [
                     { path: '', redirectTo: 'tables', pathMatch: 'full' },
+                    {
+                        path: 'smart-add',
+                        loadComponent: () => import('./components/admin/content/smart-add/smart-add.component').then(m => m.SmartAddComponent),
+                        title: 'הוספה חכמה - אקורדישקייט'
+                    },
                     {
                         path: 'tables',
                         loadComponent: () => import('./components/admin/system/value-tables/value-tables.component').then(m => m.ValueTablesComponent),

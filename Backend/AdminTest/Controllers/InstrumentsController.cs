@@ -147,6 +147,27 @@ public class InstrumentsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("bulk-delete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
+    {
+        if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
+
+        var instruments = await _context.Instruments.Where(i => dto.Ids.Contains(i.Id)).ToListAsync();
+        _context.Instruments.RemoveRange(instruments);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            return BadRequest("לא ניתן למחוק חלק מהפריטים (ייתכן שהם בשימוש)");
+        }
+
+        return Ok(new { deletedCount = instruments.Count });
+    }
+
     private bool InstrumentExists(int id)
     {
         return _context.Instruments.Any(e => e.Id == id);

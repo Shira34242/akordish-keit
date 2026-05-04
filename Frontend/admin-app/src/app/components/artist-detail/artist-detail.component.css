@@ -39,29 +39,28 @@
   height: calc(100vh - 16px); /* JS מחליף לפי viewport — 8px מכל צד */
   z-index: 895;
   background-color: #ddff53;  /* fallback צהוב כשאין באנר */
-  background-size: cover;
-  background-position: center;
   overflow: hidden;
   will-change: height;
 }
 
-/* וידאו רקע לבאנר (כשהסוג הוא video) */
-.hero-video-bg {
+/* שכבת מדיה (תמונה/וידאו) — ה-filter blur מוחל ישירות על האלמנט הזה.
+   inset שלילי מפצה על דהיית הקצוות שטשטוש יוצר, ו-overflow:hidden של ההורה חותך. */
+.hero-bg-media {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  inset: -32px;
   z-index: 0;
   pointer-events: none;
 }
 
-/* שכבת טשטוש על תמונת הבאנר/וידאו */
-.hero-blur-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+.hero-bg-media--image {
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-bg-media--video {
+  width: calc(100% + 64px);
+  height: calc(100% + 64px);
+  object-fit: cover;
 }
 
 /* overlay אפור בהיר — מתגבר בגלילה, מכסה את תמונת הבאנר */

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
-import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
+import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, ImportSongFromUrlResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
 import { PagedResult } from '../models/pagination.model';
 
 @Injectable({
@@ -58,6 +58,10 @@ export class SongService {
 
     detectKey(lyricsWithChords: string): Observable<DetectKeyResponse> {
         return this.http.post<DetectKeyResponse>(`${this.apiUrl}/detect-key`, { lyricsWithChords });
+    }
+
+    importSongFromUrl(url: string): Observable<ImportSongFromUrlResponse> {
+        return this.http.post<ImportSongFromUrlResponse>(`${this.apiUrl}/import-from-url`, { url });
     }
 
     getMusicalKeys(): Observable<MusicalKey[]> {

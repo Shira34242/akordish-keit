@@ -412,6 +412,34 @@ public class DetectKeyResponseDto
     public int? EasyKeyId { get; set; }
 }
 
+public class ImportSongFromUrlRequestDto
+{
+    [Required(ErrorMessage = "קישור מקור הוא שדה חובה")]
+    public string Url { get; set; } = string.Empty;
+}
+
+public class ImportedSongDraftDto
+{
+    public string Title { get; set; } = string.Empty;
+    public List<ArtistInputDto> Artists { get; set; } = new();
+    public string YoutubeUrl { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public string LyricsWithChords { get; set; } = string.Empty;
+    public int OriginalKeyId { get; set; } = 1;
+    public int? EasyKeyId { get; set; }
+    public List<TagInputDto> Tags { get; set; } = new();
+}
+
+public class ImportSongFromUrlResponseDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string SourceUrl { get; set; } = string.Empty;
+    public int? SongId { get; set; }
+    public ImportedSongDraftDto Draft { get; set; } = new();
+    public List<string> MissingFields { get; set; } = new();
+}
+
 // ============================================
 // RATING DTOs
 // ============================================

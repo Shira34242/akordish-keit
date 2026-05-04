@@ -22,6 +22,7 @@ export class AppComponent implements OnInit {
   isAddSongModalOpen = false;
   editMode = false;
   songToEdit: any = null;
+  songPrefill: any = null;
 
   constructor(
     private modalService: ModalService,
@@ -46,6 +47,7 @@ export class AppComponent implements OnInit {
       this.isAddSongModalOpen = state.isOpen;
       this.editMode = state.editMode;
       this.songToEdit = state.songToEdit;
+      this.songPrefill = state.songPrefill;
     });
   }
 

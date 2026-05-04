@@ -51,6 +51,13 @@ export class AdminContentLayoutComponent {
     }
 
     private getState(url: string): LayoutState {
+        if (url.includes('/content/smart-add')) {
+            return {
+                title: 'הוספה חכמה',
+                subtitle: 'מקום אחד להתחיל ממנו ייבוא אקורדים והוספה מהירה של תוכן.'
+            };
+        }
+
         if (url.includes('/content/articles')) {
             return {
                 title: 'חדשות ובלוג',

@@ -51,6 +51,7 @@ export interface Article {
     readTimeMinutes?: number;
     createdBy?: string;
     updatedBy?: string;
+    tagIds: number[];
     tags: string[];
     galleryImages: ArticleGalleryImage[];
     taggedArtists: ArticleArtist[];

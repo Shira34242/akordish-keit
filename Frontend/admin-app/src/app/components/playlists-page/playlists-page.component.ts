@@ -365,6 +365,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
       isPremium: false,
       viewCount: 0,
       likeCount: 0,
+      tagIds: [],
       tags: [],
       galleryImages: [],
       taggedArtists: []

@@ -13,15 +13,18 @@ public class SongsController : ControllerBase
     private readonly ISongService _songService;
     private readonly IYouTubeService _youTubeService;
     private readonly IUserTagService _userTagService;
+    private readonly ISmartSongImportService _smartSongImportService;
 
     public SongsController(
         ISongService songService,
         IYouTubeService youTubeService,
-        IUserTagService userTagService)
+        IUserTagService userTagService,
+        ISmartSongImportService smartSongImportService)
     {
         _songService = songService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
+        _smartSongImportService = smartSongImportService;
     }
 
     // ============================================
@@ -75,6 +78,65 @@ public class SongsController : ControllerBase
             {
                 Success = false,
                 Message = "אירעה שגיאה בהוספת השיר"
+            });
+        }
+    }
+
+    [HttpPost("import-from-url")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ImportSongFromUrlResponseDto>> ImportSongFromUrl([FromBody] ImportSongFromUrlRequestDto dto)
+    {
+        try
+        {
+            var userId = GetCurrentUserId() ?? 0;
+            if (false && userId < 0)
+            {
+                return Unauthorized(new ImportSongFromUrlResponseDto
+                {
+                    Success = false,
+                    Message = "לא ניתן לזהות משתמש"
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join(", ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+
+                return Ok(new ImportSongFromUrlResponseDto
+                {
+                    Success = false,
+                    Message = errors
+                });
+            }
+
+            var result = await _smartSongImportService.ImportFromUrlAsync(dto.Url, userId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error importing song from url: {ex.Message}");
+            return Ok(new ImportSongFromUrlResponseDto
+            {
+                Success = false,
+                SourceUrl = dto.Url,
+                Draft = new ImportedSongDraftDto
+                {
+                    Title = "שיר מיובא",
+                    Artists = new List<ArtistInputDto>
+                    {
+                        new() { Name = "אמן לא ידוע" }
+                    },
+                    LyricsWithChords = string.Empty,
+                    OriginalKeyId = 1,
+                    Tags = new List<TagInputDto>
+                    {
+                        new() { Name = "ייבוא חכם" }
+                    }
+                },
+                MissingFields = new List<string> { "מילים ואקורדים" },
+                Message = "אירעה שגיאה בייבוא השיר"
             });
         }
     }

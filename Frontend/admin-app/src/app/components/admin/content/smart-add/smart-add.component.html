@@ -1,0 +1,84 @@
+<div class="smart-add-page">
+  <section class="smart-import-card" aria-labelledby="smart-import-title">
+    <div class="card-copy">
+      <span class="section-pill">ייבוא חכם</span>
+      <h2 id="smart-import-title">הוספת אקורדים מקישור</h2>
+      <p>
+        מדביקים קישור, מכינים את הייבוא, ואז עוברים לעריכת שיר כדי לסדר, לתקן ולפרסם ידנית.
+      </p>
+    </div>
+
+    <div class="import-form">
+      <label for="chord-import-url">קישור לאתר מקור</label>
+      <div class="url-row">
+        <input
+          id="chord-import-url"
+          type="url"
+          [(ngModel)]="importUrl"
+          (keyup.enter)="prepareChordImport()"
+          placeholder="https://..."
+          dir="ltr"
+        />
+        <button type="button" class="primary-btn" (click)="prepareChordImport()" [disabled]="importState === 'loading'">
+          {{ importState === 'loading' ? 'שולף...' : 'שלוף תוכן' }}
+        </button>
+      </div>
+
+      <p class="field-note" *ngIf="importState === 'idle'">
+        בשלב הזה נפתח את זרימת הייבוא. החיבור לשליפה האמיתית יתווסף בשלב הבא.
+      </p>
+      <p class="field-note error" *ngIf="importState === 'invalid'">
+        צריך להדביק קישור מלא שמתחיל ב-http או https.
+      </p>
+      <p class="field-note error" *ngIf="importState === 'error'">
+        {{ errorMessage }}
+      </p>
+    </div>
+
+    <div class="import-result" *ngIf="importState === 'ready' && importResult">
+      <div>
+        <h3>{{ importResult.songId ? 'הטיוטה נוצרה' : 'שלפנו נתונים לעריכה' }}</h3>
+        <p>{{ importResult.message }}</p>
+        <p *ngIf="importResult.missingFields.length > 0" class="missing-fields">
+          חסר: {{ importResult.missingFields.join(', ') }}
+        </p>
+      </div>
+      <button type="button" class="secondary-btn" (click)="openDraftEditor()">
+        פתיחה לעריכה ידנית
+      </button>
+    </div>
+  </section>
+
+  <section class="quick-add-section" aria-labelledby="quick-add-title">
+    <div class="section-heading">
+      <span class="section-pill">הוספה מהירה</span>
+      <h2 id="quick-add-title">כל סוגי התוכן</h2>
+    </div>
+
+    <div class="quick-actions">
+      <button type="button" class="quick-action" (click)="openSongEditor()">
+        <span class="material-symbols-outlined" aria-hidden="true">library_music</span>
+        <span>
+          <strong>אקורדים</strong>
+          <small>הוספה רגילה של שיר ואקורדים</small>
+        </span>
+      </button>
+
+      <button type="button" class="quick-action" (click)="addArticle()">
+        <span class="material-symbols-outlined" aria-hidden="true">article</span>
+        <span>
+          <strong>כתבה</strong>
+          <small>פתיחת טופס כתבה חדשה</small>
+        </span>
+      </button>
+
+      <button type="button" class="quick-action" (click)="addEvent()">
+        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+        <span>
+          <strong>הופעה</strong>
+          <small>פתיחת טופס הופעה חדשה</small>
+        </span>
+      </button>
+    </div>
+  </section>
+</div>

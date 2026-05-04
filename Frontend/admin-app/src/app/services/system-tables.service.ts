@@ -62,4 +62,24 @@ export class SystemTablesService {
     deleteItem(tableName: string, id: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}/${this.getEndpoint(tableName)}/${id}`);
     }
+
+    deleteMany(tableName: string, ids: number[]): Observable<any> {
+        return this.http.post(`${this.apiUrl}/${this.getEndpoint(tableName)}/bulk-delete`, { ids });
+    }
+
+    // -------- Tag-specific helpers (for the article form) --------
+
+    getPopularTags(limit: number = 20): Observable<SystemItem[]> {
+        return this.http.get<SystemItem[]>(`${this.apiUrl}/Tags/popular`, { params: new HttpParams().set('limit', String(limit)) });
+    }
+
+    searchTags(query: string, limit: number = 10): Observable<SystemItem[]> {
+        let params = new HttpParams().set('limit', String(limit));
+        if (query?.trim()) params = params.set('q', query.trim());
+        return this.http.get<SystemItem[]>(`${this.apiUrl}/Tags/search`, { params });
+    }
+
+    findOrCreateTag(name: string): Observable<SystemItem> {
+        return this.http.post<SystemItem>(`${this.apiUrl}/Tags/find-or-create`, { name });
+    }
 }

@@ -13,6 +13,12 @@ public class CreateSystemItemDto
     public string Name { get; set; }
 }
 
+// DTO for bulk delete operations on system tables
+public class BulkDeleteDto
+{
+    public int[] Ids { get; set; } = System.Array.Empty<int>();
+}
+
 // DTO for Instrument (has additional EnglishName field)
 public class InstrumentDto
 {
@@ -53,6 +59,21 @@ public class CreateMusicServiceProviderCategoryDto
     public string? QuickCategoryLabel { get; set; }
     public string? QuickCategoryImageUrl { get; set; }
     public int QuickCategoryOrder { get; set; }
+}
+
+// DTO for ArticleCategory (has Section field — News vs Content)
+public class ArticleCategoryDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Section { get; set; }
+}
+
+// DTO for creating/updating ArticleCategory
+public class CreateArticleCategoryDto
+{
+    public string Name { get; set; }
+    public int Section { get; set; }
 }
 
 // DTO for City

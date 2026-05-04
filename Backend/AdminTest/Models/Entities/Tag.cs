@@ -9,4 +9,5 @@ public class Tag
 
     // Navigation Properties
     public virtual ICollection<SongTag> SongTags { get; set; }
+    public virtual ICollection<ArticleTag> ArticleTags { get; set; } = new List<ArticleTag>();
 }

@@ -78,6 +78,37 @@
 .btn-primary:hover { background: #ddff53; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-bulk-delete {
+  background: #404040;
+  color: #ffffff;
+  border: none;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 999px;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  font-size: var(--font-sm);
+}
+
+.btn-bulk-delete:hover { background: #000000; }
+
+.select-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #000000;
+}
+
+.select-checkbox:disabled { cursor: not-allowed; opacity: 0.4; }
+
+.row-selected { background: #ddff53 !important; }
+.row-selected:hover { background: #ddff53 !important; }
+
 /* Table */
 .table-container { overflow-x: auto; border-right: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; }
 

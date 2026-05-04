@@ -6,10 +6,15 @@ import { GenericTableComponent } from './generic-table/generic-table.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { HttpClient } from '@angular/common/http';
 
+interface ColumnOption {
+    value: number | string;
+    label: string;
+}
+
 interface TableDefinition {
     id: string;
     label: string;
-    extraColumns?: { key: string, label: string, type?: string }[];
+    extraColumns?: { key: string, label: string, type?: string, options?: ColumnOption[], defaultValue?: any }[];
 }
 
 @Component({
@@ -23,7 +28,22 @@ export class ValueTablesComponent implements OnInit {
     tables: TableDefinition[] = [
         { id: 'genres', label: 'ז׳אנרים' },
         { id: 'tags', label: 'תגיות שירים' },
-        { id: 'article-categories', label: 'קטגוריות בחדשות מוזיקה ותוכן' },
+        {
+            id: 'article-categories',
+            label: 'קטגוריות בחדשות מוזיקה ותוכן',
+            extraColumns: [
+                {
+                    key: 'section',
+                    label: 'אזור באתר',
+                    type: 'select',
+                    defaultValue: 0,
+                    options: [
+                        { value: 0, label: 'חדשות מוזיקה' },
+                        { value: 1, label: 'תוכן מקצועי' }
+                    ]
+                }
+            ]
+        },
         { id: 'instruments', label: 'כלים נגינה', extraColumns: [{ key: 'englishName', label: 'שם באנגלית' }] },
         {
             id: 'music-service-provider-categories',
@@ -134,6 +154,18 @@ export class ValueTablesComponent implements OnInit {
             error: (err) => {
                 console.error(err);
                 alert('לא ניתן למחוק פריט זה (ייתכן שהוא בשימוש)');
+            }
+        });
+    }
+
+    onBulkDelete(ids: number[]) {
+        if (!this.currentTable || ids.length === 0) return;
+        this.systemService.deleteMany(this.currentTable.id, ids).subscribe({
+            next: () => this.loadItems(),
+            error: (err) => {
+                console.error(err);
+                const message = err?.error?.message || err?.error || 'לא ניתן היה למחוק חלק מהפריטים (ייתכן שהם בשימוש)';
+                alert(typeof message === 'string' ? message : 'לא ניתן היה למחוק חלק מהפריטים');
             }
         });
     }

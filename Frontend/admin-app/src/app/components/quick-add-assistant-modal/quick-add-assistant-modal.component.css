@@ -496,8 +496,8 @@
 }
 
 .profile-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
+  position: static;
+  margin-top: var(--space-sm);
   right: 0;
   left: 0;
   background: #ffffff;

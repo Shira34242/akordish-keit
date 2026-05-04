@@ -122,11 +122,11 @@ export class SubmitArticleComponent implements OnInit {
   generateSlug(text: string): string {
     const cleaned = text
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
+      .replace(/[^\w\u0590-\u05FF\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-+|-+$/g, '');
-    return cleaned || `article-${Date.now()}`;
+    return cleaned || 'article';
   }
 
   calculateReadTime(): void {
@@ -141,6 +141,7 @@ export class SubmitArticleComponent implements OnInit {
     this.saving = true;
     // Always submit as Draft — admin must approve before publishing
     this.article.status = ArticleStatus.Draft;
+    this.article.slug = `${this.generateSlug(this.article.title)}-${Date.now()}`;
     this.articleService.submitArticle(this.article).subscribe({
       next: () => {
         this.saving = false;

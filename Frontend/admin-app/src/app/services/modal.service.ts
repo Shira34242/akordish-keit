@@ -5,6 +5,7 @@ export interface ModalState {
   isOpen: boolean;
   editMode: boolean;
   songToEdit?: any;
+  songPrefill?: any;
 }
 
 @Injectable({
@@ -26,7 +27,17 @@ export class ModalService {
     this.modalState.next({
       isOpen: true,
       editMode: false,
-      songToEdit: null
+      songToEdit: null,
+      songPrefill: null
+    });
+  }
+
+  openPrefilledAddSongModal(songPrefill: any) {
+    this.modalState.next({
+      isOpen: true,
+      editMode: false,
+      songToEdit: null,
+      songPrefill
     });
   }
 
@@ -34,7 +45,8 @@ export class ModalService {
     this.modalState.next({
       isOpen: true,
       editMode: true,
-      songToEdit: song
+      songToEdit: song,
+      songPrefill: null
     });
   }
 
@@ -42,7 +54,8 @@ export class ModalService {
     this.modalState.next({
       isOpen: false,
       editMode: false,
-      songToEdit: null
+      songToEdit: null,
+      songPrefill: null
     });
   }
 

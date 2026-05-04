@@ -120,10 +120,11 @@ namespace AkordishKeit.Services
             {
                 query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == section.CategoryId.Value));
             }
-            // SectionType 1: filter by content type
+            // SectionType 1: filter by site section (חדשות / תוכן) — derived from the categories' Section field.
             else if (section.SectionType == 1 && section.ContentTypeId.HasValue)
             {
-                query = query.Where(a => a.ContentType == section.ContentTypeId.Value);
+                var categorySection = (Models.Enum.ArticleCategorySection)section.ContentTypeId.Value;
+                query = query.Where(a => a.ArticleCategories.Any(ac => ac.Category.Section == categorySection));
             }
 
             var articles = await query

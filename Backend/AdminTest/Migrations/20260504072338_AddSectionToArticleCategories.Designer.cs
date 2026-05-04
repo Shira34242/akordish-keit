@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkordishKeit.Migrations
 {
     [DbContext(typeof(AkordishKeitDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504072338_AddSectionToArticleCategories")]
+    partial class AddSectionToArticleCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -402,10 +405,6 @@ namespace AkordishKeit.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt")
-                        .IsDescending()
-                        .HasDatabaseName("IX_Articles_CreatedAt");
-
                     b.HasIndex("IsDeleted")
                         .HasDatabaseName("IX_Articles_IsDeleted");
 
@@ -430,10 +429,6 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("UploaderProfileType", "UploaderProfileId")
                         .HasDatabaseName("IX_Articles_UploaderProfile");
-
-                    b.HasIndex("Status", "ContentType", "CreatedAt")
-                        .IsDescending(false, false, true)
-                        .HasDatabaseName("IX_Articles_Status_ContentType_CreatedAt");
 
                     b.HasIndex("Status", "ContentType", "PublishDate")
                         .IsDescending(false, false, true)

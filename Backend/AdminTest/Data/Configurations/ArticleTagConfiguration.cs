@@ -36,7 +36,7 @@ public class ArticleTagConfiguration : IEntityTypeConfiguration<ArticleTag>
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.Tag)
-               .WithMany()
+               .WithMany(t => t.ArticleTags)
                .HasForeignKey(e => e.TagId)
                .OnDelete(DeleteBehavior.Restrict);
     }

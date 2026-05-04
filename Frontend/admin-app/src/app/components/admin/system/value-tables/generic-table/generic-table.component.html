@@ -2,6 +2,15 @@
     <div class="card-header">
         <h3 class="card-title">{{ title }}</h3>
         <div class="header-actions">
+            <!-- Bulk delete button (shown only when items are selected) -->
+            <button
+                *ngIf="selectedIds.size > 0"
+                (click)="onBulkDelete()"
+                class="btn-bulk-delete"
+                [title]="'מחק ' + selectedIds.size + ' נבחרים'">
+                <span class="material-icons" style="font-size: 1.25rem;">delete</span>
+                מחק נבחרים ({{ selectedIds.size }})
+            </button>
             <!-- Search Box -->
             <div class="search-box">
                 <input
@@ -36,7 +45,16 @@
         <table class="table">
             <thead>
                 <tr>
-                    <!-- Removed ID column -->
+                    <th style="width: 48px; text-align: center;">
+                        <input
+                            type="checkbox"
+                            class="select-checkbox"
+                            [checked]="isAllSelected"
+                            [indeterminate]="isSomeSelected"
+                            (change)="toggleSelectAll()"
+                            [disabled]="items.length === 0"
+                            title="בחר הכל">
+                    </th>
                     <th>שם</th>
                     <ng-container *ngFor="let col of extraColumns">
                         <th>{{ col.label }}</th>
@@ -45,14 +63,21 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let item of items">
-                    <!-- Removed ID cell -->
+                <tr *ngFor="let item of items" [class.row-selected]="isSelected(item)">
+                    <td style="text-align: center;">
+                        <input
+                            type="checkbox"
+                            class="select-checkbox"
+                            [checked]="isSelected(item)"
+                            (change)="toggleSelection(item)">
+                    </td>
                     <td>{{ item.name }}</td>
                     <ng-container *ngFor="let col of extraColumns">
                         <td>
                             <ng-container [ngSwitch]="col.type">
                                 <span *ngSwitchCase="'boolean'">{{ item[col.key] ? 'כן' : 'לא' }}</span>
                                 <span *ngSwitchCase="'image'">{{ item[col.key] ? 'יש תמונה' : 'אין תמונה' }}</span>
+                                <span *ngSwitchCase="'select'">{{ getOptionLabel(col, item[col.key]) }}</span>
                                 <span *ngSwitchDefault>{{ item[col.key] }}</span>
                             </ng-container>
                         </td>
@@ -69,7 +94,7 @@
                     </td>
                 </tr>
                 <tr *ngIf="items.length === 0">
-                    <td [attr.colspan]="2 + extraColumns.length + 1">
+                    <td [attr.colspan]="3 + extraColumns.length">
                         <div class="empty-state">אין נתונים להצגה</div>
                     </td>
                 </tr>
@@ -104,6 +129,9 @@
                         [showPreview]="true">
                     </app-file-upload-input>
                     <textarea *ngSwitchCase="'textarea'" [(ngModel)]="currentItem[col.key]" class="input" rows="3"></textarea>
+                    <select *ngSwitchCase="'select'" [(ngModel)]="currentItem[col.key]" class="input">
+                        <option *ngFor="let opt of col.options" [ngValue]="opt.value">{{ opt.label }}</option>
+                    </select>
                     <input *ngSwitchDefault type="text" [(ngModel)]="currentItem[col.key]" class="input">
                 </ng-container>
             </div>

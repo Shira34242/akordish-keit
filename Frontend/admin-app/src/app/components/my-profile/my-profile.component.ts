@@ -822,6 +822,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       isPremium: false,
       viewCount: 0,
       likeCount: 0,
+      tagIds: [],
       tags: [],
       galleryImages: [],
       taggedArtists: []

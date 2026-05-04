@@ -303,18 +303,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (!this.article.title.trim()) {
-      alert('נא לכתוב כותרת.');
-      return;
-    }
-
-    if (!this.article.content.trim()) {
-      alert('נא להוסיף את התוכן.');
+    if (!this.hasArticleDraftContent()) {
+      alert('נא למלא לפחות שדה אחד.');
       return;
     }
 
     this.isSubmitting = true;
-    this.article.slug = this.generateSlug(this.article.title);
+    this.prepareArticleDraftForSubmit();
+    this.article.slug = this.generateUniqueSlug(this.article.title);
     this.article.metaTitle = this.article.metaTitle?.trim() || this.article.title;
     this.article.shortDescription = this.article.shortDescription?.trim() || undefined;
     this.article.readTimeMinutes = Math.max(1, Math.ceil(this.article.content.split(/\s+/).length / 200));
@@ -870,6 +866,45 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     };
   }
 
+  private hasArticleDraftContent(): boolean {
+    const fields = [
+      this.article.title,
+      this.article.subtitle,
+      this.article.content,
+      this.article.featuredImageUrl,
+      this.article.authorName,
+      this.article.videoEmbedUrl,
+      this.article.audioEmbedUrl,
+      this.article.imageCredit,
+      this.article.shortDescription,
+      this.article.metaTitle,
+      this.article.metaDescription,
+      this.article.openGraphImageUrl
+    ];
+
+    return fields.some(value => !!value?.trim()) ||
+      (this.article.galleryImages?.length ?? 0) > 0 ||
+      !!this.selectedUploaderProfile;
+  }
+
+  private prepareArticleDraftForSubmit(): void {
+    const fallbackContent = [
+      this.article.shortDescription,
+      this.article.subtitle,
+      this.article.videoEmbedUrl,
+      this.article.featuredImageUrl,
+      this.article.audioEmbedUrl,
+      this.article.authorName
+    ].find(value => !!value?.trim())?.trim();
+
+    this.article.title = this.article.title.trim() || 'טיוטת כתבה';
+    this.article.content = this.article.content.trim() || fallbackContent || 'טיוטה שנשלחה להשלמה במערכת הניהול.';
+    this.article.status = ArticleStatus.Draft;
+    this.article.isFeatured = false;
+    this.article.isPremium = false;
+    this.article.displayOrder = 0;
+  }
+
   private createEmptyEvent(): CreateEventDto {
     return {
       name: '',
@@ -887,12 +922,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   private generateSlug(text: string): string {
-    return text
+    const cleaned = text
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
+      .replace(/[^\w\u0590-\u05FF\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
-      .trim() || `content-${Date.now()}`;
+      .replace(/^-+|-+$/g, '');
+
+    return cleaned || 'content';
+  }
+
+  private generateUniqueSlug(text: string): string {
+    return `${this.generateSlug(text)}-${Date.now()}`;
   }
 
   private scrollToBottom(): void {

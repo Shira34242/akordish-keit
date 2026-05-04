@@ -164,3 +164,23 @@ export interface DetectKeyResponse {
     originalKeyId: number | null;
     easyKeyId: number | null;
 }
+
+export interface ImportedSongDraft {
+    title: string;
+    artists: ArtistInput[];
+    youtubeUrl: string;
+    imageUrl?: string;
+    lyricsWithChords: string;
+    originalKeyId: number;
+    easyKeyId?: number | null;
+    tags?: TagInput[];
+}
+
+export interface ImportSongFromUrlResponse {
+    success: boolean;
+    message: string;
+    sourceUrl: string;
+    songId?: number;
+    draft: ImportedSongDraft;
+    missingFields: string[];
+}

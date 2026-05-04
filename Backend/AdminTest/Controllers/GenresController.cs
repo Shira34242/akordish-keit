@@ -155,6 +155,27 @@ public class GenresController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("bulk-delete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
+    {
+        if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
+
+        var genres = await _context.Genres.Where(g => dto.Ids.Contains(g.Id)).ToListAsync();
+        _context.Genres.RemoveRange(genres);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            return BadRequest("לא ניתן למחוק חלק מהפריטים (ייתכן שהם בשימוש)");
+        }
+
+        return Ok(new { deletedCount = genres.Count });
+    }
+
     private bool GenreExists(int id)
     {
         return _context.Genres.Any(e => e.Id == id);

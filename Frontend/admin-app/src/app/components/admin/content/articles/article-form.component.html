@@ -63,15 +63,7 @@
       <h2 class="section-title">סיווג</h2>
 
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label required">סוג תוכן</label>
-          <select class="form-select" [(ngModel)]="article.contentType" name="contentType" required>
-            <option [ngValue]="ArticleContentType.News">חדשות</option>
-            <option [ngValue]="ArticleContentType.Blog">בלוג</option>
-          </select>
-        </div>
-
-        <div class="form-group">
+        <div class="form-group full-width">
           <label class="form-label required">
             קטגוריות
             <span class="selected-count" *ngIf="article.categoryIds.length > 0">
@@ -79,32 +71,120 @@
             </span>
           </label>
 
-          <div class="categories-checkboxes" [class.collapsed]="!categoriesExpanded">
-            <label *ngFor="let cat of getVisibleCategories()" class="category-checkbox">
-              <input
-                type="checkbox"
-                [checked]="isCategorySelected(cat.id)"
-                (change)="toggleCategory(cat.id)"
-                [name]="'category-' + cat.id">
-              <span>{{ cat.name }}</span>
-            </label>
+          <div class="field-hint" style="margin-bottom: 12px;">
+            לפי הקטגוריות שנבחרו, הכתבה תופיע באזור המתאים באתר (חדשות מוזיקה / תוכן מקצועי). ניתן לבחור גם קטגוריות שמוגדרות בשני האזורים.
           </div>
 
-          <button
-            *ngIf="hasMoreCategories"
-            type="button"
-            class="btn-toggle-categories"
-            (click)="toggleCategoriesExpanded()">
-            <span class="material-icons">{{ categoriesExpanded ? 'expand_less' : 'expand_more' }}</span>
-            {{ categoriesExpanded ? 'הצג פחות' : 'הצג עוד' }} ({{ categories.length }} קטגוריות)
-          </button>
+          <ng-container *ngIf="newsCategories.length > 0">
+            <div class="category-section-label">חדשות מוזיקה</div>
+            <div class="categories-checkboxes">
+              <label *ngFor="let cat of newsCategories" class="category-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="isCategorySelected(cat.id)"
+                  (change)="toggleCategory(cat.id)"
+                  [name]="'category-' + cat.id">
+                <span>{{ cat.name }}</span>
+              </label>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="contentCategories.length > 0">
+            <div class="category-section-label">תוכן מקצועי</div>
+            <div class="categories-checkboxes">
+              <label *ngFor="let cat of contentCategories" class="category-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="isCategorySelected(cat.id)"
+                  (change)="toggleCategory(cat.id)"
+                  [name]="'category-' + cat.id">
+                <span>{{ cat.name }}</span>
+              </label>
+            </div>
+          </ng-container>
 
           <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="color: red; margin-top: 8px;">
             יש לבחור לפחות קטגוריה אחת
           </div>
         </div>
+      </div>
 
-        <div class="form-group">
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label class="form-label">
+            תגים
+            <span class="selected-count" *ngIf="selectedTags.length > 0">
+              (נבחרו {{ selectedTags.length }})
+            </span>
+          </label>
+
+          <div class="field-hint" style="margin-bottom: 8px;">
+            תגים משמשים לחיפוש מדויק יותר. בחר/י מבין הפופולאריים, או הוסף/י חדש.
+          </div>
+
+          <div class="tag-input-wrapper">
+            <div class="tag-input-row">
+              <input
+                type="text"
+                class="form-input"
+                [(ngModel)]="tagSearchQuery"
+                name="tagSearchQuery"
+                (input)="onTagSearchInput()"
+                (focus)="onTagSearchInput()"
+                (keyup.enter)="$event.preventDefault(); addTagFromInput()"
+                placeholder="חפש תג קיים או הוסף חדש..."
+                autocomplete="off">
+              <button
+                type="button"
+                class="btn-add-tag"
+                (click)="addTagFromInput()"
+                [disabled]="!tagSearchQuery.trim()">
+                <span class="material-icons">add</span>
+                הוסף
+              </button>
+            </div>
+
+            <div *ngIf="showTagDropdown && tagSearchResults.length > 0" class="tag-dropdown">
+              <div *ngFor="let t of tagSearchResults"
+                   class="tag-dropdown-item"
+                   [class.disabled]="isTagSelected(t.id)"
+                   (click)="!isTagSelected(t.id) && selectTag(t)">
+                {{ t.name }}
+                <span *ngIf="isTagSelected(t.id)" class="tag-dropdown-marker">נבחר</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected tag chips -->
+          <div *ngIf="selectedTags.length > 0" class="selected-tags-row">
+            <div *ngFor="let t of selectedTags" class="selected-tag-chip">
+              <span>{{ t.name }}</span>
+              <button type="button" class="btn-remove-tag" (click)="removeTag(t.id)" title="הסר">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Popular suggestions -->
+          <div *ngIf="popularTags.length > 0" class="popular-tags-section">
+            <div class="popular-tags-title">תגים פופולאריים</div>
+            <div class="popular-tags-row">
+              <button
+                *ngFor="let t of popularTags"
+                type="button"
+                class="popular-tag-chip"
+                [class.selected]="isTagSelected(t.id)"
+                [disabled]="isTagSelected(t.id)"
+                (click)="selectTag(t)">
+                {{ t.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full-width">
           <label class="form-label">שם המחבר</label>
           <input type="text" class="form-input" [(ngModel)]="article.authorName" name="authorName"
             placeholder="שם הכותב...">
@@ -407,9 +487,8 @@
           <input type="text" class="form-input slug-input" [(ngModel)]="article.slug" name="slug"
             placeholder="article-slug" required>
           <div class="field-hint">
-            הכתבה תהיה זמינה ב:
-            <ng-container *ngIf="article.contentType === ArticleContentType.Blog">/blog/{{ article.slug || 'slug' }}</ng-container>
-            <ng-container *ngIf="article.contentType !== ArticleContentType.Blog">/news/{{ article.slug || 'slug' }}</ng-container>
+            הכתבה תהיה זמינה ב: /{{ derivedSlugBase }}/{{ article.slug || 'slug' }}
+            <span *ngIf="article.categoryIds.length === 0" style="color: #aaa;"> (יוגדר לפי הקטגוריות שנבחרו)</span>
           </div>
         </div>
       </div>

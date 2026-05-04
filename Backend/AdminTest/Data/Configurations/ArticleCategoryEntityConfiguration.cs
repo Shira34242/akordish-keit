@@ -26,6 +26,10 @@ public class ArticleCategoryEntityConfiguration : IEntityTypeConfiguration<Artic
                .IsRequired()
                .HasMaxLength(100);
 
+        builder.Property(e => e.Section)
+               .IsRequired()
+               .HasDefaultValue(Models.Enum.ArticleCategorySection.News);
+
         // Indexes
         builder.HasIndex(e => e.Name)
                .IsUnique()

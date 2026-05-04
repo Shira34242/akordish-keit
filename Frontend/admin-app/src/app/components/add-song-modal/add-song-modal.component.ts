@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
-import { AddSongRequest, AutocompleteResult, MusicalKey, SongBasicDto, YouTubeMetadata, YouTubeSearchResult } from '../../models/song.model';
+import { AddSongRequest, AutocompleteResult, ImportedSongDraft, MusicalKey, SongBasicDto, YouTubeMetadata, YouTubeSearchResult } from '../../models/song.model';
 import { UserWithProfileDto } from '../../models/user.model';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
@@ -88,6 +88,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     @Input() editMode: boolean = false;
     @Input() songToEdit: any = null;
+    @Input() songPrefill: ImportedSongDraft | null = null;
     @Input() embedded: boolean = false;
     @Input() initialSongRequest: InitialSongRequest | null = null;
 
@@ -348,6 +349,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             this.userChangedOriginalKey = true;
             this.userChangedEasyKey = true;
             this.populateFormForEdit();
+        } else if (this.songPrefill) {
+            this.applySongPrefill();
         } else if (this.initialSongRequest) {
             this.applyInitialSongRequest();
         }
@@ -368,6 +371,43 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         if (artistName) {
             this.addNewArtist(artistName);
         }
+    }
+
+    private applySongPrefill(): void {
+        if (!this.songPrefill) return;
+
+        this.isManualAddMode = true;
+        this.showManualYoutubeInput = !!this.songPrefill.youtubeUrl;
+        this.currentStep = this.songPrefill.youtubeUrl && this.songPrefill.lyricsWithChords ? 2 : 1;
+
+        this.songForm.patchValue({
+            title: this.songPrefill.title || '',
+            youtubeUrl: this.songPrefill.youtubeUrl || '',
+            imageUrl: this.songPrefill.imageUrl || '',
+            lyricsWithChords: this.songPrefill.lyricsWithChords || '',
+            originalKeyId: this.normalizeKeyValue(this.songPrefill.originalKeyId),
+            easyKeyId: this.normalizeKeyValue(this.songPrefill.easyKeyId)
+        });
+
+        this.artistsArray.clear();
+        this.songPrefill.artists?.forEach(artist => {
+            if (artist.name) {
+                this.artistsArray.push(this.fb.control({
+                    id: artist.id,
+                    name: artist.name
+                }));
+            }
+        });
+
+        this.tagsArray.clear();
+        this.songPrefill.tags?.forEach(tag => {
+            if (tag.name) {
+                this.tagsArray.push(this.fb.control({
+                    id: tag.id,
+                    name: tag.name
+                }));
+            }
+        });
     }
 
     populateFormForEdit(): void {

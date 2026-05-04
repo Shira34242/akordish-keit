@@ -114,7 +114,8 @@ public class ArticleService : IArticleService
 
         if (contentType.HasValue)
         {
-            query = query.Where(a => a.ContentType == contentType.Value);
+            var section = (ArticleCategorySection)contentType.Value;
+            query = query.Where(a => a.ArticleCategories.Any(ac => ac.Category.Section == section));
         }
 
         var articles = await query
@@ -147,8 +148,8 @@ public class ArticleService : IArticleService
             TotalViews = await _context.Articles.SumAsync(a => a.ViewCount),
             TotalLikes = await _context.Articles.SumAsync(a => a.LikeCount),
             FeaturedArticles = await _context.Articles.CountAsync(a => a.IsFeatured),
-            NewsCount = await _context.Articles.CountAsync(a => a.ContentType == (int)ArticleContentType.News),
-            BlogCount = await _context.Articles.CountAsync(a => a.ContentType == (int)ArticleContentType.Blog)
+            NewsCount = await _context.Articles.CountAsync(a => a.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News)),
+            BlogCount = await _context.Articles.CountAsync(a => a.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.Content))
         };
     }
 
@@ -209,6 +210,9 @@ public class ArticleService : IArticleService
             await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
         }
 
+        // Auto-compute ContentType from categories' sections (overriding the value from the DTO).
+        article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
+
         // Add tags
         if (dto.TagIds != null && dto.TagIds.Any())
         {
@@ -226,6 +230,8 @@ public class ArticleService : IArticleService
         {
             await AddArticleArtistsAsync(article.Id, dto.ArtistIds);
         }
+
+        await _context.SaveChangesAsync();
 
         return (await GetArticleByIdAsync(article.Id))!;
     }
@@ -265,7 +271,6 @@ public class ArticleService : IArticleService
         article.FeaturedImageUrl = dto.FeaturedImageUrl;
         article.UpdatedAt = DateTime.UtcNow;
         article.AuthorName = dto.AuthorName;
-        article.ContentType = (int)dto.ContentType;
         article.Slug = dto.Slug;
         article.CanonicalUrl = dto.CanonicalUrl;
         article.VideoEmbedUrl = dto.VideoEmbedUrl;
@@ -291,6 +296,9 @@ public class ArticleService : IArticleService
         {
             await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
         }
+
+        // Auto-compute ContentType from the new categories' sections.
+        article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
 
         // Update tags
         _context.ArticleTags.RemoveRange(article.ArticleTags);
@@ -702,6 +710,21 @@ public class ArticleService : IArticleService
 
     #region Private Helper Methods
 
+    // ContentType מחושב מהקטגוריות של הכתבה:
+    // אם יש קטגוריה אחת לפחות באזור "חדשות" → News (0). אחרת → Blog (1).
+    // נשאר כשדה לצורך URLs (התראות, דיווחים) — הסינון בעמוד הציבורי כבר עבר ל-Section של הקטגוריות.
+    private async Task<int> ComputeContentTypeFromCategoriesAsync(IEnumerable<int>? categoryIds)
+    {
+        if (categoryIds == null) return (int)ArticleContentType.News;
+        var ids = categoryIds.ToList();
+        if (ids.Count == 0) return (int)ArticleContentType.News;
+
+        var hasNews = await _context.ArticleCategories
+            .AnyAsync(c => ids.Contains(c.Id) && c.Section == ArticleCategorySection.News);
+
+        return hasNews ? (int)ArticleContentType.News : (int)ArticleContentType.Blog;
+    }
+
     private static IQueryable<Article> ApplyFilters(
         IQueryable<Article> query,
         string? search,
@@ -729,10 +752,11 @@ public class ArticleService : IArticleService
             query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == categoryId.Value));
         }
 
-        // ContentType filter
+        // Section filter (חדשות/תוכן) — derived from the categories' Section field, not from the article's own ContentType
         if (contentType.HasValue)
         {
-            query = query.Where(a => a.ContentType == contentType.Value);
+            var section = (ArticleCategorySection)contentType.Value;
+            query = query.Where(a => a.ArticleCategories.Any(ac => ac.Category.Section == section));
         }
 
         // Status filter
@@ -802,6 +826,7 @@ public class ArticleService : IArticleService
             ReadTimeMinutes = article.ReadTimeMinutes,
             CreatedBy = article.CreatedBy,
             UpdatedBy = article.UpdatedBy,
+            TagIds = article.ArticleTags.Select(at => at.TagId).ToList(),
             Tags = article.ArticleTags.Select(at => at.Tag.Name).ToList(),
             GalleryImages = article.GalleryImages
                 .OrderBy(gi => gi.DisplayOrder)

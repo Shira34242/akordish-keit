@@ -35,6 +35,7 @@ public class ArticleDto
     public int? ReadTimeMinutes { get; set; }
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
+    public List<int> TagIds { get; set; } = new();
     public List<string> Tags { get; set; } = new();
     public List<ArticleGalleryImageDto> GalleryImages { get; set; } = new();
 
