@@ -4,6 +4,7 @@ using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers;
 
@@ -15,17 +16,20 @@ public class ArticlesController : ControllerBase
     private readonly IYouTubeService _youTubeService;
     private readonly IUserTagService _userTagService;
     private readonly INotificationService _notificationService;
+    private readonly IMemoryCache _cache;
 
     public ArticlesController(
         IArticleService articleService,
         IYouTubeService youTubeService,
         IUserTagService userTagService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IMemoryCache cache)
     {
         _articleService = articleService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
         _notificationService = notificationService;
+        _cache = cache;
     }
 
     // GET: api/Articles
@@ -81,8 +85,12 @@ public class ArticlesController : ControllerBase
         [FromQuery] int? contentType = null,
         [FromQuery] int limit = 5)
     {
-        var articles = await _articleService.GetFeaturedArticlesAsync(contentType, limit);
-
+        var cacheKey = $"featured_articles_{contentType}_{limit}";
+        if (!_cache.TryGetValue(cacheKey, out List<ArticleDto>? articles))
+        {
+            articles = await _articleService.GetFeaturedArticlesAsync(contentType, limit);
+            _cache.Set(cacheKey, articles, TimeSpan.FromMinutes(5));
+        }
         return Ok(articles);
     }
 
@@ -90,8 +98,12 @@ public class ArticlesController : ControllerBase
     [HttpGet("stats")]
     public async Task<ActionResult<ArticleStatsDto>> GetArticleStats()
     {
-        var stats = await _articleService.GetArticleStatsAsync();
-
+        const string cacheKey = "article_stats";
+        if (!_cache.TryGetValue(cacheKey, out ArticleStatsDto? stats))
+        {
+            stats = await _articleService.GetArticleStatsAsync();
+            _cache.Set(cacheKey, stats, TimeSpan.FromMinutes(10));
+        }
         return Ok(stats);
     }
 

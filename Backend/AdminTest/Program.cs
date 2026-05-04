@@ -3,9 +3,11 @@ using AkordishKeit.Data;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,19 @@ builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 
 // Add Memory Cache (לשימוש ב-SystemSettingsService)
 builder.Services.AddMemoryCache();
+
+// Rate limiting — מגביל autocomplete ל-40 בקשות לדקה מכל IP
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("autocomplete", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 40;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // Add Services
 builder.Services.AddScoped<ISystemSettingsService, SystemSettingsService>();
@@ -167,6 +182,20 @@ using (var scope = app.Services.CreateScope())
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Articles_CreatedAt' AND object_id = OBJECT_ID(N'[Articles]'))
+        BEGIN
+            CREATE INDEX [IX_Articles_CreatedAt] ON [Articles] ([CreatedAt] DESC);
+        END
+
+        IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Articles_Status_ContentType_CreatedAt' AND object_id = OBJECT_ID(N'[Articles]'))
+        BEGIN
+            CREATE INDEX [IX_Articles_Status_ContentType_CreatedAt] ON [Articles] ([Status], [ContentType], [CreatedAt] DESC);
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Notifications]', N'U') IS NULL
         BEGIN
             CREATE TABLE [Notifications] (
@@ -306,8 +335,9 @@ app.UseCors("AllowAngular");
 
 // Enable static files for uploaded media
 app.UseStaticFiles();
+app.UseRateLimiter();
 
-// ����! Authentication ���� Authorization
+// חשוב! Authentication לפני Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,10 +1,11 @@
 <div class="news-banner" (click)="navigate()">
 
   <!-- תמונת רקע -->
-  <div
+  <img
     class="banner-bg"
-    [style.background-image]="'url(' + (article.featuredImageUrl || 'assets/default-article.png') + ')'">
-  </div>
+    [src]="article.featuredImageUrl || 'assets/default-article.png'"
+    [alt]="article.title"
+    loading="lazy">
 
   <!-- שכבת כהייה בפינה הימנית תחתונה -->
   <div class="banner-overlay"></div>

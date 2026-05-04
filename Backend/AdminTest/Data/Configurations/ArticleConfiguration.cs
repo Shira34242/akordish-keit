@@ -137,6 +137,14 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
                .IsDescending(false, false, true)
                .HasDatabaseName("IX_Articles_Status_ContentType_PublishDate");
 
+        builder.HasIndex(e => e.CreatedAt)
+               .IsDescending()
+               .HasDatabaseName("IX_Articles_CreatedAt");
+
+        builder.HasIndex(e => new { e.Status, e.ContentType, e.CreatedAt })
+               .IsDescending(false, false, true)
+               .HasDatabaseName("IX_Articles_Status_ContentType_CreatedAt");
+
         // Relationships
         builder.HasMany(e => e.ArticleTags)
                .WithOne(at => at.Article)

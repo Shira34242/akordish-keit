@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormArray } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -7,7 +7,7 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { AddSongRequest, AutocompleteResult, ImportedSongDraft, MusicalKey, SongBasicDto, YouTubeMetadata, YouTubeSearchResult } from '../../models/song.model';
 import { UserWithProfileDto } from '../../models/user.model';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map, takeUntil } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { extractChords, parseChord } from '../../utils/music-utils';
@@ -28,7 +28,7 @@ export interface InitialSongRequest {
     templateUrl: './add-song-modal.component.html',
     styleUrls: ['./add-song-modal.component.css']
 })
-export class AddSongModalComponent implements OnInit, AfterViewInit {
+export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild('modalContent') modalContent?: ElementRef<HTMLDivElement>;
     @ViewChild('titleInput') titleInput?: ElementRef<HTMLInputElement>;
     @ViewChild('manualYoutubeInput') manualYoutubeInput?: ElementRef<HTMLInputElement>;
@@ -147,6 +147,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     showProfileDropdown = false;
     tagAsMyself = true;
     private profileSearch$ = new Subject<string>();
+    private destroy$ = new Subject<void>();
 
     get isAdminUser(): boolean {
         return this.authService.isAdminOrManager();
@@ -360,6 +361,16 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         this.scrollModalToTop();
     }
 
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+        this.artistSearch$.complete();
+        this.composerSearch$.complete();
+        this.tagSearch$.complete();
+        this.genreSearch$.complete();
+        this.profileSearch$.complete();
+    }
+
     private applyInitialSongRequest(): void {
         const songName = this.initialSongRequest?.songName?.trim();
         const artistName = this.initialSongRequest?.artistName?.trim();
@@ -503,8 +514,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
     }
 
     loadMusicalKeys() {
+        if (this.musicalKeys.length > 0) return;
         this.isLoadingKeys = true;
-        this.songService.getMusicalKeys().subscribe({
+        this.songService.getMusicalKeys().pipe(takeUntil(this.destroy$)).subscribe({
             next: (keys) => {
                 this.musicalKeys = keys.map(key => ({
                     ...key,
@@ -528,7 +540,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             switchMap(query => {
                 if (!query || query.length < 2) return of([]);
                 return this.songService.autocompleteArtists(query).pipe(catchError(() => of([])));
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(results => this.artistSuggestions = results);
 
         this.composerSearch$.pipe(
@@ -537,7 +550,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             switchMap(query => {
                 if (!query || query.length < 2) return of([]);
                 return this.songService.autocompletePeople(query).pipe(catchError(() => of([])));
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(results => this.composerSuggestions = results);
 
         // Tag Autocomplete
@@ -547,7 +561,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             switchMap(query => {
                 if (!query || query.length < 2) return of([]);
                 return this.songService.autocompleteTags(query).pipe(catchError(() => of([])));
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(results => this.tagSuggestions = results);
 
         // Genre Autocomplete
@@ -557,7 +572,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             switchMap(query => {
                 if (!query || query.length < 2) return of([]);
                 return this.songService.autocompleteGenres(query).pipe(catchError(() => of([])));
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(results => this.genreSuggestions = results);
     }
 
@@ -581,7 +597,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 }
 
                 return of(title);
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(() => {
             this.isSearchingYouTube = false;
         });
@@ -670,7 +687,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
             switchMap(q => {
                 this.profileSearchLoading = true;
                 return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter).pipe(catchError(() => of([])));
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe({
             next: (results) => {
                 this.profileSearchResults = results;
@@ -762,11 +780,11 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
 
     setupKeyAutoDetect() {
         // מעקב אחרי שינוי ידני בסולמות
-        this.songForm.get('originalKeyId')?.valueChanges.subscribe(() => {
+        this.songForm.get('originalKeyId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
             this.userChangedOriginalKey = true;
             this.autoDetectedOriginalKeyName = null;
         });
-        this.songForm.get('easyKeyId')?.valueChanges.subscribe(() => {
+        this.songForm.get('easyKeyId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
             this.userChangedEasyKey = true;
             this.autoDetectedEasyKeyName = null;
         });
@@ -774,7 +792,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
         // זיהוי אוטומטי בעת הקלדה
         this.songForm.get('lyricsWithChords')?.valueChanges.pipe(
             debounceTime(800),
-            distinctUntilChanged()
+            distinctUntilChanged(),
+            takeUntil(this.destroy$)
         ).subscribe(lyrics => {
             if (!lyrics || lyrics.length < 10) return;
             this.triggerDetection(lyrics, 'both');
@@ -990,7 +1009,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit {
                 return this.songService.checkDuplicate(title).pipe(
                     catchError(() => of(null))
                 );
-            })
+            }),
+            takeUntil(this.destroy$)
         ).subscribe(response => {
             this.isCheckingDuplicate = false;
             if (response && response.isPotentialDuplicate) {

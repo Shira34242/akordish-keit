@@ -206,30 +206,24 @@ public class ArticleService : IArticleService
 
         // Add categories
         if (dto.CategoryIds != null && dto.CategoryIds.Any())
-        {
-            await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
-        }
+            AddArticleCategories(article.Id, dto.CategoryIds);
 
         // Auto-compute ContentType from categories' sections (overriding the value from the DTO).
         article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
 
         // Add tags
         if (dto.TagIds != null && dto.TagIds.Any())
-        {
-            await AddArticleTagsAsync(article.Id, dto.TagIds);
-        }
+            AddArticleTags(article.Id, dto.TagIds);
 
         // Add gallery images
         if (dto.GalleryImages != null && dto.GalleryImages.Any())
-        {
-            await AddGalleryImagesAsync(article.Id, dto.GalleryImages);
-        }
+            AddGalleryImages(article.Id, dto.GalleryImages);
 
         // Add artists (תיוג אומנים)
         if (dto.ArtistIds != null && dto.ArtistIds.Any())
-        {
-            await AddArticleArtistsAsync(article.Id, dto.ArtistIds);
-        }
+            AddArticleArtists(article.Id, dto.ArtistIds);
+
+        await _context.SaveChangesAsync();
 
         await _context.SaveChangesAsync();
 
@@ -293,9 +287,7 @@ public class ArticleService : IArticleService
         // Update categories
         _context.ArticleArticleCategories.RemoveRange(article.ArticleCategories);
         if (dto.CategoryIds != null && dto.CategoryIds.Any())
-        {
-            await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
-        }
+            AddArticleCategories(article.Id, dto.CategoryIds);
 
         // Auto-compute ContentType from the new categories' sections.
         article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
@@ -303,16 +295,12 @@ public class ArticleService : IArticleService
         // Update tags
         _context.ArticleTags.RemoveRange(article.ArticleTags);
         if (dto.TagIds != null && dto.TagIds.Any())
-        {
-            await AddArticleTagsAsync(article.Id, dto.TagIds);
-        }
+            AddArticleTags(article.Id, dto.TagIds);
 
         // Update gallery images
         _context.ArticleGalleryImages.RemoveRange(article.GalleryImages);
         if (dto.GalleryImages != null && dto.GalleryImages.Any())
-        {
-            await AddGalleryImagesAsync(article.Id, dto.GalleryImages);
-        }
+            AddGalleryImages(article.Id, dto.GalleryImages);
 
         // Update artists (תיוג אומנים)
         if (dto.ArtistIds != null)
@@ -323,9 +311,7 @@ public class ArticleService : IArticleService
             _context.ArticleArtists.RemoveRange(existingArtists);
 
             if (dto.ArtistIds.Any())
-            {
-                await AddArticleArtistsAsync(article.Id, dto.ArtistIds);
-            }
+                AddArticleArtists(article.Id, dto.ArtistIds);
         }
 
         await _context.SaveChangesAsync();
@@ -443,19 +429,15 @@ public class ArticleService : IArticleService
 
     public async Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress)
     {
-        var feedbacks = await _context.ArticleFeedbacks
-            .Where(f => f.ArticleId == articleId)
-            .ToListAsync();
-
-        var yes = feedbacks.Count(f => f.IsPositive);
-        var no = feedbacks.Count(f => !f.IsPositive);
+        var yes = await _context.ArticleFeedbacks.CountAsync(f => f.ArticleId == articleId && f.IsPositive);
+        var no = await _context.ArticleFeedbacks.CountAsync(f => f.ArticleId == articleId && !f.IsPositive);
         var total = yes + no;
 
         ArticleFeedback? userVote = null;
         if (userId.HasValue)
-            userVote = feedbacks.FirstOrDefault(f => f.UserId == userId);
+            userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
         else if (!string.IsNullOrEmpty(ipAddress))
-            userVote = feedbacks.FirstOrDefault(f => f.UserId == null && f.IpAddress == ipAddress);
+            userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
 
         return BuildFeedbackResult(yes, no, total, userVote);
     }
@@ -689,10 +671,10 @@ public class ArticleService : IArticleService
         await _context.SaveChangesAsync();
 
         var categoryIds = original.ArticleCategories.Select(ac => ac.CategoryId).ToList();
-        if (categoryIds.Any()) await AddArticleCategoriesAsync(newArticle.Id, categoryIds);
+        if (categoryIds.Any()) AddArticleCategories(newArticle.Id, categoryIds);
 
         var tagIds = original.ArticleTags.Select(at => at.TagId).ToList();
-        if (tagIds.Any()) await AddArticleTagsAsync(newArticle.Id, tagIds);
+        if (tagIds.Any()) AddArticleTags(newArticle.Id, tagIds);
 
         var galleryImages = original.GalleryImages.Select(gi => new CreateArticleGalleryImageDto
         {
@@ -700,10 +682,12 @@ public class ArticleService : IArticleService
             Caption = gi.Caption,
             DisplayOrder = gi.DisplayOrder
         }).ToList();
-        if (galleryImages.Any()) await AddGalleryImagesAsync(newArticle.Id, galleryImages);
+        if (galleryImages.Any()) AddGalleryImages(newArticle.Id, galleryImages);
 
         var artistIds = original.ArticleArtists.Select(aa => aa.ArtistId).ToList();
-        if (artistIds.Any()) await AddArticleArtistsAsync(newArticle.Id, artistIds);
+        if (artistIds.Any()) AddArticleArtists(newArticle.Id, artistIds);
+
+        await _context.SaveChangesAsync();
 
         return (await GetArticleByIdAsync(newArticle.Id))!;
     }
@@ -738,12 +722,12 @@ public class ArticleService : IArticleService
         // Search filter
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchLower = search.ToLower();
+            var pattern = $"%{search}%";
             query = query.Where(a =>
-                a.Title.ToLower().Contains(searchLower) ||
-                (a.Subtitle != null && a.Subtitle.ToLower().Contains(searchLower)) ||
-                (a.ShortDescription != null && a.ShortDescription.ToLower().Contains(searchLower)) ||
-                a.Slug.ToLower().Contains(searchLower));
+                EF.Functions.Like(a.Title, pattern) ||
+                (a.Subtitle != null && EF.Functions.Like(a.Subtitle, pattern)) ||
+                (a.ShortDescription != null && EF.Functions.Like(a.ShortDescription, pattern)) ||
+                EF.Functions.Like(a.Slug, pattern));
         }
 
         // Category filter
@@ -780,7 +764,7 @@ public class ArticleService : IArticleService
         // Author filter
         if (!string.IsNullOrWhiteSpace(authorName))
         {
-            query = query.Where(a => a.AuthorName != null && a.AuthorName.ToLower().Contains(authorName.ToLower()));
+            query = query.Where(a => a.AuthorName != null && EF.Functions.Like(a.AuthorName, $"%{authorName}%"));
         }
 
         return query;
@@ -1108,63 +1092,55 @@ public class ArticleService : IArticleService
         return null;
     }
 
-    private async Task AddArticleCategoriesAsync(int articleId, List<int> categoryIds)
+    private void AddArticleCategories(int articleId, List<int> categoryIds)
     {
         foreach (var categoryId in categoryIds)
         {
-            var articleCategory = new ArticleArticleCategory
+            _context.ArticleArticleCategories.Add(new ArticleArticleCategory
             {
                 ArticleId = articleId,
                 CategoryId = categoryId
-            };
-            _context.ArticleArticleCategories.Add(articleCategory);
+            });
         }
-        await _context.SaveChangesAsync();
     }
 
-    private async Task AddArticleTagsAsync(int articleId, List<int> tagIds)
+    private void AddArticleTags(int articleId, List<int> tagIds)
     {
         foreach (var tagId in tagIds)
         {
-            var articleTag = new ArticleTag
+            _context.ArticleTags.Add(new ArticleTag
             {
                 ArticleId = articleId,
                 TagId = tagId
-            };
-            _context.ArticleTags.Add(articleTag);
+            });
         }
-        await _context.SaveChangesAsync();
     }
 
-    private async Task AddGalleryImagesAsync(int articleId, List<CreateArticleGalleryImageDto> galleryImages)
+    private void AddGalleryImages(int articleId, List<CreateArticleGalleryImageDto> galleryImages)
     {
-        foreach (var galleryImageDto in galleryImages)
+        foreach (var dto in galleryImages)
         {
-            var galleryImage = new ArticleGalleryImage
+            _context.ArticleGalleryImages.Add(new ArticleGalleryImage
             {
                 ArticleId = articleId,
-                ImageUrl = galleryImageDto.ImageUrl,
-                Caption = galleryImageDto.Caption,
-                DisplayOrder = galleryImageDto.DisplayOrder
-            };
-            _context.ArticleGalleryImages.Add(galleryImage);
+                ImageUrl = dto.ImageUrl,
+                Caption = dto.Caption,
+                DisplayOrder = dto.DisplayOrder
+            });
         }
-        await _context.SaveChangesAsync();
     }
 
-    private async Task AddArticleArtistsAsync(int articleId, List<int> artistIds)
+    private void AddArticleArtists(int articleId, List<int> artistIds)
     {
         foreach (var artistId in artistIds)
         {
-            var articleArtist = new ArticleArtist
+            _context.ArticleArtists.Add(new ArticleArtist
             {
                 ArticleId = articleId,
                 ArtistId = artistId,
                 CreatedAt = DateTime.UtcNow
-            };
-            _context.ArticleArtists.Add(articleArtist);
+            });
         }
-        await _context.SaveChangesAsync();
     }
 
     #endregion

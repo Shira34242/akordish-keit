@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 
@@ -447,6 +448,7 @@ public class SongsController : ControllerBase
     // Autocomplete for artists
     // ============================================
     [HttpGet("autocomplete/artists")]
+    [EnableRateLimiting("autocomplete")]
     public async Task<ActionResult<List<AutocompleteResultDto>>> AutocompleteArtists(
         [FromQuery] string query,
         [FromQuery] int maxResults = 15)
@@ -468,6 +470,7 @@ public class SongsController : ControllerBase
     // Autocomplete for genres
     // ============================================
     [HttpGet("autocomplete/genres")]
+    [EnableRateLimiting("autocomplete")]
     public async Task<ActionResult<List<AutocompleteResultDto>>> AutocompleteGenres(
         [FromQuery] string query,
         [FromQuery] int maxResults = 15)
@@ -489,6 +492,7 @@ public class SongsController : ControllerBase
     // Autocomplete for people (composers, lyricists, arrangers)
     // ============================================
     [HttpGet("autocomplete/people")]
+    [EnableRateLimiting("autocomplete")]
     public async Task<ActionResult<List<AutocompleteResultDto>>> AutocompletePeople(
         [FromQuery] string query,
         [FromQuery] int maxResults = 15)
@@ -510,6 +514,7 @@ public class SongsController : ControllerBase
     // Autocomplete for tags
     // ============================================
     [HttpGet("autocomplete/tags")]
+    [EnableRateLimiting("autocomplete")]
     public async Task<ActionResult<List<AutocompleteResultDto>>> AutocompleteTags(
         [FromQuery] string query,
         [FromQuery] int maxResults = 15)

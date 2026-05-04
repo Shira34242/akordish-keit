@@ -3,6 +3,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Services;
 
@@ -12,17 +13,20 @@ public class SongService : ISongService
     private readonly IYouTubeService _youTubeService;
     private readonly INotificationService _notificationService;
     private readonly IChordIndexService _chordIndexService;
+    private readonly IMemoryCache _cache;
 
     public SongService(
         AkordishKeitDbContext context,
         IYouTubeService youTubeService,
         INotificationService notificationService,
-        IChordIndexService chordIndexService)
+        IChordIndexService chordIndexService,
+        IMemoryCache cache)
     {
         _context = context;
         _youTubeService = youTubeService;
         _notificationService = notificationService;
         _chordIndexService = chordIndexService;
+        _cache = cache;
     }
 
     // ============================================
@@ -31,6 +35,20 @@ public class SongService : ISongService
 
     public async Task<AddSongResponseDto> CreateSongAsync(AddSongRequestDto dto, int userId)
     {
+        // Fetch YouTube metadata BEFORE opening the transaction — external HTTP calls must not hold a DB connection
+        string? imageUrl = dto.ImageUrl;
+        int? durationSeconds = null;
+
+        if (!string.IsNullOrEmpty(dto.YoutubeUrl))
+        {
+            var youtubeMetadata = await _youTubeService.GetVideoMetadataAsync(dto.YoutubeUrl);
+            if (youtubeMetadata.Success && string.IsNullOrEmpty(imageUrl))
+            {
+                imageUrl = youtubeMetadata.ThumbnailUrl;
+            }
+            durationSeconds = youtubeMetadata.DurationSeconds;
+        }
+
         // Use transaction to ensure atomicity
         using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -38,6 +56,14 @@ public class SongService : ISongService
         {
             // 1. Validate existing artists (only those with ID)
             var existingArtists = dto.Artists.Where(a => a.Id.HasValue).ToList();
+
+            // Reject duplicate artist IDs in the same submission
+            var artistIds = existingArtists.Select(a => a.Id!.Value).ToList();
+            if (artistIds.Count != artistIds.Distinct().Count())
+            {
+                return new AddSongResponseDto { Success = false, Message = "לא ניתן להוסיף אותו אמן פעמיים" };
+            }
+
             foreach (var artist in existingArtists)
             {
                 var artistExists = await _context.Artists
@@ -51,20 +77,6 @@ public class SongService : ISongService
                         Message = $"אמן עם ID {artist.Id} לא קיים במערכת"
                     };
                 }
-            }
-
-            // 2. Fetch YouTube metadata if provided
-            string? imageUrl = dto.ImageUrl;
-            int? durationSeconds = null;
-
-            if (!string.IsNullOrEmpty(dto.YoutubeUrl))
-            {
-                var youtubeMetadata = await _youTubeService.GetVideoMetadataAsync(dto.YoutubeUrl);
-                if (youtubeMetadata.Success && string.IsNullOrEmpty(imageUrl))
-                {
-                    imageUrl = youtubeMetadata.ThumbnailUrl;
-                }
-                durationSeconds = youtubeMetadata.DurationSeconds;
             }
 
             // 3. Handle composer/lyricist/arranger - create new if doesn't exist
@@ -1684,7 +1696,11 @@ public class SongService : ISongService
     {
         try
         {
+            if (_cache.TryGetValue("musical_keys", out List<MusicalKeyDto>? cached) && cached != null)
+                return cached;
+
             var keys = await _context.MusicalKeys
+                .AsNoTracking()
                 .OrderBy(k => k.SemitoneOffset)
                 .ThenBy(k => k.IsMinor)
                 .Select(k => new MusicalKeyDto
@@ -1696,6 +1712,7 @@ public class SongService : ISongService
                 })
                 .ToListAsync();
 
+            _cache.Set("musical_keys", keys, TimeSpan.FromHours(24));
             return keys;
         }
         catch (Exception ex)
@@ -1801,6 +1818,7 @@ public class SongService : ISongService
         var normalizedQuery = query.Trim().ToLower();
 
         return await _context.Artists
+            .AsNoTracking()
             .Where(a => !a.IsDeleted)
             .Where(a => a.Name.Contains(query) ||
                        (a.EnglishName != null && a.EnglishName.Contains(query)))
@@ -1825,6 +1843,7 @@ public class SongService : ISongService
     private async Task<List<AutocompleteResultDto>> AutocompleteGenresAsync(string query, int maxResults)
     {
         return await _context.Genres
+            .AsNoTracking()
             .Where(g => g.Name.Contains(query))
             .Take(maxResults)
             .Select(g => new AutocompleteResultDto
@@ -1840,6 +1859,7 @@ public class SongService : ISongService
     private async Task<List<AutocompleteResultDto>> AutocompletePeopleAsync(string query, int maxResults)
     {
         return await _context.People
+            .AsNoTracking()
             .Where(p => !p.IsDeleted)
             .Where(p => p.Name.Contains(query) ||
                        (p.EnglishName != null && p.EnglishName.Contains(query)))
@@ -1858,6 +1878,7 @@ public class SongService : ISongService
     private async Task<List<AutocompleteResultDto>> AutocompleteTagsAsync(string query, int maxResults)
     {
         return await _context.Tags
+            .AsNoTracking()
             .Where(t => t.Name.Contains(query))
             .Take(maxResults)
             .Select(t => new AutocompleteResultDto
