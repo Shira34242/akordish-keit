@@ -67,7 +67,7 @@
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="item.imageUrl || '/default-user.svg'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -78,7 +78,7 @@
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-avatar.png'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="item.imageUrl || '/default-user.svg'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -251,8 +251,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName">
-                  <span *ngIf="!teacher.profileImageUrl" class="person-initial">{{ teacher.displayName[0] }}</span>
+                  <img [src]="teacher.profileImageUrl || '/default-user.svg'" [alt]="teacher.displayName" imgFallback="/default-user.svg">
                 </div>
                 <p class="person-name">{{ teacher.displayName }}</p>
                 <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
@@ -265,8 +264,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img *ngIf="pro.profileImageUrl" [src]="pro.profileImageUrl" [alt]="pro.displayName">
-                  <span *ngIf="!pro.profileImageUrl" class="person-initial">{{ pro.displayName[0] }}</span>
+                  <img [src]="pro.profileImageUrl || '/default-user.svg'" [alt]="pro.displayName" imgFallback="/default-user.svg">
                 </div>
                 <p class="person-name">{{ pro.displayName }}</p>
                 <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>

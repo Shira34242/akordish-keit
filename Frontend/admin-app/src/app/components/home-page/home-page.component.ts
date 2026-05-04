@@ -19,6 +19,7 @@ import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
+import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
@@ -47,7 +48,8 @@ interface HeroParticle {
     EventCardComponent,
     EventModalComponent,
     TranslatePipe,
-    AutoScrollDirective
+    AutoScrollDirective,
+    ImgFallbackDirective
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
