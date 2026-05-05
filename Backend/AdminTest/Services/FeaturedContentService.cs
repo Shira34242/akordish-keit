@@ -18,6 +18,7 @@ namespace AkordishKeit.Services
         public async Task<IEnumerable<FeaturedContentDto>> GetActiveFeaturedContentAsync()
         {
             var featuredContents = await _context.FeaturedContents
+                .AsNoTracking()
                 .Include(fc => fc.Article)
                     .ThenInclude(a => a.ArticleCategories)
                         .ThenInclude(ac => ac.Category)
@@ -34,6 +35,7 @@ namespace AkordishKeit.Services
         public async Task<IEnumerable<FeaturedContentDto>> GetAllFeaturedContentAsync()
         {
             var featuredContents = await _context.FeaturedContents
+                .AsNoTracking()
                 .Include(fc => fc.Article)
                     .ThenInclude(a => a.ArticleCategories)
                         .ThenInclude(ac => ac.Category)
@@ -49,6 +51,7 @@ namespace AkordishKeit.Services
         public async Task<FeaturedContentDto?> GetFeaturedContentByIdAsync(int id)
         {
             var featuredContent = await _context.FeaturedContents
+                .AsNoTracking()
                 .Include(fc => fc.Article)
                     .ThenInclude(a => a.ArticleCategories)
                         .ThenInclude(ac => ac.Category)
@@ -157,23 +160,30 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<FeaturedContentDto>> UpdateFeaturedContentBulkAsync(UpdateFeaturedContentBulkDto dto)
         {
-            // Delete all existing featured content
-            var existing = await _context.FeaturedContents.ToListAsync();
-            _context.FeaturedContents.RemoveRange(existing);
-
-            // Create new featured content
-            var newFeaturedContents = dto.Items.Select(item => new FeaturedContent
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                ArticleId = item.ArticleId,
-                DisplayOrder = item.DisplayOrder,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }).ToList();
+                var existing = await _context.FeaturedContents.ToListAsync();
+                _context.FeaturedContents.RemoveRange(existing);
 
-            _context.FeaturedContents.AddRange(newFeaturedContents);
-            await _context.SaveChangesAsync();
+                var newFeaturedContents = dto.Items.Select(item => new FeaturedContent
+                {
+                    ArticleId = item.ArticleId,
+                    DisplayOrder = item.DisplayOrder,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }).ToList();
 
-            // Return the new featured content
+                _context.FeaturedContents.AddRange(newFeaturedContents);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
             return await GetActiveFeaturedContentAsync();
         }
 

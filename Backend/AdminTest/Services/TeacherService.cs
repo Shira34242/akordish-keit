@@ -37,6 +37,7 @@ public class TeacherService : ITeacherService
                 .ThenInclude(c => c.Category)
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
+            .AsSplitQuery()
             .Where(t => !t.ServiceProvider.IsDeleted && t.ServiceProvider.IsTeacher)
             .AsQueryable();
 
@@ -106,6 +107,7 @@ public class TeacherService : ITeacherService
     public async Task<TeacherDto?> GetTeacherByIdAsync(int id)
     {
         var teacher = await _context.Teachers
+            .AsNoTracking()
             .Include(t => t.ServiceProvider)
                 .ThenInclude(sp => sp.User)
             .Include(t => t.ServiceProvider.Categories)
@@ -115,6 +117,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
             .Include(t => t.Testimonials)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id && !t.ServiceProvider.IsDeleted);
 
         return teacher == null ? null : MapToDto(teacher);
@@ -123,6 +126,7 @@ public class TeacherService : ITeacherService
     public async Task<TeacherDto?> GetTeacherByUserIdAsync(int userId)
     {
         var teacher = await _context.Teachers
+            .AsNoTracking()
             .Include(t => t.ServiceProvider)
                 .ThenInclude(sp => sp.User)
             .Include(t => t.ServiceProvider.Categories)
@@ -132,6 +136,7 @@ public class TeacherService : ITeacherService
             .Include(t => t.Instruments)
                 .ThenInclude(ti => ti.Instrument)
             .Include(t => t.Testimonials)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.ServiceProvider.UserId == userId && !t.ServiceProvider.IsDeleted);
 
         return teacher == null ? null : MapToDto(teacher);

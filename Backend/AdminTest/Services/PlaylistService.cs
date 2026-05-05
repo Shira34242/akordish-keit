@@ -63,6 +63,7 @@ public class PlaylistService : IPlaylistService
                 .ThenInclude(ps => ps.Song)
                     .ThenInclude(s => s.SongArtists)
                         .ThenInclude(sa => sa.Artist)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Id == playlistId && (p.UserId == userId || p.IsPublic));
 
         if (playlist == null) return null;

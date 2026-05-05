@@ -1,4 +1,4 @@
-using AkordishKeit.Data;
+﻿using AkordishKeit.Data;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -42,6 +42,7 @@ public class ArticleService : IArticleService
                 .ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .AsQueryable();
 
         // Apply filters
@@ -80,6 +81,7 @@ public class ArticleService : IArticleService
                 .ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(a => a.Id == id);
 
         return article == null ? null : MapToDto(article);
@@ -100,6 +102,7 @@ public class ArticleService : IArticleService
                 .ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == (int)ArticleStatus.Published);
 
         return article == null ? null : MapToDto(article);
@@ -129,6 +132,7 @@ public class ArticleService : IArticleService
                 .ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .OrderBy(a => a.DisplayOrder)
             .ThenByDescending(a => a.PublishDate)
             .Take(limit)
@@ -222,8 +226,6 @@ public class ArticleService : IArticleService
         // Add artists (תיוג אומנים)
         if (dto.ArtistIds != null && dto.ArtistIds.Any())
             AddArticleArtists(article.Id, dto.ArtistIds);
-
-        await _context.SaveChangesAsync();
 
         await _context.SaveChangesAsync();
 
@@ -524,6 +526,7 @@ public class ArticleService : IArticleService
             .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .ToListAsync();
 
         return new PagedResult<ArticleDto>
@@ -546,6 +549,7 @@ public class ArticleService : IArticleService
             .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
             .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .Where(a => a.UploaderProfileType == profileType
                 && a.UploaderProfileId == profileId
                 && a.Status == (int)ArticleStatus.Published
@@ -848,7 +852,7 @@ public class ArticleService : IArticleService
         var currentUser = await _context.Users.FindAsync(callerUserId.Value);
         if (currentUser == null)
         {
-            throw new InvalidOperationException("׳׳©׳×׳׳© ׳׳ ׳ ׳׳¦׳");
+            throw new InvalidOperationException("המשתמש לא נמצא");
         }
 
         var isAdmin = currentUser.Role == UserRole.Admin || currentUser.Role == UserRole.Manager;
@@ -892,7 +896,7 @@ public class ArticleService : IArticleService
         var belongsToUser = await ProfileBelongsToUserAsync(uploaderUserId.Value, profileType, profileId.Value);
         if (!belongsToUser)
         {
-            throw new InvalidOperationException("׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳ ׳‘׳—׳¨ ׳׳ ׳©׳™׳™׳ ׳׳׳©׳×׳׳© ׳”׳׳¢׳׳”");
+            throw new InvalidOperationException("הפרופיל שנבחר לא שייך למשתמש המעלה");
         }
 
         return (uploaderUserId, profileType, profileId);
@@ -937,7 +941,7 @@ public class ArticleService : IArticleService
         var belongsToUser = await ProfileBelongsToUserAsync(uploaderUserId.Value, profileType, profileId.Value);
         if (!belongsToUser)
         {
-            throw new InvalidOperationException("׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳ ׳‘׳—׳¨ ׳׳ ׳©׳™׳™׳ ׳׳׳©׳×׳׳© ׳”׳׳¢׳׳”");
+            throw new InvalidOperationException("הפרופיל שנבחר לא שייך למשתמש המעלה");
         }
 
         return (uploaderUserId, profileType, profileId);

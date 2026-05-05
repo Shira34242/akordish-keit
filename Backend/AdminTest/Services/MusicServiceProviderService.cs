@@ -95,6 +95,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
     public async Task<MusicServiceProviderDto?> GetServiceProviderByIdAsync(int id)
     {
         var serviceProvider = await _context.ServiceProviders
+            .AsNoTracking()
             .Include(sp => sp.User)
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)
@@ -102,6 +103,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
             .Include(sp => sp.Branches)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);
@@ -110,6 +112,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
     public async Task<MusicServiceProviderDto?> GetServiceProviderByUserIdAsync(int userId)
     {
         var serviceProvider = await _context.ServiceProviders
+            .AsNoTracking()
             .Include(sp => sp.User)
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)
@@ -117,6 +120,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.SocialLinks)
             .Include(sp => sp.CustomerTestimonials)
             .Include(sp => sp.Branches)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(sp => sp.UserId == userId && !sp.IsDeleted);
 
         return serviceProvider == null ? null : MapToDto(serviceProvider);

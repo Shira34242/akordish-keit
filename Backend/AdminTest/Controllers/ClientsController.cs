@@ -3,6 +3,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enums;
 using AkordishKeit.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ namespace AkordishKeit.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin,Manager")]
     public class ClientsController : ControllerBase
     {
         private readonly AkordishKeitDbContext _context;
@@ -26,7 +28,6 @@ namespace AkordishKeit.Controllers
             [FromQuery] int pageSize = 10)
         {
             var clientsQuery = _context.Clients
-                .Where(c => !c.IsActive || c.IsActive) // Get all
                 .Select(c => new ClientDto
                 {
                     Id = c.Id,
