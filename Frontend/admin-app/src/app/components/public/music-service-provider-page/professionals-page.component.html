@@ -11,6 +11,16 @@
     <div class="hero-collapse-overlay"></div>
   </div>
 
+  <!-- לחצן הצטרפות — fixed, צמוד לפינה השמאלית-תחתונה של ה-hero (זז יחד איתו בגלילה) -->
+  <button class="btn-join-index"
+          *ngIf="authService.isLoggedIn"
+          (click)="openBecomeProfessionalForm()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+    להצטרפות
+  </button>
+
   <!-- ════════════════════════════════════════
        HERO CONTENT AREA
   ════════════════════════════════════════ -->
@@ -149,16 +159,6 @@
 
     </div>
 
-    <!-- לחצן הצטרפות — פינה שמאלית-תחתונה בתוך ה-hero -->
-    <button class="btn-join-index"
-            *ngIf="authService.isLoggedIn"
-            (click)="openBecomeProfessionalForm()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      להצטרפות
-    </button>
-
   </div>
 
 
@@ -198,7 +198,7 @@
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
           <div class="prof-card" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+              <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -229,7 +229,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+                <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -253,7 +253,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+                <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -277,7 +277,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+                <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -300,7 +300,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+                <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -323,7 +323,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
               <div class="prof-card-img">
-                <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+                <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -348,7 +348,7 @@
         <div class="professionals-grid">
           <div class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
             <div class="prof-card-img">
-              <img [src]="p.profileImageUrl " [alt]="p.displayName" loading="lazy" imgFallback>
+              <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -361,7 +361,7 @@
           </div>
           <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+              <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
@@ -397,7 +397,7 @@
         <div class="professionals-grid" *ngIf="filteredTeachers.length > 0">
           <div class="prof-card" *ngFor="let t of filteredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+              <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -428,7 +428,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+                <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -452,7 +452,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+                <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לאורגן</p>
@@ -475,7 +475,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+                <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לסאונד</p>
@@ -498,7 +498,7 @@
           <div class="professionals-strip">
             <div class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
               <div class="prof-card-img">
-                <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+                <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לפיתוח קול</p>
@@ -523,7 +523,7 @@
         <div class="professionals-grid">
           <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
             <div class="prof-card-img">
-              <img [src]="t.profileImageUrl " [alt]="t.displayName" loading="lazy" imgFallback>
+              <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>

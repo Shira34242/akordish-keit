@@ -13,7 +13,7 @@
   <!-- טקסט — פינה ימנית תחתונה -->
   <div class="banner-text">
     <h3 class="banner-title">{{ article.title }}</h3>
-    <p class="banner-subtitle" *ngIf="article.shortDescription">{{ article.shortDescription }}</p>
+    <p class="banner-subtitle" *ngIf="showDescription && article.shortDescription">{{ article.shortDescription }}</p>
   </div>
 
   <!-- כפתור חץ — פינה שמאלית תחתונה -->

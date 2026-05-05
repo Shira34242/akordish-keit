@@ -97,6 +97,7 @@ public class ArticleCategoriesController : ControllerBase
 
         var category = new ArticleCategoryEntity
         {
+            Id = await GetNextCategoryIdAsync(),
             Name = name,
             DisplayName = name,
             Section = (ArticleCategorySection)dto.Section
@@ -145,11 +146,18 @@ public class ArticleCategoriesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteArticleCategory(int id)
     {
-        var category = await _context.ArticleCategories.FindAsync(id);
-        if (category == null) return NotFound();
+        try
+        {
+            await DeleteCategoriesAndDetachReferencesAsync(new[] { id });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = $"לא ניתן למחוק את הקטגוריה. סיבה: {ex.GetBaseException().Message}"
+            });
+        }
 
-        _context.ArticleCategories.Remove(category);
-        await _context.SaveChangesAsync();
         return NoContent();
     }
 
@@ -159,13 +167,65 @@ public class ArticleCategoriesController : ControllerBase
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
 
-        var categories = await _context.ArticleCategories
+        var categoryIds = await _context.ArticleCategories
             .Where(c => dto.Ids.Contains(c.Id))
+            .Select(c => c.Id)
+            .ToArrayAsync();
+
+        try
+        {
+            await DeleteCategoriesAndDetachReferencesAsync(categoryIds);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = $"לא ניתן למחוק את הקטגוריות. סיבה: {ex.GetBaseException().Message}"
+            });
+        }
+
+        return Ok(new { deletedCount = categoryIds.Length });
+    }
+
+    private async Task<int> GetNextCategoryIdAsync()
+    {
+        var maxId = await _context.ArticleCategories
+            .Select(c => (int?)c.Id)
+            .MaxAsync() ?? 0;
+
+        return maxId + 1;
+    }
+
+    private async Task DeleteCategoriesAndDetachReferencesAsync(int[] categoryIds)
+    {
+        var ids = categoryIds.Distinct().ToArray();
+        if (ids.Length == 0) return;
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var articleLinks = await _context.ArticleArticleCategories
+            .Where(ac => ids.Contains(ac.CategoryId))
+            .ToListAsync();
+        _context.ArticleArticleCategories.RemoveRange(articleLinks);
+
+        var affectedSections = await _context.NewsPageSections
+            .Where(s => s.CategoryId.HasValue && ids.Contains(s.CategoryId.Value))
             .ToListAsync();
 
+        foreach (var section in affectedSections)
+        {
+            section.CategoryId = null;
+            section.IsActive = false;
+            section.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var categories = await _context.ArticleCategories
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
         _context.ArticleCategories.RemoveRange(categories);
+
         await _context.SaveChangesAsync();
 
-        return Ok(new { deletedCount = categories.Count });
+        await transaction.CommitAsync();
     }
 }

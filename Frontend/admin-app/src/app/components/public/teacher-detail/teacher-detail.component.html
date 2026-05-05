@@ -20,7 +20,7 @@
 
     <div class="hero-content">
       <div class="hero-profile-side">
-        <img [src]="teacher.profileImageUrl || '/logo.png'"
+        <img [src]="teacher.profileImageUrl || '/default-user.svg'"
              [alt]="teacher.displayName"
              class="hero-profile-photo"
              imgFallback />
@@ -89,19 +89,6 @@
             <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
           </svg>
         </a>
-
-        <span *ngIf="socialLinks.length > 0" class="hero-actions-divider" aria-hidden="true"></span>
-
-        <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
-          <a *ngFor="let link of socialLinks"
-             [href]="link.url"
-             target="_blank"
-             rel="noopener"
-             class="hero-social-btn"
-             [title]="getSocialPlatformName(link.platform)"
-             [innerHTML]="getSocialIconSvg(link.platform)">
-          </a>
-        </div>
       </div>
     </div>
   </section>
@@ -174,6 +161,20 @@
             </div>
           </article>
         </div>
+      </div>
+    </section>
+
+    <section class="social-follow-section" *ngIf="socialLinks.length > 0">
+      <h2 class="social-follow-title">מוזמנים לעקוב אחרי ברשתות</h2>
+      <div class="social-follow-box">
+        <a *ngFor="let link of socialLinks"
+           [href]="link.url"
+           target="_blank"
+           rel="noopener"
+           class="social-follow-btn"
+           [title]="getSocialPlatformName(link.platform)"
+           [innerHTML]="getSocialIconSvg(link.platform)">
+        </a>
       </div>
     </section>
 

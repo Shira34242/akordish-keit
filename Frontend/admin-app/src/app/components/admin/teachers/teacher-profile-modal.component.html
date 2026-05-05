@@ -25,10 +25,10 @@
         <div class="header-decoration"></div>
         <div class="profile-image-wrapper">
           <img
-            [src]="teacher.profileImageUrl || '/logo.png'"
+            [src]="teacher.profileImageUrl || '/default-user.svg'"
             alt="{{ teacher.displayName }}"
             class="profile-image"
-            onerror="this.onerror=null; this.src='/logo.png'"
+            onerror="this.onerror=null; this.src='/default-user.svg'"
           />
           <span *ngIf="teacher.isFeatured" class="featured-star">
             <span class="material-icons">star</span>

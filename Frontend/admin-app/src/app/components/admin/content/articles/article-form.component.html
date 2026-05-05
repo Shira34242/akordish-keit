@@ -64,7 +64,7 @@
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label required">
+          <label class="form-label">
             קטגוריות
             <span class="selected-count" *ngIf="article.categoryIds.length > 0">
               (נבחרו {{ article.categoryIds.length }})
@@ -103,8 +103,8 @@
             </div>
           </ng-container>
 
-          <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="color: red; margin-top: 8px;">
-            יש לבחור לפחות קטגוריה אחת
+          <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="margin-top: 8px;">
+            אפשר לשמור כתבה ללא קטגוריה
           </div>
         </div>
       </div>
@@ -274,6 +274,7 @@
             <div *ngIf="!selectedProfile" class="profile-search-wrapper">
               <div class="admin-profile-tools">
                 <select class="form-input admin-profile-select" [(ngModel)]="profileTypeFilter" name="profileTypeFilter" (change)="onProfileFilterChange()">
+                  <option value="none">אף אחד</option>
                   <option value="all">כולם</option>
                   <option value="teacher">מורים</option>
                   <option value="serviceProvider">נותני שירות</option>
@@ -333,9 +334,10 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">קרדיט צילום</label>
+          <label class="form-label">קרדיטים</label>
           <input type="text" class="form-input" [(ngModel)]="article.imageCredit" name="imageCredit"
-            placeholder="צלם/מקור התמונה...">
+            placeholder="קרדיט צילום / מקור / תודה קצרה...">
+          <small class="help-text">יוצג כשורת טקסט עדינה בתחתית הכתבה.</small>
         </div>
       </div>
 

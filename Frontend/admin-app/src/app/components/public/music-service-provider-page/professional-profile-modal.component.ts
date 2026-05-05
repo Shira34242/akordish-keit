@@ -254,7 +254,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   }
 
   get profileImageSrc(): string {
-    return this.readString('profileImageUrl', 'ProfileImageUrl') || '/logo.png';
+    return this.readString('profileImageUrl', 'ProfileImageUrl') || '/default-user.svg';
   }
 
   get heroBackgroundSrc(): string {

@@ -45,6 +45,11 @@
           </div>
         </div>
 
+        <!-- Featured Image Section (when no video) -->
+        <div class="featured-image-section" *ngIf="!safeVideoUrl && article.featuredImageUrl">
+          <img [src]="article.featuredImageUrl" [alt]="article.title" class="featured-image-inline">
+        </div>
+
         <!-- Audio Section -->
         <div class="audio-section" *ngIf="article.audioEmbedUrl">
           <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
@@ -88,6 +93,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Credits -->
+        <p class="article-credits" *ngIf="article.imageCredit">
+          <span>קרדיטים:</span>
+          {{ article.imageCredit }}
+        </p>
 
         <!-- Lightbox -->
         <div class="lightbox-overlay" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">

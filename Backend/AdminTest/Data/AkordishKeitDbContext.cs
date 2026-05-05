@@ -208,7 +208,5 @@ public class AkordishKeitDbContext : DbContext
         GenreSeed.Seed(modelBuilder);
         TagSeed.Seed(modelBuilder);
         InstrumentSeed.Seed(modelBuilder);
-        ArticleCategorySeed.Seed(modelBuilder);
-
     }
 }

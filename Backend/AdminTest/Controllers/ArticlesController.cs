@@ -149,9 +149,6 @@ public class ArticlesController : ControllerBase
             if (string.IsNullOrWhiteSpace(dto.Slug))
                 dto.Slug = $"article-{DateTime.UtcNow.Ticks}";
 
-            if (dto.CategoryIds == null || dto.CategoryIds.Count == 0)
-                dto.CategoryIds = new List<int> { 1 };
-
             var userId = GetCurrentUserId();
             var article = await _articleService.CreateArticleAsync(dto, userId);
 
