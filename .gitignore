@@ -83,6 +83,9 @@ nul
 # Claude Code
 .claude/
 
+# .NET SDK cache
+.dotnet-home/
+
 # Local personal instructions (not for git)
 CLAUDE.local.md
 
