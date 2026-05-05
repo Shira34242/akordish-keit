@@ -45,6 +45,8 @@ export interface Artist {
   articleCount: number;            // כמות כתבות
   upcomingEventCount: number;      // כמות הופעות קרובות
 
+  hits: ArtistHit[];
+  albums: ArtistAlbum[];
   createdAt: Date;
 }
 
@@ -83,6 +85,26 @@ export interface ArtistVideo {
   videoUrl: string;                // YouTube/Vimeo embed URL
   title?: string;
   displayOrder: number;
+}
+
+export interface ArtistHit {
+  id: number;
+  title: string;
+  imageUrl?: string;
+  youTubeUrl?: string;
+  youtubeUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface ArtistAlbum {
+  id: number;
+  title: string;
+  coverImageUrl: string;
+  releaseYear?: number;
+  externalUrl: string;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 // ========================================
@@ -146,6 +168,8 @@ export interface UpdateArtistDto {
   performanceIsActive?: boolean;
   /** null מנתק את האירוע. הגדרת אובייקט יוצרת/מעדכנת אירוע. */
   performanceEvent?: PerformanceEventInput | null;
+  hits?: AddArtistHitDto[];
+  albums?: AddArtistAlbumDto[];
   socialLinks?: SocialLink[];      // קישורי רשתות חברתיות
   galleryImages?: AddGalleryImageDto[];  // תמונות גלריה
   videos?: AddVideoDto[];          // סרטונים
@@ -200,6 +224,23 @@ export interface AddVideoDto {
   videoUrl: string;                // YouTube/Vimeo URL
   title?: string;
   displayOrder: number;
+}
+
+export interface AddArtistHitDto {
+  title: string;
+  imageUrl?: string;
+  youTubeUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface AddArtistAlbumDto {
+  title: string;
+  coverImageUrl: string;
+  releaseYear?: number;
+  externalUrl: string;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 /**

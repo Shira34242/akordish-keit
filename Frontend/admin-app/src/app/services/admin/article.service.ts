@@ -53,7 +53,8 @@ export class ArticleService {
     status?: ArticleStatus,
     isFeatured?: boolean,
     isPremium?: boolean,
-    authorName?: string
+    authorName?: string,
+    tagId?: number
   ): Observable<PagedResult<Article>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -79,6 +80,9 @@ export class ArticleService {
     }
     if (authorName) {
       params = params.set('authorName', authorName);
+    }
+    if (tagId !== undefined) {
+      params = params.set('tagId', tagId.toString());
     }
 
     return this.http.get<PagedResult<Article>>(this.apiUrl, { params });

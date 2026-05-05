@@ -38,9 +38,11 @@ interface ArtistFormData {
   // Banner
   bannerMediaType: BannerMediaType;
   bannerUrl: string;
-  bannerBlur: number;
+  bannerBlurEnabled: boolean;
   // Premium fields - gallery (unified)
   galleryItems?: { kind: 'image' | 'video'; imageUrl?: string; caption?: string; videoUrl?: string; title?: string; displayOrder: number }[];
+  hits?: { title: string; imageUrl?: string; youTubeUrl: string; displayOrder: number; isActive: boolean }[];
+  albums?: { title: string; coverImageUrl: string; releaseYear: number | null; externalUrl: string; displayOrder: number; isActive: boolean }[];
 }
 
 interface PlatformLinkOption {
@@ -116,8 +118,10 @@ export class ArtistCreateComponent implements OnInit {
     },
     bannerMediaType: 'image',
     bannerUrl: '',
-    bannerBlur: 0,
-    galleryItems: []
+    bannerBlurEnabled: false,
+    galleryItems: [],
+    hits: [],
+    albums: []
   };
 
   constructor(
@@ -256,6 +260,39 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.galleryItems?.forEach((it, order) => it.displayOrder = order);
   }
 
+  addHit(): void {
+    if (!this.artistForm.hits) this.artistForm.hits = [];
+    this.artistForm.hits.push({
+      title: '',
+      imageUrl: '',
+      youTubeUrl: '',
+      displayOrder: this.artistForm.hits.length,
+      isActive: true
+    });
+  }
+
+  removeHit(index: number): void {
+    this.artistForm.hits?.splice(index, 1);
+    this.artistForm.hits?.forEach((hit, order) => hit.displayOrder = order);
+  }
+
+  addAlbum(): void {
+    if (!this.artistForm.albums) this.artistForm.albums = [];
+    this.artistForm.albums.push({
+      title: '',
+      coverImageUrl: '',
+      releaseYear: null,
+      externalUrl: '',
+      displayOrder: this.artistForm.albums.length,
+      isActive: true
+    });
+  }
+
+  removeAlbum(index: number): void {
+    this.artistForm.albums?.splice(index, 1);
+    this.artistForm.albums?.forEach((album, order) => album.displayOrder = order);
+  }
+
   get galleryItemsCount(): number {
     return (this.artistForm.galleryItems || []).filter(it => {
       if (it.kind === 'image') return !!it.imageUrl?.trim();
@@ -337,6 +374,14 @@ export class ArtistCreateComponent implements OnInit {
       return;
     }
 
+    const richContentError = this.validateRichContent();
+    if (richContentError) {
+      this.error = richContentError;
+      this.currentStep = 3;
+      this.scrollToTop();
+      return;
+    }
+
     this.saving = true;
     this.error = '';
 
@@ -366,6 +411,27 @@ export class ArtistCreateComponent implements OnInit {
         videoUrl: it.videoUrl!.trim(),
         title: it.title?.trim() || undefined,
         displayOrder: index
+      }));
+
+    const hits = (this.artistForm.hits || [])
+      .filter(hit => hit.title?.trim() && hit.youTubeUrl?.trim())
+      .map((hit, index) => ({
+        title: hit.title.trim(),
+        imageUrl: hit.imageUrl?.trim() || undefined,
+        youTubeUrl: hit.youTubeUrl.trim(),
+        displayOrder: index,
+        isActive: hit.isActive
+      }));
+
+    const albums = (this.artistForm.albums || [])
+      .filter(album => album.title?.trim() && album.coverImageUrl?.trim() && album.externalUrl?.trim())
+      .map((album, index) => ({
+        title: album.title.trim(),
+        coverImageUrl: album.coverImageUrl.trim(),
+        releaseYear: album.releaseYear ?? undefined,
+        externalUrl: album.externalUrl.trim(),
+        displayOrder: index,
+        isActive: album.isActive
       }));
 
     const performance: PerformanceEventInput | null = this.artistForm.performance.enabled
@@ -404,12 +470,18 @@ export class ArtistCreateComponent implements OnInit {
       bannerImageUrl: bannerType === 'image' && bannerUrl ? bannerUrl : undefined,
       bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') && bannerUrl ? bannerUrl : undefined,
       bannerMediaType: bannerUrl ? bannerType : null,
-      bannerBlur: Number(this.artistForm.bannerBlur) || 0,
+      bannerBlur: this.artistForm.bannerBlurEnabled ? 12 : 0,
       galleryImages: galleryImages.length > 0
         ? galleryImages
         : undefined,
       videos: videos.length > 0
         ? videos
+        : undefined,
+      hits: hits.length > 0
+        ? hits
+        : undefined,
+      albums: albums.length > 0
+        ? albums
         : undefined
     };
 
@@ -471,6 +543,43 @@ export class ArtistCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/artists']);
+  }
+
+  private validateRichContent(): string | null {
+    const p = this.artistForm.performance;
+    if (p.enabled) {
+      if (!p.name?.trim()) return 'יש למלא שם הופעה לפני שמירה';
+      if (!p.eventDate) return 'יש למלא תאריך הופעה לפני שמירה';
+      if (!p.ticketUrl?.trim()) return 'יש למלא קישור לכרטיסים לפני שמירה';
+      if (!p.imageUrl?.trim()) return 'יש להעלות או להדביק תמונת הופעה לפני שמירה';
+      if (!p.bannerImageUrl?.trim()) return 'יש להעלות או להדביק תמונת באנר להופעה לפני שמירה';
+      if (Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+    }
+
+    for (let i = 0; i < (this.artistForm.hits || []).length; i++) {
+      const hit = this.artistForm.hits![i];
+      if (!this.hasHitContent(hit)) continue;
+      if (!hit.title?.trim()) return `יש למלא שם ללהיט מספר ${i + 1}`;
+      if (!hit.youTubeUrl?.trim()) return `יש למלא קישור יוטיוב ללהיט מספר ${i + 1}`;
+    }
+
+    for (let i = 0; i < (this.artistForm.albums || []).length; i++) {
+      const album = this.artistForm.albums![i];
+      if (!this.hasAlbumContent(album)) continue;
+      if (!album.title?.trim()) return `יש למלא כותרת לאלבום מספר ${i + 1}`;
+      if (!album.coverImageUrl?.trim()) return `יש להעלות או להדביק תמונת עטיפה לאלבום מספר ${i + 1}`;
+      if (!album.externalUrl?.trim()) return `יש למלא קישור חיצוני לאלבום מספר ${i + 1}`;
+    }
+
+    return null;
+  }
+
+  private hasHitContent(hit: NonNullable<ArtistFormData['hits']>[number]): boolean {
+    return !!(hit.title?.trim() || hit.imageUrl?.trim() || hit.youTubeUrl?.trim());
+  }
+
+  private hasAlbumContent(album: NonNullable<ArtistFormData['albums']>[number]): boolean {
+    return !!(album.title?.trim() || album.coverImageUrl?.trim() || album.externalUrl?.trim() || album.releaseYear);
   }
 
   private scrollToTop(smooth = true): void {

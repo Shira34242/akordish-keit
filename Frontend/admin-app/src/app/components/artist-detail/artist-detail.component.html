@@ -114,6 +114,54 @@
       </button>
     </div>
 
+    <!-- להיטים גדולים -->
+    <div class="artist-media-section" *ngIf="artist.hits && artist.hits.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">להיטים גדולים</h2>
+      </div>
+      <div class="artist-horizontal-row artist-horizontal-row--hits">
+        <a
+          *ngFor="let hit of artist.hits"
+          class="artist-hit-card"
+          [href]="hit.youTubeUrl || hit.youtubeUrl"
+          target="_blank"
+          rel="noopener">
+          <div class="artist-hit-image">
+            <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title" loading="lazy">
+            <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
+          </div>
+          <div class="artist-hit-info">
+            <span class="artist-card-label">להיט גדול</span>
+            <span class="artist-hit-title">{{ hit.title }}</span>
+            <span class="artist-card-link">YouTube</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- אלבומים -->
+    <div class="artist-media-section" *ngIf="artist.albums && artist.albums.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">אלבומים</h2>
+      </div>
+      <div class="artist-horizontal-row artist-horizontal-row--albums">
+        <a
+          *ngFor="let album of artist.albums"
+          class="artist-album-card"
+          [href]="album.externalUrl"
+          target="_blank"
+          rel="noopener">
+          <div class="artist-album-cover">
+            <img [src]="album.coverImageUrl" [alt]="album.title" loading="lazy">
+          </div>
+          <div class="artist-album-info">
+            <span class="artist-album-title">{{ album.title }}</span>
+            <span class="artist-album-year" *ngIf="album.releaseYear">{{ album.releaseYear }}</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
     <!-- אקורדים ושירים -->
     <div class="songs-section" *ngIf="totalSongs > 0 || loadingSongs">
       <div class="section-header">

@@ -40,6 +40,24 @@
   min-height: 34px;
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
+}
+
+.tag-filter-clear {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-base);
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  font-family: 'Open Sans', sans-serif;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.tag-filter-clear:hover {
+  background: #ddff53;
 }
 
 .page-title {

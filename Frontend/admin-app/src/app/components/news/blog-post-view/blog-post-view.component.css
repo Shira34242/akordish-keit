@@ -559,6 +559,46 @@
 }
 
 /* ============================================
+   ARTICLE TAGS — תגים בתחתית הכתבה
+============================================ */
+
+.article-tags-section {
+  padding: var(--space-base) var(--space-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  direction: rtl;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.article-tags-label {
+  font-size: var(--font-xs);
+  font-weight: 800;
+  font-family: 'Open Sans', sans-serif;
+  color: rgba(0, 0, 0, 0.5);
+  margin-left: var(--space-xs);
+}
+
+.article-tag-chip {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-base);
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  font-family: 'Open Sans', sans-serif;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.article-tag-chip:hover {
+  background: #ddff53;
+  color: #000000;
+}
+
+/* ============================================
    FEEDBACK SECTION — עיגולי אחוזים
 ============================================ */
 

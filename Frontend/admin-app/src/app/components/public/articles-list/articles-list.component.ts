@@ -8,6 +8,7 @@ import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
+import { SystemTablesService } from '../../../services/system-tables.service';
 
 @Component({
   selector: 'app-articles-list',
@@ -22,6 +23,7 @@ export class ArticlesListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
+  private readonly systemTablesService = inject(SystemTablesService);
 
   articles: Article[] = [];
   isLoading = true;
@@ -35,6 +37,8 @@ export class ArticlesListComponent implements OnInit {
   contentType?: ArticleContentType;
   categoryName = '';
   searchTerm = '';
+  tagId?: number;
+  tagName = '';
 
   get categories(): Array<{ id: ArticleCategory; key: string }> {
     return [
@@ -67,6 +71,14 @@ export class ArticlesListComponent implements OnInit {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
+        // Reset filter state when query params change
+        this.categoryId = undefined;
+        this.categoryName = '';
+        this.contentType = undefined;
+        this.searchTerm = '';
+        this.tagId = undefined;
+        this.tagName = '';
+
         // Get category from query params
         if (params['category']) {
           this.categoryId = +params['category'];
@@ -83,12 +95,32 @@ export class ArticlesListComponent implements OnInit {
           this.searchTerm = params['search'];
         }
 
+        // Get tag from query params
+        if (params['tagId']) {
+          this.tagId = +params['tagId'];
+          this.tagName = params['tagName'] || '';
+          if (!this.tagName) {
+            this.loadTagName(this.tagId);
+          }
+        }
+
         // Get page from query params
         if (params['page']) {
           this.currentPage = +params['page'];
+        } else {
+          this.currentPage = 1;
         }
 
         this.loadArticles();
+      });
+  }
+
+  private loadTagName(tagId: number): void {
+    this.systemTablesService.getTag(tagId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tag) => { this.tagName = tag?.name || `#${tagId}`; },
+        error: () => { this.tagName = `#${tagId}`; }
       });
   }
 
@@ -104,7 +136,8 @@ export class ArticlesListComponent implements OnInit {
       ArticleStatus.Published,
       undefined, // isFeatured
       undefined, // isPremium
-      undefined  // authorName
+      undefined, // authorName
+      this.tagId
     ).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
@@ -182,6 +215,11 @@ export class ArticlesListComponent implements OnInit {
 
     if (this.contentType !== undefined) {
       queryParams.contentType = this.contentType;
+    }
+
+    if (this.tagId !== undefined) {
+      queryParams.tagId = this.tagId;
+      if (this.tagName) queryParams.tagName = this.tagName;
     }
 
     this.router.navigate([], {

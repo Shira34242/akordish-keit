@@ -82,4 +82,8 @@ export class SystemTablesService {
     findOrCreateTag(name: string): Observable<SystemItem> {
         return this.http.post<SystemItem>(`${this.apiUrl}/Tags/find-or-create`, { name });
     }
+
+    getTag(id: number): Observable<SystemItem> {
+        return this.http.get<SystemItem>(`${this.apiUrl}/Tags/${id}`);
+    }
 }

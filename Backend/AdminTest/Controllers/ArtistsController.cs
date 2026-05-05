@@ -189,6 +189,8 @@ public class ArtistsController : ControllerBase
             var artist = await _context.Artists
                 .Include(a => a.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(a => a.Videos.OrderBy(v => v.DisplayOrder))
+                .Include(a => a.Hits.OrderBy(h => h.DisplayOrder))
+                .Include(a => a.Albums.OrderBy(al => al.DisplayOrder))
                 .Include(a => a.SocialLinks)
                 .Include(a => a.PerformanceEvent)
                 .Where(a => a.Id == id && !a.IsDeleted)
@@ -257,6 +259,29 @@ public class ArtistsController : ControllerBase
                     Title = v.Title,
                     DisplayOrder = v.DisplayOrder
                 }).ToList(),
+                Hits = artist.Hits
+                    .Where(h => h.IsActive)
+                    .Select(h => new ArtistHitDto
+                    {
+                        Id = h.Id,
+                        Title = h.Title,
+                        ImageUrl = h.ImageUrl,
+                        YouTubeUrl = h.YouTubeUrl,
+                        DisplayOrder = h.DisplayOrder,
+                        IsActive = h.IsActive
+                    }).ToList(),
+                Albums = artist.Albums
+                    .Where(al => al.IsActive)
+                    .Select(al => new ArtistAlbumDto
+                    {
+                        Id = al.Id,
+                        Title = al.Title,
+                        CoverImageUrl = al.CoverImageUrl,
+                        ReleaseYear = al.ReleaseYear,
+                        ExternalUrl = al.ExternalUrl,
+                        DisplayOrder = al.DisplayOrder,
+                        IsActive = al.IsActive
+                    }).ToList(),
                 SocialLinks = artist.SocialLinks.Select(sl => new SocialLinkDto
                 {
                     Id = sl.Id,
@@ -481,7 +506,8 @@ public class ArtistsController : ControllerBase
                 artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
 
             // עדכון אירוע מקושר לבאנר
-            await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
+            if (dto.PerformanceEvent != null || dto.PerformanceIsActive == false)
+                await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
 
             // רק Admin יכול לעדכן סטטוס ו-Premium
             if (isAdmin)
@@ -551,6 +577,9 @@ public class ArtistsController : ControllerBase
                     });
                 }
             }
+
+            await SyncArtistHitsAsync(id, dto.Hits);
+            await SyncArtistAlbumsAsync(id, dto.Albums);
 
             await _context.SaveChangesAsync();
 
@@ -923,6 +952,9 @@ public class ArtistsController : ControllerBase
                 }
             }
 
+            await SyncArtistHitsAsync(artist.Id, dto.Hits);
+            await SyncArtistAlbumsAsync(artist.Id, dto.Albums);
+
             await _context.SaveChangesAsync();
 
             await _notificationService.NotifyArtistSubmittedAsync(userId, artist.Id, artist.Name);
@@ -962,6 +994,31 @@ public class ArtistsController : ControllerBase
                         Title = v.Title,
                         DisplayOrder = v.DisplayOrder
                     }).ToList(),
+                    Hits = a.Hits
+                        .Where(h => h.IsActive)
+                        .OrderBy(h => h.DisplayOrder)
+                        .Select(h => new ArtistHitDto
+                        {
+                            Id = h.Id,
+                            Title = h.Title,
+                            ImageUrl = h.ImageUrl,
+                            YouTubeUrl = h.YouTubeUrl,
+                            DisplayOrder = h.DisplayOrder,
+                            IsActive = h.IsActive
+                        }).ToList(),
+                    Albums = a.Albums
+                        .Where(al => al.IsActive)
+                        .OrderBy(al => al.DisplayOrder)
+                        .Select(al => new ArtistAlbumDto
+                        {
+                            Id = al.Id,
+                            Title = al.Title,
+                            CoverImageUrl = al.CoverImageUrl,
+                            ReleaseYear = al.ReleaseYear,
+                            ExternalUrl = al.ExternalUrl,
+                            DisplayOrder = al.DisplayOrder,
+                            IsActive = al.IsActive
+                        }).ToList(),
                     SocialLinks = a.SocialLinks.Select(sl => new SocialLinkDto
                     {
                         Id = sl.Id,
@@ -1082,6 +1139,9 @@ public class ArtistsController : ControllerBase
                 }
             }
 
+            await SyncArtistHitsAsync(artist.Id, dto.Hits);
+            await SyncArtistAlbumsAsync(artist.Id, dto.Albums);
+
             await _context.SaveChangesAsync();
 
             // החזרת פרטי האומן המלאים
@@ -1119,6 +1179,31 @@ public class ArtistsController : ControllerBase
                         Title = v.Title,
                         DisplayOrder = v.DisplayOrder
                     }).ToList(),
+                    Hits = a.Hits
+                        .Where(h => h.IsActive)
+                        .OrderBy(h => h.DisplayOrder)
+                        .Select(h => new ArtistHitDto
+                        {
+                            Id = h.Id,
+                            Title = h.Title,
+                            ImageUrl = h.ImageUrl,
+                            YouTubeUrl = h.YouTubeUrl,
+                            DisplayOrder = h.DisplayOrder,
+                            IsActive = h.IsActive
+                        }).ToList(),
+                    Albums = a.Albums
+                        .Where(al => al.IsActive)
+                        .OrderBy(al => al.DisplayOrder)
+                        .Select(al => new ArtistAlbumDto
+                        {
+                            Id = al.Id,
+                            Title = al.Title,
+                            CoverImageUrl = al.CoverImageUrl,
+                            ReleaseYear = al.ReleaseYear,
+                            ExternalUrl = al.ExternalUrl,
+                            DisplayOrder = al.DisplayOrder,
+                            IsActive = al.IsActive
+                        }).ToList(),
                     SocialLinks = a.SocialLinks.Select(sl => new SocialLinkDto
                     {
                         Id = sl.Id,
@@ -1176,6 +1261,8 @@ public class ArtistsController : ControllerBase
             var original = await _context.Artists
                 .Include(a => a.GalleryImages)
                 .Include(a => a.Videos)
+                .Include(a => a.Hits)
+                .Include(a => a.Albums)
                 .Include(a => a.SocialLinks)
                 .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
 
@@ -1243,11 +1330,42 @@ public class ArtistsController : ControllerBase
                 });
             }
 
+            foreach (var hit in original.Hits)
+            {
+                _context.ArtistHits.Add(new ArtistHit
+                {
+                    ArtistId = newArtist.Id,
+                    Title = hit.Title,
+                    ImageUrl = hit.ImageUrl,
+                    YouTubeUrl = hit.YouTubeUrl,
+                    DisplayOrder = hit.DisplayOrder,
+                    IsActive = hit.IsActive,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            foreach (var album in original.Albums)
+            {
+                _context.ArtistAlbums.Add(new ArtistAlbum
+                {
+                    ArtistId = newArtist.Id,
+                    Title = album.Title,
+                    CoverImageUrl = album.CoverImageUrl,
+                    ReleaseYear = album.ReleaseYear,
+                    ExternalUrl = album.ExternalUrl,
+                    DisplayOrder = album.DisplayOrder,
+                    IsActive = album.IsActive,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
             await _context.SaveChangesAsync();
 
             var result = await _context.Artists
                 .Include(a => a.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(a => a.Videos.OrderBy(v => v.DisplayOrder))
+                .Include(a => a.Hits.OrderBy(h => h.DisplayOrder))
+                .Include(a => a.Albums.OrderBy(al => al.DisplayOrder))
                 .Include(a => a.SocialLinks)
                 .Where(a => a.Id == newArtist.Id)
                 .Select(a => new ArtistDetailDto
@@ -1282,6 +1400,31 @@ public class ArtistsController : ControllerBase
                         Title = v.Title,
                         DisplayOrder = v.DisplayOrder
                     }).ToList(),
+                    Hits = a.Hits
+                        .Where(h => h.IsActive)
+                        .OrderBy(h => h.DisplayOrder)
+                        .Select(h => new ArtistHitDto
+                        {
+                            Id = h.Id,
+                            Title = h.Title,
+                            ImageUrl = h.ImageUrl,
+                            YouTubeUrl = h.YouTubeUrl,
+                            DisplayOrder = h.DisplayOrder,
+                            IsActive = h.IsActive
+                        }).ToList(),
+                    Albums = a.Albums
+                        .Where(al => al.IsActive)
+                        .OrderBy(al => al.DisplayOrder)
+                        .Select(al => new ArtistAlbumDto
+                        {
+                            Id = al.Id,
+                            Title = al.Title,
+                            CoverImageUrl = al.CoverImageUrl,
+                            ReleaseYear = al.ReleaseYear,
+                            ExternalUrl = al.ExternalUrl,
+                            DisplayOrder = al.DisplayOrder,
+                            IsActive = al.IsActive
+                        }).ToList(),
                     SocialLinks = a.SocialLinks.Select(sl => new SocialLinkDto
                     {
                         Id = sl.Id,
@@ -1316,6 +1459,58 @@ public class ArtistsController : ControllerBase
             "image" or "gif" or "video" => t,
             _ => null
         };
+    }
+
+    private async Task SyncArtistHitsAsync(int artistId, List<AddArtistHitDto>? hits)
+    {
+        if (hits == null) return;
+
+        var existingHits = await _context.ArtistHits
+            .Where(hit => hit.ArtistId == artistId)
+            .ToListAsync();
+        _context.ArtistHits.RemoveRange(existingHits);
+
+        foreach (var hit in hits.Where(h => !string.IsNullOrWhiteSpace(h.Title) && !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
+        {
+            _context.ArtistHits.Add(new ArtistHit
+            {
+                ArtistId = artistId,
+                Title = hit.Title.Trim(),
+                ImageUrl = string.IsNullOrWhiteSpace(hit.ImageUrl) ? null : hit.ImageUrl.Trim(),
+                YouTubeUrl = hit.YouTubeUrl.Trim(),
+                DisplayOrder = hit.DisplayOrder,
+                IsActive = hit.IsActive,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+    }
+
+    private async Task SyncArtistAlbumsAsync(int artistId, List<AddArtistAlbumDto>? albums)
+    {
+        if (albums == null) return;
+
+        var existingAlbums = await _context.ArtistAlbums
+            .Where(album => album.ArtistId == artistId)
+            .ToListAsync();
+        _context.ArtistAlbums.RemoveRange(existingAlbums);
+
+        foreach (var album in albums.Where(a =>
+            !string.IsNullOrWhiteSpace(a.Title) &&
+            !string.IsNullOrWhiteSpace(a.CoverImageUrl) &&
+            !string.IsNullOrWhiteSpace(a.ExternalUrl)))
+        {
+            _context.ArtistAlbums.Add(new ArtistAlbum
+            {
+                ArtistId = artistId,
+                Title = album.Title.Trim(),
+                CoverImageUrl = album.CoverImageUrl.Trim(),
+                ReleaseYear = album.ReleaseYear,
+                ExternalUrl = album.ExternalUrl.Trim(),
+                DisplayOrder = album.DisplayOrder,
+                IsActive = album.IsActive,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
     }
 
     /// <summary>

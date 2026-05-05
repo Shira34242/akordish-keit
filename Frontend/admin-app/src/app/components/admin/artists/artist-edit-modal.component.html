@@ -135,17 +135,15 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">טשטוש על הבאנר ({{ editForm.bannerBlur }})</label>
-          <input
-            type="range"
-            min="0"
-            max="20"
-            step="1"
-            [(ngModel)]="editForm.bannerBlur"
-            name="bannerBlur"
-            class="form-range"
-          />
-          <small class="form-hint">0 = ללא טשטוש, 20 = טשטוש חזק. מועיל כדי להבליט את פרטי האמן מעל הבאנר.</small>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="editForm.bannerBlurEnabled"
+              name="bannerBlurEnabled"
+            />
+            <span>הוסף טשטוש לבאנר</span>
+          </label>
+          <small class="form-hint">סימון תיבה זו יחיל טשטוש על תמונת/וידאו הבאנר — מועיל להבליט את פרטי האמן.</small>
         </div>
 
         <div class="form-group">
@@ -298,6 +296,93 @@
             <small class="form-hint">יחס מומלץ: 4:1 (למשל 1200×300). מוצג כבאנר נמוך ורחב מתחת לפרופיל האמן.</small>
           </div>
         </ng-container>
+      </div>
+
+      <!-- Hits -->
+      <div class="form-section">
+        <h2 class="section-title">להיטים גדולים</h2>
+        <p class="section-desc">שורה נגללת בדף האמן. כל להיט צריך שם וקישור YouTube; תמונה היא אופציונלית.</p>
+
+        <div *ngFor="let hit of editForm.hits; let i = index" class="gallery-item">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">שם הלהיט</label>
+              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + i" class="form-input" placeholder="שם הסינגל..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">תמונה</label>
+              <app-file-upload-input
+                [(url)]="hit.imageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">קישור YouTube</label>
+              <input type="url" [(ngModel)]="hit.youTubeUrl" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+            </div>
+
+            <div class="form-group" style="flex: 0 0 60px;">
+              <label class="form-label">&nbsp;</label>
+              <button type="button" class="btn-remove" (click)="removeHit(i)" aria-label="הסר">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-add" (click)="addHit()">
+          <span class="material-icons">smart_display</span>
+          הוסף להיט
+        </button>
+      </div>
+
+      <!-- Albums -->
+      <div class="form-section">
+        <h2 class="section-title">אלבומים</h2>
+        <p class="section-desc">שורת קוביות בדף האמן. המעבר הוא לקישור חיצוני.</p>
+
+        <div *ngFor="let album of editForm.albums; let i = index" class="gallery-item">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">שם האלבום</label>
+              <input type="text" [(ngModel)]="album.title" [name]="'album_title_' + i" class="form-input" placeholder="שם האלבום..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">עטיפה</label>
+              <app-file-upload-input
+                [(url)]="album.coverImageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">שנת יציאה</label>
+              <input type="number" min="1900" max="2100" [(ngModel)]="album.releaseYear" [name]="'album_year_' + i" class="form-input" placeholder="2026" />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">קישור חיצוני</label>
+              <input type="url" [(ngModel)]="album.externalUrl" [name]="'album_url_' + i" class="form-input" placeholder="https://..." />
+            </div>
+
+            <div class="form-group" style="flex: 0 0 60px;">
+              <label class="form-label">&nbsp;</label>
+              <button type="button" class="btn-remove" (click)="removeAlbum(i)" aria-label="הסר">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-add" (click)="addAlbum()">
+          <span class="material-icons">album</span>
+          הוסף אלבום
+        </button>
       </div>
 
       <!-- Gallery (Images + Videos unified) -->

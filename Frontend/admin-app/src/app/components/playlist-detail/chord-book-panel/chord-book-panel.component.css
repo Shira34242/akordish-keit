@@ -357,7 +357,7 @@
     flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #e0e0e0 transparent;
+    scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
     padding: 6px 0;
     max-height: 260px;
 }

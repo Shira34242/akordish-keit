@@ -1226,6 +1226,16 @@
     object-fit: contain;
 }
 
+.footer-acum a {
+    color: #ccc;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.footer-acum a:hover {
+    color: #fff;
+}
+
 .footer-legal-link {
     background: none;
     border: none;

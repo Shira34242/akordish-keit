@@ -360,18 +360,29 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   private rebuildGalleryMedia(): void {
     const media: GalleryMediaItem[] = [];
-    const videoUrl = this.readString('videoUrl', 'VideoUrl');
+    const seenVideoUrls = new Set<string>();
+    const addVideo = (videoUrl: string, caption = 'סרטון היכרות') => {
+      const normalizedUrl = videoUrl.trim();
+      if (!normalizedUrl || seenVideoUrls.has(normalizedUrl)) return;
 
-    if (videoUrl) {
+      seenVideoUrls.add(normalizedUrl);
       media.push({
         type: 'video',
-        videoUrl,
-        imageUrl: this.getVideoThumbnailUrl(videoUrl) || this.heroBannerSrc || this.profileImageSrc,
-        caption: 'סרטון היכרות'
+        videoUrl: normalizedUrl,
+        imageUrl: this.getVideoThumbnailUrl(normalizedUrl) || this.heroBannerSrc || this.profileImageSrc,
+        caption
       });
-    }
+    };
 
-    this.galleryItems.forEach(item => media.push({ type: 'image', ...item }));
+    this.extractVideoLinks(this.readString('videoUrl', 'VideoUrl')).forEach(url => addVideo(url));
+    this.galleryItems.forEach(item => {
+      if (this.isVideoUrl(item.imageUrl)) {
+        addVideo(item.imageUrl, item.caption || 'סרטון');
+        return;
+      }
+
+      media.push({ type: 'image', ...item });
+    });
     this.galleryMediaItems = media;
   }
 
@@ -462,6 +473,18 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   private getVideoThumbnailUrl(url: string): string {
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
     return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  private extractVideoLinks(value: string): string[] {
+    return value
+      .split(/\r?\n|,/)
+      .map(url => url.trim())
+      .filter(url => this.isVideoUrl(url));
+  }
+
+  private isVideoUrl(url?: string): boolean {
+    if (!url) return false;
+    return /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url);
   }
 
   getSafeVideoUrl(url: string): SafeResourceUrl {

@@ -125,6 +125,15 @@
              class="artist-link">{{ artist.artistName }}</a>
         </div>
 
+        <!-- Article Tags -->
+        <div class="article-tags-section" *ngIf="articleTags.length > 0">
+          <span class="article-tags-label">תגים:</span>
+          <a *ngFor="let tag of articleTags"
+             [routerLink]="['/articles']"
+             [queryParams]="{ tagId: tag.id, tagName: tag.name }"
+             class="article-tag-chip">#{{ tag.name }}</a>
+        </div>
+
         <!-- Uploader Badge -->
         <div *ngIf="article.uploaderProfile" class="uploader-badge-wrapper">
           <app-content-uploader-badge [profile]="article.uploaderProfile" />

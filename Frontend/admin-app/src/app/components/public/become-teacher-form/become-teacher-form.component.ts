@@ -9,13 +9,13 @@ import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } f
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { AuthService } from '../../../services/auth.service';
-import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
+import { MediaService } from '../../../services/admin/media.service';
 
 @Component({
   selector: 'app-become-teacher-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadInputComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './become-teacher-form.component.html',
   styleUrls: ['./become-teacher-form.component.css']
 })
@@ -25,6 +25,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   private readonly citiesService = inject(CitiesService);
   private readonly authService = inject(AuthService);
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly mediaService = inject(MediaService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   @Output() close = new EventEmitter<void>();
@@ -61,6 +62,11 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   testimonials: CreateTeacherTestimonialDto[] = [];
   newTestimonial = { studentName: '', text: '' };
   socialLinks: SocialLinkDto[] = [];
+  activeSocialPlatform: SocialPlatform | null = null;
+  hasWhatsAppForPhone = false;
+  profileImageUploading = false;
+  galleryUploadingCount = 0;
+  showVideoLinkInput = false;
 
   // Available data
   availableInstruments: SystemItem[] = [];
@@ -71,13 +77,13 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
   readonly SOCIAL_PLATFORMS = [
-    { value: SocialPlatform.Instagram, label: 'Instagram' },
-    { value: SocialPlatform.Facebook, label: 'Facebook' },
-    { value: SocialPlatform.YouTube, label: 'YouTube' },
-    { value: SocialPlatform.TikTok, label: 'TikTok' },
-    { value: SocialPlatform.Twitter, label: 'Twitter / X' },
-    { value: SocialPlatform.Spotify, label: 'Spotify' },
-    { value: SocialPlatform.Zing, label: 'Zing' }
+    { value: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera' },
+    { value: SocialPlatform.Facebook, label: 'Facebook', icon: 'facebook' },
+    { value: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display' },
+    { value: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note' },
+    { value: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email' },
+    { value: SocialPlatform.Spotify, label: 'Spotify', icon: 'graphic_eq' },
+    { value: SocialPlatform.Zing, label: 'Zing', icon: 'language' }
   ];
 
   // UI state
@@ -126,24 +132,49 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    const nextState = !this.cityDropdownOpen;
-    this.closeAllDropdowns();
-    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
+      this.cityDropdownOpen = false;
       this.citySearchText = '';
-      this.filteredCities = this.availableCities;
+    } else {
+      this.openCityDropdown();
     }
+  }
+
+  openCityDropdown(): void {
+    if (this.cityDropdownOpen) return;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = true;
+    this.citySearchText = '';
+    this.filteredCities = this.availableCities;
+  }
+
+  onCityTextInput(event: Event): void {
+    this.citySearchText = (event.target as HTMLInputElement).value;
+    if (!this.cityDropdownOpen) {
+      this.cityDropdownOpen = true;
+    }
+    this.onCitySearchChange();
+  }
+
+  onCityInputBlur(): void {
+    setTimeout(() => {
+      if (this.cityDropdownOpen) {
+        this.cityDropdownOpen = false;
+        this.citySearchText = '';
+      }
+    }, 200);
   }
 
   selectCity(cityId: number | undefined): void {
     this.cityId = cityId;
     this.cityDropdownOpen = false;
+    this.citySearchText = '';
   }
 
   getSelectedCityName(): string {
-    if (!this.cityId) return 'בחר עיר...';
+    if (!this.cityId) return '';
     const city = this.availableCities.find(c => c.id === this.cityId);
-    return city ? city.name : 'בחר עיר...';
+    return city ? city.name : '';
   }
 
   onCitySearchChange(): void {
@@ -272,6 +303,50 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   }
 
   // Gallery methods
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.profileImageUploading) return;
+
+    this.profileImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (response) => {
+        this.profileImageUrl = response.url;
+        this.profileImageUploading = false;
+      },
+      error: () => {
+        this.profileImageUploading = false;
+        alert('שגיאה בהעלאת תמונת הפרופיל.');
+      }
+    });
+  }
+
+  onGalleryFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length === 0) return;
+
+    this.galleryUploadingCount += files.length;
+    files.forEach(file => {
+      this.mediaService.uploadMedia(file).subscribe({
+        next: (response) => {
+          this.galleryImages.push({
+            imageUrl: response.url,
+            caption: '',
+            order: this.galleryImages.length
+          });
+          this.galleryUploadingCount--;
+        },
+        error: () => {
+          this.galleryUploadingCount--;
+          alert('שגיאה בהעלאת אחד הקבצים לגלריה.');
+        }
+      });
+    });
+  }
+
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
       alert('נא להזין URL לתמונה');
@@ -313,14 +388,40 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   }
 
   addSocialLink(): void {
-    this.socialLinks.push({
-      platform: SocialPlatform.Instagram,
-      url: ''
-    });
+    this.selectSocialPlatform(SocialPlatform.Instagram);
   }
 
   removeSocialLink(index: number): void {
     this.socialLinks.splice(index, 1);
+  }
+
+  selectSocialPlatform(platform: SocialPlatform): void {
+    this.activeSocialPlatform = this.activeSocialPlatform === platform ? null : platform;
+    if (this.activeSocialPlatform && !this.socialLinks.some(link => link.platform === platform)) {
+      this.socialLinks = [...this.socialLinks, { platform, url: '' }];
+    }
+  }
+
+  getSocialUrl(platform: SocialPlatform): string {
+    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+  }
+
+  setSocialUrl(platform: SocialPlatform, event: Event): void {
+    const url = (event.target as HTMLInputElement).value;
+    const existing = this.socialLinks.find(link => link.platform === platform);
+    if (existing) {
+      existing.url = url;
+      return;
+    }
+    this.socialLinks = [...this.socialLinks, { platform, url }];
+  }
+
+  hasSocialUrl(platform: SocialPlatform): boolean {
+    return !!this.getSocialUrl(platform).trim();
+  }
+
+  trackBySocialPlatform(_: number, item: { value: SocialPlatform }): number {
+    return item.value;
   }
 
   // Navigation methods
@@ -384,7 +485,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       cityId: this.cityId,
       location: this.location,
       phoneNumber: this.phoneNumber,
-      whatsAppNumber: this.whatsAppNumber,
+      whatsAppNumber: this.hasWhatsAppForPhone ? this.phoneNumber : this.whatsAppNumber,
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,

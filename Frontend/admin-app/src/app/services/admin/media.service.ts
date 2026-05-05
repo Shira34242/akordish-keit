@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -15,6 +15,15 @@ export class MediaService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ url: string }>(`${this.apiUrl}/upload`, formData);
+  }
+
+  uploadMediaWithProgress(file: File): Observable<HttpEvent<{ url: string }>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/upload`, formData, {
+      observe: 'events',
+      reportProgress: true
+    });
   }
 
   deleteMedia(url: string): Observable<{ message: string }> {

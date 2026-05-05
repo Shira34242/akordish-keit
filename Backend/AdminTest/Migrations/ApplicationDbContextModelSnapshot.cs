@@ -949,6 +949,54 @@ namespace AkordishKeit.Migrations
                     b.ToTable("ArtistGalleryImages", (string)null);
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistHit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("YouTubeUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId")
+                        .HasDatabaseName("IX_ArtistHits_ArtistId");
+
+                    b.ToTable("ArtistHits", (string)null);
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistSocialLink", b =>
                 {
                     b.Property<int>("Id")
@@ -1012,6 +1060,58 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_ArtistVideos_ArtistId");
 
                     b.ToTable("ArtistVideos", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistAlbum", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CoverImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ExternalUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("ReleaseYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId")
+                        .HasDatabaseName("IX_ArtistAlbums_ArtistId");
+
+                    b.ToTable("ArtistAlbums", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.Boost", b =>
@@ -3923,6 +4023,17 @@ namespace AkordishKeit.Migrations
                     b.Navigation("Artist");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistHit", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Artist", "Artist")
+                        .WithMany("Hits")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistSocialLink", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.Artist", "Artist")
@@ -3938,6 +4049,17 @@ namespace AkordishKeit.Migrations
                 {
                     b.HasOne("AkordishKeit.Models.Entities.Artist", "Artist")
                         .WithMany("Videos")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ArtistAlbum", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.Artist", "Artist")
+                        .WithMany("Albums")
                         .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -4541,11 +4663,15 @@ namespace AkordishKeit.Migrations
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.Artist", b =>
                 {
+                    b.Navigation("Albums");
+
                     b.Navigation("ArticleArtists");
 
                     b.Navigation("EventArtists");
 
                     b.Navigation("GalleryImages");
+
+                    b.Navigation("Hits");
 
                     b.Navigation("SocialLinks");
 
