@@ -55,7 +55,6 @@
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-thumb {
   background: var(--site-scrollbar-thumb);
   border-radius: 8px;
-  border: 2px solid var(--site-scrollbar-track);
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-thumb:hover {
@@ -152,6 +151,13 @@
   color: #000000;
   font-size: var(--font-sm);
   font-weight: 700;
+}
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
 }
 
 .submission-note,
@@ -478,6 +484,10 @@
   margin-bottom: 0;
   display: grid;
   gap: 6px;
+}
+
+.form-range {
+  width: 100%;
 }
 
 .form-label {

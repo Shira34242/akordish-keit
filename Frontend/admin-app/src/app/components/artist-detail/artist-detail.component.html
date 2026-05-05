@@ -127,12 +127,12 @@
           target="_blank"
           rel="noopener">
           <div class="artist-hit-image">
-            <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title" loading="lazy">
+            <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט גדול'" loading="lazy">
             <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
           </div>
           <div class="artist-hit-info">
             <span class="artist-card-label">להיט גדול</span>
-            <span class="artist-hit-title">{{ hit.title }}</span>
+            <span class="artist-hit-title">{{ hit.title || 'להיט גדול' }}</span>
             <span class="artist-card-link">YouTube</span>
           </div>
         </a>
@@ -148,14 +148,14 @@
         <a
           *ngFor="let album of artist.albums"
           class="artist-album-card"
-          [href]="album.externalUrl"
-          target="_blank"
+          [attr.href]="album.externalUrl || null"
+          [attr.target]="album.externalUrl ? '_blank' : null"
           rel="noopener">
           <div class="artist-album-cover">
-            <img [src]="album.coverImageUrl" [alt]="album.title" loading="lazy">
+            <img [src]="album.coverImageUrl" [alt]="album.title || 'אלבום'" loading="lazy">
           </div>
           <div class="artist-album-info">
-            <span class="artist-album-title">{{ album.title }}</span>
+            <span class="artist-album-title">{{ album.title || 'אלבום' }}</span>
             <span class="artist-album-year" *ngIf="album.releaseYear">{{ album.releaseYear }}</span>
           </div>
         </a>

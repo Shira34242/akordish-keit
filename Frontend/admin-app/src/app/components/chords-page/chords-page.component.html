@@ -322,6 +322,9 @@
                         <app-song-card [song]="song"></app-song-card>
                     </div>
                 </div>
+                <div class="catalog-load-more" *ngIf="songs.length > 0 && hasMoreSongs && !isLoadingMore">
+                    <button class="btn-secondary" (click)="loadMore()">{{ 'profile.show_more' | translate }}</button>
+                </div>
                 <div class="load-more-indicator" *ngIf="isLoadingMore">
                     <div class="spinner"></div>
                 </div>

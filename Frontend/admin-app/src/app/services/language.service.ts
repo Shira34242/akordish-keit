@@ -500,9 +500,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Events page
     'events.title': 'הופעות',
-    'events.filter_upcoming': 'קרובות',
-    'events.filter_all': 'הכל',
-    'events.filter_past': 'שעברו',
+    'events.filter_upcoming': 'הופעות קרובות',
+    'events.filter_all': 'כל ההופעות',
+    'events.filter_past': 'הופעות שעברו',
     'events.empty': 'אין הופעות להצגה',
     'events.tickets': 'לכרטיסים',
     'events.tab_news': 'חדשות',
@@ -1460,9 +1460,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Events page
     'events.title': 'Shows',
-    'events.filter_upcoming': 'Upcoming',
-    'events.filter_all': 'All',
-    'events.filter_past': 'Past',
+    'events.filter_upcoming': 'Upcoming Shows',
+    'events.filter_all': 'All Shows',
+    'events.filter_past': 'Past Shows',
     'events.empty': 'No Shows to Display',
     'events.tickets': 'Get Tickets',
     'events.tab_news': 'News',

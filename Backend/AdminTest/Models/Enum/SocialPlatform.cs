@@ -11,6 +11,9 @@ namespace AkordishKeit.Models.Enum
         Website = 5,
         Twitter = 6,
         Spotify = 7,
-        Zing = 8
+        Zing = 8,
+        Jewzik = 9,
+        TwentyFourSix = 10,
+        AppleMusic = 11
     }
 }

@@ -251,7 +251,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.scrollObserver.observe(sentinel);
     }
 
-    private loadMore(): void {
+    loadMore(): void {
         if (this.knownChordsMode || this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
         if (this.currentPage >= this.totalPages) return;
         this.isLoadingMore = true;

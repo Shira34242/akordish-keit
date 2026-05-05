@@ -151,9 +151,13 @@
 
             <label class="checkbox-label" style="margin-top: 12px;">
               <input
-                type="checkbox"
-                [(ngModel)]="artistForm.bannerBlurEnabled"
-                name="bannerBlurEnabled"
+                type="range"
+                min="0"
+                max="20"
+                step="1"
+                [(ngModel)]="artistForm.bannerBlur"
+                name="bannerBlur"
+                class="form-range"
               />
               <span>הוסף טשטוש לבאנר</span>
             </label>
@@ -290,7 +294,8 @@
                 placeholder="https://example.com/image.jpg"
                 [showPreview]="false"
               />
-              <input type="url" [(ngModel)]="hit.youTubeUrl" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <small class="field-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
             </div>
           </div>
 
@@ -322,6 +327,7 @@
               />
               <input type="number" min="1900" max="2100" [(ngModel)]="album.releaseYear" [name]="'album_year_' + i" class="form-input" placeholder="שנת יציאה" />
               <input type="url" [(ngModel)]="album.externalUrl" [name]="'album_url_' + i" class="form-input" placeholder="https://..." />
+              <small class="field-error" *ngIf="getAlbumValidationMessage(i) as albumError">{{ albumError }}</small>
             </div>
           </div>
 

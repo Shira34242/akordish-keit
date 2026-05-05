@@ -770,6 +770,12 @@
     padding: var(--space-2xl) 0;
 }
 
+.catalog-load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-2xl);
+}
+
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE — TABLET ≤1024px

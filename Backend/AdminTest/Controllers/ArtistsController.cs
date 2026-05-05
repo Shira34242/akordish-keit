@@ -485,7 +485,14 @@ public class ArtistsController : ControllerBase
                 return Forbid();
             var wasActive = artist.Status == ArtistStatus.Active;
 
+            var richMediaError = ValidateArtistRichMedia(dto);
+            if (richMediaError != null)
+                return BadRequest(new { message = richMediaError });
+
             // עדכון שדות בסיסיים
+            if (!string.IsNullOrWhiteSpace(dto.Name))
+                artist.Name = dto.Name.Trim();
+
             if (!string.IsNullOrWhiteSpace(dto.EnglishName))
                 artist.EnglishName = dto.EnglishName;
 
@@ -506,8 +513,10 @@ public class ArtistsController : ControllerBase
                 artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
 
             // עדכון אירוע מקושר לבאנר
-            if (dto.PerformanceEvent != null || dto.PerformanceIsActive == false)
+            if (dto.PerformanceIsActive == true)
                 await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
+            else if (dto.PerformanceIsActive == false)
+                await SyncPerformanceEventAsync(artist, null);
 
             // רק Admin יכול לעדכן סטטוס ו-Premium
             if (isAdmin)
@@ -858,6 +867,17 @@ public class ArtistsController : ControllerBase
             // קביעת Premium לפי המנוי (אם קיים)
             bool isPremium = activeSubscription?.Plan == SubscriptionPlan.Premium;
 
+            if (!isPremium && (dto.Hits != null || dto.Albums != null))
+            {
+                var richMediaError = ValidateArtistRichMedia(new UpdateArtistDto
+                {
+                    Hits = dto.Hits,
+                    Albums = dto.Albums
+                });
+                if (richMediaError != null)
+                    return BadRequest(new { message = richMediaError });
+            }
+
             // יצירת אומן חדש
             var artist = new Artist
             {
@@ -891,11 +911,23 @@ public class ArtistsController : ControllerBase
             // שדות Premium - רק אם יש מנוי Premium
             if (isPremium)
             {
+                var richMediaError = ValidateArtistRichMedia(dto);
+                if (richMediaError != null)
+                    return BadRequest(new { message = richMediaError });
+
                 artist.BannerImageUrl = dto.BannerImageUrl;
                 artist.BannerGifUrl = dto.BannerGifUrl;
                 artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
                 if (dto.BannerBlur.HasValue)
                     artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
+                artist.PerformanceIsActive = dto.PerformanceIsActive == true;
+                artist.PerformanceImageUrl = FirstText(
+                    dto.PerformanceImageUrl,
+                    dto.PerformanceEvent?.BannerImageUrl,
+                    dto.PerformanceEvent?.ImageUrl);
+                artist.PerformanceTicketUrl = FirstText(
+                    dto.PerformanceTicketUrl,
+                    dto.PerformanceEvent?.TicketUrl);
             }
 
             _context.Artists.Add(artist);
@@ -904,7 +936,9 @@ public class ArtistsController : ControllerBase
             // סנכרון אירוע מקושר (רק למשלם)
             if (isPremium)
             {
-                await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
+                await SyncPerformanceEventAsync(
+                    artist,
+                    artist.PerformanceIsActive ? dto.PerformanceEvent : null);
                 await _context.SaveChangesAsync();
             }
 
@@ -1065,6 +1099,10 @@ public class ArtistsController : ControllerBase
                 return BadRequest("אומן בשם זה כבר קיים במערכת");
 
             // יצירת אומן חדש
+            var richMediaError = ValidateArtistRichMedia(dto);
+            if (richMediaError != null)
+                return BadRequest(new { message = richMediaError });
+
             var artist = new Artist
             {
                 Name = dto.Name,
@@ -1461,6 +1499,59 @@ public class ArtistsController : ControllerBase
         };
     }
 
+    private static string? FirstText(params string?[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim();
+    }
+
+    private static string? ValidateArtistRichMedia(UpdateArtistDto dto)
+    {
+        if (dto.PerformanceIsActive == true)
+        {
+            var performance = dto.PerformanceEvent;
+            if (performance == null)
+                return "יש למלא פרטי הופעה לפני שמירה";
+
+            if (string.IsNullOrWhiteSpace(performance.ImageUrl) &&
+                string.IsNullOrWhiteSpace(performance.BannerImageUrl) &&
+                string.IsNullOrWhiteSpace(dto.PerformanceImageUrl))
+                return "בבאנר הופעה יש להוסיף תמונה לפני שמירה";
+        }
+
+        if (dto.Hits != null)
+        {
+            for (var i = 0; i < dto.Hits.Count; i++)
+            {
+                var hit = dto.Hits[i];
+                var isBlank = string.IsNullOrWhiteSpace(hit.Title) &&
+                    string.IsNullOrWhiteSpace(hit.ImageUrl) &&
+                    string.IsNullOrWhiteSpace(hit.YouTubeUrl);
+                var isComplete = !string.IsNullOrWhiteSpace(hit.YouTubeUrl);
+
+                if (!isBlank && !isComplete)
+                    return $"להיט מספר {i + 1}: יש למלא קישור YouTube, או למחוק את השורה";
+            }
+        }
+
+        if (dto.Albums != null)
+        {
+            for (var i = 0; i < dto.Albums.Count; i++)
+            {
+                var album = dto.Albums[i];
+                var isBlank = string.IsNullOrWhiteSpace(album.Title) &&
+                    string.IsNullOrWhiteSpace(album.CoverImageUrl) &&
+                    string.IsNullOrWhiteSpace(album.ExternalUrl) &&
+                    !album.ReleaseYear.HasValue;
+                var isComplete = !string.IsNullOrWhiteSpace(album.CoverImageUrl);
+
+                if (!isBlank && !isComplete)
+                    return $"אלבום מספר {i + 1}: יש להוסיף תמונת עטיפה, או למחוק את השורה";
+            }
+        }
+
+        return null;
+    }
+
     private async Task SyncArtistHitsAsync(int artistId, List<AddArtistHitDto>? hits)
     {
         if (hits == null) return;
@@ -1470,12 +1561,12 @@ public class ArtistsController : ControllerBase
             .ToListAsync();
         _context.ArtistHits.RemoveRange(existingHits);
 
-        foreach (var hit in hits.Where(h => !string.IsNullOrWhiteSpace(h.Title) && !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
+        foreach (var hit in hits.Where(h => !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
         {
             _context.ArtistHits.Add(new ArtistHit
             {
                 ArtistId = artistId,
-                Title = hit.Title.Trim(),
+                Title = string.IsNullOrWhiteSpace(hit.Title) ? "להיט גדול" : hit.Title.Trim(),
                 ImageUrl = string.IsNullOrWhiteSpace(hit.ImageUrl) ? null : hit.ImageUrl.Trim(),
                 YouTubeUrl = hit.YouTubeUrl.Trim(),
                 DisplayOrder = hit.DisplayOrder,
@@ -1494,18 +1585,15 @@ public class ArtistsController : ControllerBase
             .ToListAsync();
         _context.ArtistAlbums.RemoveRange(existingAlbums);
 
-        foreach (var album in albums.Where(a =>
-            !string.IsNullOrWhiteSpace(a.Title) &&
-            !string.IsNullOrWhiteSpace(a.CoverImageUrl) &&
-            !string.IsNullOrWhiteSpace(a.ExternalUrl)))
+        foreach (var album in albums.Where(a => !string.IsNullOrWhiteSpace(a.CoverImageUrl)))
         {
             _context.ArtistAlbums.Add(new ArtistAlbum
             {
                 ArtistId = artistId,
-                Title = album.Title.Trim(),
+                Title = string.IsNullOrWhiteSpace(album.Title) ? "אלבום" : album.Title.Trim(),
                 CoverImageUrl = album.CoverImageUrl.Trim(),
                 ReleaseYear = album.ReleaseYear,
-                ExternalUrl = album.ExternalUrl.Trim(),
+                ExternalUrl = string.IsNullOrWhiteSpace(album.ExternalUrl) ? string.Empty : album.ExternalUrl.Trim(),
                 DisplayOrder = album.DisplayOrder,
                 IsActive = album.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -1524,9 +1612,16 @@ public class ArtistsController : ControllerBase
         {
             // ניתוק האירוע (ללא מחיקה — האירוע עצמו נשמר במערכת)
             artist.PerformanceEventId = null;
+            artist.PerformanceIsActive = false;
+            artist.PerformanceImageUrl = null;
+            artist.PerformanceTicketUrl = null;
             return;
         }
 
+        var imageUrl = FirstText(input.ImageUrl, input.BannerImageUrl, artist.PerformanceImageUrl) ?? string.Empty;
+        var bannerImageUrl = FirstText(input.BannerImageUrl, input.ImageUrl, artist.PerformanceImageUrl);
+        var ticketUrl = FirstText(input.TicketUrl, artist.PerformanceTicketUrl) ?? string.Empty;
+        var eventDate = input.EventDate == default ? DateTime.UtcNow : input.EventDate;
         Event? eventEntity = null;
 
         if (input.EventId.HasValue)
@@ -1542,10 +1637,10 @@ public class ArtistsController : ControllerBase
             {
                 Name = string.IsNullOrWhiteSpace(input.Name) ? artist.Name : input.Name.Trim(),
                 Description = input.Description?.Trim(),
-                ImageUrl = input.ImageUrl?.Trim() ?? string.Empty,
-                BannerImageUrl = string.IsNullOrWhiteSpace(input.BannerImageUrl) ? null : input.BannerImageUrl.Trim(),
-                TicketUrl = input.TicketUrl?.Trim() ?? string.Empty,
-                EventDate = input.EventDate,
+                ImageUrl = imageUrl,
+                BannerImageUrl = bannerImageUrl,
+                TicketUrl = ticketUrl,
+                EventDate = eventDate,
                 Location = input.Location?.Trim(),
                 Price = input.Price,
                 ArtistName = artist.Name,
@@ -1560,12 +1655,10 @@ public class ArtistsController : ControllerBase
         {
             eventEntity.Name = string.IsNullOrWhiteSpace(input.Name) ? eventEntity.Name : input.Name.Trim();
             eventEntity.Description = input.Description?.Trim();
-            if (!string.IsNullOrWhiteSpace(input.ImageUrl))
-                eventEntity.ImageUrl = input.ImageUrl.Trim();
-            eventEntity.BannerImageUrl = string.IsNullOrWhiteSpace(input.BannerImageUrl) ? null : input.BannerImageUrl.Trim();
-            if (!string.IsNullOrWhiteSpace(input.TicketUrl))
-                eventEntity.TicketUrl = input.TicketUrl.Trim();
-            eventEntity.EventDate = input.EventDate;
+            eventEntity.ImageUrl = imageUrl;
+            eventEntity.BannerImageUrl = bannerImageUrl;
+            eventEntity.TicketUrl = ticketUrl;
+            eventEntity.EventDate = eventDate;
             eventEntity.Location = input.Location?.Trim();
             eventEntity.Price = input.Price;
             eventEntity.IsActive = input.IsActive;
@@ -1586,6 +1679,9 @@ public class ArtistsController : ControllerBase
         }
 
         artist.PerformanceEventId = eventEntity.Id;
+        artist.PerformanceIsActive = input.IsActive;
+        artist.PerformanceImageUrl = bannerImageUrl ?? imageUrl;
+        artist.PerformanceTicketUrl = ticketUrl;
     }
 
     /// <summary>

@@ -34,7 +34,7 @@
 
   /* Scrollbar */
   --site-scrollbar-size: 9px;
-  --site-scrollbar-track: #F2F2F2;
+  --site-scrollbar-track: transparent;
   --site-scrollbar-thumb: #404040;
   --site-scrollbar-thumb-hover: #000000;
 }
@@ -127,7 +127,6 @@ body::-webkit-scrollbar-thumb,
 .dropdown-list::-webkit-scrollbar-thumb {
   background: var(--site-scrollbar-thumb);
   border-radius: 8px;
-  border: 2px solid var(--site-scrollbar-track);
 }
 
 html::-webkit-scrollbar-thumb:hover,
@@ -180,4 +179,22 @@ body::-webkit-scrollbar-button,
   .dropdown-list {
     scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
   }
+}
+
+/* ========================================
+   Events page — single-screen, no scroll, no footer
+   ======================================== */
+html:has(app-events-page),
+body:has(app-events-page) {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body:has(app-events-page) .main-footer {
+  display: none;
+}
+
+body:has(app-events-page) .main-content {
+  min-height: 0;
+  flex: 0 0 auto;
 }

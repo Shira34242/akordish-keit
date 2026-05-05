@@ -281,18 +281,39 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     }
 
     const currentSourceIndex = this.normalizeIndex(Math.round(this.activePosition), sourceTotal);
-    this.activePosition = this.loopOffset + currentSourceIndex;
+    const newPosition = this.loopOffset + currentSourceIndex;
 
-    if (!shouldAnimate) {
+    if (this.activePosition === newPosition) {
       return;
     }
 
+    if (!shouldAnimate) {
+      this.activePosition = newPosition;
+      return;
+    }
+
+    const items = this.carouselItems?.toArray() ?? [];
+    items.forEach(item => {
+      (item.nativeElement as HTMLElement).style.transition = 'none';
+    });
+
+    this.activePosition = newPosition;
     this.isRepositioning = true;
+    this.activeIndex = Math.round(this.activePosition);
+
+    items.forEach((item, index) => {
+      this.displayItem(item.nativeElement, index, items.length);
+    });
+
+    if (items[0]) {
+      void (items[0].nativeElement as HTMLElement).offsetHeight;
+    }
+
     requestAnimationFrame(() => {
-      this.animate();
-      requestAnimationFrame(() => {
-        this.isRepositioning = false;
+      items.forEach(item => {
+        (item.nativeElement as HTMLElement).style.transition = '';
       });
+      this.isRepositioning = false;
     });
   }
 

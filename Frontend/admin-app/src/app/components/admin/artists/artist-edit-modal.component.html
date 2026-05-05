@@ -35,11 +35,8 @@
               name="name"
               class="form-input"
               placeholder="שם האומן בעברית"
-              [readonly]="isEditMode"
-              [class.readonly]="isEditMode"
               required
             />
-            <small class="form-hint" *ngIf="isEditMode">לא ניתן לשנות את שם האומן</small>
           </div>
 
           <div class="form-group">
@@ -137,9 +134,13 @@
         <div class="form-group">
           <label class="checkbox-label">
             <input
-              type="checkbox"
-              [(ngModel)]="editForm.bannerBlurEnabled"
-              name="bannerBlurEnabled"
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              [(ngModel)]="editForm.bannerBlur"
+              name="bannerBlur"
+              class="form-range"
             />
             <span>הוסף טשטוש לבאנר</span>
           </label>
@@ -185,6 +186,7 @@
               </div>
             </div>
           </div>
+          <small class="form-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
         </div>
 
         <button type="button" class="btn-add" (click)="addSocialLink()">
@@ -205,6 +207,9 @@
                 <option [value]="3">YouTube</option>
                 <option [value]="7">Spotify</option>
                 <option [value]="8">Zing</option>
+                <option [value]="11">Apple Music</option>
+                <option [value]="9">ג'וזיק</option>
+                <option [value]="10">24Six</option>
               </select>
             </div>
             <div class="form-group">
@@ -217,6 +222,7 @@
               </div>
             </div>
           </div>
+          <small class="form-error" *ngIf="getAlbumValidationMessage(i) as albumError">{{ albumError }}</small>
         </div>
 
         <button type="button" class="btn-add" (click)="addMusicLink()">
@@ -321,7 +327,7 @@
 
             <div class="form-group" style="flex: 2;">
               <label class="form-label">קישור YouTube</label>
-              <input type="url" [(ngModel)]="hit.youTubeUrl" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
             </div>
 
             <div class="form-group" style="flex: 0 0 60px;">
@@ -494,55 +500,6 @@
               />
               <span>אומן Premium (גישה לגלריה, סרטונים, באנר GIF)</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Statistics (Read Only - Edit Mode Only) -->
-      <div class="form-section" *ngIf="isEditMode && artist">
-        <h2 class="section-title">סטטיסטיקות</h2>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">שירים</label>
-            <input
-              type="text"
-              [value]="artist.songCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">כתבות</label>
-            <input
-              type="text"
-              [value]="artist.articleCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">הופעות קרובות</label>
-            <input
-              type="text"
-              [value]="artist.upcomingEventCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">נוצר בתאריך</label>
-            <input
-              type="text"
-              [value]="artist.createdAt | date: 'dd/MM/yyyy HH:mm'"
-              class="form-input readonly"
-              readonly
-            />
           </div>
         </div>
       </div>

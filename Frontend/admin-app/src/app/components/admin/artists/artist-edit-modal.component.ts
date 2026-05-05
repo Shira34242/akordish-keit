@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
+import { SongService } from '../../../services/song.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import {
   Artist,
@@ -80,7 +81,7 @@ export class ArtistEditModalComponent implements OnInit {
   error: string | null = null;
   isEditMode = false;
 
-  readonly MUSIC_PLATFORMS = [3, 7, 8]; // YouTube, Spotify, Zing
+  readonly MUSIC_PLATFORMS = [3, 7, 8, 9, 10, 11]; // YouTube, Spotify, Zing, Jewzik, 24Six, Apple Music
 
   readonly GALLERY_MIN_ITEMS = 5;
 
@@ -93,7 +94,7 @@ export class ArtistEditModalComponent implements OnInit {
     imageUrl: '',
     bannerMediaType: 'image' as BannerMediaType,
     bannerUrl: '',           // URL פעיל אחד לפי הסוג
-    bannerBlurEnabled: false,
+    bannerBlur: 0,
     websiteUrl: '',
     status: ArtistStatus.Pending,
     isPremium: false,
@@ -119,7 +120,7 @@ export class ArtistEditModalComponent implements OnInit {
 
   ArtistStatus = ArtistStatus;
 
-  constructor(private artistService: ArtistService) { }
+  constructor(private artistService: ArtistService, private songService: SongService) { }
 
   ngOnInit(): void {
     this.isEditMode = this.artistId !== null;
@@ -165,7 +166,7 @@ export class ArtistEditModalComponent implements OnInit {
 
         const ev = artist.performanceEvent;
         const performance: PerformanceEventForm = {
-          enabled: !!(artist.performanceIsActive && ev),
+          enabled: !!artist.performanceIsActive,
           eventId: ev?.id,
           name: ev?.name || '',
           description: ev?.description || '',
@@ -186,7 +187,7 @@ export class ArtistEditModalComponent implements OnInit {
           imageUrl: artist.imageUrl || '',
           bannerMediaType: bannerType,
           bannerUrl: bannerUrl,
-          bannerBlurEnabled: (artist.bannerBlur ?? 0) > 0,
+          bannerBlur: this.normalizedBannerBlur(artist.bannerBlur),
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
@@ -252,6 +253,7 @@ export class ArtistEditModalComponent implements OnInit {
     const bannerUrl = this.optionalText(this.editForm.bannerUrl);
 
     const commonPayload: Partial<UpdateArtistDto> = {
+      name: this.editForm.name.trim(),
       englishName: this.optionalText(this.editForm.englishName),
       shortBio: this.optionalText(this.editForm.shortBio),
       biography: this.optionalText(this.editForm.biography),
@@ -260,7 +262,7 @@ export class ArtistEditModalComponent implements OnInit {
       bannerImageUrl: bannerType === 'image' ? bannerUrl : undefined,
       bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') ? bannerUrl : undefined,
       bannerMediaType: bannerUrl ? bannerType : null,
-      bannerBlur: this.editForm.bannerBlurEnabled ? 12 : 0,
+      bannerBlur: this.normalizedBannerBlur(this.editForm.bannerBlur),
       websiteUrl: this.optionalText(this.editForm.websiteUrl),
       status: Number(this.editForm.status),
       isPremium: this.editForm.isPremium,
@@ -370,6 +372,23 @@ export class ArtistEditModalComponent implements OnInit {
     this.editForm.hits.splice(index, 1);
   }
 
+  onHitYouTubeUrlChange(index: number): void {
+    const hit = this.editForm.hits[index];
+    if (!hit || !hit.youTubeUrl?.trim() || hit.imageUrl?.trim()) return;
+
+    this.songService.getYouTubeMetadata(hit.youTubeUrl.trim()).subscribe({
+      next: (meta) => {
+        if (meta?.title && !hit.title?.trim()) {
+          hit.title = meta.title;
+        }
+        if (meta?.thumbnailUrl && !hit.imageUrl?.trim()) {
+          hit.imageUrl = meta.thumbnailUrl;
+        }
+      },
+      error: () => { /* ignore — user can add image manually */ }
+    });
+  }
+
   addAlbum(): void {
     this.editForm.albums.push({
       title: '',
@@ -410,14 +429,16 @@ export class ArtistEditModalComponent implements OnInit {
   private buildPerformanceEvent(): PerformanceEventInput | null {
     const p = this.editForm.performance;
     if (!p.enabled) return null;
+    const imageUrl = this.optionalText(p.imageUrl) || this.optionalText(p.bannerImageUrl) || '';
+    const bannerImageUrl = this.optionalText(p.bannerImageUrl) || imageUrl;
     return {
       eventId: p.eventId,
-      name: p.name.trim(),
+      name: p.name?.trim() || this.editForm.name.trim(),
       description: p.description?.trim() || undefined,
-      imageUrl: p.imageUrl?.trim() || '',
-      bannerImageUrl: p.bannerImageUrl?.trim() || undefined,
+      imageUrl,
+      bannerImageUrl,
       ticketUrl: p.ticketUrl?.trim() || '',
-      eventDate: new Date(p.eventDate).toISOString(),
+      eventDate: p.eventDate ? new Date(p.eventDate).toISOString() : new Date().toISOString(),
       location: p.location?.trim() || undefined,
       price: p.price ?? null,
       isActive: p.isActive
@@ -427,43 +448,67 @@ export class ArtistEditModalComponent implements OnInit {
   private validateRichContent(): string | null {
     const p = this.editForm.performance;
     if (p.enabled) {
-      if (!p.name?.trim()) return 'יש למלא שם הופעה לפני שמירה';
-      if (!p.eventDate) return 'יש למלא תאריך הופעה לפני שמירה';
-      if (!p.ticketUrl?.trim()) return 'יש למלא קישור לכרטיסים לפני שמירה';
-      if (!p.imageUrl?.trim()) return 'יש להעלות או להדביק תמונת הופעה לפני שמירה';
-      if (!p.bannerImageUrl?.trim()) return 'יש להעלות או להדביק תמונת באנר להופעה לפני שמירה';
-      if (Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+      this.mirrorPerformanceImageFields(p);
+      if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
     }
 
     for (let i = 0; i < this.editForm.hits.length; i++) {
-      const hit = this.editForm.hits[i];
-      if (!this.hasHitContent(hit)) continue;
-      if (!hit.title?.trim()) return `יש למלא שם ללהיט מספר ${i + 1}`;
-      if (!hit.youTubeUrl?.trim()) return `יש למלא קישור יוטיוב ללהיט מספר ${i + 1}`;
+      const message = this.getHitValidationMessage(i);
+      if (message) return message;
     }
 
     for (let i = 0; i < this.editForm.albums.length; i++) {
-      const album = this.editForm.albums[i];
-      if (!this.hasAlbumContent(album)) continue;
-      if (!album.title?.trim()) return `יש למלא כותרת לאלבום מספר ${i + 1}`;
-      if (!album.coverImageUrl?.trim()) return `יש להעלות או להדביק תמונת עטיפה לאלבום מספר ${i + 1}`;
-      if (!album.externalUrl?.trim()) return `יש למלא קישור חיצוני לאלבום מספר ${i + 1}`;
+      const message = this.getAlbumValidationMessage(i);
+      if (message) return message;
     }
 
     return null;
   }
 
-  private hasHitContent(hit: HitForm): boolean {
-    return !!(hit.title?.trim() || hit.imageUrl?.trim() || hit.youTubeUrl?.trim());
+  getHitValidationMessage(index: number): string | null {
+    const hit = this.editForm.hits[index];
+    if (!hit || this.isBlankHit(hit) || this.isCompleteHit(hit)) return null;
+    return `להיט מספר ${index + 1}: יש להוסיף קישור YouTube, או למחוק את השורה`;
   }
 
-  private hasAlbumContent(album: AlbumForm): boolean {
-    return !!(album.title?.trim() || album.coverImageUrl?.trim() || album.externalUrl?.trim() || album.releaseYear);
+  getAlbumValidationMessage(index: number): string | null {
+    const album = this.editForm.albums[index];
+    if (!album || this.isBlankAlbum(album) || this.isCompleteAlbum(album)) return null;
+    return `אלבום מספר ${index + 1}: יש להוסיף תמונת עטיפה, או למחוק את השורה`;
+  }
+
+  private isBlankHit(hit: HitForm): boolean {
+    return !hit.title?.trim() && !hit.imageUrl?.trim() && !hit.youTubeUrl?.trim();
+  }
+
+  private isCompleteHit(hit: HitForm): boolean {
+    return !!hit.youTubeUrl?.trim();
+  }
+
+  private isBlankAlbum(album: AlbumForm): boolean {
+    return !album.title?.trim() && !album.coverImageUrl?.trim() && !album.externalUrl?.trim() && !album.releaseYear;
+  }
+
+  private isCompleteAlbum(album: AlbumForm): boolean {
+    return !!album.coverImageUrl?.trim();
   }
 
   private optionalText(value: string | undefined): string | undefined {
     const trimmed = value?.trim();
     return trimmed || undefined;
+  }
+
+  private mirrorPerformanceImageFields(performance: PerformanceEventForm): void {
+    const imageUrl = performance.imageUrl?.trim();
+    const bannerImageUrl = performance.bannerImageUrl?.trim();
+    if (!imageUrl && bannerImageUrl) performance.imageUrl = bannerImageUrl;
+    if (!bannerImageUrl && imageUrl) performance.bannerImageUrl = imageUrl;
+  }
+
+  private normalizedBannerBlur(value: number | null | undefined): number {
+    const numericValue = Number(value) || 0;
+    return Math.max(0, Math.min(20, numericValue));
   }
 
   private normalizedLinks() {
@@ -501,9 +546,9 @@ export class ArtistEditModalComponent implements OnInit {
 
   private normalizedHits() {
     return this.editForm.hits
-      .filter(hit => hit.title?.trim() && hit.youTubeUrl?.trim())
+      .filter(hit => hit.youTubeUrl?.trim())
       .map((hit, index) => ({
-        title: hit.title.trim(),
+        title: hit.title?.trim() || 'להיט גדול',
         imageUrl: this.optionalText(hit.imageUrl),
         youTubeUrl: hit.youTubeUrl.trim(),
         displayOrder: index,
@@ -513,12 +558,12 @@ export class ArtistEditModalComponent implements OnInit {
 
   private normalizedAlbums() {
     return this.editForm.albums
-      .filter(album => album.title?.trim() && album.coverImageUrl?.trim() && album.externalUrl?.trim())
+      .filter(album => album.coverImageUrl?.trim())
       .map((album, index) => ({
-        title: album.title.trim(),
+        title: album.title?.trim() || 'אלבום',
         coverImageUrl: album.coverImageUrl.trim(),
         releaseYear: album.releaseYear ?? undefined,
-        externalUrl: album.externalUrl.trim(),
+        externalUrl: album.externalUrl?.trim() || '',
         displayOrder: index,
         isActive: album.isActive
       }));

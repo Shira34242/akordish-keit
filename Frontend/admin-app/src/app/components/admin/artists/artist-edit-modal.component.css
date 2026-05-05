@@ -126,6 +126,7 @@
 .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; }
 
 .form-hint { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #000000; opacity: 0.6; }
+.form-error { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 800; color: #000000; }
 .char-counter { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #000000; opacity: 0.6; text-align: left; }
 .char-counter.warning { color: #000000; }
 .char-counter.danger { opacity: 1; font-weight: 800; }
