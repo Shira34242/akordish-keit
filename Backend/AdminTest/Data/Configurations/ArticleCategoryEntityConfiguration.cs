@@ -16,7 +16,7 @@ public class ArticleCategoryEntityConfiguration : IEntityTypeConfiguration<Artic
 
         // Properties
         builder.Property(e => e.Id)
-               .ValueGeneratedNever(); // We'll manually set IDs from the enum
+               .ValueGeneratedNever(); // IDs are assigned by the API so existing category IDs stay stable.
 
         builder.Property(e => e.Name)
                .IsRequired()

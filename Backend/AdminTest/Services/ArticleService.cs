@@ -206,7 +206,7 @@ public class ArticleService : IArticleService
 
         // Add categories
         if (dto.CategoryIds != null && dto.CategoryIds.Any())
-            AddArticleCategories(article.Id, dto.CategoryIds);
+            await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
 
         // Auto-compute ContentType from categories' sections (overriding the value from the DTO).
         article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
@@ -287,7 +287,7 @@ public class ArticleService : IArticleService
         // Update categories
         _context.ArticleArticleCategories.RemoveRange(article.ArticleCategories);
         if (dto.CategoryIds != null && dto.CategoryIds.Any())
-            AddArticleCategories(article.Id, dto.CategoryIds);
+            await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
 
         // Auto-compute ContentType from the new categories' sections.
         article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
@@ -671,7 +671,7 @@ public class ArticleService : IArticleService
         await _context.SaveChangesAsync();
 
         var categoryIds = original.ArticleCategories.Select(ac => ac.CategoryId).ToList();
-        if (categoryIds.Any()) AddArticleCategories(newArticle.Id, categoryIds);
+        if (categoryIds.Any()) await AddArticleCategoriesAsync(newArticle.Id, categoryIds);
 
         var tagIds = original.ArticleTags.Select(at => at.TagId).ToList();
         if (tagIds.Any()) AddArticleTags(newArticle.Id, tagIds);
@@ -786,6 +786,7 @@ public class ArticleService : IArticleService
 
             CategoryIds = article.ArticleCategories.Select(ac => ac.CategoryId).ToList(),
             CategoryNames = article.ArticleCategories
+                .Where(ac => ac.Category != null)
                 .Select(ac => ac.Category.DisplayName)
                 .ToList(),
             ContentType = article.ContentType,
@@ -1092,9 +1093,14 @@ public class ArticleService : IArticleService
         return null;
     }
 
-    private void AddArticleCategories(int articleId, List<int> categoryIds)
+    private async Task AddArticleCategoriesAsync(int articleId, List<int> categoryIds)
     {
-        foreach (var categoryId in categoryIds)
+        var validCategoryIds = await _context.ArticleCategories
+            .Where(c => categoryIds.Contains(c.Id))
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        foreach (var categoryId in validCategoryIds.Distinct())
         {
             _context.ArticleArticleCategories.Add(new ArticleArticleCategory
             {

@@ -97,6 +97,7 @@ public class ArticleCategoriesController : ControllerBase
 
         var category = new ArticleCategoryEntity
         {
+            Id = await GetNextCategoryIdAsync(),
             Name = name,
             DisplayName = name,
             Section = (ArticleCategorySection)dto.Section
@@ -145,10 +146,17 @@ public class ArticleCategoriesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteArticleCategory(int id)
     {
-        var category = await _context.ArticleCategories.FindAsync(id);
-        if (category == null) return NotFound();
-
-        await DeleteCategoriesAndDetachReferencesAsync(new[] { id });
+        try
+        {
+            await DeleteCategoriesAndDetachReferencesAsync(new[] { id });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = $"לא ניתן למחוק את הקטגוריה. סיבה: {ex.GetBaseException().Message}"
+            });
+        }
 
         return NoContent();
     }
@@ -159,14 +167,33 @@ public class ArticleCategoriesController : ControllerBase
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
 
-        var categories = await _context.ArticleCategories
+        var categoryIds = await _context.ArticleCategories
             .Where(c => dto.Ids.Contains(c.Id))
-            .ToListAsync();
+            .Select(c => c.Id)
+            .ToArrayAsync();
 
-        var categoryIds = categories.Select(c => c.Id).ToArray();
-        await DeleteCategoriesAndDetachReferencesAsync(categoryIds);
+        try
+        {
+            await DeleteCategoriesAndDetachReferencesAsync(categoryIds);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = $"לא ניתן למחוק את הקטגוריות. סיבה: {ex.GetBaseException().Message}"
+            });
+        }
 
-        return Ok(new { deletedCount = categories.Count });
+        return Ok(new { deletedCount = categoryIds.Length });
+    }
+
+    private async Task<int> GetNextCategoryIdAsync()
+    {
+        var maxId = await _context.ArticleCategories
+            .Select(c => (int?)c.Id)
+            .MaxAsync() ?? 0;
+
+        return maxId + 1;
     }
 
     private async Task DeleteCategoriesAndDetachReferencesAsync(int[] categoryIds)
@@ -174,56 +201,30 @@ public class ArticleCategoriesController : ControllerBase
         var ids = categoryIds.Distinct().ToArray();
         if (ids.Length == 0) return;
 
-        var idList = string.Join(",", ids);
-
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        await _context.Database.ExecuteSqlRawAsync($@"
-DECLARE @dropLegacyArticleCategoryFks nvarchar(max) = N'';
+        var articleLinks = await _context.ArticleArticleCategories
+            .Where(ac => ids.Contains(ac.CategoryId))
+            .ToListAsync();
+        _context.ArticleArticleCategories.RemoveRange(articleLinks);
 
-SELECT @dropLegacyArticleCategoryFks +=
-    N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(parentTable.schema_id)) + N'.' + QUOTENAME(parentTable.name) +
-    N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';'
-FROM sys.foreign_keys fk
-JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-JOIN sys.tables parentTable ON parentTable.object_id = fk.parent_object_id
-JOIN sys.tables referencedTable ON referencedTable.object_id = fk.referenced_object_id
-WHERE parentTable.name = N'Articles'
-  AND referencedTable.name = N'ArticleCategories';
+        var affectedSections = await _context.NewsPageSections
+            .Where(s => s.CategoryId.HasValue && ids.Contains(s.CategoryId.Value))
+            .ToListAsync();
 
-IF @dropLegacyArticleCategoryFks <> N''
-BEGIN
-    EXEC sp_executesql @dropLegacyArticleCategoryFks;
-END
+        foreach (var section in affectedSections)
+        {
+            section.CategoryId = null;
+            section.IsActive = false;
+            section.UpdatedAt = DateTime.UtcNow;
+        }
 
-IF OBJECT_ID(N'Articles', N'U') IS NOT NULL
-   AND COL_LENGTH(N'Articles', N'CategoryId') IS NOT NULL
-   AND COLUMNPROPERTY(OBJECT_ID(N'Articles'), N'CategoryId', 'AllowsNull') = 1
-BEGIN
-    UPDATE [Articles]
-    SET [CategoryId] = NULL
-    WHERE [CategoryId] IN ({idList});
-END
+        var categories = await _context.ArticleCategories
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
+        _context.ArticleCategories.RemoveRange(categories);
 
-IF OBJECT_ID(N'ArticleArticleCategories', N'U') IS NOT NULL
-BEGIN
-    DELETE FROM [ArticleArticleCategories]
-    WHERE [CategoryId] IN ({idList});
-END
-
-IF OBJECT_ID(N'NewsPageSections', N'U') IS NOT NULL
-   AND COL_LENGTH(N'NewsPageSections', N'CategoryId') IS NOT NULL
-BEGIN
-    UPDATE [NewsPageSections]
-    SET [CategoryId] = NULL
-    WHERE [CategoryId] IN ({idList});
-END
-
-IF OBJECT_ID(N'ArticleCategories', N'U') IS NOT NULL
-BEGIN
-    DELETE FROM [ArticleCategories]
-    WHERE [Id] IN ({idList});
-END");
+        await _context.SaveChangesAsync();
 
         await transaction.CommitAsync();
     }

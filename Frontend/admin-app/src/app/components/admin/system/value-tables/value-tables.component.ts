@@ -153,7 +153,8 @@ export class ValueTablesComponent implements OnInit {
             next: () => this.loadItems(),
             error: (err) => {
                 console.error(err);
-                alert('לא ניתן למחוק פריט זה (ייתכן שהוא בשימוש)');
+                const message = err?.error?.message || err?.message || err?.error || 'לא ניתן למחוק פריט זה';
+                alert(typeof message === 'string' ? message : 'לא ניתן למחוק פריט זה');
             }
         });
     }
@@ -164,7 +165,7 @@ export class ValueTablesComponent implements OnInit {
             next: () => this.loadItems(),
             error: (err) => {
                 console.error(err);
-                const message = err?.error?.message || err?.error || 'לא ניתן היה למחוק חלק מהפריטים (ייתכן שהם בשימוש)';
+                const message = err?.error?.message || err?.message || err?.error || 'לא ניתן היה למחוק חלק מהפריטים (ייתכן שהם בשימוש)';
                 alert(typeof message === 'string' ? message : 'לא ניתן היה למחוק חלק מהפריטים');
             }
         });

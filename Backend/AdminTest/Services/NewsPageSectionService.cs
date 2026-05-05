@@ -116,6 +116,11 @@ namespace AkordishKeit.Services
                 .AsQueryable();
 
             // SectionType 0: filter by category
+            if (section.SectionType == 0 && !section.CategoryId.HasValue)
+            {
+                return new List<ArticleDto>();
+            }
+
             if (section.SectionType == 0 && section.CategoryId.HasValue)
             {
                 query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == section.CategoryId.Value));

@@ -591,9 +591,8 @@ export class ArticleFormComponent implements OnInit {
       return false;
     }
 
-    if (!this.article.categoryIds || this.article.categoryIds.length === 0) {
-      alert('נא לבחור לפחות קטגוריה אחת');
-      return false;
+    if (!this.article.categoryIds) {
+      this.article.categoryIds = [];
     }
 
     return true;

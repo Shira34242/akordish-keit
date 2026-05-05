@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NewsPageSectionService } from '../../../../services/news-page-section.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { RequiredFieldFeedbackService } from '../../../../services/required-field-feedback.service';
+import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 
 import {
   NewsPageSection,
@@ -12,7 +13,10 @@ import {
   UpdateNewsPageSectionDto
 } from '../../../../models/news-page-section.model';
 
-interface CategoryOption { id: number; name: string; }
+interface CategoryOption extends SystemItem {
+  section?: number;
+}
+
 interface ContentTypeOption { id: number; name: string; }
 
 @Component({
@@ -25,14 +29,15 @@ interface ContentTypeOption { id: number; name: string; }
 export class NewsPageSectionsMangementComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly service = inject(NewsPageSectionService);
+  private readonly systemTablesService = inject(SystemTablesService);
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   sections: NewsPageSection[] = [];
+  categories: CategoryOption[] = [];
   loading = false;
   saving = false;
 
-  // טופס הוספה / עריכה
   showForm = false;
   editingSection: NewsPageSection | null = null;
   formTitle = '';
@@ -44,31 +49,24 @@ export class NewsPageSectionsMangementComponent implements OnInit {
 
   readonly NewsSectionType = NewsSectionType;
 
-  readonly categories: CategoryOption[] = [
-    { id: 1,  name: 'כללי' },
-    { id: 2,  name: 'חדשות' },
-    { id: 3,  name: 'ביקורות' },
-    { id: 4,  name: 'ראיונות' },
-    { id: 5,  name: 'כתבות מיוחדות' },
-    { id: 6,  name: 'כתבות הופעות' },
-    { id: 7,  name: 'ביקורות אלבומים' },
-    { id: 8,  name: 'טכנולוגיה מוזיקלית' },
-    { id: 9,  name: 'לימוד וחינוך' },
-    { id: 10, name: 'פופולארי' },
-    { id: 11, name: 'קליפים' },
-    { id: 12, name: 'בלוג' },
-    { id: 13, name: 'דעה' },
-    { id: 14, name: 'מצעדים' },
-    { id: 15, name: 'מאחורי הקלעים' }
-  ];
-
   readonly contentTypes: ContentTypeOption[] = [
     { id: 0, name: 'חדשות' },
     { id: 1, name: 'בלוג' }
   ];
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadSections();
+  }
+
+  loadCategories(): void {
+    this.systemTablesService.getItems('article-categories', 1, 200).subscribe({
+      next: (result) => {
+        this.categories = (result.items as CategoryOption[])
+          .sort((a, b) => (a.section ?? 0) - (b.section ?? 0) || a.name.localeCompare(b.name, 'he'));
+      },
+      error: (err) => console.error('Error loading article categories for news sections', err)
+    });
   }
 
   loadSections(): void {
@@ -139,21 +137,22 @@ export class NewsPageSectionsMangementComponent implements OnInit {
         next: () => { this.saving = false; this.closeForm(); this.loadSections(); },
         error: () => { this.saving = false; alert('שגיאה בשמירה'); }
       });
-    } else {
-      const dto: CreateNewsPageSectionDto = {
-        title: this.formTitle.trim(),
-        sectionType: this.formSectionType,
-        categoryId: this.formSectionType === NewsSectionType.ByCategory ? this.formCategoryId! : undefined,
-        contentTypeId: this.formSectionType === NewsSectionType.ByContentType ? this.formContentTypeId! : undefined,
-        displayOrder: this.sections.length + 1,
-        isActive: this.formIsActive,
-        articleCount: this.formArticleCount
-      };
-      this.service.createSection(dto).subscribe({
-        next: () => { this.saving = false; this.closeForm(); this.loadSections(); },
-        error: () => { this.saving = false; alert('שגיאה ביצירה'); }
-      });
+      return;
     }
+
+    const dto: CreateNewsPageSectionDto = {
+      title: this.formTitle.trim(),
+      sectionType: this.formSectionType,
+      categoryId: this.formSectionType === NewsSectionType.ByCategory ? this.formCategoryId! : undefined,
+      contentTypeId: this.formSectionType === NewsSectionType.ByContentType ? this.formContentTypeId! : undefined,
+      displayOrder: this.sections.length + 1,
+      isActive: this.formIsActive,
+      articleCount: this.formArticleCount
+    };
+    this.service.createSection(dto).subscribe({
+      next: () => { this.saving = false; this.closeForm(); this.loadSections(); },
+      error: () => { this.saving = false; alert('שגיאה ביצירה'); }
+    });
   }
 
   toggleActive(section: NewsPageSection): void {
@@ -200,11 +199,12 @@ export class NewsPageSectionsMangementComponent implements OnInit {
   }
 
   getCategoryName(id: number | undefined): string {
-    return this.categories.find(c => c.id === id)?.name ?? '—';
+    if (!id) return 'ללא קטגוריה';
+    return this.categories.find(c => c.id === id)?.name ?? 'קטגוריה שנמחקה';
   }
 
   getContentTypeName(id: number | undefined): string {
-    return this.contentTypes.find(c => c.id === id)?.name ?? '—';
+    return this.contentTypes.find(c => c.id === id)?.name ?? '-';
   }
 
   getSectionLabel(section: NewsPageSection): string {

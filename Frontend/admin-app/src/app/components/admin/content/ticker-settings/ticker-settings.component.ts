@@ -9,13 +9,18 @@ import {
   TickerMoveDirection,
   TickerSettingsService
 } from '../../../../services/ticker-settings.service';
-import { ArticleCategory, ArticleContentType } from '../../../../models/article.model';
+import { SystemItem, SystemTablesService } from '../../../../services/system-tables.service';
+import { ArticleContentType } from '../../../../models/article.model';
 
 export interface FilterOption {
   label: string;
   filterType: 'contentType' | 'category';
   contentType?: ArticleContentType;
   categoryId?: number;
+}
+
+interface CategoryWithSection extends SystemItem {
+  section?: number;
 }
 
 @Component({
@@ -46,36 +51,20 @@ export class TickerSettingsComponent implements OnInit, OnDestroy {
     { label: 'שמאלה', value: 'ltr' }
   ];
 
-  readonly filterOptions: FilterOption[] = [
-    { label: 'חדשות המוזיקה', filterType: 'contentType', contentType: ArticleContentType.News },
-    { label: 'תוכן ובלוג', filterType: 'contentType', contentType: ArticleContentType.Blog },
-    { label: 'כללי', filterType: 'category', categoryId: ArticleCategory.General },
-    { label: 'חדשות', filterType: 'category', categoryId: ArticleCategory.News },
-    { label: 'ביקורות', filterType: 'category', categoryId: ArticleCategory.Reviews },
-    { label: 'ראיונות', filterType: 'category', categoryId: ArticleCategory.Interviews },
-    { label: 'כתבות', filterType: 'category', categoryId: ArticleCategory.Features },
-    { label: 'דיווחי הופעות', filterType: 'category', categoryId: ArticleCategory.LiveReports },
-    { label: 'ביקורות אלבומים', filterType: 'category', categoryId: ArticleCategory.AlbumReviews },
-    { label: 'טכנולוגיה מוזיקלית', filterType: 'category', categoryId: ArticleCategory.MusicTech },
-    { label: 'חינוך', filterType: 'category', categoryId: ArticleCategory.Education },
-    { label: 'פופולרי', filterType: 'category', categoryId: ArticleCategory.Popular },
-    { label: 'קליפים', filterType: 'category', categoryId: ArticleCategory.Clips },
-    { label: 'בלוג', filterType: 'category', categoryId: ArticleCategory.Blog },
-    { label: 'דעה', filterType: 'category', categoryId: ArticleCategory.Opinion },
-    { label: 'מצעדים', filterType: 'category', categoryId: ArticleCategory.Charts },
-    { label: 'מאחורי הקלעים', filterType: 'category', categoryId: ArticleCategory.BehindTheScenes }
-  ];
+  filterOptions: FilterOption[] = this.baseFilterOptions;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private settingsService: TickerSettingsService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private systemTablesService: SystemTablesService
   ) {}
 
   ngOnInit(): void {
     this.previewFrameSrc = this.sanitizer.bypassSecurityTrustResourceUrl('/?tickerPreview=1');
     this.cfg = { ...this.settingsService.config };
+    this.loadCategories();
     this.settingsService.config$
       .pipe(takeUntil(this.destroy$))
       .subscribe(cfg => {
@@ -157,6 +146,36 @@ export class TickerSettingsComponent implements OnInit, OnDestroy {
         this.saving = false;
         this.saveError = true;
       }
+    });
+  }
+
+  private get baseFilterOptions(): FilterOption[] {
+    return [
+      { label: 'חדשות המוזיקה', filterType: 'contentType', contentType: ArticleContentType.News },
+      { label: 'תוכן ובלוג', filterType: 'contentType', contentType: ArticleContentType.Blog }
+    ];
+  }
+
+  private loadCategories(): void {
+    this.systemTablesService.getItems('article-categories', 1, 200).subscribe({
+      next: (result) => {
+        const categoryOptions = (result.items as CategoryWithSection[])
+          .sort((a, b) => (a.section ?? 0) - (b.section ?? 0) || a.name.localeCompare(b.name, 'he'))
+          .map(category => ({
+            label: category.name,
+            filterType: 'category' as const,
+            categoryId: category.id
+          }));
+
+        this.filterOptions = [...this.baseFilterOptions, ...categoryOptions];
+
+        if (this.cfg.filterType === 'category' && !categoryOptions.some(option => option.categoryId === this.cfg.categoryId)) {
+          this.cfg.filterType = 'contentType';
+          this.cfg.contentType = ArticleContentType.News;
+          this.markDraft();
+        }
+      },
+      error: (err) => console.error('Error loading article categories for ticker', err)
     });
   }
 }

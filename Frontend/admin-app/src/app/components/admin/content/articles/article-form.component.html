@@ -64,7 +64,7 @@
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label required">
+          <label class="form-label">
             קטגוריות
             <span class="selected-count" *ngIf="article.categoryIds.length > 0">
               (נבחרו {{ article.categoryIds.length }})
@@ -103,8 +103,8 @@
             </div>
           </ng-container>
 
-          <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="color: red; margin-top: 8px;">
-            יש לבחור לפחות קטגוריה אחת
+          <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="margin-top: 8px;">
+            אפשר לשמור כתבה ללא קטגוריה
           </div>
         </div>
       </div>
