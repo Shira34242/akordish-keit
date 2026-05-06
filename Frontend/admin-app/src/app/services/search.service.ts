@@ -27,8 +27,11 @@ export class SearchService {
 
   constructor(private http: HttpClient) {}
 
-  search(q: string): Observable<SearchResults> {
-    const params = new HttpParams().set('q', q);
+  search(q: string, limit?: number): Observable<SearchResults> {
+    let params = new HttpParams().set('q', q);
+    if (limit !== undefined && limit !== null) {
+      params = params.set('limit', limit.toString());
+    }
     return this.http.get<SearchResults>(this.apiUrl, { params });
   }
 

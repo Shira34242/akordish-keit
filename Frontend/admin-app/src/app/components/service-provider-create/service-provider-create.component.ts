@@ -15,7 +15,8 @@ import {
   ProfileStatus,
   CreateGalleryImageDto,
   CreateServiceProviderCategoryDto,
-  CreateServiceProviderTestimonialDto
+  CreateServiceProviderTestimonialDto,
+  CreateServiceProviderBranchDto
 } from '../../models/music-service-provider.model';
 import {
   SubscriptionPlan,
@@ -72,6 +73,10 @@ export class ServiceProviderCreateComponent implements OnInit {
   videoUrl: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
+  hasBranches = false;
+  branches: CreateServiceProviderBranchDto[] = [];
+  newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  branchImageUploading = false;
   selectedCategoryId: number | undefined = undefined;
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
@@ -254,6 +259,17 @@ export class ServiceProviderCreateComponent implements OnInit {
     return city ? city.name : '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
   }
 
+  getCityName(cityId?: number): string {
+    if (!cityId) return '';
+    return this.availableCities.find(city => city.id === cityId)?.name ?? '';
+  }
+
+  getBranchSummaryLine(branch: CreateServiceProviderBranchDto): string {
+    return [this.getCityName(branch.cityId), branch.address, branch.openingHours]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
   onCitySearchChange() {
     if (!this.citySearchText.trim()) {
       this.filteredCities = this.availableCities;
@@ -370,6 +386,51 @@ export class ServiceProviderCreateComponent implements OnInit {
         }
       });
     });
+  }
+
+  onBranchImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || this.branchImageUploading) return;
+
+    this.branchImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (result) => {
+        this.newBranch.imageUrl = result.url;
+        this.branchImageUploading = false;
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading branch image:', error);
+        this.error = 'שגיאה בהעלאת תמונת הסניף';
+        this.branchImageUploading = false;
+        input.value = '';
+      }
+    });
+  }
+
+  addBranch(): void {
+    if (!this.newBranch.name?.trim()) {
+      this.error = 'נא להזין שם סניף';
+      return;
+    }
+
+    this.branches.push({
+      name: this.newBranch.name.trim(),
+      cityId: this.newBranch.cityId,
+      imageUrl: this.newBranch.imageUrl?.trim() || undefined,
+      address: this.newBranch.address?.trim() || undefined,
+      phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
+      email: this.newBranch.email?.trim() || undefined,
+      openingHours: this.newBranch.openingHours?.trim() || undefined,
+      order: this.branches.length
+    });
+    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  }
+
+  removeBranch(index: number): void {
+    this.branches.splice(index, 1);
+    this.branches.forEach((branch, order) => branch.order = order);
   }
 
   addVideoLink(): void {
@@ -505,7 +566,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       fullDescription: this.fullDescription?.trim() || undefined,
       isTeacher: false,
       cityId: this.cityId,
-      location: this.location?.trim() || undefined,
+      location: this.hasBranches ? undefined : this.location?.trim() || undefined,
       phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
       email: this.email.trim(),
@@ -514,7 +575,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       profileImageUrl: this.profileImageUrl?.trim() || undefined,
       videoUrl: normalizedVideoLinks[0] || this.videoUrl?.trim() || undefined,
       yearsOfExperience: this.yearsOfExperience,
-      workingHours: this.workingHours?.trim() || undefined,
+      workingHours: this.hasBranches ? undefined : this.workingHours?.trim() || undefined,
       isFeatured: false,
       status: ProfileStatus.Pending,
       categories: this.selectedCategoryId ? [{
@@ -525,7 +586,8 @@ export class ServiceProviderCreateComponent implements OnInit {
       socialLinks: this.socialLinks
         .filter(link => link.url?.trim())
         .map(link => ({ ...link, url: link.url.trim() })),
-      customerTestimonials: this.customerTestimonials
+      customerTestimonials: this.customerTestimonials,
+      branches: this.hasBranches ? this.normalizedBranches() : []
     };
 
     this.serviceProviderService.createServiceProviderProfile(dto).subscribe({
@@ -582,12 +644,33 @@ export class ServiceProviderCreateComponent implements OnInit {
       return false;
     }
 
+    if (this.hasBranches && this.branches.length === 0) {
+      this.error = 'נא להוסיף לפחות סניף אחד';
+      this.showRequiredStep(2, '[data-required-branches]');
+      return false;
+    }
+
     return true;
   }
 
   private showRequiredStep(step: number, selector: string): void {
     this.currentStep = step;
     setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
+  }
+
+  private normalizedBranches(): CreateServiceProviderBranchDto[] {
+    return this.branches
+      .filter(branch => branch.name?.trim())
+      .map((branch, index) => ({
+        name: branch.name.trim(),
+        cityId: branch.cityId,
+        imageUrl: branch.imageUrl?.trim() || undefined,
+        address: branch.address?.trim() || undefined,
+        phoneNumber: branch.phoneNumber?.trim() || undefined,
+        email: branch.email?.trim() || undefined,
+        openingHours: branch.openingHours?.trim() || undefined,
+        order: index
+      }));
   }
 
   @HostListener('document:click', ['$event'])

@@ -38,7 +38,9 @@ public class TagsController : ControllerBase
             .Select(t => new SystemItemDto
             {
                 Id = t.Id,
-                Name = t.Name
+                Name = t.Name,
+                ShowInChordQuickSearch = t.ShowInChordQuickSearch,
+                ChordQuickSearchOrder = t.ChordQuickSearchOrder
             })
             .ToListAsync();
 
@@ -53,7 +55,7 @@ public class TagsController : ControllerBase
         return result;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<SystemItemDto>> GetTag(int id)
     {
         var tag = await _context.Tags
@@ -61,7 +63,9 @@ public class TagsController : ControllerBase
             .Select(t => new SystemItemDto
             {
                 Id = t.Id,
-                Name = t.Name
+                Name = t.Name,
+                ShowInChordQuickSearch = t.ShowInChordQuickSearch,
+                ChordQuickSearchOrder = t.ChordQuickSearchOrder
             })
             .FirstOrDefaultAsync();
 
@@ -79,7 +83,9 @@ public class TagsController : ControllerBase
     {
         var tag = new Tag
         {
-            Name = dto.Name
+            Name = dto.Name,
+            ShowInChordQuickSearch = dto.ShowInChordQuickSearch,
+            ChordQuickSearchOrder = dto.ChordQuickSearchOrder
         };
 
         _context.Tags.Add(tag);
@@ -88,13 +94,15 @@ public class TagsController : ControllerBase
         var result = new SystemItemDto
         {
             Id = tag.Id,
-            Name = tag.Name
+            Name = tag.Name,
+            ShowInChordQuickSearch = tag.ShowInChordQuickSearch,
+            ChordQuickSearchOrder = tag.ChordQuickSearchOrder
         };
 
         return CreatedAtAction("GetTag", new { id = tag.Id }, result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutTag(int id, CreateSystemItemDto dto)
     {
@@ -106,6 +114,8 @@ public class TagsController : ControllerBase
         }
 
         tag.Name = dto.Name;
+        tag.ShowInChordQuickSearch = dto.ShowInChordQuickSearch;
+        tag.ChordQuickSearchOrder = dto.ChordQuickSearchOrder;
 
         try
         {
@@ -126,7 +136,7 @@ public class TagsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteTag(int id)
     {
@@ -140,6 +150,26 @@ public class TagsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpGet("chord-quick")]
+    public async Task<ActionResult<List<SystemItemDto>>> GetChordQuickTags()
+    {
+        var tags = await _context.Tags
+            .AsNoTracking()
+            .Where(t => t.ShowInChordQuickSearch)
+            .OrderBy(t => t.ChordQuickSearchOrder)
+            .ThenBy(t => t.Name)
+            .Select(t => new SystemItemDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                ShowInChordQuickSearch = t.ShowInChordQuickSearch,
+                ChordQuickSearchOrder = t.ChordQuickSearchOrder
+            })
+            .ToListAsync();
+
+        return tags;
     }
 
     /// <summary>

@@ -58,7 +58,8 @@ namespace AkordishKeit.Controllers
                 {
                     File = fileDescription,
                     PublicId = $"{publicId}{fileExtension}",
-                    Overwrite = false
+                    Overwrite = false,
+                    ResourceType = "raw"
                 });
             }
             else if (VideoExtensions.Contains(fileExtension) || AudioExtensions.Contains(fileExtension))

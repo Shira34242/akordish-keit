@@ -78,7 +78,7 @@
               <span class="material-icons">language</span>
               <span>{{ getShortUrl(professional.websiteUrl) }}</span>
             </a>
-            <div *ngIf="professional.cityId || professional.location" class="contact-item contact-item-static">
+            <div *ngIf="!hasBranches && (professional.cityId || professional.location)" class="contact-item contact-item-static">
               <span class="material-icons">location_on</span>
               <span>{{ getLocationLine() }}</span>
             </div>
@@ -121,7 +121,7 @@
       <span class="feature-tag" *ngFor="let tag of featureTags">{{ tag }}</span>
     </section>
 
-    <section class="hours-section spotlight-section" *ngIf="professional.workingHours">
+    <section class="hours-section spotlight-section" *ngIf="!hasBranches && professional.workingHours">
       <div class="spotlight-copy">
         <span class="spotlight-label">שעות פתיחה</span>
         <p>{{ professional.workingHours }}</p>
@@ -135,17 +135,18 @@
       </div>
       <div class="branches-grid">
         <article class="branch-card" *ngFor="let branch of branches">
+          <img *ngIf="branch.imageUrl" [src]="branch.imageUrl" [alt]="branch.name" class="branch-image">
           <div class="branch-card-top">
             <span class="branch-icon material-icons">store</span>
             <strong class="branch-name">{{ branch.name }}</strong>
           </div>
           <div class="branch-details">
-            <a *ngIf="branch.address"
-               [href]="'https://waze.com/ul?q=' + encodeUri(branch.address)"
+            <a *ngIf="getBranchLocationLine(branch)"
+               [href]="getBranchNavigationUrl(branch)"
                target="_blank" rel="noopener"
                class="branch-detail branch-detail-link">
               <span class="material-icons">location_on</span>
-              <span>{{ branch.address }}</span>
+              <span>{{ getBranchLocationLine(branch) }}</span>
             </a>
             <a *ngIf="branch.phoneNumber"
                [href]="'tel:' + branch.phoneNumber"

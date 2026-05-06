@@ -19,9 +19,18 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
                .IsRequired()
                .HasMaxLength(50);
 
+        builder.Property(e => e.ShowInChordQuickSearch)
+               .HasDefaultValue(false);
+
+        builder.Property(e => e.ChordQuickSearchOrder)
+               .HasDefaultValue(0);
+
         // Indexes
         builder.HasIndex(e => e.Name)
                .IsUnique()
                .HasDatabaseName("IX_Tags_Name");
+
+        builder.HasIndex(e => new { e.ShowInChordQuickSearch, e.ChordQuickSearchOrder })
+               .HasDatabaseName("IX_Tags_ChordQuickSearch");
     }
 }

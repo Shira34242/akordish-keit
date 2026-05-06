@@ -19,10 +19,10 @@
             </button>
         </div>
 
-        <!-- גוף -->
+        <!-- גוף: 2 עמודות — ימין הגדרות, שמאל תצוגה מקדימה -->
         <div class="panel-body">
 
-            <!-- עמודת הגדרות -->
+            <!-- ===== עמודה ימנית: הגדרות + רשימת שירים ===== -->
             <div class="settings-col">
 
                 <!-- כרטיס פריסה -->
@@ -97,6 +97,25 @@
                     </button>
                 </div>
 
+                <!-- רשימת שירים -->
+                <div class="settings-card songs-card">
+                    <div class="songs-header">
+                        <span class="songs-header-label">שירים בספר</span>
+                        <span class="songs-count-badge">{{ songCount }}</span>
+                    </div>
+                    <div class="songs-list">
+                        <div class="song-entry" *ngFor="let s of playlist.songs; let i = index">
+                            <span class="song-num">{{ i + 1 }}</span>
+                            <img class="song-thumb" [src]="s.songImageUrl" [alt]="s.songTitle"
+                                onerror="this.src='/logo.png'">
+                            <div class="song-info">
+                                <span class="song-title">{{ s.songTitle }}</span>
+                                <span class="song-artist">{{ s.artistName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- הסבר -->
                 <div class="info-card">
                     <div class="info-icon">
@@ -111,105 +130,110 @@
 
             </div>
 
-            <!-- רשימת שירים -->
-            <div class="songs-col">
-                <div class="songs-header">
-                    <span class="songs-header-label">שירים בספר</span>
-                    <span class="songs-count-badge">{{ songCount }}</span>
+            <!-- ===== עמודה שמאלית: תצוגה מקדימה גדולה ===== -->
+            <div class="preview-col">
+
+                <div class="preview-col-header">
+                    <span class="preview-label">תצוגה מקדימה</span>
+                    <button type="button" class="zoom-all-btn" (click)="openZoomAll()" [disabled]="songCount === 0">
+                        <span class="material-icons">open_in_full</span>
+                        הצג את כל הדפים
+                    </button>
                 </div>
 
-                <div class="songs-list">
-                    <div class="song-entry" *ngFor="let s of playlist.songs; let i = index">
-                        <span class="song-num">{{ i + 1 }}</span>
-                        <img class="song-thumb" [src]="s.songImageUrl" [alt]="s.songTitle"
-                            onerror="this.src='/logo.png'">
-                        <div class="song-info">
-                            <span class="song-title">{{ s.songTitle }}</span>
-                            <span class="song-artist">{{ s.artistName }}</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="preview-list">
 
-                <!-- תצוגה מקדימה אמיתית של עמודי הספר -->
-                <div class="book-preview">
-                    <div class="book-page book-page--cover">
-                        <div class="book-page-label">כריכה</div>
-                        <button type="button" class="live-zoom-btn" (click)="openZoom('cover')" title="הגדל תצוגה">
-                            <span class="material-icons">zoom_in</span>
-                        </button>
-                        <div class="live-page live-page--dark">
-                            <div class="live-scale" [innerHTML]="previewCoverPageHtml"></div>
+                    <!-- כריכה -->
+                    <div class="big-page big-page--cover">
+                        <div class="big-page-label">כריכה</div>
+                        <div class="big-frame big-frame--dark">
+                            <div class="big-scale" [innerHTML]="previewCoverPageHtml"></div>
                         </div>
                     </div>
 
-                    <div class="book-page book-page--index">
-                        <div class="book-page-label">תוכן עניינים</div>
-                        <button type="button" class="live-zoom-btn" (click)="openZoom('index')" title="הגדל תצוגה">
-                            <span class="material-icons">zoom_in</span>
-                        </button>
-                        <div class="live-page">
-                            <div class="live-scale" [innerHTML]="previewIndexPageHtml"></div>
+                    <!-- תוכן עניינים -->
+                    <div class="big-page big-page--index">
+                        <div class="big-page-label">תוכן עניינים</div>
+                        <div class="big-frame">
+                            <div class="big-scale" [innerHTML]="previewIndexPageHtml"></div>
                         </div>
                     </div>
 
-                    <div class="book-page book-page--song">
-                        <div class="book-page-label">
+                    <!-- שיר נוכחי -->
+                    <div class="big-page big-page--song">
+                        <div class="big-page-label">
                             שיר {{ previewSongIndex + 1 }} / {{ songCount }}
                         </div>
-                        <button type="button" class="live-zoom-btn" (click)="openZoom('song')" title="הגדל תצוגה">
-                            <span class="material-icons">zoom_in</span>
-                        </button>
-                        <div class="live-page">
-                            <div class="live-loading" *ngIf="isLoadingPreview">טוען...</div>
-                            <div class="live-scale" *ngIf="!isLoadingPreview" [innerHTML]="previewSongPageHtml"></div>
+                        <div class="big-frame">
+                            <div class="big-loading" *ngIf="isLoadingPreview">טוען...</div>
+                            <div class="big-scale" *ngIf="!isLoadingPreview" [innerHTML]="previewSongPageHtml"></div>
                         </div>
-                        <div class="live-nav" *ngIf="songCount > 1">
-                            <button type="button" class="live-nav-btn"
+                        <div class="big-nav" *ngIf="songCount > 1">
+                            <button type="button" class="big-nav-btn"
                                     (click)="prevPreviewSong()"
                                     [disabled]="previewSongIndex === 0"
-                                    title="שיר קודם">‹</button>
-                            <button type="button" class="live-nav-btn"
+                                    title="שיר קודם">‹ שיר קודם</button>
+                            <button type="button" class="big-nav-btn"
                                     (click)="nextPreviewSong()"
                                     [disabled]="previewSongIndex >= songCount - 1"
-                                    title="שיר הבא">›</button>
+                                    title="שיר הבא">שיר הבא ›</button>
                         </div>
                     </div>
+
                 </div>
 
-                <!-- חלון הגדלה לתצוגה מקדימה -->
-                <div class="zoom-backdrop" *ngIf="zoomedPage" (click)="onZoomBackdropClick($event)">
-                    <div class="zoom-card">
-                        <div class="zoom-header">
-                            <span class="zoom-title">
-                                {{ zoomedPage === 'cover' ? 'כריכה' :
-                                   zoomedPage === 'index' ? 'תוכן עניינים' :
-                                   'שיר ' + (previewSongIndex + 1) + ' / ' + songCount }}
-                            </span>
-                            <button type="button" class="zoom-close" (click)="closeZoom()" title="סגור">
-                                <span class="material-icons">close</span>
-                            </button>
-                        </div>
-                        <div class="zoom-body">
-                            <div class="zoom-page" [class.zoom-page--dark]="zoomedPage === 'cover'">
-                                <div class="zoom-scale" *ngIf="zoomedPage === 'cover'" [innerHTML]="previewCoverPageHtml"></div>
-                                <div class="zoom-scale" *ngIf="zoomedPage === 'index'" [innerHTML]="previewIndexPageHtml"></div>
-                                <ng-container *ngIf="zoomedPage === 'song'">
-                                    <div class="zoom-loading" *ngIf="isLoadingPreview">טוען...</div>
-                                    <div class="zoom-scale" *ngIf="!isLoadingPreview" [innerHTML]="previewSongPageHtml"></div>
-                                </ng-container>
-                            </div>
-                            <div class="zoom-nav" *ngIf="zoomedPage === 'song' && songCount > 1">
-                                <button type="button" class="zoom-nav-btn"
-                                        (click)="prevPreviewSong()"
-                                        [disabled]="previewSongIndex === 0">‹ שיר קודם</button>
-                                <button type="button" class="zoom-nav-btn"
-                                        (click)="nextPreviewSong()"
-                                        [disabled]="previewSongIndex >= songCount - 1">שיר הבא ›</button>
-                            </div>
+            </div>
+
+        </div>
+
+        <!-- ===== חלון הגדלה: כל הדפים יחד ===== -->
+        <div class="zoom-backdrop" *ngIf="zoomOpen" (click)="onZoomBackdropClick($event)">
+            <div class="zoom-card">
+                <div class="zoom-header">
+                    <span class="zoom-title">
+                        כל דפי הספר · {{ playlist.name }}
+                    </span>
+                    <button type="button" class="zoom-close" (click)="closeZoom()" title="סגור">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="zoom-body">
+
+                    <!-- עמוד כריכה -->
+                    <div class="zoom-page-wrap">
+                        <div class="zoom-page-num">1 · כריכה</div>
+                        <div class="zoom-page zoom-page--dark">
+                            <div class="zoom-scale" [innerHTML]="previewCoverPageHtml"></div>
                         </div>
                     </div>
-                </div>
 
+                    <!-- עמוד תוכן עניינים -->
+                    <div class="zoom-page-wrap">
+                        <div class="zoom-page-num">2 · תוכן עניינים</div>
+                        <div class="zoom-page">
+                            <div class="zoom-scale" [innerHTML]="fullIndexPageHtml"></div>
+                        </div>
+                    </div>
+
+                    <!-- מצב טעינה לכל השירים -->
+                    <div class="zoom-loading-row" *ngIf="isLoadingAllSongs">
+                        <div class="spinner-sm spinner-dark"></div>
+                        <span>טוען את כל השירים...</span>
+                    </div>
+
+                    <!-- כל השירים -->
+                    <ng-container *ngIf="allSongsData">
+                        <div class="zoom-page-wrap" *ngFor="let song of allSongsData; let i = index">
+                            <div class="zoom-page-num">
+                                {{ 3 + i }} · {{ playlist.songs[i]?.songTitle }}
+                            </div>
+                            <div class="zoom-page">
+                                <div class="zoom-scale" [innerHTML]="allSongPageHtml(song)"></div>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                </div>
             </div>
         </div>
 

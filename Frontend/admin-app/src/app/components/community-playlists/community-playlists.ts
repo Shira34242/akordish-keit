@@ -32,6 +32,25 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
   private readonly pageSize = 20;
   error: string | null = null;
 
+  private normalizePagedResult(result: any): { items: Playlist[]; hasNextPage: boolean; totalCount: number } {
+    if (Array.isArray(result)) {
+      return {
+        items: result,
+        hasNextPage: false,
+        totalCount: result.length
+      };
+    }
+
+    const items = result?.items ?? result?.Items ?? [];
+    const totalCount = result?.totalCount ?? result?.TotalCount ?? items.length;
+
+    return {
+      items,
+      hasNextPage: result?.hasNextPage ?? result?.HasNextPage ?? false,
+      totalCount
+    };
+  }
+
   constructor(
     private playlistService: PlaylistService,
     private router: Router,
@@ -100,15 +119,16 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
 
     this.playlistService.getPublicPlaylists(1, this.pageSize).subscribe({
       next: (result) => {
-        this.playlists = result.items;
-        this.filteredPlaylists = result.items;
-        this.hasNextPage = result.hasNextPage;
-        this.totalCount = result.totalCount;
+        const normalized = this.normalizePagedResult(result);
+        this.playlists = normalized.items;
+        this.filteredPlaylists = this.playlists;
+        this.hasNextPage = normalized.hasNextPage;
+        this.totalCount = normalized.totalCount;
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading public playlists:', err);
-        this.error = 'שגיאה בטעינת רשימות המאגר הקהילתי';
+        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת רשימות המאגר הקהילתי';
         this.isLoading = false;
       }
     });
@@ -122,9 +142,10 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
 
     this.playlistService.getPublicPlaylists(this.currentPage, this.pageSize).subscribe({
       next: (result) => {
-        this.playlists = [...this.playlists, ...result.items];
-        this.hasNextPage = result.hasNextPage;
-        this.totalCount = result.totalCount;
+        const normalized = this.normalizePagedResult(result);
+        this.playlists = [...this.playlists, ...normalized.items];
+        this.hasNextPage = normalized.hasNextPage;
+        this.totalCount = normalized.totalCount;
         this.isLoadingMore = false;
         this.filterPlaylists();
       },

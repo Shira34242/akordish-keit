@@ -57,6 +57,7 @@ export interface MusicServiceProviderListDto {
   createdAt: string;
   categoriesCount: number;
   categoryName?: string;
+  branchCityIds: number[];
 }
 
 export interface CreateMusicServiceProviderDto {
@@ -118,6 +119,8 @@ export interface UpdateMusicServiceProviderDto {
 export interface ServiceProviderBranchDto {
   id: number;
   name: string;
+  cityId?: number;
+  imageUrl?: string;
   address?: string;
   phoneNumber?: string;
   email?: string;
@@ -127,6 +130,8 @@ export interface ServiceProviderBranchDto {
 
 export interface CreateServiceProviderBranchDto {
   name: string;
+  cityId?: number;
+  imageUrl?: string;
   address?: string;
   phoneNumber?: string;
   email?: string;

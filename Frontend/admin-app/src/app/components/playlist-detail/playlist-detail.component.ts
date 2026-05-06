@@ -34,26 +34,30 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   isEditing = false;
   editedName = '';
   editedDescription = '';
+  editedIsPublic = false;
+  editedImageUrl: string | undefined = undefined;
 
   showChordBook = false;
 
-  editingImage = false;
-  pendingImageUrl = '';
-  isSavingImage = false;
+  isUploadingImage = false;
   imageUploadError: string | null = null;
 
-  isTogglingPublic = false;
+  isSavingEdit = false;
 
   private readonly langService = inject(LanguageService);
 
   get thumbnailSlots(): (string | null)[] {
-    if (this.playlist?.imageUrl) return [];
+    if (this.displayedImageUrl) return [];
     const images = (this.playlist?.songs || [])
       .slice(0, 4)
       .map(s => s.songImageUrl || null);
     if (images.every(s => s === null)) return [];
     while (images.length < 4) images.push(null);
     return images;
+  }
+
+  get displayedImageUrl(): string | undefined {
+    return this.isEditing ? this.editedImageUrl : this.playlist?.imageUrl;
   }
 
   constructor(
@@ -139,8 +143,9 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     this.playlistService.getPlaylistById(this.playlistId).subscribe({
       next: (playlist) => {
         this.playlist = playlist;
-        this.editedName = playlist.name;
-        this.editedDescription = playlist.description || '';
+        if (!this.isEditing) {
+          this.syncEditedFromPlaylist();
+        }
         this.isLoading = false;
       },
       error: (err) => {
@@ -151,60 +156,54 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     });
   }
 
-  toggleEdit(): void {
-    this.isEditing = !this.isEditing;
-    if (!this.isEditing && this.playlist) {
-      this.editedName = this.playlist.name;
-      this.editedDescription = this.playlist.description || '';
-    }
+  private syncEditedFromPlaylist(): void {
+    if (!this.playlist) return;
+    this.editedName = this.playlist.name;
+    this.editedDescription = this.playlist.description || '';
+    this.editedIsPublic = this.playlist.isPublic;
+    this.editedImageUrl = this.playlist.imageUrl;
+  }
+
+  enterEdit(): void {
+    this.syncEditedFromPlaylist();
+    this.imageUploadError = null;
+    this.isEditing = true;
+  }
+
+  cancelEdit(): void {
+    this.isEditing = false;
+    this.imageUploadError = null;
+    this.isUploadingImage = false;
+    this.syncEditedFromPlaylist();
+  }
+
+  setEditedIsPublic(value: boolean): void {
+    if (this.isSavingEdit) return;
+    this.editedIsPublic = value;
   }
 
   saveEdit(): void {
-    if (!this.editedName.trim()) return;
+    if (!this.editedName.trim() || this.isSavingEdit || this.isUploadingImage) return;
 
     const dto: UpdatePlaylistDto = {
       name: this.editedName.trim(),
-      description: this.editedDescription.trim() || undefined
+      description: this.editedDescription.trim() || '',
+      isPublic: this.editedIsPublic,
+      imageUrl: this.editedImageUrl ?? ''
     };
 
+    this.isSavingEdit = true;
     this.playlistService.updatePlaylist(this.playlistId, dto).subscribe({
       next: () => {
+        this.isSavingEdit = false;
         this.isEditing = false;
         this.loadPlaylist();
       },
       error: (err) => {
         console.error('Error updating playlist:', err);
+        this.isSavingEdit = false;
       }
     });
-  }
-
-  togglePublic(): void {
-    if (!this.playlist || this.isTogglingPublic) return;
-    this.isTogglingPublic = true;
-
-    this.playlistService.updatePlaylist(this.playlistId, { isPublic: !this.playlist.isPublic }).subscribe({
-      next: () => {
-        if (this.playlist) this.playlist.isPublic = !this.playlist.isPublic;
-        this.isTogglingPublic = false;
-      },
-      error: (err) => {
-        console.error('Error toggling public:', err);
-        this.isTogglingPublic = false;
-      }
-    });
-  }
-
-  openImageEdit(): void {
-    this.editingImage = true;
-    this.pendingImageUrl = this.playlist?.imageUrl || '';
-    this.imageUploadError = null;
-  }
-
-  cancelImageEdit(): void {
-    this.editingImage = false;
-    this.pendingImageUrl = '';
-    this.isSavingImage = false;
-    this.imageUploadError = null;
   }
 
   onImageFileSelected(event: Event): void {
@@ -225,41 +224,27 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     }
 
     this.imageUploadError = null;
-    this.isSavingImage = true;
+    this.isUploadingImage = true;
 
     this.mediaService.uploadMedia(file).subscribe({
       next: (res) => {
-        this.pendingImageUrl = res.url;
-        this.savePlaylistImage();
+        this.editedImageUrl = res.url;
+        this.isUploadingImage = false;
         input.value = '';
       },
       error: (err) => {
         console.error('Error uploading image:', err);
         this.imageUploadError = err?.error?.message || 'שגיאה בהעלאת התמונה';
-        this.isSavingImage = false;
+        this.isUploadingImage = false;
         input.value = '';
       }
     });
   }
 
-  removePlaylistImage(): void {
-    this.pendingImageUrl = '';
-    this.savePlaylistImage();
-  }
-
-  savePlaylistImage(): void {
-    this.isSavingImage = true;
-    this.playlistService.updatePlaylist(this.playlistId, { imageUrl: this.pendingImageUrl || '' }).subscribe({
-      next: () => {
-        if (this.playlist) this.playlist.imageUrl = this.pendingImageUrl || undefined;
-        this.cancelImageEdit();
-      },
-      error: (err) => {
-        console.error('Error updating image:', err);
-        this.imageUploadError = 'שגיאה בשמירת התמונה';
-        this.isSavingImage = false;
-      }
-    });
+  clearEditedImage(): void {
+    if (this.isUploadingImage) return;
+    this.editedImageUrl = undefined;
+    this.imageUploadError = null;
   }
 
   removeSong(songId: number): void {

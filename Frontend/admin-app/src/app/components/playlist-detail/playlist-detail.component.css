@@ -152,29 +152,16 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
-.thumb-edit-btn {
+.thumb-uploading {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.88);
-  color: #000000;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.thumb-edit-btn:hover {
-  background: #ddff53;
-}
-
-.thumb-edit-btn .material-icons {
-  font-size: 15px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  font-size: var(--font-sm);
+  font-weight: 800;
 }
 
 /* IMAGE EDIT PANEL */

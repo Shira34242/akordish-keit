@@ -26,7 +26,8 @@ export class MusicServiceProviderService {
     isFeatured?: boolean,
     isTeacher?: boolean,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = 10,
+    cityName?: string
   ): Observable<PagedResult<MusicServiceProviderListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -40,6 +41,9 @@ export class MusicServiceProviderService {
     }
     if (cityId !== undefined && cityId !== null) {
       params = params.set('cityId', cityId.toString());
+    }
+    if (cityName) {
+      params = params.set('cityName', cityName);
     }
     if (status !== undefined && status !== null) {
       params = params.set('status', status.toString());

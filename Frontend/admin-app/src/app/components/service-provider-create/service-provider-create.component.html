@@ -48,7 +48,13 @@
 
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם העסק או נותן השירות *" />
 
-            <div class="two-fields">
+            <label class="choice-toggle">
+              <input type="checkbox" [(ngModel)]="hasBranches" name="hasBranches" />
+              <span class="material-icons">storefront</span>
+              <strong>לעסק יש כמה סניפים</strong>
+            </label>
+
+            <div class="two-fields" *ngIf="!hasBranches">
               <div class="custom-dropdown">
                 <button type="button" class="select-field" (click)="toggleCityDropdown()">{{ getSelectedCityName() }}</button>
                 <div *ngIf="cityDropdownOpen" class="dropdown-menu">
@@ -103,7 +109,38 @@
 
             <div class="two-fields">
               <input id="yearsOfExperience" type="number" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="text-input" placeholder="שנות ניסיון" />
-              <input id="workingHours" type="text" [(ngModel)]="workingHours" name="workingHours" class="text-input" placeholder="שעות פעילות" />
+              <input *ngIf="!hasBranches" id="workingHours" type="text" [(ngModel)]="workingHours" name="workingHours" class="text-input" placeholder="שעות פעילות" />
+            </div>
+
+            <div class="soft-block" *ngIf="hasBranches" data-required-branches data-required-anchor tabindex="-1">
+              <div class="soft-label">סניפים</div>
+              <div class="branch-draft-grid">
+                <label class="branch-image-action" [class.has-image]="newBranch.imageUrl">
+                  <img *ngIf="newBranch.imageUrl" [src]="newBranch.imageUrl" alt="">
+                  <span class="material-icons">{{ branchImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+                  <strong>{{ branchImageUploading ? 'מעלה תמונה...' : 'תמונת סניף' }}</strong>
+                  <input type="file" accept="image/*" class="hidden-file-input" (change)="onBranchImageSelected($event)" />
+                </label>
+                <input type="text" [(ngModel)]="newBranch.name" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="שם הסניף *" />
+                <select [(ngModel)]="newBranch.cityId" [ngModelOptions]="{standalone: true}" class="text-input">
+                  <option [ngValue]="undefined">עיר הסניף</option>
+                  <option *ngFor="let city of availableCities" [ngValue]="city.id">{{ city.name }}</option>
+                </select>
+                <input type="text" [(ngModel)]="newBranch.address" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="כתובת הסניף" />
+                <input type="tel" [(ngModel)]="newBranch.phoneNumber" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="טלפון סניף" />
+                <input type="text" [(ngModel)]="newBranch.openingHours" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="שעות פתיחה" />
+                <button type="button" class="primary-action" (click)="addBranch()">הוספת סניף</button>
+              </div>
+              <div class="branch-list" *ngIf="branches.length">
+                <article class="mini-card branch-summary" *ngFor="let branch of branches; let i = index">
+                  <button type="button" class="remove-button" (click)="removeBranch(i)" aria-label="מחיקת סניף">
+                    <span class="material-icons">close</span>
+                  </button>
+                  <img *ngIf="branch.imageUrl" [src]="branch.imageUrl" alt="">
+                  <strong>{{ branch.name }}</strong>
+                  <p>{{ getBranchSummaryLine(branch) }}</p>
+                </article>
+              </div>
             </div>
 
             <div class="soft-block">

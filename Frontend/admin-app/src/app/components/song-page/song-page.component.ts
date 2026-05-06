@@ -1128,6 +1128,7 @@ private getKeyIndex(keyName: string): number {
     }
 
     private isImageFileUrl(url: string): boolean {
+        if (/\.pdf(\?.*)?$/i.test(url)) return false;
         return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url) || /\/image\/upload\//i.test(url);
     }
 

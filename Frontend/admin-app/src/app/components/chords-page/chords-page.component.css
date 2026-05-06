@@ -158,6 +158,37 @@
     border-bottom-color: #000000;
 }
 
+.quick-tags-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    max-width: 680px;
+    margin-top: var(--space-xs);
+}
+
+.quick-tag-btn {
+    min-height: 26px;
+    padding: var(--space-xs) var(--space-base);
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-sm);
+    font-weight: 300;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.quick-tag-btn:hover,
+.quick-tag-btn.active {
+    background: #000000;
+    color: #ddff53;
+    font-weight: 800;
+}
+
 /* Search row — עוטף את החיפוש + כפתור המיון */
 .search-row {
     display: flex;

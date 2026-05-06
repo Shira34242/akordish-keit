@@ -28,6 +28,7 @@ public interface ISongService
         int? artistId = null,
         int? genreId = null,
         int? keyId = null,
+        int? tagId = null,
         string? sortBy = null,
         bool includeUnapproved = false);
 

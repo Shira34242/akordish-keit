@@ -20,7 +20,7 @@ export class ChordBookPanelComponent implements OnInit {
     @Output() close = new EventEmitter<void>();
 
     columnMode: ColumnMode = 'auto';
-    fontSize: number = 16;
+    fontSize: number = 10;
     chordColor: string = '#ddff53';
     lyricsColor: string = '#000000';
     showChords: boolean = true;
@@ -29,7 +29,9 @@ export class ChordBookPanelComponent implements OnInit {
     previewSongData: any = null;
     isLoadingPreview = false;
 
-    zoomedPage: 'cover' | 'index' | 'song' | null = null;
+    zoomOpen: boolean = false;
+    allSongsData: any[] | null = null;
+    isLoadingAllSongs: boolean = false;
 
     isExporting: boolean = false;
     progressText: string = '';
@@ -86,10 +88,51 @@ export class ChordBookPanelComponent implements OnInit {
         if (this.previewSongIndex > 0) this.loadPreviewSong(this.previewSongIndex - 1);
     }
 
-    openZoom(page: 'cover' | 'index' | 'song'): void { this.zoomedPage = page; }
-    closeZoom(): void { this.zoomedPage = null; }
+    openZoomAll(): void {
+        if (this.songCount === 0) return;
+        this.zoomOpen = true;
+        if (!this.allSongsData && !this.isLoadingAllSongs) {
+            this.loadAllSongs();
+        }
+    }
+
+    closeZoom(): void { this.zoomOpen = false; }
+
     onZoomBackdropClick(e: MouseEvent): void {
         if ((e.target as HTMLElement).classList.contains('zoom-backdrop')) this.closeZoom();
+    }
+
+    private loadAllSongs(): void {
+        this.isLoadingAllSongs = true;
+        const promises = this.playlist.songs.map(s =>
+            new Promise<any>((resolve) => {
+                this.songService.getSongById(s.songId).subscribe({
+                    next: (song) => resolve(song),
+                    error: () => resolve(null)
+                });
+            })
+        );
+        Promise.all(promises).then((results) => {
+            this.allSongsData = results;
+            this.isLoadingAllSongs = false;
+        });
+    }
+
+    allSongPageHtml(song: any): SafeHtml {
+        if (!song) {
+            return this.sanitizer.bypassSecurityTrustHtml(
+                '<div style="padding:40px;text-align:center;color:#888;font-family:\'Open Sans\',sans-serif">שגיאה בטעינת השיר</div>'
+            );
+        }
+        const cols = this.columnsForSong(song);
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildSongInnerHtml(song, cols));
+    }
+
+    get fullIndexPageHtml(): SafeHtml {
+        const entries = this.playlist.songs.map((s, i) => ({
+            title: s.songTitle, artist: s.artistName, page: 3 + i
+        }));
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildIndexInnerHtml(entries));
     }
 
     private chooseColumnsForSong(song: any): 1 | 2 | 3 {

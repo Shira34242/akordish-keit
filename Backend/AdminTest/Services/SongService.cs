@@ -604,6 +604,7 @@ public class SongService : ISongService
         int? artistId = null,
         int? genreId = null,
         int? keyId = null,
+        int? tagId = null,
         string? sortBy = null,
         bool includeUnapproved = false)
     {
@@ -638,6 +639,11 @@ public class SongService : ISongService
             if (keyId.HasValue)
             {
                 query = query.Where(s => s.OriginalKeyId == keyId.Value);
+            }
+
+            if (tagId.HasValue)
+            {
+                query = query.Where(s => s.SongTags.Any(st => st.TagId == tagId.Value));
             }
 
             // Search filter

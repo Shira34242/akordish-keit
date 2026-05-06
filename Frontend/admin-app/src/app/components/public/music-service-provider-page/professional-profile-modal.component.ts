@@ -277,7 +277,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     if (this.professional.shortBio) parts.push(this.professional.shortBio);
     if (this.professional.yearsOfExperience) parts.push(`מעל ${this.professional.yearsOfExperience} שנות ניסיון`);
     if (this.getCategoriesDisplay()) parts.push(this.getCategoriesDisplay());
-    if (this.getLocationLine()) parts.push(this.getLocationLine());
+    if (!this.hasBranches && this.getLocationLine()) parts.push(this.getLocationLine());
     return parts.join(', ');
   }
 
@@ -328,7 +328,11 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   }
 
   get hasNavigationTarget(): boolean {
-    return !!this.getLocationLine();
+    return !this.hasBranches && !!this.getLocationLine();
+  }
+
+  get hasBranches(): boolean {
+    return this.branches.length > 0;
   }
 
   get wazeNavigationUrl(): string {
@@ -428,6 +432,14 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     if (!this.professional) return '';
     const city = this.getCityName(this.professional.cityId) || this.professional.cityName || '';
     return [city, this.professional.location].filter(Boolean).join(' · ');
+  }
+
+  getBranchLocationLine(branch: ServiceProviderBranchDto): string {
+    return [this.getCityName(branch.cityId), branch.address].filter(Boolean).join(' · ');
+  }
+
+  getBranchNavigationUrl(branch: ServiceProviderBranchDto): string {
+    return `https://waze.com/ul?q=${encodeURIComponent(this.getBranchLocationLine(branch) || branch.name)}&navigate=yes`;
   }
 
   getCategoriesDisplay(): string {

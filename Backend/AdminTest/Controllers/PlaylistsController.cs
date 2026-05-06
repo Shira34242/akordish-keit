@@ -42,7 +42,7 @@ public class PlaylistsController : ControllerBase
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<PlaylistDetailDto>> GetPlaylistById(int id)
     {
         var userId = GetCurrentUserId();
@@ -76,8 +76,15 @@ public class PlaylistsController : ControllerBase
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-        var result = await _playlistService.GetPublicPlaylistsAsync(page, pageSize);
-        return Ok(result);
+        try
+        {
+            var result = await _playlistService.GetPublicPlaylistsAsync(page, pageSize);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"שגיאה בטעינת רשימות ציבוריות: {ex.Message}" });
+        }
     }
 
     [HttpPost]

@@ -90,7 +90,7 @@ export class ServiceProviderFormComponent implements OnInit {
   customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
   newTestimonial = { clientName: '', text: '' };
   branches: CreateServiceProviderBranchDto[] = [];
-  newBranch: CreateServiceProviderBranchDto = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
 
   // Available categories, cities, and users loaded from API
   availableCategories: SystemItem[] = [];
@@ -218,6 +218,8 @@ export class ServiceProviderFormComponent implements OnInit {
         })) || [];
         this.branches = provider.branches?.map(b => ({
           name: b.name,
+          cityId: b.cityId,
+          imageUrl: b.imageUrl,
           address: b.address,
           phoneNumber: b.phoneNumber,
           email: b.email,
@@ -468,6 +470,11 @@ export class ServiceProviderFormComponent implements OnInit {
     return city ? city.name : null;
   }
 
+  getCityName(cityId?: number): string {
+    if (!cityId) return '';
+    return this.availableCities.find(city => city.id === cityId)?.name ?? '';
+  }
+
   onCitySearchChange(): void {
     const searchLower = this.citySearchText.toLowerCase();
     this.filteredCities = this.availableCities.filter(city =>
@@ -564,13 +571,15 @@ export class ServiceProviderFormComponent implements OnInit {
     }
     this.branches.push({
       name: this.newBranch.name.trim(),
+      cityId: this.newBranch.cityId,
+      imageUrl: this.newBranch.imageUrl?.trim() || undefined,
       address: this.newBranch.address?.trim() || undefined,
       phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
       email: this.newBranch.email?.trim() || undefined,
       openingHours: this.newBranch.openingHours?.trim() || undefined,
       order: this.branches.length
     });
-    this.newBranch = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
   }
 
   async removeBranch(index: number): Promise<void> {
@@ -620,6 +629,8 @@ export class ServiceProviderFormComponent implements OnInit {
       .filter(branch => branch.name?.trim())
       .map((branch, index) => ({
         name: branch.name.trim(),
+        cityId: branch.cityId,
+        imageUrl: this.optionalText(branch.imageUrl),
         address: this.optionalText(branch.address),
         phoneNumber: this.optionalText(branch.phoneNumber),
         email: this.optionalText(branch.email),

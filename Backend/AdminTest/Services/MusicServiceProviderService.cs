@@ -1,4 +1,5 @@
 using AkordishKeit.Data;
+using AkordishKeit.Controllers;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -22,6 +23,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         string? search,
         int? categoryId,
         int? cityId,
+        string? cityName,
         int? status,
         bool? isFeatured,
         bool? isTeacher,
@@ -33,16 +35,56 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             .Include(sp => sp.User)
             .Include(sp => sp.Categories)
                 .ThenInclude(c => c.Category)
+            .Include(sp => sp.Branches)
             .Where(sp => !sp.IsDeleted)
             .AsQueryable();
 
+        var searchCity = FindCityByText(search);
+        var cityNameCity = FindCityByText(cityName);
+        var cityIdsForFilter = new List<int>();
+
+        if (cityId.HasValue)
+        {
+            cityIdsForFilter.Add(cityId.Value);
+        }
+
+        if (searchCity != null)
+        {
+            cityIdsForFilter.Add(searchCity.Id);
+        }
+
+        if (cityNameCity != null)
+        {
+            cityIdsForFilter.Add(cityNameCity.Id);
+        }
+
+        cityIdsForFilter = cityIdsForFilter.Distinct().ToList();
+        var normalizedCityName = cityName?.Trim();
+        var normalizedSearch = search?.Trim();
+        var shouldUseSearchAsText = !string.IsNullOrWhiteSpace(normalizedSearch) && searchCity == null;
+        var cityTextTerms = BuildCityTextTerms(normalizedCityName, searchCity, cityNameCity);
+        var cityTerm1 = cityTextTerms.ElementAtOrDefault(0);
+        var cityTerm2 = cityTextTerms.ElementAtOrDefault(1);
+        var cityTerm3 = cityTextTerms.ElementAtOrDefault(2);
+
         // Apply filters
-        if (!string.IsNullOrWhiteSpace(search))
+        if (shouldUseSearchAsText)
         {
             query = query.Where(sp =>
-                sp.DisplayName.Contains(search) ||
-                (sp.User != null && sp.User.Username.Contains(search)) ||
-                (sp.User != null && sp.User.Email.Contains(search)));
+                sp.DisplayName.Contains(normalizedSearch!) ||
+                (sp.Location != null && sp.Location.Contains(normalizedSearch!)) ||
+                (sp.User != null && sp.User.Username.Contains(normalizedSearch!)) ||
+                (sp.User != null && sp.User.Email.Contains(normalizedSearch!)) ||
+                sp.Categories.Any(c => c.Category.Name.Contains(normalizedSearch!) || (c.SubCategory != null && c.SubCategory.Contains(normalizedSearch!))) ||
+                _context.ServiceProviderBranches.Any(b =>
+                    b.ServiceProviderId == sp.Id &&
+                    (
+                    b.Name.Contains(normalizedSearch!) ||
+                    (b.Address != null && b.Address.Contains(normalizedSearch!)) ||
+                    (b.PhoneNumber != null && b.PhoneNumber.Contains(normalizedSearch!)) ||
+                    (b.Email != null && b.Email.Contains(normalizedSearch!)) ||
+                    (b.OpeningHours != null && b.OpeningHours.Contains(normalizedSearch!))
+                    )));
         }
 
         if (categoryId.HasValue)
@@ -50,9 +92,18 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             query = query.Where(sp => sp.Categories.Any(c => c.CategoryId == categoryId.Value));
         }
 
-        if (cityId.HasValue)
+        if (cityIdsForFilter.Count > 0 || !string.IsNullOrWhiteSpace(normalizedCityName))
         {
-            query = query.Where(sp => sp.CityId == cityId.Value);
+            query = query.Where(sp =>
+                (sp.CityId.HasValue && cityIdsForFilter.Contains(sp.CityId.Value)) ||
+                _context.ServiceProviderBranches.Any(b =>
+                    b.ServiceProviderId == sp.Id &&
+                    (
+                    (b.CityId.HasValue && cityIdsForFilter.Contains(b.CityId.Value)) ||
+                    (!string.IsNullOrEmpty(cityTerm1) && (b.Name.Contains(cityTerm1) || (b.Address != null && b.Address.Contains(cityTerm1)))) ||
+                    (!string.IsNullOrEmpty(cityTerm2) && (b.Name.Contains(cityTerm2) || (b.Address != null && b.Address.Contains(cityTerm2)))) ||
+                    (!string.IsNullOrEmpty(cityTerm3) && (b.Name.Contains(cityTerm3) || (b.Address != null && b.Address.Contains(cityTerm3))))
+                    )));
         }
 
         if (status.HasValue)
@@ -521,6 +572,8 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             {
                 Name = branch.Name,
                 Address = branch.Address,
+                CityId = branch.CityId,
+                ImageUrl = branch.ImageUrl,
                 PhoneNumber = branch.PhoneNumber,
                 Email = branch.Email,
                 OpeningHours = branch.OpeningHours,
@@ -602,6 +655,8 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             {
                 Id = b.Id,
                 Name = b.Name,
+                CityId = b.CityId,
+                ImageUrl = b.ImageUrl,
                 Address = b.Address,
                 PhoneNumber = b.PhoneNumber,
                 Email = b.Email,
@@ -622,6 +677,8 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             serviceProvider.Branches.Add(new MusicServiceProviderBranch
             {
                 Name = branchDto.Name,
+                CityId = branchDto.CityId,
+                ImageUrl = branchDto.ImageUrl,
                 Address = branchDto.Address,
                 PhoneNumber = branchDto.PhoneNumber,
                 Email = branchDto.Email,
@@ -668,7 +725,81 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             StatusName = entity.Status.ToString(),
             CreatedAt = entity.CreatedAt,
             CategoriesCount = entity.Categories.Count,
-            CategoryName = entity.Categories.FirstOrDefault()?.Category?.Name // Get first category name
+            CategoryName = entity.Categories.FirstOrDefault()?.Category?.Name, // Get first category name
+            BranchCityIds = GetBranchCityIds(entity.Branches)
         };
+    }
+
+    private static List<int> GetBranchCityIds(IEnumerable<MusicServiceProviderBranch> branches)
+    {
+        return branches
+            .SelectMany(branch =>
+            {
+                var cityIds = new List<int>();
+                if (branch.CityId.HasValue)
+                {
+                    cityIds.Add(branch.CityId.Value);
+                }
+
+                var inferredCity = FindCityByText(branch.Address) ?? FindCityByText(branch.Name);
+                if (inferredCity != null)
+                {
+                    cityIds.Add(inferredCity.Id);
+                }
+
+                return cityIds;
+            })
+            .Distinct()
+            .ToList();
+    }
+
+    private static List<string> BuildCityTextTerms(string? requestedCityName, CityDto? searchCity, CityDto? cityNameCity)
+    {
+        var terms = new List<string>();
+
+        AddTerm(requestedCityName);
+        AddCity(searchCity);
+        AddCity(cityNameCity);
+
+        return terms
+            .Where(term => term.Length >= 2)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(3)
+            .ToList();
+
+        void AddCity(CityDto? city)
+        {
+            if (city == null) return;
+
+            AddTerm(city.Name);
+            AddTerm(city.EnglishName);
+        }
+
+        void AddTerm(string? value)
+        {
+            var term = value?.Trim();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                terms.Add(term);
+            }
+        }
+    }
+
+    private static CityDto? FindCityByText(string? text)
+    {
+        var normalized = text?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return null;
+        }
+
+        return CitiesController.GetIsraeliCities().FirstOrDefault(city =>
+            city.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+            city.Name.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains(city.Name, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(city.EnglishName) &&
+                (city.EnglishName.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+                 city.EnglishName.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                 normalized.Contains(city.EnglishName, StringComparison.OrdinalIgnoreCase))));
     }
 }
