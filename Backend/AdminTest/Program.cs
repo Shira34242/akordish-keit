@@ -187,6 +187,36 @@ using (var scope = app.Services.CreateScope())
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsent') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsent] bit NOT NULL CONSTRAINT [DF_Users_MarketingConsent] DEFAULT CAST(0 AS bit);
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentAt') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentAt] datetime2 NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentRevokedAt') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentRevokedAt] datetime2 NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentSource') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentSource] nvarchar(100) NULL;
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Articles_CreatedAt' AND object_id = OBJECT_ID(N'[Articles]'))
         BEGIN

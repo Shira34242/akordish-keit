@@ -150,6 +150,21 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.user = this.authService.currentUserValue;
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.user = user;
+      });
+
+    this.authService.refreshSession()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.user = response.user;
+        },
+        error: () => {}
+      });
+
     this.loadMySongs();
     this.loadMyArticles();
     this.loadMyEvents();

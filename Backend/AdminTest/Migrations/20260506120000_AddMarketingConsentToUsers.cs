@@ -1,4 +1,6 @@
 using System;
+using AkordishKeit.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AkordishKeit.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AkordishKeitDbContext))]
+    [Migration("20260506120000_AddMarketingConsentToUsers")]
     public partial class AddMarketingConsentToUsers : Migration
     {
         /// <inheritdoc />
