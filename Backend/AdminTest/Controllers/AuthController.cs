@@ -113,9 +113,12 @@ namespace AkordishKeit.Controllers
             bool isNewGoogleUser = user == null;
             if (isNewGoogleUser && !request.TermsApproved)
             {
-                return BadRequest(new { message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם" });
+                return BadRequest(new
+                {
+                    code = "TERMS_REQUIRED",
+                    message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם"
+                });
             }
-
             // שמירת תמונת פרופיל ב-Cloudinary (במקום URL ישיר מ-Google שעלול להשתנות)
             // מבוצע כשאין תמונה שמורה, או כשהתמונה הקיימת היא URL ישיר מ-Google
             bool needsImageUpload = user == null

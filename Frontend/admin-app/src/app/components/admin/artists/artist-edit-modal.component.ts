@@ -241,14 +241,12 @@ export class ArtistEditModalComponent implements OnInit {
     // Validate required fields
     if (!this.editForm.name?.trim()) {
       this.showValidationError('שם האומן הוא שדה חובה', '[data-validation-target="artist-name"]');
-      this.error = 'שם האומן הוא שדה חובה';
       return;
     }
 
     const richContentError = this.validateRichContent();
     if (richContentError) {
       this.showValidationError(richContentError, this.getRichContentValidationTarget());
-      this.error = richContentError;
       return;
     }
 
@@ -295,7 +293,7 @@ export class ArtistEditModalComponent implements OnInit {
         },
         error: (err) => {
           console.error('שגיאה בעדכון אומן:', err);
-          this.error = 'שגיאה בעדכון פרטי האומן';
+          this.error = err.error?.message || err.error || err.message || 'שגיאה בעדכון פרטי האומן';
           this.saving = false;
         }
       });
@@ -317,7 +315,7 @@ export class ArtistEditModalComponent implements OnInit {
         error: (err) => {
           console.error('שגיאה ביצירת אומן:', err);
           // Show the actual error message from backend
-          this.error = err.error || err.message || 'שגיאה ביצירת האומן';
+          this.error = err.error?.message || err.error || err.message || 'שגיאה ביצירת האומן';
           this.saving = false;
         }
       });

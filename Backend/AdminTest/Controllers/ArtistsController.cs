@@ -867,16 +867,9 @@ public class ArtistsController : ControllerBase
             // קביעת Premium לפי המנוי (אם קיים)
             bool isPremium = activeSubscription?.Plan == SubscriptionPlan.Premium;
 
-            if (!isPremium && (dto.Hits != null || dto.Albums != null))
-            {
-                var richMediaError = ValidateArtistRichMedia(new UpdateArtistDto
-                {
-                    Hits = dto.Hits,
-                    Albums = dto.Albums
-                });
-                if (richMediaError != null)
-                    return BadRequest(new { message = richMediaError });
-            }
+            var richMediaError = ValidateArtistRichMedia(dto);
+            if (richMediaError != null)
+                return BadRequest(new { message = richMediaError });
 
             // יצירת אומן חדש
             var artist = new Artist
@@ -908,39 +901,29 @@ public class ArtistsController : ControllerBase
                 artist.Tier = ProfileTier.Free;
             }
 
-            // שדות Premium - רק אם יש מנוי Premium
-            if (isPremium)
-            {
-                var richMediaError = ValidateArtistRichMedia(dto);
-                if (richMediaError != null)
-                    return BadRequest(new { message = richMediaError });
-
-                artist.BannerImageUrl = dto.BannerImageUrl;
-                artist.BannerGifUrl = dto.BannerGifUrl;
-                artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
-                if (dto.BannerBlur.HasValue)
-                    artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
-                artist.PerformanceIsActive = dto.PerformanceIsActive == true;
-                artist.PerformanceImageUrl = FirstText(
-                    dto.PerformanceImageUrl,
-                    dto.PerformanceEvent?.BannerImageUrl,
-                    dto.PerformanceEvent?.ImageUrl);
-                artist.PerformanceTicketUrl = FirstText(
-                    dto.PerformanceTicketUrl,
-                    dto.PerformanceEvent?.TicketUrl);
-            }
+            // Artist page media fields are saved for every artist profile.
+            artist.BannerImageUrl = dto.BannerImageUrl;
+            artist.BannerGifUrl = dto.BannerGifUrl;
+            artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
+            if (dto.BannerBlur.HasValue)
+                artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
+            artist.PerformanceIsActive = dto.PerformanceIsActive == true;
+            artist.PerformanceImageUrl = FirstText(
+                dto.PerformanceImageUrl,
+                dto.PerformanceEvent?.BannerImageUrl,
+                dto.PerformanceEvent?.ImageUrl);
+            artist.PerformanceTicketUrl = FirstText(
+                dto.PerformanceTicketUrl,
+                dto.PerformanceEvent?.TicketUrl);
 
             _context.Artists.Add(artist);
             await _context.SaveChangesAsync();
 
-            // סנכרון אירוע מקושר (רק למשלם)
-            if (isPremium)
-            {
-                await SyncPerformanceEventAsync(
-                    artist,
-                    artist.PerformanceIsActive ? dto.PerformanceEvent : null);
-                await _context.SaveChangesAsync();
-            }
+            // Keep the artist performance banner and linked event in sync.
+            await SyncPerformanceEventAsync(
+                artist,
+                artist.PerformanceIsActive ? dto.PerformanceEvent : null);
+            await _context.SaveChangesAsync();
 
             // הוספת קישורים לרשתות חברתיות
             if (dto.SocialLinks != null && dto.SocialLinks.Any())
@@ -1130,7 +1113,9 @@ public class ArtistsController : ControllerBase
             await _context.SaveChangesAsync();
 
             // סנכרון אירוע מקושר (אחרי שמרנו את האמן כדי לקבל ID)
-            await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
+            await SyncPerformanceEventAsync(
+                artist,
+                artist.PerformanceIsActive ? dto.PerformanceEvent : null);
             await _context.SaveChangesAsync();
 
             // הוספת קישורים לרשתות חברתיות

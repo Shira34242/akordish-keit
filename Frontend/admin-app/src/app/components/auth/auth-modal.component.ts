@@ -31,6 +31,7 @@ export class AuthModalComponent implements OnDestroy {
   password = '';
   termsApproved = false;
   marketingConsent = false;
+  googleTermsRequired = false;
 
   // Password strength
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
@@ -75,9 +76,18 @@ export class AuthModalComponent implements OnDestroy {
     this.password = '';
     this.termsApproved = false;
     this.marketingConsent = false;
+    this.googleTermsRequired = false;
     this.showPassword = false;
     this.passwordStrength = null;
     this.passwordErrors = [];
+  }
+
+  get shouldShowConsentRows(): boolean {
+    return !this.isLogin || this.googleTermsRequired;
+  }
+
+  get googleRequiresTermsApproval(): boolean {
+    return !this.isLogin || this.googleTermsRequired;
   }
 
   onPasswordChange() {
@@ -199,14 +209,16 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleGoogleLogin(idToken: string) {
-    if (!this.isLogin && !this.termsApproved) {
+    const isRegistrationConsentFlow = this.googleRequiresTermsApproval;
+
+    if (isRegistrationConsentFlow && !this.termsApproved) {
       this.errorMessage = 'יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם';
       return;
     }
 
     GoogleOneTapService.setProcessing(true);
     this.loading = true;
-    this.authService.googleLogin(idToken, !this.isLogin && this.termsApproved, !this.isLogin && this.marketingConsent).subscribe({
+    this.authService.googleLogin(idToken, isRegistrationConsentFlow && this.termsApproved, isRegistrationConsentFlow && this.marketingConsent).subscribe({
       next: (response) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
@@ -215,9 +227,24 @@ export class AuthModalComponent implements OnDestroy {
       error: (error) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
+        if (this.isGoogleTermsRequiredError(error)) {
+          this.googleTermsRequired = true;
+          this.termsApproved = false;
+          this.marketingConsent = false;
+          this.errorMessage = 'כדי להשלים הרשמה עם Google יש לאשר תקנון ומדיניות פרטיות';
+          return;
+        }
         this.errorMessage = error.error?.message || 'שגיאה בכניסה עם Google';
       }
     });
+  }
+
+  private isGoogleTermsRequiredError(error: any): boolean {
+    const body = error?.error;
+    const message = typeof body === 'string' ? body : body?.message;
+
+    return body?.code === 'TERMS_REQUIRED'
+      || (typeof message === 'string' && message.includes('תקנון'));
   }
 
   triggerGoogleSignIn() {
