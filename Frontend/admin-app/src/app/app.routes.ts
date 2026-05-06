@@ -211,6 +211,12 @@ export const routes: Routes = [
                 data: { page: 'copyright' }
             },
             {
+                path: 'accessibility',
+                loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
+                title: 'הצהרת נגישות - אקורדישקייט',
+                data: { page: 'accessibility' }
+            },
+            {
                 path: 'submit/event',
                 loadComponent: () => import('./components/public/submit-event/submit-event.component').then(m => m.SubmitEventComponent),
                 canActivate: [authGuard],

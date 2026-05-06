@@ -131,12 +131,13 @@ builder.Services.AddScoped<IAuthorizationHandler, SubscribedTierHandler>();
 
 // Add CORS for Angular
 // ⚠️ חשוב! AllowCredentials() מאפשר שליחת cookies בין domains
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? new[] { "http://localhost:4200", "https://localhost:4200" };
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials(); // 🔐 מאפשר cookies ו-authentication credentials

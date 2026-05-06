@@ -111,6 +111,10 @@ namespace AkordishKeit.Controllers
                 .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
 
             bool isNewGoogleUser = user == null;
+            if (isNewGoogleUser && !request.TermsApproved)
+            {
+                return BadRequest(new { message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם" });
+            }
 
             // שמירת תמונת פרופיל ב-Cloudinary (במקום URL ישיר מ-Google שעלול להשתנות)
             // מבוצע כשאין תמונה שמורה, או כשהתמונה הקיימת היא URL ישיר מ-Google
@@ -138,6 +142,9 @@ namespace AkordishKeit.Controllers
                     Points = 0,
                     IsActive = true,
                     EmailConfirmed = true, // Verified by Google
+                    MarketingConsent = request.MarketingConsent,
+                    MarketingConsentAt = request.MarketingConsent ? DateTime.UtcNow : null,
+                    MarketingConsentSource = request.MarketingConsent ? "google-registration" : null,
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false
                 };
@@ -155,6 +162,13 @@ namespace AkordishKeit.Controllers
                 if (needsImageUpload && profileImageUrl != null)
                 {
                     user.ProfileImageUrl = profileImageUrl;
+                }
+                if (request.MarketingConsent && !user.MarketingConsent)
+                {
+                    user.MarketingConsent = true;
+                    user.MarketingConsentAt = DateTime.UtcNow;
+                    user.MarketingConsentRevokedAt = null;
+                    user.MarketingConsentSource = "google-login";
                 }
                 user.LastLoginAt = DateTime.UtcNow;
                 user.VisitCount++;
@@ -304,7 +318,10 @@ namespace AkordishKeit.Controllers
                 CreatedAt = user.CreatedAt,
                 LastProfileReminderAt = user.LastProfileReminderAt,
                 ProfileReminderDismissCount = user.ProfileReminderDismissCount,
-                VisitCount = user.VisitCount
+                VisitCount = user.VisitCount,
+                MarketingConsent = user.MarketingConsent,
+                MarketingConsentAt = user.MarketingConsentAt,
+                MarketingConsentRevokedAt = user.MarketingConsentRevokedAt
             };
         }
 
@@ -325,6 +342,11 @@ namespace AkordishKeit.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            if (!request.TermsApproved)
+            {
+                return BadRequest(new { message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם" });
             }
 
             // 1. Check if username already exists
@@ -354,6 +376,9 @@ namespace AkordishKeit.Controllers
                 Points = 0,
                 IsActive = true,
                 EmailConfirmed = false, // Will need email confirmation
+                MarketingConsent = request.MarketingConsent,
+                MarketingConsentAt = request.MarketingConsent ? DateTime.UtcNow : null,
+                MarketingConsentSource = request.MarketingConsent ? "registration" : null,
                 CreatedAt = DateTime.UtcNow,
                 IsDeleted = false
             };
@@ -566,6 +591,51 @@ namespace AkordishKeit.Controllers
 
             // Mark reminder as resolved (so we don't keep nagging immediately after they updated)
             user.LastProfileReminderAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            return Ok(BuildUserDto(user, hasProfessionalProfile));
+        }
+
+        /// <summary>
+        /// עדכון הסכמה לקבלת דיוור פרסומי במייל.
+        /// </summary>
+        [Authorize]
+        [HttpPut("marketing-consent")]
+        public async Task<ActionResult<UserDto>> UpdateMarketingConsent([FromBody] MarketingConsentRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "משתמש לא מזוהה" });
+            }
+
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
+                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "משתמש לא נמצא" });
+            }
+
+            if (request.MarketingConsent)
+            {
+                user.MarketingConsent = true;
+                user.MarketingConsentAt = DateTime.UtcNow;
+                user.MarketingConsentRevokedAt = null;
+                user.MarketingConsentSource = "profile";
+            }
+            else
+            {
+                user.MarketingConsent = false;
+                user.MarketingConsentRevokedAt = DateTime.UtcNow;
+            }
+
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

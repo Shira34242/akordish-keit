@@ -64,7 +64,7 @@
 
       <div class="google-btn-wrapper">
         <div class="google-btn-stack">
-          <button type="button" class="btn-google" [disabled]="loading">
+          <button type="button" class="btn-google" [disabled]="loading || (!isLogin && !termsApproved)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -73,7 +73,7 @@
             </svg>
             <span>{{ isLogin ? ('auth.google_login' | translate) : ('auth.google_register' | translate) }}</span>
           </button>
-          <div class="google-signin-overlay">
+          <div class="google-signin-overlay" [class.google-signin-overlay--disabled]="loading || (!isLogin && !termsApproved)">
             <asl-google-signin-button
               type="standard"
               size="large"
@@ -86,13 +86,22 @@
       </div>
 
       <div class="terms-row" *ngIf="!isLogin">
-        <input type="checkbox" class="terms-checkbox" checked readonly />
+        <input id="termsApproval" name="termsApproval" type="checkbox" class="terms-checkbox" [(ngModel)]="termsApproved" required />
         <span class="terms-text">
           {{ 'auth.terms' | translate }}
+          <a routerLink="/terms" target="_blank" rel="noopener">תקנון ותנאי שימוש</a>
+          <span> ו</span>
+          <a routerLink="/privacy" target="_blank" rel="noopener">מדיניות פרטיות</a>
+          <span>.</span>
         </span>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="loading">
+      <div class="terms-row" *ngIf="!isLogin">
+        <input id="marketingConsent" name="marketingConsent" type="checkbox" class="terms-checkbox" [(ngModel)]="marketingConsent" />
+        <span class="terms-text">אני מאשר/ת קבלת דיוור שיווקי, עדכונים והצעות מאקורדישקייט בדוא"ל.</span>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading || (!isLogin && !termsApproved)">
         <span *ngIf="!loading">{{ isLogin ? ('auth.submit_login' | translate) : ('auth.submit_register' | translate) }}</span>
         <span *ngIf="loading" class="spinner"></span>
       </button>

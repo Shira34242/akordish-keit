@@ -34,6 +34,7 @@
               [(ngModel)]="editForm.name"
               name="name"
               class="form-input"
+              data-validation-target="artist-name"
               placeholder="שם האומן בעברית"
               required
             />
@@ -287,6 +288,7 @@
           <div class="form-group">
             <label class="form-label required">פוסטר ההופעה (ריבועי - לדף ההופעות)</label>
             <app-file-upload-input
+              data-validation-target="performance-image"
               [(url)]="editForm.performance.imageUrl"
               placeholder="https://example.com/poster.jpg"
             />
@@ -327,7 +329,7 @@
 
             <div class="form-group" style="flex: 2;">
               <label class="form-label">קישור YouTube</label>
-              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
             </div>
 
             <div class="form-group" style="flex: 0 0 60px;">
@@ -360,6 +362,7 @@
             <div class="form-group" style="flex: 2;">
               <label class="form-label">עטיפה</label>
               <app-file-upload-input
+                [attr.data-validation-target]="'album-cover-' + i"
                 [(url)]="album.coverImageUrl"
                 placeholder="https://..."
                 [showPreview]="false"

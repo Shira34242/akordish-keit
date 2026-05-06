@@ -194,6 +194,10 @@
   border-radius: 25px !important;
 }
 
+.google-signin-overlay--disabled {
+  pointer-events: none;
+}
+
 /* Submit Button */
 .btn-submit {
   width: 50%;

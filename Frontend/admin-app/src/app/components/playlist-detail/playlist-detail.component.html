@@ -42,16 +42,22 @@
           </div>
 
           <div class="image-edit-panel" *ngIf="editingImage">
-            <input type="url" class="image-edit-input"
-                   [(ngModel)]="pendingImageUrl"
-                   [placeholder]="'playlist.image_placeholder' | translate"
-                   (keyup.enter)="savePlaylistImage()">
+            <label class="image-upload-btn" [class.image-upload-btn--disabled]="isSavingImage">
+              <span class="material-icons">cloud_upload</span>
+              <span>{{ isSavingImage ? '...' : (playlist.imageUrl ? 'החלף תמונה' : 'העלה תמונה') }}</span>
+              <input type="file" accept="image/*"
+                     (change)="onImageFileSelected($event)"
+                     [disabled]="isSavingImage"
+                     hidden>
+            </label>
+            <button class="btn-pill btn-pill--sm image-remove-btn" type="button"
+                    *ngIf="playlist.imageUrl"
+                    (click)="removePlaylistImage()" [disabled]="isSavingImage">
+              {{ 'shared.remove' | translate }}
+            </button>
+            <p class="image-upload-error" *ngIf="imageUploadError">{{ imageUploadError }}</p>
             <div class="image-edit-actions">
-              <button class="btn-pill btn-pill--accent btn-pill--sm" type="button"
-                      (click)="savePlaylistImage()" [disabled]="isSavingImage">
-                {{ isSavingImage ? '...' : ('shared.save' | translate) }}
-              </button>
-              <button class="btn-pill btn-pill--sm" type="button" (click)="cancelImageEdit()">
+              <button class="btn-pill btn-pill--sm" type="button" (click)="cancelImageEdit()" [disabled]="isSavingImage">
                 {{ 'shared.cancel' | translate }}
               </button>
             </div>
@@ -79,6 +85,11 @@
             <div class="hero-name-row">
               <h1 class="hero-name">{{ playlist.name }}</h1>
               <span class="badge-default" *ngIf="playlist.isDefault">{{ 'playlist.default_badge' | translate }}</span>
+              <span class="badge-status"
+                    *ngIf="!playlist.isDefault"
+                    [class.badge-status--public]="playlist.isPublic">
+                {{ playlist.isPublic ? ('playlist.public' | translate) : ('playlist.private' | translate) }}
+              </span>
             </div>
             <p class="hero-desc" *ngIf="playlist.description">{{ playlist.description }}</p>
             <div class="hero-meta">
@@ -88,7 +99,7 @@
             </div>
           </div>
 
-          <div class="visibility-wrap" *ngIf="isOwner() && !playlist.isDefault">
+          <div class="visibility-wrap" *ngIf="isEditing && isOwner() && !playlist.isDefault">
             <div class="visibility-toggle">
               <button class="toggle-opt" type="button"
                       [class.toggle-opt--active]="playlist.isPublic"
@@ -111,7 +122,7 @@
           <div class="hero-left-col">
 
             <div class="chord-book-card"
-                 *ngIf="!playlist.isDefault && playlist.songs.length > 0"
+                 *ngIf="!playlist.isDefault && playlist.songs.length > 0 && canUseChordBook()"
                  (click)="showChordBook = true">
               <div class="chord-book-text">
                 <span class="chord-book-title">{{ 'playlist.chord_book_title' | translate }}</span>
@@ -189,7 +200,7 @@
 </div>
 
 <app-chord-book-panel
-  *ngIf="showChordBook && playlist && !playlist.isDefault"
+  *ngIf="showChordBook && playlist && !playlist.isDefault && canUseChordBook()"
   [playlist]="playlist"
   (close)="showChordBook = false">
 </app-chord-book-panel>

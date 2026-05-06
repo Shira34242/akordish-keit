@@ -3616,6 +3616,21 @@ namespace AkordishKeit.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("MarketingConsent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("MarketingConsentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("MarketingConsentRevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MarketingConsentSource")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("GoogleId")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");

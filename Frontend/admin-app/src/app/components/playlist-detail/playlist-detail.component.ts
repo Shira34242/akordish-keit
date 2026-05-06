@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail, UpdatePlaylistDto } from '../../models/playlist.model';
 import { AuthService } from '../../services/auth.service';
+import { MediaService } from '../../services/admin/media.service';
 import { ChordBookPanelComponent } from './chord-book-panel/chord-book-panel.component';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
@@ -39,6 +40,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   editingImage = false;
   pendingImageUrl = '';
   isSavingImage = false;
+  imageUploadError: string | null = null;
 
   isTogglingPublic = false;
 
@@ -59,6 +61,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     private router: Router,
     private playlistService: PlaylistService,
     private authService: AuthService,
+    private mediaService: MediaService,
     private ngZone: NgZone
   ) {}
 
@@ -194,23 +197,66 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   openImageEdit(): void {
     this.editingImage = true;
     this.pendingImageUrl = this.playlist?.imageUrl || '';
+    this.imageUploadError = null;
   }
 
   cancelImageEdit(): void {
     this.editingImage = false;
     this.pendingImageUrl = '';
     this.isSavingImage = false;
+    this.imageUploadError = null;
+  }
+
+  onImageFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.imageUploadError = 'יש לבחור קובץ תמונה בלבד';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      this.imageUploadError = 'הקובץ גדול מדי (מקסימום 10MB)';
+      input.value = '';
+      return;
+    }
+
+    this.imageUploadError = null;
+    this.isSavingImage = true;
+
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (res) => {
+        this.pendingImageUrl = res.url;
+        this.savePlaylistImage();
+        input.value = '';
+      },
+      error: (err) => {
+        console.error('Error uploading image:', err);
+        this.imageUploadError = err?.error?.message || 'שגיאה בהעלאת התמונה';
+        this.isSavingImage = false;
+        input.value = '';
+      }
+    });
+  }
+
+  removePlaylistImage(): void {
+    this.pendingImageUrl = '';
+    this.savePlaylistImage();
   }
 
   savePlaylistImage(): void {
     this.isSavingImage = true;
-    this.playlistService.updatePlaylist(this.playlistId, { imageUrl: this.pendingImageUrl || undefined }).subscribe({
+    this.playlistService.updatePlaylist(this.playlistId, { imageUrl: this.pendingImageUrl || '' }).subscribe({
       next: () => {
         if (this.playlist) this.playlist.imageUrl = this.pendingImageUrl || undefined;
         this.cancelImageEdit();
       },
       error: (err) => {
         console.error('Error updating image:', err);
+        this.imageUploadError = 'שגיאה בשמירת התמונה';
         this.isSavingImage = false;
       }
     });
@@ -247,5 +293,12 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   isOwner(): boolean {
     const currentUser = this.authService.currentUserValue;
     return !!(currentUser && this.playlist && currentUser.id === this.playlist.userId);
+  }
+
+  canUseChordBook(): boolean {
+    const user = this.authService.currentUserValue;
+    if (!user) return false;
+    if (this.authService.isAdminOrManager(user)) return true;
+    return (user.contentTag ?? 0) >= 2;
   }
 }

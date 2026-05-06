@@ -75,6 +75,7 @@
                   [(ngModel)]="artistForm.name"
                   name="name"
                   class="form-input"
+                  data-validation-target="artist-name"
                   [placeholder]="'artist_create.name_he_placeholder' | translate"
                   required
                 />
@@ -294,7 +295,7 @@
                 placeholder="https://example.com/image.jpg"
                 [showPreview]="false"
               />
-              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
               <small class="field-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
             </div>
           </div>
@@ -321,6 +322,7 @@
               </div>
               <input type="text" [(ngModel)]="album.title" [name]="'album_title_' + i" class="form-input" placeholder="שם האלבום" />
               <app-file-upload-input
+                [attr.data-validation-target]="'album-cover-' + i"
                 [(url)]="album.coverImageUrl"
                 placeholder="https://example.com/cover.jpg"
                 [showPreview]="false"
@@ -470,6 +472,7 @@
 
                 <label class="form-label" style="margin-top: 8px;">פוסטר ריבועי (לדף ההופעות)</label>
                 <app-file-upload-input
+                  data-validation-target="performance-image"
                   [(url)]="artistForm.performance.imageUrl"
                   placeholder="https://example.com/poster.jpg"
                   [showPreview]="true"

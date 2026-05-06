@@ -334,6 +334,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'shared.search': 'חיפוש',
     'shared.reset': 'איפוס',
     'shared.saving': 'שומר...',
+    'shared.remove': 'הסר',
 
     // Song card
     'song_card.label': 'אקורדים לשיר',
@@ -377,7 +378,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.password': 'סיסמה',
     'auth.google_login': 'התחבר עם Google',
     'auth.google_register': 'הירשם עם Google',
-    'auth.terms': 'בהרשמה לאתר אני מאשר/ת את תקנון האתר ומסכים/ה לקבל עדכונים ותוכן שיווקי במייל.',
+    'auth.terms': 'בהרשמה לאתר אני מאשר/ת שקראתי ואני מסכים/ה ל',
     'auth.terms_link': 'תקנון האתר',
     'auth.submit_login': 'היכנס ←',
     'auth.submit_register': 'המשך ←',
@@ -549,7 +550,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlist.default_badge': 'ברירת מחדל',
     'playlist.public': 'ציבורית',
     'playlist.private': 'פרטית',
-    'playlist.public_hint': 'הרשימה גלויה לכל משתמשי האתר',
+    'playlist.public_hint': 'הרשימה גלויה לכל משתמשי האתר לצפייה ושכפול',
     'playlist.private_hint': 'הרשימה גלויה רק לך',
     'playlist.chord_book_title': 'הפוך את הרשימה לספר אקורדים',
     'playlist.chord_book_desc': 'כל שירי הרשימה בתצוגת אקורדים, מוכנים להדפסה',
@@ -1294,6 +1295,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'shared.search': 'Search',
     'shared.reset': 'Reset',
     'shared.saving': 'Saving...',
+    'shared.remove': 'Remove',
 
     // Song card
     'song_card.label': 'Song Chords',
@@ -1337,7 +1339,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.password': 'Password',
     'auth.google_login': 'Sign In with Google',
     'auth.google_register': 'Sign Up with Google',
-    'auth.terms': 'By registering I agree to the site terms and consent to receive updates and marketing content by email.',
+    'auth.terms': 'By registering I confirm that I have read and agree to the ',
     'auth.terms_link': 'Site Terms',
     'auth.submit_login': 'Sign In ←',
     'auth.submit_register': 'Continue ←',
@@ -1509,7 +1511,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlist.default_badge': 'Default',
     'playlist.public': 'Public',
     'playlist.private': 'Private',
-    'playlist.public_hint': 'List is visible to all site users',
+    'playlist.public_hint': 'List is visible to all site users for viewing and duplication',
     'playlist.private_hint': 'List is visible only to you',
     'playlist.chord_book_title': 'Turn this list into a Chord Book',
     'playlist.chord_book_desc': 'All songs in chord view, ready to print',

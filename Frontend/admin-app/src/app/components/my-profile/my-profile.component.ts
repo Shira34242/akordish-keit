@@ -108,6 +108,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   showProfileModal = false;
   profileForm = { phone: '', address: '', birthDate: '' };
   profileSaving = false;
+  marketingSaving = false;
 
   showEditPageModal = false;
   editPageType: 'artist' | 'teacher' | 'provider' | null = null;
@@ -217,6 +218,23 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         this.closeProfileModal();
       },
       error: () => { this.profileSaving = false; }
+    });
+  }
+
+  toggleMarketingConsent(): void {
+    if (!this.user || this.marketingSaving) return;
+
+    const nextValue = !(this.user.marketingConsent ?? false);
+    this.marketingSaving = true;
+
+    this.authService.updateMarketingConsent(nextValue).subscribe({
+      next: (updatedUser) => {
+        this.user = updatedUser;
+        this.marketingSaving = false;
+      },
+      error: () => {
+        this.marketingSaving = false;
+      }
     });
   }
 

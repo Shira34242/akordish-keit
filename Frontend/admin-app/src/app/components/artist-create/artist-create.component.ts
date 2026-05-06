@@ -395,15 +395,14 @@ export class ArtistCreateComponent implements OnInit {
     if (!this.artistForm.name.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05d0\u05ea \u05e9\u05dd \u05d4\u05d0\u05de\u05df';
       this.currentStep = 1;
+      window.alert(this.error);
       setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '#artistName'));
       return;
     }
 
     const richContentError = this.validateRichContent();
     if (richContentError) {
-      this.error = richContentError;
-      this.currentStep = 3;
-      this.scrollToTop();
+      this.showValidationError(richContentError, this.getRichContentValidationTarget());
       return;
     }
 
@@ -596,6 +595,43 @@ export class ArtistCreateComponent implements OnInit {
     }
 
     return null;
+  }
+
+  private getRichContentValidationTarget(): string {
+    const p = this.artistForm.performance;
+    if (p.enabled) {
+      this.mirrorPerformanceImageFields(p);
+      if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+    }
+
+    for (let i = 0; i < (this.artistForm.hits || []).length; i++) {
+      if (this.getHitValidationMessage(i)) return `[data-validation-target="hit-youtube-${i}"]`;
+    }
+
+    for (let i = 0; i < (this.artistForm.albums || []).length; i++) {
+      if (this.getAlbumValidationMessage(i)) return `[data-validation-target="album-cover-${i}"]`;
+    }
+
+    return '#artistName';
+  }
+
+  private showValidationError(message: string, targetSelector: string): void {
+    this.error = message;
+    this.currentStep = targetSelector === '#artistName' ? 1 : 3;
+    window.alert(message);
+    setTimeout(() => this.scrollToValidationTarget(targetSelector));
+  }
+
+  private scrollToValidationTarget(targetSelector: string): void {
+    const target = this.host.nativeElement.querySelector<HTMLElement>(targetSelector);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const focusable = target.matches('input, textarea, select, button')
+      ? target
+      : target.querySelector<HTMLElement>('input, textarea, select, button');
+    focusable?.focus({ preventScroll: true });
   }
 
   getHitValidationMessage(index: number): string | null {

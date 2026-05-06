@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
@@ -120,7 +120,11 @@ export class ArtistEditModalComponent implements OnInit {
 
   ArtistStatus = ArtistStatus;
 
-  constructor(private artistService: ArtistService, private songService: SongService) { }
+  constructor(
+    private artistService: ArtistService,
+    private songService: SongService,
+    private host: ElementRef<HTMLElement>
+  ) { }
 
   ngOnInit(): void {
     this.isEditMode = this.artistId !== null;
@@ -236,12 +240,14 @@ export class ArtistEditModalComponent implements OnInit {
 
     // Validate required fields
     if (!this.editForm.name?.trim()) {
+      this.showValidationError('שם האומן הוא שדה חובה', '[data-validation-target="artist-name"]');
       this.error = 'שם האומן הוא שדה חובה';
       return;
     }
 
     const richContentError = this.validateRichContent();
     if (richContentError) {
+      this.showValidationError(richContentError, this.getRichContentValidationTarget());
       this.error = richContentError;
       return;
     }
@@ -464,6 +470,42 @@ export class ArtistEditModalComponent implements OnInit {
     }
 
     return null;
+  }
+
+  private getRichContentValidationTarget(): string {
+    const p = this.editForm.performance;
+    if (p.enabled) {
+      this.mirrorPerformanceImageFields(p);
+      if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+    }
+
+    for (let i = 0; i < this.editForm.hits.length; i++) {
+      if (this.getHitValidationMessage(i)) return `[data-validation-target="hit-youtube-${i}"]`;
+    }
+
+    for (let i = 0; i < this.editForm.albums.length; i++) {
+      if (this.getAlbumValidationMessage(i)) return `[data-validation-target="album-cover-${i}"]`;
+    }
+
+    return '[data-validation-target="artist-name"]';
+  }
+
+  private showValidationError(message: string, targetSelector: string): void {
+    this.error = message;
+    window.alert(message);
+    setTimeout(() => this.scrollToValidationTarget(targetSelector));
+  }
+
+  private scrollToValidationTarget(targetSelector: string): void {
+    const target = this.host.nativeElement.querySelector<HTMLElement>(targetSelector);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const focusable = target.matches('input, textarea, select, button')
+      ? target
+      : target.querySelector<HTMLElement>('input, textarea, select, button');
+    focusable?.focus({ preventScroll: true });
   }
 
   getHitValidationMessage(index: number): string | null {

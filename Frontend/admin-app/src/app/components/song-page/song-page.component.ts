@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-brows
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 import {
     transposeChord,
@@ -1131,7 +1132,7 @@ private getKeyIndex(keyName: string): number {
     }
 
     private buildSheetMusicPdfViewerUrl(url: string): string {
-        return `https://localhost:44395/api/Media/pdf-view?url=${encodeURIComponent(url)}`;
+        return `${environment.apiBaseUrl}/api/Media/pdf-view?url=${encodeURIComponent(url)}`;
     }
 
     private extractYoutubeVideoId(url: string): string | null {

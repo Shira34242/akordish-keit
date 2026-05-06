@@ -73,6 +73,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .IsRequired()
                .HasDefaultValue(true);
 
+        builder.Property(e => e.MarketingConsent)
+               .IsRequired()
+               .HasDefaultValue(false);
+
+        builder.Property(e => e.MarketingConsentSource)
+               .HasMaxLength(100);
+
         builder.Property(e => e.CreatedAt)
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");

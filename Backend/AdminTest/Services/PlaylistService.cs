@@ -163,7 +163,7 @@ public class PlaylistService : IPlaylistService
     public async Task<PagedResult<PlaylistDto>> GetPublicPlaylistsAsync(int page = 1, int pageSize = 20)
     {
         var query = _context.Playlists
-            .Where(p => p.IsPublic)
+            .Where(p => p.IsPublic && !p.IsDefault && !p.IsAdopted && p.PlaylistSongs.Any())
             .OrderByDescending(p => p.CreatedAt);
 
         var totalCount = await query.CountAsync();

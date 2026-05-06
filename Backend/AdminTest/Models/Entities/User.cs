@@ -41,6 +41,10 @@ public class User
 
     public bool IsActive { get; set; }
     public bool EmailConfirmed { get; set; }
+    public bool MarketingConsent { get; set; }
+    public DateTime? MarketingConsentAt { get; set; }
+    public DateTime? MarketingConsentRevokedAt { get; set; }
+    public string? MarketingConsentSource { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }

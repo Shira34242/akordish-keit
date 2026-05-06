@@ -29,11 +29,15 @@
                 <div class="settings-card">
 
                     <div class="setting-group">
-                        <div class="setting-label">עמודות</div>
+                        <div class="setting-label">
+                            <span>עמודות</span>
+                            <span class="setting-value" *ngIf="columnMode === 'auto'">שיר לעמוד</span>
+                        </div>
                         <div class="btn-group">
-                            <button class="seg-btn" [class.active]="columns === 1" (click)="columns = 1">1</button>
-                            <button class="seg-btn" [class.active]="columns === 2" (click)="columns = 2">2</button>
-                            <button class="seg-btn" [class.active]="columns === 3" (click)="columns = 3">3</button>
+                            <button class="seg-btn" [class.active]="columnMode === 'auto'" (click)="columnMode = 'auto'">אוטו'</button>
+                            <button class="seg-btn" [class.active]="columnMode === 1" (click)="columnMode = 1">1</button>
+                            <button class="seg-btn" [class.active]="columnMode === 2" (click)="columnMode = 2">2</button>
+                            <button class="seg-btn" [class.active]="columnMode === 3" (click)="columnMode = 3">3</button>
                         </div>
                     </div>
 
@@ -126,41 +130,82 @@
                     </div>
                 </div>
 
-                <!-- תצוגה מקדימה של עמודי הספר -->
+                <!-- תצוגה מקדימה אמיתית של עמודי הספר -->
                 <div class="book-preview">
                     <div class="book-page book-page--cover">
                         <div class="book-page-label">כריכה</div>
-                        <div class="cover-preview-content">
-                            <div class="cover-book-badge">ספר אקורדים</div>
-                            <div class="cover-title">{{ playlist.name }}</div>
-                            <div class="cover-count">{{ songCount }} שירים</div>
-                            <div class="cover-divider"></div>
-                            <div class="cover-brand">אקורדישקייט</div>
+                        <button type="button" class="live-zoom-btn" (click)="openZoom('cover')" title="הגדל תצוגה">
+                            <span class="material-icons">zoom_in</span>
+                        </button>
+                        <div class="live-page live-page--dark">
+                            <div class="live-scale" [innerHTML]="previewCoverPageHtml"></div>
                         </div>
                     </div>
+
                     <div class="book-page book-page--index">
                         <div class="book-page-label">תוכן עניינים</div>
-                        <div class="index-preview-row" *ngFor="let s of playlist.songs.slice(0, 6); let i = index">
-                            <span class="index-num">{{ i + 1 }}</span>
-                            <span class="index-title">{{ s.songTitle }}</span>
-                            <span class="index-page">{{ 3 + i }}</span>
+                        <button type="button" class="live-zoom-btn" (click)="openZoom('index')" title="הגדל תצוגה">
+                            <span class="material-icons">zoom_in</span>
+                        </button>
+                        <div class="live-page">
+                            <div class="live-scale" [innerHTML]="previewIndexPageHtml"></div>
                         </div>
-                        <div class="index-more" *ngIf="songCount > 6">+ עוד {{ songCount - 6 }}</div>
                     </div>
+
                     <div class="book-page book-page--song">
-                        <div class="book-page-label">שיר לדוגמה</div>
-                        <div class="song-preview-header">
-                            <div class="song-preview-cover"></div>
-                            <div>
-                                <div class="song-preview-title">{{ playlist.songs[0]?.songTitle || 'שם השיר' }}</div>
-                                <div class="song-preview-artist">{{ playlist.songs[0]?.artistName || 'שם האמן' }}</div>
-                            </div>
+                        <div class="book-page-label">
+                            שיר {{ previewSongIndex + 1 }} / {{ songCount }}
                         </div>
-                        <div class="song-preview-lines">
-                            <div class="song-preview-chord">Am  G  F  C</div>
-                            <div class="song-preview-lyric">שורת מילים לדוגמה</div>
-                            <div class="song-preview-chord">C  G</div>
-                            <div class="song-preview-lyric">ועוד שורה</div>
+                        <button type="button" class="live-zoom-btn" (click)="openZoom('song')" title="הגדל תצוגה">
+                            <span class="material-icons">zoom_in</span>
+                        </button>
+                        <div class="live-page">
+                            <div class="live-loading" *ngIf="isLoadingPreview">טוען...</div>
+                            <div class="live-scale" *ngIf="!isLoadingPreview" [innerHTML]="previewSongPageHtml"></div>
+                        </div>
+                        <div class="live-nav" *ngIf="songCount > 1">
+                            <button type="button" class="live-nav-btn"
+                                    (click)="prevPreviewSong()"
+                                    [disabled]="previewSongIndex === 0"
+                                    title="שיר קודם">‹</button>
+                            <button type="button" class="live-nav-btn"
+                                    (click)="nextPreviewSong()"
+                                    [disabled]="previewSongIndex >= songCount - 1"
+                                    title="שיר הבא">›</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- חלון הגדלה לתצוגה מקדימה -->
+                <div class="zoom-backdrop" *ngIf="zoomedPage" (click)="onZoomBackdropClick($event)">
+                    <div class="zoom-card">
+                        <div class="zoom-header">
+                            <span class="zoom-title">
+                                {{ zoomedPage === 'cover' ? 'כריכה' :
+                                   zoomedPage === 'index' ? 'תוכן עניינים' :
+                                   'שיר ' + (previewSongIndex + 1) + ' / ' + songCount }}
+                            </span>
+                            <button type="button" class="zoom-close" (click)="closeZoom()" title="סגור">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <div class="zoom-body">
+                            <div class="zoom-page" [class.zoom-page--dark]="zoomedPage === 'cover'">
+                                <div class="zoom-scale" *ngIf="zoomedPage === 'cover'" [innerHTML]="previewCoverPageHtml"></div>
+                                <div class="zoom-scale" *ngIf="zoomedPage === 'index'" [innerHTML]="previewIndexPageHtml"></div>
+                                <ng-container *ngIf="zoomedPage === 'song'">
+                                    <div class="zoom-loading" *ngIf="isLoadingPreview">טוען...</div>
+                                    <div class="zoom-scale" *ngIf="!isLoadingPreview" [innerHTML]="previewSongPageHtml"></div>
+                                </ng-container>
+                            </div>
+                            <div class="zoom-nav" *ngIf="zoomedPage === 'song' && songCount > 1">
+                                <button type="button" class="zoom-nav-btn"
+                                        (click)="prevPreviewSong()"
+                                        [disabled]="previewSongIndex === 0">‹ שיר קודם</button>
+                                <button type="button" class="zoom-nav-btn"
+                                        (click)="nextPreviewSong()"
+                                        [disabled]="previewSongIndex >= songCount - 1">שיר הבא ›</button>
+                            </div>
                         </div>
                     </div>
                 </div>
