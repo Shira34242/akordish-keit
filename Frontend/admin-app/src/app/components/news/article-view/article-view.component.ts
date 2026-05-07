@@ -81,6 +81,12 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     return this.relatedArticles.slice(0, this.relatedArticlesVisibleCount);
   }
 
+  get articleTags(): { id: number; name: string }[] {
+    if (!this.article?.tagIds?.length) return [];
+    const names = this.article.tags || [];
+    return this.article.tagIds.map((id, i) => ({ id, name: names[i] ?? `#${id}` }));
+  }
+
   get hasMoreRelatedArticles(): boolean {
     return this.relatedArticlesVisibleCount < this.relatedArticles.length;
   }

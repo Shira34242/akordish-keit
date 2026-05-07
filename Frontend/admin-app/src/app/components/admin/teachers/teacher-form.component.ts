@@ -152,18 +152,43 @@ export class TeacherFormComponent implements OnInit {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    const nextState = !this.cityDropdownOpen;
-    this.closeAllDropdowns();
-    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
+      this.cityDropdownOpen = false;
       this.citySearchText = '';
-      this.filteredCities = this.availableCities;
+    } else {
+      this.openCityDropdown();
     }
+  }
+
+  openCityDropdown(): void {
+    if (this.cityDropdownOpen) return;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = true;
+    this.citySearchText = '';
+    this.filteredCities = this.availableCities;
+  }
+
+  onCityTextInput(event: Event): void {
+    this.citySearchText = (event.target as HTMLInputElement).value;
+    if (!this.cityDropdownOpen) {
+      this.cityDropdownOpen = true;
+    }
+    this.onCitySearchChange();
+  }
+
+  onCityInputBlur(): void {
+    setTimeout(() => {
+      if (this.cityDropdownOpen) {
+        this.cityDropdownOpen = false;
+        this.citySearchText = '';
+      }
+    }, 200);
   }
 
   selectCity(cityId: number | undefined): void {
     this.cityId = cityId;
     this.cityDropdownOpen = false;
+    this.citySearchText = '';
   }
 
   getSelectedCityName(): string {

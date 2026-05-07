@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ArtistService } from '../../services/artist.service';
+import { SongService } from '../../services/song.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
@@ -41,6 +42,8 @@ interface ArtistFormData {
   bannerBlur: number;
   // Premium fields - gallery (unified)
   galleryItems?: { kind: 'image' | 'video'; imageUrl?: string; caption?: string; videoUrl?: string; title?: string; displayOrder: number }[];
+  hits?: { title: string; imageUrl?: string; youTubeUrl: string; displayOrder: number; isActive: boolean }[];
+  albums?: { title: string; coverImageUrl: string; releaseYear: number | null; externalUrl: string; displayOrder: number; isActive: boolean }[];
 }
 
 interface PlatformLinkOption {
@@ -89,6 +92,9 @@ export class ArtistCreateComponent implements OnInit {
       { platform: 3, label: 'YouTube', icon: 'smart_display', placeholder: this.langService.translate('artist_create.platform_youtube') },
       { platform: 7, label: 'Spotify', icon: 'album', placeholder: this.langService.translate('artist_create.platform_spotify') },
       { platform: 8, label: 'Zing', icon: 'library_music', placeholder: this.langService.translate('artist_create.platform_zing') },
+      { platform: 11, label: 'Apple Music', icon: 'apple', placeholder: 'https://music.apple.com/...' },
+      { platform: 9, label: "ג'וזיק", icon: 'queue_music', placeholder: 'https://jewzik.com/...' },
+      { platform: 10, label: '24Six', icon: 'graphic_eq', placeholder: 'https://24six.fm/...' },
     ];
   }
 
@@ -117,13 +123,16 @@ export class ArtistCreateComponent implements OnInit {
     bannerMediaType: 'image',
     bannerUrl: '',
     bannerBlur: 0,
-    galleryItems: []
+    galleryItems: [],
+    hits: [],
+    albums: []
   };
 
   constructor(
     private authService: AuthService,
     private subscriptionService: SubscriptionService,
     private artistService: ArtistService,
+    private songService: SongService,
     private router: Router,
     private host: ElementRef<HTMLElement>,
     private requiredFieldFeedback: RequiredFieldFeedbackService
@@ -251,6 +260,56 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.galleryItems?.forEach((it, order) => it.displayOrder = order);
   }
 
+  addHit(): void {
+    if (!this.artistForm.hits) this.artistForm.hits = [];
+    this.artistForm.hits.push({
+      title: '',
+      imageUrl: '',
+      youTubeUrl: '',
+      displayOrder: this.artistForm.hits.length,
+      isActive: true
+    });
+  }
+
+  removeHit(index: number): void {
+    this.artistForm.hits?.splice(index, 1);
+    this.artistForm.hits?.forEach((hit, order) => hit.displayOrder = order);
+  }
+
+  onHitYouTubeUrlChange(index: number): void {
+    const hit = this.artistForm.hits?.[index];
+    if (!hit || !hit.youTubeUrl?.trim() || hit.imageUrl?.trim()) return;
+
+    this.songService.getYouTubeMetadata(hit.youTubeUrl.trim()).subscribe({
+      next: (meta) => {
+        if (meta?.title && !hit.title?.trim()) {
+          hit.title = meta.title;
+        }
+        if (meta?.thumbnailUrl && !hit.imageUrl?.trim()) {
+          hit.imageUrl = meta.thumbnailUrl;
+        }
+      },
+      error: () => { /* ignore — user can add image manually */ }
+    });
+  }
+
+  addAlbum(): void {
+    if (!this.artistForm.albums) this.artistForm.albums = [];
+    this.artistForm.albums.push({
+      title: '',
+      coverImageUrl: '',
+      releaseYear: null,
+      externalUrl: '',
+      displayOrder: this.artistForm.albums.length,
+      isActive: true
+    });
+  }
+
+  removeAlbum(index: number): void {
+    this.artistForm.albums?.splice(index, 1);
+    this.artistForm.albums?.forEach((album, order) => album.displayOrder = order);
+  }
+
   get galleryItemsCount(): number {
     return (this.artistForm.galleryItems || []).filter(it => {
       if (it.kind === 'image') return !!it.imageUrl?.trim();
@@ -314,7 +373,10 @@ export class ArtistCreateComponent implements OnInit {
     const platforms: Record<number, string> = {
       3: 'YouTube',
       7: 'Spotify',
-      8: 'Zing'
+      8: 'Zing',
+      9: "\u05d2'\u05d5\u05d6\u05d9\u05e7",
+      10: '24Six',
+      11: 'Apple Music'
     };
     return platforms[platform] || '\u05d0\u05d7\u05e8';
   }
@@ -328,7 +390,14 @@ export class ArtistCreateComponent implements OnInit {
     if (!this.artistForm.name.trim()) {
       this.error = '\u05e0\u05d0 \u05dc\u05de\u05dc\u05d0 \u05d0\u05ea \u05e9\u05dd \u05d4\u05d0\u05de\u05df';
       this.currentStep = 1;
+      window.alert(this.error);
       setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '#artistName'));
+      return;
+    }
+
+    const richContentError = this.validateRichContent();
+    if (richContentError) {
+      this.showValidationError(richContentError, this.getRichContentValidationTarget());
       return;
     }
 
@@ -363,16 +432,44 @@ export class ArtistCreateComponent implements OnInit {
         displayOrder: index
       }));
 
+    const hits = (this.artistForm.hits || [])
+      .filter(hit => hit.youTubeUrl?.trim())
+      .map((hit, index) => ({
+        title: hit.title?.trim() || 'להיט גדול',
+        imageUrl: hit.imageUrl?.trim() || undefined,
+        youTubeUrl: hit.youTubeUrl.trim(),
+        displayOrder: index,
+        isActive: hit.isActive
+      }));
+
+    const albums = (this.artistForm.albums || [])
+      .filter(album => album.coverImageUrl?.trim())
+      .map((album, index) => ({
+        title: album.title?.trim() || 'אלבום',
+        coverImageUrl: album.coverImageUrl.trim(),
+        releaseYear: album.releaseYear ?? undefined,
+        externalUrl: album.externalUrl?.trim() || '',
+        displayOrder: index,
+        isActive: album.isActive
+      }));
+
+    const performanceImageUrl = this.artistForm.performance.imageUrl?.trim()
+      || this.artistForm.performance.bannerImageUrl?.trim()
+      || '';
+    const performanceBannerImageUrl = this.artistForm.performance.bannerImageUrl?.trim()
+      || performanceImageUrl;
+
     const performance: PerformanceEventInput | null = this.artistForm.performance.enabled
-      && this.artistForm.performance.name?.trim()
-      && this.artistForm.performance.eventDate
+      && performanceImageUrl
       ? {
-          name: this.artistForm.performance.name.trim(),
+          name: this.artistForm.performance.name?.trim() || this.artistForm.name.trim(),
           description: this.artistForm.performance.description?.trim() || undefined,
-          imageUrl: this.artistForm.performance.imageUrl?.trim() || '',
-          bannerImageUrl: this.artistForm.performance.bannerImageUrl?.trim() || undefined,
+          imageUrl: performanceImageUrl,
+          bannerImageUrl: performanceBannerImageUrl,
           ticketUrl: this.artistForm.performance.ticketUrl?.trim() || '',
-          eventDate: new Date(this.artistForm.performance.eventDate).toISOString(),
+          eventDate: this.artistForm.performance.eventDate
+            ? new Date(this.artistForm.performance.eventDate).toISOString()
+            : new Date().toISOString(),
           location: this.artistForm.performance.location?.trim() || undefined,
           price: this.artistForm.performance.price ?? null,
           isActive: this.artistForm.performance.isActive
@@ -399,12 +496,18 @@ export class ArtistCreateComponent implements OnInit {
       bannerImageUrl: bannerType === 'image' && bannerUrl ? bannerUrl : undefined,
       bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') && bannerUrl ? bannerUrl : undefined,
       bannerMediaType: bannerUrl ? bannerType : null,
-      bannerBlur: Number(this.artistForm.bannerBlur) || 0,
+      bannerBlur: this.normalizedBannerBlur(this.artistForm.bannerBlur),
       galleryImages: galleryImages.length > 0
         ? galleryImages
         : undefined,
       videos: videos.length > 0
         ? videos
+        : undefined,
+      hits: hits.length > 0
+        ? hits
+        : undefined,
+      albums: albums.length > 0
+        ? albums
         : undefined
     };
 
@@ -466,6 +569,104 @@ export class ArtistCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/artists']);
+  }
+
+  private validateRichContent(): string | null {
+    const p = this.artistForm.performance;
+    if (p.enabled) {
+      this.mirrorPerformanceImageFields(p);
+      if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+    }
+
+    for (let i = 0; i < (this.artistForm.hits || []).length; i++) {
+      const message = this.getHitValidationMessage(i);
+      if (message) return message;
+    }
+
+    for (let i = 0; i < (this.artistForm.albums || []).length; i++) {
+      const message = this.getAlbumValidationMessage(i);
+      if (message) return message;
+    }
+
+    return null;
+  }
+
+  private getRichContentValidationTarget(): string {
+    const p = this.artistForm.performance;
+    if (p.enabled) {
+      this.mirrorPerformanceImageFields(p);
+      if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+    }
+
+    for (let i = 0; i < (this.artistForm.hits || []).length; i++) {
+      if (this.getHitValidationMessage(i)) return `[data-validation-target="hit-youtube-${i}"]`;
+    }
+
+    for (let i = 0; i < (this.artistForm.albums || []).length; i++) {
+      if (this.getAlbumValidationMessage(i)) return `[data-validation-target="album-cover-${i}"]`;
+    }
+
+    return '#artistName';
+  }
+
+  private showValidationError(message: string, targetSelector: string): void {
+    this.error = message;
+    this.currentStep = targetSelector === '#artistName' ? 1 : 3;
+    window.alert(message);
+    setTimeout(() => this.scrollToValidationTarget(targetSelector));
+  }
+
+  private scrollToValidationTarget(targetSelector: string): void {
+    const target = this.host.nativeElement.querySelector<HTMLElement>(targetSelector);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const focusable = target.matches('input, textarea, select, button')
+      ? target
+      : target.querySelector<HTMLElement>('input, textarea, select, button');
+    focusable?.focus({ preventScroll: true });
+  }
+
+  getHitValidationMessage(index: number): string | null {
+    const hit = this.artistForm.hits?.[index];
+    if (!hit || this.isBlankHit(hit) || this.isCompleteHit(hit)) return null;
+    return `להיט מספר ${index + 1}: יש להוסיף קישור YouTube, או למחוק את השורה`;
+  }
+
+  getAlbumValidationMessage(index: number): string | null {
+    const album = this.artistForm.albums?.[index];
+    if (!album || this.isBlankAlbum(album) || this.isCompleteAlbum(album)) return null;
+    return `אלבום מספר ${index + 1}: יש להוסיף תמונת עטיפה, או למחוק את השורה`;
+  }
+
+  private isBlankHit(hit: NonNullable<ArtistFormData['hits']>[number]): boolean {
+    return !hit.title?.trim() && !hit.imageUrl?.trim() && !hit.youTubeUrl?.trim();
+  }
+
+  private isCompleteHit(hit: NonNullable<ArtistFormData['hits']>[number]): boolean {
+    return !!hit.youTubeUrl?.trim();
+  }
+
+  private isBlankAlbum(album: NonNullable<ArtistFormData['albums']>[number]): boolean {
+    return !album.title?.trim() && !album.coverImageUrl?.trim() && !album.externalUrl?.trim() && !album.releaseYear;
+  }
+
+  private isCompleteAlbum(album: NonNullable<ArtistFormData['albums']>[number]): boolean {
+    return !!album.coverImageUrl?.trim();
+  }
+
+  private mirrorPerformanceImageFields(performance: ArtistFormData['performance']): void {
+    const imageUrl = performance.imageUrl?.trim();
+    const bannerImageUrl = performance.bannerImageUrl?.trim();
+    if (!imageUrl && bannerImageUrl) performance.imageUrl = bannerImageUrl;
+    if (!bannerImageUrl && imageUrl) performance.bannerImageUrl = imageUrl;
+  }
+
+  private normalizedBannerBlur(value: number | null | undefined): number {
+    const numericValue = Number(value) || 0;
+    return Math.max(0, Math.min(20, numericValue));
   }
 
   private scrollToTop(smooth = true): void {

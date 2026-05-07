@@ -63,6 +63,8 @@ public class ServiceProviderBranchDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public int? CityId { get; set; }
+    public string? ImageUrl { get; set; }
     public string? Address { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
@@ -78,6 +80,12 @@ public class CreateServiceProviderBranchDto
 
     [StringLength(300)]
     public string? Address { get; set; }
+
+    public int? CityId { get; set; }
+
+    [StringLength(500)]
+    [Url]
+    public string? ImageUrl { get; set; }
 
     [StringLength(20)]
     public string? PhoneNumber { get; set; }
@@ -408,6 +416,7 @@ public class MusicServiceProviderListDto
     public DateTime CreatedAt { get; set; }
     public int CategoriesCount { get; set; }
     public string? CategoryName { get; set; } // Primary category name for professionals
+    public List<int> BranchCityIds { get; set; } = new();
 }
 
 public class TeacherListDto : MusicServiceProviderListDto

@@ -9,7 +9,13 @@
 
     <!-- Page Header -->
     <div class="page-header">
-      <h1 class="page-title">{{ categoryName || ('articles.all_title' | translate) }}</h1>
+      <h1 class="page-title">
+        <ng-container *ngIf="tagId; else titleNoTag">תגית: {{ tagName || '#' + tagId }}</ng-container>
+        <ng-template #titleNoTag>{{ categoryName || ('articles.all_title' | translate) }}</ng-template>
+      </h1>
+      <a *ngIf="tagId" class="tag-filter-clear" [routerLink]="['/articles']" title="הסר סינון תגית">
+        × הסר סינון תגית
+      </a>
     </div>
 
     <!-- Filter Bar -->

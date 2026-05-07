@@ -48,7 +48,7 @@ public class CitiesController : ControllerBase
     /// <summary>
     /// רשימת ערים מרכזיות בישראל - ממוינות לפי חשיבות ואוכלוסייה
     /// </summary>
-    private static List<CityDto> GetIsraeliCities()
+    public static List<CityDto> GetIsraeliCities()
     {
         return new List<CityDto>
         {

@@ -37,6 +37,8 @@ public class ArtistDetailDto
     // מדיה
     public List<ArtistGalleryImageDto> GalleryImages { get; set; } = new();
     public List<ArtistVideoDto> Videos { get; set; } = new();
+    public List<ArtistHitDto> Hits { get; set; } = new();
+    public List<ArtistAlbumDto> Albums { get; set; } = new();
     public List<SocialLinkDto> SocialLinks { get; set; } = new();
 
     // סטטיסטיקות
@@ -83,6 +85,33 @@ public class ArtistVideoDto
     public string VideoUrl { get; set; }
     public string? Title { get; set; }
     public int DisplayOrder { get; set; }
+}
+
+/// <summary>
+/// להיט גדול בדף אמן
+/// </summary>
+public class ArtistHitDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public string YouTubeUrl { get; set; } = string.Empty;
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; }
+}
+
+/// <summary>
+/// אלבום בדף אמן עם קישור חיצוני
+/// </summary>
+public class ArtistAlbumDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public int? ReleaseYear { get; set; }
+    public string ExternalUrl { get; set; } = string.Empty;
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; }
 }
 
 /// <summary>

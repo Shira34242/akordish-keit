@@ -126,6 +126,7 @@
 .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; }
 
 .form-hint { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #000000; opacity: 0.6; }
+.form-error { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 800; color: #000000; }
 .char-counter { display: block; margin-top: var(--space-xs); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #000000; opacity: 0.6; text-align: left; }
 .char-counter.warning { color: #000000; }
 .char-counter.danger { opacity: 1; font-weight: 800; }
@@ -256,6 +257,42 @@
 
 /* Readonly */
 .form-input.readonly, .form-textarea.readonly { background: #F2F2F2; color: #000000; cursor: not-allowed; opacity: 0.7; }
+
+/* Existing-event summary card (when picking an existing event for the artist banner) */
+.existing-event-summary { margin-top: var(--space-md); }
+.existing-event-card {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  background: #F2F2F2;
+  border-radius: 16px;
+  padding: var(--space-md);
+}
+.existing-event-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.existing-event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.existing-event-meta strong {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-base);
+  color: #000;
+}
+.existing-event-meta span {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-sm);
+  color: #404040;
+}
 
 @media (max-width: 768px) {
   .modal-container { max-width: 100%; max-height: 100vh; border-radius: 0; }

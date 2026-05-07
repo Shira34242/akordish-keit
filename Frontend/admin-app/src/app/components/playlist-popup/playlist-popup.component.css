@@ -360,20 +360,6 @@
   opacity: 0.85;
 }
 
-/* ===== SCROLLBAR ===== */
-.playlists-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.playlists-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.playlists-list::-webkit-scrollbar-thumb {
-  background: #d0d0d0;
-  border-radius: 999px;
-}
-
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
   .popup-card {

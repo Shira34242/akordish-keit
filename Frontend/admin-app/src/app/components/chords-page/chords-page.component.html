@@ -80,6 +80,15 @@
                 </button>
             </div>
 
+            <div class="quick-tags-wrap" *ngIf="!knownChordsMode && quickTags.length > 0">
+                <button class="quick-tag-btn"
+                        *ngFor="let tag of quickTags"
+                        [class.active]="selectedTagId === tag.id"
+                        (click)="selectQuickTag(tag)">
+                    {{ tag.name }}
+                </button>
+            </div>
+
             <div class="known-filter-wrap" *ngIf="knownChordsMode">
                 <div class="known-filter-note">
                     <strong>{{ 'chords.known_filter_title' | translate }}</strong>
@@ -183,6 +192,7 @@
                     <span class="section-tag section-tag--accent">
                         {{ 'chords.results_prefix' | translate }} {{ totalCount }} {{ 'chords.results_suffix' | translate }}
                         <ng-container *ngIf="artistSearchText"> — {{ artistSearchText }}</ng-container>
+                        <ng-container *ngIf="selectedTagName"> — {{ selectedTagName }}</ng-container>
                     </span>
                 </div>
                 <div class="loading-spinner" *ngIf="isLoading">
@@ -321,6 +331,9 @@
                     <div class="grid-card" *ngFor="let song of songs" (click)="saveToRecent(song)">
                         <app-song-card [song]="song"></app-song-card>
                     </div>
+                </div>
+                <div class="catalog-load-more" *ngIf="songs.length > 0 && hasMoreSongs && !isLoadingMore">
+                    <button class="btn-secondary" (click)="loadMore()">{{ 'profile.show_more' | translate }}</button>
                 </div>
                 <div class="load-more-indicator" *ngIf="isLoadingMore">
                     <div class="spinner"></div>

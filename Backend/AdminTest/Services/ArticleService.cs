@@ -27,7 +27,8 @@ public class ArticleService : IArticleService
         bool? isPremium,
         string? authorName,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        int? tagId = null)
     {
         var query = _context.Articles
             .AsNoTracking()
@@ -46,7 +47,7 @@ public class ArticleService : IArticleService
             .AsQueryable();
 
         // Apply filters
-        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName);
+        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName, tagId);
 
         // Order by CreatedAt before pagination
         query = query.OrderByDescending(a => a.CreatedAt);
@@ -721,7 +722,8 @@ public class ArticleService : IArticleService
         int? status,
         bool? isFeatured,
         bool? isPremium,
-        string? authorName)
+        string? authorName,
+        int? tagId = null)
     {
         // Search filter
         if (!string.IsNullOrWhiteSpace(search))
@@ -769,6 +771,12 @@ public class ArticleService : IArticleService
         if (!string.IsNullOrWhiteSpace(authorName))
         {
             query = query.Where(a => a.AuthorName != null && EF.Functions.Like(a.AuthorName, $"%{authorName}%"));
+        }
+
+        // Tag filter
+        if (tagId.HasValue)
+        {
+            query = query.Where(a => a.ArticleTags.Any(at => at.TagId == tagId.Value));
         }
 
         return query;

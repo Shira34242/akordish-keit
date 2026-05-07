@@ -27,7 +27,14 @@ interface TableDefinition {
 export class ValueTablesComponent implements OnInit {
     tables: TableDefinition[] = [
         { id: 'genres', label: 'ז׳אנרים' },
-        { id: 'tags', label: 'תגיות שירים' },
+        {
+            id: 'tags',
+            label: 'תגיות שירים',
+            extraColumns: [
+                { key: 'showInChordQuickSearch', label: 'הצג בחיפוש מהיר', type: 'boolean' },
+                { key: 'chordQuickSearchOrder', label: 'סדר', type: 'number', defaultValue: 0 }
+            ]
+        },
         {
             id: 'article-categories',
             label: 'קטגוריות בחדשות מוזיקה ותוכן',

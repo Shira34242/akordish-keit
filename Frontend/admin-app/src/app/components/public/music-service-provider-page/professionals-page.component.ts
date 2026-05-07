@@ -16,6 +16,7 @@ import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/te
 import { BecomeProfessionalFormComponent } from '../become-professional-form/become-professional-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
+import { SearchService, SearchItem } from '../../../services/search.service';
 
 interface Category {
   id: number;
@@ -47,6 +48,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private readonly catalogPageSize = 24;
   private readonly searchPageSize = 40;
   private readonly scrollLoadOffset = 700;
+  private searchDebounceTimer?: ReturnType<typeof setTimeout>;
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -66,6 +68,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   // ג”€ג”€ג”€ Shared search fields ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   searchTerm: string = '';
   selectedCityId: number | null = null;
+  cityFilterSearchTerm = '';
 
   // ג”€ג”€ג”€ Professionals filters ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   selectedCategoryId: number | null = null;
@@ -153,6 +156,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private quickAddAssistantService: QuickAddAssistantService,
+    private searchService: SearchService,
     private hostRef: ElementRef<HTMLElement>
   ) {}
 
@@ -228,6 +232,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     const nextState = !this.showCityDropdown;
     this.closeAllDropdowns();
     this.showCityDropdown = nextState;
+    if (nextState) {
+      this.cityFilterSearchTerm = '';
+    }
   }
 
   toggleInstrumentDropdown(): void {
@@ -284,7 +291,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   loadCities(): void {
     this.citiesService.getCities().subscribe({
       next: (cities) => {
-        this.cities = cities.filter(c => c.isActive);
+        this.cities = cities
+          .filter(c => c.isActive)
+          .sort((a, b) => a.name.localeCompare(b.name, 'he'));
         this.cityNameById = new Map(this.cities.map(city => [city.id, city.name]));
       },
       error: (err) => console.error('Error loading cities:', err)
@@ -391,11 +400,26 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   // ג”€ג”€ג”€ Search ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   onSearch(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = undefined;
+    }
+
     if (this.activeTab === 'professionals') {
       this.onSearchProfessionals();
     } else {
       this.onSearchTeachers();
     }
+  }
+
+  onSearchInputChange(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+
+    this.searchDebounceTimer = setTimeout(() => {
+      this.onSearch();
+    }, 350);
   }
 
   private onSearchProfessionals(): void {
@@ -412,11 +436,24 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     }
     this.isFiltered = true;
     this.filteredProfessionalsPage = 1;
+    const searchParams = this.getProfessionalSearchParams();
+
+    if (!this.selectedCategoryId && searchParams.globalSearch) {
+      this.searchService.search(searchParams.globalSearch, this.searchPageSize).subscribe({
+        next: (response) => {
+          this.filteredProfessionals = this.mapSearchItemsToProfessionals(response.professionals || []);
+          this.filteredProfessionalsTotal = this.filteredProfessionals.length;
+        },
+        error: (err) => console.error('Error searching professionals index:', err)
+      });
+      return;
+    }
+
     this.professionalService.getServiceProviders(
-      this.searchTerm || undefined,
+      searchParams.search,
       this.selectedCategoryId || undefined,
-      this.selectedCityId || undefined,
-      1, undefined, false, 1, this.searchPageSize
+      searchParams.cityId,
+      1, undefined, false, 1, this.searchPageSize, searchParams.cityName
     ).subscribe({
       next: (response: any) => {
         this.filteredProfessionals = response.items || response.data || [];
@@ -661,15 +698,23 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     if (this.loadingMoreProfessionals || this.filteredProfessionals.length >= this.filteredProfessionalsTotal) return;
     this.loadingMoreProfessionals = true;
     const nextPage = this.filteredProfessionalsPage + 1;
+    const searchParams = this.getProfessionalSearchParams();
+
+    if (!this.selectedCategoryId && searchParams.globalSearch) {
+      this.loadingMoreProfessionals = false;
+      return;
+    }
+
     this.professionalService.getServiceProviders(
-      this.searchTerm || undefined,
+      searchParams.search,
       this.selectedCategoryId || undefined,
-      this.selectedCityId || undefined,
+      searchParams.cityId,
       1,
       undefined,
       false,
       nextPage,
-      this.searchPageSize
+      this.searchPageSize,
+      searchParams.cityName
     ).subscribe({
       next: (response: any) => {
         this.appendUniqueProfessionals(this.filteredProfessionals, response.items || response.data || []);
@@ -740,7 +785,49 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     target.push(...items.filter(item => !existingIds.has(item.id)));
   }
 
-  // ג”€ג”€ג”€ Navigation ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  private getProfessionalSearchParams(): { search?: string; cityId?: number; cityName?: string; globalSearch?: string } {
+    const trimmedSearch = this.searchTerm.trim();
+    const cityFromSearch = this.findCityFromSearchTerm();
+    const selectedCityName = this.selectedCityId ? this.getCityName(this.selectedCityId) : undefined;
+    const globalSearch = trimmedSearch || selectedCityName || cityFromSearch?.name || undefined;
+
+    return {
+      search: trimmedSearch || undefined,
+      cityId: this.selectedCityId ?? cityFromSearch?.id ?? undefined,
+      cityName: selectedCityName || cityFromSearch?.name || trimmedSearch || undefined,
+      globalSearch: globalSearch && globalSearch.length >= 2 ? globalSearch : undefined
+    };
+  }
+
+  private mapSearchItemsToProfessionals(items: SearchItem[]): MusicServiceProviderListDto[] {
+    return items.map(item => ({
+      id: item.id,
+      displayName: item.title,
+      profileImageUrl: item.imageUrl,
+      categoryName: item.subtitle,
+      isTeacher: false,
+      isFeatured: false,
+      status: 1 as any,
+      statusName: '',
+      tier: 0,
+      isPrimaryProfile: false,
+      createdAt: '',
+      categoriesCount: 0,
+      branchCityIds: this.inferCityIdsFromText(item.subtitle)
+    }));
+  }
+
+  private inferCityIdsFromText(text?: string): number[] {
+    if (!text) return [];
+    return this.cities
+      .filter(city =>
+        text.includes(city.name) ||
+        (!!city.englishName && text.toLowerCase().includes(city.englishName.toLowerCase()))
+      )
+      .map(city => city.id);
+  }
+
+  // ─── Navigation ───────────────────────────────────
   viewProfessional(professionalId: number): void {
     this.router.navigate(['/professional', professionalId]);
   }
@@ -773,6 +860,37 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   getCityName(cityId?: number): string {
     if (!cityId) return '';
     return this.cityNameById.get(cityId) || '';
+  }
+
+  get filteredCityOptions(): City[] {
+    const search = this.cityFilterSearchTerm.trim().toLowerCase();
+    if (!search) return this.cities;
+    return this.cities.filter(city =>
+      city.name.toLowerCase().includes(search) ||
+      city.englishName?.toLowerCase().includes(search)
+    );
+  }
+
+  getProviderCityLine(provider: MusicServiceProviderListDto): string {
+    const cityNames = new Set<string>();
+    if (provider.cityId) {
+      const city = this.getCityName(provider.cityId);
+      if (city) cityNames.add(city);
+    }
+    (provider.branchCityIds ?? []).forEach(cityId => {
+      const city = this.getCityName(cityId);
+      if (city) cityNames.add(city);
+    });
+    return Array.from(cityNames).join(', ');
+  }
+
+  private findCityFromSearchTerm(): City | undefined {
+    const search = this.searchTerm.trim().toLowerCase();
+    if (!search) return undefined;
+    return this.cities.find(city =>
+      city.name.toLowerCase().includes(search) ||
+      city.englishName?.toLowerCase().includes(search)
+    );
   }
 
   getTeacherInstruments(teacher: TeacherListDto): string {

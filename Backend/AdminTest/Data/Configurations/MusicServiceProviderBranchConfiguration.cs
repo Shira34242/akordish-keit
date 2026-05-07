@@ -22,6 +22,9 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(b => b.Address)
                 .HasMaxLength(300);
 
+            builder.Property(b => b.ImageUrl)
+                .HasMaxLength(500);
+
             builder.Property(b => b.PhoneNumber)
                 .HasMaxLength(20);
 
@@ -43,6 +46,7 @@ namespace AkordishKeit.Data.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(b => b.ServiceProviderId);
+            builder.HasIndex(b => b.CityId);
             builder.HasIndex(b => b.Order);
         }
     }

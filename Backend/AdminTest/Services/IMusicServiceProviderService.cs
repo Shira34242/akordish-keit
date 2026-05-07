@@ -8,6 +8,7 @@ public interface IMusicServiceProviderService
         string? search,
         int? categoryId,
         int? cityId,
+        string? cityName,
         int? status,
         bool? isFeatured,
         bool? isTeacher,

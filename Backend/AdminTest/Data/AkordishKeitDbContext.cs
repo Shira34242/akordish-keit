@@ -40,6 +40,8 @@ public class AkordishKeitDbContext : DbContext
     // Artist Media & Relationships
     public DbSet<ArtistGalleryImage> ArtistGalleryImages { get; set; }
     public DbSet<ArtistVideo> ArtistVideos { get; set; }
+    public DbSet<ArtistHit> ArtistHits { get; set; }
+    public DbSet<ArtistAlbum> ArtistAlbums { get; set; }
     public DbSet<ArticleArtist> ArticleArtists { get; set; }
     public DbSet<EventArtist> EventArtists { get; set; }
 
@@ -132,6 +134,8 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ArtistSocialLinkConfiguration());
         modelBuilder.ApplyConfiguration(new ArtistGalleryImageConfiguration());
         modelBuilder.ApplyConfiguration(new ArtistVideoConfiguration());
+        modelBuilder.ApplyConfiguration(new ArtistHitConfiguration());
+        modelBuilder.ApplyConfiguration(new ArtistAlbumConfiguration());
         modelBuilder.ApplyConfiguration(new ArticleArtistConfiguration());
         modelBuilder.ApplyConfiguration(new EventArtistConfiguration());
         modelBuilder.ApplyConfiguration(new InstrumentConfiguration());

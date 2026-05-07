@@ -690,7 +690,7 @@
                                 <span *ngFor="let a of artistsArray.value; let last = last">{{ a.name }}{{ !last ? ', '
                                     : '' }}</span>
                             </p>
-                            <p class="song-composer" *ngIf="selectedComposer">{{ selectedComposer?.name }}</p>
+                            <p class="song-composer" *ngIf="selectedComposer">{{ selectedComposer.name }}</p>
                         </div>
                         <div class="song-image">
                             <img [src]="songForm.get('imageUrl')?.value || 'assets/default-song.png'" [attr.alt]="'song_modal.song_image_alt' | translate">

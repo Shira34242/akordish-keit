@@ -357,7 +357,9 @@
             </ul>
             <ul class="footer-col footer-page-links" aria-label="קישורי מידע">
                 <li><a routerLink="/privacy">מדיניות פרטיות</a></li>
-                <li><a routerLink="/terms">תנאי שימוש</a></li>
+                <li><a routerLink="/terms">תקנון ותנאי שימוש</a></li>
+                <li><a routerLink="/accessibility">הצהרת נגישות</a></li>
+                <li><a routerLink="/copyright">זכויות יוצרים</a></li>
                 <li><a routerLink="/about">אודות</a></li>
             </ul>
             <ul class="footer-col footer-col--tools">
@@ -381,7 +383,7 @@
     <div class="footer-legal">
         <span class="footer-acum">
             <img src="/acum-logo.png" alt="אקו&quot;ם" class="footer-acum-logo" (error)="$event.target.style.display='none'" />
-            {{ 'footer.acum' | translate }}
+            {{ 'footer.acum_prefix' | translate }}<a href="https://acum.org.il/" target="_blank" rel="noopener">{{ 'footer.acum_name' | translate }}</a>{{ 'footer.acum_suffix' | translate }}
         </span>
         <span class="footer-dot">·</span>
         <span>{{ 'footer.rights_notice' | translate }} <button class="footer-legal-link" type="button" (click)="openReportModal()">{{ 'footer.contact' | translate }}</button> {{ 'footer.rights_resolve' | translate }}</span>

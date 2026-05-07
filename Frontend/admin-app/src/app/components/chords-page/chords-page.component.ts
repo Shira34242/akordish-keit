@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
+import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -48,6 +49,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     selectedArtistId: number | null = null;
     selectedGenreId: number | null = null;
     selectedKeyId: number | null = null;
+    selectedTagId: number | null = null;
+    selectedTagName: string = '';
     sortBy: string = 'date';
     knownChordsMode = false;
     knownInstrument: KnownChordInstrument = 'guitar';
@@ -60,6 +63,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     artists: any[] = [];
     genres: any[] = [];
     musicalKeys: MusicalKey[] = [];
+    quickTags: SystemItem[] = [];
     filteredArtists: any[] = [];
     filteredGenres: any[] = [];
     filteredKeys: MusicalKey[] = [];
@@ -78,13 +82,14 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     private recentlyViewedKey = 'chords-recently-viewed';
 
     get isFiltered(): boolean {
-        return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId || this.knownChordsMode);
+        return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId || this.selectedTagId || this.knownChordsMode);
     }
 
     constructor(
         private songService: SongService,
         private authService: AuthService,
         private knownChordService: UserKnownChordService,
+        private systemTablesService: SystemTablesService,
         private router: Router
     ) {
         this.searchSubscription = this.searchSubject.pipe(
@@ -114,6 +119,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     ngOnInit(): void {
         this.loadSongs();
         this.loadFilterData();
+        this.loadQuickTags();
         this.loadCategorySections();
         this.loadRecentlyViewed();
     }
@@ -251,7 +257,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.scrollObserver.observe(sentinel);
     }
 
-    private loadMore(): void {
+    loadMore(): void {
         if (this.knownChordsMode || this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
         if (this.currentPage >= this.totalPages) return;
         this.isLoadingMore = true;
@@ -263,7 +269,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.selectedArtistId || undefined,
             this.selectedGenreId || undefined,
             this.selectedKeyId || undefined,
-            this.sortBy
+            this.sortBy,
+            this.selectedTagId || undefined
         ).subscribe({
             next: (res) => {
                 this.songs = [...this.songs, ...(res.songs || [])];
@@ -294,7 +301,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.selectedArtistId || undefined,
             this.selectedGenreId || undefined,
             this.selectedKeyId || undefined,
-            this.sortBy
+            this.sortBy,
+            this.selectedTagId || undefined
         ).subscribe({
             next: (res) => {
                 this.songs = res.songs;
@@ -320,6 +328,29 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.genres = genres;
             this.filteredGenres = genres.slice(0, 10);
         });
+    }
+
+    loadQuickTags(): void {
+        this.systemTablesService.getChordQuickTags().subscribe({
+            next: tags => this.quickTags = tags || [],
+            error: () => this.quickTags = []
+        });
+    }
+
+    selectQuickTag(tag: SystemItem): void {
+        this.knownChordsMode = false;
+        if (this.selectedTagId === tag.id) {
+            this.selectedTagId = null;
+            this.selectedTagName = '';
+        } else {
+            this.selectedTagId = tag.id;
+            this.selectedTagName = tag.name;
+            this.search = '';
+        }
+        this.currentPage = 1;
+        this.hasMoreSongs = true;
+        this.songs = [];
+        this.loadSongs();
     }
 
     // ─────────────────────────────────────────────
@@ -415,6 +446,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedArtistId = null;
         this.selectedGenreId = null;
         this.selectedKeyId = null;
+        this.selectedTagId = null;
+        this.selectedTagName = '';
         this.selectedFilterArtistId = null;
         this.sortBy = 'date';
         this.knownChordsMode = false;
@@ -460,6 +493,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.selectedArtistId = null;
             this.selectedGenreId = null;
             this.selectedKeyId = null;
+            this.selectedTagId = null;
+            this.selectedTagName = '';
             this.selectedFilterArtistId = null;
             this.artistSearchText = '';
             this.genreSearchText = '';

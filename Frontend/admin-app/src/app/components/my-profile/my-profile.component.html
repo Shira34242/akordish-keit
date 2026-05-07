@@ -148,6 +148,31 @@
       </div>
     </div>
 
+    <div class="manage-card manage-card--requests">
+      <div class="manage-card-col">
+        <div>
+          <h3 class="manage-card-title">עדכונים במייל</h3>
+          <p class="manage-card-subtitle">קבלת עדכונים והצעות מאקורדישקייט. אפשר לשנות בכל רגע.</p>
+        </div>
+        <div class="manage-card-actions">
+          <button class="manage-account-link" (click)="toggleMarketingConsent()" [disabled]="marketingSaving">
+            {{ marketingSaving ? 'שומר...' : (user?.marketingConsent ? 'הפסק דיוור' : 'הפעל דיוור') }}
+          </button>
+        </div>
+      </div>
+      <div class="manage-card-col manage-card-col--info">
+        <div class="manage-info-list">
+          <div class="manage-info-item">
+            <span class="manage-info-label">סטטוס</span>
+            <span class="status-value">
+              <span class="status-dot" [ngClass]="user?.marketingConsent ? 'status-dot--active' : 'status-dot--inactive'"></span>
+              {{ user?.marketingConsent ? 'פעיל' : 'לא פעיל' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     @if (canViewChordRequests) {
       <div class="manage-card manage-card--requests">
         <div class="manage-card-col">

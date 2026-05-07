@@ -90,7 +90,7 @@ export class ServiceProviderFormComponent implements OnInit {
   customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
   newTestimonial = { clientName: '', text: '' };
   branches: CreateServiceProviderBranchDto[] = [];
-  newBranch: CreateServiceProviderBranchDto = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
 
   // Available categories, cities, and users loaded from API
   availableCategories: SystemItem[] = [];
@@ -218,6 +218,8 @@ export class ServiceProviderFormComponent implements OnInit {
         })) || [];
         this.branches = provider.branches?.map(b => ({
           name: b.name,
+          cityId: b.cityId,
+          imageUrl: b.imageUrl,
           address: b.address,
           phoneNumber: b.phoneNumber,
           email: b.email,
@@ -423,24 +425,54 @@ export class ServiceProviderFormComponent implements OnInit {
 
   // City dropdown methods
   toggleCityDropdown(): void {
-    const nextState = !this.cityDropdownOpen;
-    this.closeAllDropdowns();
-    this.cityDropdownOpen = nextState;
     if (this.cityDropdownOpen) {
+      this.cityDropdownOpen = false;
       this.citySearchText = '';
-      this.filteredCities = this.availableCities;
+    } else {
+      this.openCityDropdown();
     }
+  }
+
+  openCityDropdown(): void {
+    if (this.cityDropdownOpen) return;
+    this.closeAllDropdowns();
+    this.cityDropdownOpen = true;
+    this.citySearchText = '';
+    this.filteredCities = this.availableCities;
+  }
+
+  onCityTextInput(event: Event): void {
+    this.citySearchText = (event.target as HTMLInputElement).value;
+    if (!this.cityDropdownOpen) {
+      this.cityDropdownOpen = true;
+    }
+    this.onCitySearchChange();
+  }
+
+  onCityInputBlur(): void {
+    setTimeout(() => {
+      if (this.cityDropdownOpen) {
+        this.cityDropdownOpen = false;
+        this.citySearchText = '';
+      }
+    }, 200);
   }
 
   selectCity(cityId: number | undefined): void {
     this.cityId = cityId;
     this.cityDropdownOpen = false;
+    this.citySearchText = '';
   }
 
   getSelectedCityName(): string | null {
     if (!this.cityId) return null;
     const city = this.availableCities.find(c => c.id === this.cityId);
     return city ? city.name : null;
+  }
+
+  getCityName(cityId?: number): string {
+    if (!cityId) return '';
+    return this.availableCities.find(city => city.id === cityId)?.name ?? '';
   }
 
   onCitySearchChange(): void {
@@ -539,13 +571,15 @@ export class ServiceProviderFormComponent implements OnInit {
     }
     this.branches.push({
       name: this.newBranch.name.trim(),
+      cityId: this.newBranch.cityId,
+      imageUrl: this.newBranch.imageUrl?.trim() || undefined,
       address: this.newBranch.address?.trim() || undefined,
       phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
       email: this.newBranch.email?.trim() || undefined,
       openingHours: this.newBranch.openingHours?.trim() || undefined,
       order: this.branches.length
     });
-    this.newBranch = { name: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
   }
 
   async removeBranch(index: number): Promise<void> {
@@ -595,6 +629,8 @@ export class ServiceProviderFormComponent implements OnInit {
       .filter(branch => branch.name?.trim())
       .map((branch, index) => ({
         name: branch.name.trim(),
+        cityId: branch.cityId,
+        imageUrl: this.optionalText(branch.imageUrl),
         address: this.optionalText(branch.address),
         phoneNumber: this.optionalText(branch.phoneNumber),
         email: this.optionalText(branch.email),

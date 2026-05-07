@@ -33,6 +33,9 @@ export interface User {
     lastProfileReminderAt?: string | null;
     profileReminderDismissCount?: number;
     visitCount?: number;
+    marketingConsent?: boolean;
+    marketingConsentAt?: string | null;
+    marketingConsentRevokedAt?: string | null;
 }
 
 export interface CompleteProfilePayload {
@@ -100,8 +103,8 @@ export class AuthService {
         }
     }
 
-    register(username: string, email: string, password: string): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { username, email, password }, {
+    register(username: string, email: string, password: string, termsApproved: boolean, marketingConsent = false): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { username, email, password, termsApproved, marketingConsent }, {
             withCredentials: true // 🔐 מאפשר שליחת וקבלת cookies
         }).pipe(
             tap(response => this.saveAuthResponse(response))
@@ -116,8 +119,8 @@ export class AuthService {
         );
     }
 
-    googleLogin(idToken: string): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, { idToken }, {
+    googleLogin(idToken: string, termsApproved = false, marketingConsent = false): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, { idToken, termsApproved, marketingConsent }, {
             withCredentials: true // 🔐 מאפשר שליחת וקבלת cookies
         }).pipe(
             tap(response => this.saveAuthResponse(response))
@@ -162,6 +165,17 @@ export class AuthService {
 
     updateSoftProfile(payload: UpdateSoftProfilePayload): Observable<User> {
         return this.http.put<User>(`${this.apiUrl}/update-soft-profile`, payload, {
+            withCredentials: true
+        }).pipe(
+            tap(user => {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.currentUserSubject.next(user);
+            })
+        );
+    }
+
+    updateMarketingConsent(marketingConsent: boolean): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/marketing-consent`, { marketingConsent }, {
             withCredentials: true
         }).pipe(
             tap(user => {

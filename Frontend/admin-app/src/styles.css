@@ -31,6 +31,12 @@
   --space-2xl:  2.5rem;    /* 40px — בין מקטעים בעמוד */
   --space-3xl:  3.5rem;    /* 56px — בין אזורי תוכן גדולים */
   --space-4xl:  4.5rem;    /* 72px — ריווח חיצוני גדול */
+
+  /* Scrollbar */
+  --site-scrollbar-size: 9px;
+  --site-scrollbar-track: transparent;
+  --site-scrollbar-thumb: #404040;
+  --site-scrollbar-thumb-hover: #000000;
 }
 
 /* Global Reset */
@@ -69,4 +75,126 @@ app-root {
 .ak-required-group-invalid .dropdown-trigger,
 .ak-required-group-invalid .dropdown-selected {
   border-color: var(--color-error) !important;
+}
+
+/* ========================================
+   Scrollbar — גלילה
+   ======================================== */
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.guided-scroll-region::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.modal-container::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.playlists-list::-webkit-scrollbar,
+.horizontal-scroll::-webkit-scrollbar,
+.gallery-scroll::-webkit-scrollbar,
+.teachers-grid::-webkit-scrollbar,
+.profile-dropdown::-webkit-scrollbar,
+.dropdown-list::-webkit-scrollbar {
+  width: var(--site-scrollbar-size);
+  height: var(--site-scrollbar-size);
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.guided-scroll-region::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track,
+.modal-container::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.playlists-list::-webkit-scrollbar-track,
+.horizontal-scroll::-webkit-scrollbar-track,
+.gallery-scroll::-webkit-scrollbar-track,
+.teachers-grid::-webkit-scrollbar-track,
+.profile-dropdown::-webkit-scrollbar-track,
+.dropdown-list::-webkit-scrollbar-track {
+  background: var(--site-scrollbar-track);
+  border-radius: 8px;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.guided-scroll-region::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb,
+.modal-container::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.playlists-list::-webkit-scrollbar-thumb,
+.horizontal-scroll::-webkit-scrollbar-thumb,
+.gallery-scroll::-webkit-scrollbar-thumb,
+.teachers-grid::-webkit-scrollbar-thumb,
+.profile-dropdown::-webkit-scrollbar-thumb,
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--site-scrollbar-thumb);
+  border-radius: 8px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.guided-scroll-region::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-container::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover,
+.playlists-list::-webkit-scrollbar-thumb:hover,
+.horizontal-scroll::-webkit-scrollbar-thumb:hover,
+.gallery-scroll::-webkit-scrollbar-thumb:hover,
+.teachers-grid::-webkit-scrollbar-thumb:hover,
+.profile-dropdown::-webkit-scrollbar-thumb:hover,
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: var(--site-scrollbar-thumb-hover);
+}
+
+html::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button,
+.guided-scroll-region::-webkit-scrollbar-button,
+.modal-content::-webkit-scrollbar-button,
+.modal-container::-webkit-scrollbar-button,
+.modal-body::-webkit-scrollbar-button,
+.playlists-list::-webkit-scrollbar-button,
+.horizontal-scroll::-webkit-scrollbar-button,
+.gallery-scroll::-webkit-scrollbar-button,
+.teachers-grid::-webkit-scrollbar-button,
+.profile-dropdown::-webkit-scrollbar-button,
+.dropdown-list::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  body,
+  html {
+    scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
+  }
+
+  .guided-scroll-region,
+  .modal-content,
+  .modal-container,
+  .modal-body,
+  .playlists-list,
+  .horizontal-scroll,
+  .gallery-scroll,
+  .teachers-grid,
+  .profile-dropdown,
+  .dropdown-list {
+    scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
+  }
+}
+
+/* ========================================
+   Events page — single-screen, no scroll, no footer
+   ======================================== */
+html:has(app-events-page),
+body:has(app-events-page) {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body:has(app-events-page) .main-footer {
+  display: none;
+}
+
+body:has(app-events-page) .main-content {
+  min-height: 0;
+  flex: 0 0 auto;
 }

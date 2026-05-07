@@ -1,9 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SongService } from '../../../services/song.service';
 import { PlaylistDetail } from '../../../models/playlist.model';
 import { isChord, isChordLine } from '../../../utils/music-utils';
+
+type ColumnMode = 'auto' | 1 | 2 | 3;
 
 @Component({
     selector: 'app-chord-book-panel',
@@ -12,15 +15,23 @@ import { isChord, isChordLine } from '../../../utils/music-utils';
     templateUrl: './chord-book-panel.component.html',
     styleUrls: ['./chord-book-panel.component.css']
 })
-export class ChordBookPanelComponent {
+export class ChordBookPanelComponent implements OnInit {
     @Input() playlist!: PlaylistDetail;
     @Output() close = new EventEmitter<void>();
 
-    columns: 1 | 2 | 3 = 1;
-    fontSize: number = 16;
+    columnMode: ColumnMode = 'auto';
+    fontSize: number = 10;
     chordColor: string = '#ddff53';
     lyricsColor: string = '#000000';
     showChords: boolean = true;
+
+    previewSongIndex = 0;
+    previewSongData: any = null;
+    isLoadingPreview = false;
+
+    zoomOpen: boolean = false;
+    allSongsData: any[] | null = null;
+    isLoadingAllSongs: boolean = false;
 
     isExporting: boolean = false;
     progressText: string = '';
@@ -33,7 +44,11 @@ export class ChordBookPanelComponent {
     readonly PAGE_FULL_H = Math.round(640 * 297 / 210); // ≈ 906
     readonly BRAND_BAR_H = 20;
 
-    constructor(private songService: SongService) {}
+    constructor(private songService: SongService, private sanitizer: DomSanitizer) {}
+
+    ngOnInit(): void {
+        this.loadPreviewSong(0);
+    }
 
     onBackdropClick(e: MouseEvent) {
         if ((e.target as HTMLElement).classList.contains('chord-book-backdrop')) this.close.emit();
@@ -47,6 +62,116 @@ export class ChordBookPanelComponent {
     }
 
     get songCount(): number { return this.playlist?.songs?.length ?? 0; }
+
+    loadPreviewSong(index: number): void {
+        if (!this.playlist?.songs?.length) return;
+        const safeIdx = Math.max(0, Math.min(index, this.playlist.songs.length - 1));
+        this.previewSongIndex = safeIdx;
+        const target = this.playlist.songs[safeIdx];
+        this.isLoadingPreview = true;
+        this.songService.getSongById(target.songId).subscribe({
+            next: (song) => {
+                this.previewSongData = song;
+                this.isLoadingPreview = false;
+            },
+            error: () => {
+                this.previewSongData = null;
+                this.isLoadingPreview = false;
+            }
+        });
+    }
+
+    nextPreviewSong(): void {
+        if (this.previewSongIndex < this.songCount - 1) this.loadPreviewSong(this.previewSongIndex + 1);
+    }
+    prevPreviewSong(): void {
+        if (this.previewSongIndex > 0) this.loadPreviewSong(this.previewSongIndex - 1);
+    }
+
+    openZoomAll(): void {
+        if (this.songCount === 0) return;
+        this.zoomOpen = true;
+        if (!this.allSongsData && !this.isLoadingAllSongs) {
+            this.loadAllSongs();
+        }
+    }
+
+    closeZoom(): void { this.zoomOpen = false; }
+
+    onZoomBackdropClick(e: MouseEvent): void {
+        if ((e.target as HTMLElement).classList.contains('zoom-backdrop')) this.closeZoom();
+    }
+
+    private loadAllSongs(): void {
+        this.isLoadingAllSongs = true;
+        const promises = this.playlist.songs.map(s =>
+            new Promise<any>((resolve) => {
+                this.songService.getSongById(s.songId).subscribe({
+                    next: (song) => resolve(song),
+                    error: () => resolve(null)
+                });
+            })
+        );
+        Promise.all(promises).then((results) => {
+            this.allSongsData = results;
+            this.isLoadingAllSongs = false;
+        });
+    }
+
+    allSongPageHtml(song: any): SafeHtml {
+        if (!song) {
+            return this.sanitizer.bypassSecurityTrustHtml(
+                '<div style="padding:40px;text-align:center;color:#888;font-family:\'Open Sans\',sans-serif">שגיאה בטעינת השיר</div>'
+            );
+        }
+        const cols = this.columnsForSong(song);
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildSongInnerHtml(song, cols));
+    }
+
+    get fullIndexPageHtml(): SafeHtml {
+        const entries = this.playlist.songs.map((s, i) => ({
+            title: s.songTitle, artist: s.artistName, page: 3 + i
+        }));
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildIndexInnerHtml(entries));
+    }
+
+    private chooseColumnsForSong(song: any): 1 | 2 | 3 {
+        const lyrics: string = song?.lyricsWithChords || '';
+        const totalLines = lyrics ? lyrics.split('\n').length : 0;
+        const lineH = this.fontSize * 2;
+        const approxHeaderH = 130;
+        const avail = this.pageClipH - approxHeaderH;
+        if (avail <= 0) return 1;
+        for (let cols = 1; cols <= 3; cols++) {
+            const colHeight = Math.ceil(totalLines / cols) * lineH;
+            if (colHeight <= avail) return cols as 1 | 2 | 3;
+        }
+        return 3;
+    }
+
+    columnsForSong(song: any): 1 | 2 | 3 {
+        if (this.columnMode === 'auto') return this.chooseColumnsForSong(song);
+        return this.columnMode;
+    }
+
+    get previewSongPageHtml(): SafeHtml {
+        const song = this.previewSongData;
+        if (!song) return this.sanitizer.bypassSecurityTrustHtml('');
+        const cols = this.columnsForSong(song);
+        const html = this.buildSongInnerHtml(song, cols);
+        return this.sanitizer.bypassSecurityTrustHtml(html);
+    }
+
+    get previewCoverPageHtml(): SafeHtml {
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildCoverInnerHtml());
+    }
+
+    get previewIndexPageHtml(): SafeHtml {
+        const entries = this.playlist.songs.slice(0, 12).map((s, i) => ({
+            title: s.songTitle, artist: s.artistName, page: 3 + i
+        }));
+        return this.sanitizer.bypassSecurityTrustHtml(this.buildIndexInnerHtml(entries));
+    }
 
     private escapeHtml(s: string): string {
         return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -79,12 +204,46 @@ export class ChordBookPanelComponent {
         return out.join('\n');
     }
 
-    // ===== בניית container לשיר =====
+    // ===== בניית HTML פנימי של שיר (משותף לייצוא ולתצוגה מקדימה) =====
 
-    private buildSongContainer(song: any): HTMLElement {
+    private buildSongInnerHtml(song: any, cols: 1 | 2 | 3): string {
+        const lyricsHtml = this.buildLyricsHtml(song);
+        const colCss = cols > 1
+            ? `column-count:${cols};column-gap:24px;column-fill:balance;`
+            : '';
+        const artistName = song?.artists?.map((a: any) => a.name).join(', ') || '';
+        const keyName = song?.originalKeyName || '';
+        const genreHtml = (song?.genres || []).map((g: any) =>
+            `<span style="display:inline-block;background:#F2F2F2;border-radius:999px;padding:1px 8px;font-size:9px;font-weight:300;margin:1px 2px;color:#404040">${this.escapeHtml(g.name || '')}</span>`
+        ).join('');
+        const composerParts: string[] = [];
+        if (song?.composer?.name) composerParts.push('לחן: ' + song.composer.name);
+        if (song?.lyricist?.name) composerParts.push('מילים: ' + song.lyricist.name);
+        const composerHtml = composerParts.length
+            ? `<div style="font-size:9px;font-weight:300;color:#888;margin-top:3px">${this.escapeHtml(composerParts.join(' | '))}</div>`
+            : '';
+        const imageHtml = song?.imageUrl
+            ? `<img src="${song.imageUrl}" crossorigin="anonymous" style="width:80px;height:80px;object-fit:cover;border-radius:12px;flex-shrink:0;display:block" alt="">`
+            : '';
+
+        return `
+<div class="pdf-header" style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e8e8e8">
+  ${imageHtml}
+  <div style="flex:1;text-align:right">
+    <div style="font-size:17px;font-weight:800;line-height:1.2;margin-bottom:3px">${this.escapeHtml(song?.title || '')}</div>
+    <div style="font-size:12px;font-weight:300;color:#404040;margin-bottom:3px">${this.escapeHtml(artistName)}</div>
+    ${keyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">סולם: ${this.escapeHtml(keyName)}</div>` : ''}
+    <div style="margin-top:2px">${genreHtml}</div>
+    ${composerHtml}
+  </div>
+</div>
+<div class="pdf-lyrics" style="white-space:pre-wrap;font-size:${this.fontSize}px;line-height:2;color:${this.lyricsColor};${colCss}">${lyricsHtml}</div>`;
+    }
+
+    private buildSongContainer(song: any, cols?: 1 | 2 | 3): HTMLElement {
         const container = document.createElement('div');
         container.style.cssText = [
-            'position:fixed', 'top:0', 'left:0',
+            'position:fixed', 'top:0', 'left:-99999px',
             `width:${this.PAGE_W}px`,
             'background:#fff',
             'direction:rtl',
@@ -94,56 +253,38 @@ export class ChordBookPanelComponent {
             'line-height:2',
             'padding:20px 24px',
             'box-sizing:border-box',
-            'z-index:99998'
+            'pointer-events:none',
+            'z-index:-1'
         ].join(';');
-
-        const lyricsHtml = this.buildLyricsHtml(song);
-        const colCss = this.columns > 1
-            ? `column-count:${this.columns};column-gap:24px;column-fill:balance;`
-            : '';
-        const artistName = song?.artists?.map((a: any) => a.name).join(', ') || '';
-        const keyName = song?.originalKeyName || '';
-        const genreHtml = (song?.genres || []).map((g: any) =>
-            `<span style="display:inline-block;background:#F2F2F2;border-radius:999px;padding:1px 8px;font-size:9px;font-weight:300;margin:1px 2px;color:#404040">${g.name}</span>`
-        ).join('');
-        const composerParts: string[] = [];
-        if (song?.composer?.name) composerParts.push('לחן: ' + song.composer.name);
-        if (song?.lyricist?.name) composerParts.push('מילים: ' + song.lyricist.name);
-        const composerHtml = composerParts.length
-            ? `<div style="font-size:9px;font-weight:300;color:#888;margin-top:3px">${composerParts.join(' | ')}</div>`
-            : '';
-        const imageHtml = song?.imageUrl
-            ? `<img src="${song.imageUrl}" crossorigin="anonymous" style="width:80px;height:80px;object-fit:cover;border-radius:12px;flex-shrink:0;display:block" alt="">`
-            : '';
-
-        container.innerHTML = `
-<div class="pdf-header" style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e8e8e8">
-  ${imageHtml}
-  <div style="flex:1;text-align:right">
-    <div style="font-size:17px;font-weight:800;line-height:1.2;margin-bottom:3px">${this.escapeHtml(song?.title || '')}</div>
-    <div style="font-size:12px;font-weight:300;color:#404040;margin-bottom:3px">${this.escapeHtml(artistName)}</div>
-    ${keyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">סולם: ${keyName}</div>` : ''}
-    <div style="margin-top:2px">${genreHtml}</div>
-    ${composerHtml}
-  </div>
-</div>
-<div class="pdf-lyrics" style="white-space:pre-wrap;font-size:${this.fontSize}px;line-height:2;color:${this.lyricsColor};${colCss}">${lyricsHtml}</div>`;
+        const finalCols = cols ?? this.columnsForSong(song);
+        container.innerHTML = this.buildSongInnerHtml(song, finalCols);
         return container;
     }
 
     // ===== עמוד כריכה =====
 
+    private buildCoverInnerHtml(): string {
+        return `
+<div style="color:#ddff53;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px;opacity:0.7">ספר אקורדים</div>
+<div style="color:#ffffff;font-size:38px;font-weight:800;line-height:1.25;margin-bottom:20px;max-width:480px">${this.escapeHtml(this.playlist.name)}</div>
+<div style="color:#555;font-size:13px;font-weight:300;margin-bottom:56px">${this.songCount} שירים</div>
+<div style="width:48px;height:3px;background:#ddff53;border-radius:999px;margin-bottom:56px"></div>
+<div style="color:#ddff53;font-size:17px;font-weight:800;letter-spacing:.06em">אקורדישקייט</div>
+<div style="color:#404040;font-size:11px;font-weight:300;margin-top:10px">המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית</div>`;
+    }
+
     private buildCoverContainer(): HTMLElement {
         const container = document.createElement('div');
         container.style.cssText = [
-            'position:fixed', 'top:0', 'left:0',
+            'position:fixed', 'top:0', 'left:-99999px',
             `width:${this.PAGE_W}px`,
             `height:${this.PAGE_FULL_H}px`,
             'background:#000',
             'direction:rtl',
             'font-family:"Open Sans",Arial,sans-serif',
             'box-sizing:border-box',
-            'z-index:99998',
+            'pointer-events:none',
+            'z-index:-1',
             'display:flex',
             'flex-direction:column',
             'align-items:center',
@@ -151,34 +292,13 @@ export class ChordBookPanelComponent {
             'padding:60px 48px',
             'text-align:center'
         ].join(';');
-
-        container.innerHTML = `
-<div style="color:#ddff53;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px;opacity:0.7">ספר אקורדים</div>
-<div style="color:#ffffff;font-size:38px;font-weight:800;line-height:1.25;margin-bottom:20px;max-width:480px">${this.escapeHtml(this.playlist.name)}</div>
-<div style="color:#555;font-size:13px;font-weight:300;margin-bottom:56px">${this.songCount} שירים</div>
-<div style="width:48px;height:3px;background:#ddff53;border-radius:999px;margin-bottom:56px"></div>
-<div style="color:#ddff53;font-size:17px;font-weight:800;letter-spacing:.06em">אקורדישקייט</div>
-<div style="color:#404040;font-size:11px;font-weight:300;margin-top:10px">המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית</div>`;
+        container.innerHTML = this.buildCoverInnerHtml();
         return container;
     }
 
     // ===== עמוד תוכן עניינים =====
 
-    private buildIndexContainer(entries: { title: string; artist: string; page: number }[]): HTMLElement {
-        const container = document.createElement('div');
-        container.style.cssText = [
-            'position:fixed', 'top:0', 'left:0',
-            `width:${this.PAGE_W}px`,
-            'background:#fff',
-            'direction:rtl',
-            'font-family:"Open Sans",Arial,sans-serif',
-            'font-weight:300',
-            'font-size:13px',
-            'padding:28px 32px',
-            'box-sizing:border-box',
-            'z-index:99998'
-        ].join(';');
-
+    private buildIndexInnerHtml(entries: { title: string; artist: string; page: number }[]): string {
         const rows = entries.map((e, i) => `
 <div style="display:flex;align-items:center;padding:9px 0;border-bottom:1px solid #F2F2F2;gap:12px">
   <span style="font-weight:800;font-size:10px;color:#aaa;min-width:22px;text-align:center;flex-shrink:0">${i + 1}</span>
@@ -189,10 +309,28 @@ export class ChordBookPanelComponent {
   <span style="font-weight:800;font-size:11px;background:#ddff53;border-radius:999px;padding:2px 10px;flex-shrink:0;direction:ltr">${e.page}</span>
 </div>`).join('');
 
-        container.innerHTML = `
+        return `
 <div style="font-size:22px;font-weight:800;margin-bottom:4px">תוכן עניינים</div>
 <div style="font-size:11px;font-weight:300;color:#888;margin-bottom:22px">${this.escapeHtml(this.playlist.name)}</div>
 ${rows}`;
+    }
+
+    private buildIndexContainer(entries: { title: string; artist: string; page: number }[]): HTMLElement {
+        const container = document.createElement('div');
+        container.style.cssText = [
+            'position:fixed', 'top:0', 'left:-99999px',
+            `width:${this.PAGE_W}px`,
+            'background:#fff',
+            'direction:rtl',
+            'font-family:"Open Sans",Arial,sans-serif',
+            'font-weight:300',
+            'font-size:13px',
+            'padding:28px 32px',
+            'box-sizing:border-box',
+            'pointer-events:none',
+            'z-index:-1'
+        ].join(';');
+        container.innerHTML = this.buildIndexInnerHtml(entries);
         return container;
     }
 

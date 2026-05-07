@@ -37,6 +37,8 @@ public class UpdateArtistDto
     public List<SocialLinkDto>? SocialLinks { get; set; }
     public List<AddGalleryImageDto>? GalleryImages { get; set; }
     public List<AddVideoDto>? Videos { get; set; }
+    public List<AddArtistHitDto>? Hits { get; set; }
+    public List<AddArtistAlbumDto>? Albums { get; set; }
 }
 
 /// <summary>
@@ -79,6 +81,31 @@ public class AddVideoDto
     public string VideoUrl { get; set; }
     public string? Title { get; set; }
     public int DisplayOrder { get; set; }
+}
+
+/// <summary>
+/// DTO להוספת להיט גדול בדף אמן
+/// </summary>
+public class AddArtistHitDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public string YouTubeUrl { get; set; } = string.Empty;
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// DTO להוספת אלבום בדף אמן
+/// </summary>
+public class AddArtistAlbumDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string CoverImageUrl { get; set; } = string.Empty;
+    public int? ReleaseYear { get; set; }
+    public string ExternalUrl { get; set; } = string.Empty;
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 /// <summary>

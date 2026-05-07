@@ -339,6 +339,29 @@
       </div>
     </section>
 
+    <section
+      class="home-section viral-section"
+      #viralSection
+      *ngIf="!viralArticlesLoaded || loadingViralArticles || visibleViralArticles.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">ויראלי</h2>
+        <a routerLink="/music-news" class="section-link">לכל חדשות המוזיקה</a>
+      </div>
+
+      <div class="viral-loading" *ngIf="loadingViralArticles">טוען כתבות פופולאריות...</div>
+
+      <div class="viral-list" *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0">
+        <app-news-banner
+          *ngFor="let article of visibleViralArticles; trackBy: trackById"
+          class="viral-news-row"
+          [article]="article"
+          [showDescription]="false">
+        </app-news-banner>
+      </div>
+
+      <div class="viral-sentinel" #viralSentinel *ngIf="canRevealMoreViralArticles"></div>
+    </section>
+
     </div>
   </div>
 </div>

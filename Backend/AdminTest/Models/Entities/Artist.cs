@@ -85,6 +85,8 @@ public class Artist
     public virtual ICollection<ArtistSocialLink> SocialLinks { get; set; }
     public virtual ICollection<ArtistGalleryImage> GalleryImages { get; set; }
     public virtual ICollection<ArtistVideo> Videos { get; set; }
+    public virtual ICollection<ArtistHit> Hits { get; set; }
+    public virtual ICollection<ArtistAlbum> Albums { get; set; }
     public virtual ICollection<ArticleArtist> ArticleArtists { get; set; }
     public virtual ICollection<EventArtist> EventArtists { get; set; }
 }

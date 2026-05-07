@@ -39,6 +39,7 @@ public class MusicServiceProvidersController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] int? categoryId = null,
         [FromQuery] int? cityId = null,
+        [FromQuery] string? cityName = null,
         [FromQuery] int? status = null,
         [FromQuery] bool? isFeatured = null,
         [FromQuery] bool? isTeacher = null,
@@ -46,7 +47,7 @@ public class MusicServiceProvidersController : ControllerBase
         [FromQuery] int pageSize = 10)
     {
         var result = await _service.GetServiceProvidersAsync(
-            search, categoryId, cityId, status, isFeatured, isTeacher, pageNumber, pageSize);
+            search, categoryId, cityId, cityName, status, isFeatured, isTeacher, pageNumber, pageSize);
 
         return Ok(result);
     }
@@ -276,6 +277,40 @@ public class MusicServiceProvidersController : ControllerBase
                         ServiceProviderId = serviceProvider.Id,
                         Platform = link.Platform,
                         Url = link.Url
+                    });
+                }
+            }
+
+            if (dto.CustomerTestimonials != null && dto.CustomerTestimonials.Any())
+            {
+                foreach (var testimonial in dto.CustomerTestimonials.Where(item => !string.IsNullOrWhiteSpace(item.Text)))
+                {
+                    _context.ServiceProviderTestimonials.Add(new MusicServiceProviderTestimonial
+                    {
+                        ServiceProviderId = serviceProvider.Id,
+                        ClientName = testimonial.ClientName,
+                        Text = testimonial.Text,
+                        Order = testimonial.Order
+                    });
+                }
+            }
+
+            if (dto.Branches != null && dto.Branches.Any())
+            {
+                foreach (var branch in dto.Branches.Where(item => !string.IsNullOrWhiteSpace(item.Name)))
+                {
+                    _context.ServiceProviderBranches.Add(new MusicServiceProviderBranch
+                    {
+                        ServiceProviderId = serviceProvider.Id,
+                        Name = branch.Name,
+                        CityId = branch.CityId,
+                        ImageUrl = branch.ImageUrl,
+                        Address = branch.Address,
+                        PhoneNumber = branch.PhoneNumber,
+                        Email = branch.Email,
+                        OpeningHours = branch.OpeningHours,
+                        Order = branch.Order,
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
             }

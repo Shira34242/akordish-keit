@@ -75,6 +75,7 @@
                   [(ngModel)]="artistForm.name"
                   name="name"
                   class="form-input"
+                  data-validation-target="artist-name"
                   [placeholder]="'artist_create.name_he_placeholder' | translate"
                   required
                 />
@@ -149,18 +150,19 @@
               [showPreview]="false"
             />
 
-            <label class="form-label" style="margin-top: 12px;">טשטוש על הבאנר ({{ artistForm.bannerBlur }})</label>
-            <input
-              type="range"
-              min="0"
-              max="20"
-              step="1"
-              [(ngModel)]="artistForm.bannerBlur"
-              name="bannerBlur"
-              class="form-range"
-              style="width: 100%;"
-            />
-            <small class="form-hint">0 = ללא טשטוש, 20 = טשטוש חזק. שימושי כדי שהשם והפרטים שלך יבלטו מעל התמונה.</small>
+            <label class="checkbox-label" style="margin-top: 12px;">
+              <input
+                type="range"
+                min="0"
+                max="20"
+                step="1"
+                [(ngModel)]="artistForm.bannerBlur"
+                name="bannerBlur"
+                class="form-range"
+              />
+              <span>הוסף טשטוש לבאנר</span>
+            </label>
+            <small class="form-hint">סימון תיבה זו יחיל טשטוש על הבאנר — שימושי כדי שהשם והפרטים יבלטו מעל התמונה.</small>
           </div>
 
           <div class="form-group">
@@ -265,6 +267,70 @@
           <div class="section-head">
             <h2>{{ 'artist_create.step_media' | translate }}</h2>
             <p class="section-description">{{ 'artist_create.step3_desc' | translate }}</p>
+          </div>
+
+          <div class="section-kicker">להיטים גדולים</div>
+          <p class="section-description section-description--compact">
+            יוצג בדף האמן כשורת מלבנים נגללת. צריך שם וקישור YouTube; תמונה היא אופציונלית.
+          </p>
+
+          <div class="media-grid">
+            <button type="button" class="media-add-card media-add-card--video" (click)="addHit()">
+              <span class="material-icons">smart_display</span>
+              <strong>הוסף להיט</strong>
+              <span>שם, תמונה וקישור YouTube</span>
+            </button>
+
+            <div *ngFor="let hit of artistForm.hits; let i = index" class="media-card media-card--video">
+              <button type="button" class="media-card-remove" (click)="removeHit(i)" aria-label="הסר">
+                <span class="material-icons">close</span>
+              </button>
+              <div class="media-card-preview" [class.has-image]="hit.imageUrl">
+                <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט'" />
+                <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
+              </div>
+              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + i" class="form-input" placeholder="שם הלהיט" />
+              <app-file-upload-input
+                [(url)]="hit.imageUrl"
+                placeholder="https://example.com/image.jpg"
+                [showPreview]="false"
+              />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <small class="field-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
+            </div>
+          </div>
+
+          <div class="section-kicker section-kicker--spaced">אלבומים</div>
+          <p class="section-description section-description--compact">
+            יוצג בדף האמן כשורת קוביות נגללת. המעבר הוא לקישור חיצוני.
+          </p>
+
+          <div class="media-grid">
+            <button type="button" class="media-add-card" (click)="addAlbum()">
+              <span class="material-icons">album</span>
+              <strong>הוסף אלבום</strong>
+              <span>עטיפה, שנה וקישור חיצוני</span>
+            </button>
+
+            <div *ngFor="let album of artistForm.albums; let i = index" class="media-card">
+              <button type="button" class="media-card-remove" (click)="removeAlbum(i)" aria-label="הסר">
+                <span class="material-icons">close</span>
+              </button>
+              <div class="media-card-preview" [class.has-image]="album.coverImageUrl">
+                <img *ngIf="album.coverImageUrl" [src]="album.coverImageUrl" [alt]="album.title || 'אלבום'" />
+                <span *ngIf="!album.coverImageUrl" class="material-icons">album</span>
+              </div>
+              <input type="text" [(ngModel)]="album.title" [name]="'album_title_' + i" class="form-input" placeholder="שם האלבום" />
+              <app-file-upload-input
+                [attr.data-validation-target]="'album-cover-' + i"
+                [(url)]="album.coverImageUrl"
+                placeholder="https://example.com/cover.jpg"
+                [showPreview]="false"
+              />
+              <input type="number" min="1900" max="2100" [(ngModel)]="album.releaseYear" [name]="'album_year_' + i" class="form-input" placeholder="שנת יציאה" />
+              <input type="url" [(ngModel)]="album.externalUrl" [name]="'album_url_' + i" class="form-input" placeholder="https://..." />
+              <small class="field-error" *ngIf="getAlbumValidationMessage(i) as albumError">{{ albumError }}</small>
+            </div>
           </div>
 
           <div class="section-kicker">{{ 'artist_create.gallery_kicker' | translate }}</div>
@@ -406,6 +472,7 @@
 
                 <label class="form-label" style="margin-top: 8px;">פוסטר ריבועי (לדף ההופעות)</label>
                 <app-file-upload-input
+                  data-validation-target="performance-image"
                   [(url)]="artistForm.performance.imageUrl"
                   placeholder="https://example.com/poster.jpg"
                   [showPreview]="true"

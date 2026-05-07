@@ -18,6 +18,7 @@ export const routes: Routes = [
             {
                 path: 'song/:id',
                 component: SongPageComponent,
+                canActivate: [authGuard],
                 title: 'אקורדישקייט'
             },
             {
@@ -209,6 +210,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
                 title: 'זכויות יוצרים - אקורדישקייט',
                 data: { page: 'copyright' }
+            },
+            {
+                path: 'accessibility',
+                loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
+                title: 'הצהרת נגישות - אקורדישקייט',
+                data: { page: 'accessibility' }
             },
             {
                 path: 'submit/event',

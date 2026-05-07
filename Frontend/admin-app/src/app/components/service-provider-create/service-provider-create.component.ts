@@ -1,20 +1,22 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SystemTablesService, SystemItem } from '../../services/system-tables.service';
 import { CitiesService, City } from '../../services/cities.service';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
+import { MediaService } from '../../services/admin/media.service';
 import {
   CreateMusicServiceProviderDto,
   ProfileStatus,
   CreateGalleryImageDto,
   CreateServiceProviderCategoryDto,
-  CreateServiceProviderTestimonialDto
+  CreateServiceProviderTestimonialDto,
+  CreateServiceProviderBranchDto
 } from '../../models/music-service-provider.model';
 import {
   SubscriptionPlan,
@@ -37,7 +39,7 @@ interface PlatformLinkOption {
 @Component({
   selector: 'app-service-provider-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadInputComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './service-provider-create.component.html',
   styleUrls: ['./service-provider-create.component.css']
 })
@@ -71,12 +73,24 @@ export class ServiceProviderCreateComponent implements OnInit {
   videoUrl: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
+  hasBranches = false;
+  branches: CreateServiceProviderBranchDto[] = [];
+  newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  branchImageUploading = false;
   selectedCategoryId: number | undefined = undefined;
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
   socialLinks: SocialLinkDto[] = [];
   customerTestimonials: CreateServiceProviderTestimonialDto[] = [];
   newTestimonial = { clientName: '', text: '' };
+  activeSocialPlatform: SocialPlatform | null = null;
+  profileImageUploading = false;
+  galleryUploadingCount = 0;
+  galleryUploadProgress = 0;
+  showVideoLinkInput = false;
+  showTestimonialDraft = false;
+  newVideoUrl = '';
+  videoLinks: string[] = [];
 
   // Available data
   availableCategories: Category[] = [];
@@ -109,7 +123,8 @@ export class ServiceProviderCreateComponent implements OnInit {
     private route: ActivatedRoute,
     public router: Router,
     private host: ElementRef<HTMLElement>,
-    private requiredFieldFeedback: RequiredFieldFeedbackService
+    private requiredFieldFeedback: RequiredFieldFeedbackService,
+    private mediaService: MediaService
   ) {}
 
   ngOnInit() {
@@ -242,6 +257,17 @@ export class ServiceProviderCreateComponent implements OnInit {
     return city ? city.name : '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
   }
 
+  getCityName(cityId?: number): string {
+    if (!cityId) return '';
+    return this.availableCities.find(city => city.id === cityId)?.name ?? '';
+  }
+
+  getBranchSummaryLine(branch: CreateServiceProviderBranchDto): string {
+    return [this.getCityName(branch.cityId), branch.address, branch.openingHours]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
   onCitySearchChange() {
     if (!this.citySearchText.trim()) {
       this.filteredCities = this.availableCities;
@@ -290,6 +316,145 @@ export class ServiceProviderCreateComponent implements OnInit {
     this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('[data-required-service-category]'));
   }
 
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.profileImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (result) => {
+        this.profileImageUrl = result.url;
+        this.profileImageUploading = false;
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading profile image:', error);
+        this.error = 'שגיאה בהעלאת תמונת הפרופיל';
+        this.profileImageUploading = false;
+        input.value = '';
+      }
+    });
+  }
+
+  onGalleryFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
+
+    let completedFiles = 0;
+    const progressByFile = new Map<string, number>();
+    this.galleryUploadingCount += files.length;
+    this.galleryUploadProgress = 0;
+
+    files.forEach((file, index) => {
+      const fileKey = `${file.name}-${file.size}-${index}`;
+      progressByFile.set(fileKey, 0);
+
+      this.mediaService.uploadMediaWithProgress(file).subscribe({
+        next: (event) => {
+          if (event.type === HttpEventType.UploadProgress && event.total) {
+            progressByFile.set(fileKey, Math.round((event.loaded / event.total) * 100));
+            this.galleryUploadProgress = Math.round(
+              Array.from(progressByFile.values()).reduce((sum, value) => sum + value, 0) / files.length
+            );
+            return;
+          }
+
+          if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+          this.galleryImages.push({
+            imageUrl: event.body.url,
+            caption: '',
+            order: this.galleryImages.length
+          });
+          completedFiles++;
+          progressByFile.set(fileKey, 100);
+          this.galleryUploadingCount = Math.max(0, this.galleryUploadingCount - 1);
+          this.galleryUploadProgress = Math.round((completedFiles / files.length) * 100);
+          input.value = '';
+        },
+        error: (error) => {
+          console.error('Error uploading gallery image:', error);
+          this.error = 'שגיאה בהעלאת קובץ לגלריה';
+          completedFiles++;
+          this.galleryUploadingCount = Math.max(0, this.galleryUploadingCount - 1);
+          this.galleryUploadProgress = this.galleryUploadingCount ? this.galleryUploadProgress : 0;
+          input.value = '';
+        }
+      });
+    });
+  }
+
+  onBranchImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || this.branchImageUploading) return;
+
+    this.branchImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (result) => {
+        this.newBranch.imageUrl = result.url;
+        this.branchImageUploading = false;
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading branch image:', error);
+        this.error = 'שגיאה בהעלאת תמונת הסניף';
+        this.branchImageUploading = false;
+        input.value = '';
+      }
+    });
+  }
+
+  addBranch(): void {
+    if (!this.newBranch.name?.trim()) {
+      this.error = 'נא להזין שם סניף';
+      return;
+    }
+
+    this.branches.push({
+      name: this.newBranch.name.trim(),
+      cityId: this.newBranch.cityId,
+      imageUrl: this.newBranch.imageUrl?.trim() || undefined,
+      address: this.newBranch.address?.trim() || undefined,
+      phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
+      email: this.newBranch.email?.trim() || undefined,
+      openingHours: this.newBranch.openingHours?.trim() || undefined,
+      order: this.branches.length
+    });
+    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  }
+
+  removeBranch(index: number): void {
+    this.branches.splice(index, 1);
+    this.branches.forEach((branch, order) => branch.order = order);
+  }
+
+  addVideoLink(): void {
+    const url = this.newVideoUrl.trim();
+    if (!url) return;
+
+    if (!this.videoLinks.includes(url)) {
+      this.videoLinks.push(url);
+    }
+
+    this.videoUrl = this.videoLinks[0] ?? '';
+    this.newVideoUrl = '';
+    this.showVideoLinkInput = true;
+  }
+
+  removeVideoLink(index: number): void {
+    this.videoLinks.splice(index, 1);
+    this.videoUrl = this.videoLinks[0] ?? '';
+  }
+
+  private normalizedVideoLinks(): string[] {
+    return this.videoLinks
+      .map(url => url.trim())
+      .filter((url, index, links) => !!url && links.indexOf(url) === index);
+  }
+
   // Gallery methods
   addGalleryImage() {
     if (!this.newGalleryImage.imageUrl.trim()) {
@@ -306,10 +471,8 @@ export class ServiceProviderCreateComponent implements OnInit {
   }
 
   removeGalleryImage(index: number) {
-    if (confirm('\u05d4\u05d0\u05dd \u05dc\u05de\u05d7\u05d5\u05e7 \u05d0\u05ea \u05d4\u05ea\u05de\u05d5\u05e0\u05d4 \u05d4\u05d6\u05d5 \u05de\u05d4\u05d2\u05dc\u05e8\u05d9\u05d4?')) {
-      this.galleryImages.splice(index, 1);
-      this.galleryImages.forEach((img, idx) => img.order = idx);
-    }
+    this.galleryImages.splice(index, 1);
+    this.galleryImages.forEach((img, idx) => img.order = idx);
   }
 
   addTestimonial(): void {
@@ -325,13 +488,12 @@ export class ServiceProviderCreateComponent implements OnInit {
     });
 
     this.newTestimonial = { clientName: '', text: '' };
+    this.showTestimonialDraft = false;
   }
 
   removeTestimonial(index: number): void {
-    if (confirm('האם למחוק את ההמלצה הזו?')) {
-      this.customerTestimonials.splice(index, 1);
-      this.customerTestimonials.forEach((item, idx) => item.order = idx);
-    }
+    this.customerTestimonials.splice(index, 1);
+    this.customerTestimonials.forEach((item, idx) => item.order = idx);
   }
 
   getPlatformLink(platform: SocialPlatform): string {
@@ -355,6 +517,18 @@ export class ServiceProviderCreateComponent implements OnInit {
     this.socialLinks = [...this.socialLinks, { platform, url: normalizedUrl }];
   }
 
+  selectSocialPlatform(platform: SocialPlatform): void {
+    this.activeSocialPlatform = this.activeSocialPlatform === platform ? null : platform;
+  }
+
+  hasPlatformLink(platform: SocialPlatform): boolean {
+    return !!this.getPlatformLink(platform).trim();
+  }
+
+  getActiveSocialPlaceholder(): string {
+    return this.socialPlatformOptions.find(option => option.platform === this.activeSocialPlatform)?.placeholder ?? 'הדבק קישור לפרופיל';
+  }
+
   trackByPlatform(_index: number, option: PlatformLinkOption): number {
     return option.platform;
   }
@@ -376,6 +550,12 @@ export class ServiceProviderCreateComponent implements OnInit {
         caption: image.caption?.trim() || '',
         order: index
       }));
+    const normalizedVideoLinks = this.normalizedVideoLinks();
+    const videoGalleryItems = normalizedVideoLinks.map((url, index) => ({
+      imageUrl: url,
+      caption: 'וידאו',
+      order: normalizedGalleryImages.length + index
+    }));
 
     const dto: CreateMusicServiceProviderDto = {
       userId: currentUser?.id,
@@ -384,27 +564,28 @@ export class ServiceProviderCreateComponent implements OnInit {
       fullDescription: this.fullDescription?.trim() || undefined,
       isTeacher: false,
       cityId: this.cityId,
-      location: this.location?.trim() || undefined,
+      location: this.hasBranches ? undefined : this.location?.trim() || undefined,
       phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
       email: this.email.trim(),
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl?.trim() || undefined,
-      videoUrl: this.videoUrl?.trim() || undefined,
+      videoUrl: normalizedVideoLinks[0] || this.videoUrl?.trim() || undefined,
       yearsOfExperience: this.yearsOfExperience,
-      workingHours: this.workingHours?.trim() || undefined,
+      workingHours: this.hasBranches ? undefined : this.workingHours?.trim() || undefined,
       isFeatured: false,
       status: ProfileStatus.Pending,
       categories: this.selectedCategoryId ? [{
         categoryId: this.selectedCategoryId,
         subCategory: undefined
       } as CreateServiceProviderCategoryDto] : [],
-      galleryImages: normalizedGalleryImages,
+      galleryImages: [...normalizedGalleryImages, ...videoGalleryItems],
       socialLinks: this.socialLinks
         .filter(link => link.url?.trim())
         .map(link => ({ ...link, url: link.url.trim() })),
-      customerTestimonials: this.customerTestimonials
+      customerTestimonials: this.customerTestimonials,
+      branches: this.hasBranches ? this.normalizedBranches() : []
     };
 
     this.serviceProviderService.createServiceProviderProfile(dto).subscribe({
@@ -461,12 +642,33 @@ export class ServiceProviderCreateComponent implements OnInit {
       return false;
     }
 
+    if (this.hasBranches && this.branches.length === 0) {
+      this.error = 'נא להוסיף לפחות סניף אחד';
+      this.showRequiredStep(2, '[data-required-branches]');
+      return false;
+    }
+
     return true;
   }
 
   private showRequiredStep(step: number, selector: string): void {
     this.currentStep = step;
     setTimeout(() => this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, selector));
+  }
+
+  private normalizedBranches(): CreateServiceProviderBranchDto[] {
+    return this.branches
+      .filter(branch => branch.name?.trim())
+      .map((branch, index) => ({
+        name: branch.name.trim(),
+        cityId: branch.cityId,
+        imageUrl: branch.imageUrl?.trim() || undefined,
+        address: branch.address?.trim() || undefined,
+        phoneNumber: branch.phoneNumber?.trim() || undefined,
+        email: branch.email?.trim() || undefined,
+        openingHours: branch.openingHours?.trim() || undefined,
+        order: index
+      }));
   }
 
   @HostListener('document:click', ['$event'])

@@ -57,6 +57,7 @@
           <input type="text"
                  [placeholder]="activeTab === 'professionals' ? 'חפש שם, תחום או עיר...' : 'חפש שם מורה או כלי נגינה...'"
                  [(ngModel)]="searchTerm"
+                 (ngModelChange)="onSearchInputChange()"
                  (keyup.enter)="onSearch()"
                  class="search-input">
           <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -73,9 +74,15 @@
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
           <div class="filter-dropdown" *ngIf="showCityDropdown" (click)="$event.stopPropagation()">
+            <input
+              type="text"
+              class="filter-search-input"
+              [(ngModel)]="cityFilterSearchTerm"
+              placeholder="חיפוש עיר"
+              (click)="$event.stopPropagation()">
             <button class="filter-option" [class.active]="selectedCityId === null"
                     (click)="selectedCityId = null; onSearch(); showCityDropdown = false">כל הערים</button>
-            <button class="filter-option" *ngFor="let city of cities; trackBy: trackByCityId"
+            <button class="filter-option" *ngFor="let city of filteredCityOptions; trackBy: trackByCityId"
                     [class.active]="selectedCityId === city.id"
                     (click)="selectedCityId = city.id; onSearch(); showCityDropdown = false">{{ city.name }}</button>
           </div>
@@ -204,9 +211,9 @@
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
-              <div class="prof-card-meta" *ngIf="p.cityId">
+              <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                 <span class="material-icons">location_on</span>
-                {{ getCityName(p.cityId) }}
+                {{ getProviderCityLine(p) }}
               </div>
             </div>
           </div>
@@ -235,9 +242,9 @@
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
-                <div class="prof-card-meta" *ngIf="p.cityId">
+                <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                   <span class="material-icons">location_on</span>
-                  {{ getCityName(p.cityId) }}
+                  {{ getProviderCityLine(p) }}
                 </div>
               </div>
             </div>
@@ -282,9 +289,9 @@
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
-                <div class="prof-card-meta" *ngIf="p.cityId">
+                <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                   <span class="material-icons">location_on</span>
-                  {{ getCityName(p.cityId) }}
+                  {{ getProviderCityLine(p) }}
                 </div>
               </div>
             </div>
@@ -305,9 +312,9 @@
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
-                <div class="prof-card-meta" *ngIf="p.cityId">
+                <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                   <span class="material-icons">location_on</span>
-                  {{ getCityName(p.cityId) }}
+                  {{ getProviderCityLine(p) }}
                 </div>
               </div>
             </div>
@@ -328,9 +335,9 @@
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
-                <div class="prof-card-meta" *ngIf="p.cityId">
+                <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                   <span class="material-icons">location_on</span>
-                  {{ getCityName(p.cityId) }}
+                  {{ getProviderCityLine(p) }}
                 </div>
               </div>
             </div>
@@ -353,9 +360,9 @@
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
-              <div class="prof-card-meta" *ngIf="p.cityId">
+                <div class="prof-card-meta" *ngIf="getProviderCityLine(p)">
                 <span class="material-icons">location_on</span>
-                {{ getCityName(p.cityId) }}
+                  {{ getProviderCityLine(p) }}
               </div>
             </div>
           </div>

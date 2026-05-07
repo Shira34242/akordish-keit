@@ -355,11 +355,15 @@
         <div class="sheet-music-page-panel" *ngIf="isSheetMusicMode">
             <div class="sheet-music-viewer sheet-music-page-viewer">
                 <img *ngIf="isSheetMusicImage && sheetMusicDirectUrl" class="sheet-music-image" [src]="sheetMusicDirectUrl" alt="תווים לשיר">
-                <iframe *ngIf="!isSheetMusicImage && sheetMusicViewerUrl"
-                        class="sheet-music-frame"
-                        [src]="sheetMusicViewerUrl"
-                        title="תווים לשיר">
-                </iframe>
+                <ng-container *ngIf="!isSheetMusicImage && sheetMusicViewerUrl">
+                    <iframe class="sheet-music-frame"
+                            [src]="sheetMusicViewerUrl"
+                            title="תווים לשיר">
+                    </iframe>
+                    <a *ngIf="sheetMusicDirectUrl" class="sheet-music-inline-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
+                        {{ 'song.open_pdf' | translate }}
+                    </a>
+                </ng-container>
             </div>
         </div>
 

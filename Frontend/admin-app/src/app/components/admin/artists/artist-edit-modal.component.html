@@ -34,12 +34,10 @@
               [(ngModel)]="editForm.name"
               name="name"
               class="form-input"
+              data-validation-target="artist-name"
               placeholder="שם האומן בעברית"
-              [readonly]="isEditMode"
-              [class.readonly]="isEditMode"
               required
             />
-            <small class="form-hint" *ngIf="isEditMode">לא ניתן לשנות את שם האומן</small>
           </div>
 
           <div class="form-group">
@@ -135,17 +133,19 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">טשטוש על הבאנר ({{ editForm.bannerBlur }})</label>
-          <input
-            type="range"
-            min="0"
-            max="20"
-            step="1"
-            [(ngModel)]="editForm.bannerBlur"
-            name="bannerBlur"
-            class="form-range"
-          />
-          <small class="form-hint">0 = ללא טשטוש, 20 = טשטוש חזק. מועיל כדי להבליט את פרטי האמן מעל הבאנר.</small>
+          <label class="checkbox-label">
+            <input
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              [(ngModel)]="editForm.bannerBlur"
+              name="bannerBlur"
+              class="form-range"
+            />
+            <span>הוסף טשטוש לבאנר</span>
+          </label>
+          <small class="form-hint">סימון תיבה זו יחיל טשטוש על תמונת/וידאו הבאנר — מועיל להבליט את פרטי האמן.</small>
         </div>
 
         <div class="form-group">
@@ -187,6 +187,7 @@
               </div>
             </div>
           </div>
+          <small class="form-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
         </div>
 
         <button type="button" class="btn-add" (click)="addSocialLink()">
@@ -207,6 +208,9 @@
                 <option [value]="3">YouTube</option>
                 <option [value]="7">Spotify</option>
                 <option [value]="8">Zing</option>
+                <option [value]="11">Apple Music</option>
+                <option [value]="9">ג'וזיק</option>
+                <option [value]="10">24Six</option>
               </select>
             </div>
             <div class="form-group">
@@ -219,6 +223,7 @@
               </div>
             </div>
           </div>
+          <small class="form-error" *ngIf="getAlbumValidationMessage(i) as albumError">{{ albumError }}</small>
         </div>
 
         <button type="button" class="btn-add" (click)="addMusicLink()">
@@ -232,7 +237,7 @@
         <h2 class="section-title">באנר הופעה (אירוע מלא)</h2>
         <p class="section-desc">
           באנר ההופעה ייווצר כהופעה מלאה במערכת — היא תוצג גם בדף ההופעות הראשי וגם בבאנר של דף האמן.
-          נדרשות 2 תמונות: פוסטר ריבועי לדף ההופעות + תמונת באנר רחבה (4:1) לדף האמן.
+          ניתן לבחור הופעה קיימת של האמן או ליצור חדשה. בכל מקרה — תמונת הבאנר הרחבה (4:1) ייחודית לדף האמן ומוגדרת כאן.
         </p>
 
         <div class="form-group">
@@ -248,56 +253,182 @@
         </div>
 
         <ng-container *ngIf="editForm.performance.enabled">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label required">שם ההופעה</label>
-              <input type="text" [(ngModel)]="editForm.performance.name" name="perfName" class="form-input" placeholder="שם ההופעה..." />
-            </div>
-            <div class="form-group">
-              <label class="form-label required">תאריך ושעה</label>
-              <input type="datetime-local" [(ngModel)]="editForm.performance.eventDate" name="perfDate" class="form-input" />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">מיקום</label>
-              <input type="text" [(ngModel)]="editForm.performance.location" name="perfLocation" class="form-input" placeholder="עיר / מקום..." />
-            </div>
-            <div class="form-group">
-              <label class="form-label">מחיר (אופציונלי)</label>
-              <input type="number" min="0" [(ngModel)]="editForm.performance.price" name="perfPrice" class="form-input" placeholder="₪" />
-            </div>
-          </div>
 
           <div class="form-group">
-            <label class="form-label">תיאור (אופציונלי)</label>
-            <textarea [(ngModel)]="editForm.performance.description" name="perfDescription" class="form-textarea" rows="3" placeholder="תיאור ההופעה..."></textarea>
+            <label class="form-label">בחירת הופעה</label>
+            <select
+              class="form-select"
+              name="perfEventChoice"
+              [ngModel]="performanceEventChoice"
+              (ngModelChange)="onPerformanceEventChoiceChange($event)">
+              <option value="new">צרי הופעה חדשה</option>
+              <option *ngFor="let ev of availableEvents" [ngValue]="ev.id">
+                {{ formatEventOptionLabel(ev) }}
+              </option>
+            </select>
+            <small class="form-hint">
+              <span *ngIf="performanceEventChoice === 'new'">תיווצר הופעה חדשה ותתויג לאמן.</span>
+              <span *ngIf="performanceEventChoice !== 'new'">בעריכת השדות מטה תעדכני את ההופעה הקיימת. תמונת הבאנר הרחבה משויכת לדף האמן בלבד.</span>
+            </small>
+          </div>
+          <!-- מצב 1: יצירת הופעה חדשה — כל השדות עריכים -->
+          <ng-container *ngIf="performanceEventChoice === 'new'">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">שם ההופעה</label>
+                <input type="text" [(ngModel)]="editForm.performance.name" name="perfName" class="form-input" placeholder="שם ההופעה..." />
+              </div>
+              <div class="form-group">
+                <label class="form-label required">תאריך ושעה</label>
+                <input type="datetime-local" [(ngModel)]="editForm.performance.eventDate" name="perfDate" class="form-input" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">מיקום</label>
+                <input type="text" [(ngModel)]="editForm.performance.location" name="perfLocation" class="form-input" placeholder="עיר / מקום..." />
+              </div>
+              <div class="form-group">
+                <label class="form-label">מחיר (אופציונלי)</label>
+                <input type="number" min="0" [(ngModel)]="editForm.performance.price" name="perfPrice" class="form-input" placeholder="₪" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">תיאור (אופציונלי)</label>
+              <textarea [(ngModel)]="editForm.performance.description" name="perfDescription" class="form-textarea" rows="3" placeholder="תיאור ההופעה..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">קישור לרכישת כרטיסים</label>
+              <input type="url" [(ngModel)]="editForm.performance.ticketUrl" name="perfTicketUrl" class="form-input" placeholder="https://tickets.example.com/..." />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">פוסטר ההופעה (ריבועי - לדף ההופעות)</label>
+              <app-file-upload-input
+                data-validation-target="performance-image"
+                [(url)]="editForm.performance.imageUrl"
+                placeholder="https://example.com/poster.jpg"
+              />
+              <small class="form-hint">יחס מומלץ: 1:1 ריבוע, ייצוג בכרטיסי הופעות.</small>
+            </div>
+          </ng-container>
+
+          <!-- מצב 2: הופעה קיימת — סיכום לקריאה בלבד; פרטי האירוע נשמרים כפי שהם -->
+          <div *ngIf="performanceEventChoice !== 'new'" class="form-group existing-event-summary">
+            <label class="form-label">פרטי ההופעה הקיימת</label>
+            <div class="existing-event-card">
+              <img *ngIf="editForm.performance.imageUrl" [src]="editForm.performance.imageUrl" alt="פוסטר ההופעה" />
+              <div class="existing-event-meta">
+                <strong>{{ editForm.performance.name }}</strong>
+                <span *ngIf="editForm.performance.eventDate">{{ editForm.performance.eventDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span *ngIf="editForm.performance.location">{{ editForm.performance.location }}</span>
+              </div>
+            </div>
+            <small class="form-hint">לעריכת פרטי ההופעה — היכנסי לניהול ההופעה בדף ההופעות.</small>
           </div>
 
-          <div class="form-group">
-            <label class="form-label required">קישור לרכישת כרטיסים</label>
-            <input type="url" [(ngModel)]="editForm.performance.ticketUrl" name="perfTicketUrl" class="form-input" placeholder="https://tickets.example.com/..." />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label required">פוסטר ההופעה (ריבועי - לדף ההופעות)</label>
-            <app-file-upload-input
-              [(url)]="editForm.performance.imageUrl"
-              placeholder="https://example.com/poster.jpg"
-            />
-            <small class="form-hint">יחס מומלץ: 1:1 ריבוע, ייצוג בכרטיסי הופעות.</small>
-          </div>
-
+          <!-- בכל מצב — תמונת באנר רחבה לדף האמן (ייחודית כאן) -->
           <div class="form-group">
             <label class="form-label required">תמונת באנר (רחבה - לדף האמן)</label>
             <app-file-upload-input
+              data-validation-target="performance-banner-image"
               [(url)]="editForm.performance.bannerImageUrl"
               placeholder="https://example.com/banner.jpg"
             />
-            <small class="form-hint">יחס מומלץ: 4:1 (למשל 1200×300). מוצג כבאנר נמוך ורחב מתחת לפרופיל האמן.</small>
+            <small class="form-hint">יחס מומלץ: 4:1 (למשל 1200×300). מוצג כבאנר נמוך ורחב בדף האמן בלבד — לא מחליף את הפוסטר הריבועי בדף ההופעות.</small>
           </div>
         </ng-container>
+      </div>
+
+      <!-- Hits -->
+      <div class="form-section">
+        <h2 class="section-title">להיטים גדולים</h2>
+        <p class="section-desc">שורה נגללת בדף האמן. כל להיט צריך שם וקישור YouTube; תמונה היא אופציונלית.</p>
+
+        <div *ngFor="let hit of editForm.hits; let i = index" class="gallery-item">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">שם הלהיט</label>
+              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + i" class="form-input" placeholder="שם הסינגל..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">תמונה</label>
+              <app-file-upload-input
+                [(url)]="hit.imageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">קישור YouTube</label>
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
+            </div>
+
+            <div class="form-group" style="flex: 0 0 60px;">
+              <label class="form-label">&nbsp;</label>
+              <button type="button" class="btn-remove" (click)="removeHit(i)" aria-label="הסר">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-add" (click)="addHit()">
+          <span class="material-icons">smart_display</span>
+          הוסף להיט
+        </button>
+      </div>
+
+      <!-- Albums -->
+      <div class="form-section">
+        <h2 class="section-title">אלבומים</h2>
+        <p class="section-desc">שורת קוביות בדף האמן. המעבר הוא לקישור חיצוני.</p>
+
+        <div *ngFor="let album of editForm.albums; let i = index" class="gallery-item">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">שם האלבום</label>
+              <input type="text" [(ngModel)]="album.title" [name]="'album_title_' + i" class="form-input" placeholder="שם האלבום..." />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">עטיפה</label>
+              <app-file-upload-input
+                [attr.data-validation-target]="'album-cover-' + i"
+                [(url)]="album.coverImageUrl"
+                placeholder="https://..."
+                [showPreview]="false"
+              />
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">שנת יציאה</label>
+              <input type="number" min="1900" max="2100" [(ngModel)]="album.releaseYear" [name]="'album_year_' + i" class="form-input" placeholder="2026" />
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">קישור חיצוני</label>
+              <input type="url" [(ngModel)]="album.externalUrl" [name]="'album_url_' + i" class="form-input" placeholder="https://..." />
+            </div>
+
+            <div class="form-group" style="flex: 0 0 60px;">
+              <label class="form-label">&nbsp;</label>
+              <button type="button" class="btn-remove" (click)="removeAlbum(i)" aria-label="הסר">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-add" (click)="addAlbum()">
+          <span class="material-icons">album</span>
+          הוסף אלבום
+        </button>
       </div>
 
       <!-- Gallery (Images + Videos unified) -->
@@ -409,55 +540,6 @@
               />
               <span>אומן Premium (גישה לגלריה, סרטונים, באנר GIF)</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Statistics (Read Only - Edit Mode Only) -->
-      <div class="form-section" *ngIf="isEditMode && artist">
-        <h2 class="section-title">סטטיסטיקות</h2>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">שירים</label>
-            <input
-              type="text"
-              [value]="artist.songCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">כתבות</label>
-            <input
-              type="text"
-              [value]="artist.articleCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">הופעות קרובות</label>
-            <input
-              type="text"
-              [value]="artist.upcomingEventCount"
-              class="form-input readonly"
-              readonly
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">נוצר בתאריך</label>
-            <input
-              type="text"
-              [value]="artist.createdAt | date: 'dd/MM/yyyy HH:mm'"
-              class="form-input readonly"
-              readonly
-            />
           </div>
         </div>
       </div>

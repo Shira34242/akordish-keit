@@ -227,12 +227,13 @@ public class SongsController : ControllerBase
         [FromQuery] int? artistId = null,
         [FromQuery] int? genreId = null,
         [FromQuery] int? keyId = null,
+        [FromQuery] int? tagId = null,
         [FromQuery] string? sortBy = "date")
     {
         try
         {
             var result = await _songService.GetSongsAsync(
-                page, pageSize, search, artistId, genreId, keyId, sortBy, includeUnapproved: false);
+                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: false);
 
             return Ok(new
             {
@@ -263,12 +264,13 @@ public class SongsController : ControllerBase
         [FromQuery] int? artistId = null,
         [FromQuery] int? genreId = null,
         [FromQuery] int? keyId = null,
+        [FromQuery] int? tagId = null,
         [FromQuery] string? sortBy = "date")
     {
         try
         {
             var result = await _songService.GetSongsAsync(
-                page, pageSize, search, artistId, genreId, keyId, sortBy, includeUnapproved: true);
+                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: true);
 
             return Ok(new
             {

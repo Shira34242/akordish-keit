@@ -306,6 +306,22 @@
   background: #ddff53;
 }
 
+.filter-search-input {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+}
+
+.filter-search-input:focus {
+  outline: 1px solid rgba(0, 0, 0, 0.18);
+}
+
 /* ניקוי */
 .clear-row {
   display: flex;

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { GoogleSigninButtonModule, SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
@@ -10,7 +11,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, GoogleSigninButtonModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, GoogleSigninButtonModule, TranslatePipe, RouterLink],
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.css']
 })
@@ -28,6 +29,9 @@ export class AuthModalComponent implements OnDestroy {
   username = '';
   email = '';
   password = '';
+  termsApproved = false;
+  marketingConsent = false;
+  googleTermsRequired = false;
 
   // Password strength
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
@@ -70,9 +74,20 @@ export class AuthModalComponent implements OnDestroy {
     this.username = '';
     this.email = '';
     this.password = '';
+    this.termsApproved = false;
+    this.marketingConsent = false;
+    this.googleTermsRequired = false;
     this.showPassword = false;
     this.passwordStrength = null;
     this.passwordErrors = [];
+  }
+
+  get shouldShowConsentRows(): boolean {
+    return !this.isLogin || this.googleTermsRequired;
+  }
+
+  get googleRequiresTermsApproval(): boolean {
+    return !this.isLogin || this.googleTermsRequired;
   }
 
   onPasswordChange() {
@@ -169,13 +184,19 @@ export class AuthModalComponent implements OnDestroy {
       return;
     }
 
+    if (!this.termsApproved) {
+      this.errorMessage = 'יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם';
+      this.loading = false;
+      return;
+    }
+
     if (this.passwordErrors.length > 0) {
       this.errorMessage = 'הסיסמא חייבת לכלול: ' + this.passwordErrors.join(', ');
       this.loading = false;
       return;
     }
 
-    this.authService.register(this.username, this.email, this.password).subscribe({
+    this.authService.register(this.username, this.email, this.password, this.termsApproved, this.marketingConsent).subscribe({
       next: (response) => {
         this.loading = false;
         this.authSuccess.emit(response);
@@ -188,9 +209,16 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleGoogleLogin(idToken: string) {
+    const isRegistrationConsentFlow = this.googleRequiresTermsApproval;
+
+    if (isRegistrationConsentFlow && !this.termsApproved) {
+      this.errorMessage = 'יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם';
+      return;
+    }
+
     GoogleOneTapService.setProcessing(true);
     this.loading = true;
-    this.authService.googleLogin(idToken).subscribe({
+    this.authService.googleLogin(idToken, isRegistrationConsentFlow && this.termsApproved, isRegistrationConsentFlow && this.marketingConsent).subscribe({
       next: (response) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
@@ -199,9 +227,24 @@ export class AuthModalComponent implements OnDestroy {
       error: (error) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
+        if (this.isGoogleTermsRequiredError(error)) {
+          this.googleTermsRequired = true;
+          this.termsApproved = false;
+          this.marketingConsent = false;
+          this.errorMessage = 'כדי להשלים הרשמה עם Google יש לאשר תקנון ומדיניות פרטיות';
+          return;
+        }
         this.errorMessage = error.error?.message || 'שגיאה בכניסה עם Google';
       }
     });
+  }
+
+  private isGoogleTermsRequiredError(error: any): boolean {
+    const body = error?.error;
+    const message = typeof body === 'string' ? body : body?.message;
+
+    return body?.code === 'TERMS_REQUIRED'
+      || (typeof message === 'string' && message.includes('תקנון'));
   }
 
   triggerGoogleSignIn() {

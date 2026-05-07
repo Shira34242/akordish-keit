@@ -130,6 +130,16 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .HasForeignKey(v => v.ArtistId)
                .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(a => a.Hits)
+               .WithOne(hit => hit.Artist)
+               .HasForeignKey(hit => hit.ArtistId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(a => a.Albums)
+               .WithOne(album => album.Artist)
+               .HasForeignKey(album => album.ArtistId)
+               .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(a => a.ArticleArtists)
                .WithOne(aa => aa.Artist)
                .HasForeignKey(aa => aa.ArtistId)

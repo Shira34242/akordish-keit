@@ -6,6 +6,8 @@ public class Tag
 {
     public int Id { get; set; }
     public string Name { get; set; }
+    public bool ShowInChordQuickSearch { get; set; }
+    public int ChordQuickSearchOrder { get; set; }
 
     // Navigation Properties
     public virtual ICollection<SongTag> SongTags { get; set; }

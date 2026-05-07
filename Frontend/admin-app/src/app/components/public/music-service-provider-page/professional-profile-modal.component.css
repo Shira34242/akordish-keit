@@ -500,6 +500,14 @@
   gap: var(--space-sm);
 }
 
+.branch-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
 .branch-card-top {
   display: flex;
   align-items: center;
@@ -1160,5 +1168,4 @@
 .social-follow-btn svg {
   width: 18px;
   height: 18px;
-}
 }

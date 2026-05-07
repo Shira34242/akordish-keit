@@ -10,6 +10,8 @@ namespace AkordishKeit.Models.DTOs
     public class GoogleLoginRequest
     {
         public string IdToken { get; set; }
+        public bool TermsApproved { get; set; }
+        public bool MarketingConsent { get; set; }
     }
 
     public class RegisterRequest
@@ -27,6 +29,9 @@ namespace AkordishKeit.Models.DTOs
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$",
             ErrorMessage = "סיסמא חייבת לכלול לפחות: אות גדולה, אות קטנה, מספר ותו מיוחד (@$!%*?&#)")]
         public string Password { get; set; } = string.Empty;
+
+        public bool TermsApproved { get; set; }
+        public bool MarketingConsent { get; set; }
     }
 
     public class LoginRequest
@@ -36,6 +41,11 @@ namespace AkordishKeit.Models.DTOs
 
         [Required(ErrorMessage = "סיסמא היא שדה חובה")]
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class MarketingConsentRequest
+    {
+        public bool MarketingConsent { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -201,5 +211,14 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("visitCount")]
         public int VisitCount { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("marketingConsent")]
+        public bool MarketingConsent { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("marketingConsentAt")]
+        public DateTime? MarketingConsentAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("marketingConsentRevokedAt")]
+        public DateTime? MarketingConsentRevokedAt { get; set; }
     }
 }

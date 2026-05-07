@@ -361,6 +361,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   goToAdmin(): void {
+    this.closeUserMenu();
     this.router.navigate(['/admin']);
   }
 
@@ -578,11 +579,17 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   toggleUserMenu(event: Event): void {
     event.stopPropagation();
-    this.showUserMenu = !this.showUserMenu;
+    const next = !this.showUserMenu;
+    this.showUserMenu = next;
+    if (next) {
+      this.showNotificationsPopup = false;
+      this.showNotificationsCenterModal = false;
+    }
   }
 
   closeUserMenu(): void {
     this.showUserMenu = false;
+    this.showMobileMenu = false;
   }
 
   toggleMobileMenu(): void {
@@ -595,6 +602,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   signOut(): void {
     this.showUserMenu = false;
+    this.showMobileMenu = false;
+    this.showNotificationsPopup = false;
+    this.showNotificationsCenterModal = false;
     this.authService.logout();
     this.socialAuthService.signOut().catch(() => {});
     this.router.navigate(['/']);

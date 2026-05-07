@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
+import { SongService } from '../../../services/song.service';
+import { EventService } from '../../../services/event.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import {
   Artist,
@@ -10,6 +12,7 @@ import {
   PerformanceEventInput,
   UpdateArtistDto
 } from '../../../models/artist.model';
+import { UpcomingEventDto } from '../../../models/event.model';
 
 interface SocialLinkForm {
   id?: number;
@@ -27,6 +30,25 @@ interface GalleryItemForm {
   videoUrl?: string;
   title?: string;
   displayOrder: number;
+}
+
+interface HitForm {
+  id?: number;
+  title: string;
+  imageUrl: string;
+  youTubeUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+interface AlbumForm {
+  id?: number;
+  title: string;
+  coverImageUrl: string;
+  releaseYear: number | null;
+  externalUrl: string;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 interface PerformanceEventForm {
@@ -61,7 +83,7 @@ export class ArtistEditModalComponent implements OnInit {
   error: string | null = null;
   isEditMode = false;
 
-  readonly MUSIC_PLATFORMS = [3, 7, 8]; // YouTube, Spotify, Zing
+  readonly MUSIC_PLATFORMS = [3, 7, 8, 9, 10, 11]; // YouTube, Spotify, Zing, Jewzik, 24Six, Apple Music
 
   readonly GALLERY_MIN_ITEMS = 5;
 
@@ -81,6 +103,8 @@ export class ArtistEditModalComponent implements OnInit {
     socialLinks: [] as SocialLinkForm[],
     musicLinks: [] as SocialLinkForm[],
     galleryItems: [] as GalleryItemForm[],
+    hits: [] as HitForm[],
+    albums: [] as AlbumForm[],
     performance: {
       enabled: false,
       eventId: undefined,
@@ -98,7 +122,17 @@ export class ArtistEditModalComponent implements OnInit {
 
   ArtistStatus = ArtistStatus;
 
-  constructor(private artistService: ArtistService) { }
+  // הופעות קיימות של האמן (לבחירה כבאנר במקום ליצור הופעה חדשה)
+  availableEvents: UpcomingEventDto[] = [];
+  // 'new' = יצירת הופעה חדשה. אחרת — id של הופעה קיימת.
+  performanceEventChoice: 'new' | number = 'new';
+
+  constructor(
+    private artistService: ArtistService,
+    private songService: SongService,
+    private eventService: EventService,
+    private host: ElementRef<HTMLElement>
+  ) { }
 
   ngOnInit(): void {
     this.isEditMode = this.artistId !== null;
@@ -144,7 +178,7 @@ export class ArtistEditModalComponent implements OnInit {
 
         const ev = artist.performanceEvent;
         const performance: PerformanceEventForm = {
-          enabled: !!(artist.performanceIsActive && ev),
+          enabled: !!artist.performanceIsActive,
           eventId: ev?.id,
           name: ev?.name || '',
           description: ev?.description || '',
@@ -157,6 +191,10 @@ export class ArtistEditModalComponent implements OnInit {
           isActive: ev?.isActive ?? true
         };
 
+        // אם יש כבר אירוע מקושר, ברירת המחדל בבורר היא ההופעה הזו. אחרת — "יצירה חדשה".
+        this.performanceEventChoice = ev?.id ?? 'new';
+        this.loadArtistEvents();
+
         this.editForm = {
           name: artist.name || '',
           englishName: artist.englishName || '',
@@ -165,7 +203,7 @@ export class ArtistEditModalComponent implements OnInit {
           imageUrl: artist.imageUrl || '',
           bannerMediaType: bannerType,
           bannerUrl: bannerUrl,
-          bannerBlur: artist.bannerBlur ?? 0,
+          bannerBlur: this.normalizedBannerBlur(artist.bannerBlur),
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
@@ -180,6 +218,23 @@ export class ArtistEditModalComponent implements OnInit {
             url: link.url
           })) || [],
           galleryItems,
+          hits: (artist.hits || []).map((hit, index) => ({
+            id: hit.id,
+            title: hit.title || '',
+            imageUrl: hit.imageUrl || '',
+            youTubeUrl: hit.youTubeUrl || hit.youtubeUrl || '',
+            displayOrder: hit.displayOrder ?? index,
+            isActive: hit.isActive ?? true
+          })),
+          albums: (artist.albums || []).map((album, index) => ({
+            id: album.id,
+            title: album.title || '',
+            coverImageUrl: album.coverImageUrl || '',
+            releaseYear: album.releaseYear ?? null,
+            externalUrl: album.externalUrl || '',
+            displayOrder: album.displayOrder ?? index,
+            isActive: album.isActive ?? true
+          })),
           performance
         };
         this.loading = false;
@@ -197,7 +252,13 @@ export class ArtistEditModalComponent implements OnInit {
 
     // Validate required fields
     if (!this.editForm.name?.trim()) {
-      this.error = 'שם האומן הוא שדה חובה';
+      this.showValidationError('שם האומן הוא שדה חובה', '[data-validation-target="artist-name"]');
+      return;
+    }
+
+    const richContentError = this.validateRichContent();
+    if (richContentError) {
+      this.showValidationError(richContentError, this.getRichContentValidationTarget());
       return;
     }
 
@@ -208,6 +269,7 @@ export class ArtistEditModalComponent implements OnInit {
     const bannerUrl = this.optionalText(this.editForm.bannerUrl);
 
     const commonPayload: Partial<UpdateArtistDto> = {
+      name: this.editForm.name.trim(),
       englishName: this.optionalText(this.editForm.englishName),
       shortBio: this.optionalText(this.editForm.shortBio),
       biography: this.optionalText(this.editForm.biography),
@@ -216,7 +278,7 @@ export class ArtistEditModalComponent implements OnInit {
       bannerImageUrl: bannerType === 'image' ? bannerUrl : undefined,
       bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') ? bannerUrl : undefined,
       bannerMediaType: bannerUrl ? bannerType : null,
-      bannerBlur: Number(this.editForm.bannerBlur) || 0,
+      bannerBlur: this.normalizedBannerBlur(this.editForm.bannerBlur),
       websiteUrl: this.optionalText(this.editForm.websiteUrl),
       status: Number(this.editForm.status),
       isPremium: this.editForm.isPremium,
@@ -224,7 +286,9 @@ export class ArtistEditModalComponent implements OnInit {
       performanceEvent: this.buildPerformanceEvent(),
       socialLinks: this.normalizedLinks(),
       galleryImages: this.normalizedGalleryImages(),
-      videos: this.normalizedVideos()
+      videos: this.normalizedVideos(),
+      hits: this.normalizedHits(),
+      albums: this.normalizedAlbums()
     };
 
     if (this.isEditMode && this.artistId) {
@@ -241,7 +305,7 @@ export class ArtistEditModalComponent implements OnInit {
         },
         error: (err) => {
           console.error('שגיאה בעדכון אומן:', err);
-          this.error = 'שגיאה בעדכון פרטי האומן';
+          this.error = err.error?.message || err.error || err.message || 'שגיאה בעדכון פרטי האומן';
           this.saving = false;
         }
       });
@@ -261,7 +325,7 @@ export class ArtistEditModalComponent implements OnInit {
         error: (err) => {
           console.error('שגיאה ביצירת אומן:', err);
           // Show the actual error message from backend
-          this.error = err.error || err.message || 'שגיאה ביצירת האומן';
+          this.error = err.error?.message || err.error || err.message || 'שגיאה ביצירת האומן';
           this.saving = false;
         }
       });
@@ -308,6 +372,52 @@ export class ArtistEditModalComponent implements OnInit {
     this.editForm.galleryItems.splice(index, 1);
   }
 
+  addHit(): void {
+    this.editForm.hits.push({
+      title: '',
+      imageUrl: '',
+      youTubeUrl: '',
+      displayOrder: this.editForm.hits.length,
+      isActive: true
+    });
+  }
+
+  removeHit(index: number): void {
+    this.editForm.hits.splice(index, 1);
+  }
+
+  onHitYouTubeUrlChange(index: number): void {
+    const hit = this.editForm.hits[index];
+    if (!hit || !hit.youTubeUrl?.trim() || hit.imageUrl?.trim()) return;
+
+    this.songService.getYouTubeMetadata(hit.youTubeUrl.trim()).subscribe({
+      next: (meta) => {
+        if (meta?.title && !hit.title?.trim()) {
+          hit.title = meta.title;
+        }
+        if (meta?.thumbnailUrl && !hit.imageUrl?.trim()) {
+          hit.imageUrl = meta.thumbnailUrl;
+        }
+      },
+      error: () => { /* ignore — user can add image manually */ }
+    });
+  }
+
+  addAlbum(): void {
+    this.editForm.albums.push({
+      title: '',
+      coverImageUrl: '',
+      releaseYear: null,
+      externalUrl: '',
+      displayOrder: this.editForm.albums.length,
+      isActive: true
+    });
+  }
+
+  removeAlbum(index: number): void {
+    this.editForm.albums.splice(index, 1);
+  }
+
   get galleryItemsCount(): number {
     return this.editForm.galleryItems.filter(it => {
       if (it.kind === 'image') return !!it.imageUrl?.trim();
@@ -317,6 +427,66 @@ export class ArtistEditModalComponent implements OnInit {
 
   setBannerType(type: BannerMediaType): void {
     this.editForm.bannerMediaType = type;
+  }
+
+  private loadArtistEvents(): void {
+    if (!this.artistId) return;
+    this.artistService.getArtistEvents(this.artistId).subscribe({
+      next: (events) => { this.availableEvents = events || []; },
+      error: () => { this.availableEvents = []; }
+    });
+  }
+
+  /**
+   * המשתמש בחר באנר הופעה — או יצירה חדשה, או הופעה קיימת.
+   * בבחירה קיימת אנחנו מושכים את כל פרטי האירוע מ-/api/Events/{id}
+   * וממלאים את הטופס. שדה bannerImageUrl נשאר עריך — הוא ייחודי לבאנר דף האמן.
+   */
+  onPerformanceEventChoiceChange(value: 'new' | number | string): void {
+    if (value === 'new' || value === '' || value == null) {
+      this.performanceEventChoice = 'new';
+      this.editForm.performance.eventId = undefined;
+      this.editForm.performance.name = '';
+      this.editForm.performance.description = '';
+      this.editForm.performance.eventDate = '';
+      this.editForm.performance.location = '';
+      this.editForm.performance.price = null;
+      this.editForm.performance.ticketUrl = '';
+      this.editForm.performance.imageUrl = '';
+      this.editForm.performance.bannerImageUrl = '';
+      this.editForm.performance.isActive = true;
+      return;
+    }
+
+    const eventId = Number(value);
+    this.performanceEventChoice = eventId;
+
+    this.eventService.getEventById(eventId).subscribe({
+      next: (event) => {
+        this.editForm.performance.eventId = event.id;
+        this.editForm.performance.name = event.name || '';
+        this.editForm.performance.description = event.description || '';
+        this.editForm.performance.eventDate = event.eventDate ? this.toLocalDateInput(event.eventDate) : '';
+        this.editForm.performance.location = event.location || '';
+        this.editForm.performance.price = event.price ?? null;
+        this.editForm.performance.ticketUrl = event.ticketUrl || '';
+        // פוסטר ההופעה (ריבוע) — מהאירוע הקיים
+        this.editForm.performance.imageUrl = event.imageUrl || '';
+        // באנר רחב לדף האמן — אם להופעה כבר יש אחד נטען אותו, אחרת ריק כדי שהמשתמש יעלה תמונה חדשה
+        this.editForm.performance.bannerImageUrl = event.bannerImageUrl || '';
+        this.editForm.performance.isActive = event.isActive ?? true;
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת הופעה קיימת:', err);
+        window.alert('לא ניתן לטעון את ההופעה שנבחרה');
+      }
+    });
+  }
+
+  formatEventOptionLabel(event: UpcomingEventDto): string {
+    if (!event) return '';
+    const date = event.eventDate ? new Date(event.eventDate).toLocaleDateString('he-IL') : '';
+    return date ? `${event.name} — ${date}` : event.name;
   }
 
   private toLocalDateInput(iso: string): string {
@@ -333,24 +503,138 @@ export class ArtistEditModalComponent implements OnInit {
   private buildPerformanceEvent(): PerformanceEventInput | null {
     const p = this.editForm.performance;
     if (!p.enabled) return null;
-    if (!p.name?.trim() || !p.eventDate) return null;
+    const imageUrl = this.optionalText(p.imageUrl) || this.optionalText(p.bannerImageUrl) || '';
+    const bannerImageUrl = this.optionalText(p.bannerImageUrl) || imageUrl;
     return {
       eventId: p.eventId,
-      name: p.name.trim(),
+      name: p.name?.trim() || this.editForm.name.trim(),
       description: p.description?.trim() || undefined,
-      imageUrl: p.imageUrl?.trim() || '',
-      bannerImageUrl: p.bannerImageUrl?.trim() || undefined,
+      imageUrl,
+      bannerImageUrl,
       ticketUrl: p.ticketUrl?.trim() || '',
-      eventDate: new Date(p.eventDate).toISOString(),
+      eventDate: p.eventDate ? new Date(p.eventDate).toISOString() : new Date().toISOString(),
       location: p.location?.trim() || undefined,
       price: p.price ?? null,
       isActive: p.isActive
     };
   }
 
+  private validateRichContent(): string | null {
+    const p = this.editForm.performance;
+    if (p.enabled) {
+      const isExisting = this.performanceEventChoice !== 'new';
+      if (isExisting) {
+        // בחירת הופעה קיימת — חובה רק תמונת באנר רחבה לדף האמן
+        if (!p.bannerImageUrl?.trim()) return 'יש להעלות תמונת באנר רחבה לדף האמן';
+      } else {
+        // יצירת הופעה חדשה — דורש פוסטר ושם ותאריך
+        this.mirrorPerformanceImageFields(p);
+        if (!p.name?.trim()) return 'יש למלא שם להופעה';
+        if (!p.eventDate?.trim()) return 'יש למלא תאריך להופעה';
+        if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
+        if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+      }
+    }
+
+    for (let i = 0; i < this.editForm.hits.length; i++) {
+      const message = this.getHitValidationMessage(i);
+      if (message) return message;
+    }
+
+    for (let i = 0; i < this.editForm.albums.length; i++) {
+      const message = this.getAlbumValidationMessage(i);
+      if (message) return message;
+    }
+
+    return null;
+  }
+
+  private getRichContentValidationTarget(): string {
+    const p = this.editForm.performance;
+    if (p.enabled) {
+      const isExisting = this.performanceEventChoice !== 'new';
+      if (isExisting) {
+        if (!p.bannerImageUrl?.trim()) return '[data-validation-target="performance-banner-image"]';
+      } else {
+        this.mirrorPerformanceImageFields(p);
+        if (!p.name?.trim()) return '[name="perfName"]';
+        if (!p.eventDate?.trim()) return '[name="perfDate"]';
+        if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
+        if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+      }
+    }
+
+    for (let i = 0; i < this.editForm.hits.length; i++) {
+      if (this.getHitValidationMessage(i)) return `[data-validation-target="hit-youtube-${i}"]`;
+    }
+
+    for (let i = 0; i < this.editForm.albums.length; i++) {
+      if (this.getAlbumValidationMessage(i)) return `[data-validation-target="album-cover-${i}"]`;
+    }
+
+    return '[data-validation-target="artist-name"]';
+  }
+
+  private showValidationError(message: string, targetSelector: string): void {
+    this.error = message;
+    window.alert(message);
+    setTimeout(() => this.scrollToValidationTarget(targetSelector));
+  }
+
+  private scrollToValidationTarget(targetSelector: string): void {
+    const target = this.host.nativeElement.querySelector<HTMLElement>(targetSelector);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const focusable = target.matches('input, textarea, select, button')
+      ? target
+      : target.querySelector<HTMLElement>('input, textarea, select, button');
+    focusable?.focus({ preventScroll: true });
+  }
+
+  getHitValidationMessage(index: number): string | null {
+    const hit = this.editForm.hits[index];
+    if (!hit || this.isBlankHit(hit) || this.isCompleteHit(hit)) return null;
+    return `להיט מספר ${index + 1}: יש להוסיף קישור YouTube, או למחוק את השורה`;
+  }
+
+  getAlbumValidationMessage(index: number): string | null {
+    const album = this.editForm.albums[index];
+    if (!album || this.isBlankAlbum(album) || this.isCompleteAlbum(album)) return null;
+    return `אלבום מספר ${index + 1}: יש להוסיף תמונת עטיפה, או למחוק את השורה`;
+  }
+
+  private isBlankHit(hit: HitForm): boolean {
+    return !hit.title?.trim() && !hit.imageUrl?.trim() && !hit.youTubeUrl?.trim();
+  }
+
+  private isCompleteHit(hit: HitForm): boolean {
+    return !!hit.youTubeUrl?.trim();
+  }
+
+  private isBlankAlbum(album: AlbumForm): boolean {
+    return !album.title?.trim() && !album.coverImageUrl?.trim() && !album.externalUrl?.trim() && !album.releaseYear;
+  }
+
+  private isCompleteAlbum(album: AlbumForm): boolean {
+    return !!album.coverImageUrl?.trim();
+  }
+
   private optionalText(value: string | undefined): string | undefined {
     const trimmed = value?.trim();
     return trimmed || undefined;
+  }
+
+  private mirrorPerformanceImageFields(performance: PerformanceEventForm): void {
+    const imageUrl = performance.imageUrl?.trim();
+    const bannerImageUrl = performance.bannerImageUrl?.trim();
+    if (!imageUrl && bannerImageUrl) performance.imageUrl = bannerImageUrl;
+    if (!bannerImageUrl && imageUrl) performance.bannerImageUrl = imageUrl;
+  }
+
+  private normalizedBannerBlur(value: number | null | undefined): number {
+    const numericValue = Number(value) || 0;
+    return Math.max(0, Math.min(20, numericValue));
   }
 
   private normalizedLinks() {
@@ -383,6 +667,31 @@ export class ArtistEditModalComponent implements OnInit {
         videoUrl: it.videoUrl!.trim(),
         title: this.optionalText(it.title),
         displayOrder: index
+      }));
+  }
+
+  private normalizedHits() {
+    return this.editForm.hits
+      .filter(hit => hit.youTubeUrl?.trim())
+      .map((hit, index) => ({
+        title: hit.title?.trim() || 'להיט גדול',
+        imageUrl: this.optionalText(hit.imageUrl),
+        youTubeUrl: hit.youTubeUrl.trim(),
+        displayOrder: index,
+        isActive: hit.isActive
+      }));
+  }
+
+  private normalizedAlbums() {
+    return this.editForm.albums
+      .filter(album => album.coverImageUrl?.trim())
+      .map((album, index) => ({
+        title: album.title?.trim() || 'אלבום',
+        coverImageUrl: album.coverImageUrl.trim(),
+        releaseYear: album.releaseYear ?? undefined,
+        externalUrl: album.externalUrl?.trim() || '',
+        displayOrder: index,
+        isActive: album.isActive
       }));
   }
 

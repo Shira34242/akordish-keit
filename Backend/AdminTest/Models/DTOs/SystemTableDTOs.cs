@@ -5,12 +5,16 @@ public class SystemItemDto
 {
     public int Id { get; set; }
     public string Name { get; set; }
+    public bool ShowInChordQuickSearch { get; set; }
+    public int ChordQuickSearchOrder { get; set; }
 }
 
 // DTO for creating/updating simple system tables
 public class CreateSystemItemDto
 {
     public string Name { get; set; }
+    public bool ShowInChordQuickSearch { get; set; }
+    public int ChordQuickSearchOrder { get; set; }
 }
 
 // DTO for bulk delete operations on system tables

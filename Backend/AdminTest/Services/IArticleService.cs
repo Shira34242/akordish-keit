@@ -13,7 +13,8 @@ public interface IArticleService
         bool? isPremium,
         string? authorName,
         int pageNumber,
-        int pageSize);
+        int pageSize,
+        int? tagId = null);
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 

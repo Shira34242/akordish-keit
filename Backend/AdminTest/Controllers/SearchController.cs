@@ -22,17 +22,23 @@ public class SearchController : ControllerBase
     /// חיפוש גלובלי — מחזיר תוצאות מכל סוגי התוכן במקביל
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<SearchResultsDto>> Search([FromQuery] string q = "", [FromQuery] bool deep = false)
+    public async Task<ActionResult<SearchResultsDto>> Search(
+        [FromQuery] string q = "",
+        [FromQuery] bool deep = false,
+        [FromQuery] int limit = 5)
     {
         if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
             return Ok(new SearchResultsDto());
 
         var term = q.Trim();
+        var resultLimit = Math.Clamp(limit, 1, 50);
         var searchTokens = term
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(token => token.Length >= 2)
             .Take(4)
             .ToArray();
+        var searchedCity = FindCityByText(term);
+        var searchedCityId = searchedCity?.Id;
 
         // שלב 2 — חיפוש עמוק לפי מילות השיר (לא כולל שירים שכבר נמצאו בשלב 1 לפי כותרת)
         if (deep)
@@ -61,7 +67,7 @@ public class SearchController : ControllerBase
         var songs = await _context.Songs
             .Where(s => !s.IsDeleted && s.IsApproved && s.Title.Contains(term))
             .OrderByDescending(s => s.ViewCount)
-            .Take(5)
+            .Take(resultLimit)
             .Select(s => new SearchItemDto
             {
                 Id = s.Id,
@@ -76,7 +82,7 @@ public class SearchController : ControllerBase
             .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active && a.Name.Contains(term))
             .OrderByDescending(a => a.Tier)
             .ThenBy(a => a.Name)
-            .Take(5)
+            .Take(resultLimit)
             .Select(a => new SearchItemDto
             {
                 Id = a.Id,
@@ -90,7 +96,7 @@ public class SearchController : ControllerBase
         var articles = await _context.Articles
             .Where(a => a.Status == (int)ArticleStatus.Published && a.Title.Contains(term))
             .OrderByDescending(a => a.PublishDate)
-            .Take(5)
+            .Take(resultLimit)
             .Select(a => new SearchItemDto
             {
                 Id = a.Id,
@@ -108,7 +114,7 @@ public class SearchController : ControllerBase
             includeTeacherFields: true);
 
         var teachers = await OrderServiceProviderSearchResults(teachersQuery, term)
-            .Take(5)
+            .Take(resultLimit)
             .Select(p => new SearchItemDto
             {
                 Id = p.Id,
@@ -116,7 +122,8 @@ public class SearchController : ControllerBase
                 Subtitle = p.Branches
                     .Where(b =>
                         b.Name.Contains(term) ||
-                        (b.Address != null && b.Address.Contains(term)))
+                        (b.Address != null && b.Address.Contains(term)) ||
+                        (searchedCityId.HasValue && b.CityId == searchedCityId.Value))
                     .Select(b => b.Address != null ? b.Name + " - " + b.Address : b.Name)
                     .FirstOrDefault() ?? p.ShortBio,
                 ImageUrl = p.ProfileImageUrl,
@@ -131,7 +138,7 @@ public class SearchController : ControllerBase
             includeTeacherFields: false);
 
         var professionals = await OrderServiceProviderSearchResults(professionalsQuery, term)
-            .Take(5)
+            .Take(resultLimit)
             .Select(p => new SearchItemDto
             {
                 Id = p.Id,
@@ -139,7 +146,8 @@ public class SearchController : ControllerBase
                 Subtitle = p.Branches
                     .Where(b =>
                         b.Name.Contains(term) ||
-                        (b.Address != null && b.Address.Contains(term)))
+                        (b.Address != null && b.Address.Contains(term)) ||
+                        (searchedCityId.HasValue && b.CityId == searchedCityId.Value))
                     .Select(b => b.Address != null ? b.Name + " - " + b.Address : b.Name)
                     .FirstOrDefault() ?? p.ShortBio,
                 ImageUrl = p.ProfileImageUrl,
@@ -150,7 +158,7 @@ public class SearchController : ControllerBase
         var playlists = await _context.Playlists
             .Where(pl => pl.IsPublic && pl.Name.Contains(term))
             .OrderByDescending(pl => pl.CreatedAt)
-            .Take(5)
+            .Take(resultLimit)
             .Select(pl => new SearchItemDto
             {
                 Id = pl.Id,
@@ -183,21 +191,32 @@ public class SearchController : ControllerBase
         foreach (var token in tokens)
         {
             var currentToken = token;
+            var tokenCity = FindCityByText(currentToken);
+            var tokenCityId = tokenCity?.Id;
+            var cityTerm1 = tokenCity?.Name;
+            var cityTerm2 = tokenCity?.EnglishName;
 
             query = query.Where(p =>
                 p.DisplayName.Contains(currentToken) ||
                 (p.ShortBio != null && p.ShortBio.Contains(currentToken)) ||
                 (p.Location != null && p.Location.Contains(currentToken)) ||
                 (p.WorkingHours != null && p.WorkingHours.Contains(currentToken)) ||
+                (tokenCityId.HasValue && p.CityId == tokenCityId.Value) ||
                 p.Categories.Any(c =>
                     c.Category.Name.Contains(currentToken) ||
                     (c.SubCategory != null && c.SubCategory.Contains(currentToken))) ||
-                p.Branches.Any(b =>
+                _context.ServiceProviderBranches.Any(b =>
+                    b.ServiceProviderId == p.Id &&
+                    (
                     b.Name.Contains(currentToken) ||
                     (b.Address != null && b.Address.Contains(currentToken)) ||
+                    (tokenCityId.HasValue && b.CityId == tokenCityId.Value) ||
+                    (!string.IsNullOrEmpty(cityTerm1) && (b.Name.Contains(cityTerm1) || (b.Address != null && b.Address.Contains(cityTerm1)))) ||
+                    (!string.IsNullOrEmpty(cityTerm2) && (b.Name.Contains(cityTerm2) || (b.Address != null && b.Address.Contains(cityTerm2)))) ||
                     (b.PhoneNumber != null && b.PhoneNumber.Contains(currentToken)) ||
                     (b.Email != null && b.Email.Contains(currentToken)) ||
-                    (b.OpeningHours != null && b.OpeningHours.Contains(currentToken))) ||
+                    (b.OpeningHours != null && b.OpeningHours.Contains(currentToken))
+                    )) ||
                 (includeTeacherFields &&
                     p.TeacherProfile != null &&
                     ((p.TeacherProfile.Specializations != null && p.TeacherProfile.Specializations.Contains(currentToken)) ||
@@ -209,6 +228,24 @@ public class SearchController : ControllerBase
         }
 
         return query;
+    }
+
+    private static CityDto? FindCityByText(string? text)
+    {
+        var normalized = text?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return null;
+        }
+
+        return CitiesController.GetIsraeliCities().FirstOrDefault(city =>
+            city.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+            city.Name.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains(city.Name, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(city.EnglishName) &&
+                (city.EnglishName.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+                 city.EnglishName.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                 normalized.Contains(city.EnglishName, StringComparison.OrdinalIgnoreCase))));
     }
 
     private static IOrderedQueryable<MusicServiceProvider> OrderServiceProviderSearchResults(

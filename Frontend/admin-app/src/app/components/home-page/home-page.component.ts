@@ -58,6 +58,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('viralSection') viralSection?: ElementRef<HTMLElement>;
+  @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -73,6 +75,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredArtists: any[] = [];
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
+  viralArticles: Article[] = [];
+  visibleViralCount = 3;
+  loadingViralArticles = false;
+  viralArticlesLoaded = false;
   upcomingEvents: UpcomingEventDto[] = [];
   selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
@@ -86,6 +92,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroParticles: HeroParticle[] = [];
   private particleAnimId?: number;
   private heroMouseHandler?: (e: MouseEvent) => void;
+  private viralObserver?: IntersectionObserver;
 
   constructor(
     private router: Router,
@@ -156,12 +163,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.initHeroHeight();
       this.initParticleEffect();
+      this.initViralObserver();
     }, 0);
   }
 
   ngOnDestroy(): void {
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
+    this.viralObserver?.disconnect();
   }
 
   @HostListener('window:scroll')
@@ -333,6 +342,90 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get useScrollingBlogBanner(): boolean {
     return this.blogArticles.length >= 2;
+  }
+
+  get visibleViralArticles(): Article[] {
+    return this.viralArticles.slice(0, this.visibleViralCount);
+  }
+
+  get canRevealMoreViralArticles(): boolean {
+    return this.visibleViralCount < Math.min(this.viralArticles.length, 15);
+  }
+
+  private initViralObserver(): void {
+    if (this.viralObserver) this.viralObserver.disconnect();
+
+    this.viralObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+
+          if (entry.target === this.viralSection?.nativeElement) {
+            this.loadViralArticles();
+          }
+
+          if (entry.target === this.viralSentinel?.nativeElement) {
+            this.revealMoreViralArticles();
+          }
+        }
+      },
+      { rootMargin: '360px 0px', threshold: 0.01 }
+    );
+
+    if (this.viralSection?.nativeElement) {
+      this.viralObserver.observe(this.viralSection.nativeElement);
+    }
+    if (this.viralSentinel?.nativeElement) {
+      this.viralObserver.observe(this.viralSentinel.nativeElement);
+    }
+  }
+
+  private loadViralArticles(): void {
+    if (this.viralArticlesLoaded || this.loadingViralArticles) return;
+
+    this.loadingViralArticles = true;
+    this.articleService.getArticles(1, 36, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (res: any) => {
+          const currentNewsIds = new Set(this.newsArticles.map(article => article.id));
+          const olderArticles = (res.items || [])
+            .filter((article: Article) => !currentNewsIds.has(article.id))
+            .filter((article: Article) => this.isOlderNewsArticle(article));
+          const fallbackArticles = (res.items || [])
+            .filter((article: Article) => !currentNewsIds.has(article.id))
+            .filter((article: Article) => !olderArticles.some((oldArticle: Article) => oldArticle.id === article.id));
+
+          const popularOlderArticles = olderArticles
+            .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
+          const popularFallbackArticles = fallbackArticles
+            .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
+
+          this.viralArticles = [...popularOlderArticles, ...popularFallbackArticles].slice(0, 15);
+          this.visibleViralCount = Math.min(3, this.viralArticles.length);
+          this.viralArticlesLoaded = true;
+          this.loadingViralArticles = false;
+          setTimeout(() => this.initViralObserver(), 0);
+        },
+        error: (err) => {
+          console.error('loadContent: viral articles', err);
+          this.viralArticlesLoaded = true;
+          this.loadingViralArticles = false;
+        }
+      });
+  }
+
+  private isOlderNewsArticle(article: Article): boolean {
+    const dateValue = article.publishDate || article.createdAt;
+    const timestamp = dateValue ? new Date(dateValue).getTime() : 0;
+    if (!timestamp) return true;
+
+    const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
+    return Date.now() - timestamp >= twoWeeksMs;
+  }
+
+  private revealMoreViralArticles(): void {
+    if (!this.viralArticlesLoaded || !this.canRevealMoreViralArticles) return;
+    this.visibleViralCount = Math.min(this.visibleViralCount + 3, this.viralArticles.length, 15);
   }
 
   private initParticleEffect(): void {

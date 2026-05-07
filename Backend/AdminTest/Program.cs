@@ -74,7 +74,8 @@ builder.Services.AddHostedService<CleanupService>();
 
 // Add DbContext
 builder.Services.AddDbContext<AkordishKeitDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -131,12 +132,13 @@ builder.Services.AddScoped<IAuthorizationHandler, SubscribedTierHandler>();
 
 // Add CORS for Angular
 // ⚠️ חשוב! AllowCredentials() מאפשר שליחת cookies בין domains
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? new[] { "http://localhost:4200", "https://localhost:4200" };
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials(); // 🔐 מאפשר cookies ו-authentication credentials
@@ -186,6 +188,36 @@ using (var scope = app.Services.CreateScope())
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsent') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsent] bit NOT NULL CONSTRAINT [DF_Users_MarketingConsent] DEFAULT CAST(0 AS bit);
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentAt') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentAt] datetime2 NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentRevokedAt') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentRevokedAt] datetime2 NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'MarketingConsentSource') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [MarketingConsentSource] nvarchar(100) NULL;
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Articles_CreatedAt' AND object_id = OBJECT_ID(N'[Articles]'))
         BEGIN
@@ -196,6 +228,43 @@ using (var scope = app.Services.CreateScope())
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Articles_Status_ContentType_CreatedAt' AND object_id = OBJECT_ID(N'[Articles]'))
         BEGIN
             CREATE INDEX [IX_Articles_Status_ContentType_CreatedAt] ON [Articles] ([Status], [ContentType], [CreatedAt] DESC);
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[ArtistAlbums]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [ArtistAlbums] (
+                [Id] int NOT NULL IDENTITY,
+                [ArtistId] int NOT NULL,
+                [Title] nvarchar(200) NOT NULL,
+                [CoverImageUrl] nvarchar(500) NOT NULL,
+                [ReleaseYear] int NULL,
+                [ExternalUrl] nvarchar(500) NOT NULL,
+                [DisplayOrder] int NOT NULL CONSTRAINT [DF_ArtistAlbums_DisplayOrder] DEFAULT 0,
+                [IsActive] bit NOT NULL CONSTRAINT [DF_ArtistAlbums_IsActive] DEFAULT CAST(1 AS bit),
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_ArtistAlbums_CreatedAt] DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_ArtistAlbums] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_ArtistAlbums_Artists_ArtistId] FOREIGN KEY ([ArtistId]) REFERENCES [Artists] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_ArtistAlbums_ArtistId] ON [ArtistAlbums] ([ArtistId]);
+        END
+
+        IF OBJECT_ID(N'[ArtistHits]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [ArtistHits] (
+                [Id] int NOT NULL IDENTITY,
+                [ArtistId] int NOT NULL,
+                [Title] nvarchar(200) NOT NULL,
+                [ImageUrl] nvarchar(500) NULL,
+                [YouTubeUrl] nvarchar(500) NOT NULL,
+                [DisplayOrder] int NOT NULL CONSTRAINT [DF_ArtistHits_DisplayOrder] DEFAULT 0,
+                [IsActive] bit NOT NULL CONSTRAINT [DF_ArtistHits_IsActive] DEFAULT CAST(1 AS bit),
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_ArtistHits_CreatedAt] DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_ArtistHits] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_ArtistHits_Artists_ArtistId] FOREIGN KEY ([ArtistId]) REFERENCES [Artists] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_ArtistHits_ArtistId] ON [ArtistHits] ([ArtistId]);
         END
     ");
 

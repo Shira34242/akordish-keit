@@ -73,6 +73,10 @@ export class SystemTablesService {
         return this.http.get<SystemItem[]>(`${this.apiUrl}/Tags/popular`, { params: new HttpParams().set('limit', String(limit)) });
     }
 
+    getChordQuickTags(): Observable<SystemItem[]> {
+        return this.http.get<SystemItem[]>(`${this.apiUrl}/Tags/chord-quick`);
+    }
+
     searchTags(query: string, limit: number = 10): Observable<SystemItem[]> {
         let params = new HttpParams().set('limit', String(limit));
         if (query?.trim()) params = params.set('q', query.trim());
@@ -81,5 +85,9 @@ export class SystemTablesService {
 
     findOrCreateTag(name: string): Observable<SystemItem> {
         return this.http.post<SystemItem>(`${this.apiUrl}/Tags/find-or-create`, { name });
+    }
+
+    getTag(id: number): Observable<SystemItem> {
+        return this.http.get<SystemItem>(`${this.apiUrl}/Tags/${id}`);
     }
 }

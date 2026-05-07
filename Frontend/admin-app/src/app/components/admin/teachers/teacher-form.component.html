@@ -147,31 +147,27 @@
         <div class="form-group">
           <label class="form-label">עיר</label>
           <div class="custom-dropdown" [class.open]="cityDropdownOpen">
-            <div class="dropdown-trigger" (click)="toggleCityDropdown()">
-              <span class="dropdown-value">
-                {{ getSelectedCityName() || 'בחר עיר...' }}
-              </span>
-              <span class="material-icons dropdown-arrow">
+            <div class="dropdown-trigger">
+              <input
+                type="text"
+                [value]="cityDropdownOpen ? citySearchText : getSelectedCityName()"
+                (input)="onCityTextInput($event)"
+                (focus)="openCityDropdown()"
+                (blur)="onCityInputBlur()"
+                name="citySearch"
+                placeholder="בחר עיר..."
+                class="dropdown-search-input"
+                autocomplete="off"
+              />
+              <span class="material-icons dropdown-arrow" (mousedown)="$event.preventDefault()" (click)="toggleCityDropdown()">
                 {{ cityDropdownOpen ? 'expand_less' : 'expand_more' }}
               </span>
             </div>
             <div class="dropdown-menu" *ngIf="cityDropdownOpen">
-              <div class="dropdown-search">
-                <span class="material-icons">search</span>
-                <input
-                  type="text"
-                  [(ngModel)]="citySearchText"
-                  (ngModelChange)="onCitySearchChange()"
-                  name="citySearch"
-                  placeholder="חפש עיר..."
-                  class="dropdown-search-input"
-                  (click)="$event.stopPropagation()"
-                />
-              </div>
               <div class="dropdown-options">
                 <div
                   class="dropdown-option"
-                  (click)="selectCity(undefined)"
+                  (mousedown)="$event.preventDefault(); selectCity(undefined)"
                   [class.selected]="!cityId"
                 >
                   <span>ללא עיר</span>
@@ -179,7 +175,7 @@
                 <div
                   *ngFor="let city of filteredCities"
                   class="dropdown-option"
-                  (click)="selectCity(city.id)"
+                  (mousedown)="$event.preventDefault(); selectCity(city.id)"
                   [class.selected]="cityId === city.id"
                 >
                   <span>{{ city.name }}</span>

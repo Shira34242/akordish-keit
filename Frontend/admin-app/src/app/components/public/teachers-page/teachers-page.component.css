@@ -291,25 +291,6 @@
   overflow-x: auto;
   padding-bottom: 10px;
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
-}
-
-.teachers-grid::-webkit-scrollbar {
-  height: var(--site-scrollbar-size);
-}
-
-.teachers-grid::-webkit-scrollbar-track {
-  background: var(--site-scrollbar-track);
-}
-
-.teachers-grid::-webkit-scrollbar-thumb {
-  background: var(--site-scrollbar-thumb);
-  border-radius: 999px;
-}
-
-.teachers-grid::-webkit-scrollbar-thumb:hover {
-  background: var(--site-scrollbar-thumb-hover);
 }
 
 /* Filtered results grid - normal wrapping layout */

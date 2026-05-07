@@ -31,8 +31,7 @@
   padding: var(--space-lg);
   box-sizing: border-box;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
   direction: rtl;
 }
 
@@ -45,20 +44,21 @@
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar {
-  width: 5px;
+  width: var(--site-scrollbar-size);
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--site-scrollbar-track);
+  border-radius: 8px;
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.16);
-  border-radius: 999px;
+  background: var(--site-scrollbar-thumb);
+  border-radius: 8px;
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--site-scrollbar-thumb-hover);
 }
 
 .artist-create.embedded-mode .guided-scroll-region::-webkit-scrollbar-button {
@@ -151,6 +151,13 @@
   color: #000000;
   font-size: var(--font-sm);
   font-weight: 700;
+}
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
 }
 
 .submission-note,
@@ -477,6 +484,10 @@
   margin-bottom: 0;
   display: grid;
   gap: 6px;
+}
+
+.form-range {
+  width: 100%;
 }
 
 .form-label {
