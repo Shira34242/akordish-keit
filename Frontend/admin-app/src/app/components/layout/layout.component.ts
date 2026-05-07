@@ -610,7 +610,6 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   onAuthSuccess(response: AuthResponse): void {
-    console.log('Auth successful', response);
     this.closeAuthModal();
 
     if (response.requiresProfileCompletion) {
@@ -638,7 +637,6 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   onProfileComplete(userType: UserType): void {
-    console.log('Profile completed as:', userType);
     this.closeAdditionalDetailsModal();
 
     if (userType === UserType.Regular) {

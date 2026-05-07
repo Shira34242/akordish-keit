@@ -60,7 +60,6 @@ export class AppComponent implements OnInit {
   }
 
   onSongAdded() {
-    console.log('Song added successfully');
     this.modalService.closeModal();
     // מודיע לכל הרכיבים שהשיר עודכן
     this.modalService.notifySongUpdated();

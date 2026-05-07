@@ -497,7 +497,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     changeFontSize(delta: number): void {
         // עדכן את הגודל לפני הלוג – כך שה‑console יציג את הערך החדש
         this.fontSize = Math.max(10, Math.min(32, this.fontSize + delta));
-        console.log('Font size changed to', this.fontSize);
     }
 
 

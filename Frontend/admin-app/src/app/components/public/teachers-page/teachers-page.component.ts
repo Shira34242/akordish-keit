@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { TeacherService } from '../../../services/teacher.service';
 import { CitiesService, City } from '../../../services/cities.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
-import { TeacherListDto, TeacherDto } from '../../../models/teacher.model';
+import { TeacherListDto } from '../../../models/teacher.model';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { TeacherProfileModalComponent } from '../../admin/teachers/teacher-profile-modal.component';
@@ -18,13 +19,6 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 interface Instrument {
   id: number;
   name: string;
-}
-
-interface TeacherBanner {
-  title: string;
-  teachers: TeacherListDto[];
-  instrumentId?: number;
-  showAll?: boolean;
 }
 
 @Component({
@@ -53,7 +47,6 @@ export class TeachersPageComponent implements OnInit {
   languageOptions = getTeachingLanguageOptions();
 
   // Teachers data
-  allTeachers: TeacherListDto[] = []; // Store all teachers
   featuredTeachers: TeacherListDto[] = [];
   organTeachers: TeacherListDto[] = [];
   soundTeachers: TeacherListDto[] = [];
@@ -64,6 +57,13 @@ export class TeachersPageComponent implements OnInit {
   isFiltered: boolean = false;
   filteredTeachers: TeacherListDto[] = [];
 
+  // Pagination state
+  loadingMoreTeachers = false;
+  additionalTeachersPage = 1;
+  additionalTeachersTotal = 0;
+  filteredTeachersPage = 1;
+  filteredTeachersTotal = 0;
+
   // Quick search instruments
   quickSearchInstruments = [
     { id: 0, name: 'גיטרה', hebrewName: 'גיטרה' },
@@ -73,6 +73,12 @@ export class TeachersPageComponent implements OnInit {
   ];
 
   loading: boolean = true;
+
+  private readonly stripPageSize = 10;
+  private readonly catalogPageSize = 24;
+  private readonly searchPageSize = 40;
+  private readonly scrollLoadOffset = 700;
+  private rafPending = false;
 
   constructor(
     private teacherService: TeacherService,
@@ -85,8 +91,17 @@ export class TeachersPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCities();
-    this.loadInstruments();
     this.loadTeachers();
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.loadMoreWhenNearBottom();
+      this.rafPending = false;
+    });
   }
 
   loadCities(): void {
@@ -98,69 +113,47 @@ export class TeachersPageComponent implements OnInit {
     });
   }
 
-  loadInstruments(): void {
-    this.systemTablesService.getItems('instruments', 1, 100).subscribe({
-      next: (response: any) => {
-        this.instruments = response.items || response;
+  loadTeachers(): void {
+    this.loading = true;
 
-        // Map quick search instrument IDs
+    this.systemTablesService.getItems('instruments', 1, 100).pipe(
+      switchMap((instrumentResponse: any) => {
+        this.instruments = instrumentResponse.items || instrumentResponse || [];
+
         this.quickSearchInstruments.forEach(quick => {
           const instrument = this.instruments.find(i =>
             i.name.toLowerCase().includes(quick.name.toLowerCase())
           );
-          if (instrument) {
-            quick.id = instrument.id;
-          }
+          if (instrument) quick.id = instrument.id;
         });
-      },
-      error: (err) => console.error('Error loading instruments:', err)
-    });
-  }
 
-  loadTeachers(): void {
-    this.loading = true;
+        const organId = this.findInstrumentId('אורגן');
+        const soundId = this.findInstrumentId('סאונד');
+        const vocalId = this.findInstrumentId('פיתוח קול');
 
-    // Load featured teachers (top 10)
-    this.teacherService.getTeachers(undefined, undefined, 1, true, 1, 10).subscribe({
-      next: (response: any) => {
-        this.featuredTeachers = response.items || response.data || [];
-      },
-      error: (err) => console.error('Error loading featured teachers:', err)
-    });
-
-    // Load all active teachers
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 200).subscribe({
-      next: (response: any) => {
-        this.allTeachers = response.items || response.data || [];
-
-        // DEBUG: Log sample teacher data
-        if (this.allTeachers.length > 0) {
-          console.log('Sample teacher data:', this.allTeachers[0]);
-          console.log('Fields check:', {
-            hasLanguages: 'languages' in this.allTeachers[0],
-            hasTargetAudience: 'targetAudience' in this.allTeachers[0],
-            hasPrimaryInstrument: 'primaryInstrument' in this.allTeachers[0],
-            languages: this.allTeachers[0].languages,
-            targetAudience: this.allTeachers[0].targetAudience,
-            primaryInstrument: this.allTeachers[0].primaryInstrument
-          });
-        }
-
-        // Filter teachers by specific instruments
-        this.organTeachers = this.filterTeachersByInstrument(this.allTeachers, 'אורגן');
-        this.soundTeachers = this.filterTeachersByInstrument(this.allTeachers, 'סאונד');
-        this.vocalTeachers = this.filterTeachersByInstrument(this.allTeachers, 'פיתוח קול');
-        console.log('Organ teachers count:', this.organTeachers.length);
-        // Additional teachers (not in any specific category)
-        const categorizedIds = new Set([
-          ...this.featuredTeachers.map(t => t.id),
-          ...this.organTeachers.map(t => t.id),
-          ...this.soundTeachers.map(t => t.id),
-          ...this.vocalTeachers.map(t => t.id)
-        ]);
-
-        this.additionalTeachers = this.allTeachers.filter((t: TeacherListDto) => !categorizedIds.has(t.id));
-
+        return forkJoin({
+          featured: this.teacherService.getTeachers(undefined, undefined, 1, true, 1, this.stripPageSize),
+          organ: organId
+            ? this.teacherService.getTeachers(undefined, organId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          sound: soundId
+            ? this.teacherService.getTeachers(undefined, soundId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          vocal: vocalId
+            ? this.teacherService.getTeachers(undefined, vocalId, 1, undefined, 1, this.stripPageSize)
+            : of({ items: [], data: [] } as any),
+          catalog: this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, this.catalogPageSize)
+        });
+      })
+    ).subscribe({
+      next: (results: any) => {
+        this.featuredTeachers = results.featured.items || results.featured.data || [];
+        this.organTeachers = results.organ.items || results.organ.data || [];
+        this.soundTeachers = results.sound.items || results.sound.data || [];
+        this.vocalTeachers = results.vocal.items || results.vocal.data || [];
+        this.additionalTeachers = results.catalog.items || results.catalog.data || [];
+        this.additionalTeachersPage = results.catalog.pageNumber || 1;
+        this.additionalTeachersTotal = results.catalog.totalCount || this.additionalTeachers.length;
         this.loading = false;
       },
       error: (err) => {
@@ -170,26 +163,7 @@ export class TeachersPageComponent implements OnInit {
     });
   }
 
-  filterTeachersByInstrument(teachers: TeacherListDto[], instrumentName: string, limit: number = 10): TeacherListDto[] {
-    // Find the instrument ID by name
-    const instrument = this.instruments.find(i =>
-      i.name.toLowerCase().includes(instrumentName.toLowerCase())
-    );
-
-    if (!instrument) {
-      return [];
-    }
-
-    // Filter teachers who teach this instrument (not just primary)
-    const filtered = teachers.filter(teacher =>
-      teacher.instrumentIds && teacher.instrumentIds.includes(instrument.id)
-    );
-
-    return limit > 0 ? filtered.slice(0, limit) : filtered;
-  }
-
   onSearch(): void {
-    // Check if any filter is active
     const hasActiveFilter =
       this.searchTerm.trim() !== '' ||
       this.selectedCityId !== null ||
@@ -198,99 +172,33 @@ export class TeachersPageComponent implements OnInit {
       this.selectedLanguage !== null;
 
     if (!hasActiveFilter) {
-      // No filters - show default view with banners
       this.isFiltered = false;
       this.filteredTeachers = [];
+      this.filteredTeachersPage = 1;
+      this.filteredTeachersTotal = 0;
       return;
     }
 
-    // Apply all filters client-side (faster and more efficient for this dataset size)
     this.isFiltered = true;
-    this.filteredTeachers = this.applyAllFilters(this.allTeachers);
-  }
+    this.filteredTeachersPage = 1;
 
-  applyAllFilters(teachers: TeacherListDto[]): TeacherListDto[] {
-    let filtered = [...teachers];
-
-    console.log('=== Starting filter process ===');
-    console.log('Total teachers:', filtered.length);
-    console.log('Active filters:', {
-      searchTerm: this.searchTerm,
-      selectedCityId: this.selectedCityId,
-      selectedInstrumentId: this.selectedInstrumentId,
-      selectedTargetAudience: this.selectedTargetAudience,
-      selectedLanguage: this.selectedLanguage
+    this.teacherService.getTeachers(
+      this.searchTerm || undefined,
+      this.selectedInstrumentId || undefined,
+      1,
+      undefined,
+      1,
+      this.searchPageSize,
+      this.selectedCityId || undefined,
+      this.selectedTargetAudience || undefined,
+      this.selectedLanguage || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.filteredTeachers = response.items || response.data || [];
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachers.length;
+      },
+      error: (err) => console.error('Error filtering teachers:', err)
     });
-
-    // Filter by search term (name or instrument)
-    if (this.searchTerm.trim() !== '') {
-      const searchLower = this.searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(t =>
-        t.displayName?.toLowerCase().includes(searchLower) ||
-        t.primaryInstrument?.toLowerCase().includes(searchLower)
-      );
-      console.log('After search term filter:', filtered.length);
-    }
-
-    // Filter by city (convert to number for comparison)
-    if (this.selectedCityId !== null) {
-      const cityId = Number(this.selectedCityId);
-      console.log('Filtering by city ID:', cityId, 'Type:', typeof cityId);
-      filtered = filtered.filter(t => t.cityId === cityId);
-      console.log('After city filter:', filtered.length);
-    }
-
-    // Filter by instrument (convert to number for comparison)
-    if (this.selectedInstrumentId !== null) {
-      const instrumentId = Number(this.selectedInstrumentId);
-      console.log('Filtering by instrument ID:', instrumentId);
-      console.log('Sample teacher instrumentIds:', filtered.slice(0, 5).map(t => ({
-        id: t.id,
-        name: t.displayName,
-        instrumentIds: t.instrumentIds
-      })));
-      filtered = filtered.filter(t =>
-        t.instrumentIds && t.instrumentIds.includes(instrumentId)
-      );
-      console.log('After instrument filter:', filtered.length);
-    }
-
-    // Filter by target audience (using bitwise AND for flags enum)
-    if (this.selectedTargetAudience !== null && this.selectedTargetAudience !== 0) {
-      const selectedAudience = this.selectedTargetAudience; // Store in local variable for TypeScript
-      console.log('Filtering by target audience:', selectedAudience);
-      console.log('Sample teacher targetAudience values:', filtered.slice(0, 5).map(t => ({
-        id: t.id,
-        name: t.displayName,
-        targetAudience: t.targetAudience
-      })));
-      filtered = filtered.filter(t =>
-        t.targetAudience !== undefined &&
-        t.targetAudience !== null &&
-        (t.targetAudience & selectedAudience) !== 0
-      );
-      console.log('After target audience filter:', filtered.length);
-    }
-
-    // Filter by language (using bitwise AND for flags enum)
-    if (this.selectedLanguage !== null && this.selectedLanguage !== 0) {
-      const selectedLang = this.selectedLanguage; // Store in local variable for TypeScript
-      console.log('Filtering by language:', selectedLang);
-      console.log('Sample teacher languages values:', filtered.slice(0, 5).map(t => ({
-        id: t.id,
-        name: t.displayName,
-        languages: t.languages
-      })));
-      filtered = filtered.filter(t =>
-        t.languages !== undefined &&
-        t.languages !== null &&
-        (t.languages & selectedLang) !== 0
-      );
-      console.log('After language filter:', filtered.length);
-    }
-
-    console.log('=== Final filtered count:', filtered.length, '===');
-    return filtered;
   }
 
   clearFilters(): void {
@@ -301,13 +209,14 @@ export class TeachersPageComponent implements OnInit {
     this.selectedLanguage = null;
     this.isFiltered = false;
     this.filteredTeachers = [];
+    this.filteredTeachersPage = 1;
+    this.filteredTeachersTotal = 0;
   }
 
   onQuickSearch(instrumentName: string): void {
     const instrument = this.instruments.find(i =>
       i.name.toLowerCase().includes(instrumentName.toLowerCase())
     );
-
     if (instrument) {
       this.selectedInstrumentId = instrument.id;
       this.onSearch();
@@ -315,29 +224,103 @@ export class TeachersPageComponent implements OnInit {
   }
 
   onViewMore(category: string): void {
-    // Filter to show only this category (no limit - show all)
     this.isFiltered = true;
+    this.filteredTeachersPage = 1;
 
-    switch(category) {
-      case 'featured':
-        // Show all featured teachers, not just the first 10
-        this.filteredTeachers = this.allTeachers.filter(t => t.isFeatured);
-        break;
-      case 'organ':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'אורגן', 0);
-        break;
-      case 'sound':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'סאונד', 0);
-        break;
-      case 'vocal':
-        this.filteredTeachers = this.filterTeachersByInstrument(this.allTeachers, 'פיתוח קול', 0);
-        break;
-      default:
-        this.filteredTeachers = this.allTeachers;
+    let instrumentId: number | undefined;
+    let featured: boolean | undefined;
+
+    switch (category) {
+      case 'featured': featured = true; break;
+      case 'organ':    instrumentId = this.findInstrumentId('אורגן'); break;
+      case 'sound':    instrumentId = this.findInstrumentId('סאונד'); break;
+      case 'vocal':    instrumentId = this.findInstrumentId('פיתוח קול'); break;
     }
 
-    // Scroll to top
+    this.teacherService.getTeachers(undefined, instrumentId, 1, featured, 1, this.searchPageSize).subscribe({
+      next: (response: any) => {
+        this.filteredTeachers = response.items || response.data || [];
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachers.length;
+      },
+      error: (err) => console.error('Error loading teacher section:', err)
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private loadMoreWhenNearBottom(): void {
+    const distanceFromBottom =
+      document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+    if (distanceFromBottom > this.scrollLoadOffset) return;
+
+    if (this.isFiltered) {
+      this.loadMoreFilteredTeachers();
+    } else {
+      this.loadMoreCatalogTeachers();
+    }
+  }
+
+  private loadMoreCatalogTeachers(): void {
+    if (this.loadingMoreTeachers || this.additionalTeachers.length >= this.additionalTeachersTotal) return;
+    this.loadingMoreTeachers = true;
+    const nextPage = this.additionalTeachersPage + 1;
+
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, nextPage, this.catalogPageSize).subscribe({
+      next: (response: any) => {
+        this.appendUniqueTeachers(this.additionalTeachers, response.items || response.data || []);
+        this.additionalTeachersPage = response.pageNumber || nextPage;
+        this.additionalTeachersTotal = response.totalCount || this.additionalTeachersTotal;
+        this.loadingMoreTeachers = false;
+      },
+      error: (err) => {
+        console.error('Error loading more teachers:', err);
+        this.loadingMoreTeachers = false;
+      }
+    });
+  }
+
+  private loadMoreFilteredTeachers(): void {
+    if (this.loadingMoreTeachers || this.filteredTeachers.length >= this.filteredTeachersTotal) return;
+    this.loadingMoreTeachers = true;
+    const nextPage = this.filteredTeachersPage + 1;
+
+    this.teacherService.getTeachers(
+      this.searchTerm || undefined,
+      this.selectedInstrumentId || undefined,
+      1,
+      undefined,
+      nextPage,
+      this.searchPageSize,
+      this.selectedCityId || undefined,
+      this.selectedTargetAudience || undefined,
+      this.selectedLanguage || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.appendUniqueTeachers(this.filteredTeachers, response.items || response.data || []);
+        this.filteredTeachersPage = response.pageNumber || nextPage;
+        this.filteredTeachersTotal = response.totalCount || this.filteredTeachersTotal;
+        this.loadingMoreTeachers = false;
+      },
+      error: (err) => {
+        console.error('Error loading more filtered teachers:', err);
+        this.loadingMoreTeachers = false;
+      }
+    });
+  }
+
+  private appendUniqueTeachers(target: TeacherListDto[], items: TeacherListDto[]): void {
+    const existingIds = new Set(target.map(item => item.id));
+    target.push(...items.filter(item => !existingIds.has(item.id)));
+  }
+
+  private findInstrumentId(instrumentName: string): number | undefined {
+    return this.instruments.find(i =>
+      i.name.toLowerCase().includes(instrumentName.toLowerCase())
+    )?.id;
+  }
+
+  trackByTeacherId(_index: number, teacher: TeacherListDto): number {
+    return teacher.id;
   }
 
   viewTeacher(teacherId: number): void {
@@ -367,25 +350,16 @@ export class TeachersPageComponent implements OnInit {
   }
 
   getTeacherInstruments(teacher: TeacherListDto): string {
-    if (!teacher.instrumentIds || teacher.instrumentIds.length === 0) {
-      return '';
-    }
+    if (!teacher.instrumentIds || teacher.instrumentIds.length === 0) return '';
 
-    const instrumentNames = teacher.instrumentIds
+    const names = teacher.instrumentIds
       .map(id => this.instruments.find(i => i.id === id)?.name)
-      .filter(name => name !== undefined) as string[];
+      .filter((name): name is string => name !== undefined);
 
-    if (instrumentNames.length === 0) {
-      return '';
-    }
+    if (names.length === 0) return '';
+    if (names.length === 1) return `מורה ל${names[0]}`;
 
-    if (instrumentNames.length === 1) {
-      return `מורה ל${instrumentNames[0]}`;
-    }
-
-    // Multiple instruments: "מורה לפסנתר, גיטרה וכינור"
-    const lastInstrument = instrumentNames[instrumentNames.length - 1];
-    const otherInstruments = instrumentNames.slice(0, -1).join(', ');
-    return `מורה ל${otherInstruments} ו${lastInstrument}`;
+    const last = names[names.length - 1];
+    return `מורה ל${names.slice(0, -1).join(', ')} ו${last}`;
   }
 }

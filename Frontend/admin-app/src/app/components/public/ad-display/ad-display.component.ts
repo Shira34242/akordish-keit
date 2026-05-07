@@ -287,7 +287,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
         this.markAdAsViewed(this.currentAd.id);
         this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-view`, {})
           .subscribe({
-            next: () => console.log(`📊 צפייה נספרה לפרסומת ${this.currentAd?.id}`),
+            next: () => {},
             error: (error) => console.error('Error tracking view:', error)
           });
       } else {
@@ -301,7 +301,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
         this.markAdAsClicked(this.currentAd.id);
         this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-click`, {})
           .subscribe({
-            next: () => console.log(`📊 קליק נספר לפרסומת ${this.currentAd?.id}`),
+            next: () => {},
             error: (error) => console.error('Error tracking click:', error)
           });
       } 

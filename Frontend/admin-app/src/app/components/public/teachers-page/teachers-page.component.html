@@ -91,11 +91,11 @@
   </div>
 
   <div *ngIf="!loading && isFiltered" class="filtered-section">
-    <h2 class="filtered-title">{{ 'shared.search' | translate }} ({{ filteredTeachers.length }} {{ 'teachers.results_count' | translate }})</h2>
+    <h2 class="filtered-title">{{ 'shared.search' | translate }} ({{ filteredTeachersTotal || filteredTeachers.length }} {{ 'teachers.results_count' | translate }})</h2>
 
     <div *ngIf="filteredTeachers.length > 0" class="teachers-grid">
       <div
-        *ngFor="let teacher of filteredTeachers"
+        *ngFor="let teacher of filteredTeachers; trackBy: trackByTeacherId"
         class="teacher-card"
         (click)="viewTeacher(teacher.id)">
         <div class="teacher-image">
@@ -147,7 +147,7 @@
 
       <div class="teachers-grid">
         <div
-          *ngFor="let teacher of featuredTeachers"
+          *ngFor="let teacher of featuredTeachers; trackBy: trackByTeacherId"
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
@@ -187,7 +187,7 @@
 
       <div class="teachers-grid">
         <div
-          *ngFor="let teacher of organTeachers"
+          *ngFor="let teacher of organTeachers; trackBy: trackByTeacherId"
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
@@ -221,7 +221,7 @@
 
       <div class="teachers-grid">
         <div
-          *ngFor="let teacher of soundTeachers"
+          *ngFor="let teacher of soundTeachers; trackBy: trackByTeacherId"
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
@@ -255,7 +255,7 @@
 
       <div class="teachers-grid">
         <div
-          *ngFor="let teacher of vocalTeachers"
+          *ngFor="let teacher of vocalTeachers; trackBy: trackByTeacherId"
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
@@ -283,7 +283,7 @@
 
       <div class="teachers-table">
         <div
-          *ngFor="let teacher of additionalTeachers"
+          *ngFor="let teacher of additionalTeachers; trackBy: trackByTeacherId"
           class="teacher-row"
           (click)="viewTeacher(teacher.id)">
           <div class="row-image">

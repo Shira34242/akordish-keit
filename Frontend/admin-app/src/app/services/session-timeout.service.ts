@@ -142,7 +142,6 @@ export class SessionTimeoutService {
     if (continueSession) {
       // המשתמש רוצה להישאר - מאפסים את הטיימר
       this.resetIdleTimer();
-      console.log('Session extended by user');
     } else {
       // המשתמש בחר להתנתק
       this.logout();
@@ -153,7 +152,6 @@ export class SessionTimeoutService {
    * מנתק את המשתמש אוטומטית
    */
   private logout() {
-    console.warn('Session timeout - logging out user');
 
     // הצגת הודעה
     alert('התנתקת אוטומטית בגלל חוסר פעילות.');
@@ -174,6 +172,5 @@ export class SessionTimeoutService {
    */
   extendSession() {
     this.resetIdleTimer();
-    console.log('Session manually extended');
   }
 }

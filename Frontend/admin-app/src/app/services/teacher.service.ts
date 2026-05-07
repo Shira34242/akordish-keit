@@ -79,7 +79,6 @@ export class TeacherService {
   }
 
   createTeacher(dto: CreateTeacherDto): Observable<TeacherDto> {
-    console.log(dto);
     return this.http.post<TeacherDto>(this.apiUrl, dto);
   }
 

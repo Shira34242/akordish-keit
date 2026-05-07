@@ -252,8 +252,6 @@ export class ArtistEditModalComponent implements OnInit {
         name: this.editForm.name.trim()
       };
 
-      console.log('Creating artist with DTO:', createDto);
-
       this.artistService.createArtist(createDto).subscribe({
         next: () => {
           this.saving = false;

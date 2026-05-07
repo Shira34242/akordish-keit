@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -48,13 +48,13 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private readonly searchPageSize = 40;
   private readonly scrollLoadOffset = 700;
 
-  // ─── Tab ─────────────────────────────────────────
+  // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
 
-  // ─── Top filter (category dropdown — כולל מורים) ──
+  // ג”€ג”€ג”€ Top filter (category dropdown ג€” ׳›׳•׳׳ ׳׳•׳¨׳™׳) ג”€ג”€
   topFilterValue: string = 'all'; // 'all' | 'teachers' | category id as string
 
-  // ─── Dropdown visibility ──────────────────────────
+  // ג”€ג”€ג”€ Dropdown visibility ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   showCategoryDropdown = false;
   showCityDropdown = false;
   showInstrumentDropdown = false;
@@ -63,26 +63,26 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   showBecomeProfessionalForm = false;
 
-  // ─── Shared search fields ─────────────────────────
+  // ג”€ג”€ג”€ Shared search fields ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   searchTerm: string = '';
   selectedCityId: number | null = null;
 
-  // ─── Professionals filters ────────────────────────
+  // ג”€ג”€ג”€ Professionals filters ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   selectedCategoryId: number | null = null;
 
-  // ─── Teachers filters ─────────────────────────────
+  // ג”€ג”€ג”€ Teachers filters ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   selectedInstrumentId: number | null = null;
   selectedTargetAudience: TargetAudience | null = null;
   selectedLanguage: TeachingLanguage | null = null;
 
-  // ─── Data lists ──────────────────────────────────
+  // ג”€ג”€ג”€ Data lists ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   cities: City[] = [];
   categories: Category[] = [];
   instruments: Instrument[] = [];
   targetAudienceOptions = getTargetAudienceOptions();
   languageOptions = getTeachingLanguageOptions();
 
-  // ─── Professionals data ───────────────────────────
+  // ג”€ג”€ג”€ Professionals data ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   featuredProfessionals: MusicServiceProviderListDto[] = [];
   musicStores: MusicServiceProviderListDto[] = [];
   recordingStudios: MusicServiceProviderListDto[] = [];
@@ -98,10 +98,10 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   filteredProfessionalsTotal = 0;
 
   quickSearchCategories = [
-    { id: 0, name: 'חנויות מוזיקה', hebrewName: 'חנויות מוזיקה' },
-    { id: 0, name: 'אולפני הקלטות', hebrewName: 'אולפני הקלטות' },
-    { id: 0, name: 'עריכת וידאו', hebrewName: 'עריכת וידאו' },
-    { id: 0, name: 'הגברה', hebrewName: 'הגברה' }
+    { id: 0, name: '׳—׳ ׳•׳™׳•׳× ׳׳•׳–׳™׳§׳”', hebrewName: '׳—׳ ׳•׳™׳•׳× ׳׳•׳–׳™׳§׳”' },
+    { id: 0, name: '׳׳•׳׳₪׳ ׳™ ׳”׳§׳׳˜׳•׳×', hebrewName: '׳׳•׳׳₪׳ ׳™ ׳”׳§׳׳˜׳•׳×' },
+    { id: 0, name: '׳¢׳¨׳™׳›׳× ׳•׳™׳“׳׳•', hebrewName: '׳¢׳¨׳™׳›׳× ׳•׳™׳“׳׳•' },
+    { id: 0, name: '׳”׳’׳‘׳¨׳”', hebrewName: '׳”׳’׳‘׳¨׳”' }
   ];
 
   get visibleQuickCategories(): Category[] {
@@ -119,7 +119,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       .filter((category): category is Category => !!category);
   }
 
-  // ─── Teachers data ────────────────────────────────
+  // ג”€ג”€ג”€ Teachers data ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   allTeachers: TeacherListDto[] = [];
   featuredTeachers: TeacherListDto[] = [];
   organTeachers: TeacherListDto[] = [];
@@ -138,10 +138,10 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private instrumentNameById = new Map<number, string>();
 
   quickSearchInstruments = [
-    { id: 0, name: 'גיטרה', hebrewName: 'גיטרה' },
-    { id: 0, name: 'פסנתר', hebrewName: 'פסנתר' },
-    { id: 0, name: 'כינור', hebrewName: 'כינור' },
-    { id: 0, name: 'חליל', hebrewName: 'חליל' }
+    { id: 0, name: '׳’׳™׳˜׳¨׳”', hebrewName: '׳’׳™׳˜׳¨׳”' },
+    { id: 0, name: '׳₪׳¡׳ ׳×׳¨', hebrewName: '׳₪׳¡׳ ׳×׳¨' },
+    { id: 0, name: '׳›׳™׳ ׳•׳¨', hebrewName: '׳›׳™׳ ׳•׳¨' },
+    { id: 0, name: '׳—׳׳™׳', hebrewName: '׳—׳׳™׳' }
   ];
 
   constructor(
@@ -208,7 +208,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     const minHeight = 56;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
-    // משתף את גובה ה-hero הנוכחי עם ה-CSS, כדי שלחצן ה-"להצטרפות" יצמד לפינה הצהובה התחתונה
+    // ׳׳©׳×׳£ ׳׳× ׳’׳•׳‘׳” ׳”-hero ׳”׳ ׳•׳›׳—׳™ ׳¢׳ ׳”-CSS, ׳›׳“׳™ ׳©׳׳—׳¦׳ ׳”-"׳׳”׳¦׳˜׳¨׳₪׳•׳×" ׳™׳¦׳׳“ ׳׳₪׳™׳ ׳” ׳”׳¦׳”׳•׳‘׳” ׳”׳×׳—׳×׳•׳ ׳”
     this.hostRef.nativeElement.style.setProperty('--hero-height', newHeight + 'px');
     const overlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (overlay) {
@@ -248,7 +248,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     this.showAudienceDropdown = nextState;
   }
 
-  // ─── Top filter (category dropdown) ─────────────
+  // ג”€ג”€ג”€ Top filter (category dropdown) ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   setTopFilter(value: string): void {
     this.topFilterValue = value;
     if (value === 'teachers') {
@@ -260,7 +260,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // ─── Tab ─────────────────────────────────────────
+  // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   setTab(tab: 'professionals' | 'teachers'): void {
     if (this.activeTab === tab) return;
     this.activeTab = tab;
@@ -280,7 +280,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // ─── Cities ───────────────────────────────────────
+  // ג”€ג”€ג”€ Cities ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   loadCities(): void {
     this.citiesService.getCities().subscribe({
       next: (cities) => {
@@ -291,7 +291,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // ─── Load Professionals ───────────────────────────
+  // ג”€ג”€ג”€ Load Professionals ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   loadProfessionals(): void {
     this.loading = true;
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).pipe(
@@ -301,9 +301,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
           const category = this.categories.find(c => c.name.toLowerCase().includes(quick.name.toLowerCase()));
           if (category) quick.id = category.id;
         });
-        const musicStoreCat = this.categories.find(c => c.name.includes('חנויות מוזיקה'));
-        const recordingStudioCat = this.categories.find(c => c.name.includes('אולפני הקלטות'));
-        const amplificationCat = this.categories.find(c => c.name.includes('הגברה'));
+        const musicStoreCat = this.categories.find(c => c.name.includes('׳—׳ ׳•׳™׳•׳× ׳׳•׳–׳™׳§׳”'));
+        const recordingStudioCat = this.categories.find(c => c.name.includes('׳׳•׳׳₪׳ ׳™ ׳”׳§׳׳˜׳•׳×'));
+        const amplificationCat = this.categories.find(c => c.name.includes('׳”׳’׳‘׳¨׳”'));
         return forkJoin({
           featured: this.professionalService.getServiceProviders(undefined, undefined, undefined, 1, true, false, 1, this.stripPageSize),
           musicStores: musicStoreCat
@@ -333,7 +333,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // ─── Load Instruments + Teachers (together to avoid race) ────
+  // ג”€ג”€ג”€ Load Instruments + Teachers (together to avoid race) ג”€ג”€ג”€ג”€
   loadInstrumentsAndTeachers(): void {
     this.loadingTeachers = true;
     this.systemTablesService.getItems('instruments', 1, 100).pipe(
@@ -345,9 +345,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
           if (instrument) quick.id = instrument.id;
         });
 
-        const organId = this.findInstrumentId('אורגן');
-        const soundId = this.findInstrumentId('סאונד');
-        const vocalId = this.findInstrumentId('פיתוח קול');
+        const organId = this.findInstrumentId('׳׳•׳¨׳’׳');
+        const soundId = this.findInstrumentId('׳¡׳׳•׳ ׳“');
+        const vocalId = this.findInstrumentId('׳₪׳™׳×׳•׳— ׳§׳•׳');
 
         return forkJoin({
           featured: this.teacherService.getTeachers(undefined, undefined, 1, true, 1, this.stripPageSize),
@@ -389,7 +389,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     return this.instruments.find(i => i.name.toLowerCase().includes(instrumentName.toLowerCase()))?.id;
   }
 
-  // ─── Search ───────────────────────────────────────
+  // ג”€ג”€ג”€ Search ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   onSearch(): void {
     if (this.activeTab === 'professionals') {
       this.onSearchProfessionals();
@@ -544,7 +544,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     return imageUrl ? `url("${imageUrl.replace(/"/g, '\\"')}")` : null;
   }
 
-  // ─── View More — Professionals ────────────────────
+  // ג”€ג”€ג”€ View More ג€” Professionals ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   onViewMore(section: string): void {
     this.isFiltered = true;
     let categoryId: number | undefined;
@@ -559,15 +559,15 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         });
         break;
       case 'musicStores':
-        categoryId = this.categories.find(c => c.name.includes('חנויות מוזיקה'))?.id;
+        categoryId = this.categories.find(c => c.name.includes('׳—׳ ׳•׳™׳•׳× ׳׳•׳–׳™׳§׳”'))?.id;
         if (categoryId) this.loadFilteredSection(categoryId);
         break;
       case 'recordingStudios':
-        categoryId = this.categories.find(c => c.name.includes('אולפני הקלטות'))?.id;
+        categoryId = this.categories.find(c => c.name.includes('׳׳•׳׳₪׳ ׳™ ׳”׳§׳׳˜׳•׳×'))?.id;
         if (categoryId) this.loadFilteredSection(categoryId);
         break;
       case 'amplification':
-        categoryId = this.categories.find(c => c.name.includes('הגברה'))?.id;
+        categoryId = this.categories.find(c => c.name.includes('׳”׳’׳‘׳¨׳”'))?.id;
         if (categoryId) this.loadFilteredSection(categoryId);
         break;
       default:
@@ -586,7 +586,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // ─── View More — Teachers ─────────────────────────
+  // ג”€ג”€ג”€ View More ג€” Teachers ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   onViewMoreTeachers(category: string): void {
     this.isFilteredTeachers = true;
     this.filteredTeachersPage = 1;
@@ -597,13 +597,13 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         featured = true;
         break;
       case 'organ':
-        instrumentId = this.findInstrumentId('אורגן');
+        instrumentId = this.findInstrumentId('׳׳•׳¨׳’׳');
         break;
       case 'sound':
-        instrumentId = this.findInstrumentId('סאונד');
+        instrumentId = this.findInstrumentId('׳¡׳׳•׳ ׳“');
         break;
       case 'vocal':
-        instrumentId = this.findInstrumentId('פיתוח קול');
+        instrumentId = this.findInstrumentId('׳₪׳™׳×׳•׳— ׳§׳•׳');
         break;
       default:
         break;
@@ -740,7 +740,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     target.push(...items.filter(item => !existingIds.has(item.id)));
   }
 
-  // ─── Navigation ───────────────────────────────────
+  // ג”€ג”€ג”€ Navigation ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   viewProfessional(professionalId: number): void {
     this.router.navigate(['/professional', professionalId]);
   }
@@ -769,7 +769,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     this.showBecomeProfessionalForm = false;
   }
 
-  // ─── Helpers ──────────────────────────────────────
+  // ג”€ג”€ג”€ Helpers ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   getCityName(cityId?: number): string {
     if (!cityId) return '';
     return this.cityNameById.get(cityId) || '';
@@ -782,13 +782,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       .filter((n): n is string => !!n);
     if (names.length === 0) return '';
     if (names.length === 1) return `מורה ל${names[0]}`;
-    return `מורה ל${names.slice(0, -1).join(', ')} ו${names[names.length - 1]}`;
-    if (names.length === 0) return '';
-    if (names.length === 1) return `׳׳•׳¨׳” ׳${names[0]}`;
     const last = names[names.length - 1];
-    return `׳׳•׳¨׳” ׳${names.slice(0, -1).join(', ')} ׳•${last}`;
+    return `מורה ל${names.slice(0, -1).join(', ')} ו${last}`;
   }
-
   trackByProfessionalId(_index: number, professional: MusicServiceProviderListDto): number {
     return professional.id;
   }

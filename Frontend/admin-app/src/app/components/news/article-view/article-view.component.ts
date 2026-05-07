@@ -300,7 +300,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         title: this.article?.title || '',
         text: this.article?.subtitle || '',
         url: url
-      }).catch((error) => console.log('Error sharing:', error));
+      }).catch(() => {});
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(url).then(() => {
@@ -341,12 +341,10 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         contentId: this.article.id
       }).pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => {
-            console.log('Article added to favorites');
-          },
+          next: () => {},
           error: (error) => {
             console.error('Error adding article to favorites:', error);
-            this.isFavorite = wasLiked; // Revert on error
+            this.isFavorite = wasLiked;
           }
         });
     } else {
@@ -354,12 +352,10 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       this.likedContentService.removeLikedContent('Article', this.article.id)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => {
-            console.log('Article removed from favorites');
-          },
+          next: () => {},
           error: (error) => {
             console.error('Error removing article from favorites:', error);
-            this.isFavorite = wasLiked; // Revert on error
+            this.isFavorite = wasLiked;
           }
         });
     }
