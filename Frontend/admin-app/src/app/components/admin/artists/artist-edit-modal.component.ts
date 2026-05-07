@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArtistService } from '../../../services/artist.service';
 import { SongService } from '../../../services/song.service';
+import { EventService } from '../../../services/event.service';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import {
   Artist,
@@ -11,6 +12,7 @@ import {
   PerformanceEventInput,
   UpdateArtistDto
 } from '../../../models/artist.model';
+import { UpcomingEventDto } from '../../../models/event.model';
 
 interface SocialLinkForm {
   id?: number;
@@ -120,9 +122,15 @@ export class ArtistEditModalComponent implements OnInit {
 
   ArtistStatus = ArtistStatus;
 
+  // הופעות קיימות של האמן (לבחירה כבאנר במקום ליצור הופעה חדשה)
+  availableEvents: UpcomingEventDto[] = [];
+  // 'new' = יצירת הופעה חדשה. אחרת — id של הופעה קיימת.
+  performanceEventChoice: 'new' | number = 'new';
+
   constructor(
     private artistService: ArtistService,
     private songService: SongService,
+    private eventService: EventService,
     private host: ElementRef<HTMLElement>
   ) { }
 
@@ -182,6 +190,10 @@ export class ArtistEditModalComponent implements OnInit {
           price: ev?.price ?? null,
           isActive: ev?.isActive ?? true
         };
+
+        // אם יש כבר אירוע מקושר, ברירת המחדל בבורר היא ההופעה הזו. אחרת — "יצירה חדשה".
+        this.performanceEventChoice = ev?.id ?? 'new';
+        this.loadArtistEvents();
 
         this.editForm = {
           name: artist.name || '',
@@ -419,6 +431,66 @@ export class ArtistEditModalComponent implements OnInit {
     this.editForm.bannerMediaType = type;
   }
 
+  private loadArtistEvents(): void {
+    if (!this.artistId) return;
+    this.artistService.getArtistEvents(this.artistId).subscribe({
+      next: (events) => { this.availableEvents = events || []; },
+      error: () => { this.availableEvents = []; }
+    });
+  }
+
+  /**
+   * המשתמש בחר באנר הופעה — או יצירה חדשה, או הופעה קיימת.
+   * בבחירה קיימת אנחנו מושכים את כל פרטי האירוע מ-/api/Events/{id}
+   * וממלאים את הטופס. שדה bannerImageUrl נשאר עריך — הוא ייחודי לבאנר דף האמן.
+   */
+  onPerformanceEventChoiceChange(value: 'new' | number | string): void {
+    if (value === 'new' || value === '' || value == null) {
+      this.performanceEventChoice = 'new';
+      this.editForm.performance.eventId = undefined;
+      this.editForm.performance.name = '';
+      this.editForm.performance.description = '';
+      this.editForm.performance.eventDate = '';
+      this.editForm.performance.location = '';
+      this.editForm.performance.price = null;
+      this.editForm.performance.ticketUrl = '';
+      this.editForm.performance.imageUrl = '';
+      this.editForm.performance.bannerImageUrl = '';
+      this.editForm.performance.isActive = true;
+      return;
+    }
+
+    const eventId = Number(value);
+    this.performanceEventChoice = eventId;
+
+    this.eventService.getEventById(eventId).subscribe({
+      next: (event) => {
+        this.editForm.performance.eventId = event.id;
+        this.editForm.performance.name = event.name || '';
+        this.editForm.performance.description = event.description || '';
+        this.editForm.performance.eventDate = event.eventDate ? this.toLocalDateInput(event.eventDate) : '';
+        this.editForm.performance.location = event.location || '';
+        this.editForm.performance.price = event.price ?? null;
+        this.editForm.performance.ticketUrl = event.ticketUrl || '';
+        // פוסטר ההופעה (ריבוע) — מהאירוע הקיים
+        this.editForm.performance.imageUrl = event.imageUrl || '';
+        // באנר רחב לדף האמן — אם להופעה כבר יש אחד נטען אותו, אחרת ריק כדי שהמשתמש יעלה תמונה חדשה
+        this.editForm.performance.bannerImageUrl = event.bannerImageUrl || '';
+        this.editForm.performance.isActive = event.isActive ?? true;
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת הופעה קיימת:', err);
+        window.alert('לא ניתן לטעון את ההופעה שנבחרה');
+      }
+    });
+  }
+
+  formatEventOptionLabel(event: UpcomingEventDto): string {
+    if (!event) return '';
+    const date = event.eventDate ? new Date(event.eventDate).toLocaleDateString('he-IL') : '';
+    return date ? `${event.name} — ${date}` : event.name;
+  }
+
   private toLocalDateInput(iso: string): string {
     // ISO -> "yyyy-MM-ddTHH:mm" לטופס datetime-local
     try {
@@ -452,9 +524,18 @@ export class ArtistEditModalComponent implements OnInit {
   private validateRichContent(): string | null {
     const p = this.editForm.performance;
     if (p.enabled) {
-      this.mirrorPerformanceImageFields(p);
-      if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
-      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+      const isExisting = this.performanceEventChoice !== 'new';
+      if (isExisting) {
+        // בחירת הופעה קיימת — חובה רק תמונת באנר רחבה לדף האמן
+        if (!p.bannerImageUrl?.trim()) return 'יש להעלות תמונת באנר רחבה לדף האמן';
+      } else {
+        // יצירת הופעה חדשה — דורש פוסטר ושם ותאריך
+        this.mirrorPerformanceImageFields(p);
+        if (!p.name?.trim()) return 'יש למלא שם להופעה';
+        if (!p.eventDate?.trim()) return 'יש למלא תאריך להופעה';
+        if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
+        if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+      }
     }
 
     for (let i = 0; i < this.editForm.hits.length; i++) {
@@ -473,9 +554,16 @@ export class ArtistEditModalComponent implements OnInit {
   private getRichContentValidationTarget(): string {
     const p = this.editForm.performance;
     if (p.enabled) {
-      this.mirrorPerformanceImageFields(p);
-      if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
-      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+      const isExisting = this.performanceEventChoice !== 'new';
+      if (isExisting) {
+        if (!p.bannerImageUrl?.trim()) return '[data-validation-target="performance-banner-image"]';
+      } else {
+        this.mirrorPerformanceImageFields(p);
+        if (!p.name?.trim()) return '[name="perfName"]';
+        if (!p.eventDate?.trim()) return '[name="perfDate"]';
+        if (!p.imageUrl?.trim()) return '[data-validation-target="performance-image"]';
+        if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return '[name="perfDate"]';
+      }
     }
 
     for (let i = 0; i < this.editForm.hits.length; i++) {

@@ -1,5 +1,4 @@
 using AkordishKeit.Data;
-using AkordishKeit.Controllers;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -793,7 +792,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             return null;
         }
 
-        return CitiesController.GetIsraeliCities().FirstOrDefault(city =>
+        return AkordishKeit.Controllers.CitiesController.GetIsraeliCities().FirstOrDefault(city =>
             city.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
             city.Name.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
             normalized.Contains(city.Name, StringComparison.OrdinalIgnoreCase) ||
