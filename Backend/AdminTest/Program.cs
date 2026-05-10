@@ -65,6 +65,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAgencyService, AgencyService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
@@ -163,7 +164,7 @@ using (var scope = app.Services.CreateScope())
         {
             dbContext.Database.Migrate(migrationsBeforeFullText.Last());
         }
-        else if (!pendingMigrations.Contains(fullTextMigrationId))
+        else
         {
             dbContext.Database.Migrate();
         }

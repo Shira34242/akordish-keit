@@ -1,0 +1,124 @@
+<div class="agencies-container" dir="rtl">
+  <div class="page-header">
+    <div>
+      <h1>ניהול סוכנויות</h1>
+      <p>רשימת הסוכנויות, שיוכים, באנרים ופרטי יצירת קשר.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="addAgency()">
+      <span class="material-icons">add</span>
+      סוכנות חדשה
+    </button>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-row">
+      <input class="form-control" type="text" placeholder="חיפוש לפי שם, קישור או אימייל" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+      <select class="form-control" [(ngModel)]="activeFilter" (change)="onSearch()">
+        <option [ngValue]="null">כל הסוכנויות</option>
+        <option [ngValue]="true">פעילות</option>
+        <option [ngValue]="false">לא פעילות</option>
+      </select>
+      <button class="btn btn-primary" type="button" (click)="onSearch()">חפש</button>
+      <button class="btn btn-light" type="button" (click)="clearFilters()">נקה</button>
+    </div>
+  </div>
+
+  <div class="analytics-panel" *ngIf="analytics">
+    <div class="metric-card">
+      <span>צפיות בדפי סוכנות</span>
+      <strong>{{ analytics.totals.pageViews }}</strong>
+    </div>
+    <div class="metric-card">
+      <span>קליקים מבאנרים</span>
+      <strong>{{ analytics.totals.bannerClicks }}</strong>
+    </div>
+    <div class="metric-card">
+      <span>פניות לסוכנויות</span>
+      <strong>{{ analytics.totals.contactClicks }}</strong>
+    </div>
+    <div class="metric-card">
+      <span>מעבר לפרופילים/תוכן</span>
+      <strong>{{ analytics.totals.profileClicks + analytics.totals.contentClicks }}</strong>
+    </div>
+  </div>
+
+  <div class="details-panel" *ngIf="analytics?.topDetails?.length">
+    <div class="details-header">
+      <h2>פעולות מובילות</h2>
+      <span>30 יום אחרונים</span>
+    </div>
+    <div class="details-list">
+      <div class="detail-row" *ngFor="let item of analytics!.topDetails">
+        <span>{{ item.itemLabel }}</span>
+        <strong>{{ item.count }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>טוען סוכנויות...</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div class="table-container" *ngIf="!loading && !error">
+    <table class="agencies-table">
+      <thead>
+        <tr>
+          <th>סוכנות</th>
+          <th>קישור</th>
+          <th>פרופילים</th>
+          <th>תוכן</th>
+          <th>באנר אינדקס</th>
+          <th>אנליטיקס 30 יום</th>
+          <th>סטטוס</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let agency of agencies">
+          <td>
+            <div class="agency-cell">
+              <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name">
+              <div>
+                <strong>{{ agency.name }}</strong>
+                <span>{{ agency.shortDescription || 'אין תיאור קצר' }}</span>
+              </div>
+            </div>
+          </td>
+          <td>/agency/{{ agency.slug }}</td>
+          <td>{{ agency.profilesCount }}</td>
+          <td>{{ agency.contentsCount }}</td>
+          <td><span class="badge" [class.badge-success]="agency.showInIndexBanner">{{ agency.showInIndexBanner ? 'מוצג' : 'מוסתר' }}</span></td>
+          <td>
+            <div class="mini-analytics" *ngIf="getAgencyAnalytics(agency.id) as stats; else noStats">
+              <span>{{ stats.pageViews }} צפיות</span>
+              <span>{{ stats.contactClicks }} פניות</span>
+              <span>{{ stats.totalInteractions }} פעולות</span>
+            </div>
+            <ng-template #noStats><span class="muted">אין נתונים</span></ng-template>
+          </td>
+          <td><span class="badge" [class.badge-success]="agency.isActive">{{ agency.isActive ? 'פעילה' : 'כבויה' }}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action" type="button" (click)="viewAgency(agency.slug)" title="צפייה"><span class="material-icons">visibility</span></button>
+              <button class="btn-action" type="button" (click)="editAgency(agency.id)" title="עריכה"><span class="material-icons">edit</span></button>
+              <button class="btn-action btn-delete" type="button" (click)="deleteAgency(agency)" title="מחיקה"><span class="material-icons">delete</span></button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="agencies.length === 0">
+          <td colspan="8" class="no-data">לא נמצאו סוכנויות</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-container" *ngIf="!loading && totalPages > 1">
+    <button class="btn-pagination" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">הקודם</button>
+    <button class="btn-pagination" *ngFor="let page of getPaginationRange()" [class.active]="page === currentPage" (click)="goToPage(page)">{{ page }}</button>
+    <button class="btn-pagination" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">הבא</button>
+    <span class="pagination-info">עמוד {{ currentPage }} מתוך {{ totalPages }}</span>
+  </div>
+</div>

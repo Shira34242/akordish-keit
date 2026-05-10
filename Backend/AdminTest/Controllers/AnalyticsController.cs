@@ -225,6 +225,97 @@ namespace AkordishKeit.Controllers
             });
         }
 
+        // GET: api/analytics/agencies?dateFrom=2025-01-01&dateTo=2025-12-31
+        [HttpGet("agencies")]
+        public async Task<IActionResult> GetAgencyAnalytics([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
+        {
+            var now = DateTime.UtcNow;
+            var periodStart = dateFrom.HasValue ? DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc).Date : now.AddDays(-30);
+            var periodEnd = dateTo.HasValue ? DateTime.SpecifyKind(dateTo.Value, DateTimeKind.Utc).Date.AddDays(1) : now;
+            var agencyButtonTypes = new[]
+            {
+                "agency_view",
+                "agency_banner_click",
+                "agency_contact_phone",
+                "agency_contact_whatsapp",
+                "agency_contact_email",
+                "agency_contact_website",
+                "agency_contact_panel",
+                "agency_profile_click",
+                "agency_content_click"
+            };
+
+            var clicks = await _context.ButtonClicks
+                .AsNoTracking()
+                .Where(c => agencyButtonTypes.Contains(c.ButtonType))
+                .Where(c => c.ClickedAt >= periodStart && c.ClickedAt < periodEnd)
+                .ToListAsync();
+
+            var agencyIds = clicks
+                .Where(c => c.ItemId.HasValue)
+                .Select(c => c.ItemId!.Value)
+                .Distinct()
+                .ToList();
+
+            var agencyNames = await _context.Agencies
+                .AsNoTracking()
+                .Where(a => agencyIds.Contains(a.Id))
+                .Select(a => new { a.Id, a.Name, a.Slug })
+                .ToDictionaryAsync(a => a.Id);
+
+            var byAgency = clicks
+                .Where(c => c.ItemId.HasValue)
+                .GroupBy(c => c.ItemId!.Value)
+                .Select(g =>
+                {
+                    agencyNames.TryGetValue(g.Key, out var agency);
+                    return new
+                    {
+                        agencyId = g.Key,
+                        agencyName = agency?.Name ?? $"Agency #{g.Key}",
+                        agencySlug = agency?.Slug,
+                        pageViews = g.Count(c => c.ButtonType == "agency_view"),
+                        bannerClicks = g.Count(c => c.ButtonType == "agency_banner_click"),
+                        contactClicks = g.Count(c => c.ButtonType.StartsWith("agency_contact_")),
+                        profileClicks = g.Count(c => c.ButtonType == "agency_profile_click"),
+                        contentClicks = g.Count(c => c.ButtonType == "agency_content_click"),
+                        totalInteractions = g.Count()
+                    };
+                })
+                .OrderByDescending(x => x.totalInteractions)
+                .ToList();
+
+            var topDetails = clicks
+                .Where(c => c.ItemId.HasValue && !string.IsNullOrWhiteSpace(c.ItemLabel))
+                .GroupBy(c => new { c.ButtonType, c.ItemId, c.ItemLabel })
+                .Select(g => new
+                {
+                    g.Key.ButtonType,
+                    g.Key.ItemId,
+                    g.Key.ItemLabel,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(30)
+                .ToList();
+
+            return Ok(new
+            {
+                period = new { dateFrom = periodStart, dateTo = periodEnd.AddDays(-1) },
+                totals = new
+                {
+                    pageViews = clicks.Count(c => c.ButtonType == "agency_view"),
+                    bannerClicks = clicks.Count(c => c.ButtonType == "agency_banner_click"),
+                    contactClicks = clicks.Count(c => c.ButtonType.StartsWith("agency_contact_")),
+                    profileClicks = clicks.Count(c => c.ButtonType == "agency_profile_click"),
+                    contentClicks = clicks.Count(c => c.ButtonType == "agency_content_click"),
+                    totalInteractions = clicks.Count
+                },
+                byAgency,
+                topDetails
+            });
+        }
+
         private int? GetUserId()
         {
             if (User.Identity?.IsAuthenticated != true) return null;

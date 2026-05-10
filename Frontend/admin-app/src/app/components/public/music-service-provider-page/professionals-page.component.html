@@ -227,6 +227,25 @@
       <!-- Sections Area -->
       <div class="sections-area" *ngIf="!isFiltered">
 
+        <div class="section agency-banner-section" *ngIf="agencyBanners.length > 0">
+          <div class="section-header">
+            <span class="section-tag section-tag--accent">סוכנויות מומלצות</span>
+            <span class="total-badge">{{ agencyBanners.length }}</span>
+          </div>
+          <div class="agency-banner-strip">
+            <article class="agency-banner-card" *ngFor="let agency of agencyBanners" (click)="viewAgency(agency.slug)">
+              <img [src]="agency.bannerImageUrl || agency.logoUrl || '/collection-guitars-guitars-are-display-room.png'" [alt]="agency.name" loading="lazy" imgFallback>
+              <div class="agency-banner-copy">
+                <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name" imgFallback>
+                <div>
+                  <strong>{{ agency.name }}</strong>
+                  <span>{{ agency.shortDescription || 'נותני שירות ותוכן מוזיקלי במקום אחד' }}</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
         <!-- מומלצים -->
         <div class="section" *ngIf="featuredProfessionals.length > 0">
           <div class="section-header">

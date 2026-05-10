@@ -32,6 +32,13 @@ namespace AkordishKeit.Migrations
                 name: "IX_Tags_ChordQuickSearch",
                 table: "Tags",
                 columns: new[] { "ShowInChordQuickSearch", "ChordQuickSearchOrder" });
+
+            migrationBuilder.UpdateData(
+                table: "Tags",
+                keyColumn: "Id",
+                keyValue: 1,
+                columns: new[] { "ShowInChordQuickSearch", "ChordQuickSearchOrder" },
+                values: new object[] { true, 1 });
         }
 
         /// <inheritdoc />

@@ -1,0 +1,106 @@
+.agency-page { direction: rtl; background: #ffffff; min-height: 100vh; }
+.loading-state, .error-state {
+  margin: var(--space-4xl) auto;
+  max-width: 900px;
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: var(--space-2xl);
+  text-align: center;
+}
+.agency-hero {
+  position: relative;
+  min-height: 56vh;
+  margin: 8px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #404040;
+}
+.hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.hero-content {
+  position: relative;
+  min-height: 56vh;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  padding: var(--space-2xl);
+  color: #ffffff;
+}
+.agency-logo {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+}
+.agency-label {
+  display: inline-flex;
+  background: var(--agency-primary, #ddff53);
+  color: var(--agency-text, #000000);
+  border-radius: 999px;
+  padding: var(--space-xs) var(--space-base);
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+h1 { margin: var(--space-md) 0 var(--space-sm); font-size: var(--font-4xl); line-height: var(--lh-heading); font-weight: 800; }
+.hero-content p { max-width: 720px; margin: 0; font-size: var(--font-lg); line-height: var(--lh-body); }
+.contact-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-lg); }
+.contact-pill {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 var(--space-base);
+  background: #ffffff;
+  color: #000000;
+  text-decoration: none;
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+.contact-pill:hover { background: var(--agency-primary, #ddff53); color: var(--agency-text, #000000); }
+.agency-content { max-width: 1120px; margin: 0 auto; padding: var(--space-3xl) var(--space-xl); display: grid; gap: var(--space-2xl); }
+.intro-section {
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: var(--space-xl);
+  font-size: var(--font-lg);
+  line-height: var(--lh-body);
+}
+.intro-section p { margin: 0; }
+.section { display: grid; gap: var(--space-base); }
+.section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-base); }
+.section-tag, .total-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 var(--space-base);
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+.section-tag { background: var(--agency-primary, #ddff53); color: var(--agency-text, #000000); }
+.total-badge { background: #F2F2F2; color: #000000; }
+.profiles-grid, .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-md); }
+.profile-card, .content-card {
+  background: #F2F2F2;
+  border-radius: 20px;
+  padding: var(--space-md);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-md);
+}
+.profile-card { grid-template-columns: 72px 1fr; align-items: center; }
+.profile-card:hover, .content-card:hover { background: #e8e8e8; }
+.profile-card img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: #ffffff; }
+.profile-card strong, .profile-card span, .content-card strong, .content-card span { display: block; }
+.profile-card strong, .content-card strong { font-size: var(--font-base); font-weight: 800; }
+.profile-card span, .content-card span { color: rgba(0,0,0,0.55); font-size: var(--font-xs); margin-top: var(--space-xs); }
+.content-card img { width: 100%; aspect-ratio: 4 / 2.6; object-fit: cover; border-radius: 16px; background: #ffffff; }
+.profile-card strong, .content-card strong { color: var(--agency-secondary, #000000); }
+@media (max-width: 768px) {
+  .agency-hero, .hero-content { min-height: 64vh; }
+  .hero-content { align-items: flex-end; padding: var(--space-xl); flex-direction: column; justify-content: flex-end; text-align: right; }
+  .agency-logo { width: 88px; height: 88px; align-self: flex-start; }
+  h1 { font-size: var(--font-3xl); }
+  .agency-content { padding: var(--space-2xl) var(--space-base); }
+}

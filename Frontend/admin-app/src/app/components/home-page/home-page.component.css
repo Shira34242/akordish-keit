@@ -400,6 +400,11 @@
   gap: var(--space-md);
 }
 
+.music-news-stack,
+.content-blog-stack {
+  width: 100%;
+}
+
 .news-banner-row {
   overflow-x: auto;
   overflow-y: hidden;
@@ -422,8 +427,32 @@
   width: max-content;
 }
 
-.news-banner-card {
+.news-banner-track > .news-banner-card {
   flex: 0 0 19rem;
+}
+
+.content-articles-section {
+  display: block;
+  clear: both;
+}
+
+.content-articles-grid {
+  width: 100%;
+}
+
+.content-articles-empty {
+  background: #F2F2F2;
+  border-radius: 18px;
+  padding: var(--space-lg);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: #404040;
+  text-align: center;
+}
+
+.news-grid .news-banner-card {
+  min-width: 0;
 }
 
 .news-banner-card ::ng-deep .news-banner {
@@ -1038,7 +1067,7 @@
     height: 34px;
   }
 
-  .news-banner-card {
+  .news-banner-track > .news-banner-card {
     flex: 0 0 13rem;
   }
 
@@ -1089,7 +1118,7 @@
     padding-inline-start: calc((((100% - (var(--space-md) * 3)) / 4) / 2) + (var(--space-md) / 2));
   }
 
-  .news-banner-card {
+  .news-banner-track > .news-banner-card {
     flex: 0 0 11rem;
   }
 

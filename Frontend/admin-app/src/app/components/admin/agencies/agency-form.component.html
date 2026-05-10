@@ -1,0 +1,150 @@
+<div class="agency-form-page" dir="rtl">
+  <div class="page-header">
+    <div>
+      <h1>{{ agencyId ? 'עריכת סוכנות' : 'סוכנות חדשה' }}</h1>
+      <p>פרטי הסוכנות, באנר האינדקס, תגי פרופילים ותוכן משויך.</p>
+    </div>
+    <button class="btn btn-light" type="button" (click)="back()">חזרה לרשימה</button>
+  </div>
+
+  <div *ngIf="loading" class="panel">טוען...</div>
+  <div *ngIf="error" class="alert">{{ error }}</div>
+
+  <form class="form-panel" (ngSubmit)="save()" *ngIf="!loading">
+    <div class="form-grid">
+      <label>
+        <span>שם סוכנות</span>
+        <input name="name" [(ngModel)]="form.name" required>
+      </label>
+      <label>
+        <span>קישור קצר</span>
+        <input name="slug" [(ngModel)]="form.slug" placeholder="נוצר אוטומטית אם ריק">
+      </label>
+      <label>
+        <span>לוגו</span>
+        <app-file-upload-input [(url)]="form.logoUrl" placeholder="כתובת לוגו או העלאת קובץ"></app-file-upload-input>
+      </label>
+      <label>
+        <span>תמונת באנר</span>
+        <app-file-upload-input [(url)]="form.bannerImageUrl" placeholder="כתובת באנר או העלאת קובץ"></app-file-upload-input>
+      </label>
+      <label>
+        <span>טלפון</span>
+        <input name="phoneNumber" [(ngModel)]="form.phoneNumber">
+      </label>
+      <label>
+        <span>ווטסאפ</span>
+        <input name="whatsAppNumber" [(ngModel)]="form.whatsAppNumber">
+      </label>
+      <label>
+        <span>אימייל</span>
+        <input name="email" type="email" [(ngModel)]="form.email">
+      </label>
+      <label>
+        <span>אתר</span>
+        <input name="websiteUrl" [(ngModel)]="form.websiteUrl">
+      </label>
+      <div class="brand-colors full">
+        <label>
+          <span>צבע ראשי</span>
+          <input type="color" name="brandPrimaryColor" [(ngModel)]="form.brandPrimaryColor">
+        </label>
+        <label>
+          <span>צבע משני</span>
+          <input type="color" name="brandSecondaryColor" [(ngModel)]="form.brandSecondaryColor">
+        </label>
+        <label>
+          <span>צבע טקסט</span>
+          <input type="color" name="brandTextColor" [(ngModel)]="form.brandTextColor">
+        </label>
+        <div class="brand-preview" [style.background]="form.brandPrimaryColor" [style.color]="form.brandTextColor">
+          <strong>{{ form.name || 'שם הסוכנות' }}</strong>
+          <span [style.background]="form.brandSecondaryColor"></span>
+        </div>
+      </div>
+      <label class="full">
+        <span>תיאור קצר</span>
+        <input name="shortDescription" [(ngModel)]="form.shortDescription">
+      </label>
+      <label class="full">
+        <span>תיאור מלא</span>
+        <textarea name="fullDescription" rows="5" [(ngModel)]="form.fullDescription"></textarea>
+      </label>
+    </div>
+
+    <div class="switch-row">
+      <label class="checkbox-label"><input type="checkbox" name="isActive" [(ngModel)]="form.isActive"> סוכנות פעילה</label>
+      <label class="checkbox-label"><input type="checkbox" name="showInIndexBanner" [(ngModel)]="form.showInIndexBanner"> הצג בבאנר באינדקס</label>
+      <label class="order-label"><span>סדר תצוגה</span><input type="number" name="displayOrder" [(ngModel)]="form.displayOrder"></label>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn btn-primary" type="submit" [disabled]="saving">{{ saving ? 'שומר...' : 'שמור סוכנות' }}</button>
+    </div>
+  </form>
+
+  <div class="management-grid" *ngIf="agencyId && agency">
+    <section class="panel">
+      <div class="panel-header">
+        <h2>פרופילים משויכים</h2>
+        <span>{{ agency.profiles.length }}</span>
+      </div>
+      <div class="inline-form">
+        <select [(ngModel)]="profileForm.profileType">
+          <option value="artist">אמן</option>
+          <option value="serviceProvider">נותן שירות</option>
+          <option value="teacher">מורה</option>
+        </select>
+        <input type="number" [(ngModel)]="profileForm.profileId" placeholder="ID פרופיל">
+        <select [(ngModel)]="profileForm.contactMode">
+          <option [ngValue]="AgencyContactMode.Direct">יצירת קשר ישירה</option>
+          <option [ngValue]="AgencyContactMode.Agency">דרך הסוכנות</option>
+          <option [ngValue]="AgencyContactMode.Both">גם וגם</option>
+        </select>
+        <label><input type="checkbox" [(ngModel)]="profileForm.showBadge"> תג פעיל</label>
+        <label><input type="checkbox" [(ngModel)]="profileForm.isFeaturedByAgency"> מודגש</label>
+        <input type="number" [(ngModel)]="profileForm.displayOrder" placeholder="סדר">
+        <button class="btn btn-primary" type="button" (click)="addProfile()">הוסף</button>
+      </div>
+
+      <div class="rows-list">
+        <div class="linked-row" *ngFor="let profile of agency.profiles">
+          <div>
+            <strong>{{ profile.profileName || ('פרופיל #' + profile.profileId) }}</strong>
+            <span>{{ profile.isTeacher ? 'מורה' : profile.profileType === 'artist' ? 'אמן' : 'נותן שירות' }} · {{ getContactModeLabel(profile.contactMode) }}</span>
+          </div>
+          <button class="btn-action btn-delete" type="button" (click)="removeProfile(profile)"><span class="material-icons">delete</span></button>
+        </div>
+        <p class="empty" *ngIf="agency.profiles.length === 0">אין פרופילים משויכים</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>תוכן משויך ישירות</h2>
+        <span>{{ agency.contents.length }}</span>
+      </div>
+      <div class="inline-form">
+        <select [(ngModel)]="contentForm.contentType">
+          <option value="article">כתבה</option>
+          <option value="song">שיר</option>
+        </select>
+        <input type="number" [(ngModel)]="contentForm.contentId" placeholder="ID תוכן">
+        <label><input type="checkbox" [(ngModel)]="contentForm.isFeatured"> מודגש</label>
+        <input type="number" [(ngModel)]="contentForm.displayOrder" placeholder="סדר">
+        <button class="btn btn-primary" type="button" (click)="addContent()">הוסף</button>
+      </div>
+
+      <div class="rows-list">
+        <div class="linked-row" *ngFor="let content of agency.contents">
+          <div>
+            <strong>{{ content.title || ('תוכן #' + content.contentId) }}</strong>
+            <span>{{ content.contentType === 'article' ? 'כתבה' : 'שיר' }}</span>
+          </div>
+          <button class="btn-action btn-delete" type="button" (click)="removeContent(content)"><span class="material-icons">delete</span></button>
+        </div>
+        <p class="empty" *ngIf="agency.contents.length === 0">אין תוכן משויך ישירות</p>
+      </div>
+    </section>
+  </div>
+</div>

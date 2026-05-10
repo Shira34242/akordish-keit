@@ -44,7 +44,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             break;
 
           case 500:
-            errorMessage = error.error?.message || 'שגיאה בשרת. אנא נסה שנית מאוחר יותר.';
+            errorMessage = error.error?.message
+              || (error.error?.errors ? Object.values(error.error.errors as Record<string, string[]>).flat().join(', ') : null)
+              || error.error?.title
+              || error.error?.detail
+              || 'שגיאה בשרת. אנא נסה שנית מאוחר יותר.';
             break;
 
           case 503:
@@ -58,6 +62,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           default:
             if (error.error?.message) {
               errorMessage = error.error.message;
+            } else if (error.error?.errors) {
+              const messages = Object.values(error.error.errors as Record<string, string[]>).flat();
+              errorMessage = messages.length > 0 ? messages.join(', ') : error.error.title || `שגיאה: ${error.status}`;
+            } else if (error.error?.title) {
+              errorMessage = error.error.title;
             } else if (error.message) {
               errorMessage = error.message;
             } else {

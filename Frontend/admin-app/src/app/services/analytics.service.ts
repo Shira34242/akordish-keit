@@ -43,6 +43,12 @@ export class AnalyticsService {
       .subscribe();
   }
 
+  trackInteraction(buttonType: string, itemId?: number, itemLabel?: string): void {
+    this.http.post(`${this.base}/button-click`, { buttonType, itemId: itemId ?? null, itemLabel: itemLabel ?? null })
+      .pipe(catchError(() => of(null)))
+      .subscribe();
+  }
+
   getDashboard(dateFrom?: string, dateTo?: string): Observable<AnalyticsDashboard> {
     const params: Record<string, string> = {};
     if (dateFrom) params['dateFrom'] = dateFrom;

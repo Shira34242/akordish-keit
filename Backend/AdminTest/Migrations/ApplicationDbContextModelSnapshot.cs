@@ -3398,6 +3398,8 @@ namespace AkordishKeit.Migrations
                         new
                         {
                             Id = 1,
+                            ChordQuickSearchOrder = 1,
+                            ShowInChordQuickSearch = true,
                             Name = "שבת"
                         },
                         new

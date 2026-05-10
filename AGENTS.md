@@ -25,6 +25,11 @@ Follow project communication rules:
 - Explain in simple design terms
 
 Agent roles:
-- Claude Code is the primary builder
-- Codex is used for review, debugging, and small improvements
+- Codex is the primary builder and reviewer for this project
+- DeepSeek V4 Pro is the secondary agent for review, debugging, and small improvements
 - Avoid large refactors unless explicitly requested
+
+Working context:
+- The user usually works from `C:\Projects\akordish-keit\Frontend\admin-app`
+- Treat frontend paths as relative to that folder when the user references the active app
+- Do not change unrelated files while updating these rules

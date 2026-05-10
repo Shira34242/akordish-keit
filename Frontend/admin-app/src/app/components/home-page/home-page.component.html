@@ -142,7 +142,7 @@
   <div class="content-section">
     <div class="page-content">
 
-    <section class="home-section" *ngIf="newsArticles.length > 0">
+    <section class="home-section music-news-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.news_title' | translate }}</h2>
         <a routerLink="/music-news" class="section-link">{{ 'home.news_link' | translate }}</a>
@@ -157,8 +157,8 @@
         </app-news-banner>
       </div>
 
-      <div *ngIf="useScrollingNewsBanner" class="news-banner-stack">
-        <div class="news-banner-row news-banner-row--top" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+      <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
+        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <app-news-banner
@@ -171,7 +171,7 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <app-news-banner
@@ -294,13 +294,13 @@
       </div>
     </section>
 
-    <section class="home-section" *ngIf="blogArticles.length > 0">
+    <section class="home-section content-articles-section">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
         <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>
       </div>
 
-      <div *ngIf="!useScrollingBlogBanner" class="news-grid">
+      <div *ngIf="!useScrollingBlogBanner" class="news-grid content-articles-grid">
         <app-news-banner
           *ngFor="let article of blogArticles; trackBy: trackById"
           class="news-banner-card"
@@ -309,7 +309,7 @@
         </app-news-banner>
       </div>
 
-      <div *ngIf="useScrollingBlogBanner" class="news-banner-stack">
+      <div *ngIf="useScrollingBlogBanner" class="news-banner-stack content-blog-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
@@ -336,6 +336,10 @@
             </ng-container>
           </div>
         </div>
+      </div>
+
+      <div class="content-articles-empty" *ngIf="blogArticles.length === 0">
+        {{ 'blog.no_content' | translate }}
       </div>
     </section>
 

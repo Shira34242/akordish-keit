@@ -12,6 +12,7 @@ import { TeacherService } from '../../services/teacher.service';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
 import { SearchService, SearchResults, SearchItem } from '../../services/search.service';
+import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
@@ -95,6 +96,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private particleAnimId?: number;
   private heroMouseHandler?: (e: MouseEvent) => void;
   private viralObserver?: IntersectionObserver;
+  private articleCategorySectionById = new Map<number, ArticleContentType>();
+  private articleCategorySectionByName = new Map<string, ArticleContentType>();
+  private allPublishedArticles: Article[] = [];
 
   constructor(
     private router: Router,
@@ -105,7 +109,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     private teacherService: TeacherService,
     private providerService: MusicServiceProviderService,
     private quickAddAssistantService: QuickAddAssistantService,
-    private searchService: SearchService
+    private searchService: SearchService,
+    private systemTablesService: SystemTablesService
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -240,16 +245,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => console.error('loadContent: featured artists', err)
     });
 
-    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+    this.systemTablesService.getItems('article-categories', 1, 200)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res: any) => { this.newsArticles = res.items || []; },
-        error: (err) => console.error('loadContent: news articles', err)
-      });
-
-    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res: any) => { this.blogArticles = res.items || []; },
-        error: (err) => console.error('loadContent: blog articles', err)
+        next: (res: any) => {
+          this.setArticleCategorySections(res.items || []);
+          this.loadHomeArticles();
+        },
+        error: (err) => {
+          console.error('loadContent: article categories', err);
+          this.loadHomeArticles();
+        }
       });
 
     this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -334,16 +339,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.newsArticles.length >= 2;
   }
 
+  get useScrollingBlogBanner(): boolean {
+    return this.blogArticles.length >= 2;
+  }
+
   get blogArticlesFirstRow(): Article[] {
     return this.splitForRows(this.blogArticles).top;
   }
 
   get blogArticlesSecondRow(): Article[] {
     return this.splitForRows(this.blogArticles).bottom;
-  }
-
-  get useScrollingBlogBanner(): boolean {
-    return this.blogArticles.length >= 2;
   }
 
   get visibleViralArticles(): Article[] {
@@ -386,27 +391,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.viralArticlesLoaded || this.loadingViralArticles) return;
 
     this.loadingViralArticles = true;
-    this.articleService.getArticles(1, 36, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+    if (this.allPublishedArticles.length > 0) {
+      this.setViralArticles(this.allPublishedArticles);
+      return;
+    }
+
+    this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
-          const currentNewsIds = new Set(this.newsArticles.map(article => article.id));
-          const olderArticles = (res.items || [])
-            .filter((article: Article) => !currentNewsIds.has(article.id))
-            .filter((article: Article) => this.isOlderNewsArticle(article));
-          const fallbackArticles = (res.items || [])
-            .filter((article: Article) => !currentNewsIds.has(article.id))
-            .filter((article: Article) => !olderArticles.some((oldArticle: Article) => oldArticle.id === article.id));
-
-          const popularOlderArticles = olderArticles
-            .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
-          const popularFallbackArticles = fallbackArticles
-            .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
-
-          this.viralArticles = [...popularOlderArticles, ...popularFallbackArticles].slice(0, 15);
-          this.visibleViralCount = Math.min(3, this.viralArticles.length);
-          this.viralArticlesLoaded = true;
-          this.loadingViralArticles = false;
-          setTimeout(() => this.initViralObserver(), 0);
+          this.setViralArticles(this.uniqueArticles(res.items || []));
         },
         error: (err) => {
           console.error('loadContent: viral articles', err);
@@ -414,6 +407,139 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadingViralArticles = false;
         }
       });
+  }
+
+  private loadHomeArticles(): void {
+    this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (res: any) => {
+          this.allPublishedArticles = this.uniqueArticles(res.items || []);
+          this.newsArticles = this.allPublishedArticles
+            .filter(article => this.isMusicNewsArticle(article))
+            .map(article => this.withContentType(article, ArticleContentType.News))
+            .slice(0, 12);
+          this.blogArticles = this.allPublishedArticles
+            .filter(article => this.isContentArticle(article))
+            .map(article => this.withContentType(article, ArticleContentType.Blog))
+            .slice(0, 12);
+        },
+        error: (err) => console.error('loadContent: home articles', err)
+      });
+  }
+
+  private setArticleCategorySections(categories: SystemItem[]): void {
+    this.articleCategorySectionById = new Map<number, ArticleContentType>();
+    this.articleCategorySectionByName = new Map<string, ArticleContentType>();
+
+    for (const category of categories) {
+      const type = this.getCategoryTypeFromName(category.name)
+        ?? (Number(category['section']) === 1 ? ArticleContentType.Blog : ArticleContentType.News);
+      this.articleCategorySectionById.set(category.id, type);
+      if (category.name) {
+        this.articleCategorySectionByName.set(this.normalizeCategoryName(category.name), type);
+      }
+    }
+  }
+
+  private setViralArticles(articles: Article[]): void {
+    const currentNewsIds = new Set(this.newsArticles.map(article => article.id));
+    const newsArticles = articles
+      .filter(article => this.isMusicNewsArticle(article))
+      .filter(article => !currentNewsIds.has(article.id));
+
+    const olderArticles = newsArticles.filter(article => this.isOlderNewsArticle(article));
+    const fallbackArticles = newsArticles.filter(article => !olderArticles.some(oldArticle => oldArticle.id === article.id));
+
+    const popularOlderArticles = olderArticles
+      .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
+    const popularFallbackArticles = fallbackArticles
+      .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
+
+    this.viralArticles = [...popularOlderArticles, ...popularFallbackArticles].slice(0, 15);
+    this.viralArticles = this.viralArticles.map(article => this.withContentType(article, ArticleContentType.News));
+    this.visibleViralCount = Math.min(3, this.viralArticles.length);
+    this.viralArticlesLoaded = true;
+    this.loadingViralArticles = false;
+    setTimeout(() => this.initViralObserver(), 0);
+  }
+
+  private isMusicNewsArticle(article: Article): boolean {
+    const categoryType = this.getArticleCategorySection(article);
+    if (categoryType !== null) return categoryType === ArticleContentType.News;
+    return this.normalizeArticleContentType(article) === ArticleContentType.News;
+  }
+
+  private isContentArticle(article: Article): boolean {
+    const categoryType = this.getArticleCategorySection(article);
+    if (categoryType !== null) return categoryType === ArticleContentType.Blog;
+    return this.normalizeArticleContentType(article) === ArticleContentType.Blog;
+  }
+
+  private getArticleCategorySection(article: Article): ArticleContentType | null {
+    const ids = Array.isArray(article.categoryIds) ? article.categoryIds : [];
+    const categoryNames = Array.isArray(article.categoryNames) ? article.categoryNames : [];
+    const typeFromNames = this.getArticleCategoryTypeFromNames(categoryNames);
+    if (typeFromNames !== null) return typeFromNames;
+
+    const knownCategoryTypes = ids
+      .map(id => this.articleCategorySectionById.get(id))
+      .filter((type): type is ArticleContentType => type !== undefined);
+
+    if (knownCategoryTypes.includes(ArticleContentType.News)) return ArticleContentType.News;
+    if (knownCategoryTypes.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
+
+    const knownNameTypes = categoryNames
+      .map(name => this.articleCategorySectionByName.get(this.normalizeCategoryName(name)))
+      .filter((type): type is ArticleContentType => type !== undefined);
+
+    if (knownNameTypes.includes(ArticleContentType.News)) return ArticleContentType.News;
+    if (knownNameTypes.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
+    return null;
+  }
+
+  private normalizeCategoryName(name: string): string {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  private getArticleCategoryTypeFromNames(categoryNames: string[]): ArticleContentType | null {
+    const types = categoryNames
+      .map(name => this.getCategoryTypeFromName(name))
+      .filter((type): type is ArticleContentType => type !== null);
+
+    if (types.includes(ArticleContentType.News)) return ArticleContentType.News;
+    if (types.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
+    return null;
+  }
+
+  private getCategoryTypeFromName(name: string): ArticleContentType | null {
+    const text = this.normalizeCategoryName(name);
+    if (!text) return null;
+    if (text.includes('חדשות') || text.includes('news')) return ArticleContentType.News;
+    if (text.includes('תוכן') || text.includes('blog') || text.includes('content')) return ArticleContentType.Blog;
+    return null;
+  }
+
+  private withContentType(article: Article, contentType: ArticleContentType): Article {
+    return { ...article, contentType };
+  }
+
+  private uniqueArticles(articles: Article[]): Article[] {
+    const seen = new Set<number>();
+    return articles.filter(article => {
+      if (seen.has(article.id)) return false;
+      seen.add(article.id);
+      return true;
+    });
+  }
+
+  private normalizeArticleContentType(article: Article): ArticleContentType | null {
+    const rawType = (article as Article & { contentType?: ArticleContentType | string }).contentType;
+    if (rawType === ArticleContentType.News || rawType === ArticleContentType.Blog) return rawType;
+
+    const textType = String(rawType ?? '').trim().toLowerCase();
+    if (textType === '0' || textType === 'news' || textType === 'article' || textType.includes('חדשות')) return ArticleContentType.News;
+    if (textType === '1' || textType === 'blog' || textType === 'blogpost' || textType === 'content' || textType.includes('תוכן')) return ArticleContentType.Blog;
+    return null;
   }
 
   private isOlderNewsArticle(article: Article): boolean {

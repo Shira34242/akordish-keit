@@ -72,6 +72,11 @@ export const routes: Routes = [
                 title: 'בעלי מקצוע - מוזיקה חרדית - אקורדישקייט'
             },
             {
+                path: 'agency/:slug',
+                loadComponent: () => import('./components/public/agency-page/agency-page.component').then(m => m.AgencyPageComponent),
+                title: 'סוכנות מוזיקה - אקורדישקייט'
+            },
+            {
                 path: 'my-playlists',
                 loadComponent: () => import('./components/playlists-page/playlists-page.component').then(m => m.PlaylistsPageComponent),
                 canActivate: [authGuard],
@@ -280,6 +285,21 @@ export const routes: Routes = [
                         path: 'artists',
                         loadComponent: () => import('./components/admin/artists/artists-admin-list.component').then(m => m.ArtistsAdminListComponent),
                         title: 'ניהול אומנים - אקורדישקייט'
+                    },
+                    {
+                        path: 'agencies',
+                        loadComponent: () => import('./components/admin/agencies/agencies-list.component').then(m => m.AgenciesListComponent),
+                        title: 'ניהול סוכנויות - אקורדישקייט'
+                    },
+                    {
+                        path: 'agencies/new',
+                        loadComponent: () => import('./components/admin/agencies/agency-form.component').then(m => m.AgencyFormComponent),
+                        title: 'סוכנות חדשה - אקורדישקייט'
+                    },
+                    {
+                        path: 'agencies/edit/:id',
+                        loadComponent: () => import('./components/admin/agencies/agency-form.component').then(m => m.AgencyFormComponent),
+                        title: 'עריכת סוכנות - אקורדישקייט'
                     }
                 ]
             },
@@ -375,6 +395,7 @@ export const routes: Routes = [
             { path: 'service-providers/new', redirectTo: 'users/service-providers/new', pathMatch: 'full' },
             { path: 'service-providers/edit/:id', redirectTo: 'users/service-providers/edit/:id', pathMatch: 'full' },
             { path: 'artists', redirectTo: 'users/artists', pathMatch: 'full' },
+            { path: 'agencies', redirectTo: 'users/agencies', pathMatch: 'full' },
             {
                 path: 'advertising',
                 loadComponent: () => import('./components/admin/advertisements/campaigns/campaigns-list.component').then(m => m.CampaignsListComponent),

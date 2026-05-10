@@ -18,6 +18,9 @@ import { BecomeProfessionalFormComponent } from '../become-professional-form/bec
 import { AuthService } from '../../../services/auth.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { SearchService, SearchItem } from '../../../services/search.service';
+import { AgencyListDto } from '../../../models/agency.model';
+import { AgencyService } from '../../../services/agency.service';
+import { AnalyticsService } from '../../../services/analytics.service';
 
 interface Category {
   id: number;
@@ -50,6 +53,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private readonly searchPageSize = 40;
   private readonly scrollLoadOffset = 700;
   private searchDebounceTimer?: ReturnType<typeof setTimeout>;
+  agencyBanners: AgencyListDto[] = [];
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -160,6 +164,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private quickAddAssistantService: QuickAddAssistantService,
     private searchService: SearchService,
+    private agencyService: AgencyService,
+    private analytics: AnalyticsService,
     private hostRef: ElementRef<HTMLElement>
   ) {}
 
@@ -169,8 +175,16 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       this.activeTab = 'teachers';
     }
     this.loadCities();
+    this.loadAgencyBanners();
     this.loadProfessionals();
     this.loadInstrumentsAndTeachers();
+  }
+
+  loadAgencyBanners(): void {
+    this.agencyService.getIndexBanners(6).subscribe({
+      next: agencies => this.agencyBanners = agencies,
+      error: () => this.agencyBanners = []
+    });
   }
 
   ngAfterViewInit(): void {
@@ -837,6 +851,14 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   viewTeacher(teacherId: number): void {
     this.router.navigate(['/teacher', teacherId]);
+  }
+
+  viewAgency(slug: string): void {
+    const agency = this.agencyBanners.find(item => item.slug === slug);
+    if (agency) {
+      this.analytics.trackInteraction('agency_banner_click', agency.id, agency.name);
+    }
+    this.router.navigate(['/agency', slug]);
   }
 
   openBecomeProfessionalForm(): void {

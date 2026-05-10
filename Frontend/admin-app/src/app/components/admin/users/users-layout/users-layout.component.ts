@@ -47,6 +47,11 @@ export class AdminUsersLayoutComponent {
 
         if (url.includes('/users/artists')) {
             this.actions.requestAddArtist();
+            return;
+        }
+
+        if (url.includes('/users/agencies')) {
+            this.router.navigate(['/admin/users/agencies/new']);
         }
     }
 
@@ -72,6 +77,14 @@ export class AdminUsersLayoutComponent {
                 title: 'אומנים',
                 subtitle: 'ניהול אומנים, סטטוס תצוגה ופרופילי אמן.',
                 actionLabel: 'אומן חדש'
+            };
+        }
+
+        if (url.includes('/users/agencies')) {
+            return {
+                title: 'סוכנויות',
+                subtitle: 'ניהול סוכנויות, באנרים, שיוך פרופילים ותוכן.',
+                actionLabel: 'סוכנות חדשה'
             };
         }
 

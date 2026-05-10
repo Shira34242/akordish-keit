@@ -35,6 +35,10 @@
           <span class="material-icons">star</span>
           מומלץ
         </span>
+        <button *ngIf="agencyBadge" class="agency-profile-badge" type="button" (click)="goToAgency()">
+          <img *ngIf="agencyBadge.logoUrl" [src]="agencyBadge.logoUrl" [alt]="agencyBadge.agencyName" imgFallback>
+          <span>{{ agencyBadge.agencyName }}</span>
+        </button>
         <h1 class="hero-name">{{ professional.displayName }}</h1>
         <p class="hero-role">{{ heroRole }}</p>
         <p class="hero-location" *ngIf="heroLocationLine">
@@ -60,21 +64,41 @@
           </button>
 
           <div class="contact-panel" [class.open]="contactOpen">
-            <a *ngIf="professional.phoneNumber" [href]="'tel:' + professional.phoneNumber" class="contact-item">
+            <div *ngIf="showAgencyContact" class="contact-group-label">דרך הסוכנות</div>
+            <a *ngIf="showAgencyContact && agencyBadge?.phoneNumber" [href]="'tel:' + agencyBadge?.phoneNumber" class="contact-item" (click)="trackAgencyContact('phone')">
+              <span class="material-icons">phone</span>
+              <span>{{ agencyBadge?.phoneNumber }}</span>
+            </a>
+            <a *ngIf="showAgencyContact && agencyBadge?.whatsAppNumber" [href]="getWhatsAppUrl(agencyBadge!.whatsAppNumber!)" target="_blank" rel="noopener" class="contact-item" (click)="trackAgencyContact('whatsapp')">
+              <svg class="contact-whatsapp-icon" viewBox="0 0 512 512" aria-hidden="true">
+                <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
+              </svg>
+              <span>{{ agencyBadge?.whatsAppNumber }}</span>
+            </a>
+            <a *ngIf="showAgencyContact && agencyBadge?.email" [href]="'mailto:' + agencyBadge?.email" class="contact-item" (click)="trackAgencyContact('email')">
+              <span class="material-icons">email</span>
+              <span>{{ agencyBadge?.email }}</span>
+            </a>
+            <a *ngIf="showAgencyContact && agencyBadge?.websiteUrl" [href]="agencyBadge?.websiteUrl" target="_blank" rel="noopener" class="contact-item" (click)="trackAgencyContact('website')">
+              <span class="material-icons">language</span>
+              <span>{{ getShortUrl(agencyBadge!.websiteUrl!) }}</span>
+            </a>
+            <div *ngIf="showDirectContact && showAgencyContact" class="contact-group-label">יצירת קשר ישירה</div>
+            <a *ngIf="showDirectContact && professional.phoneNumber" [href]="'tel:' + professional.phoneNumber" class="contact-item">
               <span class="material-icons">phone</span>
               <span>{{ professional.phoneNumber }}</span>
             </a>
-            <a *ngIf="professional.whatsAppNumber" [href]="getWhatsAppUrl(professional.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item">
+            <a *ngIf="showDirectContact && professional.whatsAppNumber" [href]="getWhatsAppUrl(professional.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item">
               <svg class="contact-whatsapp-icon" viewBox="0 0 512 512" aria-hidden="true">
                 <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
               </svg>
               <span>{{ professional.whatsAppNumber }}</span>
             </a>
-            <a *ngIf="professional.email" [href]="'mailto:' + professional.email" class="contact-item">
+            <a *ngIf="showDirectContact && professional.email" [href]="'mailto:' + professional.email" class="contact-item">
               <span class="material-icons">email</span>
               <span>{{ professional.email }}</span>
             </a>
-            <a *ngIf="professional.websiteUrl" [href]="professional.websiteUrl" target="_blank" rel="noopener" class="contact-item">
+            <a *ngIf="showDirectContact && professional.websiteUrl" [href]="professional.websiteUrl" target="_blank" rel="noopener" class="contact-item">
               <span class="material-icons">language</span>
               <span>{{ getShortUrl(professional.websiteUrl) }}</span>
             </a>
@@ -85,11 +109,12 @@
           </div>
         </div>
 
-        <a *ngIf="professional.whatsAppNumber"
-           [href]="getWhatsAppUrl(professional.whatsAppNumber)"
+        <a *ngIf="quickWhatsAppNumber"
+           [href]="getWhatsAppUrl(quickWhatsAppNumber)"
            target="_blank"
            rel="noopener"
            class="btn-cta-whatsapp"
+           (click)="showAgencyContact ? trackAgencyContact('whatsapp') : null"
            aria-label="הודעה מהירה">
           <svg viewBox="0 0 512 512" aria-hidden="true">
             <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>

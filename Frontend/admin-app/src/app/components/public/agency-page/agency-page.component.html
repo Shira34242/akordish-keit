@@ -1,0 +1,85 @@
+<div class="agency-page" dir="rtl" [ngStyle]="agencyThemeVars">
+  <div *ngIf="loading" class="loading-state">טוען סוכנות...</div>
+  <div *ngIf="error && !loading" class="error-state">{{ error }}</div>
+
+  <ng-container *ngIf="agency && !loading">
+    <section class="agency-hero">
+      <img [src]="heroImage" [alt]="agency.name" class="hero-image" imgFallback>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name" class="agency-logo" imgFallback>
+        <div>
+          <span class="agency-label">סוכנות מוזיקה</span>
+          <h1>{{ agency.name }}</h1>
+          <p *ngIf="agency.shortDescription">{{ agency.shortDescription }}</p>
+          <div class="contact-row">
+            <a *ngIf="agency.phoneNumber" [href]="'tel:' + agency.phoneNumber" class="contact-pill" (click)="trackContact('phone')">טלפון</a>
+            <a *ngIf="agency.whatsAppNumber" [href]="getWhatsAppUrl(agency.whatsAppNumber)" target="_blank" rel="noopener" class="contact-pill" (click)="trackContact('whatsapp')">ווטסאפ</a>
+            <a *ngIf="agency.email" [href]="'mailto:' + agency.email" class="contact-pill" (click)="trackContact('email')">אימייל</a>
+            <a *ngIf="agency.websiteUrl" [href]="agency.websiteUrl" target="_blank" rel="noopener" class="contact-pill" (click)="trackContact('website')">אתר</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="agency-content">
+      <section class="intro-section" *ngIf="agency.fullDescription">
+        <p>{{ agency.fullDescription }}</p>
+      </section>
+
+      <section class="section" *ngIf="allProfiles.length > 0">
+        <div class="section-header">
+          <span class="section-tag">נותני שירות ואמנים</span>
+          <span class="total-badge">{{ allProfiles.length }}</span>
+        </div>
+        <div class="profiles-grid">
+          <article class="profile-card" *ngFor="let profile of allProfiles" (click)="goToProfile(profile)">
+            <img [src]="profile.imageUrl || '/default-user.svg'" [alt]="profile.name" imgFallback>
+            <div>
+              <strong>{{ profile.name }}</strong>
+              <span>{{ profile.isTeacher ? 'מורה לנגינה' : profile.profileType === 'artist' ? 'אמן' : 'נותן שירות' }}</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" *ngIf="directContentCount > 0">
+        <div class="section-header">
+          <span class="section-tag">תוכן של הסוכנות</span>
+          <span class="total-badge">{{ directContentCount }}</span>
+        </div>
+        <div class="content-grid">
+          <article class="content-card" *ngFor="let article of agency.directArticles" (click)="goToArticle(article)">
+            <img [src]="article.featuredImageUrl || '/logo.png'" [alt]="article.title" imgFallback>
+            <span>כתבה</span>
+            <strong>{{ article.title }}</strong>
+          </article>
+          <article class="content-card" *ngFor="let song of agency.directSongs" (click)="goToSong(song)">
+            <img [src]="song.imageUrl || '/logo.png'" [alt]="song.title" imgFallback>
+            <span>שיר</span>
+            <strong>{{ song.title }}</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" *ngIf="memberContentCount > 0">
+        <div class="section-header">
+          <span class="section-tag">תוכן של חברי הסוכנות</span>
+          <span class="total-badge">{{ memberContentCount }}</span>
+        </div>
+        <div class="content-grid">
+          <article class="content-card" *ngFor="let article of agency.memberArticles" (click)="goToArticle(article)">
+            <img [src]="article.featuredImageUrl || '/logo.png'" [alt]="article.title" imgFallback>
+            <span>כתבה</span>
+            <strong>{{ article.title }}</strong>
+          </article>
+          <article class="content-card" *ngFor="let song of agency.memberSongs" (click)="goToSong(song)">
+            <img [src]="song.imageUrl || '/logo.png'" [alt]="song.title" imgFallback>
+            <span>שיר</span>
+            <strong>{{ song.title }}</strong>
+          </article>
+        </div>
+      </section>
+    </main>
+  </ng-container>
+</div>

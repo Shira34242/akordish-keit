@@ -9,7 +9,7 @@ public static class TagSeed
     {
         var tags = new List<Tag>
         {
-            new() { Id = 1, Name = "שבת" },
+            new() { Id = 1, Name = "שבת", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 1 },
             new() { Id = 2, Name = "חתונה" },
             new() { Id = 3, Name = "חגים" },
             new() { Id = 4, Name = "ראש השנה" },
