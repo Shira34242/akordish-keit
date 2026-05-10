@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SongService } from '../../../services/song.service';
 import { PlaylistDetail } from '../../../models/playlist.model';
 import { isChord, isChordLine } from '../../../utils/music-utils';
+import { LanguageService } from '../../../services/language.service';
 
 type ColumnMode = 'auto' | 1 | 2 | 3;
 
@@ -43,6 +44,8 @@ export class ChordBookPanelComponent implements OnInit {
     readonly PAGE_W = 640;
     readonly PAGE_FULL_H = Math.round(640 * 297 / 210); // ≈ 906
     readonly BRAND_BAR_H = 20;
+
+    private readonly langService = inject(LanguageService);
 
     constructor(private songService: SongService, private sanitizer: DomSanitizer) {}
 
@@ -121,7 +124,7 @@ export class ChordBookPanelComponent implements OnInit {
     allSongPageHtml(song: any): SafeHtml {
         if (!song) {
             return this.sanitizer.bypassSecurityTrustHtml(
-                '<div style="padding:40px;text-align:center;color:#888;font-family:\'Open Sans\',sans-serif">שגיאה בטעינת השיר</div>'
+                `<div style="padding:40px;text-align:center;color:#888;font-family:'Open Sans',sans-serif">${this.langService.translate('chord_book.error_load_song')}</div>`
             );
         }
         const cols = this.columnsForSong(song);
@@ -217,8 +220,8 @@ export class ChordBookPanelComponent implements OnInit {
             `<span style="display:inline-block;background:#F2F2F2;border-radius:999px;padding:1px 8px;font-size:9px;font-weight:300;margin:1px 2px;color:#404040">${this.escapeHtml(g.name || '')}</span>`
         ).join('');
         const composerParts: string[] = [];
-        if (song?.composer?.name) composerParts.push('לחן: ' + song.composer.name);
-        if (song?.lyricist?.name) composerParts.push('מילים: ' + song.lyricist.name);
+        if (song?.composer?.name) composerParts.push(this.langService.translate('print.composer_melody') + ' ' + song.composer.name);
+        if (song?.lyricist?.name) composerParts.push(this.langService.translate('print.composer_lyrics') + ' ' + song.lyricist.name);
         const composerHtml = composerParts.length
             ? `<div style="font-size:9px;font-weight:300;color:#888;margin-top:3px">${this.escapeHtml(composerParts.join(' | '))}</div>`
             : '';
@@ -232,7 +235,7 @@ export class ChordBookPanelComponent implements OnInit {
   <div style="flex:1;text-align:right">
     <div style="font-size:17px;font-weight:800;line-height:1.2;margin-bottom:3px">${this.escapeHtml(song?.title || '')}</div>
     <div style="font-size:12px;font-weight:300;color:#404040;margin-bottom:3px">${this.escapeHtml(artistName)}</div>
-    ${keyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">סולם: ${this.escapeHtml(keyName)}</div>` : ''}
+    ${keyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">${this.langService.translate('print.key_label')} ${this.escapeHtml(keyName)}</div>` : ''}
     <div style="margin-top:2px">${genreHtml}</div>
     ${composerHtml}
   </div>
@@ -265,9 +268,9 @@ export class ChordBookPanelComponent implements OnInit {
 
     private buildCoverInnerHtml(): string {
         return `
-<div style="color:#ddff53;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px;opacity:0.7">ספר אקורדים</div>
+<div style="color:#ddff53;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:40px;opacity:0.7">${this.langService.translate('chord_book.cover_title')}</div>
 <div style="color:#ffffff;font-size:38px;font-weight:800;line-height:1.25;margin-bottom:20px;max-width:480px">${this.escapeHtml(this.playlist.name)}</div>
-<div style="color:#555;font-size:13px;font-weight:300;margin-bottom:56px">${this.songCount} שירים</div>
+<div style="color:#555;font-size:13px;font-weight:300;margin-bottom:56px">${this.songCount}${this.langService.translate('chord_book.songs_count')}</div>
 <div style="width:48px;height:3px;background:#ddff53;border-radius:999px;margin-bottom:56px"></div>
 <div style="color:#ddff53;font-size:17px;font-weight:800;letter-spacing:.06em">אקורדישקייט</div>
 <div style="color:#404040;font-size:11px;font-weight:300;margin-top:10px">המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית</div>`;
@@ -310,7 +313,7 @@ export class ChordBookPanelComponent implements OnInit {
 </div>`).join('');
 
         return `
-<div style="font-size:22px;font-weight:800;margin-bottom:4px">תוכן עניינים</div>
+<div style="font-size:22px;font-weight:800;margin-bottom:4px">${this.langService.translate('chord_book.toc_title')}</div>
 <div style="font-size:11px;font-weight:300;color:#888;margin-bottom:22px">${this.escapeHtml(this.playlist.name)}</div>
 ${rows}`;
     }
@@ -433,7 +436,7 @@ ${rows}`;
 
         try {
             // שלב 1: כריכה
-            this.progressText = 'בונה עמוד כריכה...';
+            this.progressText = this.langService.translate('chord_book.progress_cover');
             this.progressPercent = 3;
             const coverEl = this.buildCoverContainer();
             document.body.appendChild(coverEl);
@@ -444,7 +447,7 @@ ${rows}`;
             // שלב 2: שירים
             for (let i = 0; i < this.playlist.songs.length; i++) {
                 const ps = this.playlist.songs[i];
-                this.progressText = `מכין שיר ${i + 1} מתוך ${this.playlist.songs.length}: ${ps.songTitle}`;
+                this.progressText = `${this.langService.translate('chord_book.progress_song_pre')}${i + 1}${this.langService.translate('chord_book.progress_song_of')}${this.playlist.songs.length}: ${ps.songTitle}`;
                 this.progressPercent = 8 + Math.round((i / this.playlist.songs.length) * 78);
 
                 const songData = await new Promise<any>((resolve, reject) => {
@@ -462,7 +465,7 @@ ${rows}`;
             }
 
             // שלב 3: תוכן עניינים (כעת יודעים מספרי עמודים)
-            this.progressText = 'בונה תוכן עניינים...';
+            this.progressText = this.langService.translate('chord_book.progress_toc');
             this.progressPercent = 90;
             const indexEl = this.buildIndexContainer(indexEntries);
             document.body.appendChild(indexEl);
@@ -476,7 +479,7 @@ ${rows}`;
             }
 
             // שלב 4: PDF
-            this.progressText = 'מרכיב PDF...';
+            this.progressText = this.langService.translate('chord_book.progress_pdf');
             this.progressPercent = 95;
             const { jsPDF } = await import('jspdf');
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -493,11 +496,11 @@ ${rows}`;
                 pdf.addImage(allPageImages[i], 'JPEG', marginMm, marginMm, contentW, displayH);
             }
 
-            pdf.save(`${this.playlist.name} - ספר אקורדים.pdf`);
+            pdf.save(`${this.playlist.name}${this.langService.translate('chord_book.filename_suffix')}.pdf`);
             this.progressPercent = 100;
         } catch (e) {
             console.error('Chord book export failed:', e);
-            alert('שגיאה בייצוא הספר. נסה שוב.');
+            alert(this.langService.translate('chord_book.error_export'));
         } finally {
             this.isExporting = false;
             this.progressText = '';

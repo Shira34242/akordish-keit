@@ -189,11 +189,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private applySeo(artist: Artist): void {
     const path = `/artist/${artist.id}`;
-    const rawDescription = artist.shortBio || artist.biography || `דף האמן של ${artist.name} באקורדישקייט, כולל שירים, אקורדים, כתבות והופעות.`;
+    const descFallback = `${this.langService.translate('artist.seo_desc_pre')}${artist.name}${this.langService.translate('artist.seo_desc_suf')}`;
+    const rawDescription = artist.shortBio || artist.biography || descFallback;
     const description = rawDescription.replace(/\s+/g, ' ').trim().slice(0, 160);
 
     this.seo.set({
-      title: `${artist.name} - אקורדים, שירים ועדכונים`,
+      title: `${artist.name}${this.langService.translate('artist.seo_title_suf')}`,
       description,
       path,
       imageUrl: artist.imageUrl || artist.bannerImageUrl,
@@ -201,8 +202,8 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       structuredData: [
         this.seo.organizationSchema(),
         this.seo.breadcrumbSchema([
-          { name: 'בית', path: '/' },
-          { name: 'אמנים', path: '/artists' },
+          { name: this.langService.translate('nav.home_label'), path: '/' },
+          { name: this.langService.translate('nav.artists_label'), path: '/artists' },
           { name: artist.name, path }
         ]),
         {

@@ -212,13 +212,13 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      this.imageUploadError = 'יש לבחור קובץ תמונה בלבד';
+      this.imageUploadError = this.langService.translate('playlist.error_image_type');
       input.value = '';
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      this.imageUploadError = 'הקובץ גדול מדי (מקסימום 10MB)';
+      this.imageUploadError = this.langService.translate('playlist.error_image_size');
       input.value = '';
       return;
     }
@@ -234,7 +234,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
       },
       error: (err) => {
         console.error('Error uploading image:', err);
-        this.imageUploadError = err?.error?.message || 'שגיאה בהעלאת התמונה';
+        this.imageUploadError = err?.error?.message || this.langService.translate('playlist.error_image_upload');
         this.isUploadingImage = false;
         input.value = '';
       }

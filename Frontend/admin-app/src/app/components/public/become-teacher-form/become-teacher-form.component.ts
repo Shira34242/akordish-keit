@@ -11,6 +11,7 @@ import { TargetAudience, getTargetAudienceOptions } from '../../../models/target
 import { AuthService } from '../../../services/auth.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 import { MediaService } from '../../../services/admin/media.service';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-become-teacher-form',
@@ -27,6 +28,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly mediaService = inject(MediaService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly langService = inject(LanguageService);
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -201,7 +203,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   getSelectedInstrumentsText(): string {
     if (this.selectedInstrumentIds.length === 0) {
-      return 'בחר כלי נגינה...';
+      return this.langService.translate('common.select_instrument');
     }
     const names = this.selectedInstrumentIds
       .map(id => this.availableInstruments.find(inst => inst.id === id)?.name)
@@ -249,7 +251,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   }
 
   getSelectedLanguagesText(): string {
-    if (this.selectedLanguages.length === 0) return 'בחר שפות...';
+    if (this.selectedLanguages.length === 0) return this.langService.translate('common.select_language');
     const names = this.selectedLanguages
       .map(val => this.languageOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -281,7 +283,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   }
 
   getSelectedAudiencesText(): string {
-    if (this.selectedAudiences.length === 0) return 'בחר קהל יעד...';
+    if (this.selectedAudiences.length === 0) return this.langService.translate('common.select_audience');
     const names = this.selectedAudiences
       .map(val => this.audienceOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -317,7 +319,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.profileImageUploading = false;
-        alert('שגיאה בהעלאת תמונת הפרופיל.');
+        alert(this.langService.translate('form.error_profile_image'));
       }
     });
   }
@@ -341,7 +343,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.galleryUploadingCount--;
-          alert('שגיאה בהעלאת אחד הקבצים לגלריה.');
+          alert(this.langService.translate('form.error_gallery_file'));
         }
       });
     });
@@ -349,7 +351,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
-      alert('נא להזין URL לתמונה');
+      alert(this.langService.translate('form.enter_image_url'));
       return;
     }
     const order = this.galleryImages.length;
@@ -362,7 +364,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   }
 
   removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+    if (confirm(this.langService.translate('form.confirm_delete_image'))) {
       this.galleryImages.splice(index, 1);
       this.galleryImages.forEach((img, idx) => img.order = idx);
     }
@@ -370,7 +372,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
 
   addTestimonial(): void {
     if (!this.newTestimonial.text.trim()) {
-      alert('נא להזין טקסט המלצה');
+      alert(this.langService.translate('form.enter_testimonial'));
       return;
     }
 
@@ -519,18 +521,18 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     this.teacherService.createTeacher(dto).subscribe({
       next: () => {
         this.saving = false;
-        alert('הבקשה נשלחה בהצלחה! נבדוק את פרטייך ונעדכן אותך בקרוב.');
+        alert(this.langService.translate('form.success_submitted'));
         this.success.emit();
         this.onClose();
       },
       error: (error: any) => {
         console.error('Error creating teacher:', error);
-        let errorMessage = 'שגיאה בשליחת הבקשה';
+        let errorMessage = this.langService.translate('form.error_submit');
         if (error.error?.errors) {
           const validationErrors = Object.entries(error.error.errors)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
-          errorMessage += '\n\nפרטי השגיאה:\n' + validationErrors;
+          errorMessage += '\n\n' + this.langService.translate('form.error_details_prefix') + '\n' + validationErrors;
         }
         alert(errorMessage);
         this.saving = false;

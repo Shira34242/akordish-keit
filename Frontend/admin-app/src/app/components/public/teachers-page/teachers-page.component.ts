@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
+import { LanguageService } from '../../../services/language.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -79,6 +80,8 @@ export class TeachersPageComponent implements OnInit {
   private readonly searchPageSize = 40;
   private readonly scrollLoadOffset = 700;
   private rafPending = false;
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private teacherService: TeacherService,
@@ -357,9 +360,11 @@ export class TeachersPageComponent implements OnInit {
       .filter((name): name is string => name !== undefined);
 
     if (names.length === 0) return '';
-    if (names.length === 1) return `מורה ל${names[0]}`;
+    const prefix = this.langService.translate('teacher.role_prefix');
+    if (names.length === 1) return `${prefix}${names[0]}`;
 
     const last = names[names.length - 1];
-    return `מורה ל${names.slice(0, -1).join(', ')} ו${last}`;
+    const and = this.langService.translate('teacher.role_and');
+    return `${prefix}${names.slice(0, -1).join(', ')}${and}${last}`;
   }
 }

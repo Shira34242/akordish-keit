@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export enum UserType {
   Regular = 'regular',
@@ -31,6 +32,7 @@ export class AdditionalDetailsModalComponent {
   selectedUserType: UserType | null = null;
 
   UserType = UserType;
+  private readonly langService = inject(LanguageService);
 
   constructor(private authService: AuthService) {}
 
@@ -57,7 +59,7 @@ export class AdditionalDetailsModalComponent {
       },
       error: (error: any) => {
         this.loading = false;
-        this.errorMessage = error?.error?.message || 'שגיאה בעדכון הפרטים';
+        this.errorMessage = error?.error?.message || this.langService.translate('auth.error_update_details');
       }
     });
   }

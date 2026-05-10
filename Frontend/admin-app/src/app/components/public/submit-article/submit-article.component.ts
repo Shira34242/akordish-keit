@@ -6,6 +6,7 @@ import { ArticleService } from '../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
 import { ArtistService } from '../../../services/artist.service';
 import { UserService } from '../../../services/user.service';
+import { LanguageService } from '../../../services/language.service';
 import { ArtistListDto } from '../../../models/artist.model';
 import {
   CreateArticleDto,
@@ -27,6 +28,7 @@ export class SubmitArticleComponent implements OnInit {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private readonly langService = inject(LanguageService);
 
   // State
   categories: SystemItem[] = [];
@@ -148,7 +150,7 @@ export class SubmitArticleComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error submitting article:', error);
-        alert('שגיאה בשליחת הכתבה: ' + (error.error?.message || error.message));
+        alert(this.langService.translate('article.error_submit_prefix') + ' ' + (error.error?.message || error.message));
         this.saving = false;
       }
     });
@@ -156,11 +158,11 @@ export class SubmitArticleComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.article.title?.trim()) {
-      alert('נא להזין כותרת');
+      alert(this.langService.translate('article.enter_title'));
       return false;
     }
     if (!this.article.content?.trim()) {
-      alert('נא להזין תוכן הכתבה');
+      alert(this.langService.translate('article.enter_content'));
       return false;
     }
     return true;
@@ -233,20 +235,20 @@ export class SubmitArticleComponent implements OnInit {
   fetchYouTubeThumbnail(): void {
     if (!this.article.videoEmbedUrl) return;
     this.fetchingYouTube = true;
-    this.youtubeMessage = 'שולף תמונה מיוטיוב...';
+    this.youtubeMessage = this.langService.translate('article.fetching_youtube');
     this.articleService.getYouTubeMetadata(this.article.videoEmbedUrl).subscribe({
       next: (metadata) => {
         if (metadata.success && metadata.thumbnailUrl) {
           this.article.featuredImageUrl = metadata.thumbnailUrl;
-          this.youtubeMessage = '✓ תמונה נשלפה בהצלחה';
+          this.youtubeMessage = this.langService.translate('article.youtube_success');
           setTimeout(() => this.youtubeMessage = '', 3000);
         } else {
-          this.youtubeMessage = '⚠️ לא ניתן לשלוף תמונה';
+          this.youtubeMessage = this.langService.translate('article.youtube_fail');
         }
         this.fetchingYouTube = false;
       },
       error: () => {
-        this.youtubeMessage = '⚠️ שגיאה בשליפת התמונה';
+        this.youtubeMessage = this.langService.translate('article.youtube_error');
         this.fetchingYouTube = false;
       }
     });
@@ -255,7 +257,7 @@ export class SubmitArticleComponent implements OnInit {
   // Gallery helpers
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
-      alert('נא להזין URL לתמונה');
+      alert(this.langService.translate('form.enter_image_url'));
       return;
     }
     if (!this.article.galleryImages) this.article.galleryImages = [];
@@ -268,7 +270,7 @@ export class SubmitArticleComponent implements OnInit {
   }
 
   removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+    if (confirm(this.langService.translate('form.confirm_delete_image'))) {
       this.article.galleryImages?.splice(index, 1);
       this.article.galleryImages?.forEach((img, idx) => { img.displayOrder = idx; });
     }

@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BoostService } from '../../services/boost.service';
 import { BoostType, BoostTypeHelper } from '../../models/subscription.model';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-boost-purchase',
@@ -18,7 +19,9 @@ export class BoostPurchaseComponent {
   loading = false;
   error = '';
 
-  BoostType = BoostType; // עבור ה-template
+  BoostType = BoostType;
+
+  private readonly langService = inject(LanguageService);
 
   constructor(private boostService: BoostService) {}
 
@@ -32,7 +35,7 @@ export class BoostPurchaseComponent {
 
   purchaseBoost() {
     if (!this.serviceProviderId) {
-      this.error = 'חסר מזהה פרופיל';
+      this.error = this.langService.translate('boost.error_no_profile');
       return;
     }
 
@@ -54,11 +57,11 @@ export class BoostPurchaseComponent {
       next: () => {
         this.loading = false;
         this.purchased.emit();
-        alert(`הבוסט נרכש בהצלחה! הפרופיל שלך עכשיו ב${this.getBoostName()}`);
+        alert(`${this.langService.translate('boost.success_pre')}${this.getBoostName()}`);
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.message || 'שגיאה ברכישת הבוסט';
+        this.error = err.error?.message || this.langService.translate('boost.error_purchase');
         console.error('Error purchasing boost:', err);
       }
     });
@@ -67,9 +70,9 @@ export class BoostPurchaseComponent {
   getBoostDescription(): string {
     switch (this.type) {
       case BoostType.TopOfRecommended:
-        return 'הפרופיל שלך יקפוץ לראש רשימת המומלצים! פעיל עד שמישהו אחר קונה בוסט.';
+        return this.langService.translate('boost.desc_top');
       case BoostType.HomepageBanner:
-        return 'הפרופיל שלך יוצג בבאנר בדף הבית! נראות מקסימלית.';
+        return this.langService.translate('boost.desc_banner');
       default:
         return '';
     }

@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 export enum RecoveryMethod {
   Email = 'email',
@@ -42,6 +43,7 @@ export class ForgotPasswordModalComponent {
 
   // Recovery method enum
   RecoveryMethod = RecoveryMethod;
+  private readonly langService = inject(LanguageService);
 
   constructor(private authService: AuthService) {}
 
@@ -50,7 +52,7 @@ export class ForgotPasswordModalComponent {
     this.successMessage = '';
 
     if (!this.usernameOrEmail) {
-      this.errorMessage = 'נא להזין שם משתמש או אימייל';
+      this.errorMessage = this.langService.translate('auth.enter_username_email');
       return;
     }
 
@@ -61,12 +63,12 @@ export class ForgotPasswordModalComponent {
         this.loading = false;
         this.step = 'verify';
         this.successMessage = this.recoveryMethod === RecoveryMethod.Email
-          ? 'קוד אימות נשלח לאימייל שלך'
-          : 'קוד אימות נשלח בהודעת SMS';
+          ? this.langService.translate('auth.code_sent_email')
+          : this.langService.translate('auth.code_sent_sms');
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.message || 'שגיאה בשליחת קוד האימות';
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_send_code');
       }
     });
   }
@@ -75,22 +77,22 @@ export class ForgotPasswordModalComponent {
     this.errorMessage = '';
 
     if (!this.verificationCode) {
-      this.errorMessage = 'נא להזין קוד אימות';
+      this.errorMessage = this.langService.translate('auth.enter_verification_code');
       return;
     }
 
     if (!this.newPassword) {
-      this.errorMessage = 'נא להזין סיסמא חדשה';
+      this.errorMessage = this.langService.translate('auth.enter_new_password');
       return;
     }
 
     if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'הסיסמאות אינן תואמות';
+      this.errorMessage = this.langService.translate('auth.passwords_mismatch');
       return;
     }
 
     if (this.passwordErrors.length > 0) {
-      this.errorMessage = 'הסיסמא אינה עומדת בדרישות';
+      this.errorMessage = this.langService.translate('auth.password_requirements');
       return;
     }
 
@@ -99,14 +101,14 @@ export class ForgotPasswordModalComponent {
     this.authService.resetPassword(this.usernameOrEmail, this.verificationCode, this.newPassword).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'הסיסמא שונתה בהצלחה!';
+        this.successMessage = this.langService.translate('auth.password_changed');
         setTimeout(() => {
           this.success.emit();
         }, 2000);
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.message || 'שגיאה באיפוס הסיסמא';
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_reset_password');
       }
     });
   }
@@ -123,35 +125,35 @@ export class ForgotPasswordModalComponent {
 
     // Check length
     if (this.newPassword.length < 8) {
-      this.passwordErrors.push('לפחות 8 תווים');
+      this.passwordErrors.push(this.langService.translate('auth.pw_min_length'));
     } else {
       score++;
     }
 
     // Check lowercase
     if (!/[a-z]/.test(this.newPassword)) {
-      this.passwordErrors.push('אות קטנה באנגלית');
+      this.passwordErrors.push(this.langService.translate('auth.pw_lowercase'));
     } else {
       score++;
     }
 
     // Check uppercase
     if (!/[A-Z]/.test(this.newPassword)) {
-      this.passwordErrors.push('אות גדולה באנגלית');
+      this.passwordErrors.push(this.langService.translate('auth.pw_uppercase'));
     } else {
       score++;
     }
 
     // Check number
     if (!/\d/.test(this.newPassword)) {
-      this.passwordErrors.push('ספרה');
+      this.passwordErrors.push(this.langService.translate('auth.pw_number'));
     } else {
       score++;
     }
 
     // Check special character
     if (!/[@$!%*?&#]/.test(this.newPassword)) {
-      this.passwordErrors.push('תו מיוחד (@$!%*?&#)');
+      this.passwordErrors.push(this.langService.translate('auth.pw_special'));
     } else {
       score++;
     }

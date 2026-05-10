@@ -1,4 +1,5 @@
-﻿import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef, inject } from '@angular/core';
+import { LanguageService } from '../../../services/language.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -146,6 +147,8 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     { id: 0, name: '׳›׳™׳ ׳•׳¨', hebrewName: '׳›׳™׳ ׳•׳¨' },
     { id: 0, name: '׳—׳׳™׳', hebrewName: '׳—׳׳™׳' }
   ];
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private professionalService: MusicServiceProviderService,
@@ -899,9 +902,11 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       .map(id => this.instrumentNameById.get(id))
       .filter((n): n is string => !!n);
     if (names.length === 0) return '';
-    if (names.length === 1) return `מורה ל${names[0]}`;
+    const prefix = this.langService.translate('teacher.role_prefix');
+    if (names.length === 1) return `${prefix}${names[0]}`;
     const last = names[names.length - 1];
-    return `מורה ל${names.slice(0, -1).join(', ')} ו${last}`;
+    const and = this.langService.translate('teacher.role_and');
+    return `${prefix}${names.slice(0, -1).join(', ')}${and}${last}`;
   }
   trackByProfessionalId(_index: number, professional: MusicServiceProviderListDto): number {
     return professional.id;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -8,6 +8,7 @@ import {
   SubscriptionPlanHelper,
   SubscriptionDto
 } from '../../models/subscription.model';
+import { LanguageService } from '../../services/language.service';
 
 type ProfileType = 'artist' | 'teacher' | 'service-provider' | null;
 
@@ -20,92 +21,112 @@ interface PlanFeatures {
 const PROFILE_PLAN_FEATURES: Record<string, PlanFeatures> = {
   teacher: {
     basic: [
-      'תמונת פרופיל',
-      'שם',
-      'תיאור',
-      'מיקום',
-      'טלפון',
-      'מייל'
+      'sub_select.feat_photo',
+      'sub_select.feat_name',
+      'sub_select.feat_desc',
+      'sub_select.feat_location',
+      'sub_select.feat_phone',
+      'sub_select.feat_email'
     ],
     plus: [
-      'קידום בתוצאות החיפוש',
-      'קידום חד פעמי בדף הבית',
-      'לחצן ישיר לוואצפ',
-      'סימון "מומלץ"',
-      'תמונת באנר מותאמת',
-      'לחצני רשתות חברתיות',
-      'גלרית תמונות (3)',
-      'המלצות תלמידים (2)'
+      'sub_select.feat_search_boost',
+      'sub_select.feat_homepage_once',
+      'sub_select.feat_whatsapp',
+      'sub_select.feat_recommended',
+      'sub_select.feat_banner',
+      'sub_select.feat_social',
+      'sub_select.feat_teacher_gallery_3',
+      'sub_select.feat_teacher_reviews_2'
     ],
     pro: [
-      'קידום קבוע בדף הבית - רשימת מומלצים',
-      'קידום קבוע בדף חיפוש - רשימת מומלצים',
-      'וידאו מוטמע בגלריה',
-      'גלרית תמונות / וידאו (7)',
-      'המלצות תלמידים (4)'
+      'sub_select.feat_homepage_perm',
+      'sub_select.feat_search_perm',
+      'sub_select.feat_video_gallery',
+      'sub_select.feat_gallery_7',
+      'sub_select.feat_teacher_reviews_4'
     ]
   },
   'service-provider': {
     basic: [
-      'תמונת פרופיל',
-      'שם',
-      'תיאור',
-      'מיקום',
-      'טלפון',
-      'מייל',
-      'קישור לאתר',
-      'שעות פעילות'
+      'sub_select.feat_photo',
+      'sub_select.feat_name',
+      'sub_select.feat_desc',
+      'sub_select.feat_location',
+      'sub_select.feat_phone',
+      'sub_select.feat_email',
+      'sub_select.feat_website',
+      'sub_select.feat_hours'
     ],
     plus: [
-      'קידום בתוצאות החיפוש',
-      'קידום חד פעמי בדף הבית',
-      'לחצן ישיר לוואצפ',
-      'לחצן ניווט מהיר',
-      'סימון "מומלץ"',
-      'תמונת באנר מותאמת',
-      'לחצני רשתות חברתיות',
-      'גלריה תמונות (3)',
-      'המלצות (2)'
+      'sub_select.feat_search_boost',
+      'sub_select.feat_homepage_once',
+      'sub_select.feat_whatsapp',
+      'sub_select.feat_nav_btn',
+      'sub_select.feat_recommended',
+      'sub_select.feat_banner',
+      'sub_select.feat_social',
+      'sub_select.feat_sp_gallery_3',
+      'sub_select.feat_sp_reviews_2'
     ],
     pro: [
-      'קידום קבוע בדף הבית - רשימת מומלצים',
-      'קידום קבוע בדף חיפוש - רשימת מומלצים',
-      'וידאו מוטמע בגלריה',
-      'גלרית תמונות / וידאו (7)',
-      'המלצות (4)'
+      'sub_select.feat_homepage_perm',
+      'sub_select.feat_search_perm',
+      'sub_select.feat_video_gallery',
+      'sub_select.feat_gallery_7',
+      'sub_select.feat_sp_reviews_4'
     ]
   },
   artist: {
     basic: [
-      'תמונת פרופיל',
-      'שם',
-      'ביוגרפיה ארוכה',
-      'באנר תמונה רגיל',
-      'כתבות / תוכן / הופעות שתויגו'
+      'sub_select.feat_photo',
+      'sub_select.feat_name',
+      'sub_select.feat_biography',
+      'sub_select.feat_basic_banner',
+      'sub_select.feat_tagged_content'
     ],
     plus: [
-      'קידום חד פעמי בדף הבית',
-      'GIF / וידאו בבאנר',
-      'גלרית תמונות (12)',
-      'לחצני רשתות חברתיות',
-      'הפניה לאפליקציות מוזיקה',
-      'קישור לאתר'
+      'sub_select.feat_homepage_once',
+      'sub_select.feat_gif_banner',
+      'sub_select.feat_gallery_12',
+      'sub_select.feat_social',
+      'sub_select.feat_music_apps',
+      'sub_select.feat_website'
     ],
     pro: [
-      'קידום קבוע בדף הבית - רשימת מומלצים',
-      'גלרית תמונות (12)',
-      'סימון אמן "מוביל"',
-      'וידאו מוטמע בגלריה',
-      'קידום הופעות בדף הבית',
-      'קידום הופעה קרובה + הזמנת כרטיסים'
+      'sub_select.feat_homepage_perm',
+      'sub_select.feat_gallery_12',
+      'sub_select.feat_top_artist',
+      'sub_select.feat_video_gallery',
+      'sub_select.feat_event_boost',
+      'sub_select.feat_upcoming_event'
     ]
   }
 };
 
 const DEFAULT_FEATURES: PlanFeatures = {
-  basic: ['תמונת פרופיל', 'שם', 'תיאור', 'מיקום', 'טלפון', 'מייל'],
-  plus: ['קידום בחיפוש', 'קידום בדף הבית', 'לחצן לוואצפ', 'סימון "מומלץ"', 'תמונת באנר', 'גלריה'],
-  pro: ['קידום קבוע בדף הבית', 'קידום קבוע בחיפוש', 'וידאו בגלריה', 'גלריה מורחבת', 'המלצות']
+  basic: [
+    'sub_select.feat_photo',
+    'sub_select.feat_name',
+    'sub_select.feat_desc',
+    'sub_select.feat_location',
+    'sub_select.feat_phone',
+    'sub_select.feat_email'
+  ],
+  plus: [
+    'sub_select.feat_def_search',
+    'sub_select.feat_def_homepage',
+    'sub_select.feat_def_whatsapp',
+    'sub_select.feat_recommended',
+    'sub_select.feat_def_banner',
+    'sub_select.feat_def_gallery'
+  ],
+  pro: [
+    'sub_select.feat_def_homepage_perm',
+    'sub_select.feat_def_search_perm',
+    'sub_select.feat_def_video',
+    'sub_select.feat_def_gallery_ext',
+    'sub_select.feat_def_reviews'
+  ]
 };
 
 interface PlanOption {
@@ -132,13 +153,14 @@ export class SubscriptionSelectionComponent implements OnInit {
   error = '';
   fromProfileComplete = false;
 
-  // תמיכה בסוגי פרופיל מרובים
   profileTypes: ProfileType[] = [];
   primaryProfileType: ProfileType = null;
   activeTab: ProfileType = null;
 
   planOptions: PlanOption[] = [];
   SubscriptionPlan = SubscriptionPlan;
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private subscriptionService: SubscriptionService,
@@ -152,17 +174,14 @@ export class SubscriptionSelectionComponent implements OnInit {
       this.fromProfileComplete = params['from'] === 'profile-complete';
 
       if (params['types']) {
-        // פורמט חדש: ?types=teacher,artist&primary=teacher
         this.profileTypes = (params['types'] as string)
           .split(',')
           .filter(Boolean) as ProfileType[];
         this.primaryProfileType = (params['primary'] as ProfileType) || this.profileTypes[0] || null;
       } else if (params['type']) {
-        // פורמט ישן (תאימות לאחור)
         this.profileTypes = [params['type'] as ProfileType];
         this.primaryProfileType = params['type'] as ProfileType;
       } else {
-        // fallback מ-localStorage (flow של הרשמה)
         const stored = localStorage.getItem('pendingProfessionalType') as ProfileType;
         if (stored) {
           this.profileTypes = [stored];
@@ -194,7 +213,7 @@ export class SubscriptionSelectionComponent implements OnInit {
         name: 'BASIC',
         monthlyPrice: 0,
         yearlyPrice: 0,
-        features: features.basic
+        features: this.resolveFeatures(features.basic)
       },
       {
         plan: SubscriptionPlan.Regular,
@@ -202,16 +221,20 @@ export class SubscriptionSelectionComponent implements OnInit {
         monthlyPrice: 49,
         yearlyPrice: 490,
         recommended: true,
-        features: features.plus
+        features: this.resolveFeatures(features.plus)
       },
       {
         plan: SubscriptionPlan.Premium,
         name: 'PRO',
         monthlyPrice: 99,
         yearlyPrice: 990,
-        features: features.pro
+        features: this.resolveFeatures(features.pro)
       }
     ];
+  }
+
+  private resolveFeatures(keys: string[]): string[] {
+    return keys.map(k => this.langService.translate(k));
   }
 
   loadCurrentSubscription() {
@@ -273,7 +296,7 @@ export class SubscriptionSelectionComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.message || 'שגיאה ביצירת תהליך התשלום. אנא נסה שנית.';
+        this.error = err.error?.message || this.langService.translate('sub_select.error_checkout');
       }
     });
   }
@@ -281,8 +304,6 @@ export class SubscriptionSelectionComponent implements OnInit {
   getPlanPrice(plan: SubscriptionPlan): number {
     return SubscriptionPlanHelper.getPrice(plan, this.billingCycle);
   }
-
-  // ── מספר פרופילים ──
 
   getAdditionalProfilesCount(): number {
     return Math.max(0, this.profileTypes.length - 1);
@@ -294,13 +315,11 @@ export class SubscriptionSelectionComponent implements OnInit {
     return this.billingCycle === 'Monthly' ? extra * 30 : extra * 300;
   }
 
-  // ── תוויות ──
-
   getTabLabel(type: ProfileType): string {
     switch (type) {
-      case 'teacher': return 'מורה';
-      case 'artist': return 'אמן';
-      case 'service-provider': return 'בעל מקצוע';
+      case 'teacher': return this.langService.translate('sub_select.tab_teacher');
+      case 'artist': return this.langService.translate('sub_select.tab_artist');
+      case 'service-provider': return this.langService.translate('sub_select.tab_service_provider');
       default: return '';
     }
   }
@@ -312,6 +331,6 @@ export class SubscriptionSelectionComponent implements OnInit {
   }
 
   getSavingsText(): string {
-    return 'חסוך 2 חודשים!';
+    return this.langService.translate('sub_select.savings_text');
   }
 }

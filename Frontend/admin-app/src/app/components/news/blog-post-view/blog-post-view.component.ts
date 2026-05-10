@@ -14,6 +14,7 @@ import { ContentPageService } from '../../../services/content-page.service';
 import { ArticleFeedbackService } from '../../../services/article-feedback.service';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { SeoService } from '../../../services/seo.service';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-blog-post-view',
@@ -33,6 +34,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   private readonly feedbackService = inject(ArticleFeedbackService);
   private readonly authService = inject(AuthService);
   private readonly seo = inject(SeoService);
+  private readonly langService = inject(LanguageService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -215,8 +217,8 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
       structuredData: [
         this.seo.organizationSchema(),
         this.seo.breadcrumbSchema([
-          { name: 'בית', path: '/' },
-          { name: 'בלוג', path: '/blog' },
+          { name: this.langService.translate('nav.home_label'), path: '/' },
+          { name: this.langService.translate('nav.blog_label'), path: '/blog' },
           { name: article.title, path }
         ]),
         {
@@ -310,7 +312,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(url).then(() => {
-        alert('הקישור הועתק ללוח');
+        alert(this.langService.translate('common.link_copied'));
       });
     }
   }

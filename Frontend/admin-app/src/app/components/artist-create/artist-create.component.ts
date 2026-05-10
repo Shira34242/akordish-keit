@@ -435,7 +435,7 @@ export class ArtistCreateComponent implements OnInit {
     const hits = (this.artistForm.hits || [])
       .filter(hit => hit.youTubeUrl?.trim())
       .map((hit, index) => ({
-        title: hit.title?.trim() || 'להיט גדול',
+        title: hit.title?.trim() || this.langService.translate('artist_create.default_hit_title'),
         imageUrl: hit.imageUrl?.trim() || undefined,
         youTubeUrl: hit.youTubeUrl.trim(),
         displayOrder: index,
@@ -445,7 +445,7 @@ export class ArtistCreateComponent implements OnInit {
     const albums = (this.artistForm.albums || [])
       .filter(album => album.coverImageUrl?.trim())
       .map((album, index) => ({
-        title: album.title?.trim() || 'אלבום',
+        title: album.title?.trim() || this.langService.translate('artist_create.default_album_title'),
         coverImageUrl: album.coverImageUrl.trim(),
         releaseYear: album.releaseYear ?? undefined,
         externalUrl: album.externalUrl?.trim() || '',
@@ -575,8 +575,8 @@ export class ArtistCreateComponent implements OnInit {
     const p = this.artistForm.performance;
     if (p.enabled) {
       this.mirrorPerformanceImageFields(p);
-      if (!p.imageUrl?.trim()) return 'בבאנר הופעה יש להוסיף תמונה לפני שמירה';
-      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return 'תאריך ההופעה לא תקין';
+      if (!p.imageUrl?.trim()) return this.langService.translate('artist_create.validation_performance_image');
+      if (p.eventDate && Number.isNaN(new Date(p.eventDate).getTime())) return this.langService.translate('artist_create.validation_performance_date');
     }
 
     for (let i = 0; i < (this.artistForm.hits || []).length; i++) {
@@ -632,13 +632,13 @@ export class ArtistCreateComponent implements OnInit {
   getHitValidationMessage(index: number): string | null {
     const hit = this.artistForm.hits?.[index];
     if (!hit || this.isBlankHit(hit) || this.isCompleteHit(hit)) return null;
-    return `להיט מספר ${index + 1}: יש להוסיף קישור YouTube, או למחוק את השורה`;
+    return `${this.langService.translate('artist_create.validation_hit_prefix')}${index + 1}${this.langService.translate('artist_create.validation_hit_suffix')}`;
   }
 
   getAlbumValidationMessage(index: number): string | null {
     const album = this.artistForm.albums?.[index];
     if (!album || this.isBlankAlbum(album) || this.isCompleteAlbum(album)) return null;
-    return `אלבום מספר ${index + 1}: יש להוסיף תמונת עטיפה, או למחוק את השורה`;
+    return `${this.langService.translate('artist_create.validation_album_prefix')}${index + 1}${this.langService.translate('artist_create.validation_album_suffix')}`;
   }
 
   private isBlankHit(hit: NonNullable<ArtistFormData['hits']>[number]): boolean {

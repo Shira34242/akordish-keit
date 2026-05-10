@@ -1,9 +1,10 @@
-import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { PlaylistService } from '../../services/playlist.service';
 import { Playlist } from '../../models/playlist.model';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-community-playlists',
@@ -50,6 +51,8 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
       totalCount
     };
   }
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private playlistService: PlaylistService,
@@ -128,7 +131,7 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
       },
       error: (err) => {
         console.error('Error loading public playlists:', err);
-        this.error = err?.message || err?.error?.message || 'שגיאה בטעינת רשימות המאגר הקהילתי';
+        this.error = err?.message || err?.error?.message || this.langService.translate('community.error_load');
         this.isLoading = false;
       }
     });
@@ -193,14 +196,14 @@ export class CommunityPlaylistsComponent implements OnInit, AfterViewChecked, On
   adoptPlaylist(id: number, event: Event): void {
     event.stopPropagation();
 
-    if (confirm('האם לאמץ רשימה זו? תיווצר עותק ברשימות שלך')) {
+    if (confirm(this.langService.translate('community.confirm_adopt'))) {
       this.playlistService.adoptPlaylist(id).subscribe({
         next: () => {
           this.router.navigate(['/my-playlists']);
         },
         error: (err) => {
           console.error('Error adopting playlist:', err);
-          alert('שגיאה באימוץ הרשימה');
+          alert(this.langService.translate('community.error_adopt'));
         }
       });
     }

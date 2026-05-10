@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { GoogleOneTapService } from '../../services/google-one-tap.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-auth-modal',
@@ -37,6 +38,7 @@ export class AuthModalComponent implements OnDestroy {
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
   passwordErrors: string[] = [];
   private googleAuthSubscription?: Subscription;
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private authService: AuthService,
@@ -102,35 +104,35 @@ export class AuthModalComponent implements OnDestroy {
 
     // Check length
     if (this.password.length < 8) {
-      this.passwordErrors.push('לפחות 8 תווים');
+      this.passwordErrors.push(this.langService.translate('auth.pw_min_length'));
     } else {
       score++;
     }
 
     // Check lowercase
     if (!/[a-z]/.test(this.password)) {
-      this.passwordErrors.push('אות קטנה באנגלית');
+      this.passwordErrors.push(this.langService.translate('auth.pw_lowercase'));
     } else {
       score++;
     }
 
     // Check uppercase
     if (!/[A-Z]/.test(this.password)) {
-      this.passwordErrors.push('אות גדולה באנגלית');
+      this.passwordErrors.push(this.langService.translate('auth.pw_uppercase'));
     } else {
       score++;
     }
 
     // Check number
     if (!/\d/.test(this.password)) {
-      this.passwordErrors.push('ספרה');
+      this.passwordErrors.push(this.langService.translate('auth.pw_number'));
     } else {
       score++;
     }
 
     // Check special character
     if (!/[@$!%*?&#]/.test(this.password)) {
-      this.passwordErrors.push('תו מיוחד (@$!%*?&#)');
+      this.passwordErrors.push(this.langService.translate('auth.pw_special'));
     } else {
       score++;
     }
@@ -172,26 +174,26 @@ export class AuthModalComponent implements OnDestroy {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.message || 'שגיאה בכניסה למערכת';
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_login');
       }
     });
   }
 
   private handleRegister() {
     if (!this.email || !this.username || !this.password) {
-      this.errorMessage = 'נא למלא את כל השדות';
+      this.errorMessage = this.langService.translate('auth.fill_all_fields');
       this.loading = false;
       return;
     }
 
     if (!this.termsApproved) {
-      this.errorMessage = 'יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם';
+      this.errorMessage = this.langService.translate('auth.approve_terms');
       this.loading = false;
       return;
     }
 
     if (this.passwordErrors.length > 0) {
-      this.errorMessage = 'הסיסמא חייבת לכלול: ' + this.passwordErrors.join(', ');
+      this.errorMessage = this.langService.translate('auth.password_must_include') + this.passwordErrors.join(', ');
       this.loading = false;
       return;
     }
@@ -203,7 +205,7 @@ export class AuthModalComponent implements OnDestroy {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.message || 'שגיאה בהרשמה למערכת';
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_register');
       }
     });
   }
@@ -212,7 +214,7 @@ export class AuthModalComponent implements OnDestroy {
     const isRegistrationConsentFlow = this.googleRequiresTermsApproval;
 
     if (isRegistrationConsentFlow && !this.termsApproved) {
-      this.errorMessage = 'יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם';
+      this.errorMessage = this.langService.translate('auth.approve_terms');
       return;
     }
 
@@ -231,10 +233,10 @@ export class AuthModalComponent implements OnDestroy {
           this.googleTermsRequired = true;
           this.termsApproved = false;
           this.marketingConsent = false;
-          this.errorMessage = 'כדי להשלים הרשמה עם Google יש לאשר תקנון ומדיניות פרטיות';
+          this.errorMessage = this.langService.translate('auth.google_terms_required');
           return;
         }
-        this.errorMessage = error.error?.message || 'שגיאה בכניסה עם Google';
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_google');
       }
     });
   }

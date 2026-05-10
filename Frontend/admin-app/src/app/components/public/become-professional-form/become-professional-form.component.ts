@@ -8,6 +8,7 @@ import { CreateMusicServiceProviderDto, ProfileStatus, CreateGalleryImageDto, Cr
 import { AuthService } from '../../../services/auth.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 import { MediaService } from '../../../services/admin/media.service';
+import { LanguageService } from '../../../services/language.service';
 
 interface Category {
   id: number;
@@ -29,6 +30,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly mediaService = inject(MediaService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly langService = inject(LanguageService);
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -189,10 +191,10 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   getSelectedCategoryText(): string {
     if (!this.selectedCategoryId) {
-      return 'בחר קטגוריה...';
+      return this.langService.translate('common.select_category');
     }
     const category = this.availableCategories.find(cat => cat.id === this.selectedCategoryId);
-    return category ? category.name : 'בחר קטגוריה...';
+    return category ? category.name : this.langService.translate('common.select_category');
   }
 
   onCategorySearchChange(): void {
@@ -227,7 +229,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.profileImageUploading = false;
-        alert('שגיאה בהעלאת תמונת הפרופיל.');
+        alert(this.langService.translate('form.error_profile_image'));
       }
     });
   }
@@ -251,7 +253,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.galleryUploadingCount--;
-          alert('שגיאה בהעלאת אחד הקבצים לגלריה.');
+          alert(this.langService.translate('form.error_gallery_file'));
         }
       });
     });
@@ -259,7 +261,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
-      alert('נא להזין URL לתמונה');
+      alert(this.langService.translate('form.enter_image_url'));
       return;
     }
     const order = this.galleryImages.length;
@@ -272,7 +274,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   }
 
   removeGalleryImage(index: number): void {
-    if (confirm('האם למחוק תמונה זו מהגלריה?')) {
+    if (confirm(this.langService.translate('form.confirm_delete_image'))) {
       this.galleryImages.splice(index, 1);
       this.galleryImages.forEach((img, idx) => img.order = idx);
     }
@@ -391,18 +393,18 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
     this.professionalService.createServiceProvider(dto).subscribe({
       next: () => {
         this.saving = false;
-        alert('הבקשה נשלחה בהצלחה! נבדוק את פרטייך ונעדכן אותך בקרוב.');
+        alert(this.langService.translate('form.success_submitted'));
         this.success.emit();
         this.onClose();
       },
       error: (error: any) => {
         console.error('Error creating professional:', error);
-        let errorMessage = 'שגיאה בשליחת הבקשה';
+        let errorMessage = this.langService.translate('form.error_submit');
         if (error.error?.errors) {
           const validationErrors = Object.entries(error.error.errors)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
-          errorMessage += '\n\nפרטי השגיאה:\n' + validationErrors;
+          errorMessage += '\n\n' + this.langService.translate('form.error_details_prefix') + '\n' + validationErrors;
         }
         alert(errorMessage);
         this.saving = false;

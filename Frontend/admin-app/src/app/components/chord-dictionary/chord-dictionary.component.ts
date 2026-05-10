@@ -273,17 +273,17 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     // ─── Display getters ────────────────────────────────────────────────────
 
     get selectedRootDisplay(): string {
-        if (this.selectedRoot === null) return 'כל השורשים';
+        if (this.selectedRoot === null) return this.langService.translate('dict.all_roots');
         return this.roots.find(r => r.key === this.selectedRoot)?.display ?? this.selectedRoot;
     }
 
     get selectedSuffixDisplay(): string {
-        if (this.selectedSuffix === null) return 'כל הסוגים';
+        if (this.selectedSuffix === null) return this.langService.translate('dict.all_types');
         return this.suffixes.find(s => s.key === this.selectedSuffix)?.label ?? this.selectedSuffix;
     }
 
     get selectedBassDisplay(): string {
-        if (this.selectedBass === null) return 'ללא בס';
+        if (this.selectedBass === null) return this.langService.translate('dict.no_bass');
         return this.bassNotes.find(b => b.key === this.selectedBass)?.display ?? this.selectedBass;
     }
 
@@ -472,7 +472,7 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
         const theory = this.CHORD_THEORY[suffix];
         const db     = this.getDB();
         const data   = db[name];
-        const label  = { guitar: 'גיטרה', piano: 'קלידים', ukulele: 'יוקלילי' }[this.selectedInstrument];
+        const label  = this.langService.translate('dict.instr_' + this.selectedInstrument);
 
         let hebrewNotes: string[] = [];
         let fingerLines: FingerLine[] = [];
@@ -485,12 +485,12 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
             else if (this.selectedInstrument === 'ukulele')
                 ({ fingerLines, startFrom } = this.ukuleleLines(data as UkuleleChord));
             else
-                fingerLines = [{ text: 'לחצו בו-זמנית על כל המקשים המסומנים בצהוב.' }];
+                fingerLines = [{ text: this.langService.translate('dict.piano_press') }];
         }
 
         return {
             chordName: name,
-            hebrewTitle: `איך לנגן את אקורד ${name} ב${label}`,
+            hebrewTitle: `${this.langService.translate('dict.how_to_play_pre')}${name}${this.langService.translate('dict.how_to_play_on')}${label}`,
             hebrewNotes,
             rootHebrew: this.HEBREW_NOTE[root] ?? root,
             scaleName: theory?.scaleName ?? '',
@@ -557,23 +557,25 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
             if (f === -1) { mutedNums.push(snum); continue; }
             if (firstPlayable === null) firstPlayable = snum;
 
-            const suffix = snum === 1 ? ' (הדק ביותר)' : snum === 6 ? ' (העבה ביותר)' : '';
-            const label  = `במיתר ${snum}${suffix}`;
+            const strSuffix = snum === 1 ? this.langService.translate('dict.str_thinnest')
+                            : snum === 6 ? this.langService.translate('dict.str_thickest')
+                            : '';
+            const label  = `${this.langService.translate('dict.str_on')}${snum}${strSuffix}`;
 
             if (f === 0) {
-                lines.push({ text: `${label}, על סריג מספר 0 (מיתר פתוח)`, isOpen: true });
+                lines.push({ text: `${label}${this.langService.translate('dict.fret_0')}`, isOpen: true });
             } else {
-                const fingerText = fn > 0 ? ` אצבע מספר ${fn} (${this.FINGER_NAME[fn]})` : '';
-                lines.push({ text: `${label}, על סריג מספר ${f}${fingerText}` });
+                const fingerText = fn > 0 ? `${this.langService.translate('dict.finger_num')}${fn} (${this.FINGER_NAME[fn]})` : '';
+                lines.push({ text: `${label}${this.langService.translate('dict.fret_n')}${f}${fingerText}` });
             }
         }
 
         let startFrom = '';
         if (firstPlayable !== null) {
             const mutedNote = mutedNums.length
-                ? ` (שימו לב לא לנגן את מיתר ${mutedNums.join(', ')})`
+                ? `${this.langService.translate('dict.dont_play_string')}${mutedNums.join(', ')}${this.langService.translate('dict.dont_play_close')}`
                 : '';
-            startFrom = `התחילו לפרוט ממיתר ${firstPlayable}${mutedNote}`;
+            startFrom = `${this.langService.translate('dict.start_from_string')}${firstPlayable}${mutedNote}`;
         }
         return { fingerLines: lines, startFrom };
     }
@@ -588,20 +590,22 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
             const f = chord.frets[i], fn = fingers[i] ?? 0;
             const snum = this.U_STR_NUM[i];
 
-            const suffix = snum === 1 ? ' (הדק ביותר)' : snum === 4 ? ' (העבה ביותר)' : '';
-            const label  = `במיתר ${snum}${suffix}`;
+            const strSuffix = snum === 1 ? this.langService.translate('dict.str_thinnest')
+                            : snum === 4 ? this.langService.translate('dict.str_thickest')
+                            : '';
+            const label  = `${this.langService.translate('dict.str_on')}${snum}${strSuffix}`;
 
             if (f === -1) {
-                lines.push({ text: `${label} — מושתק`, isOpen: true });
+                lines.push({ text: `${label}${this.langService.translate('dict.str_muted')}`, isOpen: true });
             } else if (f === 0) {
-                lines.push({ text: `${label}, על סריג מספר 0 (מיתר פתוח)`, isOpen: true });
+                lines.push({ text: `${label}${this.langService.translate('dict.fret_0')}`, isOpen: true });
             } else {
-                const fingerText = fn > 0 ? ` אצבע מספר ${fn} (${this.FINGER_NAME[fn]})` : '';
-                lines.push({ text: `${label}, על סריג מספר ${f}${fingerText}` });
+                const fingerText = fn > 0 ? `${this.langService.translate('dict.finger_num')}${fn} (${this.FINGER_NAME[fn]})` : '';
+                lines.push({ text: `${label}${this.langService.translate('dict.fret_n')}${f}${fingerText}` });
             }
         }
 
-        return { fingerLines: lines, startFrom: 'התחילו לפרוט את כל המיתרים יחד' };
+        return { fingerLines: lines, startFrom: this.langService.translate('dict.start_all_strings') };
     }
 
     // ─── Piano large ─────────────────────────────────────────────────────────

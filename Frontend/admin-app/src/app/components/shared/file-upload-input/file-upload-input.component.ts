@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MediaService } from '../../../services/admin/media.service';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-file-upload-input',
@@ -17,6 +18,7 @@ export class FileUploadInputComponent {
   @Input() showPreview: boolean = true;
 
   uploading = false;
+  private readonly langService = inject(LanguageService);
 
   constructor(private mediaService: MediaService) {}
 
@@ -36,7 +38,7 @@ export class FileUploadInputComponent {
         this.uploading = false;
       },
       error: () => {
-        alert('שגיאה בהעלאת הקובץ. בדוק שהשרת פועל ונסה שוב.');
+        alert(this.langService.translate('shared.file_upload_error'));
         this.uploading = false;
       }
     });

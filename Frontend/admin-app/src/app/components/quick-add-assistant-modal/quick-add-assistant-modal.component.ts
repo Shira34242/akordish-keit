@@ -304,7 +304,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.hasArticleDraftContent()) {
-      alert('נא למלא לפחות שדה אחד.');
+      alert(this.langService.translate('quick_add.fill_one_field'));
       return;
     }
 
@@ -328,7 +328,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        alert('שגיאה בשליחת התוכן: ' + (error.error?.message || error.message));
+        alert(this.langService.translate('quick_add.error_submit') + (error.error?.message || error.message));
       }
     });
   }
@@ -339,18 +339,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.event.name.trim()) {
-      alert('נא לכתוב שם הופעה.');
+      alert(this.langService.translate('quick_add.enter_event_name'));
       return;
     }
 
     if (!this.event.eventDate) {
-      alert('נא לבחור תאריך ושעה להופעה.');
+      alert(this.langService.translate('quick_add.enter_event_date'));
       return;
     }
 
     const eventLocation = this.event.location?.trim();
     if (!eventLocation) {
-      alert('נא לכתוב מיקום להופעה.');
+      alert(this.langService.translate('quick_add.enter_event_location'));
       return;
     }
 
@@ -374,7 +374,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        alert('שגיאה בשליחת ההופעה: ' + (error.error?.message || error.message));
+        alert(this.langService.translate('quick_add.error_submit_event') + (error.error?.message || error.message));
       }
     });
   }
@@ -385,12 +385,12 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.chordRequest.songName.trim()) {
-      alert('נא לכתוב את שם השיר.');
+      alert(this.langService.translate('quick_add.enter_song_name'));
       return;
     }
 
     if (!this.chordRequest.artistName.trim()) {
-      alert('נא לכתוב את שם האמן.');
+      alert(this.langService.translate('quick_add.enter_artist_name'));
       return;
     }
 
@@ -464,7 +464,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        alert('שגיאה בשליחת הבקשה: ' + (error.error?.message || error.message));
+        alert(this.langService.translate('quick_add.error_submit_request') + (error.error?.message || error.message));
       }
     });
   }
@@ -497,7 +497,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: () => {
         this.isUploadingArticleImage = false;
-        alert('שגיאה בהעלאת התמונה.');
+        alert(this.langService.translate('quick_add.error_upload_image'));
       }
     });
   }
@@ -533,7 +533,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: () => {
         this.isUploadingEventImage = false;
-        alert('שגיאה בהעלאת התמונה.');
+        alert(this.langService.translate('quick_add.error_upload_image'));
       }
     });
   }
@@ -727,21 +727,21 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       this.messages.push({
         id: 'bot-1',
         tone: 'question',
-        text: 'נפתח טופס קצר להוספת חדשות מוזיקה.'
+        text: this.langService.translate('quick_add.news_form_text')
       });
       this.openArticleFlow(ArticleContentType.News);
     } else if (this.entryPoint === 'article') {
       this.messages.push({
         id: 'bot-1',
         tone: 'question',
-        text: 'נפתח טופס קצר להוספת תוכן.'
+        text: this.langService.translate('quick_add.content_form_text')
       });
       this.openArticleFlow(ArticleContentType.Blog);
     } else if (this.entryPoint === 'event') {
       this.messages.push({
         id: 'bot-1',
         tone: 'question',
-        text: 'נפתח טופס קצר להוספת הופעה.'
+        text: this.langService.translate('quick_add.event_form_text')
       });
       this.modeOriginStep = 'root';
       this.currentMode = 'event';
@@ -964,27 +964,27 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.contactForm.fullName.trim()) {
-      alert('נא לכתוב שם מלא.');
+      alert(this.langService.translate('quick_add.enter_full_name'));
       return;
     }
 
     if (!this.contactForm.email.trim() || !this.contactForm.email.includes('@')) {
-      alert('נא לכתוב כתובת אימייל תקינה.');
+      alert(this.langService.translate('quick_add.enter_valid_email'));
       return;
     }
 
     if (!this.contactForm.subject.trim()) {
-      alert('נא לבחור נושא.');
+      alert(this.langService.translate('quick_add.select_subject'));
       return;
     }
 
     if (!this.contactForm.message.trim()) {
-      alert('נא לכתוב הודעה.');
+      alert(this.langService.translate('quick_add.enter_message'));
       return;
     }
 
     if (this.contactAttachments.some(a => a.uploading)) {
-      alert('יש להמתין לסיום העלאת הקבצים.');
+      alert(this.langService.translate('quick_add.wait_upload'));
       return;
     }
 
@@ -1016,7 +1016,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        alert('שגיאה בשליחת ההודעה: ' + (error.error?.message || error.message));
+        alert(this.langService.translate('quick_add.error_submit_message') + (error.error?.message || error.message));
       }
     });
   }
@@ -1028,12 +1028,12 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
     for (const file of files) {
       if (this.contactAttachments.length >= this.CONTACT_MAX_FILES) {
-        alert(`ניתן לצרף עד ${this.CONTACT_MAX_FILES} קבצים.`);
+        alert(this.langService.translate('quick_add.max_files') + this.CONTACT_MAX_FILES + this.langService.translate('quick_add.max_files_suffix'));
         break;
       }
 
       if (file.size > this.CONTACT_MAX_FILE_MB * 1024 * 1024) {
-        alert(`הקובץ "${file.name}" גדול מ-${this.CONTACT_MAX_FILE_MB}MB.`);
+        alert(this.langService.translate('quick_add.file_too_large'));
         continue;
       }
 

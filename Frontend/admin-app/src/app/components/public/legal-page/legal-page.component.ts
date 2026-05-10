@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SeoService } from '../../../services/seo.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
+import { LanguageService } from '../../../services/language.service';
 
 interface LegalPageContent {
   title: string;
@@ -300,6 +301,8 @@ export class LegalPageComponent implements OnInit {
   page: LegalPageContent = PAGES['about'];
   key = 'about';
 
+  private readonly langService = inject(LanguageService);
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly seo: SeoService,
@@ -318,7 +321,7 @@ export class LegalPageComponent implements OnInit {
       structuredData: [
         this.seo.organizationSchema(),
         this.seo.breadcrumbSchema([
-          { name: 'בית', path: '/' },
+          { name: this.langService.translate('nav.home_label'), path: '/' },
           { name: this.page.title, path }
         ])
       ]

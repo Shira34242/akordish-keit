@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -9,6 +9,7 @@ import {
   SubscriptionPlanHelper,
   SubscriptionStatus
 } from '../../models/subscription.model';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-subscription-status',
@@ -27,6 +28,8 @@ export class SubscriptionStatusComponent implements OnInit {
 
   SubscriptionPlan = SubscriptionPlan;
   SubscriptionStatus = SubscriptionStatus;
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private subscriptionService: SubscriptionService,
@@ -55,7 +58,7 @@ export class SubscriptionStatusComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.error = 'שגיאה בטעינת פרטי המנוי';
+        this.error = this.langService.translate('sub_status.error_load');
       }
     });
   }
@@ -99,18 +102,20 @@ export class SubscriptionStatusComponent implements OnInit {
 
   getBillingCycleText(): string {
     if (!this.currentSubscription) return '';
-    return this.currentSubscription.billingCycle === 'Monthly' ? 'חודש' : 'שנה';
+    return this.currentSubscription.billingCycle === 'Monthly'
+      ? this.langService.translate('sub_status.billing_monthly')
+      : this.langService.translate('sub_status.billing_yearly');
   }
 
   getStatusText(): string {
     if (!this.currentSubscription) return '';
     switch (this.currentSubscription.status) {
-      case SubscriptionStatus.Trial: return 'ניסיון חינם';
-      case SubscriptionStatus.Active: return 'פעיל';
-      case SubscriptionStatus.Cancelled: return 'בוטל';
-      case SubscriptionStatus.Expired: return 'פג תוקף';
-      case SubscriptionStatus.Suspended: return 'מושהה';
-      case SubscriptionStatus.PendingPayment: return 'ממתין לתשלום';
+      case SubscriptionStatus.Trial: return this.langService.translate('sub_status.status_trial');
+      case SubscriptionStatus.Active: return this.langService.translate('sub_status.status_active');
+      case SubscriptionStatus.Cancelled: return this.langService.translate('sub_status.status_cancelled');
+      case SubscriptionStatus.Expired: return this.langService.translate('sub_status.status_expired');
+      case SubscriptionStatus.Suspended: return this.langService.translate('sub_status.status_suspended');
+      case SubscriptionStatus.PendingPayment: return this.langService.translate('sub_status.status_pending');
       default: return '';
     }
   }
@@ -187,13 +192,13 @@ export class SubscriptionStatusComponent implements OnInit {
       next: () => {
         this.cancelLoading = false;
         this.showCancelConfirmation = false;
-        this.successMessage = 'המנוי בוטל. תוכל להשתמש בתכונות עד תום תקופת החיוב.';
+        this.successMessage = this.langService.translate('sub_status.cancelled_ok');
         this.loadSubscription();
         setTimeout(() => { this.successMessage = ''; }, 5000);
       },
       error: (err: any) => {
         this.cancelLoading = false;
-        this.error = err.error?.message || 'שגיאה בביטול המנוי';
+        this.error = err.error?.message || this.langService.translate('sub_status.error_cancel');
       }
     });
   }
@@ -206,13 +211,13 @@ export class SubscriptionStatusComponent implements OnInit {
     this.subscriptionService.renewSubscription(this.currentSubscription.id).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'המנוי חודש בהצלחה!';
+        this.successMessage = this.langService.translate('sub_status.renewed_ok');
         this.loadSubscription();
         setTimeout(() => { this.successMessage = ''; }, 5000);
       },
       error: (err: any) => {
         this.loading = false;
-        this.error = err.error?.message || 'שגיאה בחידוש המנוי';
+        this.error = err.error?.message || this.langService.translate('sub_status.error_renew');
       }
     });
   }

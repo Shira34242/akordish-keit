@@ -26,6 +26,7 @@ import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 interface HeroParticle {
   x: number; y: number;
@@ -68,6 +69,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   showSearchResults = false;
   private searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
+  private readonly langService = inject(LanguageService);
 
   recentSongs: any[] = [];
   popularSongs: any[] = [];
@@ -280,7 +282,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.router.navigate([route, article.slug]);
         },
         error: () => {
-          alert('לא ניתן לפתוח את הכתבה כרגע. אנא נסה שנית.');
+          alert(this.langService.translate('common.article_open_error'));
         }
       });
       return;

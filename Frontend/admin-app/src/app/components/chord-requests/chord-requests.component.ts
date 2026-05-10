@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AddSongModalComponent, InitialSongRequest } from '../add-song-modal/add-song-modal.component';
 import { ChordRequest } from '../../models/report.model';
 import { ReportService } from '../../services/report.service';
 import { AuthService } from '../../services/auth.service';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-chord-requests',
@@ -28,6 +29,8 @@ export class ChordRequestsComponent implements OnInit, AfterViewChecked, OnDestr
   private fullHeroHeight = 0;
   private heroLayoutDone = false;
   private rafPending = false;
+
+  private readonly langService = inject(LanguageService);
 
   constructor(
     private reportService: ReportService,
@@ -80,7 +83,7 @@ export class ChordRequestsComponent implements OnInit, AfterViewChecked, OnDestr
           return;
         }
 
-        this.errorMessage = 'לא הצלחנו לטעון את בקשות האקורדים כרגע.';
+        this.errorMessage = this.langService.translate('chord_req.error_load');
       }
     });
   }
@@ -149,7 +152,7 @@ export class ChordRequestsComponent implements OnInit, AfterViewChecked, OnDestr
     }).subscribe({
       next: () => this.loadRequests(),
       error: () => {
-        this.errorMessage = 'לא הצלחנו לעדכן את בקשת האקורדים כרגע.';
+        this.errorMessage = this.langService.translate('chord_req.error_update');
       }
     });
   }

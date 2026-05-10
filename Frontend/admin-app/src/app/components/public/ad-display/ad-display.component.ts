@@ -4,6 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 interface AdCampaign {
   id: number;
@@ -28,7 +29,7 @@ interface AdSpotResponse {
 @Component({
   selector: 'app-ad-display',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <div class="ad-container" *ngIf="currentAd" [style.max-width]="maxWidth" [style.max-height]="maxHeight">
       <a
@@ -83,7 +84,7 @@ interface AdSpotResponse {
       </a>
     </div>
     <div class="ad-loading" *ngIf="loading">
-      <span>טוען פרסומת...</span>
+      <span>{{ 'ad.loading' | translate }}</span>
     </div>
     <div class="ad-error" *ngIf="error && !loading">
       <span>{{ error }}</span>

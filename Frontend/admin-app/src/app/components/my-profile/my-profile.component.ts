@@ -393,9 +393,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
     const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'הסתיים';
-    if (diffDays === 0) return 'היום';
-    return 'קרוב';
+    if (diffDays < 0) return this.langService.translate('profile.expired');
+    if (diffDays === 0) return this.langService.translate('profile.today');
+    return this.langService.translate('profile.soon');
   }
 
   private loadKnownChords() {
@@ -795,12 +795,12 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'הועלה היום';
-    if (diffDays === 1) return 'הועלה אתמול';
-    if (diffDays < 14) return `הועלה לפני ${diffDays} ימים`;
-    if (diffDays < 30) return 'הועלה לפני שבועיים';
-    if (diffDays < 60) return 'הועלה לפני חודש';
-    return `הועלה לפני ${Math.floor(diffDays / 30)} חודשים`;
+    if (diffDays === 0) return this.langService.translate('profile.uploaded_today');
+    if (diffDays === 1) return this.langService.translate('profile.uploaded_yesterday');
+    if (diffDays < 14) return this.langService.translate('profile.uploaded_days_ago_prefix') + diffDays + this.langService.translate('profile.uploaded_days_ago_suffix');
+    if (diffDays < 30) return this.langService.translate('profile.uploaded_two_weeks_ago');
+    if (diffDays < 60) return this.langService.translate('profile.uploaded_month_ago');
+    return this.langService.translate('profile.uploaded_days_ago_prefix') + Math.floor(diffDays / 30) + this.langService.translate('profile.uploaded_months_ago_suffix');
   }
 
   isBlogContent(contentType?: number | string): boolean {

@@ -1,5 +1,6 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LanguageService } from '../../services/language.service';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -38,6 +39,8 @@ interface PlatformLinkOption {
   styleUrls: ['./teacher-create.component.css']
 })
 export class TeacherCreateComponent implements OnInit {
+  private readonly langService = inject(LanguageService);
+
   @Input() embedded = false;
   @Output() close = new EventEmitter<void>();
   @Output() backToChat = new EventEmitter<void>();
@@ -95,15 +98,17 @@ export class TeacherCreateComponent implements OnInit {
   // Options
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
-  readonly socialPlatformOptions: PlatformLinkOption[] = [
-    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'הדבק קישור לאינסטגרם' },
-    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'הדבק קישור לפייסבוק' },
-    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: 'הדבק קישור ליוטיוב' },
-    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'הדבק קישור לטיקטוק' },
-    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'הדבק קישור ל-X / Twitter' },
-    { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'album', placeholder: 'הדבק קישור לספוטיפיי' },
-    { platform: SocialPlatform.Zing, label: 'Zing', icon: 'library_music', placeholder: 'הדבק קישור לזינג' }
-  ];
+  get socialPlatformOptions(): PlatformLinkOption[] {
+    return [
+      { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: this.langService.translate('create.link_instagram') },
+      { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: this.langService.translate('create.link_facebook') },
+      { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: this.langService.translate('create.link_youtube') },
+      { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: this.langService.translate('create.link_tiktok') },
+      { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'album', placeholder: this.langService.translate('create.link_spotify') },
+      { platform: SocialPlatform.Zing, label: 'Zing', icon: 'library_music', placeholder: this.langService.translate('create.link_zing') },
+    ];
+  }
 
   // UI state
   cityDropdownOpen = false;
@@ -247,9 +252,9 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedCityName(): string {
-    if (!this.cityId) return '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
+    if (!this.cityId) return this.langService.translate('common.select_city');
     const city = this.availableCities.find(c => c.id === this.cityId);
-    return city ? city.name : '\u05d1\u05d7\u05e8 \u05e2\u05d9\u05e8...';
+    return city ? city.name : this.langService.translate('common.select_city');
   }
 
   onCitySearchChange() {
@@ -276,7 +281,7 @@ export class TeacherCreateComponent implements OnInit {
 
   getSelectedInstrumentsText(): string {
     if (this.selectedInstrumentIds.length === 0) {
-      return '\u05d1\u05d7\u05e8 \u05db\u05dc\u05d9 \u05e0\u05d2\u05d9\u05e0\u05d4...';
+      return this.langService.translate('common.select_instrument');
     }
     const names = this.selectedInstrumentIds
       .map(id => this.availableInstruments.find(inst => inst.id === id)?.name)
@@ -334,7 +339,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedLanguagesText(): string {
-    if (this.selectedLanguages.length === 0) return '\u05d1\u05d7\u05e8 \u05e9\u05e4\u05d4...';
+    if (this.selectedLanguages.length === 0) return this.langService.translate('common.select_language');
     const names = this.selectedLanguages
       .map(val => this.languageOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -363,7 +368,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getSelectedAudiencesText(): string {
-    if (this.selectedAudiences.length === 0) return '\u05d1\u05d7\u05e8 \u05e7\u05d4\u05dc \u05d9\u05e2\u05d3...';
+    if (this.selectedAudiences.length === 0) return this.langService.translate('common.select_audience');
     const names = this.selectedAudiences
       .map(val => this.audienceOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
@@ -398,7 +403,7 @@ export class TeacherCreateComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error uploading profile image:', error);
-        this.error = 'שגיאה בהעלאת תמונת הפרופיל';
+        this.error = this.langService.translate('common.error_profile_image');
         this.profileImageUploading = false;
         input.value = '';
       }
@@ -444,7 +449,7 @@ export class TeacherCreateComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error uploading gallery image:', error);
-          this.error = 'שגיאה בהעלאת קובץ לגלריה';
+          this.error = this.langService.translate('common.error_gallery_file');
           completedFiles++;
           this.galleryUploadingCount = Math.max(0, this.galleryUploadingCount - 1);
           this.galleryUploadProgress = this.galleryUploadingCount ? this.galleryUploadProgress : 0;
@@ -481,7 +486,7 @@ export class TeacherCreateComponent implements OnInit {
   // Gallery methods
   addGalleryImage() {
     if (!this.newGalleryImage.imageUrl.trim()) {
-      alert('\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e7\u05d9\u05e9\u05d5\u05e8 \u05dc\u05ea\u05de\u05d5\u05e0\u05d4');
+      alert(this.langService.translate('teacher_create.enter_image_url'));
       return;
     }
     const order = this.galleryImages.length;
@@ -500,7 +505,7 @@ export class TeacherCreateComponent implements OnInit {
 
   addTestimonial(): void {
     if (!this.newTestimonial.text.trim()) {
-      alert('נא להזין טקסט המלצה');
+      alert(this.langService.translate('form.enter_testimonial'));
       return;
     }
 
@@ -557,7 +562,7 @@ export class TeacherCreateComponent implements OnInit {
   }
 
   getActiveSocialPlaceholder(): string {
-    return this.socialPlatformOptions.find(option => option.platform === this.activeSocialPlatform)?.placeholder ?? 'הדבק קישור לפרופיל';
+    return this.socialPlatformOptions.find(option => option.platform === this.activeSocialPlatform)?.placeholder ?? this.langService.translate('shared.paste_profile_link');
   }
 
   trackByPlatform(_index: number, option: PlatformLinkOption): number {
@@ -589,7 +594,7 @@ export class TeacherCreateComponent implements OnInit {
     const normalizedVideoLinks = this.normalizedVideoLinks();
     const videoGalleryItems = normalizedVideoLinks.map((url, index) => ({
       imageUrl: url,
-      caption: 'וידאו',
+      caption: this.langService.translate('shared.video_caption'),
       order: normalizedGalleryImages.length + index
     }));
 
@@ -648,7 +653,7 @@ export class TeacherCreateComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error creating teacher profile:', err);
-        this.error = err.error?.message || '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05d9\u05e6\u05d9\u05e8\u05ea \u05e4\u05e8\u05d5\u05e4\u05d9\u05dc \u05de\u05d5\u05e8\u05d4';
+        this.error = err.error?.message || this.langService.translate('teacher_create.error_save');
         this.saving = false;
 
         // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage ׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ§׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ
@@ -661,25 +666,25 @@ export class TeacherCreateComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.displayName.trim()) {
-      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05e9\u05dd \u05ea\u05e6\u05d5\u05d2\u05d4';
+      this.error = this.langService.translate('common.enter_display_name');
       this.showRequiredStep(1, '#displayName');
       return false;
     }
 
     if (!this.email || !this.email.trim()) {
-      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d0\u05d9\u05de\u05d9\u05d9\u05dc';
+      this.error = this.langService.translate('common.enter_email');
       this.showRequiredStep(2, '#email');
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
-      this.error = '\u05e0\u05d0 \u05dc\u05d4\u05d6\u05d9\u05df \u05d8\u05dc\u05e4\u05d5\u05df';
+      this.error = this.langService.translate('common.enter_phone');
       this.showRequiredStep(2, '#phoneNumber');
       return false;
     }
 
     if (this.selectedInstrumentIds.length === 0) {
-      this.error = '\u05e0\u05d0 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05dc\u05e4\u05d7\u05d5\u05ea \u05db\u05dc\u05d9 \u05e0\u05d2\u05d9\u05e0\u05d4 \u05d0\u05d7\u05d3';
+      this.error = this.langService.translate('teacher_create.select_instrument_min');
       this.showRequiredStep(1, '.instrument-picker');
       return false;
     }

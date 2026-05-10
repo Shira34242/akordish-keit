@@ -32,6 +32,7 @@ import { UserKnownChordService, KnownChordInstrument } from '../../services/user
 import { SongRatingService } from '../../services/song-rating.service';
 import { SeoService } from '../../services/seo.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
     selector: 'app-song-page',
@@ -143,6 +144,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private knownChordService: UserKnownChordService,
         private songRatingService: SongRatingService,
         private seo: SeoService,
+        private langService: LanguageService,
     ) { }
 
     handleRandomSongClick(): void {
@@ -286,7 +288,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             },
             error: (err) => {
                 console.error('Error loading song:', err);
-                this.error = 'שגיאה בטעינת השיר';
+                this.error = this.langService.translate('song.error_load');
                 this.isLoading = false;
             }
         });
@@ -311,10 +313,16 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     private applySeo(): void {
         if (!this.song || !this.songId) return;
         const artistName = this.getArtistNames();
-        const title = artistName ? `${this.song.title} - ${artistName} אקורדים` : `${this.song.title} אקורדים`;
+        const titleChords = this.langService.translate('song_page.seo_title_chords');
+        const title = artistName
+            ? `${this.song.title} - ${artistName}${titleChords}`
+            : `${this.song.title}${titleChords}`;
+        const pre = this.langService.translate('song_page.seo_desc_pre');
+        const by = this.langService.translate('song_page.seo_desc_by');
+        const suf = this.langService.translate('song_page.seo_desc_suf');
         const description = artistName
-            ? `אקורדים לשיר ${this.song.title} של ${artistName}, כולל מילים, סולם וכלי עזר לנגינה.`
-            : `אקורדים לשיר ${this.song.title}, כולל מילים, סולם וכלי עזר לנגינה.`;
+            ? `${pre}${this.song.title}${by}${artistName}${suf}`
+            : `${pre}${this.song.title}${suf}`;
         const path = `/song/${this.songId}`;
 
         this.seo.set({
@@ -325,8 +333,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             structuredData: [
                 this.seo.organizationSchema(),
                 this.seo.breadcrumbSchema([
-                    { name: 'בית', path: '/' },
-                    { name: 'אקורדים', path: '/chords' },
+                    { name: this.langService.translate('nav.home_label'), path: '/' },
+                    { name: this.langService.translate('song_page.breadcrumb_chords'), path: '/chords' },
                     { name: this.song.title, path }
                 ]),
                 {
@@ -796,7 +804,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         const shareData = {
             title: `${this.song.title} - ${artistName}`,
-            text: `בדוק את השיר "${this.song.title}" של ${artistName} באתר אקורדישקייט!`,
+            text: `${this.langService.translate('song.share_text_pre')} "${this.song.title}" ${this.langService.translate('song.share_text_mid')} ${artistName} ${this.langService.translate('song.share_text_suf')}`,
             url: window.location.href,
         };
 

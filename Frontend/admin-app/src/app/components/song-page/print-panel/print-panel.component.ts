@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { LanguageService } from '../../../services/language.service';
 import {
     transposeChord,
     simplifyChord,
@@ -70,6 +71,8 @@ export class PrintPanelComponent implements OnInit {
     private readonly blackNotesInOctave = [1, 3, 6, 8, 10];
     private readonly blackKeyOffsets: Record<number, number> = { 1: 14, 3: 34, 6: 74, 8: 94, 10: 114 };
 
+    private readonly langService = inject(LanguageService);
+
     constructor(private sanitizer: DomSanitizer) {}
 
     ngOnInit() {
@@ -109,8 +112,8 @@ export class PrintPanelComponent implements OnInit {
 
     get composerLine(): string {
         const parts: string[] = [];
-        if (this.song?.composer?.name) parts.push('לחן: ' + this.song.composer.name);
-        if (this.song?.lyricist?.name) parts.push('מילים: ' + this.song.lyricist.name);
+        if (this.song?.composer?.name) parts.push(this.langService.translate('print.composer_melody') + ' ' + this.song.composer.name);
+        if (this.song?.lyricist?.name) parts.push(this.langService.translate('print.composer_lyrics') + ' ' + this.song.lyricist.name);
         return parts.join(' | ');
     }
 
@@ -377,7 +380,7 @@ export class PrintPanelComponent implements OnInit {
             : '';
         const diagramsHtml = this.showDiagrams && this.chordDiagrams.length > 0
             ? `<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e8e8e8">
-                 <div style="font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#888;margin-bottom:8px">תרשימי אקורדים</div>
+                 <div style="font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#888;margin-bottom:8px">${this.langService.translate('print.chord_diagrams')}</div>
                  <div style="display:flex;flex-wrap:wrap;gap:10px;direction:rtl">${this.buildDiagramsHtml()}</div>
                </div>`
             : '';
@@ -388,7 +391,7 @@ export class PrintPanelComponent implements OnInit {
   <div style="flex:1;text-align:right">
     <div style="font-size:17px;font-weight:800;line-height:1.2;margin-bottom:3px">${this.song?.title || ''}</div>
     <div style="font-size:12px;font-weight:300;color:#404040;margin-bottom:3px">${this.artistName}</div>
-    ${this.song?.originalKeyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">סולם: ${this.currentKey}</div>` : ''}
+    ${this.song?.originalKeyName ? `<div style="font-size:10px;color:#888;margin-bottom:4px">${this.langService.translate('print.key_label')} ${this.currentKey}</div>` : ''}
     <div style="margin-top:2px">${genreHtml}</div>
     ${composerHtml}
   </div>
@@ -500,7 +503,7 @@ ${diagramsHtml}
     // ===== הדפסה — תמונה בלבד =====
 
     async print() {
-        const overlay = this.createOverlay('מכין להדפסה — רגע...');
+        const overlay = this.createOverlay(this.langService.translate('print.preparing_print'));
         document.body.appendChild(overlay);
         const container = this.buildPrintContainer();
         document.body.appendChild(container);
@@ -531,7 +534,7 @@ body{background:#fff}@media print{@page{size:A4;margin:0}img{width:100%;page-bre
 
     async exportPdf() {
         this.isExporting = true;
-        const overlay = this.createOverlay('מכין PDF — רגע...');
+        const overlay = this.createOverlay(this.langService.translate('print.preparing_pdf'));
         document.body.appendChild(overlay);
         const container = this.buildPrintContainer();
         document.body.appendChild(container);
@@ -550,7 +553,7 @@ body{background:#fff}@media print{@page{size:A4;margin:0}img{width:100%;page-bre
                 if (i > 0) pdf.addPage();
                 pdf.addImage(sliceImages[i], 'JPEG', marginMm, marginMm, contentW, displayH);
             }
-            pdf.save(`${this.song?.title || 'שיר'} - ${this.artistName}.pdf`);
+            pdf.save(`${this.song?.title || this.langService.translate('print.filename_fallback')} - ${this.artistName}.pdf`);
         } catch (e) {
             console.error('PDF export failed:', e);
         } finally {

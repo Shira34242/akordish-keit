@@ -1,7 +1,7 @@
 <div class="carousel-section">
     <div class="carousel-header">
         <h2 class="carousel-title">{{ title }}</h2>
-        <a [routerLink]="linkUrl" class="more-link">{{ linkText }} &lt;</a>
+        <a [routerLink]="linkUrl" class="more-link">{{ linkText || ('shared.load_more' | translate) }} &lt;</a>
     </div>
 
     <div class="carousel-container">

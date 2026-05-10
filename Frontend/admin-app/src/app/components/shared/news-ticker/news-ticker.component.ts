@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, of, switchMap, takeUntil } from 'rxjs';
 import { Article, ArticleStatus } from '../../../models/article.model';
@@ -8,6 +8,7 @@ import {
   TICKER_DEFAULT,
   TickerSettingsService
 } from '../../../services/ticker-settings.service';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-news-ticker',
@@ -24,7 +25,12 @@ export class NewsTickerComponent implements OnInit, OnChanges, OnDestroy {
   titles: string[] = [];
 
   readonly trackCopies = [0, 1, 2, 3];
-  readonly fallbackTitles = ['חדשות המוזיקה באקורדישקייט'];
+
+  private readonly langService = inject(LanguageService);
+
+  get fallbackTitles(): string[] {
+    return [this.langService.translate('ticker.fallback_title')];
+  }
 
   private destroy$ = new Subject<void>();
 

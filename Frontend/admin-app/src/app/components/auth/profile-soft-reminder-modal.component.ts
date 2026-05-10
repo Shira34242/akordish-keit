@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 import { CitiesService, City } from '../../services/cities.service';
 import { ReminderKind } from '../../services/profile-reminder.service';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-profile-soft-reminder-modal',
@@ -34,20 +35,14 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   birthMonth: number | null = null;
   birthYear: number | null = null;
 
-  months = [
-    { value: 1, label: 'ינואר' },
-    { value: 2, label: 'פברואר' },
-    { value: 3, label: 'מרץ' },
-    { value: 4, label: 'אפריל' },
-    { value: 5, label: 'מאי' },
-    { value: 6, label: 'יוני' },
-    { value: 7, label: 'יולי' },
-    { value: 8, label: 'אוגוסט' },
-    { value: 9, label: 'ספטמבר' },
-    { value: 10, label: 'אוקטובר' },
-    { value: 11, label: 'נובמבר' },
-    { value: 12, label: 'דצמבר' }
-  ];
+  private readonly langService = inject(LanguageService);
+
+  get months(): { value: number; label: string }[] {
+    return Array.from({ length: 12 }, (_, i) => ({
+      value: i + 1,
+      label: this.langService.translate(`common.month_${i + 1}`)
+    }));
+  }
   years: number[] = [];
 
   constructor(
@@ -85,12 +80,12 @@ export class ProfileSoftReminderModalComponent implements OnInit {
 
   get title(): string {
     return this.kind === 'birthday'
-      ? 'שנפתיע אותך ביומולדת?'
-      : 'כמה פרטים אחרונים להשלמת החוויה באתר';
+      ? this.langService.translate('profile_reminder.birthday_title')
+      : this.langService.translate('profile_reminder.contact_title');
   }
 
   get subtitle(): string | null {
-    return this.kind === 'birthday' ? 'רק חודש ושנה' : null;
+    return this.kind === 'birthday' ? this.langService.translate('profile_reminder.birthday_subtitle') : null;
   }
 
   get filteredCities(): City[] {
@@ -142,7 +137,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
       },
       error: (err: any) => {
         this.loading = false;
-        this.errorMessage = err?.error?.message || 'שגיאה בשמירת הפרטים';
+        this.errorMessage = err?.error?.message || this.langService.translate('profile_reminder.error_save');
       }
     });
   }

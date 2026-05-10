@@ -16,6 +16,7 @@ import {
 } from '../../../models/music-service-provider.model';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { CitiesService, City } from '../../../services/cities.service';
+import { LanguageService } from '../../../services/language.service';
 
 type GalleryMediaItem = {
   type: 'image' | 'video';
@@ -46,6 +47,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   @ViewChild('testimonialsScroller') testimonialsScrollerRef?: ElementRef<HTMLDivElement>;
 
   private readonly analytics = inject(AnalyticsService);
+  private readonly langService = inject(LanguageService);
 
   professional: MusicServiceProviderDto | null = null;
   cities: City[] = [];
@@ -119,7 +121,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       },
       error: () => {
         this.loading = false;
-        this.error = 'שגיאה בטעינת פרטי נותן השירות';
+        this.error = this.langService.translate('pro_modal.error_load');
       }
     });
   }
@@ -263,7 +265,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   get heroRole(): string {
     const categories = this.getCategoriesDisplay();
-    return categories || 'נותן שירות בעולם המוזיקה';
+    return categories || this.langService.translate('pro_modal.default_role');
   }
 
   get heroLocationLine(): string {
@@ -275,7 +277,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     if (!this.professional) return '';
     const parts: string[] = [];
     if (this.professional.shortBio) parts.push(this.professional.shortBio);
-    if (this.professional.yearsOfExperience) parts.push(`מעל ${this.professional.yearsOfExperience} שנות ניסיון`);
+    if (this.professional.yearsOfExperience) parts.push(`${this.langService.translate('pro_modal.years_exp_prefix')} ${this.professional.yearsOfExperience} ${this.langService.translate('pro_modal.years_exp_suffix')}`);
     if (this.getCategoriesDisplay()) parts.push(this.getCategoriesDisplay());
     if (!this.hasBranches && this.getLocationLine()) parts.push(this.getLocationLine());
     return parts.join(', ');
@@ -296,19 +298,19 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     const parkingType = this.professional.parkingType ?? ServiceProviderParkingType.None;
 
     if (parkingType === ServiceProviderParkingType.ParkingAvailable) {
-      tags.push('חניה במקום');
+      tags.push(this.langService.translate('pro_modal.parking'));
     }
 
     if (parkingType === ServiceProviderParkingType.FreeParking) {
-      tags.push('חניה חינם במקום');
+      tags.push(this.langService.translate('pro_modal.free_parking'));
     }
 
     if (this.professional.hasAccessibleEntrance) {
-      tags.push('כניסה נגישה');
+      tags.push(this.langService.translate('pro_modal.accessible'));
     }
 
     if (this.professional.isAnash) {
-      tags.push('מאנ"ש');
+      tags.push(this.langService.translate('pro_modal.anash'));
     }
 
     return tags;
@@ -365,7 +367,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   private rebuildGalleryMedia(): void {
     const media: GalleryMediaItem[] = [];
     const seenVideoUrls = new Set<string>();
-    const addVideo = (videoUrl: string, caption = 'סרטון היכרות') => {
+    const addVideo = (videoUrl: string, caption = this.langService.translate('pro_modal.intro_video')) => {
       const normalizedUrl = videoUrl.trim();
       if (!normalizedUrl || seenVideoUrls.has(normalizedUrl)) return;
 
@@ -381,7 +383,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     this.extractVideoLinks(this.readString('videoUrl', 'VideoUrl')).forEach(url => addVideo(url));
     this.galleryItems.forEach(item => {
       if (this.isVideoUrl(item.imageUrl)) {
-        addVideo(item.imageUrl, item.caption || 'סרטון');
+        addVideo(item.imageUrl, item.caption || this.langService.translate('pro_modal.video'));
         return;
       }
 
@@ -464,7 +466,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   getWhatsAppUrl(phoneNumber: string): string {
     const normalizedNumber = this.normalizeWhatsAppNumber(phoneNumber);
-    const message = encodeURIComponent('היי, הגעתי דרך אתר אקורדישקייט');
+    const message = encodeURIComponent(this.langService.translate('pro_modal.whatsapp_msg'));
     return `https://wa.me/${normalizedNumber}?text=${message}`;
   }
 
@@ -542,11 +544,11 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       [SocialPlatform.Twitter]: 'Twitter / X',
       [SocialPlatform.TikTok]: 'TikTok',
       [SocialPlatform.Spotify]: 'Spotify',
-      [SocialPlatform.Website]: 'אתר',
+      [SocialPlatform.Website]: this.langService.translate('pro_modal.link'),
       [SocialPlatform.Zing]: 'Zing'
     };
 
-    return names[platform] || 'קישור';
+    return names[platform] || this.langService.translate('pro_modal.link');
   }
 
   getSocialIconSvg(platform: SocialPlatform): SafeHtml {
