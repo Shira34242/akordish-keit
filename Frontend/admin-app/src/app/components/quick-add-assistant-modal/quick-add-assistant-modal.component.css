@@ -40,6 +40,8 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transform: translateY(16px) scale(0.92);
   animation: panelIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: bottom left;
 }
@@ -53,27 +55,84 @@
 }
 
 .modal-header {
-  padding: 18px 20px 12px;
+  padding: 14px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
   flex-shrink: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.header-bot-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #000;
+  color: #ddff53;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-bot-avatar .material-icons {
+  font-size: 18px;
+}
+
+.header-bot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-bot-name {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000;
+}
+
+.header-bot-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.header-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 2rem;
+  font-size: 1.6rem;
   cursor: pointer;
   color: rgba(0, 0, 0, 0.45);
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: color 0.2s, background 0.2s;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -82,11 +141,11 @@
 }
 
 .header-title-placeholder {
-  flex: 1;
+  display: none;
 }
 
 .header-spacer {
-  width: 40px;
+  display: none;
 }
 
 .modal-content {
@@ -152,6 +211,19 @@
   color: #000;
   font-size: var(--font-base);
   font-weight: 800;
+  position: relative;
+}
+
+.smart-bubble-question::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: -7px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 8px solid #ffffff;
 }
 
 .smart-bubble-helper {
@@ -159,6 +231,19 @@
   color: rgba(0, 0, 0, 0.76);
   font-size: var(--font-sm);
   font-weight: 400;
+  position: relative;
+}
+
+.smart-bubble-helper::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: -7px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 8px solid rgba(255, 255, 255, 0.72);
 }
 
 .smart-bubble-user {
@@ -166,6 +251,34 @@
   color: #ddff53;
   font-size: var(--font-sm);
   font-weight: 700;
+  position: relative;
+}
+
+.smart-bubble-user::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 8px solid #000;
+}
+
+.bubble-timestamp {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.35);
+  margin-top: 3px;
+  padding-right: 4px;
+}
+
+.smart-message-row-user .bubble-timestamp {
+  text-align: left;
+  padding-right: 0;
+  padding-left: 4px;
 }
 
 .assistant-chip-row {
@@ -173,6 +286,41 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 4px 46px 0 0;
+}
+
+.typing-dots-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 46px;
+  height: 32px;
+}
+
+.typing-dots-row span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.typing-dots-row span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dots-row span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dotBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 0.7;
+  }
 }
 
 .assistant-chip,

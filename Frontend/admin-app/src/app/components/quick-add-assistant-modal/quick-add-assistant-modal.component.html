@@ -1,16 +1,24 @@
 <div class="modal-overlay" (click)="closeModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
+      <div class="header-bot-avatar">
+        <span class="material-icons">auto_awesome</span>
+      </div>
+      <div class="header-bot-info">
+        <span class="header-bot-name">העלאת תוכן לאתר</span>
+        <span class="header-bot-status">
+          <span class="header-status-dot"></span>
+          {{ 'fab.online_now' | translate }}
+        </span>
+      </div>
       <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
-      <div class="header-title-placeholder"></div>
-      <div class="header-spacer"></div>
     </div>
 
     <div class="modal-content">
       <div class="smart-chat-stream">
         <div
           class="smart-message-row"
-          *ngFor="let message of messages; trackBy: trackByMessage"
+          *ngFor="let message of messages; trackBy: trackByMessage; let last = last"
           [class.smart-message-row-user]="message.tone === 'user'">
           <ng-container *ngIf="message.tone !== 'user'">
             <div class="smart-bot-icon" [class.smart-bot-icon-helper]="message.tone === 'helper'">
@@ -18,16 +26,25 @@
             </div>
           </ng-container>
 
-          <div
-            class="smart-bubble"
-            [class.smart-bubble-question]="message.tone === 'question'"
-            [class.smart-bubble-helper]="message.tone === 'helper'"
-            [class.smart-bubble-user]="message.tone === 'user'">
-            {{ message.text }}
+          <div>
+            <div
+              class="smart-bubble"
+              [class.smart-bubble-question]="message.tone === 'question'"
+              [class.smart-bubble-helper]="message.tone === 'helper'"
+              [class.smart-bubble-user]="message.tone === 'user'">
+              {{ message.text }}
+            </div>
+            <div class="bubble-timestamp" *ngIf="message.tone !== 'user' && message.text && last">
+              {{ 'fab.just_now' | translate }}
+            </div>
           </div>
         </div>
 
-        <div class="assistant-chip-row" *ngIf="currentMode === 'choices' && !isTyping">
+        <div class="typing-dots-row" *ngIf="botThinking">
+          <span></span><span></span><span></span>
+        </div>
+
+        <div class="assistant-chip-row" *ngIf="currentMode === 'choices' && !isTyping && !botThinking">
           <button
             type="button"
             class="assistant-chip"

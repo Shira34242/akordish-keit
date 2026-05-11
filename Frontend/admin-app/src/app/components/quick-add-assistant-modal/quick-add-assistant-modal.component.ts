@@ -96,7 +96,9 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   showEventImageLinkInput = false;
 
   isTyping = false;
+  botThinking = false;
   private readonly TYPING_SPEED_MS = 18;
+  private readonly THINKING_DELAY_MS = 400;
 
   article: CreateArticleDto = this.createEmptyArticle(ArticleContentType.News);
   event: CreateEventDto = this.createEmptyEvent();
@@ -216,6 +218,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   async selectOption(option: AssistantOption, event?: MouseEvent): Promise<void> {
     event?.stopPropagation();
 
+    this.playClickSound();
+
     this.messages.push({
       id: `user-${this.messages.length + 1}`,
       tone: 'user',
@@ -269,7 +273,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.contactForm = { fullName: '', email: '', subject: '', message: '' };
         this.contactAttachments = [];
         this.autoFillContactFromCurrentUser();
-        this.scrollToBottom();
+        this.scrollToBottomSmooth();
         break;
       case 'content-news':
         this.openArticleFlow(ArticleContentType.News);
@@ -309,6 +313,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.isSubmitting = false;
     this.submittedMessage = '';
     this.messages = [];
+    this.botThinking = false;
+    this.isTyping = true;
     await this.appendBotStep(this.currentStep);
   }
 
@@ -745,6 +751,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.isCheckingChordRequest = false;
     this.contactForm = { fullName: '', email: '', subject: '', message: '' };
     this.contactAttachments = [];
+    this.botThinking = false;
+    this.isTyping = true;
 
     if (this.entryPoint === 'contact') {
       this.currentMode = 'contact';
@@ -777,27 +785,83 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
   private typeMessage(text: string, tone: MessageTone): Promise<void> {
     return new Promise<void>(resolve => {
-      const messageId = `bot-${this.messages.length + 1}`;
-      const message: AssistantMessage = { id: messageId, tone, text: '' };
-      this.messages = [...this.messages, message];
-      this.isTyping = true;
+      this.botThinking = true;
+      this.cdr.detectChanges();
 
-      let charIndex = 0;
-      const totalChars = text.length;
-      const interval = setInterval(() => {
-        charIndex++;
-        this.messages = this.messages.map(m =>
-          m.id === messageId ? { ...m, text: text.substring(0, charIndex) } : m
-        );
+      setTimeout(() => {
+        this.botThinking = false;
+        const messageId = `bot-${this.messages.length + 1}`;
+        const message: AssistantMessage = { id: messageId, tone, text: '' };
+        this.messages = [...this.messages, message];
+        this.isTyping = true;
+        this.playPopSound();
+        this.scrollToBottomSmooth();
 
-        if (charIndex >= totalChars) {
-          clearInterval(interval);
-          this.isTyping = false;
-          this.cdr.detectChanges();
-          resolve();
-        }
-      }, this.TYPING_SPEED_MS);
+        let charIndex = 0;
+        const totalChars = text.length;
+        const interval = setInterval(() => {
+          charIndex++;
+          this.messages = this.messages.map(m =>
+            m.id === messageId ? { ...m, text: text.substring(0, charIndex) } : m
+          );
+
+          if (charIndex >= totalChars) {
+            clearInterval(interval);
+            this.isTyping = false;
+            this.cdr.detectChanges();
+            this.scrollToBottomSmooth();
+            resolve();
+          }
+        }, this.TYPING_SPEED_MS);
+      }, this.THINKING_DELAY_MS);
     });
+  }
+
+  private playPopSound(): void {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(330, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.12);
+    } catch {
+      // audio not available
+    }
+  }
+
+  private playClickSound(): void {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.08);
+    } catch {
+      // audio not available
+    }
+  }
+
+  private scrollToBottomSmooth(): void {
+    setTimeout(() => {
+      const content = document.querySelector('.modal-content');
+      if (content) {
+        content.scrollTo({ top: content.scrollHeight, behavior: 'smooth' });
+      }
+    }, 20);
   }
 
   private getStepDefinition(step: AssistantStep): AssistantStepDefinition {
@@ -864,8 +928,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
           { id: 'contact', label: t('fab.opt_report'), action: 'contact', isSecondary: true }
         );
 
+        const userName = this.authService.currentUserValue?.username;
+        const rawQuestion = t('fab.root_question');
+        const baseQuestion = userName
+          ? `היי ${userName}, ${rawQuestion}`
+          : rawQuestion;
+
         return {
-          question: t('fab.root_question'),
+          question: baseQuestion,
           helper: t('fab.root_helper'),
           options
         };
@@ -973,15 +1043,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
   private generateUniqueSlug(text: string): string {
     return `${this.generateSlug(text)}-${Date.now()}`;
-  }
-
-  private scrollToBottom(): void {
-    setTimeout(() => {
-      const content = document.querySelector('.modal-content');
-      if (content) {
-        content.scrollTop = content.scrollHeight;
-      }
-    }, 50);
   }
 
   private autoFillContactFromCurrentUser(): void {

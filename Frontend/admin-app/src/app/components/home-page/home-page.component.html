@@ -346,7 +346,7 @@
     <section
       class="home-section viral-section"
       #viralSection
-      *ngIf="!viralArticlesLoaded || loadingViralArticles || visibleViralArticles.length > 0">
+      *ngIf="!viralArticlesLoaded || loadingViralArticles || viralArticles.length > 0">
       <div class="section-header">
         <h2 class="section-title">ויראלי</h2>
         <a routerLink="/music-news" class="section-link">לכל חדשות המוזיקה</a>
@@ -354,10 +354,10 @@
 
       <div class="viral-loading" *ngIf="loadingViralArticles">טוען כתבות פופולאריות...</div>
 
-      <div class="viral-list" *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0">
+      <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="viral-grid">
         <app-news-banner
           *ngFor="let article of visibleViralArticles; trackBy: trackById"
-          class="viral-news-row"
+          class="news-banner-card"
           [article]="article"
           [showDescription]="false">
         </app-news-banner>

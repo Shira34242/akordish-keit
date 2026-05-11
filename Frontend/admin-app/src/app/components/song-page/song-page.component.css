@@ -859,7 +859,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-    /* ללא sticky — גולל ביחד עם שאר הדף */
 }
 
 .sidebar-card {
@@ -984,6 +983,11 @@
 }
 
 /* Music News Card */
+.music-news-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .music-news-card h3 {
     margin-bottom: var(--space-base);
 }
@@ -993,6 +997,44 @@
     flex-direction: column;
     gap: var(--space-md);
 }
+
+.music-news-sentinel {
+    height: 1px;
+    width: 100%;
+}
+
+.music-news-loading {
+    text-align: center;
+    padding: var(--space-md) 0;
+}
+
+.music-news-more-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    background: #ddff53;
+    color: #000000;
+    border-radius: 20px;
+    padding: var(--space-md) var(--space-lg);
+    text-decoration: none;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: var(--font-sm);
+    transition: opacity 0.15s;
+    min-height: 44px;
+    max-height: 170px;
+    overflow: hidden;
+}
+
+.music-news-more-link:hover {
+    opacity: 0.82;
+}
+
+.music-news-more-text {
+    text-align: right;
+}
+
 .chord-dict-desc {
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;

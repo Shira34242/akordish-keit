@@ -79,7 +79,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   newsArticles: Article[] = [];
   blogArticles: Article[] = [];
   viralArticles: Article[] = [];
-  visibleViralCount = 3;
+  visibleViralCount = 4;
   loadingViralArticles = false;
   viralArticlesLoaded = false;
   upcomingEvents: UpcomingEventDto[] = [];
@@ -356,7 +356,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get canRevealMoreViralArticles(): boolean {
-    return this.visibleViralCount < Math.min(this.viralArticles.length, 15);
+    return this.visibleViralCount < this.viralArticles.length;
   }
 
   private initViralObserver(): void {
@@ -396,7 +396,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           this.setViralArticles(this.uniqueArticles(res.items || []));
@@ -410,7 +410,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeArticles(): void {
-    this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           this.allPublishedArticles = this.uniqueArticles(res.items || []);
@@ -441,23 +441,29 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private getViralColumns(): number {
+    const w = window.innerWidth;
+    if (w <= 480) return 1;
+    if (w <= 768) return 2;
+    return 4;
+  }
+
+  private floorToFullRows(count: number, total: number): number {
+    const cols = this.getViralColumns();
+    const full = Math.floor(Math.min(count, total) / cols) * cols;
+    return Math.max(0, full);
+  }
+
   private setViralArticles(articles: Article[]): void {
-    const currentNewsIds = new Set(this.newsArticles.map(article => article.id));
     const newsArticles = articles
-      .filter(article => this.isMusicNewsArticle(article))
-      .filter(article => !currentNewsIds.has(article.id));
+      .filter(article => this.isMusicNewsArticle(article));
 
-    const olderArticles = newsArticles.filter(article => this.isOlderNewsArticle(article));
-    const fallbackArticles = newsArticles.filter(article => !olderArticles.some(oldArticle => oldArticle.id === article.id));
-
-    const popularOlderArticles = olderArticles
-      .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
-    const popularFallbackArticles = fallbackArticles
+    const popularArticles = newsArticles
       .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
 
-    this.viralArticles = [...popularOlderArticles, ...popularFallbackArticles].slice(0, 15);
+    this.viralArticles = popularArticles.slice(0, 40);
     this.viralArticles = this.viralArticles.map(article => this.withContentType(article, ArticleContentType.News));
-    this.visibleViralCount = Math.min(3, this.viralArticles.length);
+    this.visibleViralCount = this.floorToFullRows(4, this.viralArticles.length);
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
     setTimeout(() => this.initViralObserver(), 0);
@@ -542,18 +548,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return null;
   }
 
-  private isOlderNewsArticle(article: Article): boolean {
-    const dateValue = article.publishDate || article.createdAt;
-    const timestamp = dateValue ? new Date(dateValue).getTime() : 0;
-    if (!timestamp) return true;
-
-    const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
-    return Date.now() - timestamp >= twoWeeksMs;
-  }
-
   private revealMoreViralArticles(): void {
     if (!this.viralArticlesLoaded || !this.canRevealMoreViralArticles) return;
-    this.visibleViralCount = Math.min(this.visibleViralCount + 3, this.viralArticles.length, 15);
+    const cols = this.getViralColumns();
+    const next = this.visibleViralCount + cols;
+    this.visibleViralCount = this.floorToFullRows(next, this.viralArticles.length);
   }
 
   private initParticleEffect(): void {

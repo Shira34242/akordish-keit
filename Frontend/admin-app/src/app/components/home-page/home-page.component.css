@@ -501,48 +501,6 @@
   min-height: 18rem;
 }
 
-.viral-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.viral-news-row {
-  display: block;
-  width: 100%;
-}
-
-.viral-news-row ::ng-deep .news-banner {
-  aspect-ratio: 7 / 1;
-  border-radius: 18px;
-}
-
-.viral-news-row ::ng-deep .banner-bg {
-  object-position: center;
-}
-
-.viral-news-row ::ng-deep .banner-text {
-  right: var(--space-xl);
-  bottom: 50%;
-  left: 5rem;
-  transform: translateY(50%);
-}
-
-.viral-news-row ::ng-deep .banner-title {
-  font-size: var(--font-lg);
-  line-height: 1.2;
-  -webkit-line-clamp: 2;
-}
-
-.viral-news-row ::ng-deep .banner-arrow-btn {
-  left: var(--space-xl);
-  bottom: 50%;
-  transform: translateY(50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
-
 .viral-loading {
   background: #F2F2F2;
   border-radius: 18px;
@@ -552,6 +510,22 @@
   font-weight: 300;
   color: #404040;
   text-align: center;
+}
+
+.viral-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.viral-grid .news-banner-card {
+  min-width: 0;
+}
+
+.viral-grid ::ng-deep .news-banner {
+  aspect-ratio: 1.35 / 1;
+  border-radius: 22px;
+  width: 100%;
 }
 
 .viral-sentinel {
@@ -1051,20 +1025,8 @@
     grid-template-columns: 1fr;
   }
 
-  .viral-news-row ::ng-deep .news-banner {
-    aspect-ratio: 3.4 / 1;
-    border-radius: 16px;
-  }
-
-  .viral-news-row ::ng-deep .banner-text {
-    right: var(--space-base);
-    left: 4rem;
-  }
-
-  .viral-news-row ::ng-deep .banner-arrow-btn {
-    left: var(--space-base);
-    width: 34px;
-    height: 34px;
+  .viral-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .news-banner-track > .news-banner-card {
@@ -1126,25 +1088,8 @@
     min-height: 14rem;
   }
 
-  .viral-news-row ::ng-deep .news-banner {
-    aspect-ratio: 2.45 / 1;
-  }
-
-  .viral-news-row ::ng-deep .banner-title {
-    font-size: var(--font-base);
-    line-height: 1.15;
-  }
-
-  .viral-news-row ::ng-deep .banner-text {
-    right: var(--space-base);
-    left: 3.5rem;
-  }
-
-  .viral-news-row ::ng-deep .banner-arrow-btn {
-    left: var(--space-md);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+  .viral-grid {
+    grid-template-columns: 1fr;
   }
 
   .provider-showcase-card {

@@ -24,7 +24,6 @@
     overflow: hidden;
     margin-bottom: var(--space-md);
     background: #F2F2F2;
-    box-shadow: 0 0 0 2px rgba(221, 255, 83, 0.4);
 }
 
 .artist-image {

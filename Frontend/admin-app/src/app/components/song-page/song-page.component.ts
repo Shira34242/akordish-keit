@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, AfterViewInit, HostListener, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
@@ -44,10 +44,13 @@ import { Article, ArticleContentType, ArticleStatus } from '../../models/article
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
-export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, AfterViewInit {
 
     @ViewChild('songHeaderBg') songHeaderBg?: ElementRef<HTMLDivElement>;
     @ViewChild('songHeaderContent') songHeaderContent?: ElementRef<HTMLDivElement>;
+    @ViewChild('newsSentinel') newsSentinel?: ElementRef<HTMLDivElement>;
+    @ViewChild('mainColumn') mainColumn?: ElementRef<HTMLDivElement>;
+    @ViewChild('ratingSection') ratingSection?: ElementRef<HTMLDivElement>;
     private headerLayoutDone = false;
     private fullHeaderHeight = 0;
     private rafPending = false;
@@ -142,6 +145,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isLoadingPopularSongs: boolean = false;
     isLoadingSimilarSongs: boolean = false;
     isLoadingMusicNews: boolean = false;
+    isLoadingMoreNews: boolean = false;
+    showMusicNewsLink: boolean = false;
+    musicNewsLinkHeight: number = 44;
+    private allMusicNewsArticles: Article[] = [];
+    private musicNewsLoadedCount: number = 0;
+    private newsObserver: IntersectionObserver | null = null;
 
     // Auto Scroll State
     private scrollInterval: any = null;
@@ -216,6 +225,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         document.removeEventListener('selectstart', this.preventSelect);
         this.stopAutoScroll();
         this.isAutoScroll = false;
+        this.stopNewsObserver();
     }
 
     // חסימת העתקה, קליק ימני, סימון טקסט
@@ -973,18 +983,132 @@ private getKeyIndex(keyName: string): number {
 
     loadMusicNews(): void {
         this.isLoadingMusicNews = true;
+        this.showMusicNewsLink = false;
+        this.musicNewsLoadedCount = 0;
+        this.musicNewsArticles = [];
+        this.allMusicNewsArticles = [];
         this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published).subscribe({
             next: (response) => {
-                this.musicNewsArticles = (response.items || [])
-                    .filter(article => article.contentType === ArticleContentType.News)
-                    .slice(0, 5);
+                this.allMusicNewsArticles = (response.items || [])
+                    .filter(article => article.contentType == ArticleContentType.News);
                 this.isLoadingMusicNews = false;
+                this.expandMusicNews(5);
+                this.startNewsObserver();
             },
             error: () => {
+                this.allMusicNewsArticles = [];
                 this.musicNewsArticles = [];
                 this.isLoadingMusicNews = false;
             }
         });
+    }
+
+    private expandMusicNews(count: number): void {
+        const next = this.musicNewsLoadedCount + count;
+        const max = this.allMusicNewsArticles.length;
+        if (next > max) {
+            this.musicNewsArticles = [...this.allMusicNewsArticles];
+            this.musicNewsLoadedCount = max;
+            return;
+        }
+        this.musicNewsArticles = this.allMusicNewsArticles.slice(0, next);
+        this.musicNewsLoadedCount = next;
+    }
+
+    private handleSentinelIntersect(): void {
+        if (this.isLoadingMoreNews || this.showMusicNewsLink) return;
+        if (this.musicNewsLoadedCount >= this.allMusicNewsArticles.length) {
+            this.finishWithLink();
+            return;
+        }
+        this.isLoadingMoreNews = true;
+        this.expandMusicNews(1);
+        this.isLoadingMoreNews = false;
+        setTimeout(() => {
+            if (this.newsExceedsRatingSection()) {
+                this.trimOneCard();
+                this.finishWithLink();
+            } else {
+                this.reobserveSentinel();
+            }
+        }, 150);
+    }
+
+    private finishWithLink(): void {
+        this.stopNewsObserver();
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => this.calcLinkHeight());
+        });
+    }
+
+    private calcLinkHeight(): void {
+        const rating = this.ratingSection?.nativeElement;
+        const sentinel = this.newsSentinel?.nativeElement;
+        if (!rating || !sentinel) {
+            this.showMusicNewsLink = true;
+            return;
+        }
+        const ratingBottom = rating.getBoundingClientRect().bottom;
+        const sentinelBottom = sentinel.getBoundingClientRect().bottom;
+        const cardPaddingBottom = 20;
+        const listGap = 10;
+        const gap = Math.floor(ratingBottom - sentinelBottom - listGap - cardPaddingBottom);
+
+        const list = document.querySelector('.music-news-list') as HTMLElement;
+        const firstCard = list?.querySelector('app-news-banner .news-banner') as HTMLElement;
+        const maxHeight = firstCard ? firstCard.getBoundingClientRect().height : 160;
+
+        this.musicNewsLinkHeight = Math.max(44, Math.min(gap, maxHeight));
+        this.showMusicNewsLink = true;
+    }
+
+    private trimOneCard(): void {
+        if (this.musicNewsArticles.length > 0) {
+            this.musicNewsArticles = this.musicNewsArticles.slice(0, -1);
+            this.musicNewsLoadedCount = this.musicNewsArticles.length;
+        }
+    }
+
+    private newsExceedsRatingSection(): boolean {
+        const rating = this.ratingSection?.nativeElement;
+        const sentinel = this.newsSentinel?.nativeElement;
+        if (!rating || !sentinel) return false;
+        return sentinel.getBoundingClientRect().bottom >= rating.getBoundingClientRect().bottom;
+    }
+
+    private startNewsObserver(): void {
+        this.stopNewsObserver();
+        if (typeof IntersectionObserver === 'undefined') return;
+        this.newsObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                this.ngZone.run(() => this.handleSentinelIntersect());
+            }
+        }, { rootMargin: '50px' });
+        setTimeout(() => this.observeSentinel(), 100);
+    }
+
+    private observeSentinel(): void {
+        if (this.newsObserver && this.newsSentinel?.nativeElement) {
+            this.newsObserver.observe(this.newsSentinel.nativeElement);
+        }
+    }
+
+    private reobserveSentinel(): void {
+        if (this.newsObserver && this.newsSentinel?.nativeElement) {
+            this.newsObserver.unobserve(this.newsSentinel.nativeElement);
+            this.newsObserver.observe(this.newsSentinel.nativeElement);
+        }
+    }
+
+    private stopNewsObserver(): void {
+        if (this.newsObserver) {
+            this.newsObserver.disconnect();
+            this.newsObserver = null;
+        }
+    }
+
+    ngAfterViewInit(): void {
+        // Sentinel is observed via timeout in startNewsObserver after data arrives
     }
 
     loadSimilarSongs(): void {

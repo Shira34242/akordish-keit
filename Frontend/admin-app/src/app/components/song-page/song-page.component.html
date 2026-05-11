@@ -296,7 +296,7 @@
     <!-- 3. Main Content Grid -->
     <div class="main-layout">
 
-        <div class="song-main-column">
+        <div class="song-main-column" #mainColumn>
             <div class="chord-diagrams-panel" *ngIf="!isSheetMusicMode && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
                 <div class="chord-diagrams-head">
                     <h3>{{ 'song.chord_diagrams_title' | translate }}</h3>
@@ -368,7 +368,7 @@
         </div>
 
         <!-- Rating Section -->
-        <div class="song-rating-section">
+        <div class="song-rating-section" #ratingSection>
             <p class="rating-title">{{ 'song.rate_title' | translate }}</p>
 
             <form class="rating" (submit)="$event.preventDefault()">
@@ -632,14 +632,29 @@
             <div class="sidebar-card music-news-card">
                 <h3>ויראלי בחדשות המוזיקה</h3>
 
-                <div *ngIf="isLoadingMusicNews" class="loading-small">{{ 'song.loading' | translate }}</div>
+                <div *ngIf="!musicNewsArticles.length && isLoadingMusicNews" class="loading-small">{{ 'song.loading' | translate }}</div>
 
-                <div class="music-news-list" *ngIf="!isLoadingMusicNews">
+                <div class="music-news-list" *ngIf="musicNewsArticles.length > 0">
                     <app-news-banner
                         *ngFor="let article of musicNewsArticles"
                         [article]="article"
                         [showDescription]="false">
                     </app-news-banner>
+
+                    <div class="music-news-loading" *ngIf="isLoadingMoreNews">
+                        <span class="loading-small">{{ 'song.loading' | translate }}</span>
+                    </div>
+
+                    <div #newsSentinel class="music-news-sentinel"></div>
+
+                    <a routerLink="/news" class="music-news-more-link"
+                        *ngIf="showMusicNewsLink"
+                        [style.height.px]="musicNewsLinkHeight">
+                        <span class="music-news-more-text">לעוד חדשות מוזיקה</span>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </a>
                 </div>
             </div>
 

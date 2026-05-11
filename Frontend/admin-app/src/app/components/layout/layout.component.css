@@ -954,7 +954,6 @@
     color: #000;
     font-size: 24px;
     border: none;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -982,6 +981,15 @@
     opacity: 0;
     transform: scale(0);
     pointer-events: none;
+}
+
+@keyframes fabPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.fab-add-song:not(.fab-hidden):not(.fab-active):not(.fab-on-yellow) {
+  animation: fabPulse 2.8s ease-in-out infinite;
 }
 
 .fab-add-icon {
