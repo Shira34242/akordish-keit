@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
+import { AgencyService, AgencyAnalyticsSummary } from '../../../../services/agency.service';
 
-type Tab = 'articles' | 'events' | 'buttons' | 'ads';
+type Tab = 'articles' | 'events' | 'buttons' | 'ads' | 'agencies';
 type Preset = '7' | '30' | '90' | '365';
 
 @Component({
@@ -26,6 +27,9 @@ export class ContentStatsComponent implements OnInit {
   dashboardLoading = true;
   dashboardError = false;
 
+  agencySummary: AgencyAnalyticsSummary | null = null;
+  agencyLoading = false;
+
   dateFrom = '';
   dateTo = '';
   activePreset: Preset | '' = '30';
@@ -33,6 +37,7 @@ export class ContentStatsComponent implements OnInit {
   constructor(
     private feedbackService: ArticleFeedbackService,
     private analytics: AnalyticsService,
+    private agencyService: AgencyService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -40,7 +45,7 @@ export class ContentStatsComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'] as Tab;
-      if (tab && ['articles', 'events', 'buttons', 'ads'].includes(tab)) {
+      if (tab && ['articles', 'events', 'buttons', 'ads', 'agencies'].includes(tab)) {
         this.activeTab = tab;
       }
     });
@@ -49,6 +54,7 @@ export class ContentStatsComponent implements OnInit {
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
+    if (tab === 'agencies') this.loadAgencyAnalytics();
   }
 
   applyPreset(days: Preset): void {
@@ -104,6 +110,20 @@ export class ContentStatsComponent implements OnInit {
 
   load(): void {
     this.loadAll();
+  }
+
+  loadAgencyAnalytics(): void {
+    this.agencyLoading = true;
+    this.agencyService.getAnalytics(this.dateFrom, this.dateTo).subscribe({
+      next: (data) => {
+        this.agencySummary = data;
+        this.agencyLoading = false;
+      },
+      error: () => {
+        this.agencySummary = null;
+        this.agencyLoading = false;
+      }
+    });
   }
 
   setSort(by: 'views' | 'likes' | 'feedback'): void {

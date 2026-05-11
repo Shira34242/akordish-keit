@@ -2,12 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
+import { AgencyService } from '../../../services/agency.service';
 import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
+import { AgencyListDto, AgencyContactMode } from '../../../models/agency.model';
 import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { environment } from '../../../../environments/environment';
 
 
 @Component({
@@ -47,9 +51,17 @@ export class ServiceProvidersListComponent implements OnInit {
 
   constructor(
     private providerService: MusicServiceProviderService,
+    private agencyService: AgencyService,
+    private http: HttpClient,
     private citiesService: CitiesService,
     private router: Router
   ) { }
+  
+  // Batch selection
+  selectionMode = false;
+  selectedIds = new Set<number>();
+  agencies: AgencyListDto[] = [];
+  selectedAgencyId: number | null = null;
 
   ngOnInit(): void {
     this.loadCities();
@@ -269,5 +281,58 @@ export class ServiceProvidersListComponent implements OnInit {
       return `${cityName}, ${provider.location}`;
     }
     return cityName || provider.location || '-';
+  }
+
+  // ============================================================
+  // Batch selection
+  // ============================================================
+
+  toggleSelectionMode(): void {
+    this.selectionMode = !this.selectionMode;
+    if (!this.selectionMode) {
+      this.selectedIds.clear();
+      this.selectedAgencyId = null;
+    } else {
+      this.loadAgencies();
+    }
+  }
+
+  toggleProvider(id: number): void {
+    this.selectedIds.has(id) ? this.selectedIds.delete(id) : this.selectedIds.add(id);
+  }
+
+  toggleSelectAll(): void {
+    this.isAllSelected ? this.selectedIds.clear() : this.providers.forEach(p => this.selectedIds.add(p.id));
+  }
+
+  get isAllSelected(): boolean {
+    return this.providers.length > 0 && this.providers.every(p => this.selectedIds.has(p.id));
+  }
+
+  private loadAgencies(): void {
+    this.http.get<{ items: AgencyListDto[] }>(`${environment.apiBaseUrl}/api/Agencies`, { params: { pageSize: '100' } })
+      .subscribe({ next: d => this.agencies = d?.items || [], error: () => this.agencies = [] });
+  }
+
+  async assignToAgency(): Promise<void> {
+    if (!this.selectedAgencyId || this.selectedIds.size === 0) return;
+    const target = this.agencies.find(a => a.id === this.selectedAgencyId);
+    if (!target || !await this.siteAlerts.confirm(`לשייך ${this.selectedIds.size} בעלי מקצוע לסוכנות "${target.name}"?`)) return;
+
+    let done = 0, failed = 0;
+    for (const id of Array.from(this.selectedIds)) {
+      try {
+        await this.agencyService.addProfile(this.selectedAgencyId, {
+          profileType: 'serviceProvider', profileId: id, contactMode: AgencyContactMode.Agency,
+          showBadge: true, isFeaturedByAgency: false, displayOrder: 0
+        }).toPromise();
+        done++;
+      } catch { failed++; }
+    }
+    this.selectedIds.clear();
+    this.selectionMode = false;
+    this.selectedAgencyId = null;
+    alert(`שויכו ${done} פרופילים${failed > 0 ? `, ${failed} נכשלו` : ''}`);
+    this.loadProviders();
   }
 }

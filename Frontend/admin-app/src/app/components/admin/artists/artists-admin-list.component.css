@@ -296,3 +296,24 @@
   .table-container { overflow-x: auto; }
   .artists-table { min-width: 700px; }
 }
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-base);
+  background: #F2F2F2;
+  border-radius: 16px;
+  margin-bottom: var(--space-base);
+  flex-wrap: wrap;
+}
+
+.grid-checkbox {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 20px;
+  height: 20px;
+  z-index: 2;
+  cursor: pointer;
+}

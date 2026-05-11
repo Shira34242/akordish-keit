@@ -45,6 +45,10 @@
       <span class="material-icons">campaign</span>
       פרסומות
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'agencies'" (click)="setTab('agencies')">
+      <span class="material-icons">business</span>
+      סוכנויות
+    </button>
   </div>
 
   <div *ngIf="dashboard && !dashboardLoading" class="overview-grid">
@@ -386,5 +390,76 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <div *ngIf="activeTab === 'agencies' && !agencyLoading" class="tab-content">
+    <div class="section-header">
+      <div>
+        <span class="section-pill">פירוט סוכנויות</span>
+        <h2>ביצועי סוכנויות</h2>
+      </div>
+      <span class="period-badge">{{ periodLabel }}</span>
+    </div>
+
+    <div class="kpi-row" *ngIf="agencySummary">
+      <div class="kpi-card kpi-accent">
+        <span class="kpi-label">צפיות בדפים</span>
+        <span class="kpi-value">{{ agencySummary.totals.pageViews | number }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">קליקים בבאנר</span>
+        <span class="kpi-value">{{ agencySummary.totals.bannerClicks | number }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">קליקי יצירת קשר</span>
+        <span class="kpi-value">{{ agencySummary.totals.contactClicks | number }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">סה"כ אינטראקציות</span>
+        <span class="kpi-value">{{ agencySummary.totals.totalInteractions | number }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="agencySummary">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-title">סוכנות</th>
+            <th class="col-stat">צפיות</th>
+            <th class="col-stat">קליקי באנר</th>
+            <th class="col-stat">יצירת קשר</th>
+            <th class="col-stat">פרופילים</th>
+            <th class="col-stat">תכנים</th>
+            <th class="col-stat">אינטראקציות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of agencySummary.byAgency; let i = index" class="data-row-static">
+            <td class="col-rank"><span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span></td>
+            <td class="col-title"><span class="title-text">{{ a.agencyName }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.pageViews | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.bannerClicks | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.contactClicks | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.profileClicks | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.contentClicks | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ a.totalInteractions | number }}</span></td>
+          </tr>
+          <tr *ngIf="agencySummary.byAgency.length === 0">
+            <td colspan="8" class="empty-cell">אין נתונים עדיין</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!agencySummary" class="empty-state">
+      <span class="material-icons">bar_chart</span>
+      <p>אין נתונים עדיין</p>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'agencies' && agencyLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>טוען נתונים...</p>
   </div>
 </div>

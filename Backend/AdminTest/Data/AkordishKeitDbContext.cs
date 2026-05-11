@@ -72,6 +72,8 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<Agency> Agencies { get; set; }
     public DbSet<AgencyProfile> AgencyProfiles { get; set; }
     public DbSet<AgencyContent> AgencyContents { get; set; }
+    public DbSet<AgencyGalleryImage> AgencyGalleryImages { get; set; }
+    public DbSet<AgencySocialLink> AgencySocialLinks { get; set; }
 
     // View Tracking
     public DbSet<SongView> SongViews { get; set; }
@@ -208,6 +210,8 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AgencyConfiguration());
         modelBuilder.ApplyConfiguration(new AgencyProfileConfiguration());
         modelBuilder.ApplyConfiguration(new AgencyContentConfiguration());
+        modelBuilder.ApplyConfiguration(new AgencyGalleryImageConfiguration());
+        modelBuilder.ApplyConfiguration(new AgencySocialLinkConfiguration());
 
         // System Settings Configuration
         modelBuilder.ApplyConfiguration(new SystemSettingConfiguration());

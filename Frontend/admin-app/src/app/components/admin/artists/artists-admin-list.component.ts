@@ -2,13 +2,17 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ArtistService } from '../../../services/artist.service';
+import { AgencyService } from '../../../services/agency.service';
 import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
 import { PagedResult } from '../../../models/user.model';
+import { AgencyListDto, UpsertAgencyProfileDto, AgencyContactMode } from '../../../models/agency.model';
 import { ArtistEditModalComponent } from './artist-edit-modal.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { environment } from '../../../../environments/environment';
 
 
 @Component({
@@ -65,9 +69,17 @@ export class ArtistsAdminListComponent implements OnInit {
 
   constructor(
     private artistService: ArtistService,
+    private agencyService: AgencyService,
+    private http: HttpClient,
     private router: Router,
     private layoutActions: AdminUsersLayoutActionsService
   ) { }
+  
+  // Batch selection
+  selectionMode = false;
+  selectedIds = new Set<number>();
+  agencies: AgencyListDto[] = [];
+  selectedAgencyId: number | null = null;
 
   ngOnInit(): void {
     this.loadArtists();
@@ -242,5 +254,81 @@ export class ArtistsAdminListComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  // ============================================================
+  // Batch selection
+  // ============================================================
+
+  toggleSelectionMode(): void {
+    this.selectionMode = !this.selectionMode;
+    if (!this.selectionMode) {
+      this.selectedIds.clear();
+      this.selectedAgencyId = null;
+    } else {
+      this.loadAgencies();
+    }
+  }
+
+  toggleArtist(id: number): void {
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+    } else {
+      this.selectedIds.add(id);
+    }
+  }
+
+  toggleSelectAll(): void {
+    if (this.isAllSelected) {
+      this.selectedIds.clear();
+    } else {
+      this.artists.forEach(a => this.selectedIds.add(a.id));
+    }
+  }
+
+  get isAllSelected(): boolean {
+    return this.artists.length > 0 && this.artists.every(a => this.selectedIds.has(a.id));
+  }
+
+  private loadAgencies(): void {
+    this.http.get<{ items: AgencyListDto[] }>(`${environment.apiBaseUrl}/api/Agencies`, { params: { pageSize: '100' } })
+      .subscribe({
+        next: (data) => this.agencies = data?.items || [],
+        error: () => this.agencies = []
+      });
+  }
+
+  async assignToAgency(): Promise<void> {
+    if (!this.selectedAgencyId || this.selectedIds.size === 0) return;
+    const targetAgency = this.agencies.find(a => a.id === this.selectedAgencyId);
+    if (!targetAgency) return;
+
+    if (!await this.siteAlerts.confirm(`לשייך ${this.selectedIds.size} אמנים לסוכנות "${targetAgency.name}"?`)) return;
+
+    let done = 0;
+    let failed = 0;
+    const ids = Array.from(this.selectedIds);
+
+    for (const id of ids) {
+      try {
+        await this.agencyService.addProfile(this.selectedAgencyId, {
+          profileType: 'artist',
+          profileId: id,
+          contactMode: AgencyContactMode.Agency,
+          showBadge: true,
+          isFeaturedByAgency: false,
+          displayOrder: 0
+        }).toPromise();
+        done++;
+      } catch {
+        failed++;
+      }
+    }
+
+    this.selectedIds.clear();
+    this.selectionMode = false;
+    this.selectedAgencyId = null;
+    alert(`שויכו ${done} פרופילים${failed > 0 ? `, ${failed} נכשלו` : ''}`);
+    this.loadArtists();
   }
 }

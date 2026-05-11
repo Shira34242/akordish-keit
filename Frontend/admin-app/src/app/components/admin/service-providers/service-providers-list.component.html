@@ -1,9 +1,28 @@
 <div class="providers-container" dir="rtl">
   <div class="page-header">
     <h1>ניהול בעלי מקצוע</h1>
-    <button class="btn btn-primary" (click)="addNewProvider()">
-      <span class="material-icons">add</span>
-      הוסף בעל מקצוע חדש
+    <div style="display:flex;gap:var(--space-md);">
+      <button class="btn btn-light" (click)="toggleSelectionMode()">
+        {{ selectionMode ? 'בטל בחירה' : 'בחירה מרובה' }}
+      </button>
+      <button class="btn btn-primary" (click)="addNewProvider()">
+        <span class="material-icons">add</span>
+        הוסף בעל מקצוע חדש
+      </button>
+    </div>
+  </div>
+
+  <div class="bulk-bar" *ngIf="selectionMode && selectedIds.size > 0">
+    <span>{{ selectedIds.size }} פרופילים נבחרו</span>
+    <button class="btn btn-light" (click)="toggleSelectAll()">
+      {{ isAllSelected ? 'בטל הכל' : 'בחר הכל' }}
+    </button>
+    <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
+      <option [ngValue]="null" disabled>בחר סוכנות...</option>
+      <option *ngFor="let a of agencies" [ngValue]="a.id">{{ a.name }}</option>
+    </select>
+    <button class="btn btn-primary" [disabled]="!selectedAgencyId" (click)="assignToAgency()">
+      שייך לסוכנות
     </button>
   </div>
 
@@ -106,6 +125,7 @@
     <table class="providers-table">
       <thead>
         <tr>
+          <th *ngIf="selectionMode" style="width:40px"></th>
           <th>תמונה</th>
           <th>שם תצוגה</th>
           <th>משתמש מקושר</th>
@@ -121,6 +141,9 @@
       </thead>
       <tbody>
         <tr *ngFor="let provider of providers">
+          <td *ngIf="selectionMode">
+            <input type="checkbox" [checked]="selectedIds.has(provider.id)" (change)="toggleProvider(provider.id)">
+          </td>
           <td>
             <img
               [src]="provider.profileImageUrl || '/logo.png'"

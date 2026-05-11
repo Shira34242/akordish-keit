@@ -161,6 +161,8 @@
 }
 
 .badge-featured {
+  display: inline-flex;
+  align-items: center;
   background: #000000;
   color: #ddff53;
   padding: var(--space-xs) var(--space-base);
@@ -170,9 +172,12 @@
   font-variation-settings: "wdth" 100;
   font-size: var(--font-xs);
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .badge-verified {
+  display: inline-flex;
+  align-items: center;
   padding: var(--space-xs) var(--space-base);
   border-radius: 999px;
   font-family: 'Open Sans', sans-serif;
@@ -180,6 +185,7 @@
   font-variation-settings: "wdth" 100;
   font-size: var(--font-xs);
   font-weight: 300;
+  white-space: nowrap;
   /* עם באנר */
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
@@ -1172,27 +1178,14 @@
     gap: var(--space-sm);
   }
 }
-.agency-profile-badge {
+.agency-badge-tag {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  min-height: 28px;
-  border: none;
+  padding: var(--space-xs) var(--space-base);
   border-radius: 999px;
-  background: #ddff53;
-  color: #000000;
-  padding: 0 var(--space-base);
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
   font-weight: 800;
   cursor: pointer;
-  margin-top: var(--space-sm);
-}
-
-.agency-profile-badge img {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #ffffff;
+  white-space: nowrap;
 }

@@ -31,6 +31,8 @@ public class AgencyDto : AgencyListDto
     public string? WebsiteUrl { get; set; }
     public List<AgencyProfileDto> Profiles { get; set; } = new();
     public List<AgencyContentDto> Contents { get; set; } = new();
+    public List<AgencyGalleryImageDto> GalleryImages { get; set; } = new();
+    public List<AgencySocialLinkDto> SocialLinks { get; set; } = new();
 }
 
 public class AgencyPublicDto : AgencyDto
@@ -89,6 +91,9 @@ public class AgencyBadgeDto
     public string AgencyName { get; set; } = string.Empty;
     public string AgencySlug { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
+    public string? BrandPrimaryColor { get; set; }
+    public string? BrandSecondaryColor { get; set; }
+    public string? BrandTextColor { get; set; }
     public AgencyContactMode ContactMode { get; set; }
     public bool ShowBadge { get; set; }
     public string? PhoneNumber { get; set; }
@@ -153,4 +158,21 @@ public class UpsertAgencyContentDto
     public int ContentId { get; set; }
     public bool IsFeatured { get; set; }
     public int DisplayOrder { get; set; }
+}
+
+public class AgencyGalleryImageDto
+{
+    public int Id { get; set; }
+    public int AgencyId { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+    public string? Caption { get; set; }
+    public int DisplayOrder { get; set; }
+}
+
+public class AgencySocialLinkDto
+{
+    public int Id { get; set; }
+    public int AgencyId { get; set; }
+    public SocialPlatform Platform { get; set; }
+    public string Url { get; set; } = string.Empty;
 }

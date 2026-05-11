@@ -3405,11 +3405,15 @@ namespace AkordishKeit.Migrations
                         new
                         {
                             Id = 2,
+                            ChordQuickSearchOrder = 2,
+                            ShowInChordQuickSearch = true,
                             Name = "חתונה"
                         },
                         new
                         {
                             Id = 3,
+                            ChordQuickSearchOrder = 3,
+                            ShowInChordQuickSearch = true,
                             Name = "חגים"
                         },
                         new
@@ -3475,6 +3479,8 @@ namespace AkordishKeit.Migrations
                         new
                         {
                             Id = 16,
+                            ChordQuickSearchOrder = 4,
+                            ShowInChordQuickSearch = true,
                             Name = "שמחה"
                         },
                         new
@@ -3485,6 +3491,8 @@ namespace AkordishKeit.Migrations
                         new
                         {
                             Id = 18,
+                            ChordQuickSearchOrder = 5,
+                            ShowInChordQuickSearch = true,
                             Name = "מתחיל"
                         },
                         new

@@ -10,6 +10,8 @@ import {
   AgencyProfileDto,
   AgencyContentDto,
   AgencyPublicDto,
+  AgencyGalleryImageDto,
+  AgencySocialLinkDto,
   CreateAgencyDto,
   UpdateAgencyDto,
   UpsertAgencyContentDto,
@@ -114,5 +116,29 @@ export class AgencyService {
     if (dateFrom) params = params.set('dateFrom', dateFrom);
     if (dateTo) params = params.set('dateTo', dateTo);
     return this.http.get<AgencyAnalyticsSummary>(`${environment.apiBaseUrl}/api/analytics/agencies`, { params });
+  }
+
+  getGalleryImages(agencyId: number): Observable<AgencyGalleryImageDto[]> {
+    return this.http.get<AgencyGalleryImageDto[]>(`${this.apiUrl}/${agencyId}/gallery`);
+  }
+
+  addGalleryImage(agencyId: number, dto: { imageUrl: string; caption?: string; displayOrder: number }): Observable<AgencyGalleryImageDto> {
+    return this.http.post<AgencyGalleryImageDto>(`${this.apiUrl}/${agencyId}/gallery`, dto);
+  }
+
+  removeGalleryImage(agencyId: number, imageId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${agencyId}/gallery/${imageId}`);
+  }
+
+  getSocialLinks(agencyId: number): Observable<AgencySocialLinkDto[]> {
+    return this.http.get<AgencySocialLinkDto[]>(`${this.apiUrl}/${agencyId}/social-links`);
+  }
+
+  upsertSocialLink(agencyId: number, dto: AgencySocialLinkDto): Observable<AgencySocialLinkDto> {
+    return this.http.post<AgencySocialLinkDto>(`${this.apiUrl}/${agencyId}/social-links`, dto);
+  }
+
+  removeSocialLink(agencyId: number, linkId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${agencyId}/social-links/${linkId}`);
   }
 }

@@ -1,9 +1,29 @@
 <div class="artists-container" dir="rtl">
   <div class="page-header">
     <h1>ניהול אומנים</h1>
-    <button class="btn btn-primary" (click)="addNewArtist()">
-      <span class="material-icons">add</span>
-      הוסף אומן חדש
+    <div style="display:flex;gap:var(--space-md);">
+      <button class="btn btn-light" (click)="toggleSelectionMode()">
+        {{ selectionMode ? 'בטל בחירה' : 'בחירה מרובה' }}
+      </button>
+      <button class="btn btn-primary" (click)="addNewArtist()">
+        <span class="material-icons">add</span>
+        הוסף אומן חדש
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk action bar -->
+  <div class="bulk-bar" *ngIf="selectionMode && selectedIds.size > 0">
+    <span>{{ selectedIds.size }} פרופילים נבחרו</span>
+    <button class="btn btn-light" (click)="toggleSelectAll()">
+      {{ isAllSelected ? 'בטל הכל' : 'בחר הכל' }}
+    </button>
+    <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
+      <option [ngValue]="null" disabled>בחר סוכנות...</option>
+      <option *ngFor="let a of agencies" [ngValue]="a.id">{{ a.name }}</option>
+    </select>
+    <button class="btn btn-primary" [disabled]="!selectedAgencyId" (click)="assignToAgency()">
+      שייך לסוכנות
     </button>
   </div>
 
@@ -78,6 +98,7 @@
       <div class="grid-card-avatar">
         <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.name" imgFallback>
         <span *ngIf="!artist.imageUrl">{{ artist.name.charAt(0) }}</span>
+        <input *ngIf="selectionMode" type="checkbox" class="grid-checkbox" [checked]="selectedIds.has(artist.id)" (click)="$event.stopPropagation()" (change)="toggleArtist(artist.id)">
       </div>
       <div class="grid-card-name">{{ artist.name }}</div>
       <div class="grid-card-sub" *ngIf="artist.shortBio">{{ artist.shortBio }}</div>
@@ -99,6 +120,7 @@
     <table class="artists-table">
       <thead>
         <tr>
+          <th *ngIf="selectionMode" style="width:40px"></th>
           <th>תמונה</th>
           <th>שם</th>
           <th>תיאור קצר</th>
@@ -111,6 +133,9 @@
       </thead>
       <tbody>
         <tr *ngFor="let artist of artists">
+          <td *ngIf="selectionMode">
+            <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
+          </td>
           <td>
             <img
               [src]="artist.imageUrl || '/logo.png'"

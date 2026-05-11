@@ -107,6 +107,9 @@ public class AgencyService : IAgencyService
             AgencyName = link.Agency.Name,
             AgencySlug = link.Agency.Slug,
             LogoUrl = link.Agency.LogoUrl,
+            BrandPrimaryColor = link.Agency.BrandPrimaryColor,
+            BrandSecondaryColor = link.Agency.BrandSecondaryColor,
+            BrandTextColor = link.Agency.BrandTextColor,
             ContactMode = link.ContactMode,
             ShowBadge = link.ShowBadge,
             PhoneNumber = link.Agency.PhoneNumber,
@@ -273,12 +276,121 @@ public class AgencyService : IAgencyService
         return true;
     }
 
+    public async Task<List<AgencyGalleryImageDto>> GetGalleryImagesAsync(int agencyId)
+    {
+        return await _context.AgencyGalleryImages
+            .AsNoTracking()
+            .Where(g => g.AgencyId == agencyId)
+            .OrderBy(g => g.DisplayOrder)
+            .Select(g => new AgencyGalleryImageDto
+            {
+                Id = g.Id,
+                AgencyId = g.AgencyId,
+                ImageUrl = g.ImageUrl,
+                Caption = g.Caption,
+                DisplayOrder = g.DisplayOrder
+            })
+            .ToListAsync();
+    }
+
+    public async Task<AgencyGalleryImageDto> AddGalleryImageAsync(int agencyId, string imageUrl, string? caption, int displayOrder)
+    {
+        var agencyExists = await _context.Agencies.AnyAsync(a => a.Id == agencyId && !a.IsDeleted);
+        if (!agencyExists) throw new KeyNotFoundException("הסוכנות לא נמצאה");
+
+        var image = new AgencyGalleryImage
+        {
+            AgencyId = agencyId,
+            ImageUrl = imageUrl,
+            Caption = caption,
+            DisplayOrder = displayOrder,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.AgencyGalleryImages.Add(image);
+        await _context.SaveChangesAsync();
+
+        return new AgencyGalleryImageDto
+        {
+            Id = image.Id,
+            AgencyId = image.AgencyId,
+            ImageUrl = image.ImageUrl,
+            Caption = image.Caption,
+            DisplayOrder = image.DisplayOrder
+        };
+    }
+
+    public async Task<bool> RemoveGalleryImageAsync(int agencyId, int imageId)
+    {
+        var image = await _context.AgencyGalleryImages
+            .FirstOrDefaultAsync(g => g.Id == imageId && g.AgencyId == agencyId);
+        if (image == null) return false;
+        _context.AgencyGalleryImages.Remove(image);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<AgencySocialLinkDto>> GetSocialLinksAsync(int agencyId)
+    {
+        return await _context.AgencySocialLinks
+            .AsNoTracking()
+            .Where(s => s.AgencyId == agencyId)
+            .Select(s => new AgencySocialLinkDto
+            {
+                Id = s.Id,
+                AgencyId = s.AgencyId,
+                Platform = s.Platform,
+                Url = s.Url
+            })
+            .ToListAsync();
+    }
+
+    public async Task<AgencySocialLinkDto> UpsertSocialLinkAsync(int agencyId, AgencySocialLinkDto dto)
+    {
+        var agencyExists = await _context.Agencies.AnyAsync(a => a.Id == agencyId && !a.IsDeleted);
+        if (!agencyExists) throw new KeyNotFoundException("הסוכנות לא נמצאה");
+
+        var link = dto.Id > 0
+            ? await _context.AgencySocialLinks.FirstOrDefaultAsync(s => s.Id == dto.Id && s.AgencyId == agencyId)
+            : null;
+
+        if (link == null)
+        {
+            link = new AgencySocialLink { AgencyId = agencyId };
+            _context.AgencySocialLinks.Add(link);
+        }
+
+        link.Platform = dto.Platform;
+        link.Url = dto.Url;
+        await _context.SaveChangesAsync();
+
+        return new AgencySocialLinkDto
+        {
+            Id = link.Id,
+            AgencyId = link.AgencyId,
+            Platform = link.Platform,
+            Url = link.Url
+        };
+    }
+
+    public async Task<bool> RemoveSocialLinkAsync(int agencyId, int linkId)
+    {
+        var link = await _context.AgencySocialLinks
+            .FirstOrDefaultAsync(s => s.Id == linkId && s.AgencyId == agencyId);
+        if (link == null) return false;
+        _context.AgencySocialLinks.Remove(link);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private IQueryable<Agency> GetAgencyQuery()
     {
         return _context.Agencies
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(a => a.Profiles)
-            .Include(a => a.Contents);
+            .Include(a => a.Contents)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.SocialLinks);
     }
 
     private async Task<AgencyDto> MapToDtoAsync(Agency agency)
@@ -309,7 +421,22 @@ public class AgencyService : IAgencyService
             ContentsCount = agency.Contents.Count,
             CreatedAt = agency.CreatedAt,
             Profiles = profiles.ToList(),
-            Contents = contents.ToList()
+            Contents = contents.ToList(),
+            GalleryImages = agency.GalleryImages.OrderBy(g => g.DisplayOrder).Select(g => new AgencyGalleryImageDto
+            {
+                Id = g.Id,
+                AgencyId = g.AgencyId,
+                ImageUrl = g.ImageUrl,
+                Caption = g.Caption,
+                DisplayOrder = g.DisplayOrder
+            }).ToList(),
+            SocialLinks = agency.SocialLinks.Select(s => new AgencySocialLinkDto
+            {
+                Id = s.Id,
+                AgencyId = s.AgencyId,
+                Platform = s.Platform,
+                Url = s.Url
+            }).ToList()
         };
     }
 
@@ -339,7 +466,9 @@ public class AgencyService : IAgencyService
             ContentsCount = baseDto.ContentsCount,
             CreatedAt = baseDto.CreatedAt,
             Profiles = baseDto.Profiles,
-            Contents = baseDto.Contents
+            Contents = baseDto.Contents,
+            GalleryImages = baseDto.GalleryImages,
+            SocialLinks = baseDto.SocialLinks
         };
 
         foreach (var profile in baseDto.Profiles)

@@ -473,8 +473,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'home.featured_title': 'מומלצי המערכת',
     'home.upcoming_events': 'הופעות קרובות',
     'home.events_link': 'לכל ההופעות ‹',
-    'home.content_title': 'תוכן',
-    'home.content_link': 'לכל התוכן ‹',
+    'home.content_title': 'כתבות',
+    'home.content_link': 'לכל הכתבות ‹',
 
     // Notifications page
     'notif_page.eyebrow': 'מרכז התראות',
@@ -1767,8 +1767,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'home.featured_title': 'System Picks',
     'home.upcoming_events': 'Upcoming Shows',
     'home.events_link': 'All Shows ‹',
-    'home.content_title': 'Content',
-    'home.content_link': 'All Content ‹',
+    'home.content_title': 'Articles',
+    'home.content_link': 'All Articles ‹',
 
     // Notifications page
     'notif_page.eyebrow': 'Notification Center',

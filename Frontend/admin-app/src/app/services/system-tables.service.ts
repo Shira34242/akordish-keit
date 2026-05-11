@@ -23,7 +23,7 @@ export interface PagedResult<T> {
     providedIn: 'root'
 })
 export class SystemTablesService {
-    private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api`;
+    private apiUrl = `${environment.apiBaseUrl}/api`;
 
     constructor(private http: HttpClient) { }
 

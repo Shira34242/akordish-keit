@@ -2,7 +2,7 @@
   <div class="page-header">
     <div>
       <h1>{{ agencyId ? 'עריכת סוכנות' : 'סוכנות חדשה' }}</h1>
-      <p>פרטי הסוכנות, באנר האינדקס, תגי פרופילים ותוכן משויך.</p>
+      <p>פרטי הסוכנות, באנר האינדקס, תגי פרופילים, תוכן, גלריה ורשתות חברתיות.</p>
     </div>
     <button class="btn btn-light" type="button" (click)="back()">חזרה לרשימה</button>
   </div>
@@ -57,10 +57,6 @@
           <span>צבע טקסט</span>
           <input type="color" name="brandTextColor" [(ngModel)]="form.brandTextColor">
         </label>
-        <div class="brand-preview" [style.background]="form.brandPrimaryColor" [style.color]="form.brandTextColor">
-          <strong>{{ form.name || 'שם הסוכנות' }}</strong>
-          <span [style.background]="form.brandSecondaryColor"></span>
-        </div>
       </div>
       <label class="full">
         <span>תיאור קצר</span>
@@ -84,29 +80,39 @@
   </form>
 
   <div class="management-grid" *ngIf="agencyId && agency">
+    <!-- Profiles -->
     <section class="panel">
       <div class="panel-header">
         <h2>פרופילים משויכים</h2>
         <span>{{ agency.profiles.length }}</span>
       </div>
       <div class="inline-form">
-        <select [(ngModel)]="profileForm.profileType">
+        <select [(ngModel)]="profileForm.profileType" (change)="profileSearch=''; profileSearchResults=[]">
           <option value="artist">אמן</option>
           <option value="serviceProvider">נותן שירות</option>
           <option value="teacher">מורה</option>
         </select>
-        <input type="number" [(ngModel)]="profileForm.profileId" placeholder="ID פרופיל">
+        <div class="search-wrap">
+          <input type="text" [(ngModel)]="profileSearch" placeholder="חפש פרופיל..."
+            (ngModelChange)="onProfileSearchChange($event)" (focus)="profileSearchResults.length && (profileSearchOpen = true)">
+          <div class="search-dropdown" *ngIf="profileSearchOpen && profileSearchResults.length">
+            <div class="search-result" *ngFor="let r of profileSearchResults" (click)="selectProfile(r)">
+              <span>{{ r.name }}</span>
+              <small>#{{ r.id }}</small>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" [(ngModel)]="profileForm.profileId">
         <select [(ngModel)]="profileForm.contactMode">
           <option [ngValue]="AgencyContactMode.Direct">יצירת קשר ישירה</option>
           <option [ngValue]="AgencyContactMode.Agency">דרך הסוכנות</option>
           <option [ngValue]="AgencyContactMode.Both">גם וגם</option>
         </select>
-        <label><input type="checkbox" [(ngModel)]="profileForm.showBadge"> תג פעיל</label>
+        <label><input type="checkbox" [(ngModel)]="profileForm.showBadge"> תג</label>
         <label><input type="checkbox" [(ngModel)]="profileForm.isFeaturedByAgency"> מודגש</label>
-        <input type="number" [(ngModel)]="profileForm.displayOrder" placeholder="סדר">
+        <input type="number" [(ngModel)]="profileForm.displayOrder" placeholder="סדר" style="width:60px">
         <button class="btn btn-primary" type="button" (click)="addProfile()">הוסף</button>
       </div>
-
       <div class="rows-list">
         <div class="linked-row" *ngFor="let profile of agency.profiles">
           <div>
@@ -119,22 +125,32 @@
       </div>
     </section>
 
+    <!-- Content -->
     <section class="panel">
       <div class="panel-header">
-        <h2>תוכן משויך ישירות</h2>
+        <h2>תוכן ישיר</h2>
         <span>{{ agency.contents.length }}</span>
       </div>
       <div class="inline-form">
-        <select [(ngModel)]="contentForm.contentType">
+        <select [(ngModel)]="contentForm.contentType" (change)="contentSearch=''; contentSearchResults=[]">
           <option value="article">כתבה</option>
           <option value="song">שיר</option>
         </select>
-        <input type="number" [(ngModel)]="contentForm.contentId" placeholder="ID תוכן">
+        <div class="search-wrap">
+          <input type="text" [(ngModel)]="contentSearch" placeholder="חפש תוכן..."
+            (ngModelChange)="onContentSearchChange($event)" (focus)="contentSearchResults.length && (contentSearchOpen = true)">
+          <div class="search-dropdown" *ngIf="contentSearchOpen && contentSearchResults.length">
+            <div class="search-result" *ngFor="let r of contentSearchResults" (click)="selectContent(r)">
+              <span>{{ r.name }}</span>
+              <small>#{{ r.id }}</small>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" [(ngModel)]="contentForm.contentId">
         <label><input type="checkbox" [(ngModel)]="contentForm.isFeatured"> מודגש</label>
-        <input type="number" [(ngModel)]="contentForm.displayOrder" placeholder="סדר">
+        <input type="number" [(ngModel)]="contentForm.displayOrder" placeholder="סדר" style="width:60px">
         <button class="btn btn-primary" type="button" (click)="addContent()">הוסף</button>
       </div>
-
       <div class="rows-list">
         <div class="linked-row" *ngFor="let content of agency.contents">
           <div>
@@ -143,7 +159,76 @@
           </div>
           <button class="btn-action btn-delete" type="button" (click)="removeContent(content)"><span class="material-icons">delete</span></button>
         </div>
-        <p class="empty" *ngIf="agency.contents.length === 0">אין תוכן משויך ישירות</p>
+        <p class="empty" *ngIf="agency.contents.length === 0">אין תוכן משויך</p>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>גלריה</h2>
+        <span>{{ (agency.galleryImages || []).length }}</span>
+      </div>
+      <div class="gallery-add-area">
+        <div class="gallery-form-row">
+          <app-file-upload-input [(url)]="galleryForm.imageUrl" placeholder="כתובת תמונה או העלאת קובץ" [showPreview]="false"></app-file-upload-input>
+          <input type="text" [(ngModel)]="galleryForm.caption" placeholder="כיתוב (רשות)" class="form-input-inline">
+          <input type="number" [(ngModel)]="galleryForm.displayOrder" placeholder="סדר" style="width:60px" class="form-input-inline">
+          <button class="btn btn-primary" type="button" (click)="addGalleryImage()" [disabled]="!galleryForm.imageUrl">הוסף תמונה</button>
+        </div>
+        <div class="gallery-form-row">
+          <input type="url" [(ngModel)]="galleryVideoForm.videoUrl" placeholder="קישור YouTube" class="form-input-inline">
+          <input type="text" [(ngModel)]="galleryVideoForm.title" placeholder="כותרת וידאו" class="form-input-inline">
+          <input type="number" [(ngModel)]="galleryVideoForm.displayOrder" placeholder="סדר" style="width:60px" class="form-input-inline">
+          <button class="btn btn-primary" type="button" (click)="addGalleryVideo()" [disabled]="!galleryVideoForm.videoUrl">הוסף וידאו</button>
+        </div>
+      </div>
+      <div class="rows-list" *ngIf="agency.galleryImages">
+        <div class="linked-row" *ngFor="let img of agency.galleryImages">
+          <div class="linked-row-preview">
+            <img *ngIf="img.imageUrl && !isVideoItem(img)" [src]="img.imageUrl" [alt]="img.caption || 'תמונה'" class="gallery-thumb" />
+            <span *ngIf="isVideoItem(img)" class="material-icons gallery-video-icon">smart_display</span>
+            <div>
+              <strong>{{ getGalleryItemLabel(img) }}</strong>
+              <span>{{ getGalleryItemUrl(img) }}</span>
+            </div>
+          </div>
+          <button class="btn-action btn-delete" type="button" (click)="removeGalleryImage(img)"><span class="material-icons">delete</span></button>
+        </div>
+        <p class="empty" *ngIf="agency.galleryImages.length === 0">אין תמונות בגלריה</p>
+      </div>
+    </section>
+
+    <!-- Social Links -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>רשתות חברתיות</h2>
+        <span>{{ (agency.socialLinks || []).length }}</span>
+      </div>
+      <div class="social-link-list">
+        <div class="social-link-row" *ngFor="let opt of socialPlatformOptions">
+          <div class="social-link-icon">
+            <span [innerHTML]="getSocialIconSvg(opt.value)" class="social-icon-svg"></span>
+            <span class="social-link-label">{{ opt.label }}</span>
+          </div>
+          <input type="url" class="form-input-inline"
+            [placeholder]="'https://...'"
+            [ngModel]="getSocialLinkUrl(opt.value)"
+            (ngModelChange)="setSocialLinkUrl(opt.value, $event)" />
+        </div>
+      </div>
+      <div class="rows-list" *ngIf="agency.socialLinks">
+        <div class="linked-row" *ngFor="let link of agency.socialLinks">
+          <div class="linked-row-preview">
+            <span [innerHTML]="getSocialIconSvg(link.platform)" class="social-icon-svg social-icon-sm"></span>
+            <div>
+              <strong>{{ getPlatformLabel(link.platform) }}</strong>
+              <span>{{ link.url }}</span>
+            </div>
+          </div>
+          <button class="btn-action btn-delete" type="button" (click)="removeSocialLink(link)"><span class="material-icons">delete</span></button>
+        </div>
+        <p class="empty" *ngIf="agency.socialLinks.length === 0">אין קישורים</p>
       </div>
     </section>
   </div>

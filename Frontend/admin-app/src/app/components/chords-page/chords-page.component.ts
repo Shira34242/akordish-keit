@@ -332,8 +332,13 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     loadQuickTags(): void {
         this.systemTablesService.getChordQuickTags().subscribe({
-            next: tags => this.quickTags = tags || [],
-            error: () => this.quickTags = []
+            next: tags => {
+                this.quickTags = Array.isArray(tags) ? tags : [];
+            },
+            error: err => {
+                console.error('ChordQuickTags: failed to load', err);
+                this.quickTags = [];
+            }
         });
     }
 

@@ -59,7 +59,7 @@ export const routes: Routes = [
             {
                 path: 'blog/:slug',
                 loadComponent: () => import('./components/news/blog-post-view/blog-post-view.component').then(m => m.BlogPostViewComponent),
-                title: 'אקורדישקייט - תוכן'
+                title: 'אקורדישקייט - כתבות'
             },
             {
                 path: 'teachers',

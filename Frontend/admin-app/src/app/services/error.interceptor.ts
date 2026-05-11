@@ -16,7 +16,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         console.error('Client-side error:', error.error.message);
         errorMessage = 'שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שנית.';
       } else {
-        console.error(`Server returned code ${error.status}:`, error.message);
+        console.error(`Server returned code ${error.status}:`, error.message, error.error);
 
         switch (error.status) {
           case 401: {
@@ -44,11 +44,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             break;
 
           case 500:
-            errorMessage = error.error?.message
-              || (error.error?.errors ? Object.values(error.error.errors as Record<string, string[]>).flat().join(', ') : null)
-              || error.error?.title
-              || error.error?.detail
-              || 'שגיאה בשרת. אנא נסה שנית מאוחר יותר.';
+            if (typeof error.error === 'string') {
+              errorMessage = error.error.substring(0, 200);
+            } else {
+              errorMessage = error.error?.message
+                || (error.error?.errors ? Object.values(error.error.errors as Record<string, string[]>).flat().join(', ') : null)
+                || error.error?.title
+                || error.error?.detail
+                || 'שגיאה בשרת. אנא נסה שנית מאוחר יותר.';
+            }
             break;
 
           case 503:
@@ -60,7 +64,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             break;
 
           default:
-            if (error.error?.message) {
+            if (typeof error.error === 'string') {
+              errorMessage = error.error.substring(0, 200);
+            } else if (error.error?.message) {
               errorMessage = error.error.message;
             } else if (error.error?.errors) {
               const messages = Object.values(error.error.errors as Record<string, string[]>).flat();

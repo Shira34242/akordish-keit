@@ -31,10 +31,12 @@
           <span class="material-icons">star</span>
           {{ 'teacher.featured_badge' | translate }}
         </span>
-        <button *ngIf="agencyBadge" class="agency-profile-badge" type="button" (click)="goToAgency()">
-          <img *ngIf="agencyBadge.logoUrl" [src]="agencyBadge.logoUrl" [alt]="agencyBadge.agencyName" imgFallback>
-          <span>{{ agencyBadge.agencyName }}</span>
-        </button>
+        <span *ngIf="agencyBadge" class="agency-badge-tag"
+          (click)="goToAgency()" role="button" tabindex="0"
+          [style.background]="agencyBadge.brandPrimaryColor || '#ddff53'"
+          [style.color]="agencyBadge.brandTextColor || '#000000'">
+          {{ agencyBadge.agencyName }}
+        </span>
         <h1 class="hero-name">{{ teacher.displayName }}</h1>
         <p class="hero-role">{{ heroRole }}</p>
         <p class="hero-location" *ngIf="heroLocationLine">

@@ -37,11 +37,13 @@
         <div class="hero-badges">
           <span class="badge-featured" *ngIf="artist.isPremium">אומן מוביל</span>
           <span class="badge-verified" *ngIf="artist.isVerified">✓ מאומת</span>
+          <span *ngIf="agencyBadge" class="agency-badge-tag"
+            (click)="goToAgency()" role="button" tabindex="0"
+            [style.background]="agencyBadge.brandPrimaryColor || '#ddff53'"
+            [style.color]="agencyBadge.brandTextColor || '#000000'">
+            {{ agencyBadge.agencyName }}
+          </span>
         </div>
-        <button *ngIf="agencyBadge" class="agency-profile-badge" type="button" (click)="goToAgency()">
-          <img *ngIf="agencyBadge.logoUrl" [src]="agencyBadge.logoUrl" [alt]="agencyBadge.agencyName">
-          <span>{{ agencyBadge.agencyName }}</span>
-        </button>
         <h1 class="hero-name">{{ artist.name }}</h1>
         <p class="hero-english" *ngIf="artist.englishName">{{ artist.englishName }}</p>
         <p class="hero-short-bio" *ngIf="artist.shortBio">{{ artist.shortBio }}</p>

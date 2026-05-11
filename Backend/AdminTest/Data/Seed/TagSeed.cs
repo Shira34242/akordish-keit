@@ -10,8 +10,8 @@ public static class TagSeed
         var tags = new List<Tag>
         {
             new() { Id = 1, Name = "שבת", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 1 },
-            new() { Id = 2, Name = "חתונה" },
-            new() { Id = 3, Name = "חגים" },
+            new() { Id = 2, Name = "חתונה", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 2 },
+            new() { Id = 3, Name = "חגים", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 3 },
             new() { Id = 4, Name = "ראש השנה" },
             new() { Id = 5, Name = "יום כיפור" },
             new() { Id = 6, Name = "סוכות" },
@@ -24,9 +24,9 @@ public static class TagSeed
             new() { Id = 13, Name = "אמונה" },
             new() { Id = 14, Name = "תודה" },
             new() { Id = 15, Name = "תפילה" },
-            new() { Id = 16, Name = "שמחה" },
+            new() { Id = 16, Name = "שמחה", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 4 },
             new() { Id = 17, Name = "עצוב" },
-            new() { Id = 18, Name = "מתחיל" },
+            new() { Id = 18, Name = "מתחיל", ShowInChordQuickSearch = true, ChordQuickSearchOrder = 5 },
             new() { Id = 19, Name = "מתקדם" },
             new() { Id = 20, Name = "קל לנגינה" }
         };

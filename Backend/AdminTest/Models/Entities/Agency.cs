@@ -27,6 +27,8 @@ public class Agency
 
     public virtual ICollection<AgencyProfile> Profiles { get; set; } = new List<AgencyProfile>();
     public virtual ICollection<AgencyContent> Contents { get; set; } = new List<AgencyContent>();
+    public virtual ICollection<AgencyGalleryImage> GalleryImages { get; set; } = new List<AgencyGalleryImage>();
+    public virtual ICollection<AgencySocialLink> SocialLinks { get; set; } = new List<AgencySocialLink>();
 }
 
 public class AgencyProfile

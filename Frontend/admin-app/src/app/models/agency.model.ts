@@ -1,10 +1,26 @@
 import { Article } from './article.model';
 import { SongDto } from './song.model';
+import { SocialPlatform } from './artist.model';
 
 export enum AgencyContactMode {
   Direct = 0,
   Agency = 1,
   Both = 2
+}
+
+export interface AgencyGalleryImageDto {
+  id: number;
+  agencyId: number;
+  imageUrl: string;
+  caption?: string;
+  displayOrder: number;
+}
+
+export interface AgencySocialLinkDto {
+  id: number;
+  agencyId: number;
+  platform: SocialPlatform;
+  url: string;
 }
 
 export interface AgencyListDto {
@@ -33,6 +49,8 @@ export interface AgencyDto extends AgencyListDto {
   websiteUrl?: string;
   profiles: AgencyProfileDto[];
   contents: AgencyContentDto[];
+  galleryImages: AgencyGalleryImageDto[];
+  socialLinks: AgencySocialLinkDto[];
 }
 
 export interface AgencyPublicDto extends AgencyDto {
@@ -86,6 +104,9 @@ export interface AgencyBadgeDto {
   agencyName: string;
   agencySlug: string;
   logoUrl?: string;
+  brandPrimaryColor?: string;
+  brandSecondaryColor?: string;
+  brandTextColor?: string;
   contactMode: AgencyContactMode;
   showBadge: boolean;
   phoneNumber?: string;

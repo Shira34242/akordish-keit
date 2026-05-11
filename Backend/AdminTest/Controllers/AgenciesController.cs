@@ -133,4 +133,60 @@ public class AgenciesController : ControllerBase
         var removed = await _service.RemoveContentAsync(agencyId, contentLinkId);
         return removed ? NoContent() : NotFound(new { message = "שיוך התוכן לא נמצא" });
     }
+
+    [HttpGet("{agencyId:int}/gallery")]
+    public async Task<ActionResult<List<AgencyGalleryImageDto>>> GetGalleryImages(int agencyId)
+    {
+        return Ok(await _service.GetGalleryImagesAsync(agencyId));
+    }
+
+    [HttpPost("{agencyId:int}/gallery")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AgencyGalleryImageDto>> AddGalleryImage(int agencyId, [FromBody] AgencyGalleryImageDto dto)
+    {
+        try
+        {
+            return Ok(await _service.AddGalleryImageAsync(agencyId, dto.ImageUrl, dto.Caption, dto.DisplayOrder));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{agencyId:int}/gallery/{imageId:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RemoveGalleryImage(int agencyId, int imageId)
+    {
+        var removed = await _service.RemoveGalleryImageAsync(agencyId, imageId);
+        return removed ? NoContent() : NotFound(new { message = "התמונה לא נמצאה" });
+    }
+
+    [HttpGet("{agencyId:int}/social-links")]
+    public async Task<ActionResult<List<AgencySocialLinkDto>>> GetSocialLinks(int agencyId)
+    {
+        return Ok(await _service.GetSocialLinksAsync(agencyId));
+    }
+
+    [HttpPost("{agencyId:int}/social-links")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AgencySocialLinkDto>> UpsertSocialLink(int agencyId, [FromBody] AgencySocialLinkDto dto)
+    {
+        try
+        {
+            return Ok(await _service.UpsertSocialLinkAsync(agencyId, dto));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{agencyId:int}/social-links/{linkId:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RemoveSocialLink(int agencyId, int linkId)
+    {
+        var removed = await _service.RemoveSocialLinkAsync(agencyId, linkId);
+        return removed ? NoContent() : NotFound(new { message = "הקישור לא נמצא" });
+    }
 }
