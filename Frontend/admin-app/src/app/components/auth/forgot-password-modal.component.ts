@@ -7,7 +7,6 @@ import { LanguageService } from '../../services/language.service';
 
 export enum RecoveryMethod {
   Email = 'email',
-  SMS = 'sms'
 }
 
 @Component({
@@ -62,9 +61,7 @@ export class ForgotPasswordModalComponent {
       next: () => {
         this.loading = false;
         this.step = 'verify';
-        this.successMessage = this.recoveryMethod === RecoveryMethod.Email
-          ? this.langService.translate('auth.code_sent_email')
-          : this.langService.translate('auth.code_sent_sms');
+        this.successMessage = this.langService.translate('auth.code_sent_email');
       },
       error: (error) => {
         this.loading = false;

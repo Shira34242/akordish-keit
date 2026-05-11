@@ -65,6 +65,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAgencyService, AgencyService>();
 
 // 🔐 Security Services
@@ -86,6 +87,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.MapInboundClaims = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,

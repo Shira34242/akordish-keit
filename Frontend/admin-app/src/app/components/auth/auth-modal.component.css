@@ -276,6 +276,24 @@
   text-decoration: underline;
 }
 
+/* Forgot Password */
+.forgot-password-row {
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+.forgot-password-link {
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+  color: #000;
+}
+
 /* Toggle Mode */
 .toggle-mode {
   text-align: center;

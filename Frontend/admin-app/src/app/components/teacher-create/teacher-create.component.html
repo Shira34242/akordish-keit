@@ -26,13 +26,10 @@
       <div class="guided-scroll-region">
         <div *ngIf="error" class="error-message">{{ error }}</div>
 
-        <div *ngIf="subscription && !submitted" class="mini-badge">מנוי {{ subscription.planName }}</div>
-
         <div class="success-state" *ngIf="submitted">
           <h2>הפרופיל נשלח לבדיקה</h2>
           <p>הדף נשמר ועבר למנהל לאישור.</p>
           <div class="success-actions">
-            <button type="button" class="primary-action" *ngIf="!subscription" (click)="goToSubscriptionSelection()">בחירת מנוי</button>
             <button type="button" class="secondary-action" (click)="finishFlow()">סיום</button>
           </div>
         </div>

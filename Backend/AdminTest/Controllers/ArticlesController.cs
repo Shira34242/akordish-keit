@@ -126,6 +126,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> CreateArticle([FromBody] CreateArticleDto dto)
     {
         try
@@ -175,6 +176,7 @@ public class ArticlesController : ControllerBase
 
     // PUT: api/Articles/5
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateArticle(int id, [FromBody] UpdateArticleDto dto)
     {
         try
@@ -207,6 +209,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/5/duplicate
     [HttpPost("{id}/duplicate")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> DuplicateArticle(int id)
     {
         try
@@ -222,6 +225,7 @@ public class ArticlesController : ControllerBase
 
     // DELETE: api/Articles/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteArticle(int id)
     {
         var result = await _articleService.DeleteArticleAsync(id);

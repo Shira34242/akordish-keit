@@ -1,0 +1,285 @@
+<div class="email-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <span class="material-symbols-outlined">mail</span>
+      <h1>שליחת מייל</h1>
+    </div>
+  </div>
+
+  <!-- Result Banner -->
+  @if (sendResult) {
+    <div class="result-banner" [class.success]="sendResult.success" [class.error]="!sendResult.success">
+      <span class="material-symbols-outlined">{{ sendResult.success ? 'check_circle' : 'error' }}</span>
+      <div class="result-text">
+        <strong>{{ sendResult.success ? 'נשלח בהצלחה!' : 'שגיאה בשליחה' }}</strong>
+        <span>{{ sendResult.message }}</span>
+      </div>
+      <button class="btn-close-result" (click)="resetForm()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+  }
+
+  <div class="email-composer">
+
+    <!-- Left: Settings -->
+    <div class="composer-sidebar">
+
+      <div class="sidebar-section">
+        <label class="field-label">שם השולח</label>
+        <input class="field-input" type="text" [(ngModel)]="fromName" placeholder="אקורדישקייט" />
+      </div>
+
+      <div class="sidebar-section">
+        <label class="field-label">קהל יעד</label>
+        <div class="group-options">
+          @for (group of recipientGroups; track group.value) {
+            <label class="group-option" [class.active]="recipientGroup === group.value">
+              <input type="radio" [value]="group.value" [(ngModel)]="recipientGroup" (ngModelChange)="onGroupChange()" />
+              <span class="material-symbols-outlined">{{ group.icon }}</span>
+              <span>{{ group.label }}</span>
+            </label>
+          }
+        </div>
+        <div class="recipient-count">
+          @if (loadingCount) {
+            <span class="count-loading">טוען...</span>
+          } @else {
+            <span class="material-symbols-outlined">people</span>
+            <strong>{{ recipientCount | number }}</strong>
+            <span>נמענים</span>
+          }
+        </div>
+      </div>
+
+      <div class="sidebar-section tips">
+        <div class="tip-title">
+          <span class="material-symbols-outlined">lightbulb</span>
+          <span>טיפים</span>
+        </div>
+        <ul>
+          <li>ניתן להדביק תמונות מ-Cloudinary</li>
+          <li>כל לינק נפתח בטאב חדש</li>
+          <li>המייל נשלח עם תבנית עיצוב של האתר</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Right: Editor -->
+    <div class="composer-main">
+
+      <!-- Subject -->
+      <div class="subject-row">
+        <label class="field-label">נושא המייל</label>
+        <input
+          class="field-input subject-input"
+          type="text"
+          [(ngModel)]="subject"
+          placeholder="הכנסי נושא למייל..."
+          maxlength="150"
+        />
+      </div>
+
+      <!-- Toolbar -->
+      <div class="editor-toolbar">
+        <div class="toolbar-group">
+          <button class="tb-btn" (click)="format('bold')" title="מודגש">
+            <strong>B</strong>
+          </button>
+          <button class="tb-btn italic-btn" (click)="format('italic')" title="נטוי">
+            <em>I</em>
+          </button>
+          <button class="tb-btn underline-btn" (click)="format('underline')" title="קו תחתון">
+            <u>U</u>
+          </button>
+          <button class="tb-btn" (click)="format('strikeThrough')" title="קו חוצה">
+            <s>S</s>
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="tb-btn" (click)="setAlign('justifyRight')" title="יישור ימין">
+            <span class="material-symbols-outlined">format_align_right</span>
+          </button>
+          <button class="tb-btn" (click)="setAlign('justifyCenter')" title="מרכז">
+            <span class="material-symbols-outlined">format_align_center</span>
+          </button>
+          <button class="tb-btn" (click)="setAlign('justifyLeft')" title="יישור שמאל">
+            <span class="material-symbols-outlined">format_align_left</span>
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="tb-btn" (click)="format('insertUnorderedList')" title="רשימה">
+            <span class="material-symbols-outlined">format_list_bulleted</span>
+          </button>
+          <button class="tb-btn" (click)="format('insertOrderedList')" title="רשימה ממוספרת">
+            <span class="material-symbols-outlined">format_list_numbered</span>
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <select class="tb-select" (change)="setFontSize($event)" title="גודל טקסט">
+            <option value="">גודל</option>
+            <option value="1">קטן מאוד</option>
+            <option value="2">קטן</option>
+            <option value="3">רגיל</option>
+            <option value="4">גדול</option>
+            <option value="5">גדול מאוד</option>
+            <option value="6">ענק</option>
+          </select>
+          <div class="color-picker-wrap" title="צבע טקסט">
+            <span class="material-symbols-outlined color-icon">format_color_text</span>
+            <input type="color" class="color-input" (change)="setTextColor($event)" />
+          </div>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="tb-btn tb-btn--link" (click)="openLinkDialog()" title="הוסף קישור">
+            <span class="material-symbols-outlined">link</span>
+            <span>קישור</span>
+          </button>
+          <button class="tb-btn tb-btn--image" (click)="openImageDialog()" title="הוסף תמונה">
+            <span class="material-symbols-outlined">image</span>
+            <span>תמונה</span>
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="tb-btn" (click)="format('removeFormat')" title="נקה עיצוב">
+            <span class="material-symbols-outlined">format_clear</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Body -->
+      <div
+        #editorBody
+        class="editor-body"
+        contenteditable="true"
+        dir="rtl"
+        [attr.data-placeholder]="'כתבי את תוכן המייל כאן...'"
+      ></div>
+
+      <!-- Actions -->
+      <div class="editor-actions">
+        <button class="btn-preview" (click)="togglePreview()">
+          <span class="material-symbols-outlined">{{ showPreview ? 'edit' : 'preview' }}</span>
+          {{ showPreview ? 'חזרה לעריכה' : 'תצוגה מקדימה' }}
+        </button>
+        <button
+          class="btn-send"
+          (click)="openConfirmDialog()"
+          [disabled]="!subject.trim() || !editorBody.innerHTML.trim()"
+        >
+          <span class="material-symbols-outlined">send</span>
+          שלח ל-{{ recipientCount | number }} נמענים
+        </button>
+      </div>
+
+      <!-- Preview Panel -->
+      @if (showPreview) {
+        <div class="preview-panel">
+          <div class="preview-header">
+            <span class="material-symbols-outlined">preview</span>
+            <span>תצוגה מקדימה</span>
+            <small>כך ייראה המייל (ללא עטיפת העיצוב)</small>
+          </div>
+          <div class="preview-body" [innerHTML]="previewHtml" dir="rtl"></div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Link Dialog -->
+@if (showLinkDialog) {
+  <div class="dialog-overlay" (click)="showLinkDialog = false">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">link</span>
+        <h3>הוספת קישור</h3>
+      </div>
+      <div class="dialog-body">
+        <label class="field-label">טקסט הקישור (אם אין טקסט מסומן)</label>
+        <input class="field-input" type="text" [(ngModel)]="linkText" placeholder="לחצו כאן" />
+        <label class="field-label">כתובת URL</label>
+        <input class="field-input" type="url" [(ngModel)]="linkUrl" placeholder="https://..." dir="ltr" />
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showLinkDialog = false">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="insertLink()" [disabled]="!linkUrl">הוסף קישור</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Image Dialog -->
+@if (showImageDialog) {
+  <div class="dialog-overlay" (click)="showImageDialog = false">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">image</span>
+        <h3>הוספת תמונה</h3>
+      </div>
+      <div class="dialog-body">
+        <label class="field-label">כתובת URL של התמונה</label>
+        <input class="field-input" type="url" [(ngModel)]="imageUrl" placeholder="https://res.cloudinary.com/..." dir="ltr" />
+        <label class="field-label">טקסט חלופי (alt)</label>
+        <input class="field-input" type="text" [(ngModel)]="imageAlt" placeholder="תיאור התמונה" />
+        <label class="field-label">רוחב</label>
+        <input class="field-input" type="text" [(ngModel)]="imageWidth" placeholder="100% או 300px" dir="ltr" />
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showImageDialog = false">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="insertImage()" [disabled]="!imageUrl">הוסף תמונה</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm Send Dialog -->
+@if (showConfirmDialog) {
+  <div class="dialog-overlay" (click)="showConfirmDialog = false">
+    <div class="dialog dialog--confirm" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">send</span>
+        <h3>אישור שליחה</h3>
+      </div>
+      <div class="dialog-body">
+        <div class="confirm-info">
+          <div class="confirm-row">
+            <span class="confirm-label">נושא:</span>
+            <span class="confirm-value">{{ subject }}</span>
+          </div>
+          <div class="confirm-row">
+            <span class="confirm-label">קהל יעד:</span>
+            <span class="confirm-value">{{ selectedGroupLabel }}</span>
+          </div>
+          <div class="confirm-row">
+            <span class="confirm-label">נמענים:</span>
+            <span class="confirm-value count-highlight">{{ recipientCount | number }} אנשים</span>
+          </div>
+        </div>
+        <p class="confirm-warning">
+          <span class="material-symbols-outlined">warning</span>
+          פעולה זו תשלח מייל אמיתי לכל הנמענים. לא ניתן לבטל לאחר השליחה.
+        </p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showConfirmDialog = false" [disabled]="isSending">ביטול</button>
+        <button class="btn-dialog-send" (click)="sendEmail()" [disabled]="isSending">
+          @if (isSending) {
+            <span class="material-symbols-outlined spinning">progress_activity</span>
+            שולח...
+          } @else {
+            <span class="material-symbols-outlined">send</span>
+            שלח עכשיו
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

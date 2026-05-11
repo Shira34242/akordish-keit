@@ -101,6 +101,10 @@
         <span class="terms-text">אני מאשר/ת קבלת דיוור שיווקי, עדכונים והצעות מאקורדישקייט בדוא"ל.</span>
       </div>
 
+      <div class="forgot-password-row" *ngIf="isLogin">
+        <a class="forgot-password-link" (click)="onForgotPassword()">{{ 'auth.forgot_password' | translate }}</a>
+      </div>
+
       <button type="submit" class="btn-submit" [disabled]="loading || (!isLogin && !termsApproved)">
         <span *ngIf="!loading">{{ isLogin ? ('auth.submit_login' | translate) : ('auth.submit_register' | translate) }}</span>
         <span *ngIf="loading" class="spinner"></span>

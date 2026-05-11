@@ -29,6 +29,7 @@ namespace AkordishKeit.Controllers
         private readonly IConfiguration _configuration;
         private readonly ICsrfTokenService _csrfTokenService; // 🔐 שירות CSRF
         private readonly Cloudinary _cloudinary;
+        private readonly IEmailService _emailService;
 
         // Simple in-memory storage for verification codes (in production, use Redis or database)
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -37,12 +38,14 @@ namespace AkordishKeit.Controllers
             AkordishKeitDbContext context,
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
-            ICsrfTokenService csrfTokenService) // 🔐 הזרקת שירות CSRF
+            ICsrfTokenService csrfTokenService,
+            IEmailService emailService)
         {
             _context = context;
             _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _csrfTokenService = csrfTokenService;
+            _emailService = emailService;
 
             var account = new Account(
                 configuration["Cloudinary:CloudName"],
@@ -727,27 +730,14 @@ namespace AkordishKeit.Controllers
             var key = user.Email.ToLower();
             _verificationCodes[key] = (code, DateTime.UtcNow.AddMinutes(15));
 
-            // TODO: Send verification code via email or SMS
-            // For now, just log it (in production, implement actual email/SMS sending)
-            Console.WriteLine($"=== PASSWORD RESET CODE ===");
-            Console.WriteLine($"User: {user.Username} ({user.Email})");
-            Console.WriteLine($"Code: {code}");
-            Console.WriteLine($"Method: {request.Method}");
-            Console.WriteLine($"Expires: {DateTime.UtcNow.AddMinutes(15):yyyy-MM-dd HH:mm:ss} UTC");
-            Console.WriteLine($"===========================");
-
             if (request.Method == "email")
             {
-                // TODO: Implement email sending service
-                // await _emailService.SendPasswordResetEmail(user.Email, code);
-            }
-            else if (request.Method == "sms")
-            {
-                // TODO: Implement SMS sending service
-                // await _smsService.SendPasswordResetSMS(user.Phone, code);
+                var sent = await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, code);
+                if (!sent)
+                    return StatusCode(500, new { message = "שגיאה בשליחת המייל, נסה שוב מאוחר יותר" });
             }
 
-            return Ok(new { message = "קוד אימות נשלח בהצלחה" });
+            return Ok(new { message = "קוד אימות נשלח למייל" });
         }
 
         [HttpPost("reset-password")]

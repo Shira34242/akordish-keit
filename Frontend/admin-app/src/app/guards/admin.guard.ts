@@ -34,15 +34,6 @@ export const adminGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // המשתמש לא Admin - מונעים גישה ומחזירים לדף הבית
-  console.warn('Access denied: User is not an Admin', user);
-
-  // ניתוב חזרה לדף הבית
   router.navigate(['/']);
-
-  // אפשר להוסיף כאן הודעת שגיאה למשתמש
-  // לדוגמה: הצגת Toast או Alert
-  alert('אין לך הרשאות לגשת לדף זה. נדרשות הרשאות מנהל.');
-
   return false;
 };

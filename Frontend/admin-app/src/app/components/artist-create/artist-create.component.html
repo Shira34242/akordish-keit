@@ -30,7 +30,6 @@
       <h2>{{ 'artist_create.success_title' | translate }}</h2>
       <p>{{ 'artist_create.success_text' | translate }}</p>
       <div class="success-actions">
-        <button type="button" class="btn-submit" *ngIf="!subscription" (click)="selectSubscription()">{{ 'artist_create.choose_plan' | translate }}</button>
         <button type="button" class="btn-cancel" (click)="finishFlow()">{{ 'artist_create.finish' | translate }}</button>
       </div>
     </div>

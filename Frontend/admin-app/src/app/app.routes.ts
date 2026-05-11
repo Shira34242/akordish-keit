@@ -387,6 +387,11 @@ export const routes: Routes = [
                     }
                 ]
             },
+            {
+                path: 'email',
+                loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
+                title: 'שליחת מייל - אקורדישקייט'
+            },
             { path: 'reports', redirectTo: 'notifications/reports', pathMatch: 'full' },
             { path: 'teachers', redirectTo: 'users/teachers', pathMatch: 'full' },
             { path: 'teachers/new', redirectTo: 'users/teachers/new', pathMatch: 'full' },

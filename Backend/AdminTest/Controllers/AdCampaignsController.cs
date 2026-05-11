@@ -3,6 +3,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enums;
 using AkordishKeit.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -302,6 +303,7 @@ namespace AkordishKeit.Controllers
 
         // POST: api/AdCampaigns
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<AdCampaignDto>> CreateAdCampaign(CreateAdCampaignDto dto)
         {
             // Validate AdSpot exists
@@ -395,6 +397,7 @@ namespace AkordishKeit.Controllers
 
         // PUT: api/AdCampaigns/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateAdCampaign(int id, UpdateAdCampaignDto dto)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
@@ -460,6 +463,7 @@ namespace AkordishKeit.Controllers
 
         // DELETE: api/AdCampaigns/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> DeleteAdCampaign(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
