@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService, User } from './auth.service';
 
-export type ReminderKind = 'contact' | 'birthday';
+export type ReminderKind = 'profile';
 
 export interface ReminderRequest {
   kind: ReminderKind;
@@ -10,19 +10,13 @@ export interface ReminderRequest {
 }
 
 const DAYS_BEFORE_FIRST_REMINDER = 5;
-const DAYS_BEFORE_BIRTHDAY_REMINDER = 21;
 const COOLDOWN_DAYS = 14;
 const MAX_DISMISSALS = 3;
 
 /**
- * שירות תזכורת רך — בודק האם להציג חלון "כמה פרטים נוספים".
- * מופעל לאחר התחברות / ניווט בתוך האתר.
- *
- * תזמון:
- * - תזכורת ליצירת קשר (טלפון + עיר): אחרי 3 ימים מהרשמה.
- * - תזכורת ליום הולדת: אחרי 14 ימים מהרשמה (אם תזכורת קודמת כבר ניתנה / הושלמה).
- * - cooldown של 14 יום בין תזכורות.
- * - מקסימום 3 דחיות — אחרי זה לא נציג עוד.
+ * שירות תזכורת רך — בודק האם להציג חלון "עוד כמה פרטים להשלמת החוויה באתר".
+ * טופס אחד מאוחד לטלפון, עיר, כתובת, חודש+שנת לידה.
+ * מופעל לאחר התחברות / ניווט בתוך האתר, וגם מדף הפרופיל.
  */
 @Injectable({ providedIn: 'root' })
 export class ProfileReminderService {
@@ -47,6 +41,13 @@ export class ProfileReminderService {
     this.requestSubject.next({ kind, user });
   }
 
+  /** הצגה ישירה של טופס השלמת הפרופיל (ללא בדיקות תזמון) — קריאה מדף הפרופיל */
+  requestProfileCompletion(): void {
+    const user = this.authService.currentUserValue;
+    if (!user) return;
+    this.requestSubject.next({ kind: 'profile', user });
+  }
+
   /** סגירת המודל בלי לשמור (דחייה) — נספר ב-Backend נפרד דרך AuthService */
   clearRequest(): void {
     this.requestSubject.next(null);
@@ -63,23 +64,13 @@ export class ProfileReminderService {
     const daysSinceRegister = this.daysSince(user.createdAt);
     const daysSinceLastReminder = this.daysSince(user.lastProfileReminderAt);
 
-    // אם חסר createdAt — לא נציג. מוטב להתעלם מאשר להציג מוקדם מדי.
     if (daysSinceRegister === null) return null;
-
-    // cooldown אחרי תזכורת קודמת
     if (daysSinceLastReminder !== null && daysSinceLastReminder < COOLDOWN_DAYS) return null;
 
-    const missingContact = !user.phone || !user.cityId || !user.address;
-    const missingBirthday = !user.birthDate;
+    const missingAny = !user.phone || !user.cityId || !user.address || !user.birthDate;
 
-    // תזכורת ראשונה (טלפון + עיר) — רק אחרי 5 ימים לפחות מההרשמה
-    if (missingContact && daysSinceRegister >= DAYS_BEFORE_FIRST_REMINDER) {
-      return 'contact';
-    }
-
-    // תזכורת יום הולדת — רק אחרי 21 יום, אם פרטי קשר כבר קיימים
-    if (missingBirthday && daysSinceRegister >= DAYS_BEFORE_BIRTHDAY_REMINDER) {
-      return 'birthday';
+    if (missingAny && daysSinceRegister >= DAYS_BEFORE_FIRST_REMINDER) {
+      return 'profile';
     }
 
     return null;

@@ -11,6 +11,7 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { AuthService } from '../../services/auth.service';
 
 interface SavedSongCard {
   id: number;
@@ -55,6 +56,8 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
   pendingImageUrl = '';
   isSavingImage = false;
 
+  showChordBookHint = false;
+
   visibleSongCount = 8;
   visibleContentCount = 6;
 
@@ -62,7 +65,8 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
     private playlistService: PlaylistService,
     private likedContentService: LikedContentService,
     private router: Router,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -190,7 +194,23 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
   }
 
   printPlaylist(id: number): void {
+    if (!this.canExportChordBook()) {
+      this.showChordBookHint = true;
+      this.openDotsMenuId = null;
+      return;
+    }
     this.router.navigate(['/playlist', id], { queryParams: { chordBook: 'true' } });
+  }
+
+  canExportChordBook(): boolean {
+    const user = this.authService.currentUserValue;
+    if (!user) return false;
+    if (this.authService.isAdminOrManager(user)) return true;
+    return (user.contentTag ?? 0) >= 2;
+  }
+
+  dismissChordBookHint(): void {
+    this.showChordBookHint = false;
   }
 
   toggleDotsMenu(id: number, event: Event): void {

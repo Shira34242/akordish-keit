@@ -29,6 +29,7 @@ export interface User {
     birthDate?: string | null;
     contentTag?: number;   // 0=None, 1=מתחיל, 2=תורם, 3=תורם מוביל
     uploadCount?: number;
+    chordBookExportCount?: number;
     createdAt?: string;
     lastProfileReminderAt?: string | null;
     profileReminderDismissCount?: number;

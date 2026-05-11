@@ -123,4 +123,8 @@ export class PlaylistService {
     const dto: RemoveFromDefaultPlaylistDto = { removeFromPersonalPlaylists };
     return this.http.delete(`${this.apiUrl}/save-to-default/${songId}`, { body: dto });
   }
+
+  exportChordBook(playlistId: number): Observable<{ success: boolean; limit: number; used: number; remaining: number; message?: string }> {
+    return this.http.post<{ success: boolean; limit: number; used: number; remaining: number; message?: string }>(`${this.apiUrl}/${playlistId}/export-chord-book`, {});
+  }
 }

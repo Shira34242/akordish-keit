@@ -100,6 +100,12 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.need_to_learn': 'צריך ללמוד:',
     'song.close': 'סגור',
     'song.error_load': 'שגיאה בטעינת השיר',
+    'song.daily_limit_title': 'הגעת למגבלה היומית',
+    'song.daily_limit_message': 'פתחת {count} דפי אקורדים היום מתוך {limit} המותרים.',
+    'song.daily_limit_guest': 'המגבלה למשתמשים רשומים גבוהה יותר.',
+    'song.daily_limit_login': 'התחברות',
+    'song.daily_limit_upgrade': 'שדרוג מנוי',
+    'song.daily_limit_share': 'משתף?',
     'song.share_text_pre': 'בדוק את השיר',
     'song.share_text_mid': 'של',
     'song.share_text_suf': 'באתר אקורדישקייט!',
@@ -239,7 +245,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'fab.song_selected': 'מעולה, נמשיך להוספת אקורדים.',
     'fab.chord_request_question': 'איזה שיר תרצה שנוסיף אקורדים עבורו?',
     'fab.opt_chords': 'אקורדים',
-    'fab.opt_content': 'תוכן',
+    'fab.opt_content': 'כתבות',
     'fab.opt_event': 'הופעה',
     'fab.opt_index': 'פרופיל לאינדקס',
     'fab.opt_artist': 'אמן',
@@ -535,6 +541,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlists.new_btn': 'רשימה חדשה',
     'playlists.options': 'אפשרויות',
     'playlists.export_book': 'יצא כספר אקורדים',
+    'playlists.export_book_restricted': 'האפשרות לייצא ספר אקורדים פתוחה לתורמי תוכן מדרגה 2 ומעלה',
     'playlists.duplicate': 'שכפל רשימה',
     'playlists.delete': 'מחק רשימה',
     'playlists.empty': 'עדיין אין רשימות',
@@ -561,6 +568,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlist.private_hint': 'הרשימה גלויה רק לך',
     'playlist.chord_book_title': 'הפוך את הרשימה לספר אקורדים',
     'playlist.chord_book_desc': 'כל שירי הרשימה בתצוגת אקורדים, מוכנים להדפסה',
+    'playlist.export_book_restricted': 'האפשרות לייצא ספר אקורדים פתוחה לתורמי תוכן מדרגה 2 ומעלה',
     'playlist.name_placeholder': 'שם הרשימה',
     'playlist.desc_placeholder': 'תיאור (אופציונלי)',
     'playlist.image_placeholder': 'הדבק URL של תמונה',
@@ -1092,9 +1100,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.error_update_details': 'שגיאה בעדכון הפרטים',
 
     // Profile reminder modal
-    'profile_reminder.birthday_title': 'שנפתיע אותך ביומולדת?',
-    'profile_reminder.contact_title': 'כמה פרטים אחרונים להשלמת החוויה באתר',
-    'profile_reminder.birthday_subtitle': 'רק חודש ושנה',
+    'profile_reminder.unified_title': 'עוד כמה פרטים להשלמת החוויה באתר',
     'profile_reminder.error_save': 'שגיאה בשמירת הפרטים',
 
     // Month names
@@ -1232,6 +1238,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'chord_book.progress_pdf': 'מרכיב PDF...',
     'chord_book.filename_suffix': ' - ספר אקורדים',
     'chord_book.error_export': 'שגיאה בייצוא הספר. נסה שוב.',
+    'chord_book.error_restricted': 'האפשרות לייצא ספר אקורדים פתוחה לתורמי תוכן מדרגה 2 ומעלה',
 
     // Print panel
     'print.composer_melody': 'לחן:',
@@ -1397,6 +1404,12 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.need_to_learn': 'Need to learn:',
     'song.close': 'Close',
     'song.error_load': 'Error loading song',
+    'song.daily_limit_title': 'Daily Limit Reached',
+    'song.daily_limit_message': 'You have opened {count} chord pages today out of {limit} allowed.',
+    'song.daily_limit_guest': 'The limit is higher for registered users.',
+    'song.daily_limit_login': 'Login',
+    'song.daily_limit_upgrade': 'Upgrade Plan',
+    'song.daily_limit_share': 'Share?',
     'song.share_text_pre': 'Check out the song',
     'song.share_text_mid': 'by',
     'song.share_text_suf': 'on Akordiskeit!',
@@ -1536,7 +1549,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'fab.song_selected': 'Great, let\'s proceed to add chords.',
     'fab.chord_request_question': 'Which song would you like us to add chords for?',
     'fab.opt_chords': 'Chords',
-    'fab.opt_content': 'Content',
+    'fab.opt_content': 'Articles',
     'fab.opt_event': 'Show',
     'fab.opt_index': 'Index a Profile',
     'fab.opt_artist': 'Artist',
@@ -1832,6 +1845,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlists.new_btn': 'New List',
     'playlists.options': 'Options',
     'playlists.export_book': 'Export as Chord Book',
+    'playlists.export_book_restricted': 'Chord book export is available for content contributors level 2 and above',
     'playlists.duplicate': 'Duplicate List',
     'playlists.delete': 'Delete List',
     'playlists.empty': 'No lists yet',
@@ -1858,6 +1872,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'playlist.private_hint': 'List is visible only to you',
     'playlist.chord_book_title': 'Turn this list into a Chord Book',
     'playlist.chord_book_desc': 'All songs in chord view, ready to print',
+    'playlist.export_book_restricted': 'Chord book export is available for content contributors level 2 and above',
     'playlist.name_placeholder': 'List name',
     'playlist.desc_placeholder': 'Description (optional)',
     'playlist.image_placeholder': 'Paste image URL',
@@ -2391,9 +2406,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.error_update_details': 'Error updating details',
 
     // Profile reminder modal
-    'profile_reminder.birthday_title': 'Surprise you on your birthday?',
-    'profile_reminder.contact_title': 'A few more details to complete your experience',
-    'profile_reminder.birthday_subtitle': 'Just month and year',
+    'profile_reminder.unified_title': 'A few more details to complete your experience',
     'profile_reminder.error_save': 'Error saving details',
 
     // Month names
@@ -2531,6 +2544,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'chord_book.progress_pdf': 'Assembling PDF...',
     'chord_book.filename_suffix': ' - Chord Book',
     'chord_book.error_export': 'Error exporting the book. Try again.',
+    'chord_book.error_restricted': 'Chord book export is available for content contributors level 2 and above',
 
     // Print panel
     'print.composer_melody': 'Melody:',

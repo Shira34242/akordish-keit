@@ -330,6 +330,7 @@ namespace AkordishKeit.Controllers
                 HasProfessionalProfile = hasProfessionalProfile,
                 ContentTag = effectiveTag,
                 UploadCount = effectiveCount,
+                ChordBookExportCount = user.ChordBookExportCount,
                 CreatedAt = user.CreatedAt,
                 LastProfileReminderAt = user.LastProfileReminderAt,
                 ProfileReminderDismissCount = user.ProfileReminderDismissCount,

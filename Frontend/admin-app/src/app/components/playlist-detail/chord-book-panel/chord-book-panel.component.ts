@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SongService } from '../../../services/song.service';
+import { PlaylistService } from '../../../services/playlist.service';
 import { PlaylistDetail } from '../../../models/playlist.model';
 import { isChord, isChordLine } from '../../../utils/music-utils';
 import { LanguageService } from '../../../services/language.service';
@@ -37,6 +38,7 @@ export class ChordBookPanelComponent implements OnInit {
     isExporting: boolean = false;
     progressText: string = '';
     progressPercent: number = 0;
+    exportError: string | null = null;
 
     private static readonly BRAND_TEXT =
         'הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית';
@@ -47,7 +49,7 @@ export class ChordBookPanelComponent implements OnInit {
 
     private readonly langService = inject(LanguageService);
 
-    constructor(private songService: SongService, private sanitizer: DomSanitizer) {}
+    constructor(private songService: SongService, private playlistService: PlaylistService, private sanitizer: DomSanitizer) {}
 
     ngOnInit(): void {
         this.loadPreviewSong(0);
@@ -55,6 +57,10 @@ export class ChordBookPanelComponent implements OnInit {
 
     onBackdropClick(e: MouseEvent) {
         if ((e.target as HTMLElement).classList.contains('chord-book-backdrop')) this.close.emit();
+    }
+
+    closeError(): void {
+        this.exportError = null;
     }
 
     get lineHeightCss(): number { return this.fontSize * 2; }
@@ -424,6 +430,22 @@ ${rows}`;
     // ===== ייצוא PDF =====
 
     async exportBook() {
+        this.exportError = null;
+
+        try {
+            const creditResult = await new Promise<{ success: boolean; limit: number; used: number; remaining: number; message?: string }>((resolve, reject) => {
+                this.playlistService.exportChordBook(this.playlist.id).subscribe({ next: resolve, error: reject });
+            });
+
+            if (!creditResult.success) {
+                this.exportError = creditResult.message || this.langService.translate('chord_book.error_restricted');
+                return;
+            }
+        } catch {
+            this.exportError = this.langService.translate('chord_book.error_export');
+            return;
+        }
+
         this.isExporting = true;
         this.progressPercent = 0;
         const scale = 2;

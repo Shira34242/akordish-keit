@@ -53,6 +53,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     song: any = null;
     isLoading: boolean = false;
     error: string | null = null;
+    dailyLimitInfo: { dailyViewCount: number; dailyLimit: number; tagHebrew?: string } | null = null;
     isPlaylistPopupOpen: boolean = false;
     isReportModalOpen: boolean = false;
     showCopyNotification: boolean = false;
@@ -123,6 +124,13 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     isSubmittingRating: boolean = false;
 
     get isLoggedIn(): boolean { return this.authService.isLoggedIn; }
+
+    getDailyLimitMessage(): string {
+        if (!this.dailyLimitInfo) return '';
+        const tpl = this.langService.translate('song.daily_limit_message');
+        return tpl.replace('{count}', String(this.dailyLimitInfo.dailyViewCount))
+                  .replace('{limit}', String(this.dailyLimitInfo.dailyLimit));
+    }
     artistSongs: any[] = [];
     popularSongs: any[] = [];
     similarSongs: any[] = [];
@@ -137,7 +145,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private route: ActivatedRoute,
         private songService: SongService,
         private sanitizer: DomSanitizer,
-        private authService: AuthService,
+        public authService: AuthService,
         private router: Router,
         private ngZone: NgZone,
         private playlistService: PlaylistService,
@@ -242,6 +250,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.headerLayoutDone = false;
         this.isLoading = true;
         this.error = null;
+        this.dailyLimitInfo = null;
         this.canEdit = false; 
         this.isEasyMode = false;
         this.showKnownChordSummary = true;
@@ -281,6 +290,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                         }
                     },
                     error: (err) => {
+                        if (err.status === 429) {
+                            this.dailyLimitInfo = err.error || null;
+                        }
                         console.error('Error incrementing view count:', err);
                     }
                 });
@@ -288,7 +300,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
             },
             error: (err) => {
                 console.error('Error loading song:', err);
-                this.error = this.langService.translate('song.error_load');
+                if (err.status === 429) {
+                    this.dailyLimitInfo = err.error || { dailyViewCount: 0, dailyLimit: 10 };
+                } else {
+                    this.error = this.langService.translate('song.error_load');
+                }
                 this.isLoading = false;
             }
         });

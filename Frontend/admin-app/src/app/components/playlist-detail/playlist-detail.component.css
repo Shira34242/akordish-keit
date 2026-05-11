@@ -832,3 +832,30 @@
     font-size: var(--font-xs);
   }
 }
+
+/* ===== Chord Book Locked Card ===== */
+.chord-book-card--locked {
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.chord-book-card--locked:hover {
+    opacity: 0.85;
+    background: rgba(0,0,0,0.05);
+}
+
+/* ===== Chord Book Restricted Hint ===== */
+.chord-book-restricted-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    max-width: 1200px;
+    margin: var(--space-lg) auto 0;
+    padding: var(--space-base) var(--space-lg);
+    background: #ddff53;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: #000000;
+}

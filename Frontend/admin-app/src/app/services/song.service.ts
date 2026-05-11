@@ -115,6 +115,10 @@ export class SongService {
         return this.http.post<{ viewCount: number }>(`${this.apiUrl}/${id}/increment-view`, {});
     }
 
+    getDailyLimitStatus(): Observable<{ limitExceeded: boolean; dailyViewCount: number; dailyLimit: number; remainingViews: number; tagHebrew?: string }> {
+        return this.http.get<{ limitExceeded: boolean; dailyViewCount: number; dailyLimit: number; remainingViews: number; tagHebrew?: string }>(`${this.apiUrl}/daily-limit-status`);
+    }
+
     getRandomSong(): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/random`);
     }

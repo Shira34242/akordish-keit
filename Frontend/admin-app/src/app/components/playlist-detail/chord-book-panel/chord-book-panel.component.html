@@ -84,6 +84,13 @@
 
                 <!-- כפתור ייצוא -->
                 <div class="action-area">
+                    <div class="export-error-banner" *ngIf="exportError" (click)="closeError()">
+                        <span class="material-icons error-icon">info</span>
+                        <span>{{ exportError }}</span>
+                        <button class="error-close" type="button" (click)="closeError()">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </div>
                     <button class="action-btn btn-export" (click)="exportBook()" [disabled]="isExporting || songCount === 0">
                         <svg *ngIf="!isExporting" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

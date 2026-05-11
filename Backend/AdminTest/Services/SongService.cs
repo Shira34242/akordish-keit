@@ -2,6 +2,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
+using AkordishKeit.Models.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -1763,6 +1764,26 @@ public class SongService : ISongService
             throw new KeyNotFoundException("Song not found");
         }
 
+        // Check daily view limit before recording (skip for this specific song if already viewed today)
+        var todayStart = DateTime.UtcNow.Date;
+        bool alreadyViewedToday = false;
+
+        if (userId.HasValue)
+        {
+            alreadyViewedToday = await _context.SongViews
+                .AnyAsync(sv => sv.SongId == id && sv.UserId == userId && sv.ViewedAt >= todayStart);
+        }
+        else if (!string.IsNullOrEmpty(ipAddress))
+        {
+            alreadyViewedToday = await _context.SongViews
+                .AnyAsync(sv => sv.SongId == id && sv.IpAddress == ipAddress && sv.ViewedAt >= todayStart);
+        }
+
+        if (!alreadyViewedToday)
+        {
+            await CheckDailyLimitAsync(userId, ipAddress);
+        }
+
         // Check if this is a unique view (within last 24 hours)
         var cutoffTime = DateTime.UtcNow.AddHours(-24);
         bool isUniqueView = false;
@@ -1813,6 +1834,87 @@ public class SongService : ISongService
         }
 
         return song.ViewCount;
+    }
+
+    public async Task<DailyLimitStatusDto> GetDailyLimitStatusAsync(int? userId, string? ipAddress)
+    {
+        var todayStart = DateTime.UtcNow.Date;
+
+        int dailyViewCount;
+        if (userId.HasValue)
+        {
+            dailyViewCount = await _context.SongViews
+                .Where(sv => sv.UserId == userId && sv.ViewedAt >= todayStart)
+                .Select(sv => sv.SongId)
+                .Distinct()
+                .CountAsync();
+        }
+        else if (!string.IsNullOrEmpty(ipAddress))
+        {
+            dailyViewCount = await _context.SongViews
+                .Where(sv => sv.IpAddress == ipAddress && sv.ViewedAt >= todayStart)
+                .Select(sv => sv.SongId)
+                .Distinct()
+                .CountAsync();
+        }
+        else
+        {
+            dailyViewCount = 0;
+        }
+
+        var (dailyLimit, tagHebrew) = await GetDailyLimitForUserAsync(userId);
+        var remaining = Math.Max(0, dailyLimit - dailyViewCount);
+
+        return new DailyLimitStatusDto
+        {
+            LimitExceeded = dailyViewCount >= dailyLimit,
+            DailyViewCount = dailyViewCount,
+            DailyLimit = dailyLimit,
+            RemainingViews = remaining,
+            TagHebrew = tagHebrew
+        };
+    }
+
+    private async Task CheckDailyLimitAsync(int? userId, string? ipAddress)
+    {
+        var status = await GetDailyLimitStatusAsync(userId, ipAddress);
+
+        if (status.LimitExceeded)
+        {
+            throw new DailyLimitExceededException(
+                status.DailyViewCount,
+                status.DailyLimit,
+                status.TagHebrew);
+        }
+    }
+
+    private async Task<(int limit, string? tagHebrew)> GetDailyLimitForUserAsync(int? userId)
+    {
+        // Admins and Managers — unlimited
+        if (userId.HasValue)
+        {
+            var user = await _context.Users
+                .Where(u => u.Id == userId.Value)
+                .Select(u => new { u.Role, u.ContentTag })
+                .FirstOrDefaultAsync();
+
+            if (user != null)
+            {
+                if (user.Role >= UserRole.Manager)
+                    return (int.MaxValue, null);
+
+                return user.ContentTag switch
+                {
+                    UserContentTag.LeadingContributor => (40, "תורם מוביל"),
+                    UserContentTag.Contributor         => (20, "תורם"),
+                    UserContentTag.Beginner            => (15, "מתחיל"),
+                    _                                  => (10, null)
+                };
+            }
+        }
+
+        // Guest / unknown — base limit
+        return (10, null);
     }
 
     // ============================================

@@ -38,6 +38,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   editedImageUrl: string | undefined = undefined;
 
   showChordBook = false;
+  showChordBookRestricted = false;
 
   isUploadingImage = false;
   imageUploadError: string | null = null;
@@ -80,7 +81,11 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
 
     this.route.queryParams.subscribe(params => {
       if (params['chordBook'] === 'true') {
-        this.showChordBook = true;
+        if (this.canUseChordBook()) {
+          this.showChordBook = true;
+        } else {
+          this.showChordBookRestricted = true;
+        }
       }
     });
 
@@ -285,5 +290,9 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     if (!user) return false;
     if (this.authService.isAdminOrManager(user)) return true;
     return (user.contentTag ?? 0) >= 2;
+  }
+
+  dismissChordBookRestricted(): void {
+    this.showChordBookRestricted = false;
   }
 }

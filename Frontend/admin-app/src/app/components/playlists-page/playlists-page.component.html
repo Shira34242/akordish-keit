@@ -28,6 +28,14 @@
     <button class="btn-pill btn-pill--accent" type="button" (click)="loadPageData()">{{ 'shared.try_again' | translate }}</button>
   </div>
 
+  <div class="chord-book-hint" *ngIf="showChordBookHint" (click)="dismissChordBookHint()">
+    <span class="material-icons hint-icon">info</span>
+    <span class="hint-text">{{ 'playlists.export_book_restricted' | translate }}</span>
+    <button class="hint-close" type="button" (click)="dismissChordBookHint()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
   <main class="page-body" *ngIf="!isLoading && !error">
 
     <section class="lists-section">
@@ -122,10 +130,19 @@
                 <span class="material-icons">more_horiz</span>
               </button>
               <div class="pcard-dropdown" *ngIf="openDotsMenuId === playlist.id">
-                <button class="dropdown-item" type="button" (click)="printPlaylist(playlist.id)">
+                <button class="dropdown-item" type="button"
+                        *ngIf="canExportChordBook(); else chordBookLocked"
+                        (click)="printPlaylist(playlist.id)">
                   <span class="material-icons">menu_book</span>
                   {{ 'playlists.export_book' | translate }}
                 </button>
+                <ng-template #chordBookLocked>
+                  <button class="dropdown-item dropdown-item--locked" type="button"
+                          (click)="printPlaylist(playlist.id)">
+                    <span class="material-icons">lock</span>
+                    {{ 'playlists.export_book' | translate }}
+                  </button>
+                </ng-template>
                 <button class="dropdown-item" type="button" (click)="duplicatePlaylist(playlist.id)">
                   <span class="material-icons">content_copy</span>
                   {{ 'playlists.duplicate' | translate }}

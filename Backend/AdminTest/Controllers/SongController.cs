@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Exceptions;
 using AkordishKeit.Services;
 
 namespace AkordishKeit.Controllers;
@@ -303,6 +304,21 @@ public class SongsController : ControllerBase
     {
         try
         {
+            var (userId, ipAddress) = GetUserIdentity();
+            var limitStatus = await _songService.GetDailyLimitStatusAsync(userId, ipAddress);
+
+            if (limitStatus.LimitExceeded)
+            {
+                return StatusCode(429, new
+                {
+                    message = "הגעת למגבלה היומית של צפייה באקורדים",
+                    dailyViewCount = limitStatus.DailyViewCount,
+                    dailyLimit = limitStatus.DailyLimit,
+                    remainingViews = limitStatus.RemainingViews,
+                    tagHebrew = limitStatus.TagHebrew
+                });
+            }
+
             var song = await _songService.GetSongByIdAsync(id, includeUnapproved: false);
 
             if (song == null)
@@ -686,6 +702,16 @@ public class SongsController : ControllerBase
 
             return Ok(new { viewCount });
         }
+        catch (DailyLimitExceededException ex)
+        {
+            return StatusCode(429, new
+            {
+                message = "הגעת למגבלה היומית של צפייה באקורדים",
+                dailyViewCount = ex.DailyViewCount,
+                dailyLimit = ex.DailyLimit,
+                tagHebrew = ex.TagHebrew
+            });
+        }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
@@ -694,6 +720,26 @@ public class SongsController : ControllerBase
         {
             Console.WriteLine($"Error incrementing song view: {ex.Message}");
             return StatusCode(500, new { message = "שגיאה בעדכון צפיות" });
+        }
+    }
+
+    // ============================================
+    // GET: api/Songs/daily-limit-status
+    // Check current daily song view limit status
+    // ============================================
+    [HttpGet("daily-limit-status")]
+    public async Task<ActionResult<DailyLimitStatusDto>> GetDailyLimitStatus()
+    {
+        try
+        {
+            var (userId, ipAddress) = GetUserIdentity();
+            var status = await _songService.GetDailyLimitStatusAsync(userId, ipAddress);
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting daily limit status: {ex.Message}");
+            return StatusCode(500, new { message = "שגיאה בבדיקת מגבלה יומית" });
         }
     }
 
@@ -807,5 +853,12 @@ public class SongsController : ControllerBase
         }
 
         return userId;
+    }
+
+    private (int? userId, string? ipAddress) GetUserIdentity()
+    {
+        int? userId = GetCurrentUserId();
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        return (userId, ipAddress);
     }
 }

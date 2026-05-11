@@ -87,6 +87,9 @@ public class User
     /// <summary>תאריך ההעלאה האחרונה — לחישוב איפוס כל 4 חודשים</summary>
     public DateTime? LastUploadDate { get; set; }
 
+    /// <summary>מונה ייצוא ספר אקורדים — מוגבל לפי רמת ContentTag</summary>
+    public int ChordBookExportCount { get; set; } = 0;
+
     // ════════════════════════════════════
     //          Navigation Properties
     // ════════════════════════════════════

@@ -278,6 +278,42 @@
 .btn-export:hover:not(:disabled) { background: #404040; }
 .btn-export:disabled { opacity: 0.35; cursor: default; }
 
+/* ===== Export Error Banner ===== */
+.export-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #ddff53;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 300;
+    color: #000000;
+}
+
+.error-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.error-close {
+    margin-right: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    color: #000000;
+    display: flex;
+    align-items: center;
+}
+
+.error-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
 /* ===== Spinner ===== */
 .spinner-sm {
     width: 12px;

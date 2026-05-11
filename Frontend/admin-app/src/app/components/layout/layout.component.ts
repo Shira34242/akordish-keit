@@ -77,7 +77,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showAuthModal = false;
   showAdditionalDetailsModal = false;
   showSoftReminderModal = false;
-  softReminderKind: ReminderKind = 'contact';
+  softReminderKind: ReminderKind = 'profile';
   softReminderUser: User | null = null;
   showForgotPasswordModal = false;
   showReportModal = false;

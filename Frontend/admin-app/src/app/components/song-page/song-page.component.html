@@ -647,7 +647,27 @@
         <div class="spinner"></div>
         <p>{{ 'song.loading_song' | translate }}</p>
     </div>
-    <div class="error-container" *ngIf="error">
+    <div class="daily-limit-container" *ngIf="dailyLimitInfo && !isLoading">
+        <div class="daily-limit-card">
+            <h2 class="daily-limit-title">{{ 'song.daily_limit_title' | translate }}</h2>
+            <p class="daily-limit-message">{{ getDailyLimitMessage() }}</p>
+            <p class="daily-limit-tag" *ngIf="dailyLimitInfo.tagHebrew">
+                ✨ {{ dailyLimitInfo.tagHebrew }}
+            </p>
+            <p class="daily-limit-guest" *ngIf="!isLoggedIn">
+                {{ 'song.daily_limit_guest' | translate }}
+            </p>
+            <div class="daily-limit-actions">
+                <button class="daily-limit-btn primary" *ngIf="!isLoggedIn" (click)="authService.requestLogin('/')">
+                    {{ 'song.daily_limit_login' | translate }}
+                </button>
+                <button class="daily-limit-btn secondary" [routerLink]="'/subscription/select'">
+                    {{ 'song.daily_limit_upgrade' | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="error-container" *ngIf="error && !isLoading && !dailyLimitInfo">
         <p>{{ error }}</p>
         <button (click)="loadSong(songId!)">{{ 'song.try_again' | translate }}</button>
     </div>

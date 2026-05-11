@@ -752,3 +752,53 @@
     width: 180px;
   }
 }
+
+/* ===== Chord Book Hint Banner ===== */
+.chord-book-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    max-width: 900px;
+    margin: var(--space-lg) auto 0;
+    padding: var(--space-base) var(--space-lg);
+    background: #ddff53;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: #000000;
+}
+
+.hint-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.hint-text {
+    flex: 1;
+}
+
+.hint-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    color: #000000;
+    display: flex;
+    align-items: center;
+}
+
+.hint-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+/* ===== Locked Dropdown Item ===== */
+.dropdown-item--locked {
+    opacity: 0.55;
+    cursor: pointer;
+}
+
+.dropdown-item--locked:hover {
+    opacity: 0.8;
+}

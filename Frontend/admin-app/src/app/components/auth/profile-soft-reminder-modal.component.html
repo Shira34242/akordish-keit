@@ -6,43 +6,41 @@
 
     <div class="soft-reminder-header">
       <h2>{{ title }}</h2>
-      <p class="soft-reminder-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
     </div>
 
     <form class="soft-reminder-form" (ngSubmit)="onSave()">
-      <ng-container *ngIf="kind === 'contact'; else birthdayFields">
-        <label>
-          <span>טלפון</span>
-          <input type="tel" name="phone" [(ngModel)]="phone" placeholder="מספר טלפון">
-        </label>
+      <label>
+        <span>טלפון</span>
+        <input type="tel" name="phone" [(ngModel)]="phone" placeholder="מספר טלפון">
+      </label>
 
-        <label class="city-field">
-          <span>עיר</span>
-          <input
-            type="text"
-            name="city"
-            [(ngModel)]="citySearch"
-            (input)="onCityInput()"
-            (focus)="showCityDropdown = true"
-            placeholder="חיפוש עיר">
+      <label class="city-field">
+        <span>עיר</span>
+        <input
+          type="text"
+          name="city"
+          [(ngModel)]="citySearch"
+          (input)="onCityInput()"
+          (focus)="showCityDropdown = true"
+          (blur)="onCityBlur()"
+          placeholder="חיפוש עיר">
 
-          <div class="city-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
-            <button
-              type="button"
-              *ngFor="let city of filteredCities"
-              (click)="selectCity(city)">
-              {{ city.name }}
-            </button>
-          </div>
-        </label>
+        <div class="city-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+          <button
+            type="button"
+            *ngFor="let city of filteredCities"
+            (click)="selectCity(city)">
+            {{ city.name }}
+          </button>
+        </div>
+      </label>
 
-        <label>
-          <span>כתובת</span>
-          <input type="text" name="address" [(ngModel)]="address" placeholder="כתובת מגורים">
-        </label>
-      </ng-container>
+      <label>
+        <span>כתובת</span>
+        <input type="text" name="address" [(ngModel)]="address" placeholder="כתובת מגורים">
+      </label>
 
-      <ng-template #birthdayFields>
+      <div class="birthday-row">
         <label>
           <span>חודש לידה</span>
           <select name="birthMonth" [(ngModel)]="birthMonth">
@@ -58,7 +56,7 @@
             <option *ngFor="let year of years" [ngValue]="year">{{ year }}</option>
           </select>
         </label>
-      </ng-template>
+      </div>
 
       <p class="soft-reminder-error" *ngIf="errorMessage">{{ errorMessage }}</p>
 

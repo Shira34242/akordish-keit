@@ -39,7 +39,7 @@ type MessageTone = 'question' | 'helper' | 'user';
 interface AssistantOption {
   id: string;
   label: string;
-  action?: QuickAddAction | 'song' | 'content-news' | 'content-article' | 'event' | 'chord-request' | 'contact-form';
+  action?: QuickAddAction | 'song' | 'content-news' | 'content-article' | `content-category:${number}` | 'event' | 'chord-request' | 'contact-form';
   nextStep?: AssistantStep;
   isSecondary?: boolean;
 }
@@ -118,6 +118,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private readonly profileSearch$ = new Subject<string>();
   eventArtists: ArtistListDto[] = [];
   professionalCategories: SystemItem[] = [];
+  articleCategories: SystemItem[] = [];
   selectedEventArtistIds: number[] = [];
   eventArtistSearchQuery = '';
   isLoadingEventArtists = false;
@@ -128,6 +129,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.initializeUploaderSelector();
     this.loadEventArtists();
     this.loadProfessionalCategories();
+    this.loadArticleCategories();
   }
 
   ngOnInit(): void {
@@ -224,6 +226,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
     if (typeof option.action === 'string' && option.action.startsWith('index-service-provider-category:')) {
       this.actionSelected.emit(option.action as QuickAddAction);
+      return;
+    }
+
+    if (typeof option.action === 'string' && option.action.startsWith('content-category:')) {
+      const categoryId = parseInt(option.action.split(':')[1], 10);
+      const category = this.articleCategories.find(c => c.id === categoryId);
+      const contentType = (category as any)?.section === 0 ? ArticleContentType.News : ArticleContentType.Blog;
+      this.openArticleFlow(contentType, categoryId);
       return;
     }
 
@@ -675,6 +685,19 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     });
   }
 
+  private loadArticleCategories(): void {
+    this.systemTablesService.getItems('article-categories', 1, 100).pipe(
+      catchError(() => of({ items: [] as SystemItem[] }))
+    ).subscribe({
+      next: (result) => {
+        this.articleCategories = result.items ?? [];
+      },
+      error: () => {
+        this.articleCategories = [];
+      }
+    });
+  }
+
   trackByMessage(_: number, message: AssistantMessage): string {
     return message.id;
   }
@@ -683,10 +706,10 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     return option.id;
   }
 
-  private openArticleFlow(type: ArticleContentType): void {
+  private openArticleFlow(type: ArticleContentType, categoryId?: number): void {
     this.modeOriginStep = this.currentStep;
     this.currentMode = 'article';
-    this.article = this.createEmptyArticle(type);
+    this.article = this.createEmptyArticle(type, categoryId != null ? [categoryId] : []);
     this.showArticleOptional = false;
     this.showArticleImageLinkInput = false;
     this.isUploadingArticleImage = false;
@@ -771,14 +794,21 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private getStepDefinition(step: AssistantStep): AssistantStepDefinition {
     const t = (k: string) => this.langService.translate(k);
     switch (step) {
-      case 'content':
+      case 'content': {
+        const categoryOptions: AssistantOption[] = this.articleCategories.map(category => ({
+          id: `content-category-${category.id}`,
+          label: category.name,
+          action: `content-category:${category.id}`
+        }));
+
         return {
           question: t('fab.content_question'),
           options: [
-            { id: 'content-news', label: t('fab.opt_news'), action: 'content-news' },
+            ...categoryOptions,
             { id: 'content-article', label: t('fab.opt_blog'), action: 'content-article' }
           ]
         };
+      }
       case 'index': {
         const professionalOptions: AssistantOption[] = this.professionalCategories.map(category => ({
           id: `index-service-provider-category-${category.id}`,
@@ -834,14 +864,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
   }
 
-  private createEmptyArticle(contentType: ArticleContentType): CreateArticleDto {
+  private createEmptyArticle(contentType: ArticleContentType, categoryIds: number[] = []): CreateArticleDto {
     return {
       title: '',
       subtitle: '',
       content: '',
       featuredImageUrl: '',
       authorName: '',
-      categoryIds: [],
+      categoryIds,
       contentType,
       slug: '',
       canonicalUrl: '',

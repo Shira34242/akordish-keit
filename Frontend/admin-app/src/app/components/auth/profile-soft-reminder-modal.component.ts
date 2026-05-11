@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
@@ -14,7 +14,7 @@ import { LanguageService } from '../../services/language.service';
   styleUrls: ['./profile-soft-reminder-modal.component.css']
 })
 export class ProfileSoftReminderModalComponent implements OnInit {
-  @Input() kind: ReminderKind = 'contact';
+  @Input() kind: ReminderKind = 'profile';
   @Input() user: User | null = null;
 
   @Output() saved = new EventEmitter<void>();
@@ -23,7 +23,6 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   loading = false;
   errorMessage = '';
 
-  // contact form
   phone = '';
   cityId: number | null = null;
   address = '';
@@ -32,7 +31,6 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   citiesLoading = true;
   showCityDropdown = false;
 
-  // birthday form
   birthMonth: number | null = null;
   birthYear: number | null = null;
 
@@ -63,31 +61,23 @@ export class ProfileSoftReminderModalComponent implements OnInit {
       this.address = this.user.address ?? '';
     }
 
-    if (this.kind === 'contact') {
-      this.citiesService.getCities().subscribe({
-        next: cities => {
-          this.cities = cities;
-          this.citiesLoading = false;
-          if (this.cityId) {
-            const found = this.cities.find(c => c.id === this.cityId);
-            if (found) this.citySearch = found.name;
-          }
-        },
-        error: () => {
-          this.citiesLoading = false;
+    this.citiesService.getCities().subscribe({
+      next: cities => {
+        this.cities = cities;
+        this.citiesLoading = false;
+        if (this.cityId) {
+          const found = this.cities.find(c => c.id === this.cityId);
+          if (found) this.citySearch = found.name;
         }
-      });
-    }
+      },
+      error: () => {
+        this.citiesLoading = false;
+      }
+    });
   }
 
   get title(): string {
-    return this.kind === 'birthday'
-      ? this.langService.translate('profile_reminder.birthday_title')
-      : this.langService.translate('profile_reminder.contact_title');
-  }
-
-  get subtitle(): string | null {
-    return this.kind === 'birthday' ? this.langService.translate('profile_reminder.birthday_subtitle') : null;
+    return this.langService.translate('profile_reminder.unified_title');
   }
 
   get filteredCities(): City[] {
@@ -106,17 +96,27 @@ export class ProfileSoftReminderModalComponent implements OnInit {
 
   onCityInput(): void {
     this.showCityDropdown = true;
-    // Clear cityId if user is typing freely (will need to re-pick)
     const exact = this.cities.find(c => c.name === this.citySearch.trim());
     this.cityId = exact ? exact.id : null;
   }
 
+  onCityBlur(): void {
+    setTimeout(() => {
+      this.showCityDropdown = false;
+    }, 200);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.city-field')) {
+      this.showCityDropdown = false;
+    }
+  }
+
   get canSave(): boolean {
     if (this.loading) return false;
-    if (this.kind === 'contact') {
-      return !!(this.phone.trim() && this.cityId && this.address.trim());
-    }
-    return !!(this.birthMonth && this.birthYear);
+    return !!(this.phone.trim() && this.cityId && this.address.trim() && this.birthMonth && this.birthYear);
   }
 
   onSave(): void {
@@ -124,14 +124,11 @@ export class ProfileSoftReminderModalComponent implements OnInit {
     this.loading = true;
 
     const payload: Record<string, unknown> = {};
-    if (this.kind === 'contact') {
-      if (this.phone.trim()) payload['phone'] = this.phone.trim();
-      if (this.cityId) payload['cityId'] = this.cityId;
-      if (this.address.trim()) payload['address'] = this.address.trim();
-    } else {
-      if (this.birthMonth) payload['birthMonth'] = this.birthMonth;
-      if (this.birthYear) payload['birthYear'] = this.birthYear;
-    }
+    if (this.phone.trim()) payload['phone'] = this.phone.trim();
+    if (this.cityId) payload['cityId'] = this.cityId;
+    if (this.address.trim()) payload['address'] = this.address.trim();
+    if (this.birthMonth) payload['birthMonth'] = this.birthMonth;
+    if (this.birthYear) payload['birthYear'] = this.birthYear;
 
     this.authService.updateSoftProfile(payload).subscribe({
       next: () => {
@@ -148,7 +145,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   onDismiss(): void {
     this.authService.dismissProfileReminder().subscribe({
       next: () => this.dismissed.emit(),
-      error: () => this.dismissed.emit() // emit anyway — UX shouldn't block on it
+      error: () => this.dismissed.emit()
     });
   }
 

@@ -107,6 +107,11 @@ public interface ISongService
     Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);
 
     /// <summary>
+    /// Check daily song view limit status for a user/IP
+    /// </summary>
+    Task<DailyLimitStatusDto> GetDailyLimitStatusAsync(int? userId, string? ipAddress);
+
+    /// <summary>
     /// שמירת דירוג שיר (upsert — מחליף אם כבר קיים)
     /// </summary>
     Task<SongRatingResponseDto> RateSongAsync(int songId, int userId, int rating);

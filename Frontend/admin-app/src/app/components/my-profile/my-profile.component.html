@@ -62,7 +62,7 @@
 
   <div class="profile-content">
     @if (profileIncomplete) {
-      <div class="completion-banner" (click)="openProfileModal()">
+      <div class="completion-banner" (click)="openProfileCompletion()">
         <div class="completion-banner-text">
           <p>{{ 'profile.completion_title' | translate }}</p>
           <p>{{ 'profile.completion_sub' | translate }}</p>
@@ -339,41 +339,6 @@
       } @else {
         <app-service-provider-form [embedded]="true" [serviceProviderIdInput]="editPageId ?? undefined" (close)="closeEditPageModal()"></app-service-provider-form>
       }
-    </div>
-  </div>
-}
-
-@if (showProfileModal) {
-  <div class="modal-backdrop" (click)="closeProfileModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <button class="modal-close" (click)="closeProfileModal()">
-        <span class="material-icons">close</span>
-      </button>
-      <h2 class="modal-title">{{ 'profile.modal_title' | translate }}</h2>
-      <p class="modal-subtitle">{{ 'profile.modal_sub' | translate }}</p>
-
-      <div class="modal-form">
-        <div class="form-group">
-          <label>{{ 'profile.label_email' | translate }}</label>
-          <input type="email" [value]="user?.email" disabled class="form-input form-input--disabled"/>
-        </div>
-        <div class="form-group">
-          <label>{{ 'profile.label_phone' | translate }}</label>
-          <input type="tel" [(ngModel)]="profileForm.phone" placeholder="050-0000000" class="form-input"/>
-        </div>
-        <div class="form-group">
-          <label>{{ 'profile.label_address' | translate }}</label>
-          <input type="text" [(ngModel)]="profileForm.address" [placeholder]="'profile.address_placeholder' | translate" class="form-input"/>
-        </div>
-        <div class="form-group">
-          <label>{{ 'profile.label_birthdate' | translate }}</label>
-          <input type="date" [(ngModel)]="profileForm.birthDate" class="form-input"/>
-        </div>
-      </div>
-
-      <button class="modal-save-btn" (click)="saveProfile()" [disabled]="profileSaving">
-        {{ profileSaving ? ('profile.saving' | translate) : ('profile.save' | translate) }}
-      </button>
     </div>
   </div>
 }

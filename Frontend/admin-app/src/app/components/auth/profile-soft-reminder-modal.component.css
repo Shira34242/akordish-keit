@@ -144,6 +144,13 @@
   background: #F2F2F2;
 }
 
+/* Birthday row */
+.birthday-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
 /* Error */
 .soft-reminder-error {
   margin: 0;

@@ -1,8 +1,11 @@
 using System.Security.Claims;
+using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Controllers;
 
@@ -11,10 +14,12 @@ namespace AkordishKeit.Controllers;
 [Authorize]
 public class PlaylistsController : ControllerBase
 {
+    private readonly AkordishKeitDbContext _context;
     private readonly IPlaylistService _playlistService;
 
-    public PlaylistsController(IPlaylistService playlistService)
+    public PlaylistsController(AkordishKeitDbContext context, IPlaylistService playlistService)
     {
+        _context = context;
         _playlistService = playlistService;
     }
 
@@ -284,5 +289,56 @@ public class PlaylistsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// צורך זיכוי ייצוא ספר אקורדים. מחזיר success=true אם יש זיכויים פנויים,
+    /// או success=false עם הסבר אם למשתמש אין זיכויים.
+    /// </summary>
+    [HttpPost("{id:int}/export-chord-book")]
+    public async Task<ActionResult> ExportChordBook(int id)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
+
+        var user = await _context.Users.FindAsync(userId.Value);
+        if (user == null)
+            return NotFound(new { message = "המשתמש לא נמצא" });
+
+        bool isAdminOrManager = user.Role >= UserRole.Manager;
+        int limit = isAdminOrManager
+            ? int.MaxValue
+            : (int)user.ContentTag switch
+            {
+                3 => 2, // LeadingContributor → 2 ספרים
+                2 => 1, // Contributor → ספר 1
+                _ => 0  // Beginner / None → 0
+            };
+
+        if (user.ChordBookExportCount >= limit)
+        {
+            return Ok(new
+            {
+                success = false,
+                limit,
+                used = user.ChordBookExportCount,
+                remaining = 0,
+                message = limit <= 0
+                    ? "ספר אקורדים פתוח רק לתורמי תוכן בדרגה 2 ומעלה"
+                    : "הגעת למגבלת הייצוא. נסה שוב מאוחר יותר."
+            });
+        }
+
+        user.ChordBookExportCount++;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            success = true,
+            limit,
+            used = user.ChordBookExportCount,
+            remaining = limit - user.ChordBookExportCount
+        });
     }
 }

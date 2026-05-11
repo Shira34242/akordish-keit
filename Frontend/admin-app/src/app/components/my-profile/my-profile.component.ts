@@ -28,6 +28,7 @@ import { EventCardData } from '../../utils/event.utils';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { ProfileReminderService } from '../../services/profile-reminder.service';
 
 interface ProfileSongCard {
   id: number;
@@ -105,12 +106,8 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     ukulele: ['C', 'D', 'F', 'G', 'A', 'Am', 'Dm', 'Em', 'Fmaj7', 'G7', 'A7', 'C7']
   };
 
-  showProfileModal = false;
-  profileForm = { phone: '', address: '', birthDate: '' };
-  profileSaving = false;
-  marketingSaving = false;
-
   showEditPageModal = false;
+  marketingSaving = false;
   editPageType: 'artist' | 'teacher' | 'provider' | null = null;
   editPageId: number | null = null;
 
@@ -146,6 +143,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private router: Router,
     private quickAddAssistantService: QuickAddAssistantService,
+    private profileReminderService: ProfileReminderService,
     public langService: LanguageService
   ) {}
 
@@ -200,41 +198,8 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     return !!this.user && ((this.user.hasProfessionalProfile ?? false) || (this.user.contentTag ?? 0) >= 2 || this.authService.isAdminOrManager(this.user));
   }
 
-  openProfileModal() {
-    this.profileForm = {
-      phone: this.user?.phone || '',
-      address: this.user?.address || '',
-      birthDate: this.user?.birthDate ? this.user.birthDate.substring(0, 10) : ''
-    };
-    this.showProfileModal = true;
-  }
-
-  closeProfileModal() {
-    this.showProfileModal = false;
-  }
-
-  saveProfile() {
-    this.profileSaving = true;
-    this.userService.updateMyProfile({
-      phone: this.profileForm.phone || undefined,
-      address: this.profileForm.address || undefined,
-      birthDate: this.profileForm.birthDate || undefined
-    }).subscribe({
-      next: () => {
-        if (this.user) {
-          this.user = {
-            ...this.user,
-            phone: this.profileForm.phone,
-            address: this.profileForm.address,
-            birthDate: this.profileForm.birthDate
-          };
-          this.authService.updateCurrentUser(this.user);
-        }
-        this.profileSaving = false;
-        this.closeProfileModal();
-      },
-      error: () => { this.profileSaving = false; }
-    });
+  openProfileCompletion(): void {
+    this.profileReminderService.requestProfileCompletion();
   }
 
   toggleMarketingConsent(): void {

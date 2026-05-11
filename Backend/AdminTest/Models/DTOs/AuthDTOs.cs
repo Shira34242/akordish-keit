@@ -199,6 +199,9 @@ namespace AkordishKeit.Models.DTOs
         [System.Text.Json.Serialization.JsonPropertyName("uploadCount")]
         public int UploadCount { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("chordBookExportCount")]
+        public int ChordBookExportCount { get; set; }
+
         /// <summary>תאריך הרשמה — לקביעת מתי להציג תזכורות</summary>
         [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
         public DateTime CreatedAt { get; set; }
