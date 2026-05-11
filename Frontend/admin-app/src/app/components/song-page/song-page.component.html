@@ -628,6 +628,21 @@
                 </ul>
             </div>
 
+            <!-- מוזיקה ויראלית — חדשות -->
+            <div class="sidebar-card music-news-card">
+                <h3>ויראלי בחדשות המוזיקה</h3>
+
+                <div *ngIf="isLoadingMusicNews" class="loading-small">{{ 'song.loading' | translate }}</div>
+
+                <div class="music-news-list" *ngIf="!isLoadingMusicNews">
+                    <app-news-banner
+                        *ngFor="let article of musicNewsArticles"
+                        [article]="article"
+                        [showDescription]="false">
+                    </app-news-banner>
+                </div>
+            </div>
+
             <!-- Uploader Badge -->
             <div *ngIf="song.uploaderProfile" class="sidebar-card uploader-card">
                 <h3>{{ 'song.uploaded_by' | translate }}</h3>

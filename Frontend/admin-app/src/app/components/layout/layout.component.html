@@ -305,17 +305,20 @@
     <router-outlet></router-outlet>
 </main>
 
-<button class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)">
-    <span class="material-icons fab-add-icon" [class.rotated]="showQuickAddAssistant">add</span>
-</button>
+ <div class="fab-chat-container" [class.fab-chat-expanded]="showQuickAddAssistant">
+    <app-quick-add-assistant-modal
+        *ngIf="showQuickAddAssistant"
+        [entryPoint]="quickAddEntryPoint"
+        [adminEditLabel]="canEditArtistPage ? adminEditTarget?.label ?? null : null"
+        [class.is-closing]="isQuickAddClosing"
+        (close)="closeFabMenu()"
+        (actionSelected)="handleQuickAddAction($event)">
+    </app-quick-add-assistant-modal>
 
-<app-quick-add-assistant-modal
-    *ngIf="showQuickAddAssistant"
-    [entryPoint]="quickAddEntryPoint"
-    [adminEditLabel]="canEditArtistPage ? adminEditTarget?.label ?? null : null"
-    (close)="closeFabMenu()"
-    (actionSelected)="handleQuickAddAction($event)">
-</app-quick-add-assistant-modal>
+    <button class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)">
+        <span class="material-icons fab-add-icon" [class.rotated]="showQuickAddAssistant">add</span>
+    </button>
+</div>
 
 <div class="guided-profile-modal-overlay" *ngIf="showTeacherCreateModal" (click)="closeTeacherCreateModal()">
     <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">

@@ -58,6 +58,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   showAddSongModal = false;
   showMobileMenu = false;
   showQuickAddAssistant = false;
+  isQuickAddClosing = false;
   quickAddEntryPoint: QuickAddEntryPoint = 'root';
   showNotificationsPopup = false;
   showNotificationsCenterModal = false;
@@ -706,8 +707,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   closeFabMenu(): void {
-    this.showQuickAddAssistant = false;
-    this.quickAddEntryPoint = 'root';
+    this.isQuickAddClosing = true;
+    setTimeout(() => {
+      this.showQuickAddAssistant = false;
+      this.quickAddEntryPoint = 'root';
+      this.isQuickAddClosing = false;
+    }, 280);
   }
 
   handleQuickAddAction(action: QuickAddAction): void {

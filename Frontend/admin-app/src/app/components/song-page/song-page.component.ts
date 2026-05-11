@@ -26,6 +26,7 @@ import { PlaylistPopupComponent } from '../playlist-popup/playlist-popup.compone
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail } from '../../models/playlist.model';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
@@ -33,11 +34,13 @@ import { SongRatingService } from '../../services/song-rating.service';
 import { SeoService } from '../../services/seo.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { ArticleService } from '../../services/admin/article.service';
+import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, TranslatePipe],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, NewsBannerComponent, TranslatePipe],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
@@ -134,9 +137,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     artistSongs: any[] = [];
     popularSongs: any[] = [];
     similarSongs: any[] = [];
+    musicNewsArticles: Article[] = [];
     isLoadingArtistSongs: boolean = false;
     isLoadingPopularSongs: boolean = false;
     isLoadingSimilarSongs: boolean = false;
+    isLoadingMusicNews: boolean = false;
 
     // Auto Scroll State
     private scrollInterval: any = null;
@@ -153,6 +158,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
         private songRatingService: SongRatingService,
         private seo: SeoService,
         private langService: LanguageService,
+        private articleService: ArticleService,
     ) { }
 
     handleRandomSongClick(): void {
@@ -277,6 +283,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked {
                 this.loadArtistSongs();
                 this.loadSimilarSongs();
                 this.loadPopularSongs();
+                this.loadMusicNews();
                 this.loadSongSavedState();
                 this.loadKnownChordsForCurrentInstrument();
                 this.loadRating(id);
@@ -960,6 +967,22 @@ private getKeyIndex(keyName: string): number {
             },
             error: () => {
                 this.isLoadingPopularSongs = false;
+            }
+        });
+    }
+
+    loadMusicNews(): void {
+        this.isLoadingMusicNews = true;
+        this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published).subscribe({
+            next: (response) => {
+                this.musicNewsArticles = (response.items || [])
+                    .filter(article => article.contentType === ArticleContentType.News)
+                    .slice(0, 5);
+                this.isLoadingMusicNews = false;
+            },
+            error: () => {
+                this.musicNewsArticles = [];
+                this.isLoadingMusicNews = false;
             }
         });
     }

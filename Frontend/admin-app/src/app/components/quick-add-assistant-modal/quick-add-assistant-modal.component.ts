@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
@@ -74,6 +74,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
   private readonly langService = inject(LanguageService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() adminEditLabel: string | null = null;
   @Input() entryPoint: QuickAddEntryPoint = 'root';
@@ -93,6 +94,9 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   showEventOptional = false;
   showArticleImageLinkInput = false;
   showEventImageLinkInput = false;
+
+  isTyping = false;
+  private readonly TYPING_SPEED_MS = 18;
 
   article: CreateArticleDto = this.createEmptyArticle(ArticleContentType.News);
   event: CreateEventDto = this.createEmptyEvent();
@@ -209,7 +213,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       .slice(0, 8);
   }
 
-  selectOption(option: AssistantOption, event?: MouseEvent): void {
+  async selectOption(option: AssistantOption, event?: MouseEvent): Promise<void> {
     event?.stopPropagation();
 
     this.messages.push({
@@ -220,7 +224,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
     if (option.nextStep) {
       this.currentStep = option.nextStep;
-      this.appendBotStep(option.nextStep);
+      await this.appendBotStep(option.nextStep);
       return;
     }
 
@@ -298,14 +302,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
   }
 
-  goBackToPreviousStep(event?: MouseEvent): void {
+  async goBackToPreviousStep(event?: MouseEvent): Promise<void> {
     event?.stopPropagation();
     this.currentMode = 'choices';
     this.currentStep = this.modeOriginStep;
     this.isSubmitting = false;
     this.submittedMessage = '';
     this.messages = [];
-    this.appendBotStep(this.currentStep);
+    await this.appendBotStep(this.currentStep);
   }
 
   submitArticle(): void {
@@ -715,7 +719,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.isUploadingArticleImage = false;
   }
 
-  private resetConversation(): void {
+  private async resetConversation(): Promise<void> {
     const initialStep = this.entryPoint === 'index' ? 'index' : 'root';
 
     this.currentStep = initialStep;
@@ -747,48 +751,53 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       this.modeOriginStep = 'root';
       this.autoFillContactFromCurrentUser();
     } else if (this.entryPoint === 'news') {
-      this.messages.push({
-        id: 'bot-1',
-        tone: 'question',
-        text: this.langService.translate('quick_add.news_form_text')
-      });
+      await this.typeMessage(this.langService.translate('quick_add.news_form_text'), 'question');
       this.openArticleFlow(ArticleContentType.News);
     } else if (this.entryPoint === 'article') {
-      this.messages.push({
-        id: 'bot-1',
-        tone: 'question',
-        text: this.langService.translate('quick_add.content_form_text')
-      });
+      await this.typeMessage(this.langService.translate('quick_add.content_form_text'), 'question');
       this.openArticleFlow(ArticleContentType.Blog);
     } else if (this.entryPoint === 'event') {
-      this.messages.push({
-        id: 'bot-1',
-        tone: 'question',
-        text: this.langService.translate('quick_add.event_form_text')
-      });
+      await this.typeMessage(this.langService.translate('quick_add.event_form_text'), 'question');
       this.modeOriginStep = 'root';
       this.currentMode = 'event';
     } else {
-      this.appendBotStep(initialStep);
+      await this.appendBotStep(initialStep);
     }
   }
 
-  private appendBotStep(step: AssistantStep): void {
+  private async appendBotStep(step: AssistantStep): Promise<void> {
     const definition = this.getStepDefinition(step);
 
-    this.messages.push({
-      id: `bot-${this.messages.length + 1}`,
-      tone: 'question',
-      text: definition.question
-    });
+    await this.typeMessage(definition.question, 'question');
 
     if (definition.helper) {
-      this.messages.push({
-        id: `bot-${this.messages.length + 1}`,
-        tone: 'helper',
-        text: definition.helper
-      });
+      await this.typeMessage(definition.helper, 'helper');
     }
+  }
+
+  private typeMessage(text: string, tone: MessageTone): Promise<void> {
+    return new Promise<void>(resolve => {
+      const messageId = `bot-${this.messages.length + 1}`;
+      const message: AssistantMessage = { id: messageId, tone, text: '' };
+      this.messages = [...this.messages, message];
+      this.isTyping = true;
+
+      let charIndex = 0;
+      const totalChars = text.length;
+      const interval = setInterval(() => {
+        charIndex++;
+        this.messages = this.messages.map(m =>
+          m.id === messageId ? { ...m, text: text.substring(0, charIndex) } : m
+        );
+
+        if (charIndex >= totalChars) {
+          clearInterval(interval);
+          this.isTyping = false;
+          this.cdr.detectChanges();
+          resolve();
+        }
+      }, this.TYPING_SPEED_MS);
+    });
   }
 
   private getStepDefinition(step: AssistantStep): AssistantStepDefinition {
