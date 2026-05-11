@@ -227,25 +227,6 @@
       <!-- Sections Area -->
       <div class="sections-area" *ngIf="!isFiltered">
 
-        <div class="section agency-banner-section" *ngIf="agencyBanners.length > 0">
-          <div class="section-header">
-            <span class="section-tag section-tag--accent">סוכנויות מומלצות</span>
-            <span class="total-badge">{{ agencyBanners.length }}</span>
-          </div>
-          <div class="agency-banner-strip">
-            <article class="agency-banner-card" *ngFor="let agency of agencyBanners" (click)="viewAgency(agency.slug)">
-              <img [src]="agency.bannerImageUrl || agency.logoUrl || '/collection-guitars-guitars-are-display-room.png'" [alt]="agency.name" loading="lazy" imgFallback>
-              <div class="agency-banner-copy">
-                <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name" imgFallback>
-                <div>
-                  <strong>{{ agency.name }}</strong>
-                  <span>{{ agency.shortDescription || 'נותני שירות ותוכן מוזיקלי במקום אחד' }}</span>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-
         <!-- מומלצים -->
         <div class="section" *ngIf="featuredProfessionals.length > 0">
           <div class="section-header">
@@ -267,6 +248,46 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="section agency-profiles-section" *ngFor="let agency of agencyBanners; trackBy: trackByAgencyId">
+          <div class="section-header agency-section-header"
+               [style.--agency-primary]="agency.brandPrimaryColor || '#ddff53'"
+               [style.--agency-secondary]="agency.brandSecondaryColor || '#000000'"
+               [style.--agency-text]="agency.brandTextColor || '#000000'">
+            <div class="agency-header-left">
+              <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name" class="agency-header-logo" imgFallback="/logo.png">
+              <span class="section-tag section-tag--accent">{{ agency.name }}</span>
+            </div>
+            <button class="btn-show-all agency-show-all"
+                    (click)="viewAgency(agency.slug)">
+              הצג סוכנות ›
+            </button>
+          </div>
+
+          <div class="agency-profiles-loading" *ngIf="agency.loadingProfiles">
+            <div class="spinner"></div>
+          </div>
+
+          <div class="agency-profiles-strip" *ngIf="!agency.loadingProfiles && agency.profileCards.length > 0">
+            <div class="prof-card agency-prof-card" *ngFor="let profile of agency.profileCards; trackBy: trackByAgencyProfileId"
+                 [style.--agency-primary]="agency.brandPrimaryColor || '#ddff53'"
+                 [style.--agency-secondary]="agency.brandSecondaryColor || '#000000'"
+                 (click)="goToAgencyProfile(profile)">
+              <div class="prof-card-img">
+                <img [src]="profile.profileImageUrl || '/default-user.svg'" [alt]="profile.profileName" loading="lazy" imgFallback="/default-user.svg">
+                <span class="prof-badge-featured" *ngIf="profile.isFeaturedByAgency">★ סוכנות</span>
+              </div>
+              <div class="prof-card-body">
+                <p class="prof-card-name">{{ profile.profileName }}</p>
+                <p class="prof-card-role">{{ agencyProfileSubtitle(profile) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="agency-profiles-empty" *ngIf="!agency.loadingProfiles && agency.profileCards.length === 0">
+            <p>לסוכנות זו אין עדיין פרופילים משוייכים</p>
           </div>
         </div>
 

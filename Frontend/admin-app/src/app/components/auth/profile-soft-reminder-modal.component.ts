@@ -26,6 +26,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   // contact form
   phone = '';
   cityId: number | null = null;
+  address = '';
   citySearch = '';
   cities: City[] = [];
   citiesLoading = true;
@@ -59,6 +60,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
     if (this.user) {
       this.phone = this.user.phone ?? '';
       this.cityId = this.user.cityId ?? null;
+      this.address = this.user.address ?? '';
     }
 
     if (this.kind === 'contact') {
@@ -112,7 +114,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   get canSave(): boolean {
     if (this.loading) return false;
     if (this.kind === 'contact') {
-      return !!(this.phone.trim() || this.cityId);
+      return !!(this.phone.trim() && this.cityId && this.address.trim());
     }
     return !!(this.birthMonth && this.birthYear);
   }
@@ -125,6 +127,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
     if (this.kind === 'contact') {
       if (this.phone.trim()) payload['phone'] = this.phone.trim();
       if (this.cityId) payload['cityId'] = this.cityId;
+      if (this.address.trim()) payload['address'] = this.address.trim();
     } else {
       if (this.birthMonth) payload['birthMonth'] = this.birthMonth;
       if (this.birthYear) payload['birthYear'] = this.birthYear;

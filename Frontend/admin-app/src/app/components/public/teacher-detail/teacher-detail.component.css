@@ -817,12 +817,12 @@
     max-width: min(400px, 78vw);
   }
 
-  .social-follow-btn {
-    width: 34px;
-    height: 34px;
+  .hero-social-btn {
+    width: 32px;
+    height: 32px;
   }
 
-  .social-follow-btn svg {
+  .hero-social-btn svg {
     width: 17px;
     height: 17px;
   }
@@ -943,72 +943,18 @@
     height: 40px;
   }
 
-  .social-follow-btn {
-    width: 32px;
-    height: 32px;
+  .hero-social-btn {
+    width: 30px;
+    height: 30px;
   }
 
-  .social-follow-btn svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .social-follow-box {
-    padding: var(--space-sm) var(--space-md);
-    gap: var(--space-xs);
+  .hero-social-btn svg {
+    width: 15px;
+    height: 15px;
   }
 
 }
 
-.social-follow-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  width: min(100%, 760px);
-  margin: 0 auto;
-}
-
-.social-follow-title {
-  margin: 0;
-  font-size: var(--font-xs);
-  font-weight: 300;
-  color: rgba(0, 0, 0, 0.35);
-  text-align: center;
-}
-
-.social-follow-box {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-base);
-  background: #F2F2F2;
-  border-radius: 16px;
-}
-
-.social-follow-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #404040;
-  text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.social-follow-btn:hover {
-  background: #ddff53;
-  color: #000000;
-}
-
-.social-follow-btn svg {
-  width: 18px;
-  height: 18px;
-}
 .agency-badge-tag {
   display: inline-block;
   padding: var(--space-xs) var(--space-base);
@@ -1025,4 +971,25 @@
   font-size: var(--font-xs);
   font-weight: 800;
   color: rgba(0,0,0,0.55);
+}
+
+.contact-panel-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 0 var(--space-sm) 0;
+  border: 2px solid #F2F2F2;
+}
+
+.contact-panel-invite {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  color: #000000;
+  margin: 0 0 var(--space-sm) 0;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid #F2F2F2;
+  text-align: right;
 }

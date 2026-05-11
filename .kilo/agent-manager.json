@@ -1,9 +1,25 @@
 {
-  "worktrees": {},
-  "sessions": {},
+  "worktrees": {
+    "wt-1778444758307-1": {
+      "branch": "plum-literature",
+      "path": "c:\\Projects\\akordish-keit\\.kilo\\worktrees\\plum-literature",
+      "parentBranch": "master",
+      "createdAt": "2026-05-10T20:25:58.307Z",
+      "remote": "origin"
+    }
+  },
+  "sessions": {
+    "ses_1ec6e3f59ffeAELrdpto5ab03C": {
+      "worktreeId": "wt-1778444758307-1",
+      "createdAt": "2026-05-10T20:26:21.118Z"
+    }
+  },
   "tabOrder": {
     "local": [
       "pending:1"
     ]
-  }
+  },
+  "worktreeOrder": [
+    "wt-1778444758307-1"
+  ]
 }

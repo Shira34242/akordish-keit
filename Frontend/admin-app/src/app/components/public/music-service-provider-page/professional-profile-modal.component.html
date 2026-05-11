@@ -61,11 +61,15 @@
 
       <div class="hero-actions">
         <div class="contact-action-wrap">
-          <button class="btn-cta-primary" type="button" (click)="toggleContact()">
+          <button class="btn-cta-primary" type="button" (click)="toggleContact()"
+            [style.background]="(agencyBadge?.brandPrimaryColor) || '#ddff53'"
+            [style.color]="(agencyBadge?.brandTextColor) || '#000000'">
             ליצירת קשר
           </button>
 
           <div class="contact-panel" [class.open]="contactOpen">
+            <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl" alt="" class="contact-panel-logo" />
+            <p *ngIf="showAgencyContact" class="contact-panel-invite">צור קשר עם {{ agencyBadge?.agencyName }}</p>
             <div *ngIf="showAgencyContact" class="contact-group-label">דרך הסוכנות</div>
             <a *ngIf="showAgencyContact && agencyBadge?.phoneNumber" [href]="'tel:' + agencyBadge?.phoneNumber" class="contact-item" (click)="trackAgencyContact('phone')">
               <span class="material-icons">phone</span>
@@ -131,6 +135,18 @@
            aria-label="ניווט עם Waze">
           <span class="material-icons">near_me</span>
         </a>
+
+        <span class="hero-actions-divider" *ngIf="socialLinks.length > 0 && (quickWhatsAppNumber || hasNavigationTarget)"></span>
+        <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
+          <a *ngFor="let link of socialLinks"
+             [href]="link.url"
+             target="_blank"
+             rel="noopener"
+             class="hero-social-btn"
+             [title]="getSocialPlatformName(link.platform)"
+             [innerHTML]="getSocialIconSvg(link.platform)">
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -258,19 +274,6 @@
       </div>
     </section>
 
-    <section class="social-follow-section" *ngIf="socialLinks.length > 0">
-      <h2 class="social-follow-title">מוזמנים לעקוב אחרי ברשתות</h2>
-      <div class="social-follow-box">
-        <a *ngFor="let link of socialLinks"
-           [href]="link.url"
-           target="_blank"
-           rel="noopener"
-           class="social-follow-btn"
-           [title]="getSocialPlatformName(link.platform)"
-           [innerHTML]="getSocialIconSvg(link.platform)">
-        </a>
-      </div>
-    </section>
   </main>
 </div>
 

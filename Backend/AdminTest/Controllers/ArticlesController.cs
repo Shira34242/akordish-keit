@@ -1,9 +1,11 @@
+using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers;
@@ -12,6 +14,7 @@ namespace AkordishKeit.Controllers;
 [ApiController]
 public class ArticlesController : ControllerBase
 {
+    private readonly AkordishKeitDbContext _context;
     private readonly IArticleService _articleService;
     private readonly IYouTubeService _youTubeService;
     private readonly IUserTagService _userTagService;
@@ -19,12 +22,14 @@ public class ArticlesController : ControllerBase
     private readonly IMemoryCache _cache;
 
     public ArticlesController(
+        AkordishKeitDbContext context,
         IArticleService articleService,
         IYouTubeService youTubeService,
         IUserTagService userTagService,
         INotificationService notificationService,
         IMemoryCache cache)
     {
+        _context = context;
         _articleService = articleService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
@@ -175,6 +180,18 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleAsync(id, dto, GetCurrentUserId());
+
+            if (dto.Status == (int)ArticleStatus.Published)
+            {
+                var submittedByUserId = await _context.Articles
+                    .Where(a => a.Id == id)
+                    .Select(a => a.SubmittedByUserId)
+                    .FirstOrDefaultAsync();
+                if (submittedByUserId.HasValue)
+                {
+                    await _userTagService.RecalculateTagAsync(submittedByUserId.Value);
+                }
+            }
 
             return Ok(article);
         }

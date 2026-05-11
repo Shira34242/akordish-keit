@@ -186,6 +186,13 @@
   cursor: help;
 }
 
+.level-progress-text {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(255,255,255,0.7);
+  margin-right: var(--space-xs);
+}
+
 .badges {
   display: flex;
   gap: var(--space-sm);

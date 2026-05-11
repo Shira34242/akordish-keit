@@ -43,6 +43,24 @@
             [style.color]="agencyBadge.brandTextColor || '#000000'">
             {{ agencyBadge.agencyName }}
           </span>
+          <div *ngIf="showAgencyContact && hasAgencyContactDetails" class="contact-action-wrap">
+            <button class="agency-contact-btn" (click)="toggleContact()"
+              [style.background]="agencyBadge!.brandPrimaryColor || '#ddff53'"
+              [style.color]="agencyBadge!.brandTextColor || '#000000'">
+              {{ contactOpen ? 'סגור' : 'יצירת קשר' }}
+            </button>
+            <div class="contact-panel" *ngIf="contactOpen">
+              <img *ngIf="agencyBadge!.logoUrl" [src]="agencyBadge!.logoUrl" alt="" class="contact-panel-logo" />
+              <p class="contact-panel-invite">צור קשר עם {{ agencyBadge!.agencyName }}</p>
+              <a *ngFor="let item of agencyContactItems"
+                class="contact-item"
+                [href]="item.href"
+                target="_blank">
+                <span class="contact-item-label">{{ item.label }}</span>
+                <span class="contact-item-value">{{ item.value }}</span>
+              </a>
+            </div>
+          </div>
         </div>
         <h1 class="hero-name">{{ artist.name }}</h1>
         <p class="hero-english" *ngIf="artist.englishName">{{ artist.englishName }}</p>

@@ -46,8 +46,9 @@ export class AdditionalDetailsModalComponent {
     this.loading = true;
 
     const levelMap: Record<string, 1 | 2 | 3> = { 'מתחיל/ה': 1, 'מתקדם/ת': 2, 'מקצועי/ת': 3 };
+    const instrumentName = this.selectedInstrument !== 'none' ? this.selectedInstrument : null;
     const payload = {
-      instrumentName: this.selectedInstrument !== 'none' ? this.selectedInstrument : null,
+      otherInstrumentName: instrumentName !== 'other' ? instrumentName : null,
       instrumentLevel: this.selectedInstrument !== 'none' ? (levelMap[this.selectedLevel] ?? null) : null,
       userType: this.selectedUserType ?? UserType.Regular
     };

@@ -3,7 +3,7 @@
     <div class="header-inner">
 
         <div class="header-right">
-            <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+            <button class="mobile-menu-btn" (click)="toggleMobileMenu($event)">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
             <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">

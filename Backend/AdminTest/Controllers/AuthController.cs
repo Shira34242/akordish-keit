@@ -286,6 +286,14 @@ namespace AkordishKeit.Controllers
             return csrfToken;
         }
 
+        private static readonly TimeSpan TagResetPeriod = TimeSpan.FromDays(30 * 4);
+
+        private static bool IsTagReset(User user)
+        {
+            return user.LastUploadDate == null
+                || DateTime.UtcNow - user.LastUploadDate.Value > TagResetPeriod;
+        }
+
         private UserDto BuildUserDto(User user, bool hasProfessionalProfile = false)
         {
             var instruments = user.Instruments?
@@ -298,6 +306,10 @@ namespace AkordishKeit.Controllers
                 })
                 .ToList() ?? new List<InstrumentDto>();
 
+            bool isReset = IsTagReset(user);
+            int effectiveTag = isReset ? 0 : (int)user.ContentTag;
+            int effectiveCount = isReset ? 0 : user.UploadCount;
+
             return new UserDto
             {
                 Id = user.Id,
@@ -305,8 +317,8 @@ namespace AkordishKeit.Controllers
                 Email = user.Email,
                 ProfileImageUrl = user.ProfileImageUrl,
                 Role = user.Role.ToString(),
-                Level = user.Level,
-                Points = user.Points,
+                Level = effectiveTag,
+                Points = effectiveCount,
                 PreferredInstrumentId = user.PreferredInstrumentId,
                 Instruments = instruments,
                 OtherInstrumentName = user.OtherInstrumentName,
@@ -316,8 +328,8 @@ namespace AkordishKeit.Controllers
                 CityId = user.CityId,
                 BirthDate = user.BirthDate,
                 HasProfessionalProfile = hasProfessionalProfile,
-                ContentTag = (int)user.ContentTag,
-                UploadCount = user.UploadCount,
+                ContentTag = effectiveTag,
+                UploadCount = effectiveCount,
                 CreatedAt = user.CreatedAt,
                 LastProfileReminderAt = user.LastProfileReminderAt,
                 ProfileReminderDismissCount = user.ProfileReminderDismissCount,

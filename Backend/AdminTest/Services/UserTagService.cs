@@ -30,11 +30,15 @@ public class UserTagService : IUserTagService
         var songCount = await _context.Songs
             .CountAsync(s => s.UploadedByUserId == userId && s.IsApproved && !s.IsDeleted);
 
-        // ספירת כתבות שהמשתמש הגיש
+        // ספירת כתבות שהמשתמש הגיש ואושרו (Published)
         var articleCount = await _context.Articles
-            .CountAsync(a => a.SubmittedByUserId == userId && !a.IsDeleted);
+            .CountAsync(a => a.SubmittedByUserId == userId && a.Status == (int)ArticleStatus.Published && !a.IsDeleted);
 
-        var totalCount = songCount + articleCount;
+        // ספירת אירועים שהמשתמש הגיש ואושרו (IsActive)
+        var eventCount = await _context.Events
+            .CountAsync(e => e.SubmittedByUserId == userId && e.IsActive && !e.IsDeleted);
+
+        var totalCount = songCount + articleCount + eventCount;
 
         // תאריך ההעלאה האחרונה
         var latestSong = await _context.Songs
@@ -42,16 +46,14 @@ public class UserTagService : IUserTagService
             .MaxAsync(s => (DateTime?)s.CreatedAt);
 
         var latestArticle = await _context.Articles
-            .Where(a => a.SubmittedByUserId == userId && !a.IsDeleted)
+            .Where(a => a.SubmittedByUserId == userId && a.Status == (int)ArticleStatus.Published && !a.IsDeleted)
             .MaxAsync(a => (DateTime?)a.CreatedAt);
 
-        DateTime? latestUpload = (latestSong, latestArticle) switch
-        {
-            (null, null) => null,
-            (not null, null) => latestSong,
-            (null, not null) => latestArticle,
-            _ => latestSong > latestArticle ? latestSong : latestArticle
-        };
+        var latestEvent = await _context.Events
+            .Where(e => e.SubmittedByUserId == userId && e.IsActive && !e.IsDeleted)
+            .MaxAsync(e => (DateTime?)e.CreatedAt);
+
+        DateTime? latestUpload = new[] { latestSong, latestArticle, latestEvent }.Max();
 
         // בדיקת איפוס: אם לא הועלה תוכן מעל 4 חודשים
         bool isReset = latestUpload == null
@@ -108,7 +110,7 @@ public class UserTagService : IUserTagService
 
     private static string GetTagHebrew(UserContentTag tag) => tag switch
     {
-        UserContentTag.Beginner            => "חבר מתחיל",
+        UserContentTag.Beginner            => "מתחיל",
         UserContentTag.Contributor         => "תורם",
         UserContentTag.LeadingContributor  => "תורם מוביל",
         _                                  => string.Empty

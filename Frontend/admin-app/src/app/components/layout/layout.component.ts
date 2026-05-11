@@ -116,12 +116,16 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     this.lastScrollY = current;
     this.checkFabBackground();
+    this.showUserMenu = false;
+    this.showNotificationsPopup = false;
+    this.showMobileMenu = false;
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showUserMenu = false;
     this.showNotificationsPopup = false;
+    this.showMobileMenu = false;
   }
 
   ngOnInit(): void {
@@ -171,6 +175,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
+        this.showUserMenu = false;
+        this.showNotificationsPopup = false;
+        this.showMobileMenu = false;
         setTimeout(() => this.checkFabBackground(), 200);
         setTimeout(() => this.checkFabBackground(), 800);
         this.updateAdminEditTarget(event.urlAfterRedirects);
@@ -592,7 +599,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showMobileMenu = false;
   }
 
-  toggleMobileMenu(): void {
+  toggleMobileMenu(event: Event): void {
+    event.stopPropagation();
     this.showMobileMenu = !this.showMobileMenu;
   }
 

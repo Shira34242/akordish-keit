@@ -113,6 +113,12 @@ public class SongsController : ControllerBase
             }
 
             var result = await _smartSongImportService.ImportFromUrlAsync(dto.Url, userId);
+
+            if (result.Success && userId > 0)
+            {
+                await _userTagService.RecalculateTagAsync(userId);
+            }
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -624,6 +630,15 @@ public class SongsController : ControllerBase
         try
         {
             var success = await _songService.ToggleSongApprovalAsync(id, dto.IsApproved);
+
+            if (success && dto.IsApproved)
+            {
+                var songDto = await _songService.GetSongByIdAsync(id, includeUnapproved: true);
+                if (songDto?.UploadedByUserId.HasValue == true)
+                {
+                    await _userTagService.RecalculateTagAsync(songDto.UploadedByUserId.Value);
+                }
+            }
 
             return Ok(new
             {

@@ -133,6 +133,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   leavingCurrentPage = false;
 
   readonly CIRCUMFERENCE = 2 * Math.PI * 52;
+  readonly MAX_LEVEL = 3;
 
   constructor(
     private authService: AuthService,
@@ -192,7 +193,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   get profileIncomplete(): boolean {
-    return !this.user?.phone || !this.user?.address || !this.user?.birthDate;
+    return !this.user?.phone || !this.user?.cityId || !this.user?.address || !this.user?.birthDate;
   }
 
   get canViewChordRequests(): boolean {
@@ -785,8 +786,37 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   getDashOffset(): number {
     const tag = this.user?.contentTag ?? 0;
-    const progress = tag / 4;
+    const progress = tag / this.MAX_LEVEL;
     return this.CIRCUMFERENCE * (1 - progress);
+  }
+
+  getNextThreshold(): number {
+    const tag = this.user?.contentTag ?? 0;
+    switch (tag) {
+      case 0: return 1;
+      case 1: return 5;
+      case 2: return 20;
+      default: return -1;
+    }
+  }
+
+  getUploadsForNextLevel(): number {
+    const count = this.user?.uploadCount ?? 0;
+    const threshold = this.getNextThreshold();
+    if (threshold < 0) return 0;
+    return Math.max(0, threshold - count);
+  }
+
+  isMaxLevel(): boolean {
+    return (this.user?.contentTag ?? 0) >= this.MAX_LEVEL;
+  }
+
+  getLevelProgressText(): string {
+    if (this.isMaxLevel()) {
+      return this.langService.translate('profile.level_max');
+    }
+    const needed = this.getUploadsForNextLevel();
+    return this.langService.translate('profile.level_needed_prefix') + needed + this.langService.translate('profile.level_needed_suffix');
   }
 
   getRelativeTime(dateStr: string | Date): string {

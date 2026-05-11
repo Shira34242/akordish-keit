@@ -16,7 +16,7 @@ import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
-import { AgencyBadgeDto } from '../../models/agency.model';
+import { AgencyBadgeDto, AgencyContactMode } from '../../models/agency.model';
 import { AgencyService } from '../../services/agency.service';
 import { AnalyticsService } from '../../services/analytics.service';
 
@@ -202,10 +202,64 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  AgencyContactMode = AgencyContactMode;
+  contactOpen = false;
+
   goToAgency(): void {
     if (!this.agencyBadge || !this.artist) return;
     this.analytics.trackInteraction('agency_profile_click', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | artist | ${this.artist.name}`);
     this.router.navigate(['/agency', this.agencyBadge.agencySlug]);
+  }
+
+  toggleContact(): void {
+    this.contactOpen = !this.contactOpen;
+    if (this.contactOpen && this.agencyBadge && this.artist) {
+      this.analytics.trackButtonClick('contact', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.artist.name}`);
+    }
+  }
+
+  trackAgencyContact(type: string): void {
+    if (!this.agencyBadge || !this.artist) return;
+    this.analytics.trackInteraction(`agency_contact_${type}`, this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.artist.name}`);
+  }
+
+  getWhatsAppUrl(phoneNumber: string): string {
+    const digits = phoneNumber.replace(/\D/g, '');
+    return `https://wa.me/${digits}`;
+  }
+
+  get showAgencyContact(): boolean {
+    return !!this.agencyBadge &&
+      (this.agencyBadge.contactMode === AgencyContactMode.Agency ||
+       this.agencyBadge.contactMode === AgencyContactMode.Both);
+  }
+
+  get hasAgencyContactDetails(): boolean {
+    return this.showAgencyContact && !!(
+      this.agencyBadge?.phoneNumber ||
+      this.agencyBadge?.whatsAppNumber ||
+      this.agencyBadge?.email ||
+      this.agencyBadge?.websiteUrl
+    );
+  }
+
+  get agencyContactItems(): Array<{ label: string; value: string; href: string; type: string }> {
+    const items: Array<{ label: string; value: string; href: string; type: string }> = [];
+    if (!this.agencyBadge) return items;
+    const b = this.agencyBadge;
+    if (b.phoneNumber) {
+      items.push({ label: 'טלפון', value: b.phoneNumber, href: 'tel:' + b.phoneNumber, type: 'phone' });
+    }
+    if (b.whatsAppNumber) {
+      items.push({ label: 'ווטסאפ', value: b.whatsAppNumber, href: this.getWhatsAppUrl(b.whatsAppNumber), type: 'whatsapp' });
+    }
+    if (b.email) {
+      items.push({ label: 'אימייל', value: b.email, href: 'mailto:' + b.email, type: 'email' });
+    }
+    if (b.websiteUrl) {
+      items.push({ label: 'אתר', value: this.getShortUrl(b.websiteUrl), href: b.websiteUrl, type: 'website' });
+    }
+    return items;
   }
 
   private applySeo(artist: Artist): void {

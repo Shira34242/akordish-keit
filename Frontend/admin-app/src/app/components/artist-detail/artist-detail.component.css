@@ -1189,3 +1189,98 @@
   cursor: pointer;
   white-space: nowrap;
 }
+
+/* Agency Contact Button */
+.contact-action-wrap {
+  position: relative;
+}
+
+.agency-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  border: 1.5px solid rgba(0, 0, 0, 0.18);
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.agency-contact-btn:hover {
+  opacity: 0.82;
+}
+
+/* Agency Contact Panel — opens above the button */
+.contact-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-sm));
+  width: 260px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  z-index: 920;
+  border: 1px solid #F2F2F2;
+}
+
+.contact-panel-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 0 var(--space-sm) 0;
+  border: 2px solid #F2F2F2;
+}
+
+.contact-panel-invite {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-sm);
+  color: #000000;
+  margin: 0;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid #F2F2F2;
+  text-align: right;
+}
+
+.contact-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 12px;
+  text-decoration: none;
+  color: #000000;
+  transition: background 0.15s;
+}
+
+.contact-item:hover {
+  background: #F2F2F2;
+}
+
+.contact-item-label {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-xs);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.contact-item-value {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  font-size: var(--font-sm);
+  color: #000000;
+  text-align: left;
+  direction: ltr;
+}

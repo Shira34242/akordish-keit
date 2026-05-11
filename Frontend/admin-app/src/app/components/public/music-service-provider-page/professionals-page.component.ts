@@ -18,7 +18,7 @@ import { BecomeProfessionalFormComponent } from '../become-professional-form/bec
 import { AuthService } from '../../../services/auth.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { SearchService, SearchItem } from '../../../services/search.service';
-import { AgencyListDto } from '../../../models/agency.model';
+import { AgencyListDto, AgencyDto, AgencyProfileDto } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 
@@ -34,6 +34,11 @@ interface Category {
 interface Instrument {
   id: number;
   name: string;
+}
+
+interface AgencyWithProfiles extends AgencyListDto {
+  profileCards: AgencyProfileDto[];
+  loadingProfiles: boolean;
 }
 
 @Component({
@@ -53,7 +58,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private readonly searchPageSize = 40;
   private readonly scrollLoadOffset = 700;
   private searchDebounceTimer?: ReturnType<typeof setTimeout>;
-  agencyBanners: AgencyListDto[] = [];
+  agencyBanners: AgencyWithProfiles[] = [];
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -182,7 +187,31 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   loadAgencyBanners(): void {
     this.agencyService.getIndexBanners(6).subscribe({
-      next: agencies => this.agencyBanners = agencies,
+      next: agencies => {
+        this.agencyBanners = agencies.map(a => ({
+          ...a,
+          profileCards: [] as AgencyProfileDto[],
+          loadingProfiles: true
+        }));
+        if (this.agencyBanners.length > 0) {
+          const profileRequests = this.agencyBanners.map(item =>
+            this.agencyService.getAgency(item.id)
+          );
+          forkJoin(profileRequests).subscribe({
+            next: (agencyDetails: AgencyDto[]) => {
+              agencyDetails.forEach((detail, i) => {
+                if (this.agencyBanners[i]) {
+                  this.agencyBanners[i].profileCards = detail.profiles?.slice(0, 12) || [];
+                  this.agencyBanners[i].loadingProfiles = false;
+                }
+              });
+            },
+            error: () => {
+              this.agencyBanners.forEach(a => a.loadingProfiles = false);
+            }
+          });
+        }
+      },
       error: () => this.agencyBanners = []
     });
   }
@@ -950,12 +979,45 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     return instrument.id;
   }
 
+  trackByAgencyId(_index: number, agency: AgencyWithProfiles): number {
+    return agency.id;
+  }
+
+  trackByAgencyProfileId(_index: number, profile: AgencyProfileDto): number {
+    return profile.id;
+  }
+
   private closeAllDropdowns(): void {
     this.showCategoryDropdown = false;
     this.showCityDropdown = false;
     this.showInstrumentDropdown = false;
     this.showLanguageDropdown = false;
     this.showAudienceDropdown = false;
+  }
+
+  agencyProfileSubtitle(profile: AgencyProfileDto): string {
+    if (profile.isTeacher) return 'מורה';
+    if (profile.profileType === 'artist') return 'אמן';
+    if (profile.profileType === 'serviceProvider') return 'נותן שירות';
+    return '';
+  }
+
+  goToAgencyProfile(profile: AgencyProfileDto): void {
+    if (profile.profileUrl) {
+      this.router.navigateByUrl(profile.profileUrl);
+      return;
+    }
+    if (profile.isTeacher) {
+      this.router.navigate(['/teacher', profile.profileId]);
+      return;
+    }
+    if (profile.profileType === 'artist') {
+      this.router.navigate(['/artist', profile.profileId]);
+      return;
+    }
+    if (profile.profileType === 'serviceProvider') {
+      this.router.navigate(['/professional', profile.profileId]);
+    }
   }
 }
 

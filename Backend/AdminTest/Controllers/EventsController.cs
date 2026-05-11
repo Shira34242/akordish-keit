@@ -1,7 +1,9 @@
+using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AkordishKeit.Controllers
@@ -10,11 +12,15 @@ namespace AkordishKeit.Controllers
     [Route("api/[controller]")]
     public class EventsController : ControllerBase
     {
+        private readonly AkordishKeitDbContext _context;
         private readonly IEventService _eventService;
+        private readonly IUserTagService _userTagService;
 
-        public EventsController(IEventService eventService)
+        public EventsController(AkordishKeitDbContext context, IEventService eventService, IUserTagService userTagService)
         {
+            _context = context;
             _eventService = eventService;
+            _userTagService = userTagService;
         }
 
         /// <summary>
@@ -92,6 +98,9 @@ namespace AkordishKeit.Controllers
             dto.DisplayOrder = 0;
 
             var eventDto = await _eventService.CreateEventAsync(dto, userId.Value);
+
+            await _userTagService.RecalculateTagAsync(userId.Value);
+
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
         }
 
@@ -124,6 +133,18 @@ namespace AkordishKeit.Controllers
 
             if (eventDto == null)
                 return NotFound(new { message = "ההופעה לא נמצאה" });
+
+            if (dto.IsActive)
+            {
+                var submittedByUserId = await _context.Events
+                    .Where(e => e.Id == id)
+                    .Select(e => e.SubmittedByUserId)
+                    .FirstOrDefaultAsync();
+                if (submittedByUserId.HasValue)
+                {
+                    await _userTagService.RecalculateTagAsync(submittedByUserId.Value);
+                }
+            }
 
             return Ok(eventDto);
         }

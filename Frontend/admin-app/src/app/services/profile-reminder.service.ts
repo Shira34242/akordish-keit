@@ -69,7 +69,7 @@ export class ProfileReminderService {
     // cooldown אחרי תזכורת קודמת
     if (daysSinceLastReminder !== null && daysSinceLastReminder < COOLDOWN_DAYS) return null;
 
-    const missingContact = !user.phone || !user.cityId;
+    const missingContact = !user.phone || !user.cityId || !user.address;
     const missingBirthday = !user.birthDate;
 
     // תזכורת ראשונה (טלפון + עיר) — רק אחרי 5 ימים לפחות מההרשמה
