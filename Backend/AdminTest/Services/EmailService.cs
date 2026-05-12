@@ -184,29 +184,61 @@ public class EmailService : IEmailService
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>איפוס סיסמא — אקורדישקייט</title>
         </head>
-        <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 20px;">
-          <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #000000; padding: 24px; text-align: center;">
-              <h1 style="color: #ddff53; margin: 0; font-size: 22px; letter-spacing: 1px;">אקורדישקייט</h1>
+        <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 32px 16px;">
+          <div style="max-width: 520px; margin: 0 auto;">
+
+            <!-- Logo bar -->
+            <div style="background-color: #000000; border-radius: 20px 20px 0 0; padding: 28px 32px; text-align: center;">
+              <div style="font-size: 26px; font-weight: 900; color: #ddff53; letter-spacing: 2px; margin-bottom: 4px;">אקורדישקייט</div>
+              <div style="font-size: 13px; color: rgba(255,255,255,0.55); letter-spacing: 1px;">AKORDISHKEIT</div>
             </div>
-            <div style="padding: 36px 32px; color: #000;">
-              <h2 style="margin: 0 0 16px; font-size: 20px;">שלום {name},</h2>
-              <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.7; color: #404040;">
-                קיבלנו בקשה לאיפוס הסיסמא שלך. השתמש בקוד הבא כדי להמשיך:
+
+            <!-- Yellow accent bar -->
+            <div style="background-color: #ddff53; height: 6px;"></div>
+
+            <!-- Body -->
+            <div style="background: #ffffff; padding: 40px 40px 32px; color: #000000;">
+
+              <p style="margin: 0 0 6px; font-size: 13px; color: #404040; text-transform: uppercase; letter-spacing: 1px;">איפוס סיסמא</p>
+              <h2 style="margin: 0 0 20px; font-size: 22px; font-weight: 800; color: #000000;">שלום {name} 👋</h2>
+
+              <p style="margin: 0 0 28px; font-size: 15px; line-height: 1.75; color: #404040;">
+                קיבלנו בקשה לאיפוס הסיסמא שלך באקורדישקייט.<br>
+                הנה קוד האימות שלך — הקלד אותו במסך האיפוס:
               </p>
-              <div style="background: #F2F2F2; border-radius: 10px; padding: 24px; text-align: center; margin: 0 0 24px;">
-                <div style="font-size: 42px; font-weight: 700; letter-spacing: 12px; color: #000; font-family: monospace;">
+
+              <!-- OTP box -->
+              <div style="background: #000000; border-radius: 16px; padding: 28px 24px; text-align: center; margin: 0 0 28px;">
+                <div style="font-size: 48px; font-weight: 900; letter-spacing: 14px; color: #ddff53; font-family: 'Courier New', monospace; padding-right: 14px;">
                   {code}
                 </div>
-                <p style="margin: 12px 0 0; font-size: 13px; color: #666;">הקוד תקף ל-15 דקות בלבד</p>
+                <div style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6);">
+                  ⏱ הקוד תקף ל-15 דקות בלבד
+                </div>
               </div>
-              <p style="margin: 0; font-size: 14px; color: #555; line-height: 1.6;">
-                אם לא ביקשת איפוס סיסמא, ניתן להתעלם מהמייל הזה. החשבון שלך בטוח.
+
+              <!-- Steps -->
+              <div style="background: #F2F2F2; border-radius: 12px; padding: 20px 24px; margin: 0 0 28px;">
+                <p style="margin: 0 0 10px; font-weight: 700; font-size: 14px; color: #000000;">איך ממשיכים?</p>
+                <ol style="margin: 0; padding-right: 20px; color: #404040; font-size: 14px; line-height: 2;">
+                  <li>חזור למסך איפוס הסיסמא באקורדישקייט</li>
+                  <li>הזן את הקוד הזה</li>
+                  <li>בחר סיסמא חדשה</li>
+                </ol>
+              </div>
+
+              <p style="margin: 0; font-size: 13px; color: #404040; line-height: 1.7; padding-top: 4px; border-top: 1px solid #F2F2F2;">
+                לא ביקשת איפוס סיסמא? אפשר להתעלם מהמייל הזה — החשבון שלך בטוח ולא ייעשה שום שינוי.
               </p>
             </div>
-            <div style="background-color: #404040; padding: 16px; text-align: center;">
-              <p style="color: #ffffff; margin: 0; font-size: 12px;">© אקורדישקייט — כל הזכויות שמורות</p>
+
+            <!-- Footer -->
+            <div style="background-color: #000000; border-radius: 0 0 20px 20px; padding: 18px 32px; text-align: center;">
+              <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">
+                © אקורדישקייט — כל הזכויות שמורות
+              </p>
             </div>
+
           </div>
         </body>
         </html>
@@ -220,17 +252,30 @@ public class EmailService : IEmailService
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>{subject}</title>
         </head>
-        <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 20px;">
-          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #000000; padding: 24px; text-align: center;">
-              <h1 style="color: #ddff53; margin: 0; font-size: 22px; letter-spacing: 1px;">אקורדישקייט</h1>
+        <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 32px 16px;">
+          <div style="max-width: 600px; margin: 0 auto;">
+
+            <!-- Logo bar -->
+            <div style="background-color: #000000; border-radius: 20px 20px 0 0; padding: 28px 32px; text-align: center;">
+              <div style="font-size: 26px; font-weight: 900; color: #ddff53; letter-spacing: 2px; margin-bottom: 4px;">אקורדישקייט</div>
+              <div style="font-size: 13px; color: rgba(255,255,255,0.55); letter-spacing: 1px;">AKORDISHKEIT</div>
             </div>
-            <div style="padding: 32px; color: #000000; font-size: 15px; line-height: 1.7;">
+
+            <!-- Yellow accent bar -->
+            <div style="background-color: #ddff53; height: 6px;"></div>
+
+            <!-- Content -->
+            <div style="background: #ffffff; padding: 40px 40px 32px; color: #000000; font-size: 15px; line-height: 1.75;">
               {content}
             </div>
-            <div style="background-color: #404040; padding: 16px; text-align: center;">
-              <p style="color: #ffffff; margin: 0; font-size: 12px;">© אקורדישקייט — כל הזכויות שמורות</p>
+
+            <!-- Footer -->
+            <div style="background-color: #000000; border-radius: 0 0 20px 20px; padding: 18px 32px; text-align: center;">
+              <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">
+                © אקורדישקייט — כל הזכויות שמורות
+              </p>
             </div>
+
           </div>
         </body>
         </html>

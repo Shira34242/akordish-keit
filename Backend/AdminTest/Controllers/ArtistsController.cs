@@ -306,7 +306,7 @@ public class ArtistsController : ControllerBase
     /// קבלת שירים של אומן
     /// </summary>
     [HttpGet("{id}/songs")]
-    public async Task<ActionResult<PagedResult<SongDto>>> GetArtistSongs(
+    public async Task<ActionResult<PagedResult<ArtistSongItemDto>>> GetArtistSongs(
         int id,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -323,7 +323,7 @@ public class ArtistsController : ControllerBase
                 .OrderByDescending(s => s.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(s => new SongDto
+                .Select(s => new ArtistSongItemDto
                 {
                     Id = s.Id,
                     Title = s.Title,
@@ -333,7 +333,7 @@ public class ArtistsController : ControllerBase
                 })
                 .ToListAsync();
 
-            return Ok(new PagedResult<SongDto>
+            return Ok(new PagedResult<ArtistSongItemDto>
             {
                 Items = songs,
                 TotalCount = totalCount,
@@ -399,7 +399,7 @@ public class ArtistsController : ControllerBase
     /// </summary>
     // GET: api/Artists/5/uploaded-songs
     [HttpGet("{id}/uploaded-songs")]
-    public async Task<ActionResult<List<SongDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)
+    public async Task<ActionResult<List<ArtistSongItemDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)
     {
         var exists = await _context.Artists
             .AnyAsync(a => a.Id == id && !a.IsDeleted);
@@ -430,7 +430,7 @@ public class ArtistsController : ControllerBase
     }
 
     [HttpGet("{id}/events")]
-    public async Task<ActionResult<List<UpcomingEventDto>>> GetArtistEvents(int id)
+    public async Task<ActionResult<List<ArtistEventItemDto>>> GetArtistEvents(int id)
     {
         try
         {
@@ -441,7 +441,7 @@ public class ArtistsController : ControllerBase
                              ea.Event.IsActive)
                 .Select(ea => ea.Event)
                 .OrderBy(e => e.EventDate)
-                .Select(e => new UpcomingEventDto
+                .Select(e => new ArtistEventItemDto
                 {
                     Id = e.Id,
                     Name = e.Name,
@@ -1700,42 +1700,25 @@ public class ArtistsController : ControllerBase
     }
 }
 
-// DTOs for backward compatibility
-public class ArtistBasicDto
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string? EnglishName { get; set; }
-    public string? ImageUrl { get; set; }
-}
-
 public class ArtistWithCountDto : ArtistBasicDto
 {
     public int SongCount { get; set; }
 }
 
-public class PagedResult<T>
-{
-    public List<T> Items { get; set; }
-    public int TotalCount { get; set; }
-    public int PageNumber { get; set; }
-    public int PageSize { get; set; }
-}
-
-public class SongDto
+public class ArtistSongItemDto
 {
     public int Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public int ViewCount { get; set; }
 }
 
-public class UpcomingEventDto
+public class ArtistEventItemDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string ImageUrl { get; set; }
-    public string TicketUrl { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
+    public string TicketUrl { get; set; } = string.Empty;
     public DateTime EventDate { get; set; }
     public string? Location { get; set; }
 }

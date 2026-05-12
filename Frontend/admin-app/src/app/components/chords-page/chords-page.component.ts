@@ -7,8 +7,8 @@ import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Subscription, EMPTY } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { MusicalKey } from '../../models/song.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 
@@ -81,6 +81,20 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     private searchSubscription?: Subscription;
     private recentlyViewedKey = 'chords-recently-viewed';
 
+    // switchMap stream for main song loading — cancels previous in-flight request
+    private songLoadParams = new Subject<{
+        search?: string;
+        page: number;
+        pageSize: number;
+        artistId?: number;
+        genreId?: number;
+        keyId?: number;
+        sortBy: string;
+        tagId?: number;
+    }>();
+    private songLoadSubscription?: Subscription;
+    private sectionsLoaded = false;
+
     get isFiltered(): boolean {
         return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId || this.selectedTagId || this.knownChordsMode);
     }
@@ -103,6 +117,41 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.songs = [];
             this.loadSongs();
         });
+
+        // switchMap cancels any in-flight request when a new one arrives
+        this.songLoadSubscription = this.songLoadParams.pipe(
+            switchMap(params => {
+                this.isLoading = true;
+                return this.songService.getSongs(
+                    params.search,
+                    params.page,
+                    params.pageSize,
+                    params.artistId,
+                    params.genreId,
+                    params.keyId,
+                    params.sortBy,
+                    params.tagId
+                ).pipe(
+                    catchError(() => {
+                        this.isLoading = false;
+                        return EMPTY;
+                    })
+                );
+            })
+        ).subscribe({
+            next: (res) => {
+                this.songs = res.songs;
+                this.totalCount = res.totalCount;
+                this.totalPages = res.totalPages;
+                this.hasMoreSongs = this.currentPage < this.totalPages;
+                this.isLoading = false;
+                // Load category sections only after the first catalog load completes
+                if (!this.sectionsLoaded) {
+                    this.sectionsLoaded = true;
+                    this.loadCategorySections();
+                }
+            }
+        });
     }
 
     handleRandomSongClick(): void {
@@ -120,8 +169,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadSongs();
         this.loadFilterData();
         this.loadQuickTags();
-        this.loadCategorySections();
         this.loadRecentlyViewed();
+        // loadCategorySections() is deferred — runs after loadSongs() returns for the first time
     }
 
     ngAfterViewInit(): void {
@@ -134,6 +183,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     ngOnDestroy(): void {
         this.scrollObserver?.disconnect();
         this.searchSubscription?.unsubscribe();
+        this.songLoadSubscription?.unsubscribe();
     }
 
     // ─────────────────────────────────────────────
@@ -292,26 +342,15 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.loadKnownChordSongs();
             return;
         }
-
-        this.isLoading = true;
-        this.songService.getSongs(
-            this.search || undefined,
-            this.currentPage,
-            this.pageSize,
-            this.selectedArtistId || undefined,
-            this.selectedGenreId || undefined,
-            this.selectedKeyId || undefined,
-            this.sortBy,
-            this.selectedTagId || undefined
-        ).subscribe({
-            next: (res) => {
-                this.songs = res.songs;
-                this.totalCount = res.totalCount;
-                this.totalPages = res.totalPages;
-                this.hasMoreSongs = this.currentPage < this.totalPages;
-                this.isLoading = false;
-            },
-            error: () => { this.isLoading = false; }
+        this.songLoadParams.next({
+            search: this.search || undefined,
+            page: this.currentPage,
+            pageSize: this.pageSize,
+            artistId: this.selectedArtistId || undefined,
+            genreId: this.selectedGenreId || undefined,
+            keyId: this.selectedKeyId || undefined,
+            sortBy: this.sortBy,
+            tagId: this.selectedTagId || undefined
         });
     }
 

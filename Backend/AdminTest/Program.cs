@@ -24,7 +24,16 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Clear();
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.CustomSchemaIds(type =>
+    {
+        if (!type.IsGenericType) return type.Name;
+        var baseName = type.GetGenericTypeDefinition().Name.Split('`')[0];
+        var args = string.Join("", type.GetGenericArguments().Select(t => t.Name));
+        return $"{baseName}Of{args}";
+    });
+});
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 
