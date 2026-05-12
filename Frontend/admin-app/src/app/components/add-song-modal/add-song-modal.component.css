@@ -1530,6 +1530,15 @@ select option {
     }
 }
 
-
-
+.submission-error {
+    background: rgba(200, 0, 0, 0.08);
+    color: #a00;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+}
 

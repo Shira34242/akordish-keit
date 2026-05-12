@@ -815,6 +815,7 @@
                     <span class="material-icons">check</span>
                     <span>{{ 'song_modal.save_changes' | translate }}</span>
                 </button>
+                <div class="submission-error" *ngIf="submissionError">{{ submissionError }}</div>
                 <button class="btn-primary btn-submit" *ngIf="currentStep === 3 && !isPreviewEditing" (click)="submit()" [disabled]="isSubmitting">
                     <span *ngIf="isSubmitting">{{ 'song_modal.saving' | translate }}</span>
                     <span *ngIf="!isSubmitting">{{ 'song_modal.submit_approval' | translate }}</span>
@@ -831,6 +832,7 @@
             <div class="right-buttons">
                 <button class="btn-primary btn-large" *ngIf="currentStep === 2" (click)="nextStep()">{{ 'song_modal.preview_next' | translate }}</button>
                 <button class="btn-primary" *ngIf="currentStep === 1" (click)="nextStep()">{{ 'song_modal.next' | translate }}</button>
+              <div class="submission-error" *ngIf="submissionError">{{ submissionError }}</div>
               <button class="btn-primary btn-submit" *ngIf="currentStep === 3" (click)="submit()" [disabled]="isSubmitting">
                     <span *ngIf="isSubmitting">{{ 'song_modal.saving' | translate }}</span>
                     <span *ngIf="!isSubmitting && editMode">{{ 'song_modal.save_edit' | translate }}</span>

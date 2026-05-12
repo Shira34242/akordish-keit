@@ -100,6 +100,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     isSubmitting: boolean = false;
     showInlineSuccess = false;
     successMessage = '';
+    submissionError = '';
 
     songForm: FormGroup;
 
@@ -1859,7 +1860,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.scrollModalToTop();
                         this.songAdded.emit();
                     } else {
-                        alert(this.langService.translate('song_modal.error_prefix') + ': ' + res.message);
+                        this.submissionError = res.message || this.langService.translate('song_modal.error_prefix');
                     }
                 },
                 error: (err) => {
@@ -1869,7 +1870,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                     const message = this.editMode
                         ? this.langService.translate('song_modal.error_update')
                         : this.langService.translate('song_modal.error_save');
-                    alert(message);
+                    this.submissionError = message;
                 }
             });
         } else {

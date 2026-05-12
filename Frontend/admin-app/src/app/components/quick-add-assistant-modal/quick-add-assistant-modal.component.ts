@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
@@ -63,7 +63,7 @@ interface AssistantStepDefinition {
   templateUrl: './quick-add-assistant-modal.component.html',
   styleUrls: ['./quick-add-assistant-modal.component.css']
 })
-export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
+export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDestroy {
   private readonly articleService = inject(ArticleService);
   private readonly eventService = inject(EventService);
   private readonly mediaService = inject(MediaService);
@@ -97,8 +97,16 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
   isTyping = false;
   botThinking = false;
+  typingMessageId: string | null = null;
+  successTypedMessage = '';
+  formError = '';
   private readonly TYPING_SPEED_MS = 18;
   private readonly THINKING_DELAY_MS = 400;
+  private readonly HELPER_PAUSE_MS = 350;
+  private destroyed = false;
+  private isResetting = false;
+  private activeTimers: number[] = [];
+  private audioCtx: AudioContext | null = null;
 
   article: CreateArticleDto = this.createEmptyArticle(ArticleContentType.News);
   event: CreateEventDto = this.createEmptyEvent();
@@ -146,6 +154,33 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     if (changes['entryPoint'] && !changes['entryPoint'].firstChange) {
       this.resetConversation();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.clearAllTimers();
+    try {
+      if (this.audioCtx) {
+        this.audioCtx.close().catch(() => {});
+        this.audioCtx = null;
+      }
+    } catch {}
+    try {
+      this.profileSearch$.complete();
+    } catch {}
+  }
+
+  private trackTimer(id: number): number {
+    this.activeTimers.push(id);
+    return id;
+  }
+
+  private clearAllTimers(): void {
+    for (const id of this.activeTimers) {
+      clearTimeout(id);
+      clearInterval(id);
+    }
+    this.activeTimers = [];
   }
 
   get currentOptions(): AssistantOption[] {
@@ -216,15 +251,16 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   async selectOption(option: AssistantOption, event?: MouseEvent): Promise<void> {
+    if (this.destroyed || this.isResetting) return;
     event?.stopPropagation();
 
     this.playClickSound();
 
-    this.messages.push({
+    this.messages = [...this.messages, {
       id: `user-${this.messages.length + 1}`,
-      tone: 'user',
+      tone: 'user' as MessageTone,
       text: option.label
-    });
+    }];
 
     if (option.nextStep) {
       this.currentStep = option.nextStep;
@@ -241,6 +277,11 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       const categoryId = parseInt(option.action.split(':')[1], 10);
       const category = this.articleCategories.find(c => c.id === categoryId);
       const contentType = (category as any)?.section === 0 ? ArticleContentType.News : ArticleContentType.Blog;
+      const categoryName = category?.name ?? '';
+      const msg = categoryName
+        ? `מעולה, נמשיך להוספת כתבה בקטגוריית "${categoryName}". מה תרצה לכלול?`
+        : this.langService.translate('quick_add.content_form_text');
+      await this.typeMessage(msg, 'question');
       this.openArticleFlow(contentType, categoryId);
       return;
     }
@@ -248,48 +289,39 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     switch (option.action) {
       case 'song':
         this.modeOriginStep = this.currentStep;
+        await this.typeMessage(this.langService.translate('fab.song_selected'), 'question');
         this.currentMode = 'song';
-        this.messages.push({
-          id: `bot-${this.messages.length + 1}`,
-          tone: 'question',
-          text: this.langService.translate('fab.song_selected')
-        });
         break;
       case 'chord-request':
         this.modeOriginStep = this.currentStep;
-        this.currentMode = 'chord-request';
         this.chordRequest = { songName: '', artistName: '' };
         this.chordRequestMatch = null;
         this.chordRequestChecked = false;
-        this.messages.push({
-          id: `bot-${this.messages.length + 1}`,
-          tone: 'question',
-          text: this.langService.translate('fab.chord_request_question')
-        });
+        await this.typeMessage(this.langService.translate('fab.chord_request_question'), 'question');
+        this.currentMode = 'chord-request';
         break;
       case 'contact-form':
         this.modeOriginStep = this.currentStep;
-        this.currentMode = 'contact';
         this.contactForm = { fullName: '', email: '', subject: '', message: '' };
         this.contactAttachments = [];
         this.autoFillContactFromCurrentUser();
-        this.scrollToBottomSmooth();
-        break;
-      case 'content-news':
-        this.openArticleFlow(ArticleContentType.News);
+        await this.typeMessage(this.langService.translate('quick_add.contact_form_text'), 'question');
+        this.currentMode = 'contact';
         break;
       case 'content-article':
+        await this.typeMessage(this.langService.translate('quick_add.content_form_text'), 'question');
         this.openArticleFlow(ArticleContentType.Blog);
         break;
       case 'event':
         this.modeOriginStep = this.currentStep;
-        this.currentMode = 'event';
         this.event = this.createEmptyEvent();
         this.showEventOptional = false;
         this.showEventImageLinkInput = false;
         this.selectedEventArtistIds = [];
         this.eventArtistSearchQuery = '';
         this.showEventArtistDropdown = false;
+        await this.typeMessage(this.langService.translate('quick_add.event_form_text'), 'question');
+        this.currentMode = 'event';
         break;
       case 'index-teacher':
       case 'index-service-provider':
@@ -315,6 +347,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.messages = [];
     this.botThinking = false;
     this.isTyping = true;
+    this.typingMessageId = null;
+    this.successTypedMessage = '';
     await this.appendBotStep(this.currentStep);
   }
 
@@ -324,7 +358,12 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.hasArticleDraftContent()) {
-      alert(this.langService.translate('quick_add.fill_one_field'));
+      this.messages = [...this.messages, {
+        id: `bot-${this.messages.length + 1}`,
+        tone: 'helper' as MessageTone,
+        text: this.langService.translate('quick_add.fill_one_field')
+      }];
+      this.scrollToBottomSmooth();
       return;
     }
 
@@ -340,15 +379,25 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
     this.articleService.submitArticle(this.article).subscribe({
       next: () => {
+        if (this.destroyed) return;
         this.isSubmitting = false;
-        this.currentMode = 'success';
-        this.submittedMessage = this.article.contentType === ArticleContentType.News
+        const msg = this.article.contentType === ArticleContentType.News
           ? this.langService.translate('fab.success_news')
           : this.langService.translate('fab.success_article');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
+        this.currentMode = 'success';
+        this.animateSuccessMessage(msg);
       },
       error: (error) => {
+        if (this.destroyed) return;
         this.isSubmitting = false;
-        alert(this.langService.translate('quick_add.error_submit') + (error.error?.message || error.message));
+        this.messages = [...this.messages, {
+          id: `bot-${this.messages.length + 1}`,
+          tone: 'helper' as MessageTone,
+          text: this.langService.translate('quick_add.error_submit')
+        }];
+        this.scrollToBottomSmooth();
       }
     });
   }
@@ -359,18 +408,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.event.name.trim()) {
-      alert(this.langService.translate('quick_add.enter_event_name'));
+      this.pushError(this.langService.translate('quick_add.enter_event_name'));
       return;
     }
 
     if (!this.event.eventDate) {
-      alert(this.langService.translate('quick_add.enter_event_date'));
+      this.pushError(this.langService.translate('quick_add.enter_event_date'));
       return;
     }
 
     const eventLocation = this.event.location?.trim();
     if (!eventLocation) {
-      alert(this.langService.translate('quick_add.enter_event_location'));
+      this.pushError(this.langService.translate('quick_add.enter_event_location'));
       return;
     }
 
@@ -388,13 +437,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
 
     this.eventService.submitEvent(payload).subscribe({
       next: () => {
+        if (this.destroyed) return;
         this.isSubmitting = false;
+        const msg = this.langService.translate('fab.success_event');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
         this.currentMode = 'success';
-        this.submittedMessage = this.langService.translate('fab.success_event');
+        this.animateSuccessMessage(msg);
       },
-      error: (error) => {
+      error: () => {
+        if (this.destroyed) return;
         this.isSubmitting = false;
-        alert(this.langService.translate('quick_add.error_submit_event') + (error.error?.message || error.message));
+        this.pushError(this.langService.translate('quick_add.error_submit_event'));
       }
     });
   }
@@ -405,12 +459,12 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.chordRequest.songName.trim()) {
-      alert(this.langService.translate('quick_add.enter_song_name'));
+      this.pushError(this.langService.translate('quick_add.enter_song_name'));
       return;
     }
 
     if (!this.chordRequest.artistName.trim()) {
-      alert(this.langService.translate('quick_add.enter_artist_name'));
+      this.pushError(this.langService.translate('quick_add.enter_artist_name'));
       return;
     }
 
@@ -479,19 +533,25 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
         this.isSubmitting = false;
         this.chordRequestMatch = null;
         this.chordRequestChecked = false;
+        const msg = this.langService.translate('fab.success_chord_request');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
         this.currentMode = 'success';
-        this.submittedMessage = this.langService.translate('fab.success_chord_request');
+        this.animateSuccessMessage(msg);
       },
-      error: (error) => {
+      error: () => {
         this.isSubmitting = false;
-        alert(this.langService.translate('quick_add.error_submit_request') + (error.error?.message || error.message));
+        this.pushError(this.langService.translate('quick_add.error_submit_request'));
       }
     });
   }
 
   onSongAdded(): void {
+    const msg = this.langService.translate('fab.success_song');
+    this.submittedMessage = msg;
+    this.successTypedMessage = '';
     this.currentMode = 'success';
-    this.submittedMessage = this.langService.translate('fab.success_song');
+    this.animateSuccessMessage(msg);
   }
 
   closeModal(): void {
@@ -517,7 +577,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: () => {
         this.isUploadingArticleImage = false;
-        alert(this.langService.translate('quick_add.error_upload_image'));
+        this.pushError(this.langService.translate('quick_add.error_upload_image'));
       }
     });
   }
@@ -553,7 +613,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       },
       error: () => {
         this.isUploadingEventImage = false;
-        alert(this.langService.translate('quick_add.error_upload_image'));
+        this.pushError(this.langService.translate('quick_add.error_upload_image'));
       }
     });
   }
@@ -726,6 +786,10 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
   }
 
   private async resetConversation(): Promise<void> {
+    if (this.isResetting) return;
+    this.isResetting = true;
+
+    try {
     const initialStep = this.entryPoint === 'index' ? 'index' : 'root';
 
     this.currentStep = initialStep;
@@ -733,6 +797,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.modeOriginStep = initialStep;
     this.isSubmitting = false;
     this.submittedMessage = '';
+    this.successTypedMessage = '';
+    this.formError = '';
     this.showArticleOptional = false;
     this.showEventOptional = false;
     this.showArticleImageLinkInput = false;
@@ -753,6 +819,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     this.contactAttachments = [];
     this.botThinking = false;
     this.isTyping = true;
+    this.typingMessageId = null;
 
     if (this.entryPoint === 'contact') {
       this.currentMode = 'contact';
@@ -771,6 +838,9 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     } else {
       await this.appendBotStep(initialStep);
     }
+    } finally {
+      this.isResetting = false;
+    }
   }
 
   private async appendBotStep(step: AssistantStep): Promise<void> {
@@ -779,47 +849,113 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     await this.typeMessage(definition.question, 'question');
 
     if (definition.helper) {
+      this.isTyping = true;
+      this.botThinking = true;
+      this.cdr.detectChanges();
+      await this.delay(this.HELPER_PAUSE_MS);
+      this.botThinking = false;
       await this.typeMessage(definition.helper, 'helper');
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => {
+      const id = window.setTimeout(resolve, ms);
+      this.trackTimer(id);
+    });
+  }
+
+  private animateSuccessMessage(text: string): void {
+    if (this.destroyed) return;
+    this.successTypedMessage = '';
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (this.destroyed) { clearInterval(id); return; }
+      i++;
+      this.successTypedMessage = text.substring(0, i);
+      this.cdr.detectChanges();
+      if (i >= text.length) {
+        clearInterval(id);
+      }
+    }, this.TYPING_SPEED_MS);
+    this.trackTimer(id);
+  }
+
+  private pushError(text: string): void {
+    if (this.destroyed) return;
+    if (this.currentMode === 'choices') {
+      this.messages = [...this.messages, {
+        id: `bot-${this.messages.length + 1}`,
+        tone: 'helper' as MessageTone,
+        text
+      }];
+      this.scrollToBottomSmooth();
+    } else {
+      this.formError = text;
+      this.cdr.detectChanges();
+      const id = window.setTimeout(() => {
+        if (!this.destroyed) { this.formError = ''; this.cdr.detectChanges(); }
+      }, 4000);
+      this.trackTimer(id);
     }
   }
 
   private typeMessage(text: string, tone: MessageTone): Promise<void> {
     return new Promise<void>(resolve => {
+      if (this.destroyed) { resolve(); return; }
       this.botThinking = true;
       this.cdr.detectChanges();
 
-      setTimeout(() => {
+      const thinkingId = window.setTimeout(() => {
+        if (this.destroyed) { resolve(); return; }
         this.botThinking = false;
         const messageId = `bot-${this.messages.length + 1}`;
         const message: AssistantMessage = { id: messageId, tone, text: '' };
         this.messages = [...this.messages, message];
         this.isTyping = true;
+        this.typingMessageId = messageId;
         this.playPopSound();
         this.scrollToBottomSmooth();
 
         let charIndex = 0;
         const totalChars = text.length;
-        const interval = setInterval(() => {
+        const typingId = window.setInterval(() => {
+          if (this.destroyed) { clearInterval(typingId); resolve(); return; }
           charIndex++;
           this.messages = this.messages.map(m =>
             m.id === messageId ? { ...m, text: text.substring(0, charIndex) } : m
           );
 
           if (charIndex >= totalChars) {
-            clearInterval(interval);
+            clearInterval(typingId);
             this.isTyping = false;
+            this.typingMessageId = null;
             this.cdr.detectChanges();
             this.scrollToBottomSmooth();
             resolve();
           }
         }, this.TYPING_SPEED_MS);
+        this.trackTimer(typingId);
       }, this.THINKING_DELAY_MS);
+      this.trackTimer(thinkingId);
     });
   }
 
+  private getAudioContext(): AudioContext | null {
+    if (this.destroyed) return null;
+    if (!this.audioCtx || this.audioCtx.state === 'closed') {
+      try { this.audioCtx = new AudioContext(); } catch { return null; }
+    }
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+    return this.audioCtx.state !== 'closed' ? this.audioCtx : null;
+  }
+
   private playPopSound(): void {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
     try {
-      const ctx = new AudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -831,14 +967,13 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.12);
-    } catch {
-      // audio not available
-    }
+    } catch { /* audio not available */ }
   }
 
   private playClickSound(): void {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
     try {
-      const ctx = new AudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -850,18 +985,19 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.08);
-    } catch {
-      // audio not available
-    }
+    } catch { /* audio not available */ }
   }
 
   private scrollToBottomSmooth(): void {
-    setTimeout(() => {
+    if (this.destroyed || this.currentMode !== 'choices') return;
+    const id = window.setTimeout(() => {
+      if (this.destroyed) return;
       const content = document.querySelector('.modal-content');
       if (content) {
         content.scrollTo({ top: content.scrollHeight, behavior: 'smooth' });
       }
     }, 20);
+    this.trackTimer(id);
   }
 
   private getStepDefinition(step: AssistantStep): AssistantStepDefinition {
@@ -924,8 +1060,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
           { id: 'index', label: t('fab.opt_index'), nextStep: 'index' },
           { id: 'artist', label: t('fab.opt_artist'), nextStep: 'artist' },
           { id: 'chord-request', label: t('fab.opt_chord_request'), action: 'chord-request', isSecondary: true },
-          { id: 'contact-form', label: t('fab.opt_contact_form'), action: 'contact-form', isSecondary: true },
-          { id: 'contact', label: t('fab.opt_report'), action: 'contact', isSecondary: true }
+          { id: 'contact-form', label: t('fab.opt_contact_form'), action: 'contact-form', isSecondary: true }
         );
 
         const userName = this.authService.currentUserValue?.username;
@@ -1064,27 +1199,27 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }
 
     if (!this.contactForm.fullName.trim()) {
-      alert(this.langService.translate('quick_add.enter_full_name'));
+      this.pushError(this.langService.translate('quick_add.enter_full_name'));
       return;
     }
 
     if (!this.contactForm.email.trim() || !this.contactForm.email.includes('@')) {
-      alert(this.langService.translate('quick_add.enter_valid_email'));
+      this.pushError(this.langService.translate('quick_add.enter_valid_email'));
       return;
     }
 
     if (!this.contactForm.subject.trim()) {
-      alert(this.langService.translate('quick_add.select_subject'));
+      this.pushError(this.langService.translate('quick_add.select_subject'));
       return;
     }
 
     if (!this.contactForm.message.trim()) {
-      alert(this.langService.translate('quick_add.enter_message'));
+      this.pushError(this.langService.translate('quick_add.enter_message'));
       return;
     }
 
     if (this.contactAttachments.some(a => a.uploading)) {
-      alert(this.langService.translate('quick_add.wait_upload'));
+      this.pushError(this.langService.translate('quick_add.wait_upload'));
       return;
     }
 
@@ -1111,12 +1246,15 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges {
     }).subscribe({
       next: () => {
         this.isSubmitting = false;
+        const msg = this.langService.translate('fab.success_contact');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
         this.currentMode = 'success';
-        this.submittedMessage = this.langService.translate('fab.success_contact');
+        this.animateSuccessMessage(msg);
       },
-      error: (error) => {
+      error: () => {
         this.isSubmitting = false;
-        alert(this.langService.translate('quick_add.error_submit_message') + (error.error?.message || error.message));
+        this.pushError(this.langService.translate('quick_add.error_submit_message'));
       }
     });
   }
