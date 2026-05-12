@@ -5,13 +5,11 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { EventService } from '../../../services/admin/event.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
-import { EventCardArtist, EventCardData, getDisplayArtist } from '../../../utils/event.utils';
+import { EventCardData, getDisplayArtist } from '../../../utils/event.utils';
 import { EventModalComponent } from '../../shared/event-modal/event-modal.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 type FilterMode = 'upcoming' | 'all' | 'past';
-type ArtistFilter = EventCardArtist & { eventCount: number };
-type ArtistFilterKey = number | string | null;
 
 @Component({
   selector: 'app-events-page',
@@ -30,10 +28,8 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   allEvents: EventCardData[] = [];
   filteredEvents: EventCardData[] = [];
   carouselEvents: EventCardData[] = [];
-  artistFilters: ArtistFilter[] = [];
   selectedEvent: EventCardData | null = null;
-  filterMode: FilterMode = 'upcoming';
-  selectedArtistKey: ArtistFilterKey = null;
+  filterMode: FilterMode = 'all';
   isRepositioning = false;
 
   private activePosition = 0;
@@ -74,34 +70,8 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.animate(), 0);
   }
 
-  selectArtist(artist: ArtistFilter): void {
-    const key = this.getArtistFilterKey(artist);
-    const isSameArtist = this.selectedArtistKey === key;
-    this.selectedArtistKey = isSameArtist ? null : key;
-    if (!isSameArtist) {
-      this.filterMode = 'all';
-    }
-    this.updateFiltered();
-    this.resetCarouselPosition();
-    setTimeout(() => this.animate(), 0);
-  }
-
   private updateFiltered(): void {
-    const modeEvents = this.getModeEvents();
-    this.artistFilters = this.buildArtistFilters(this.allEvents);
-
-    if (this.selectedArtistKey && !this.artistFilters.some(a => this.getArtistFilterKey(a) === this.selectedArtistKey)) {
-      this.selectedArtistKey = null;
-    }
-
-    if (this.selectedArtistKey) {
-      const artistKey = this.selectedArtistKey;
-      this.filteredEvents = modeEvents.filter(event => this.eventMatchesArtist(event, artistKey));
-      this.rebuildCarouselEvents();
-      return;
-    }
-
-    this.filteredEvents = modeEvents;
+    this.filteredEvents = this.getModeEvents();
     this.rebuildCarouselEvents();
   }
 
@@ -128,63 +98,6 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
       return this.allEvents.filter(e => e.isPast);
     }
     return [...this.allEvents];
-  }
-
-  private buildArtistFilters(events: EventCardData[]): ArtistFilter[] {
-    const artists = new Map<number | string, ArtistFilter>();
-
-    events.forEach(event => {
-      event.taggedArtists?.forEach(artist => {
-        const existing = artists.get(artist.artistId);
-
-        if (existing) {
-          existing.eventCount++;
-          return;
-        }
-
-        artists.set(artist.artistId, { ...artist, eventCount: 1 });
-      });
-
-      if (!event.taggedArtists?.length && event.taggedArtistNames?.length) {
-        event.taggedArtistNames.forEach(artistName => {
-          const name = artistName.trim();
-          if (!name) return;
-
-          const key = this.getNameFilterKey(name);
-          const existing = artists.get(key);
-
-          if (existing) {
-            existing.eventCount++;
-            return;
-          }
-
-          artists.set(key, {
-            artistId: 0,
-            artistName: name,
-            filterKey: key,
-            eventCount: 1
-          });
-        });
-      }
-    });
-
-    return Array.from(artists.values()).sort((a, b) => a.artistName.localeCompare(b.artistName, 'he'));
-  }
-
-  private eventMatchesArtist(event: EventCardData, key: number | string): boolean {
-    if (typeof key === 'number') {
-      return event.taggedArtists?.some(artist => artist.artistId === key) ?? false;
-    }
-
-    return event.taggedArtistNames?.some(name => this.getNameFilterKey(name) === key) ?? false;
-  }
-
-  private getArtistFilterKey(artist: ArtistFilter): number | string {
-    return artist.artistId > 0 ? artist.artistId : (artist.filterKey ?? this.getNameFilterKey(artist.artistName));
-  }
-
-  private getNameFilterKey(name: string): string {
-    return name.trim().toLocaleLowerCase();
   }
 
   private hydrateTaggedArtists(events: EventCardData[]): void {
@@ -247,7 +160,10 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     const diff = index - this.activePosition;
     const absDiff = Math.abs(diff);
     const brightness = Math.max(0.3, 1 - absDiff * 0.18);
-    el.style.setProperty('--active', String(diff / this.getVisualSpread()));
+    const visualPosition = diff / this.getVisualSpread();
+    const curve = Math.min(1.65, Math.abs(visualPosition));
+    el.style.setProperty('--active', String(visualPosition));
+    el.style.setProperty('--curve', String(curve));
     el.style.setProperty('--zIndex', String(this.getZindex(index, total)));
     el.style.setProperty('--brightness', String(brightness));
   }

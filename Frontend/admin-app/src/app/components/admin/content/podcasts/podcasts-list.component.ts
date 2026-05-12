@@ -1,0 +1,183 @@
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { Podcast, PodcastEpisode } from '../../../../models/podcast.model';
+import { PagedResult } from '../../../../models/pagination.model';
+import { PodcastService } from '../../../../services/podcast.service';
+import { SiteAlertService } from '../../../../services/site-alert.service';
+
+@Component({
+  selector: 'app-podcasts-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './podcasts-list.component.html',
+  styleUrls: ['./podcasts-list.component.css']
+})
+export class PodcastsListComponent implements OnInit {
+  private readonly podcastService = inject(PodcastService);
+  private readonly router = inject(Router);
+  private readonly siteAlerts = inject(SiteAlertService);
+
+  podcasts: Podcast[] = [];
+  episodes: PodcastEpisode[] = [];
+  loading = true;
+  savingEpisodeId: number | null = null;
+  savingPodcastId: number | null = null;
+  searchTerm = '';
+  statusFilter: 'all' | 'active' | 'draft' = 'all';
+  selectedPodcastId?: number;
+  activeTab: 'podcasts' | 'episodes' = 'episodes';
+
+  currentPage = 1;
+  pageSize = 25;
+  totalItems = 0;
+  totalPages = 0;
+
+  ngOnInit(): void {
+    this.loadPodcasts();
+    this.loadEpisodes();
+  }
+
+  loadPodcasts(): void {
+    this.podcastService.getPodcasts(1, 200).subscribe({
+      next: result => {
+        this.podcasts = result.items;
+      }
+    });
+  }
+
+  loadEpisodes(): void {
+    this.loading = true;
+    this.podcastService.getEpisodes(
+      this.currentPage,
+      this.pageSize,
+      this.selectedPodcastId,
+      this.searchTerm || undefined,
+      this.getActiveFilter()
+    ).subscribe({
+      next: (result: PagedResult<PodcastEpisode>) => {
+        this.episodes = result.items;
+        this.totalItems = result.totalCount;
+        this.totalPages = result.totalPages;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadEpisodes();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadEpisodes();
+  }
+
+  createPodcast(): void {
+    this.router.navigate(['/admin/content/podcasts/new']);
+  }
+
+  createEpisode(): void {
+    this.router.navigate(['/admin/content/podcasts/episodes/new']);
+  }
+
+  editPodcast(podcast: Podcast): void {
+    this.router.navigate(['/admin/content/podcasts/edit', podcast.id]);
+  }
+
+  editEpisode(episode: PodcastEpisode): void {
+    this.router.navigate(['/admin/content/podcasts/episodes/edit', episode.id]);
+  }
+
+  duplicateEpisode(episode: PodcastEpisode): void {
+    this.router.navigate(['/admin/content/podcasts/episodes/new'], { queryParams: { duplicate: episode.id } });
+  }
+
+  setEpisodeStatus(episode: PodcastEpisode, isActive: boolean): void {
+    if (episode.isActive === isActive || this.savingEpisodeId === episode.id) return;
+
+    this.savingEpisodeId = episode.id;
+    this.podcastService.updateEpisode(episode.id, {
+      podcastId: episode.podcastId,
+      title: episode.title,
+      slug: episode.slug,
+      description: episode.description,
+      episodeNumber: episode.episodeNumber,
+      sourceUrl: episode.sourceUrl,
+      embedUrl: episode.embedUrl,
+      thumbnailUrl: episode.thumbnailUrl,
+      platform: episode.platform,
+      publishedAt: episode.publishedAt,
+      displayOrder: episode.displayOrder,
+      isActive
+    }).subscribe({
+      next: updated => {
+        episode.isActive = updated.isActive;
+        this.savingEpisodeId = null;
+      },
+      error: () => {
+        this.savingEpisodeId = null;
+        alert('עדכון סטטוס הפרק נכשל');
+      }
+    });
+  }
+
+  setPodcastStatus(podcast: Podcast, isActive: boolean): void {
+    if (podcast.isActive === isActive || this.savingPodcastId === podcast.id) return;
+
+    this.savingPodcastId = podcast.id;
+    this.podcastService.updatePodcast(podcast.id, {
+      name: podcast.name,
+      slug: podcast.slug,
+      description: podcast.description,
+      imageUrl: podcast.imageUrl,
+      displayOrder: podcast.displayOrder,
+      isActive
+    }).subscribe({
+      next: updated => {
+        podcast.isActive = updated.isActive;
+        this.savingPodcastId = null;
+      },
+      error: () => {
+        this.savingPodcastId = null;
+        alert('עדכון סטטוס הפודקאסט נכשל');
+      }
+    });
+  }
+
+  async deletePodcast(podcast: Podcast): Promise<void> {
+    if (!await this.siteAlerts.confirm(`למחוק את הפודקאסט "${podcast.name}" ואת כל הפרקים שלו?`)) return;
+    this.podcastService.deletePodcast(podcast.id).subscribe(() => {
+      this.loadPodcasts();
+      this.loadEpisodes();
+    });
+  }
+
+  async deleteEpisode(episode: PodcastEpisode): Promise<void> {
+    if (!await this.siteAlerts.confirm(`למחוק את הפרק "${episode.title}"?`)) return;
+    this.podcastService.deleteEpisode(episode.id).subscribe(() => this.loadEpisodes());
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('he-IL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  getStatusLabel(isActive: boolean): string {
+    return isActive ? 'מוצג באתר' : 'טיוטה';
+  }
+
+  private getActiveFilter(): boolean | undefined {
+    if (this.statusFilter === 'active') return true;
+    if (this.statusFilter === 'draft') return false;
+    return undefined;
+  }
+}

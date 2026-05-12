@@ -1,0 +1,60 @@
+<div class="form-page" dir="rtl">
+  <div class="form-header">
+    <button type="button" class="back-btn" (click)="goBack()">
+      <span class="material-icons">arrow_forward</span>
+      חזרה
+    </button>
+    <h1>{{ isEditMode ? 'עריכת פודקאסט' : 'פודקאסט חדש' }}</h1>
+  </div>
+
+  <div *ngIf="loading" class="state-box">טוען פודקאסט...</div>
+
+  <form *ngIf="!loading" class="content-form" (ngSubmit)="onSubmit()">
+    <section class="form-section">
+      <h2>פרטי סדרה</h2>
+      <div class="form-group">
+        <label>שם הפודקאסט</label>
+        <input type="text" [(ngModel)]="podcast.name" name="name" required />
+      </div>
+
+      <div class="form-group">
+        <label>כתובת ידידותית</label>
+        <input type="text" [(ngModel)]="podcast.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
+      </div>
+
+      <div class="form-group">
+        <label>תיאור קצר</label>
+        <textarea [(ngModel)]="podcast.description" name="description" rows="4"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>תמונת סדרה</label>
+        <input type="url" [(ngModel)]="podcast.imageUrl" name="imageUrl" placeholder="קישור לתמונה שתופיע בעמוד הסדרה ובכרטיסי סדרות" />
+      </div>
+
+      <div class="series-preview" *ngIf="podcast.imageUrl">
+        <span [style.background-image]="'url(' + podcast.imageUrl + ')'"></span>
+        <p>כך התמונה תופיע בראש עמוד הסדרה ובכרטיסי הסדרות.</p>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>תצוגה</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>סדר הצגה</label>
+          <input type="number" [(ngModel)]="podcast.displayOrder" name="displayOrder" min="0" />
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="podcast.isActive" name="isActive" />
+          מוצג באתר
+        </label>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">ביטול</button>
+      <button type="submit" class="btn-submit" [disabled]="saving">{{ saving ? 'שומר...' : 'שמירה' }}</button>
+    </div>
+  </form>
+</div>

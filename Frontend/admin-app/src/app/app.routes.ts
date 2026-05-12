@@ -187,6 +187,21 @@ export const routes: Routes = [
                 title: 'הופעות - אקורדישקייט'
             },
             {
+                path: 'podcasts',
+                loadComponent: () => import('./components/public/podcasts-page/podcasts-page.component').then(m => m.PodcastsPageComponent),
+                title: 'פודקאסטים - אקורדישקייט'
+            },
+            {
+                path: 'podcasts/:podcastSlug/:episodeSlug',
+                loadComponent: () => import('./components/public/podcast-episode-page/podcast-episode-page.component').then(m => m.PodcastEpisodePageComponent),
+                title: 'פרק פודקאסט - אקורדישקייט'
+            },
+            {
+                path: 'podcasts/:slug',
+                loadComponent: () => import('./components/public/podcast-detail-page/podcast-detail-page.component').then(m => m.PodcastDetailPageComponent),
+                title: 'פודקאסטים - אקורדישקייט'
+            },
+            {
                 path: 'about',
                 loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
                 title: 'אודות - אקורדישקייט',
@@ -352,6 +367,31 @@ export const routes: Routes = [
                         path: 'events',
                         loadComponent: () => import('./components/admin/content/events/events-list.component').then(m => m.EventsListComponent),
                         title: 'ניהול הופעות - אקורדישקייט'
+                    },
+                    {
+                        path: 'podcasts',
+                        loadComponent: () => import('./components/admin/content/podcasts/podcasts-list.component').then(m => m.PodcastsListComponent),
+                        title: 'ניהול פודקאסטים - אקורדישקייט'
+                    },
+                    {
+                        path: 'podcasts/new',
+                        loadComponent: () => import('./components/admin/content/podcasts/podcast-form.component').then(m => m.PodcastFormComponent),
+                        title: 'פודקאסט חדש - אקורדישקייט'
+                    },
+                    {
+                        path: 'podcasts/edit/:id',
+                        loadComponent: () => import('./components/admin/content/podcasts/podcast-form.component').then(m => m.PodcastFormComponent),
+                        title: 'עריכת פודקאסט - אקורדישקייט'
+                    },
+                    {
+                        path: 'podcasts/episodes/new',
+                        loadComponent: () => import('./components/admin/content/podcasts/podcast-episode-form.component').then(m => m.PodcastEpisodeFormComponent),
+                        title: 'פרק פודקאסט חדש - אקורדישקייט'
+                    },
+                    {
+                        path: 'podcasts/episodes/edit/:id',
+                        loadComponent: () => import('./components/admin/content/podcasts/podcast-episode-form.component').then(m => m.PodcastEpisodeFormComponent),
+                        title: 'עריכת פרק פודקאסט - אקורדישקייט'
                     },
                     {
                         path: 'events/new',

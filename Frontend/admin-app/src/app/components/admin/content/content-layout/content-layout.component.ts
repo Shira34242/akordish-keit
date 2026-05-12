@@ -47,6 +47,11 @@ export class AdminContentLayoutComponent {
 
         if (url.includes('/content/events')) {
             this.router.navigate(['/admin/content/events/new']);
+            return;
+        }
+
+        if (url.includes('/content/podcasts')) {
+            this.router.navigate(['/admin/content/podcasts/episodes/new']);
         }
     }
 
@@ -92,6 +97,14 @@ export class AdminContentLayoutComponent {
                 title: 'הופעות',
                 subtitle: 'ניהול הופעות קרובות, תאריכים, מיקומים וכרטיסים.',
                 actionLabel: 'הופעה חדשה'
+            };
+        }
+
+        if (url.includes('/content/podcasts')) {
+            return {
+                title: 'פודקאסטים',
+                subtitle: 'ניהול סדרות ופרקים שמוטמעים באתר מקישורים חיצוניים.',
+                actionLabel: 'פרק חדש'
             };
         }
 

@@ -294,6 +294,20 @@
       </div>
     </section>
 
+    <section class="home-section podcasts-home-section" *ngIf="latestPodcastEpisodes.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">פודקאסטים</h2>
+        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
+      </div>
+      <div class="podcasts-home-row">
+        <app-podcast-episode-card
+          *ngFor="let episode of latestPodcastEpisodes; trackBy: trackById"
+          [episode]="episode"
+          [compact]="true">
+        </app-podcast-episode-card>
+      </div>
+    </section>
+
     <section class="home-section content-articles-section">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
