@@ -9,25 +9,7 @@
   (touchend)="onTouchEnd()">
 
   <div class="events-header">
-    <div class="artists-filter" *ngIf="artistFilters.length > 0" aria-label="סינון לפי אמן">
-      <button
-        type="button"
-        class="artist-filter"
-        *ngFor="let artist of artistFilters"
-        [class.artist-filter--active]="selectedArtistKey === (artist.artistId > 0 ? artist.artistId : artist.filterKey)"
-        [attr.aria-pressed]="selectedArtistKey === (artist.artistId > 0 ? artist.artistId : artist.filterKey)"
-        (click)="selectArtist(artist)">
-        <span class="artist-filter__image-wrap">
-          <img
-            class="artist-filter__image"
-            [src]="artist.artistImageUrl || 'assets/default-artist.png'"
-            [alt]="artist.artistName"
-            draggable="false">
-        </span>
-        <span class="artist-filter__name">{{ artist.artistName }}</span>
-      </button>
-    </div>
-    <h1 class="events-title events-title--fallback" *ngIf="artistFilters.length === 0">{{ 'events.title' | translate }}</h1>
+    <h1 class="events-title events-title--fallback">{{ 'events.title' | translate }}</h1>
   </div>
 
   <div *ngIf="loading" class="state-center">
@@ -78,8 +60,8 @@
   </div>
 
   <nav class="event-filter-bar" aria-label="סינון הופעות לפי זמן">
-    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
     <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'all'" (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>
+    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
     <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'past'" (click)="setFilter('past')">{{ 'events.filter_past' | translate }}</button>
   </nav>
 

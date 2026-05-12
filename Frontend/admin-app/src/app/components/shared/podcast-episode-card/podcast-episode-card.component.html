@@ -1,0 +1,26 @@
+<a
+  class="podcast-card"
+  [class.podcast-card--compact]="compact"
+  [routerLink]="['/podcasts', episode.podcastSlug, episode.slug]">
+  <div class="podcast-card__media">
+    <img
+      *ngIf="episode.thumbnailUrl"
+      [src]="episode.thumbnailUrl"
+      [alt]="episode.title"
+      loading="lazy">
+    <span *ngIf="!episode.thumbnailUrl" class="material-icons">play_circle</span>
+    <span class="podcast-card__play">
+      <span class="material-icons">play_arrow</span>
+    </span>
+  </div>
+
+  <div class="podcast-card__body">
+    <div class="podcast-card__meta">
+      <span>{{ episode.platform || 'פודקאסט' }}</span>
+      <span *ngIf="episode.episodeNumber">פרק {{ episode.episodeNumber }}</span>
+      <span>{{ formatDate(episode.publishedAt) }}</span>
+    </div>
+    <h3>{{ episode.title }}</h3>
+    <p>{{ episode.podcastName }}</p>
+  </div>
+</a>

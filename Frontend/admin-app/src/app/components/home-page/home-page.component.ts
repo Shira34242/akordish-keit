@@ -10,6 +10,7 @@ import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
 import { TeacherService } from '../../services/teacher.service';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
+import { PodcastService } from '../../services/podcast.service';
 import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
 import { SearchService, SearchResults, SearchItem } from '../../services/search.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
@@ -19,6 +20,7 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
+import { PodcastEpisodeCardComponent } from '../shared/podcast-episode-card/podcast-episode-card.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
@@ -26,6 +28,7 @@ import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
+import { PodcastEpisode } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 
@@ -49,6 +52,7 @@ interface HeroParticle {
     NewsTickerComponent,
     EventCardComponent,
     EventModalComponent,
+    PodcastEpisodeCardComponent,
     TranslatePipe,
     AutoScrollDirective,
     ImgFallbackDirective
@@ -86,6 +90,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
+  latestPodcastEpisodes: PodcastEpisode[] = [];
 
 
   private fullHeroHeight = 0;
@@ -108,6 +113,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     private eventService: EventService,
     private teacherService: TeacherService,
     private providerService: MusicServiceProviderService,
+    private podcastService: PodcastService,
     private quickAddAssistantService: QuickAddAssistantService,
     private searchService: SearchService,
     private systemTablesService: SystemTablesService
@@ -270,6 +276,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
+    });
+
+    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: episodes => { this.latestPodcastEpisodes = episodes; },
+      error: err => console.error('loadContent: podcasts', err)
     });
   }
 

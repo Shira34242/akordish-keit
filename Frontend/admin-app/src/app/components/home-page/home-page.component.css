@@ -971,6 +971,28 @@
   aspect-ratio: 1 / 1;
 }
 
+/* ============================================
+   PODCASTS ROW
+============================================ */
+.podcasts-home-row {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--space-sm);
+  scrollbar-width: none;
+  direction: rtl;
+  scroll-snap-type: x proximity;
+}
+
+.podcasts-home-row::-webkit-scrollbar {
+  display: none;
+}
+
+.podcasts-home-row app-podcast-episode-card {
+  flex: 0 0 min(78%, 300px);
+}
+
 
 /* ============================================
    RESPONSIVE

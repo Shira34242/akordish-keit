@@ -1,0 +1,68 @@
+<main class="episode-page" dir="rtl">
+  <div *ngIf="loading" class="episode-state">טוען פרק...</div>
+
+  <ng-container *ngIf="!loading && episode">
+    <section class="episode-shell">
+      <a [routerLink]="['/podcasts', episode.podcastSlug]" class="back-link">{{ episode.podcastName }}</a>
+
+      <div class="player-box">
+        <iframe
+          *ngIf="safeEmbedUrl"
+          [src]="safeEmbedUrl"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+
+        <div *ngIf="!safeEmbedUrl" class="external-player-fallback">
+          <span>{{ episode.platform }}</span>
+          <strong>{{ episode.title }}</strong>
+          <a [href]="episode.sourceUrl" target="_blank" rel="noopener">פתיחת הפרק</a>
+        </div>
+      </div>
+
+      <article class="episode-copy">
+        <div class="episode-meta">
+          <span>{{ episode.platform }}</span>
+          <span *ngIf="episode.episodeNumber">פרק {{ episode.episodeNumber }}</span>
+          <span>{{ formatDate(episode.publishedAt) }}</span>
+        </div>
+
+        <h1>{{ episode.title }}</h1>
+        <p *ngIf="episode.description">{{ episode.description }}</p>
+
+        <div class="episode-actions">
+          <a class="pill-btn" [href]="episode.sourceUrl" target="_blank" rel="noopener">צפייה במקור</a>
+          <a *ngIf="episode.previousEpisode" class="pill-btn pill-btn--secondary" [routerLink]="['/podcasts', episode.podcastSlug, episode.previousEpisode.slug]">פרק קודם</a>
+          <a *ngIf="episode.nextEpisode" class="pill-btn pill-btn--secondary" [routerLink]="['/podcasts', episode.podcastSlug, episode.nextEpisode.slug]">פרק הבא</a>
+        </div>
+      </article>
+
+      <section class="series-panel" *ngIf="episode.seriesEpisodes?.length">
+        <div class="section-heading">
+          <span>מתוך הסדרה</span>
+          <h2>{{ episode.podcastName }}</h2>
+        </div>
+
+        <div class="series-list">
+          <a
+            *ngFor="let item of episode.seriesEpisodes; trackBy: trackById"
+            class="series-item"
+            [class.active]="item.id === episode.id"
+            [routerLink]="['/podcasts', item.podcastSlug, item.slug]">
+            <div class="series-thumb">
+              <img *ngIf="item.thumbnailUrl" [src]="item.thumbnailUrl" [alt]="item.title" loading="lazy">
+              <span *ngIf="!item.thumbnailUrl" class="material-icons">play_circle</span>
+            </div>
+            <div class="series-copy">
+              <span *ngIf="item.episodeNumber">פרק {{ item.episodeNumber }}</span>
+              <strong>{{ item.title }}</strong>
+            </div>
+          </a>
+        </div>
+      </section>
+    </section>
+  </ng-container>
+
+  <div *ngIf="!loading && !episode" class="episode-state">הפרק לא נמצא.</div>
+</main>

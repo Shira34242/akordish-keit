@@ -118,14 +118,14 @@
     padding: 0;
     opacity: 0;
     overflow: hidden;
-    transition: max-width 0.22s ease, opacity 0.12s ease;
+    transition: max-width 0.22s ease 0.3s, opacity 0.12s ease 0.3s;
     white-space: nowrap;
     pointer-events: none;
     direction: rtl;
 }
 
 .site-nav-group:hover .site-nav-submenu,
-.header-left-group:hover .site-nav-submenu,
+.desktop-nav:hover .site-nav-submenu,
 .mobile-nav-scroll:hover .site-nav-submenu {
     max-width: min(38vw, 22rem);
     padding: 0 var(--space-xs);

@@ -1,0 +1,78 @@
+<main class="podcasts-page" dir="rtl">
+  <section class="podcasts-hero">
+    <div>
+      <span class="section-label">פודקאסטים</span>
+      <h1>פרקים אחרונים</h1>
+      <p>שיחות, ראיונות ותוכן מוזיקלי לצפייה ישירה באתר, עם מעבר מהיר בין פרקי כל סדרה.</p>
+    </div>
+    <div class="hero-stats" *ngIf="!loading">
+      <span><strong>{{ totalItems }}</strong> פרקים</span>
+      <span><strong>{{ podcasts.length }}</strong> סדרות</span>
+    </div>
+  </section>
+
+  <section class="podcast-filters">
+    <form class="search-box" (ngSubmit)="applyFilters()">
+      <span class="material-icons">search</span>
+      <input
+        type="search"
+        name="podcastSearch"
+        [(ngModel)]="searchTerm"
+        placeholder="חיפוש פרק, סדרה או נושא" />
+      <button type="submit">חיפוש</button>
+    </form>
+
+    <div class="series-tabs" *ngIf="podcasts.length > 0">
+      <button type="button" [class.active]="!selectedPodcastId" (click)="selectPodcast()">כל הפרקים</button>
+      <button
+        type="button"
+        *ngFor="let podcast of podcasts; trackBy: trackById"
+        [class.active]="selectedPodcastId === podcast.id"
+        (click)="selectPodcast(podcast.id)">
+        {{ podcast.name }}
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="podcasts-state">טוען פודקאסטים...</div>
+
+  <ng-container *ngIf="!loading">
+    <section class="podcasts-section" *ngIf="episodes.length > 0">
+      <div class="section-header">
+        <h2>{{ activePodcast ? activePodcast.name : 'כל הפרקים האחרונים' }}</h2>
+        <button type="button" *ngIf="searchTerm || selectedPodcastId" class="clear-btn" (click)="clearFilters()">ניקוי סינון</button>
+      </div>
+      <div class="episodes-grid">
+        <app-podcast-episode-card
+          *ngFor="let episode of episodes; trackBy: trackById"
+          [episode]="episode">
+        </app-podcast-episode-card>
+      </div>
+      <div class="load-more" *ngIf="currentPage < totalPages">
+        <button type="button" (click)="loadMore()" [disabled]="loadingMore">
+          {{ loadingMore ? 'טוען...' : 'הצג עוד פרקים' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="podcasts-section" *ngIf="podcasts.length > 0">
+      <div class="section-header">
+        <h2>סדרות</h2>
+      </div>
+      <div class="series-grid">
+        <a class="series-card" *ngFor="let podcast of podcasts; trackBy: trackById" [routerLink]="['/podcasts', podcast.slug]">
+          <span class="series-thumb" [style.background-image]="(podcast.imageUrl || podcast.latestEpisode?.thumbnailUrl) ? 'url(' + (podcast.imageUrl || podcast.latestEpisode?.thumbnailUrl) + ')' : ''">
+            <span *ngIf="!podcast.imageUrl && !podcast.latestEpisode?.thumbnailUrl" class="material-icons">play_circle</span>
+          </span>
+          <span class="series-count">{{ podcast.episodeCount }} פרקים</span>
+          <h3>{{ podcast.name }}</h3>
+          <p>{{ podcast.description || 'סדרת פודקאסטים' }}</p>
+        </a>
+      </div>
+    </section>
+
+    <div *ngIf="episodes.length === 0" class="podcasts-state">
+      לא נמצאו פרקים שמתאימים לסינון הזה.
+    </div>
+  </ng-container>
+</main>

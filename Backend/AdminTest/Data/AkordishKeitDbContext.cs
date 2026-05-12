@@ -65,6 +65,10 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<Event> Events { get; set; }
     public DbSet<FeaturedContent> FeaturedContents { get; set; }
 
+    // Podcasts
+    public DbSet<Podcast> Podcasts { get; set; }
+    public DbSet<PodcastEpisode> PodcastEpisodes { get; set; }
+
     // News Page Dynamic Sections
     public DbSet<NewsPageSection> NewsPageSections { get; set; }
 
@@ -167,6 +171,10 @@ public class AkordishKeitDbContext : DbContext
         // Events & Featured Content Configurations
         modelBuilder.ApplyConfiguration(new EventConfiguration());
         modelBuilder.ApplyConfiguration(new FeaturedContentConfiguration());
+
+        // Podcast Configurations
+        modelBuilder.ApplyConfiguration(new PodcastConfiguration());
+        modelBuilder.ApplyConfiguration(new PodcastEpisodeConfiguration());
 
         // View Tracking Configurations
         modelBuilder.ApplyConfiguration(new SongViewConfiguration());

@@ -76,6 +76,7 @@ builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAgencyService, AgencyService>();
+builder.Services.AddScoped<IPodcastService, PodcastService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
@@ -180,6 +181,69 @@ using (var scope = app.Services.CreateScope())
             dbContext.Database.Migrate();
         }
     }
+
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Podcasts]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [Podcasts] (
+                [Id] int NOT NULL IDENTITY,
+                [Name] nvarchar(200) NOT NULL,
+                [Slug] nvarchar(220) NOT NULL,
+                [Description] nvarchar(1000) NULL,
+                [ImageUrl] nvarchar(1000) NULL,
+                [DisplayOrder] int NOT NULL CONSTRAINT [DF_Podcasts_DisplayOrder] DEFAULT 0,
+                [IsActive] bit NOT NULL CONSTRAINT [DF_Podcasts_IsActive] DEFAULT CAST(1 AS bit),
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_Podcasts_CreatedAt] DEFAULT (GETUTCDATE()),
+                [UpdatedAt] datetime2 NULL,
+                [IsDeleted] bit NOT NULL CONSTRAINT [DF_Podcasts_IsDeleted] DEFAULT CAST(0 AS bit),
+                CONSTRAINT [PK_Podcasts] PRIMARY KEY ([Id])
+            );
+        END
+
+        IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [PodcastEpisodes] (
+                [Id] int NOT NULL IDENTITY,
+                [PodcastId] int NOT NULL,
+                [Title] nvarchar(250) NOT NULL,
+                [Slug] nvarchar(260) NOT NULL,
+                [Description] nvarchar(1000) NULL,
+                [EpisodeNumber] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_EpisodeNumber] DEFAULT 0,
+                [SourceUrl] nvarchar(1000) NOT NULL,
+                [EmbedUrl] nvarchar(1000) NOT NULL,
+                [ThumbnailUrl] nvarchar(1000) NULL,
+                [Platform] nvarchar(80) NOT NULL CONSTRAINT [DF_PodcastEpisodes_Platform] DEFAULT N'YouTube',
+                [PublishedAt] datetime2 NOT NULL CONSTRAINT [DF_PodcastEpisodes_PublishedAt] DEFAULT (GETUTCDATE()),
+                [DisplayOrder] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_DisplayOrder] DEFAULT 0,
+                [IsActive] bit NOT NULL CONSTRAINT [DF_PodcastEpisodes_IsActive] DEFAULT CAST(1 AS bit),
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_PodcastEpisodes_CreatedAt] DEFAULT (GETUTCDATE()),
+                [UpdatedAt] datetime2 NULL,
+                [IsDeleted] bit NOT NULL CONSTRAINT [DF_PodcastEpisodes_IsDeleted] DEFAULT CAST(0 AS bit),
+                CONSTRAINT [PK_PodcastEpisodes] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_PodcastEpisodes_Podcasts_PodcastId] FOREIGN KEY ([PodcastId]) REFERENCES [Podcasts] ([Id]) ON DELETE CASCADE
+            );
+        END
+
+        IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Podcasts]', N'ImageUrl') IS NULL
+            ALTER TABLE [Podcasts] ADD [ImageUrl] nvarchar(1000) NULL;
+
+        IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Podcasts_Slug' AND object_id = OBJECT_ID(N'[Podcasts]'))
+            CREATE UNIQUE INDEX [IX_Podcasts_Slug] ON [Podcasts] ([Slug]) WHERE [IsDeleted] = 0;
+
+        IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Podcasts_Public' AND object_id = OBJECT_ID(N'[Podcasts]'))
+            CREATE INDEX [IX_Podcasts_Public] ON [Podcasts] ([IsDeleted], [IsActive], [DisplayOrder]);
+
+        IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodes_Podcast_Slug' AND object_id = OBJECT_ID(N'[PodcastEpisodes]'))
+            CREATE UNIQUE INDEX [IX_PodcastEpisodes_Podcast_Slug] ON [PodcastEpisodes] ([PodcastId], [Slug]) WHERE [IsDeleted] = 0;
+
+        IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodes_Public_Latest' AND object_id = OBJECT_ID(N'[PodcastEpisodes]'))
+            CREATE INDEX [IX_PodcastEpisodes_Public_Latest] ON [PodcastEpisodes] ([IsDeleted], [IsActive], [PublishedAt] DESC);
+    ");
 
     dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Agencies]', N'U') IS NULL
