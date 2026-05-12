@@ -28,6 +28,8 @@ public interface IArticleService
 
     Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto, int? callerUserId = null);
 
+    Task<ArticleDto> UpdateArticleStatusAsync(int id, int status);
+
     Task<bool> DeleteArticleAsync(int id);
 
     Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);

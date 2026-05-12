@@ -178,13 +178,18 @@
 
 .sidebar {
   position: absolute;
-  top: var(--space-lg);
+  top: 180px;
   width: 250px;
 }
 
 .sidebar-right {
   /* RTL: פרסומת — נמצאת בצד שמאל ויזואלי */
   left: var(--space-lg);
+}
+
+.sidebar-left {
+  /* RTL: פרסומת — נמצאת בצד ימין ויזואלי */
+  right: var(--space-lg);
 }
 
 /* ============================================
@@ -688,6 +693,21 @@
   font-weight: 300;
   color: rgba(0, 0, 0, 0.45);
   font-family: 'Open Sans', sans-serif;
+}
+
+/* ============================================
+   MID-ARTICLE BANNER AD — 70% width centered
+============================================ */
+
+.mid-banner-ad {
+  width: 70%;
+  margin: var(--space-xl) auto 0;
+}
+
+@media (max-width: 768px) {
+  .mid-banner-ad {
+    width: 90%;
+  }
 }
 
 /* ============================================

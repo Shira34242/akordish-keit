@@ -238,9 +238,8 @@ namespace AkordishKeit.Controllers
                 TotalViews = await _context.AdCampaigns.SumAsync(c => c.ViewCount)
             };
 
-            var totalViews = await _context.AdCampaigns.SumAsync(c => c.ViewCount);
-            stats.AverageClickThroughRate = totalViews > 0
-                ? (double)stats.TotalClicks / totalViews * 100
+            stats.AverageClickThroughRate = stats.TotalViews > 0
+                ? (double)stats.TotalClicks / stats.TotalViews * 100
                 : 0;
 
             return Ok(stats);
@@ -484,64 +483,24 @@ namespace AkordishKeit.Controllers
         public async Task<IActionResult> TrackView(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
+            if (campaign == null) return NotFound();
 
-            if (campaign == null)
-            {
-                return NotFound();
-            }
-
-            // Get user info if authenticated
-            int? userId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
-            }
-
-            // Get IP address
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-            // Get User Agent
-            var userAgent = Request.Headers["User-Agent"].ToString();
-
-            // Get Referrer
-            var referrer = Request.Headers["Referer"].ToString();
-
-            // Check if this is a unique view (within last 24 hours)
+            var (userId, ipAddress, userAgent, referrer) = GetRequestTrackingInfo();
             var cutoffTime = DateTime.UtcNow.AddHours(-24);
-            bool isUniqueView = false;
 
+            bool isUnique;
             if (userId.HasValue)
-            {
-                // For logged-in users: check by UserId
-                isUniqueView = !await _context.AdCampaignViews
-                    .AnyAsync(av => av.AdCampaignId == id &&
-                                   av.UserId == userId &&
-                                   av.ViewedAt >= cutoffTime);
-            }
+                isUnique = !await _context.AdCampaignViews.AnyAsync(av =>
+                    av.AdCampaignId == id && av.UserId == userId && av.ViewedAt >= cutoffTime);
             else if (!string.IsNullOrEmpty(ipAddress))
-            {
-                // For guest users: check by IP + UserAgent
-                isUniqueView = !await _context.AdCampaignViews
-                    .AnyAsync(av => av.AdCampaignId == id &&
-                                   av.IpAddress == ipAddress &&
-                                   av.UserAgent == userAgent &&
-                                   av.ViewedAt >= cutoffTime);
-            }
+                isUnique = !await _context.AdCampaignViews.AnyAsync(av =>
+                    av.AdCampaignId == id && av.IpAddress == ipAddress && av.UserAgent == userAgent && av.ViewedAt >= cutoffTime);
             else
-            {
-                // No tracking info available, count as unique
-                isUniqueView = true;
-            }
+                isUnique = true;
 
-            // Only increment if this is a unique view
-            if (isUniqueView)
+            if (isUnique)
             {
-                // Record the view
-                var adView = new AdCampaignView
+                _context.AdCampaignViews.Add(new AdCampaignView
                 {
                     AdCampaignId = id,
                     UserId = userId,
@@ -549,9 +508,7 @@ namespace AkordishKeit.Controllers
                     UserAgent = userAgent,
                     Referrer = referrer,
                     ViewedAt = DateTime.UtcNow
-                };
-
-                _context.AdCampaignViews.Add(adView);
+                });
                 campaign.ViewCount++;
                 await _context.SaveChangesAsync();
             }
@@ -564,64 +521,24 @@ namespace AkordishKeit.Controllers
         public async Task<IActionResult> TrackClick(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
+            if (campaign == null) return NotFound();
 
-            if (campaign == null)
-            {
-                return NotFound();
-            }
-
-            // Get user info if authenticated
-            int? userId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
-            }
-
-            // Get IP address
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-            // Get User Agent
-            var userAgent = Request.Headers["User-Agent"].ToString();
-
-            // Get Referrer
-            var referrer = Request.Headers["Referer"].ToString();
-
-            // Check if this is a unique click (within last 24 hours)
+            var (userId, ipAddress, userAgent, referrer) = GetRequestTrackingInfo();
             var cutoffTime = DateTime.UtcNow.AddHours(-24);
-            bool isUniqueClick = false;
 
+            bool isUnique;
             if (userId.HasValue)
-            {
-                // For logged-in users: check by UserId
-                isUniqueClick = !await _context.AdCampaignClicks
-                    .AnyAsync(ac => ac.AdCampaignId == id &&
-                                   ac.UserId == userId &&
-                                   ac.ClickedAt >= cutoffTime);
-            }
+                isUnique = !await _context.AdCampaignClicks.AnyAsync(ac =>
+                    ac.AdCampaignId == id && ac.UserId == userId && ac.ClickedAt >= cutoffTime);
             else if (!string.IsNullOrEmpty(ipAddress))
-            {
-                // For guest users: check by IP + UserAgent
-                isUniqueClick = !await _context.AdCampaignClicks
-                    .AnyAsync(ac => ac.AdCampaignId == id &&
-                                   ac.IpAddress == ipAddress &&
-                                   ac.UserAgent == userAgent &&
-                                   ac.ClickedAt >= cutoffTime);
-            }
+                isUnique = !await _context.AdCampaignClicks.AnyAsync(ac =>
+                    ac.AdCampaignId == id && ac.IpAddress == ipAddress && ac.UserAgent == userAgent && ac.ClickedAt >= cutoffTime);
             else
-            {
-                // No tracking info available, count as unique
-                isUniqueClick = true;
-            }
+                isUnique = true;
 
-            // Only increment if this is a unique click
-            if (isUniqueClick)
+            if (isUnique)
             {
-                // Record the click
-                var adClick = new AdCampaignClick
+                _context.AdCampaignClicks.Add(new AdCampaignClick
                 {
                     AdCampaignId = id,
                     UserId = userId,
@@ -629,14 +546,30 @@ namespace AkordishKeit.Controllers
                     UserAgent = userAgent,
                     Referrer = referrer,
                     ClickedAt = DateTime.UtcNow
-                };
-
-                _context.AdCampaignClicks.Add(adClick);
+                });
                 campaign.ClickCount++;
                 await _context.SaveChangesAsync();
             }
 
             return Ok(new { clickCount = campaign.ClickCount });
+        }
+
+        private (int? userId, string? ipAddress, string userAgent, string referrer) GetRequestTrackingInfo()
+        {
+            int? userId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (claim != null && int.TryParse(claim.Value, out var parsed))
+                    userId = parsed;
+            }
+
+            return (
+                userId,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers["User-Agent"].ToString(),
+                Request.Headers["Referer"].ToString()
+            );
         }
 
         // GET: api/AdCampaigns/Public/GetAd?spotTechnicalId=header-banner

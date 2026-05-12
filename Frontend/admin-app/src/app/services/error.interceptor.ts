@@ -12,11 +12,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'אירעה שגיאה';
 
+      const isPublicAdRequest = req.url.includes('/api/AdCampaigns/Public/');
+
       if (error.error instanceof ErrorEvent) {
         console.error('Client-side error:', error.error.message);
         errorMessage = 'שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שנית.';
       } else {
-        console.error(`Server returned code ${error.status}:`, error.message, error.error);
+        if (!isPublicAdRequest) {
+          console.error(`Server returned code ${error.status}:`, error.message, error.error);
+        }
 
         switch (error.status) {
           case 401: {

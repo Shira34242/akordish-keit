@@ -289,6 +289,9 @@
 }
 
 .btn-action:hover { background: #ddff53; }
+.btn-action:disabled { opacity: 0.45; cursor: wait; }
+.btn-publish { background: #ddff53; }
+.btn-publish:hover { background: #000000; color: #ddff53; }
 .btn-delete:hover { background: #404040; color: #ffffff; }
 
 /* Loading & Empty */

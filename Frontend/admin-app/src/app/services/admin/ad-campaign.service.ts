@@ -56,8 +56,11 @@ export class AdCampaignService {
   /**
    * Get campaigns by client
    */
-  getCampaignsByClient(clientId: number): Observable<AdCampaign[]> {
-    return this.http.get<AdCampaign[]>(`${this.apiUrl}/client/${clientId}`);
+  getCampaignsByClient(clientId: number, pageNumber: number = 1, pageSize: number = 20): Observable<PagedResult<AdCampaign>> {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+    return this.http.get<PagedResult<AdCampaign>>(`${this.apiUrl}/client/${clientId}`, { params });
   }
 
   /**

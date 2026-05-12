@@ -477,7 +477,7 @@
 }
 
 .news-banner-card ::ng-deep .news-banner {
-  aspect-ratio: 1.35 / 1;
+  aspect-ratio: 1 / 1;
   border-radius: 22px;
 }
 
@@ -516,6 +516,34 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-md);
+}
+
+/* כרטיס ראשון — featured: תופס שורה מלאה, מידות גדולות יותר */
+.news-grid .news-banner-card:first-child {
+  grid-column: 1 / -1;
+}
+
+.news-grid .news-banner-card:first-child ::ng-deep .news-banner {
+  aspect-ratio: 2.6 / 1;
+}
+
+.news-grid .news-banner-card:first-child ::ng-deep .banner-title {
+  font-size: var(--font-xl);
+  -webkit-line-clamp: 2;
+}
+
+.news-grid .news-banner-card:first-child ::ng-deep .banner-text {
+  right: 24px;
+  bottom: 24px;
+  left: 80px;
+}
+
+.news-grid .news-banner-card:first-child ::ng-deep .banner-arrow-btn {
+  left: 24px;
+  bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
 }
 
 .viral-section {
@@ -995,6 +1023,40 @@
 
 
 /* ============================================
+   AD SLOTS — מוצג רק כשיש פרסומת פעילה
+============================================ */
+.ad-slot {
+  width: 100%;
+}
+
+.ad-slot:has(.ad-container) {
+  margin: var(--space-xl) 0;
+  border-radius: var(--radius-md, 16px);
+  background: #F2F2F2;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ad-slot__label {
+  display: none;
+}
+
+.ad-slot:has(.ad-container) .ad-slot__label {
+  display: block;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  color: #404040;
+  opacity: 0.45;
+  padding: var(--space-xs) var(--space-sm) 0;
+  align-self: flex-end;
+  direction: rtl;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ============================================
    RESPONSIVE
 ============================================ */
 
@@ -1168,8 +1230,29 @@
   }
 
   .news-banner-card ::ng-deep .news-banner {
-    aspect-ratio: 1.3 / 1;
+    aspect-ratio: 1 / 1;
     border-radius: 16px;
+  }
+
+  .news-grid .news-banner-card:first-child ::ng-deep .news-banner {
+    aspect-ratio: 1.6 / 1;
+  }
+
+  .news-grid .news-banner-card:first-child ::ng-deep .banner-title {
+    font-size: var(--font-lg);
+  }
+
+  .news-grid .news-banner-card:first-child ::ng-deep .banner-text {
+    right: 16px;
+    bottom: 16px;
+    left: 60px;
+  }
+
+  .news-grid .news-banner-card:first-child ::ng-deep .banner-arrow-btn {
+    left: 14px;
+    bottom: 14px;
+    width: 40px;
+    height: 40px;
   }
 
   .news-banner-card ::ng-deep .banner-text {

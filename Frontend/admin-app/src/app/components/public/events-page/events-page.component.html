@@ -21,33 +21,33 @@
     <p class="empty-text">{{ 'events.empty' | translate }}</p>
   </div>
 
-  <div class="carousel" [class.carousel--repositioning]="isRepositioning" *ngIf="!loading && carouselEvents.length > 0">
+  <div class="carousel" [class.carousel--repositioning]="isRepositioning" *ngIf="!loading && visibleCarouselItems.length > 0">
     <div
       class="carousel-item"
       #carouselItem
-      *ngFor="let event of carouselEvents; let i = index; trackBy: trackById"
-      (click)="onItemClick(i, event)">
+      *ngFor="let item of visibleCarouselItems; trackBy: trackByCarouselItem"
+      (click)="onItemClick(item.position, item.event)">
 
       <div class="carousel-box">
-        <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name" class="slide-img" draggable="false">
-        <div *ngIf="!event.imageUrl" class="slide-placeholder">
+        <img *ngIf="item.event.imageUrl" [src]="item.event.imageUrl" [alt]="item.event.name" class="slide-img" draggable="false" loading="lazy">
+        <div *ngIf="!item.event.imageUrl" class="slide-placeholder">
           <span class="material-icons">music_note</span>
         </div>
 
-        <span class="slide-badge" [class.slide-badge--past]="event.isPast">
-          {{ event.isPast ? ('shared.ended' | translate) : event.eventStatus }}
+        <span class="slide-badge" [class.slide-badge--past]="item.event.isPast">
+          {{ item.event.isPast ? ('shared.ended' | translate) : item.event.eventStatus }}
         </span>
 
         <div class="slide-info">
-          <h3 class="slide-name">{{ event.name }}</h3>
-          <p class="slide-meta" *ngIf="getArtist(event) || event.location">
-            <span *ngIf="getArtist(event)">{{ getArtist(event) }}</span>
-            <span *ngIf="getArtist(event) && event.location"> · </span>
-            <span *ngIf="event.location">{{ event.location }}</span>
+          <h3 class="slide-name">{{ item.event.name }}</h3>
+          <p class="slide-meta" *ngIf="getArtist(item.event) || item.event.location">
+            <span *ngIf="getArtist(item.event)">{{ getArtist(item.event) }}</span>
+            <span *ngIf="getArtist(item.event) && item.event.location"> · </span>
+            <span *ngIf="item.event.location">{{ item.event.location }}</span>
           </p>
-          <p class="slide-date">{{ formatDate(event.eventDate) }}</p>
-          <a *ngIf="event.ticketUrl && !event.isPast"
-             [href]="event.ticketUrl"
+          <p class="slide-date">{{ formatDate(item.event.eventDate) }}</p>
+          <a *ngIf="item.event.ticketUrl && !item.event.isPast"
+             [href]="item.event.ticketUrl"
              target="_blank" rel="noopener"
              class="slide-ticket"
              (click)="$event.stopPropagation()">

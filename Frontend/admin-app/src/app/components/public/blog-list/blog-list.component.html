@@ -25,12 +25,11 @@
       </div>
 
       <div class="stream-grid">
-        <div
-          class="stream-cell"
-          *ngFor="let article of streamArticles; let i = index"
-          [ngClass]="getCellClass(i)">
-          <app-news-banner [article]="article"></app-news-banner>
-        </div>
+        <ng-container *ngFor="let article of streamArticles; let i = index">
+          <div class="stream-cell" [ngClass]="getCellClass(i)">
+            <app-news-banner [article]="article"></app-news-banner>
+          </div>
+        </ng-container>
       </div>
 
       <div #sentinel class="sentinel"></div>

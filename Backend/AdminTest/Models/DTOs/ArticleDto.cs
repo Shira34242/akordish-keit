@@ -120,6 +120,11 @@ public class SubmitFeedbackDto
     public bool IsPositive { get; set; }
 }
 
+public class UpdateArticleStatusDto
+{
+    public int Status { get; set; }
+}
+
 /// <summary>כתבה בדירוג תוכן (לאדמין)</summary>
 public class ArticleRankDto
 {

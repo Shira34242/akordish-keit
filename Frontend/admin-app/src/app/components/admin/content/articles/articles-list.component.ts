@@ -27,9 +27,10 @@ export class ArticlesListComponent implements OnInit {
   articles: Article[] = [];
   categories: SystemItem[] = [];
   loading = false;
+  publishingArticleIds = new Set<number>();
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
-  activeTab: 'news' | 'blog' | 'featured' = 'news';
+  activeTab: 'all' | 'news' | 'blog' | 'featured' = 'news';
 
   // Pagination
   currentPage = 1;
@@ -62,7 +63,11 @@ export class ArticlesListComponent implements OnInit {
 
   loadArticles(): void {
     this.loading = true;
-    const contentType = this.activeTab === 'news' ? ArticleContentType.News : ArticleContentType.Blog;
+    const contentType = this.activeTab === 'all'
+      ? undefined
+      : this.activeTab === 'news'
+        ? ArticleContentType.News
+        : ArticleContentType.Blog;
 
     this.articleService.getArticles(
       this.currentPage,
@@ -86,7 +91,7 @@ export class ArticlesListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'news' | 'blog' | 'featured'): void {
+  switchTab(tab: 'all' | 'news' | 'blog' | 'featured'): void {
     this.activeTab = tab;
     this.currentPage = 1;
     if (tab !== 'featured') {
@@ -127,7 +132,7 @@ export class ArticlesListComponent implements OnInit {
   }
 
   createNew(): void {
-    const contentType = this.activeTab === 'news' ? 'news' : 'blog';
+    const contentType = this.activeTab === 'blog' ? 'blog' : 'news';
     this.router.navigate(['/admin/content/articles/new'], {
       queryParams: { type: contentType }
     });
@@ -140,6 +145,35 @@ export class ArticlesListComponent implements OnInit {
   viewArticle(article: Article): void {
     const path = article.contentType === ArticleContentType.News ? 'news' : 'blog';
     this.router.navigate([path, article.slug]);
+  }
+
+  async publishArticle(article: Article): Promise<void> {
+    if (article.status === ArticleStatus.Published || this.publishingArticleIds.has(article.id)) {
+      return;
+    }
+
+    if (!article.categoryIds || article.categoryIds.length === 0) {
+      alert('אי אפשר לפרסם כתבה בלי קטגוריה. פתחי עריכה ובחרי קטגוריה מתאימה.');
+      return;
+    }
+
+    if (!(await this.siteAlerts.confirm(`לפרסם עכשיו את הכתבה "${article.title}"?`))) {
+      return;
+    }
+
+    this.publishingArticleIds.add(article.id);
+    this.articleService.updateArticleStatus(article.id, ArticleStatus.Published).subscribe({
+      next: () => {
+        alert('הכתבה פורסמה בהצלחה');
+        this.publishingArticleIds.delete(article.id);
+        this.loadArticles();
+      },
+      error: (error) => {
+        console.error('Error publishing article:', error);
+        alert(error?.error?.message || 'שגיאה בפרסום הכתבה');
+        this.publishingArticleIds.delete(article.id);
+      }
+    });
   }
 
 

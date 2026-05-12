@@ -9,7 +9,8 @@
 .modal-header h2 { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: var(--font-lg); color: #000000; margin: 0; }
 .btn-close { width: 34px; height: 34px; border-radius: 50%; border: none; background: #F2F2F2; cursor: pointer; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
 .btn-close:hover { background: #ddff53; }
-.modal-body { padding: var(--space-lg) var(--space-xl); overflow-y: auto; flex: 1; }
+.modal-content form { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.modal-body { padding: var(--space-lg) var(--space-xl); overflow-y: auto; flex: 1; min-height: 0; }
 .modal-footer { display: flex; justify-content: flex-end; gap: var(--space-md); padding: var(--space-base) var(--space-xl); border-top: 1px solid #F2F2F2; flex-shrink: 0; }
 
 /* Form elements inside modal */

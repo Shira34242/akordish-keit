@@ -144,6 +144,13 @@ export class ArticleService {
   }
 
   /**
+   * Update article status only
+   */
+  updateArticleStatus(id: number, status: ArticleStatus): Observable<Article> {
+    return this.http.patch<Article>(`${this.apiUrl}/${id}/status`, { status });
+  }
+
+  /**
    * Delete article (soft delete)
    */
   deleteArticle(id: number): Observable<void> {

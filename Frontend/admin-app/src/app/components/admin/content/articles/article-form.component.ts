@@ -353,6 +353,7 @@ export class ArticleFormComponent implements OnInit {
     this.systemTablesService.getItems('article-categories', 1, 100).subscribe({
       next: (result) => {
         this.categories = result.items;
+        this.syncContentTypeFromCategories();
       },
       error: (err) => console.error('Error loading categories', err)
     });
@@ -430,7 +431,9 @@ export class ArticleFormComponent implements OnInit {
 
   // אזור באתר נגזר מהקטגוריות שנבחרו: אם יש קטגוריה אחת לפחות "חדשות מוזיקה" → news, אחרת → blog
   get derivedSlugBase(): 'news' | 'blog' {
-    if (!this.article.categoryIds || this.article.categoryIds.length === 0) return 'news';
+    if (!this.article.categoryIds || this.article.categoryIds.length === 0) {
+      return this.article.contentType === ArticleContentType.Blog ? 'blog' : 'news';
+    }
     const hasNews = this.categories.some(c => this.article.categoryIds.includes(c.id) && (c.section ?? 0) === 0);
     return hasNews ? 'news' : 'blog';
   }
@@ -546,6 +549,7 @@ export class ArticleFormComponent implements OnInit {
       return;
     }
 
+    this.syncContentTypeFromCategories();
     this.saving = true;
 
     if (this.isEditMode && this.articleId) {
@@ -595,6 +599,11 @@ export class ArticleFormComponent implements OnInit {
       this.article.categoryIds = [];
     }
 
+    if (this.article.categoryIds.length === 0) {
+      alert('נא לבחור קטגוריה כדי לקבוע איפה הכתבה תוצג באתר');
+      return false;
+    }
+
     return true;
   }
 
@@ -637,6 +646,19 @@ export class ArticleFormComponent implements OnInit {
     } else {
       this.article.categoryIds.push(categoryId);
     }
+    this.syncContentTypeFromCategories();
+  }
+
+  private syncContentTypeFromCategories(): void {
+    if (!this.article.categoryIds || this.article.categoryIds.length === 0 || this.categories.length === 0) {
+      return;
+    }
+
+    const hasNewsCategory = this.categories.some(
+      category => this.article.categoryIds.includes(category.id) && (category.section ?? 0) === 0
+    );
+
+    this.article.contentType = hasNewsCategory ? ArticleContentType.News : ArticleContentType.Blog;
   }
 
   // Artist selection methods

@@ -179,6 +179,11 @@
         <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
       </div>
 
+      <!-- Mid-article Banner Ad -->
+      <div class="mid-banner-ad">
+        <app-ad-display spotTechnicalId="view-article-mid-banner"></app-ad-display>
+      </div>
+
       <!-- More content banner -->
       <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
         <div class="related-content-header">
@@ -205,9 +210,12 @@
 
     <!-- Right Sidebar - Advertisement -->
     <aside class="sidebar sidebar-right">
-      <app-ad-display
-        spotTechnicalId="view-article-right">
-      </app-ad-display>
+      <app-ad-display spotTechnicalId="view-article-right"></app-ad-display>
+    </aside>
+
+    <!-- Left Sidebar - Advertisement -->
+    <aside class="sidebar sidebar-left">
+      <app-ad-display spotTechnicalId="view-article-left"></app-ad-display>
     </aside>
   </div>
 </div>

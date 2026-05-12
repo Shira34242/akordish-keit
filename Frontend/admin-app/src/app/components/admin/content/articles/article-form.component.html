@@ -104,7 +104,7 @@
           </ng-container>
 
           <div class="field-hint" *ngIf="article.categoryIds.length === 0" style="margin-top: 8px;">
-            אפשר לשמור כתבה ללא קטגוריה
+            חובה לבחור קטגוריה כדי לקבוע אם הכתבה תוצג בחדשות מוזיקה או בכתבות
           </div>
         </div>
       </div>
@@ -490,7 +490,7 @@
             placeholder="article-slug" required>
           <div class="field-hint">
             הכתבה תהיה זמינה ב: /{{ derivedSlugBase }}/{{ article.slug || 'slug' }}
-            <span *ngIf="article.categoryIds.length === 0" style="color: #aaa;"> (יוגדר לפי הקטגוריות שנבחרו)</span>
+            <span *ngIf="article.categoryIds.length === 0" style="color: #aaa;"> (חובה לבחור קטגוריה)</span>
           </div>
         </div>
       </div>

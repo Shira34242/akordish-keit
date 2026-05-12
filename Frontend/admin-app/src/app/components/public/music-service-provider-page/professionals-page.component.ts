@@ -15,6 +15,7 @@ import { TeacherListDto } from '../../../models/teacher.model';
 import { TargetAudience, getTargetAudienceOptions } from '../../../models/target-audience.enum';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/teaching-language.enum';
 import { BecomeProfessionalFormComponent } from '../become-professional-form/become-professional-form.component';
+import { AdDisplayComponent } from '../ad-display/ad-display.component';
 import { AuthService } from '../../../services/auth.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { SearchService, SearchItem } from '../../../services/search.service';
@@ -44,7 +45,7 @@ interface AgencyWithProfiles extends AgencyListDto {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent, ImgFallbackDirective],
+  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })

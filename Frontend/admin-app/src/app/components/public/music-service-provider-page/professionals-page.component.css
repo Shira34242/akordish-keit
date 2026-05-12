@@ -960,3 +960,26 @@
 .agency-profiles-empty p {
   margin: 0;
 }
+
+/* ════════════════════════════════════════
+   AD SLOTS
+════════════════════════════════════════ */
+
+.prof-ad-slot {
+  width: 100%;
+}
+
+.prof-ad-slot--top {
+  margin-bottom: var(--space-sm);
+}
+
+.prof-ad-slot:has(app-ad-display .ad-container) {
+  background: #F2F2F2;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--space-sm) 0;
+}
+

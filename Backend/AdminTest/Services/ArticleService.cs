@@ -160,6 +160,8 @@ public class ArticleService : IArticleService
 
     public async Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto, int? callerUserId = null)
     {
+        await EnsureValidArticleCategoriesAsync(dto.CategoryIds);
+
         // Validate slug uniqueness
         if (await SlugExistsAsync(dto.Slug))
         {
@@ -213,7 +215,7 @@ public class ArticleService : IArticleService
         if (dto.CategoryIds != null && dto.CategoryIds.Any())
             await AddArticleCategoriesAsync(article.Id, dto.CategoryIds);
 
-        // Auto-compute ContentType from categories' sections (overriding the value from the DTO).
+        // Auto-compute ContentType from categories' sections.
         article.ContentType = await ComputeContentTypeFromCategoriesAsync(dto.CategoryIds);
 
         // Add tags
@@ -235,6 +237,8 @@ public class ArticleService : IArticleService
 
     public async Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto, int? callerUserId = null)
     {
+        await EnsureValidArticleCategoriesAsync(dto.CategoryIds);
+
         var article = await _context.Articles
             .Include(a => a.ArticleCategories)
             .Include(a => a.ArticleTags)
@@ -331,6 +335,51 @@ public class ArticleService : IArticleService
                 article.ContentType);
         }
 
+        return (await GetArticleByIdAsync(id))!;
+    }
+
+    public async Task<ArticleDto> UpdateArticleStatusAsync(int id, int status)
+    {
+        if (!Enum.IsDefined(typeof(ArticleStatus), status))
+        {
+            throw new InvalidOperationException("Invalid article status");
+        }
+
+        var article = await _context.Articles
+            .Include(a => a.ArticleCategories)
+            .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+        if (article == null)
+        {
+            throw new KeyNotFoundException("Article not found");
+        }
+
+        if (status == (int)ArticleStatus.Published && !article.ArticleCategories.Any())
+        {
+            throw new InvalidOperationException("נא לבחור קטגוריה לפני פרסום הכתבה");
+        }
+
+        var wasPublished = article.Status == (int)ArticleStatus.Published;
+        article.Status = status;
+        article.UpdatedAt = DateTime.UtcNow;
+
+        if (!wasPublished && status == (int)ArticleStatus.Published)
+        {
+            article.PublishDate = DateTime.UtcNow;
+            article.ScheduledDate = null;
+
+            if (article.SubmittedByUserId.HasValue)
+            {
+                await _notificationService.NotifyArticleApprovedAsync(
+                    article.SubmittedByUserId.Value,
+                    article.Id,
+                    article.Title,
+                    article.Slug,
+                    article.ContentType);
+            }
+        }
+
+        await _context.SaveChangesAsync();
         return (await GetArticleByIdAsync(id))!;
     }
 
@@ -714,6 +763,21 @@ public class ArticleService : IArticleService
         return hasNews ? (int)ArticleContentType.News : (int)ArticleContentType.Blog;
     }
 
+    private async Task EnsureValidArticleCategoriesAsync(IEnumerable<int>? categoryIds)
+    {
+        var ids = categoryIds?.Distinct().ToList() ?? new List<int>();
+        if (ids.Count == 0)
+        {
+            throw new InvalidOperationException("נא לבחור קטגוריה כדי לקבוע איפה הכתבה תוצג באתר");
+        }
+
+        var validCount = await _context.ArticleCategories.CountAsync(c => ids.Contains(c.Id));
+        if (validCount != ids.Count)
+        {
+            throw new InvalidOperationException("נבחרה קטגוריה שלא קיימת במערכת");
+        }
+    }
+
     private static IQueryable<Article> ApplyFilters(
         IQueryable<Article> query,
         string? search,
@@ -742,7 +806,7 @@ public class ArticleService : IArticleService
             query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == categoryId.Value));
         }
 
-        // Section filter (חדשות/תוכן) — derived from the categories' Section field, not from the article's own ContentType
+        // Section filter is derived from the categories' Section field.
         if (contentType.HasValue)
         {
             var section = (ArticleCategorySection)contentType.Value;

@@ -19,9 +19,7 @@ builder.Logging.AddDebug();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Serialize enums as numbers for frontend filtering
-        // Note: If you need specific enums as strings, use [JsonConverter] attribute on those properties
-        options.JsonSerializerOptions.Converters.Clear();
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -366,6 +364,42 @@ using (var scope = app.Services.CreateScope())
             ADD [SheetMusicUrl] nvarchar(500) NULL;
         END
     ");
+
+    // Seed ad spots — נוצרים אוטומטית אם לא קיימים
+    var adSpotSeeds = new[]
+    {
+        new { Name = "באנר עליון דף הבית",            TechnicalId = "home-top-banner",      Dimensions = "970x250", Description = "לאחר סקציית חדשות המוזיקה" },
+        new { Name = "באנר אמצעי דף הבית",            TechnicalId = "home-mid-banner",      Dimensions = "970x250", Description = "לפני סקציית בעלי המקצוע" },
+        new { Name = "באנר תחתון דף הבית",            TechnicalId = "home-bottom-banner",   Dimensions = "970x90",  Description = "לפני סקציית כתבות תוכן" },
+        new { Name = "סיידבר שמאל — דף כתבה",        TechnicalId = "view-article-right",   Dimensions = "160x600", Description = "עמודת פרסומת שמאל בדף כתבה בודדת" },
+        new { Name = "סיידבר ימין — דף כתבה",        TechnicalId = "view-article-left",    Dimensions = "160x600", Description = "עמודת פרסומת ימין בדף כתבה בודדת" },
+        new { Name = "סיידבר שמאל — דף בלוג",        TechnicalId = "blog-post-right",      Dimensions = "160x600", Description = "עמודת פרסומת שמאל בדף בלוג בודד" },
+        new { Name = "סיידבר ימין — דף בלוג",        TechnicalId = "blog-post-left",       Dimensions = "160x600", Description = "עמודת פרסומת ימין בדף בלוג בודד" },
+        new { Name = "באנר אמצע — דף כתבה",         TechnicalId = "view-article-mid-banner", Dimensions = "728x250", Description = "באנר מלבני 70% רוחב מתחת לחוות דעת בכתבה" },
+        new { Name = "באנר אמצע — דף בלוג",          TechnicalId = "blog-post-mid-banner",       Dimensions = "728x250", Description = "באנר מלבני 70% רוחב מתחת לחוות דעת בבלוג" },
+        new { Name = "באנר עליון — אינדקס מוזיקה",  TechnicalId = "professionals-top-banner",   Dimensions = "970x250", Description = "בראש תוכן הדף, מתחת להירו" },
+        new { Name = "באנר אמצע — אינדקס מוזיקה",   TechnicalId = "professionals-sections-mid", Dimensions = "970x200", Description = "בין מומלצים לסוכנויות בטאב בעלי מקצוע" },
+        new { Name = "באנר לפני קטלוג — אינדקס מוזיקה", TechnicalId = "professionals-pre-catalog", Dimensions = "970x200", Description = "לפני גריד כל בעלי המוזיקה" },
+        new { Name = "באנר מורים — אינדקס מוזיקה",  TechnicalId = "professionals-teachers-mid", Dimensions = "970x200", Description = "בטאב מורים, אחרי מורים מומלצים" },
+    };
+
+    foreach (var seed in adSpotSeeds)
+    {
+        if (!dbContext.AdSpots.Any(s => s.TechnicalId == seed.TechnicalId))
+        {
+            dbContext.AdSpots.Add(new AkordishKeit.Models.Entities.AdSpot
+            {
+                Name = seed.Name,
+                TechnicalId = seed.TechnicalId,
+                Dimensions = seed.Dimensions,
+                Description = seed.Description,
+                IsActive = true,
+                RotationIntervalMs = 30000,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+    }
+    dbContext.SaveChanges();
 
     dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL

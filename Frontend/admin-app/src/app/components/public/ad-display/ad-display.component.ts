@@ -1,10 +1,9 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { environment } from '../../../../environments/environment';
 
 interface AdCampaign {
   id: number;
@@ -29,73 +28,33 @@ interface AdSpotResponse {
 @Component({
   selector: 'app-ad-display',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
   template: `
-    <div class="ad-container" *ngIf="currentAd" [style.max-width]="maxWidth" [style.max-height]="maxHeight">
-      <a
-        [href]="currentAd.knownUrl"
-        target="_blank"
-        (click)="trackClick()"
-        class="ad-link">
-        <!-- Desktop Media -->
-        <img
-          *ngIf="!isMobile && getMediaType(currentAd.mediaUrl) === 'image'"
-          [src]="currentAd.mediaUrl"
-          [alt]="currentAd.name"
-          class="ad-image"
-          [style.max-width]="maxWidth"
-          [style.max-height]="maxHeight"
-          (load)="trackView()"
-        />
-        <video
-          *ngIf="!isMobile && getMediaType(currentAd.mediaUrl) === 'video'"
-          [src]="currentAd.mediaUrl"
-          class="ad-video"
-          [style.max-width]="maxWidth"
-          [style.max-height]="maxHeight"
-          [autoplay]="true"
-          [loop]="true"
-          [muted]="true"
-          [playsInline]="true"
-          (loadeddata)="trackView()"
-        ></video>
-        <!-- Mobile Media -->
-        <img
-          *ngIf="isMobile && currentAd.mobileMediaUrl && getMediaType(currentAd.mobileMediaUrl) === 'image'"
-          [src]="currentAd.mobileMediaUrl"
-          [alt]="currentAd.name"
-          class="ad-image"
-          [style.max-width]="maxWidth"
-          [style.max-height]="maxHeight"
-          (load)="trackView()"
-        />
-        <video
-          *ngIf="isMobile && currentAd.mobileMediaUrl && getMediaType(currentAd.mobileMediaUrl) === 'video'"
-          [src]="currentAd.mobileMediaUrl"
-          class="ad-video"
-          [style.max-width]="maxWidth"
-          [style.max-height]="maxHeight"
-          [autoplay]="true"
-          [loop]="true"
-          [muted]="true"
-          [playsInline]="true"
-          (loadeddata)="trackView()"
-        ></video>
-      </a>
-    </div>
-    <div class="ad-loading" *ngIf="loading">
-      <span>{{ 'ad.loading' | translate }}</span>
-    </div>
-    <div class="ad-error" *ngIf="error && !loading">
-      <span>{{ error }}</span>
-    </div>
+    @if (currentAd) {
+      <div class="ad-container" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
+        <a [href]="currentAd.knownUrl" target="_blank" (click)="trackClick()" class="ad-link">
+          @if (!isMobile) {
+            @if (getMediaType(currentAd.mediaUrl) === 'image') {
+              <img [src]="currentAd.mediaUrl" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
+            } @else if (getMediaType(currentAd.mediaUrl) === 'video') {
+              <video [src]="currentAd.mediaUrl" class="ad-media"
+                autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
+            }
+          } @else if (currentAd.mobileMediaUrl) {
+            @if (getMediaType(currentAd.mobileMediaUrl) === 'image') {
+              <img [src]="currentAd.mobileMediaUrl" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
+            } @else if (getMediaType(currentAd.mobileMediaUrl) === 'video') {
+              <video [src]="currentAd.mobileMediaUrl" class="ad-media"
+                autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
+            }
+          }
+        </a>
+      </div>
+    }
   `,
   styles: [`
     .ad-container {
       width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: block;
       overflow: hidden;
       margin: 0 auto;
     }
@@ -103,33 +62,15 @@ interface AdSpotResponse {
     .ad-link {
       display: block;
       width: 100%;
+      height: 100%;
       text-decoration: none;
     }
 
-    .ad-image {
-      width: 100%;
-      height: auto;
+    .ad-media {
       display: block;
-      transition: opacity 0.3s ease;
-      object-fit: cover;
-    }
-
-    .ad-video {
       width: 100%;
-      height: auto;
-      display: block;
-      transition: opacity 0.3s ease;
+      height: 100%;
       object-fit: cover;
-    }
-
-    .ad-loading, .ad-error {
-      padding: 1rem;
-      text-align: center;
-      color: #6c757d;
-    }
-
-    .ad-error {
-      color: #dc3545;
     }
   `]
 })
@@ -139,41 +80,63 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly apiUrl = 'https://localhost:44395/api/AdCampaigns';
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/AdCampaigns`;
 
   campaigns: AdCampaign[] = [];
   currentAd: AdCampaign | null = null;
   loading = false;
-  error: string | null = null;
   currentIndex = 0;
   hasTrackedView = false;
   maxWidth: string | null = null;
-  maxHeight: string | null = null;
-  rotationInterval: number = 45000; // Default 45 seconds, will be overridden from server
+  aspectRatio: string | null = null;
+  rotationInterval: number = 45000;
 
   private rotationSubscription?: Subscription;
   private routerSubscription?: Subscription;
+  private visibilityObserver?: IntersectionObserver;
+  private hasStartedLoading = false;
   private readonly VIEWED_ADS_KEY = 'viewedAds';
   private readonly CLICKED_ADS_KEY = 'clickedAds';
 
   ngOnInit() {
-    this.loadAds();
     this.setupRouteChangeListener();
+    this.setupLazyLoading();
   }
 
   ngOnDestroy() {
     this.rotationSubscription?.unsubscribe();
     this.routerSubscription?.unsubscribe();
+    this.visibilityObserver?.disconnect();
   }
 
-  loadAds() {
-    if (!this.spotTechnicalId) {
-      this.error = 'Spot technical ID is required';
+  private setupLazyLoading(): void {
+    if (typeof IntersectionObserver === 'undefined') {
+      this.startLoadingAds();
       return;
     }
 
+    this.visibilityObserver = new IntersectionObserver(
+      entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        this.visibilityObserver?.disconnect();
+        this.startLoadingAds();
+      },
+      { rootMargin: '900px 0px', threshold: 0.01 }
+    );
+    this.visibilityObserver.observe(this.host.nativeElement);
+  }
+
+  private startLoadingAds(): void {
+    if (this.hasStartedLoading) return;
+    this.hasStartedLoading = true;
+    this.loadAds();
+  }
+
+  loadAds() {
+    if (!this.spotTechnicalId) return;
+
     this.loading = true;
-    this.error = null;
 
     const params = new HttpParams().set('spotTechnicalId', this.spotTechnicalId);
     this.http.get<AdSpotResponse>(`${this.apiUrl}/Public/GetAd`, { params })
@@ -186,32 +149,30 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
             this.rotationInterval = response.rotationIntervalMs;
           }
 
-          // תמיכה בפורמטים: "970x250" ו-"970*250"
           if (response.dimensions) {
             const sep = response.dimensions.includes('x') ? 'x' : '*';
-            const dimensionParts = response.dimensions.split(sep);
-            if (dimensionParts.length === 2) {
-              this.maxWidth = dimensionParts[0].trim() + 'px';
-              this.maxHeight = dimensionParts[1].trim() + 'px';
+            const parts = response.dimensions.split(sep);
+            if (parts.length === 2) {
+              const w = Number(parts[0].trim());
+              const h = Number(parts[1].trim());
+              if (w > 0 && h > 0) {
+                this.maxWidth = w + 'px';
+                // cap: אם הרוחב גדול מ-5x הגובה — הצג כ-5:1 כדי לא להיות שטוח מדי
+                const ratio = w / h;
+                this.aspectRatio = ratio > 5 ? `5 / 1` : `${w} / ${h}`;
+              }
             }
           }
 
           if (this.campaigns.length > 0) {
-            // Start with priority 1 (highest priority)
             this.currentIndex = 0;
             this.currentAd = this.campaigns[0];
             this.hasTrackedView = false;
-
-            // Setup rotation with interval from server
             this.setupRotation();
-          } else {
-            this.error = 'No active campaigns available';
           }
         },
-        error: (error) => {
+        error: () => {
           this.loading = false;
-          this.error = 'Failed to load advertisements';
-          console.error('Error loading ads:', error);
         }
       });
   }
@@ -244,40 +205,48 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.hasTrackedView = false;
   }
 
+  private readonly TRACKING_TTL_MS = 24 * 60 * 60 * 1000;
+
+  private getTrackedIds(key: string): Record<number, number> {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private isTrackedWithinTTL(key: string, adId: number): boolean {
+    const map = this.getTrackedIds(key);
+    const ts = map[adId];
+    return ts != null && Date.now() - ts < this.TRACKING_TTL_MS;
+  }
+
+  private markTracked(key: string, adId: number): void {
+    const map = this.getTrackedIds(key);
+    const cutoff = Date.now() - this.TRACKING_TTL_MS;
+    // prune expired entries to keep localStorage clean
+    for (const id in map) {
+      if (map[id] < cutoff) delete map[id];
+    }
+    map[adId] = Date.now();
+    localStorage.setItem(key, JSON.stringify(map));
+  }
+
   private hasViewedAd(adId: number): boolean {
-    const viewedAds = this.getViewedAds();
-    return viewedAds.includes(adId);
+    return this.isTrackedWithinTTL(this.VIEWED_ADS_KEY, adId);
   }
 
   private markAdAsViewed(adId: number): void {
-    const viewedAds = this.getViewedAds();
-    if (!viewedAds.includes(adId)) {
-      viewedAds.push(adId);
-      localStorage.setItem(this.VIEWED_ADS_KEY, JSON.stringify(viewedAds));
-    }
-  }
-
-  private getViewedAds(): number[] {
-    const stored = localStorage.getItem(this.VIEWED_ADS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    this.markTracked(this.VIEWED_ADS_KEY, adId);
   }
 
   private hasClickedAd(adId: number): boolean {
-    const clickedAds = this.getClickedAds();
-    return clickedAds.includes(adId);
+    return this.isTrackedWithinTTL(this.CLICKED_ADS_KEY, adId);
   }
 
   private markAdAsClicked(adId: number): void {
-    const clickedAds = this.getClickedAds();
-    if (!clickedAds.includes(adId)) {
-      clickedAds.push(adId);
-      localStorage.setItem(this.CLICKED_ADS_KEY, JSON.stringify(clickedAds));
-    }
-  }
-
-  private getClickedAds(): number[] {
-    const stored = localStorage.getItem(this.CLICKED_ADS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    this.markTracked(this.CLICKED_ADS_KEY, adId);
   }
 
   trackView() {
@@ -287,10 +256,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
         this.hasTrackedView = true;
         this.markAdAsViewed(this.currentAd.id);
         this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-view`, {})
-          .subscribe({
-            next: () => {},
-            error: (error) => console.error('Error tracking view:', error)
-          });
+          .subscribe({ next: () => {}, error: () => {} });
       } else {
       }
     }
@@ -301,10 +267,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
       if (!this.hasClickedAd(this.currentAd.id)) {
         this.markAdAsClicked(this.currentAd.id);
         this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-click`, {})
-          .subscribe({
-            next: () => {},
-            error: (error) => console.error('Error tracking click:', error)
-          });
+          .subscribe({ next: () => {}, error: () => {} });
       } 
     }
   }

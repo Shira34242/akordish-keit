@@ -207,6 +207,40 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // PATCH: api/Articles/5/status
+    [HttpPatch("{id}/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleDto>> UpdateArticleStatus(int id, [FromBody] UpdateArticleStatusDto dto)
+    {
+        try
+        {
+            var article = await _articleService.UpdateArticleStatusAsync(id, dto.Status);
+
+            if (dto.Status == (int)ArticleStatus.Published)
+            {
+                var submittedByUserId = await _context.Articles
+                    .Where(a => a.Id == id)
+                    .Select(a => a.SubmittedByUserId)
+                    .FirstOrDefaultAsync();
+
+                if (submittedByUserId.HasValue)
+                {
+                    await _userTagService.RecalculateTagAsync(submittedByUserId.Value);
+                }
+            }
+
+            return Ok(article);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // POST: api/Articles/5/duplicate
     [HttpPost("{id}/duplicate")]
     [Authorize(Roles = "Admin")]

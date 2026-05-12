@@ -10,6 +10,9 @@
   <!-- Tabs -->
   <div class="tabs-container">
     <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'all'" (click)="switchTab('all')">
+        הכל
+      </button>
       <button class="tab" [class.active]="activeTab === 'news'" (click)="switchTab('news')">
         חדשות
       </button>
@@ -64,7 +67,7 @@
     <!-- New Button -->
     <button class="btn-new" (click)="createNew()">
       <span class="material-icons">add</span>
-      {{ activeTab === 'news' ? 'כתבה חדשה' : 'פוסט חדש' }}
+      {{ activeTab === 'blog' ? 'פוסט חדש' : 'כתבה חדשה' }}
     </button>
   </div>
 
@@ -189,6 +192,14 @@
 
           <!-- Actions -->
           <td class="actions-cell">
+            <button
+              *ngIf="article.status !== ArticleStatus.Published"
+              class="btn-action btn-publish"
+              [disabled]="publishingArticleIds.has(article.id)"
+              (click)="publishArticle(article)"
+              title="פרסום">
+              <span class="material-icons">{{ publishingArticleIds.has(article.id) ? 'hourglass_empty' : 'publish' }}</span>
+            </button>
             <button class="btn-action btn-view" (click)="viewArticle(article)" title="צפייה">
               <span class="material-icons">visibility</span>
             </button>
@@ -213,7 +224,7 @@
       <p>התחל על ידי יצירת כתבה חדשה</p>
       <button class="btn-new" (click)="createNew()">
         <span class="material-icons">add</span>
-        {{ activeTab === 'news' ? 'כתבה חדשה' : 'פוסט חדש' }}
+        {{ activeTab === 'blog' ? 'פוסט חדש' : 'כתבה חדשה' }}
       </button>
     </div>
   </div>

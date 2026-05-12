@@ -31,6 +31,7 @@ import { MusicServiceProviderListDto } from '../../models/music-service-provider
 import { PodcastEpisode } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 
 interface HeroParticle {
   x: number; y: number;
@@ -55,7 +56,8 @@ interface HeroParticle {
     PodcastEpisodeCardComponent,
     TranslatePipe,
     AutoScrollDirective,
-    ImgFallbackDirective
+    ImgFallbackDirective,
+    AdDisplayComponent
   ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
@@ -92,6 +94,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredProviders: MusicServiceProviderListDto[] = [];
   latestPodcastEpisodes: PodcastEpisode[] = [];
 
+
+  isMobile = window.innerWidth <= 768;
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -198,6 +202,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
+    this.isMobile = window.innerWidth <= 768;
     this.initHeroHeight();
   }
 
@@ -231,6 +236,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadContent() {
+    this.loadHomeArticleCategories();
+    this.deferNonCriticalContent();
+  }
+
+  private loadNonCriticalContent(): void {
     this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
@@ -245,23 +255,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
-
-    this.artistService.getFeaturedArtists(12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (artists: any[]) => { this.featuredArtists = artists; },
-      error: (err) => console.error('loadContent: featured artists', err)
-    });
-
-    this.systemTablesService.getItems('article-categories', 1, 200)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res: any) => {
-          this.setArticleCategorySections(res.items || []);
-          this.loadHomeArticles();
-        },
-        error: (err) => {
-          console.error('loadContent: article categories', err);
-          this.loadHomeArticles();
-        }
-      });
 
     this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
@@ -282,6 +275,29 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       next: episodes => { this.latestPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: podcasts', err)
     });
+  }
+
+  private loadHomeArticleCategories(): void {
+    this.systemTablesService.getItems('article-categories', 1, 200)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (res: any) => {
+          this.setArticleCategorySections(res.items || []);
+          this.loadHomeArticles();
+        },
+        error: (err) => {
+          console.error('loadContent: article categories', err);
+          this.loadHomeArticles();
+        }
+      });
+  }
+
+  private deferNonCriticalContent(): void {
+    const load = () => this.loadNonCriticalContent();
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(load, { timeout: 1500 });
+      return;
+    }
+    setTimeout(load, 600);
   }
 
   onSearchInput(query: string) {

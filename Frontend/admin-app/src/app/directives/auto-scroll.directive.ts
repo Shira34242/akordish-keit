@@ -17,8 +17,10 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
   private halfWidth = 0;
   private resizeObserver?: ResizeObserver;
   private mutationObserver?: MutationObserver;
+  private intersectionObserver?: IntersectionObserver;
   private cleanups: Array<() => void> = [];
   private initialized = false;
+  private isVisible = false;
 
   constructor(private el: ElementRef<HTMLElement>, private zone: NgZone) {}
 
@@ -57,13 +59,28 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
     this.mutationObserver = new MutationObserver(() => this.recompute());
     this.mutationObserver.observe(host, { childList: true, subtree: true });
 
+    this.intersectionObserver = new IntersectionObserver(
+      entries => {
+        this.isVisible = entries.some(entry => entry.isIntersecting);
+      },
+      { rootMargin: '120px 0px', threshold: 0.01 }
+    );
+    this.intersectionObserver.observe(host);
+
     requestAnimationFrame(() => this.recompute());
+
+    if (this.autoScrollSpeed <= 0) return;
 
     this.zone.runOutsideAngular(() => {
       this.lastTime = performance.now();
       const tick = (now: number) => {
         if (this.destroyed) return;
         this.rafId = requestAnimationFrame(tick);
+
+        if (!this.isVisible) {
+          this.lastTime = now;
+          return;
+        }
 
         const dt = Math.min(0.1, (now - this.lastTime) / 1000);
         this.lastTime = now;
@@ -104,6 +121,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     this.resizeObserver?.disconnect();
     this.mutationObserver?.disconnect();
+    this.intersectionObserver?.disconnect();
     this.cleanups.forEach(fn => fn());
   }
 }

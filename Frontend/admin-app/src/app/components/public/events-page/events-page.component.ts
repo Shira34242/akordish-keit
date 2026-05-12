@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChildren, ElementRef, QueryList, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
 import { EventService } from '../../../services/admin/event.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
@@ -10,6 +9,12 @@ import { EventModalComponent } from '../../shared/event-modal/event-modal.compon
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 type FilterMode = 'upcoming' | 'all' | 'past';
+
+interface CarouselRenderItem {
+  event: EventCardData;
+  position: number;
+  key: string;
+}
 
 @Component({
   selector: 'app-events-page',
@@ -27,7 +32,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   loading = true;
   allEvents: EventCardData[] = [];
   filteredEvents: EventCardData[] = [];
-  carouselEvents: EventCardData[] = [];
+  visibleCarouselItems: CarouselRenderItem[] = [];
   selectedEvent: EventCardData | null = null;
   filterMode: FilterMode = 'all';
   isRepositioning = false;
@@ -42,16 +47,16 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   private touchStartPosition = 0;
   private snapTimer?: ReturnType<typeof setTimeout>;
   private wheelAccumulator = 0;
-  private readonly loopCycles = 21;
+  private readonly visibleRadius = 4;
   private readonly speedDrag = -0.008;
   private readonly wheelStepSize = 90;
 
   ngOnInit(): void {
     this.analytics.trackEventView();
-    this.eventService.getEvents(1, 100, undefined, true).subscribe({
+    this.eventService.getEvents(1, 80, undefined, true).subscribe({
       next: (result) => {
         this.allEvents = result.items.map(e => this.toCardData(e));
-        this.hydrateTaggedArtists(this.allEvents);
+        this.finishLoading();
       },
       error: () => { this.loading = false; }
     });
@@ -72,22 +77,12 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
 
   private updateFiltered(): void {
     this.filteredEvents = this.getModeEvents();
-    this.rebuildCarouselEvents();
-  }
-
-  private rebuildCarouselEvents(): void {
-    if (this.filteredEvents.length <= 1) {
-      this.carouselEvents = [...this.filteredEvents];
-      this.loopOffset = 0;
-      return;
-    }
-
-    this.carouselEvents = Array.from({ length: this.loopCycles }).flatMap(() => this.filteredEvents);
-    this.loopOffset = Math.floor(this.loopCycles / 2) * this.filteredEvents.length;
+    this.updateVisibleCarouselItems();
   }
 
   private resetCarouselPosition(): void {
-    this.activePosition = this.loopOffset;
+    this.activePosition = 0;
+    this.updateVisibleCarouselItems();
   }
 
   private getModeEvents(): EventCardData[] {
@@ -100,46 +95,6 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     return [...this.allEvents];
   }
 
-  private hydrateTaggedArtists(events: EventCardData[]): void {
-    const eventsMissingTags = events.filter(event => !event.taggedArtists?.length);
-
-    if (eventsMissingTags.length === 0) {
-      this.finishLoading();
-      return;
-    }
-
-    forkJoin(
-      eventsMissingTags.map(event =>
-        this.eventService.getEvent(event.id).pipe(catchError(() => of(null)))
-      )
-    ).subscribe({
-      next: (details) => {
-        const detailById = new Map<number, Event>();
-        details.forEach(detail => {
-          if (detail) {
-            detailById.set(detail.id, detail);
-          }
-        });
-
-        this.allEvents = this.allEvents.map(event => {
-          const detail = detailById.get(event.id);
-          if (!detail?.taggedArtists?.length) {
-            return event;
-          }
-
-          return {
-            ...event,
-            taggedArtists: detail.taggedArtists,
-            taggedArtistNames: detail.taggedArtists.map(artist => artist.artistName)
-          };
-        });
-
-        this.finishLoading();
-      },
-      error: () => this.finishLoading()
-    });
-  }
-
   private finishLoading(): void {
     this.updateFiltered();
     this.resetCarouselPosition();
@@ -147,90 +102,81 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.animate(), 0);
   }
 
-  trackById(index: number, event: EventCardData): string {
-    return `${event.id}-${index}`;
+  trackByCarouselItem(index: number, item: CarouselRenderItem): string {
+    return item.key;
   }
 
-  private getZindex(index: number, total: number): number {
-    const distance = Math.abs(index - this.activePosition);
+  private getZindex(position: number): number {
+    const distance = Math.abs(position - this.activePosition);
     return Math.max(1, 80 - Math.round(distance));
   }
 
-  private displayItem(el: HTMLElement, index: number, total: number): void {
-    const diff = index - this.activePosition;
+  private displayItem(el: HTMLElement, position: number): void {
+    const diff = position - this.activePosition;
     const absDiff = Math.abs(diff);
     const brightness = Math.max(0.3, 1 - absDiff * 0.18);
     const visualPosition = diff / this.getVisualSpread();
     const curve = Math.min(1.65, Math.abs(visualPosition));
     el.style.setProperty('--active', String(visualPosition));
     el.style.setProperty('--curve', String(curve));
-    el.style.setProperty('--zIndex', String(this.getZindex(index, total)));
+    el.style.setProperty('--zIndex', String(this.getZindex(position)));
     el.style.setProperty('--brightness', String(brightness));
   }
 
   private animate(): void {
+    this.updateVisibleCarouselItems();
+    requestAnimationFrame(() => this.applyCarouselStyles());
+  }
+
+  private applyCarouselStyles(): void {
     const items = this.carouselItems?.toArray();
     if (!items || items.length === 0) return;
 
-    const total = items.length;
+    const total = this.filteredEvents.length;
     if (total <= 1) {
       this.activePosition = 0;
-    } else {
-      this.recenterLoopIfNeeded(false);
     }
     this.activeIndex = Math.round(this.activePosition);
 
     items.forEach((item, index) => {
-      this.displayItem(item.nativeElement, index, total);
+      const renderItem = this.visibleCarouselItems[index];
+      if (renderItem) {
+        this.displayItem(item.nativeElement, renderItem.position);
+      }
     });
   }
 
   private recenterLoopIfNeeded(shouldAnimate = true): void {
-    const sourceTotal = this.filteredEvents.length;
-    if (sourceTotal <= 1 || this.carouselEvents.length <= sourceTotal) return;
+    return;
+  }
 
-    const minPosition = sourceTotal * 2;
-    const maxPosition = this.carouselEvents.length - sourceTotal * 2;
-
-    if (this.activePosition >= minPosition && this.activePosition < maxPosition) {
+  private updateVisibleCarouselItems(): void {
+    const total = this.filteredEvents.length;
+    if (total === 0) {
+      this.visibleCarouselItems = [];
       return;
     }
 
-    const currentSourceIndex = this.normalizeIndex(Math.round(this.activePosition), sourceTotal);
-    const newPosition = this.loopOffset + currentSourceIndex;
-
-    if (this.activePosition === newPosition) {
+    if (total <= this.visibleRadius * 2 + 1) {
+      this.visibleCarouselItems = this.filteredEvents.map((event, position) => ({
+        event,
+        position,
+        key: `${event.id}-${position}`
+      }));
       return;
     }
 
-    if (!shouldAnimate) {
-      this.activePosition = newPosition;
-      return;
-    }
-
-    const items = this.carouselItems?.toArray() ?? [];
-    items.forEach(item => {
-      (item.nativeElement as HTMLElement).style.transition = 'none';
-    });
-
-    this.activePosition = newPosition;
-    this.isRepositioning = true;
-    this.activeIndex = Math.round(this.activePosition);
-
-    items.forEach((item, index) => {
-      this.displayItem(item.nativeElement, index, items.length);
-    });
-
-    if (items[0]) {
-      void (items[0].nativeElement as HTMLElement).offsetHeight;
-    }
-
-    requestAnimationFrame(() => {
-      items.forEach(item => {
-        (item.nativeElement as HTMLElement).style.transition = '';
+    const center = Math.round(this.activePosition);
+    const items: CarouselRenderItem[] = [];
+    for (let position = center - this.visibleRadius; position <= center + this.visibleRadius; position++) {
+      const event = this.filteredEvents[this.normalizeIndex(position, total)];
+      items.push({
+        event,
+        position,
+        key: `${event.id}-${position}`
       });
-      this.isRepositioning = false;
-    });
+    }
+    this.visibleCarouselItems = items;
   }
 
   private getVisualSpread(): number {
@@ -329,12 +275,12 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     this.animate();
   }
 
-  onItemClick(i: number, event: EventCardData): void {
-    if (i === this.activeIndex) {
+  onItemClick(position: number, event: EventCardData): void {
+    if (position === this.activeIndex) {
       this.selectedEvent = event;
       return;
     }
-    this.activePosition = i;
+    this.activePosition = position;
     this.animate();
     this.recenterLoopIfNeeded();
   }
