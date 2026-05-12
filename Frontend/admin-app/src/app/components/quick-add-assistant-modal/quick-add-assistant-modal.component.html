@@ -16,10 +16,11 @@
 
     <div class="modal-content">
       <div class="smart-chat-stream">
-        <div
-          class="smart-message-row"
-          *ngFor="let message of messages; trackBy: trackByMessage; let last = last"
-          [class.smart-message-row-user]="message.tone === 'user'">
+          <div
+            class="smart-message-row"
+            *ngFor="let message of messages; trackBy: trackByMessage"
+            [class.smart-message-row-user]="message.tone === 'user'"
+            [class.msg-enter]="message.tone === 'user'">
           <ng-container *ngIf="message.tone !== 'user'">
             <div class="smart-bot-icon" [class.smart-bot-icon-helper]="message.tone === 'helper'">
               <span class="material-icons">{{ message.tone === 'helper' ? 'workspace_premium' : 'auto_awesome' }}</span>
@@ -34,7 +35,7 @@
               [class.smart-bubble-user]="message.tone === 'user'">
               {{ message.text }}
             </div>
-            <div class="bubble-timestamp" *ngIf="message.tone !== 'user' && message.text && last">
+            <div class="bubble-timestamp" *ngIf="message.tone !== 'user' && message.text && message.id !== typingMessageId">
               {{ 'fab.just_now' | translate }}
             </div>
           </div>
@@ -224,6 +225,8 @@
               </div>
             </div>
 
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
             <div class="smart-actions">
               <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitArticle()" [disabled]="isSubmitting">
@@ -348,6 +351,8 @@
               </div>
             </div>
 
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
             <div class="smart-actions">
               <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitEvent()" [disabled]="isSubmitting">
@@ -364,6 +369,8 @@
 
             <label class="smart-label">{{ 'fab.chord_artist_name' | translate }}</label>
             <input class="smart-input" [(ngModel)]="chordRequest.artistName" [placeholder]="'fab.chord_artist_name' | translate">
+
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
 
             <div class="smart-actions">
               <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
@@ -430,6 +437,8 @@
               </div>
             </div>
 
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
             <div class="smart-actions">
               <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
               <button type="button" class="smart-submit" (click)="submitContact()" [disabled]="isSubmitting || isContactUploading">
@@ -443,7 +452,7 @@
         <div class="embedded-flow" *ngIf="currentMode === 'success'">
           <div class="smart-message-row">
             <div class="smart-bot-icon"><span class="material-icons">check</span></div>
-            <div class="smart-bubble smart-bubble-question">{{ submittedMessage }}</div>
+            <div class="smart-bubble smart-bubble-question">{{ successTypedMessage || submittedMessage }}</div>
           </div>
           <div class="smart-actions smart-actions-success">
             <button type="button" class="smart-submit" (click)="closeModal()">{{ 'fab.close' | translate }}</button>

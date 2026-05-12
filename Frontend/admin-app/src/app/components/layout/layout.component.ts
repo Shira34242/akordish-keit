@@ -716,20 +716,23 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   }
 
   handleQuickAddAction(action: QuickAddAction): void {
-    this.closeFabMenu();
-
     if (action === 'contact') {
+      this.closeFabMenu();
       this.openReportModal();
       return;
     }
 
     if (action === 'admin-edit') {
       this.fabAdminEdit();
+      this.showQuickAddAssistant = false;
+      this.quickAddEntryPoint = 'root';
       return;
     }
 
     if (action === 'chord-requests') {
       this.router.navigate(['/chord-requests']);
+      this.showQuickAddAssistant = false;
+      this.quickAddEntryPoint = 'root';
       return;
     }
 
@@ -737,6 +740,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       this.authService.requestLogin(this.router.url);
       return;
     }
+
+    this.showQuickAddAssistant = false;
+    this.quickAddEntryPoint = 'root';
 
     switch (action) {
       case 'index-teacher':

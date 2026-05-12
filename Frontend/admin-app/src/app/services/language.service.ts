@@ -1170,6 +1170,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'quick_add.news_form_text': 'נפתח טופס קצר להוספת חדשות מוזיקה.',
     'quick_add.content_form_text': 'נפתח טופס קצר להוספת תוכן.',
     'quick_add.event_form_text': 'נפתח טופס קצר להוספת הופעה.',
+    'quick_add.contact_form_text': 'נפתח טופס קצר ליצירת קשר.',
 
     // Chord dictionary
     'chord_dict.all_roots': 'כל השורשים',
@@ -2480,6 +2481,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'quick_add.news_form_text': 'A short form will open to add music news.',
     'quick_add.content_form_text': 'A short form will open to add content.',
     'quick_add.event_form_text': 'A short form will open to add an event.',
+    'quick_add.contact_form_text': 'A short form will open to send a message.',
 
     // Chord dictionary
     'chord_dict.all_roots': 'All roots',
