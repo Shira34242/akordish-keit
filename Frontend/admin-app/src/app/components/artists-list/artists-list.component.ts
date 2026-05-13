@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,15 +7,18 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ArtistService } from '../../services/artist.service';
 import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 
 @Component({
   selector: 'app-artists-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, ArtistCircleComponent],
   templateUrl: './artists-list.component.html',
   styleUrls: ['./artists-list.component.css']
 })
-export class ArtistsListComponent implements OnInit, OnDestroy {
+export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
+
   featuredArtists: ArtistListDto[] = [];
   allArtists: ArtistListDto[] = [];
 
@@ -34,6 +37,8 @@ export class ArtistsListComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private fullHeroHeight = 0;
+  private rafPending = false;
 
   constructor(
     private artistService: ArtistService,
@@ -57,6 +62,51 @@ export class ArtistsListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initHeroHeight(), 0);
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.rafPending) return;
+    this.rafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.rafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.initHeroHeight();
+  }
+
+  private initHeroHeight(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg) return;
+    this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
+    bg.style.height = `${this.fullHeroHeight}px`;
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const bg = this.heroBg?.nativeElement;
+    if (!bg || this.fullHeroHeight === 0) return;
+
+    const minHeight = 56;
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    bg.style.height = `${newHeight}px`;
+
+    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    if (collapseOverlay) {
+      const collapseRange = this.fullHeroHeight - minHeight;
+      const collapseProgress = collapseRange > 0
+        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+        : 0;
+      collapseOverlay.style.opacity = String(collapseProgress);
+    }
   }
 
   onSearchTermChange(term: string): void {

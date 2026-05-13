@@ -1,4 +1,8 @@
-<main class="podcasts-page" [class.viewing-series]="isViewingSeries || seriesLoading || episodeLoading" dir="rtl">
+<main
+  class="podcasts-page"
+  [class.viewing-series]="isViewingSeries || seriesLoading || episodeLoading"
+  [class.playing-episode]="selectedEpisode"
+  dir="rtl">
   <section class="podcasts-intro" #heroBg>
     <div class="hero-collapse-overlay"></div>
   </section>
@@ -131,8 +135,9 @@
     <div class="viewer-layout" *ngIf="selectedPodcast">
       <aside class="viewer-media">
         <div class="media-frame" [class.media-frame--video]="selectedEpisode">
-          <button type="button" class="media-back-button" (click)="resetViewer()" aria-label="חזרה לכל הפודקאסטים" title="חזרה לכל הפודקאסטים">
+          <button type="button" class="media-back-button" (click)="resetViewer()" aria-label="חזרה לדף הראשי" title="חזרה לדף הראשי">
             <span class="material-icons">arrow_forward</span>
+            <span class="media-back-button__text">חזרה לדף הראשי</span>
           </button>
 
           <ng-container *ngIf="selectedEpisode; else podcastCover">

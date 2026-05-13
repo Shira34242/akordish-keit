@@ -1,47 +1,55 @@
 <div class="artists-page">
 
-  <header class="page-header">
-    <span class="section-label">{{ 'artists.label' | translate }}</span>
-    <h1 class="page-title">{{ 'artists.title' | translate }}</h1>
-    <p class="page-subtitle">{{ totalCount }} {{ 'artists.site_count' | translate }}</p>
-  </header>
+  <div class="top-scroll-mask"></div>
 
-  <div class="controls-bar">
-    <div class="search-wrapper">
-      <span class="material-icons search-icon">search</span>
-      <input
-        type="text"
-        class="search-input"
-        [placeholder]="'artists.search_placeholder' | translate"
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="onSearchTermChange($event)">
-    </div>
-    <div class="sort-pills">
-      <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="setSortBy('name')">{{ 'artists.sort_az' | translate }}</button>
-      <button class="sort-pill" [class.active]="sortBy === 'songcount'" (click)="setSortBy('songcount')">{{ 'artists.sort_popular' | translate }}</button>
-      <button class="sort-pill" [class.active]="sortBy === 'created'" (click)="setSortBy('created')">{{ 'artists.sort_new' | translate }}</button>
-    </div>
+  <div class="hero-bg" #heroBg>
+    <img class="hero-bg-image" src="/artist-composer-creating-new-song-his-electro-guitar-studio.png" alt="" aria-hidden="true">
+    <div class="hero-collapse-overlay"></div>
   </div>
 
-  <div class="artists-container">
+  <section class="hero-content-area">
+    <div class="hero-content">
+      <span class="section-label">{{ 'artists.label' | translate }}</span>
+      <h1 class="page-title">{{ 'artists.title' | translate }}</h1>
+      <p class="page-subtitle">{{ totalCount }} {{ 'artists.site_count' | translate }}</p>
+
+      <div class="search-row">
+        <div class="search-wrapper">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            class="search-input"
+            [placeholder]="'artists.search_placeholder' | translate"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchTermChange($event)">
+        </div>
+      </div>
+
+      <div class="sort-pills">
+        <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="setSortBy('name')">{{ 'artists.sort_az' | translate }}</button>
+        <button class="sort-pill" [class.active]="sortBy === 'songcount'" (click)="setSortBy('songcount')">{{ 'artists.sort_popular' | translate }}</button>
+        <button class="sort-pill" [class.active]="sortBy === 'created'" (click)="setSortBy('created')">{{ 'artists.sort_new' | translate }}</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="artists-content">
+
+    <section class="catalog-section">
+      <div class="section-header">
+        <span class="section-tag section-tag--secondary">{{ 'artists.title' | translate }}</span>
+        <span class="total-badge" *ngIf="totalCount > 0">{{ totalCount }}</span>
+      </div>
 
     <div class="loading-state" *ngIf="loadingAll">
       <div class="spinner"></div>
     </div>
 
     <div class="artists-grid" *ngIf="!loadingAll && allArtists.length > 0">
-      <div
+      <app-artist-circle
         *ngFor="let artist of allArtists"
-        class="artist-card"
-        (click)="navigateToArtist(artist.id)">
-        <div class="artist-photo">
-          <img [src]="artist.imageUrl || 'assets/default-artist.png'" [alt]="artist.name" loading="lazy">
-        </div>
-        <div class="artist-info">
-          <span class="artist-name">{{ artist.name }}</span>
-          <span class="artist-songs">{{ artist.songCount }} {{ 'artists.songs_suffix' | translate }}</span>
-        </div>
-      </div>
+        [artist]="artist">
+      </app-artist-circle>
     </div>
 
     <div class="empty-state" *ngIf="!loadingAll && allArtists.length === 0">
@@ -56,5 +64,7 @@
       <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">{{ 'shared.next' | translate }}</button>
     </div>
 
-  </div>
+    </section>
+
+  </main>
 </div>

@@ -306,43 +306,26 @@
       </div>
     </section>
 
-    <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0 || latestPodcastEpisodes.length > 0">
+    <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0">
       <div class="section-header">
         <h2 class="section-title">פודקאסטים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
-      <div class="podcasts-home-panel">
-        <div class="podcasts-home-series" *ngIf="homePodcasts.length > 0">
-          <a
-            class="home-series-card"
-            *ngFor="let podcast of homePodcasts; trackBy: trackById"
-            routerLink="/podcasts"
-            [queryParams]="{ series: podcast.slug }">
-            <span class="home-series-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
-              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
-            </span>
-            <span class="home-series-card__copy">
-              <strong>{{ podcast.name }}</strong>
-              <small>{{ podcast.episodeCount }} פרקים</small>
-            </span>
-          </a>
-        </div>
-
-        <div class="podcasts-home-episodes" *ngIf="latestPodcastEpisodes.length > 0">
-          <a
-            class="home-episode-card"
-            *ngFor="let episode of latestPodcastEpisodes; trackBy: trackById"
-            routerLink="/podcasts"
-            [queryParams]="{ series: episode.podcastSlug, episode: episode.slug }">
-            <span class="home-episode-card__thumb">
-              <img *ngIf="getPodcastEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
-              <span *ngIf="!getPodcastEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
-            </span>
-            <span class="home-episode-card__copy">
-              <strong>{{ episode.title }}</strong>
-              <small>{{ episode.podcastName }}</small>
-            </span>
-          </a>
+      <div class="podcasts-home-panel" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="podcasts-home-track">
+          <ng-container *ngFor="let copy of [0, 1, 2]">
+            <a
+              class="home-series-image-card"
+              *ngFor="let podcast of homePodcasts; trackBy: trackById"
+              routerLink="/podcasts"
+              [queryParams]="{ series: podcast.slug }"
+              [attr.aria-label]="podcast.name"
+              [attr.aria-hidden]="copy > 0 ? true : null">
+              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+                <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+              </span>
+            </a>
+          </ng-container>
         </div>
       </div>
     </section>

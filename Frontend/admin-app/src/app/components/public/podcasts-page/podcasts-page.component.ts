@@ -38,6 +38,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private fullHeroHeight = 0;
   private rafPending = false;
+  private episodeRequestId = 0;
 
   private skipNextQuerySync = false;
 
@@ -137,10 +138,11 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openEpisode(episode: PodcastEpisode): void {
-    this.openEpisodeBySlugs(episode.podcastSlug, episode.slug, true);
+    this.openEpisodeBySlugs(episode.podcastSlug, episode.slug, true, episode);
   }
 
   resetViewer(updateUrl = true): void {
+    this.episodeRequestId += 1;
     this.selectedPodcast = null;
     this.selectedEpisode = null;
     this.safeEmbedUrl = null;
@@ -150,6 +152,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeEpisode(): void {
+    this.episodeRequestId += 1;
     this.selectedEpisode = null;
     this.safeEmbedUrl = null;
     this.episodeLoading = false;
@@ -251,11 +254,25 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private openEpisodeBySlugs(seriesSlug: string, episodeSlug: string, updateUrl: boolean): void {
-    this.episodeLoading = true;
+  private openEpisodeBySlugs(
+    seriesSlug: string,
+    episodeSlug: string,
+    updateUrl: boolean,
+    previewEpisode?: PodcastEpisode
+  ): void {
+    const requestId = ++this.episodeRequestId;
+    this.episodeLoading = !previewEpisode;
+
+    if (previewEpisode) {
+      this.showEpisodeImmediately(previewEpisode);
+      if (updateUrl) this.updateUrl(previewEpisode.podcastSlug, previewEpisode.slug);
+      this.scrollToViewer(false);
+    }
 
     this.podcastService.getEpisodeBySlug(seriesSlug, episodeSlug).subscribe({
       next: episode => {
+        if (requestId !== this.episodeRequestId) return;
+
         this.selectedEpisode = episode;
         const playableUrl = this.buildPlayableUrl(episode.embedUrl, episode.sourceUrl, episode.thumbnailUrl);
         this.safeEmbedUrl = playableUrl
@@ -263,19 +280,84 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
           : null;
         this.episodeLoading = false;
 
-        if (!this.selectedPodcast || this.selectedPodcast.slug !== episode.podcastSlug) {
+        if (
+          !this.selectedPodcast ||
+          this.selectedPodcast.slug !== episode.podcastSlug ||
+          this.selectedPodcast.episodes.length <= 1
+        ) {
           this.loadSelectedPodcastForEpisode(episode);
         }
 
         if (updateUrl) this.updateUrl(episode.podcastSlug, episode.slug);
-        this.scrollToViewer();
+        if (!previewEpisode) this.scrollToViewer();
       },
       error: () => {
+        if (requestId !== this.episodeRequestId) return;
+
+        if (previewEpisode) {
+          this.episodeLoading = false;
+          return;
+        }
+
         this.selectedEpisode = null;
         this.safeEmbedUrl = null;
         this.episodeLoading = false;
       }
     });
+  }
+
+  private showEpisodeImmediately(episode: PodcastEpisode): void {
+    this.selectedEpisode = this.createEpisodePreview(episode);
+    this.ensurePodcastShellForEpisode(episode);
+
+    const playableUrl = this.buildPlayableUrl(episode.embedUrl, episode.sourceUrl, episode.thumbnailUrl);
+    this.safeEmbedUrl = playableUrl
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(playableUrl)
+      : null;
+    this.episodeLoading = false;
+  }
+
+  private createEpisodePreview(episode: PodcastEpisode): PodcastEpisodeDetail {
+    const seriesEpisodes = this.getCachedSeriesEpisodes(episode);
+
+    return {
+      ...episode,
+      seriesEpisodes
+    };
+  }
+
+  private ensurePodcastShellForEpisode(episode: PodcastEpisode): void {
+    if (this.selectedPodcast?.slug === episode.podcastSlug) return;
+
+    const cachedPodcast = this.podcasts.find(podcast => podcast.slug === episode.podcastSlug);
+    const seriesEpisodes = this.getCachedSeriesEpisodes(episode);
+
+    this.selectedPodcast = {
+      id: episode.podcastId,
+      name: episode.podcastName,
+      slug: episode.podcastSlug,
+      description: cachedPodcast?.description,
+      imageUrl: cachedPodcast?.imageUrl,
+      displayOrder: cachedPodcast?.displayOrder ?? 0,
+      isActive: cachedPodcast?.isActive ?? true,
+      createdAt: cachedPodcast?.createdAt ?? episode.createdAt,
+      updatedAt: cachedPodcast?.updatedAt,
+      episodeCount: cachedPodcast?.episodeCount ?? seriesEpisodes.length,
+      latestEpisode: cachedPodcast?.latestEpisode,
+      episodes: seriesEpisodes
+    };
+  }
+
+  private getCachedSeriesEpisodes(episode: PodcastEpisode): PodcastEpisode[] {
+    if (this.selectedPodcast?.slug === episode.podcastSlug && this.selectedPodcast.episodes.length > 0) {
+      return this.selectedPodcast.episodes;
+    }
+
+    if (this.selectedEpisode?.podcastSlug === episode.podcastSlug && this.selectedEpisode.seriesEpisodes.length > 0) {
+      return this.selectedEpisode.seriesEpisodes;
+    }
+
+    return [episode];
   }
 
   private loadSelectedPodcastForEpisode(episode: PodcastEpisodeDetail): void {
@@ -317,9 +399,12 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private scrollToViewer(): void {
+  private scrollToViewer(smooth = true): void {
     setTimeout(() => {
-      document.querySelector('.podcasts-viewer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelector('.podcasts-viewer')?.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'start'
+      });
     }, 0);
   }
 
