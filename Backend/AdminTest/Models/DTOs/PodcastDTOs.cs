@@ -36,6 +36,7 @@ namespace AkordishKeit.Models.DTOs
         public string EmbedUrl { get; set; } = string.Empty;
         public string? ThumbnailUrl { get; set; }
         public string Platform { get; set; } = string.Empty;
+        public int ViewCount { get; set; }
         public DateTime PublishedAt { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsActive { get; set; }

@@ -59,6 +59,13 @@ export class PodcastService {
     return this.http.get<PodcastEpisode[]>(`${this.apiUrl}/latest-episodes`, { params });
   }
 
+  getPopularEpisodes(limit = 8, podcastId?: number): Observable<PodcastEpisode[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (podcastId !== undefined) params = params.set('podcastId', podcastId);
+
+    return this.http.get<PodcastEpisode[]>(`${this.apiUrl}/popular-episodes`, { params });
+  }
+
   getPublicEpisodes(pageNumber = 1, pageSize = 12, podcastId?: number, search?: string): Observable<PagedResult<PodcastEpisode>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber)

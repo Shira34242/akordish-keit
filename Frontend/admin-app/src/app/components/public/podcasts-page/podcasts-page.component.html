@@ -1,78 +1,201 @@
-<main class="podcasts-page" dir="rtl">
-  <section class="podcasts-hero">
-    <div>
-      <span class="section-label">פודקאסטים</span>
-      <h1>פרקים אחרונים</h1>
-      <p>שיחות, ראיונות ותוכן מוזיקלי לצפייה ישירה באתר, עם מעבר מהיר בין פרקי כל סדרה.</p>
-    </div>
-    <div class="hero-stats" *ngIf="!loading">
-      <span><strong>{{ totalItems }}</strong> פרקים</span>
-      <span><strong>{{ podcasts.length }}</strong> סדרות</span>
-    </div>
+<main class="podcasts-page" [class.viewing-series]="isViewingSeries || seriesLoading || episodeLoading" dir="rtl">
+  <section class="podcasts-intro" #heroBg>
+    <div class="hero-collapse-overlay"></div>
   </section>
 
-  <section class="podcast-filters">
-    <form class="search-box" (ngSubmit)="applyFilters()">
-      <span class="material-icons">search</span>
-      <input
-        type="search"
-        name="podcastSearch"
-        [(ngModel)]="searchTerm"
-        placeholder="חיפוש פרק, סדרה או נושא" />
-      <button type="submit">חיפוש</button>
-    </form>
+  <section class="podcasts-hero-content">
+    <div class="podcasts-hero-inner">
+      <h1>פודקאסטים</h1>
+      <p>כל הסדרות והפרקים במוזיקה היהודית במקום אחד</p>
 
-    <div class="series-tabs" *ngIf="podcasts.length > 0">
-      <button type="button" [class.active]="!selectedPodcastId" (click)="selectPodcast()">כל הפרקים</button>
-      <button
-        type="button"
-        *ngFor="let podcast of podcasts; trackBy: trackById"
-        [class.active]="selectedPodcastId === podcast.id"
-        (click)="selectPodcast(podcast.id)">
-        {{ podcast.name }}
-      </button>
-    </div>
-  </section>
-
-  <div *ngIf="loading" class="podcasts-state">טוען פודקאסטים...</div>
-
-  <ng-container *ngIf="!loading">
-    <section class="podcasts-section" *ngIf="episodes.length > 0">
-      <div class="section-header">
-        <h2>{{ activePodcast ? activePodcast.name : 'כל הפרקים האחרונים' }}</h2>
-        <button type="button" *ngIf="searchTerm || selectedPodcastId" class="clear-btn" (click)="clearFilters()">ניקוי סינון</button>
-      </div>
-      <div class="episodes-grid">
-        <app-podcast-episode-card
-          *ngFor="let episode of episodes; trackBy: trackById"
-          [episode]="episode">
-        </app-podcast-episode-card>
-      </div>
-      <div class="load-more" *ngIf="currentPage < totalPages">
-        <button type="button" (click)="loadMore()" [disabled]="loadingMore">
-          {{ loadingMore ? 'טוען...' : 'הצג עוד פרקים' }}
+      <div class="podcasts-search">
+        <span class="material-icons" aria-hidden="true">search</span>
+        <input
+          type="search"
+          [value]="searchQuery"
+          (input)="onSearchInput($event)"
+          placeholder="חיפוש פודקאסט או פרק"
+          aria-label="חיפוש פודקאסט או פרק">
+        <button type="button" *ngIf="searchQuery" (click)="clearSearch()" aria-label="ניקוי חיפוש">
+          <span class="material-icons">close</span>
         </button>
       </div>
-    </section>
 
-    <section class="podcasts-section" *ngIf="podcasts.length > 0">
-      <div class="section-header">
-        <h2>סדרות</h2>
-      </div>
-      <div class="series-grid">
-        <a class="series-card" *ngFor="let podcast of podcasts; trackBy: trackById" [routerLink]="['/podcasts', podcast.slug]">
-          <span class="series-thumb" [style.background-image]="(podcast.imageUrl || podcast.latestEpisode?.thumbnailUrl) ? 'url(' + (podcast.imageUrl || podcast.latestEpisode?.thumbnailUrl) + ')' : ''">
-            <span *ngIf="!podcast.imageUrl && !podcast.latestEpisode?.thumbnailUrl" class="material-icons">play_circle</span>
-          </span>
-          <span class="series-count">{{ podcast.episodeCount }} פרקים</span>
-          <h3>{{ podcast.name }}</h3>
-          <p>{{ podcast.description || 'סדרת פודקאסטים' }}</p>
-        </a>
-      </div>
-    </section>
+      <div class="podcasts-search-results" *ngIf="showSearchResults">
+        <div class="search-result-group" *ngIf="searchPodcasts.length > 0">
+          <span>פודקאסטים</span>
+          <button type="button" *ngFor="let podcast of searchPodcasts; trackBy: trackById" (click)="selectPodcast(podcast)">
+            <strong>{{ podcast.name }}</strong>
+            <small>{{ podcast.episodeCount }} פרקים</small>
+          </button>
+        </div>
 
-    <div *ngIf="episodes.length === 0" class="podcasts-state">
-      לא נמצאו פרקים שמתאימים לסינון הזה.
+        <div class="search-result-group" *ngIf="searchEpisodes.length > 0">
+          <span>פרקים</span>
+          <button type="button" *ngFor="let episode of searchEpisodes; trackBy: trackById" (click)="openEpisode(episode)">
+            <strong>{{ episode.title }}</strong>
+            <small>{{ episode.podcastName }}</small>
+          </button>
+        </div>
+
+        <div class="search-result-empty" *ngIf="!searchLoading && searchPodcasts.length === 0 && searchEpisodes.length === 0">
+          לא נמצאו תוצאות לחיפוש הזה
+        </div>
+
+        <div class="search-result-empty" *ngIf="searchLoading">
+          מחפש...
+        </div>
+      </div>
     </div>
-  </ng-container>
+  </section>
+
+  <div class="podcasts-content">
+    <div *ngIf="loading && podcasts.length === 0" class="podcasts-state">טוען פודקאסטים...</div>
+
+    <ng-container *ngIf="!isViewingSeries && podcasts.length > 0">
+      <section class="podcasts-section">
+        <div class="section-header">
+          <h2>פודקאסטים</h2>
+          <span>{{ podcasts.length }} פודקאסטים</span>
+        </div>
+
+        <div class="series-strip">
+          <button
+            type="button"
+            class="series-card"
+            *ngFor="let podcast of podcasts; trackBy: trackById"
+            (click)="selectPodcast(podcast)">
+            <span class="series-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+            </span>
+            <span class="series-card__copy">
+              <strong>{{ podcast.name }}</strong>
+              <small>{{ podcast.episodeCount }} פרקים</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="podcasts-section" *ngIf="latestEpisodes.length > 0">
+        <div class="section-header">
+          <h2>פרקים אחרונים</h2>
+          <span>{{ latestEpisodes.length }} פרקים</span>
+        </div>
+
+        <div class="episode-grid">
+          <button
+            type="button"
+            class="episode-card"
+            *ngFor="let episode of latestEpisodes; trackBy: trackById"
+            (click)="openEpisode(episode)">
+            <span class="episode-card__thumb">
+              <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
+              <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
+            </span>
+            <span class="episode-card__copy">
+              <strong>{{ episode.title }}</strong>
+              <small>{{ episode.podcastName }}</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="podcasts-section" *ngIf="popularEpisodes.length > 0">
+        <div class="section-header">
+          <h2>פרקים פופולאריים</h2>
+          <span>לפי צפיות באתר</span>
+        </div>
+
+        <div class="episode-grid">
+          <button
+            type="button"
+            class="episode-card"
+            *ngFor="let episode of popularEpisodes; trackBy: trackById"
+            (click)="openEpisode(episode)">
+            <span class="episode-card__thumb">
+              <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
+              <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
+            </span>
+            <span class="episode-card__copy">
+              <strong>{{ episode.title }}</strong>
+              <small>{{ episode.podcastName }}</small>
+            </span>
+          </button>
+        </div>
+      </section>
+    </ng-container>
+
+    <section class="podcasts-viewer" *ngIf="isViewingSeries || seriesLoading || episodeLoading">
+      <div *ngIf="seriesLoading && !selectedPodcast" class="podcasts-state">טוען פודקאסט...</div>
+
+    <div class="viewer-layout" *ngIf="selectedPodcast">
+      <aside class="viewer-media">
+        <div class="media-frame" [class.media-frame--video]="selectedEpisode">
+          <button type="button" class="media-back-button" (click)="resetViewer()" aria-label="חזרה לכל הפודקאסטים" title="חזרה לכל הפודקאסטים">
+            <span class="material-icons">arrow_forward</span>
+          </button>
+
+          <ng-container *ngIf="selectedEpisode; else podcastCover">
+            <iframe
+              *ngIf="safeEmbedUrl"
+              [src]="safeEmbedUrl"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen>
+            </iframe>
+
+            <div *ngIf="!safeEmbedUrl" class="media-fallback">
+              <img *ngIf="getEpisodeThumbnail(selectedEpisode) as thumbnail" [src]="thumbnail" [alt]="selectedEpisode.title">
+              <strong>הפרק לא זמין לניגון מוטמע</strong>
+            </div>
+          </ng-container>
+
+          <ng-template #podcastCover>
+            <span class="podcast-cover" [style.background-image]="selectedPodcast.imageUrl ? 'url(' + selectedPodcast.imageUrl + ')' : ''">
+              <span *ngIf="!selectedPodcast.imageUrl" class="material-icons">podcasts</span>
+            </span>
+          </ng-template>
+        </div>
+
+        <div class="media-copy">
+          <span class="media-kicker">פודקאסט</span>
+          <h2>{{ selectedPodcast.name }}</h2>
+          <p *ngIf="selectedPodcast.description">{{ selectedPodcast.description }}</p>
+          <div class="now-playing" *ngIf="selectedEpisode">
+            <span>מנגן עכשיו</span>
+            <strong>{{ selectedEpisode.title }}</strong>
+          </div>
+          <button type="button" class="pill-button" *ngIf="selectedEpisode" (click)="closeEpisode()">חזרה לתמונת הפודקאסט</button>
+        </div>
+      </aside>
+
+      <div class="viewer-list">
+        <div class="viewer-list__header">
+          <h2>כל הפרקים</h2>
+        </div>
+
+        <div *ngIf="episodeLoading" class="viewer-loading">טוען פרק...</div>
+
+        <button
+          type="button"
+          class="series-episode"
+          *ngFor="let episode of seriesEpisodes; trackBy: trackById"
+          [class.active]="selectedEpisode?.id === episode.id"
+          (click)="openEpisode(episode)">
+          <span class="series-episode__thumb">
+            <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
+            <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
+          </span>
+          <span class="series-episode__copy">
+            <strong>{{ episode.title }}</strong>
+            <span class="series-episode__meta">
+              <small *ngIf="episode.episodeNumber">פרק {{ episode.episodeNumber }}</small>
+              <small>{{ formatDate(episode.publishedAt) }}</small>
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+    </section>
+  </div>
 </main>

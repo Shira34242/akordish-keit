@@ -38,6 +38,14 @@ namespace AkordishKeit.Controllers
             return Ok(await _podcastService.GetLatestEpisodesAsync(limit));
         }
 
+        [HttpGet("popular-episodes")]
+        public async Task<ActionResult<IEnumerable<PodcastEpisodeDto>>> GetPopularEpisodes(
+            [FromQuery] int limit = 8,
+            [FromQuery] int? podcastId = null)
+        {
+            return Ok(await _podcastService.GetPopularEpisodesAsync(limit, podcastId));
+        }
+
         [HttpGet("public/episodes")]
         public async Task<ActionResult<PagedResult<PodcastEpisodeDto>>> GetPublicEpisodes(
             [FromQuery] int pageNumber = 1,

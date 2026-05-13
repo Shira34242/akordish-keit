@@ -74,6 +74,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   unreadNotificationCount = 0;
   isArtistPage = false;
   isArticlePage = false;
+  isPodcastViewerPage = false;
 
   showAuthModal = false;
   showAdditionalDetailsModal = false;
@@ -182,6 +183,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.checkFabBackground(), 200);
         setTimeout(() => this.checkFabBackground(), 800);
         this.updateAdminEditTarget(event.urlAfterRedirects);
+        this.updatePodcastViewerState(event.urlAfterRedirects);
         if (this.loggedIn) {
           this.notificationService.refreshUnreadCount();
           this.profileReminderService.checkAndShow();
@@ -190,6 +192,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     });
 
     this.updateAdminEditTarget(this.router.url);
+    this.updatePodcastViewerState(this.router.url);
 
     this.contentPageService.currentArticleId$.subscribe(id => {
       this.currentArticleId = id;
@@ -344,6 +347,11 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     }
 
     this.adminEditTarget = null;
+  }
+
+  private updatePodcastViewerState(url: string): void {
+    const [path, query = ''] = url.split('?');
+    this.isPodcastViewerPage = path === '/podcasts' && new URLSearchParams(query).has('series');
   }
 
   fabAdminEdit(): void {

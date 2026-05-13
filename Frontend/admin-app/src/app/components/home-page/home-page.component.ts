@@ -20,7 +20,6 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
-import { PodcastEpisodeCardComponent } from '../shared/podcast-episode-card/podcast-episode-card.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
@@ -28,7 +27,7 @@ import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
-import { PodcastEpisode } from '../../models/podcast.model';
+import { Podcast, PodcastEpisode } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
@@ -53,7 +52,6 @@ interface HeroParticle {
     NewsTickerComponent,
     EventCardComponent,
     EventModalComponent,
-    PodcastEpisodeCardComponent,
     TranslatePipe,
     AutoScrollDirective,
     ImgFallbackDirective,
@@ -92,6 +90,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
+  homePodcasts: Podcast[] = [];
   latestPodcastEpisodes: PodcastEpisode[] = [];
 
 
@@ -275,6 +274,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       next: episodes => { this.latestPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: podcasts', err)
     });
+
+    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
+      error: err => console.error('loadContent: podcast series', err)
+    });
   }
 
   private loadHomeArticleCategories(): void {
@@ -333,6 +337,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   trackById(_index: number, item: { id: number | string }): number | string {
     return item.id;
+  }
+
+  getPodcastEpisodeThumbnail(episode: PodcastEpisode): string | null {
+    return episode.thumbnailUrl || this.buildYouTubeThumbnail(episode.sourceUrl) || this.buildYouTubeThumbnail(episode.embedUrl);
   }
 
   get hasNoResults(): boolean {
@@ -563,6 +571,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       seen.add(article.id);
       return true;
     });
+  }
+
+  private buildYouTubeThumbnail(url: string): string | null {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|img\.youtube\.com\/vi\/)([A-Za-z0-9_-]{6,})/i);
+    return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
   }
 
   private normalizeArticleContentType(article: Article): ArticleContentType | null {

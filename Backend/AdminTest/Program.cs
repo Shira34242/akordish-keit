@@ -211,6 +211,7 @@ using (var scope = app.Services.CreateScope())
                 [EmbedUrl] nvarchar(1000) NOT NULL,
                 [ThumbnailUrl] nvarchar(1000) NULL,
                 [Platform] nvarchar(80) NOT NULL CONSTRAINT [DF_PodcastEpisodes_Platform] DEFAULT N'YouTube',
+                [ViewCount] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_ViewCount] DEFAULT 0,
                 [PublishedAt] datetime2 NOT NULL CONSTRAINT [DF_PodcastEpisodes_PublishedAt] DEFAULT (GETUTCDATE()),
                 [DisplayOrder] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_DisplayOrder] DEFAULT 0,
                 [IsActive] bit NOT NULL CONSTRAINT [DF_PodcastEpisodes_IsActive] DEFAULT CAST(1 AS bit),
@@ -225,6 +226,10 @@ using (var scope = app.Services.CreateScope())
         IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[Podcasts]', N'ImageUrl') IS NULL
             ALTER TABLE [Podcasts] ADD [ImageUrl] nvarchar(1000) NULL;
+
+        IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[PodcastEpisodes]', N'ViewCount') IS NULL
+            ALTER TABLE [PodcastEpisodes] ADD [ViewCount] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_ViewCount] DEFAULT 0;
 
         IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Podcasts_Slug' AND object_id = OBJECT_ID(N'[Podcasts]'))
@@ -241,6 +246,10 @@ using (var scope = app.Services.CreateScope())
         IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodes_Public_Latest' AND object_id = OBJECT_ID(N'[PodcastEpisodes]'))
             CREATE INDEX [IX_PodcastEpisodes_Public_Latest] ON [PodcastEpisodes] ([IsDeleted], [IsActive], [PublishedAt] DESC);
+
+        IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodes_Public_Popular' AND object_id = OBJECT_ID(N'[PodcastEpisodes]'))
+            CREATE INDEX [IX_PodcastEpisodes_Public_Popular] ON [PodcastEpisodes] ([IsDeleted], [IsActive], [ViewCount] DESC);
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"

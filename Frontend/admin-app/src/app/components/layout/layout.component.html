@@ -303,7 +303,7 @@
     </aside>
 </section>
 
-<main class="main-content">
+<main class="main-content" [class.main-content--podcast-viewer]="isPodcastViewerPage">
     <router-outlet></router-outlet>
 </main>
 
@@ -345,7 +345,7 @@
     </div>
 </div>
 
-<footer class="main-footer">
+<footer class="main-footer" *ngIf="!isPodcastViewerPage">
 
     <div class="footer-body">
 

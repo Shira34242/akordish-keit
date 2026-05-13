@@ -18,6 +18,7 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(e => e.EmbedUrl).IsRequired().HasMaxLength(1000);
             builder.Property(e => e.ThumbnailUrl).HasMaxLength(1000);
             builder.Property(e => e.Platform).IsRequired().HasMaxLength(80);
+            builder.Property(e => e.ViewCount).HasDefaultValue(0);
             builder.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             builder.HasOne(e => e.Podcast)
@@ -32,6 +33,9 @@ namespace AkordishKeit.Data.Configurations
 
             builder.HasIndex(e => new { e.IsDeleted, e.IsActive, e.PublishedAt })
                 .HasDatabaseName("IX_PodcastEpisodes_Public_Latest");
+
+            builder.HasIndex(e => new { e.IsDeleted, e.IsActive, e.ViewCount })
+                .HasDatabaseName("IX_PodcastEpisodes_Public_Popular");
         }
     }
 }

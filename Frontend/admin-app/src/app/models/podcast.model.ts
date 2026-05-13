@@ -29,6 +29,7 @@ export interface PodcastEpisode {
   embedUrl: string;
   thumbnailUrl?: string;
   platform: string;
+  viewCount: number;
   publishedAt: string;
   displayOrder: number;
   isActive: boolean;

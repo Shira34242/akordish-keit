@@ -228,6 +228,27 @@ namespace AkordishKeit.Services
             return episodes.Select(e => MapEpisode(e, e.Podcast));
         }
 
+        public async Task<IEnumerable<PodcastEpisodeDto>> GetPopularEpisodesAsync(int limit, int? podcastId = null)
+        {
+            limit = Math.Clamp(limit, 1, 24);
+
+            var query = _context.PodcastEpisodes
+                .Include(e => e.Podcast)
+                .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
+                .AsQueryable();
+
+            if (podcastId.HasValue) query = query.Where(e => e.PodcastId == podcastId.Value);
+
+            var episodes = await query
+                .OrderByDescending(e => e.ViewCount)
+                .ThenByDescending(e => e.PublishedAt)
+                .ThenByDescending(e => e.Id)
+                .Take(limit)
+                .ToListAsync();
+
+            return episodes.Select(e => MapEpisode(e, e.Podcast));
+        }
+
         public async Task<PodcastEpisodeDetailDto?> GetEpisodeBySlugAsync(string podcastSlug, string episodeSlug, bool includeInactive = false)
         {
             var podcast = await _context.Podcasts
@@ -246,6 +267,13 @@ namespace AkordishKeit.Services
             var episode = orderedEpisodes.FirstOrDefault(e => e.Slug == episodeSlug);
             if (episode == null) return null;
 
+            if (!includeInactive)
+            {
+                episode.ViewCount += 1;
+                episode.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
             var index = orderedEpisodes.FindIndex(e => e.Id == episode.Id);
             var dto = new PodcastEpisodeDetailDto
             {
@@ -261,6 +289,7 @@ namespace AkordishKeit.Services
                 EmbedUrl = episode.EmbedUrl,
                 ThumbnailUrl = episode.ThumbnailUrl,
                 Platform = episode.Platform,
+                ViewCount = episode.ViewCount,
                 PublishedAt = episode.PublishedAt,
                 DisplayOrder = episode.DisplayOrder,
                 IsActive = episode.IsActive,
@@ -394,6 +423,7 @@ namespace AkordishKeit.Services
             EmbedUrl = episode.EmbedUrl,
             ThumbnailUrl = episode.ThumbnailUrl,
             Platform = episode.Platform,
+            ViewCount = episode.ViewCount,
             PublishedAt = episode.PublishedAt,
             DisplayOrder = episode.DisplayOrder,
             IsActive = episode.IsActive,

@@ -14,6 +14,7 @@ namespace AkordishKeit.Services
         Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive);
         Task<PagedResult<PodcastEpisodeDto>> GetPublicEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search);
         Task<IEnumerable<PodcastEpisodeDto>> GetLatestEpisodesAsync(int limit);
+        Task<IEnumerable<PodcastEpisodeDto>> GetPopularEpisodesAsync(int limit, int? podcastId = null);
         Task<PodcastEpisodeDetailDto?> GetEpisodeBySlugAsync(string podcastSlug, string episodeSlug, bool includeInactive = false);
         Task<PodcastEpisodeDto?> GetEpisodeByIdAsync(int id);
         Task<PodcastEpisodeDto> CreateEpisodeAsync(CreatePodcastEpisodeDto dto);
