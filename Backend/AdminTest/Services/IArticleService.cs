@@ -18,7 +18,7 @@ public interface IArticleService
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 
-    Task<ArticleDto?> GetArticleBySlugAsync(string slug);
+    Task<ArticleDto?> GetArticleBySlugAsync(string slug, int? contentType = null);
 
     Task<List<ArticleDto>> GetFeaturedArticlesAsync(int? contentType, int limit);
 

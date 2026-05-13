@@ -370,7 +370,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.agencyHeroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = window.innerWidth <= 768 ? 340 : 380;
+    this.fullHeroHeight = window.innerHeight - 16;
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
 
@@ -398,7 +398,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
     const bg = this.agencyHeroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
 
-    const minHeight = 63;
+    const minHeight = 56;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
 

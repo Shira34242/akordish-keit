@@ -33,6 +33,34 @@
     </div>
   </section>
 
+  <div class="banners-area">
+
+    <section class="loop-section" *ngIf="!loadingFeatured && featuredArtists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'artists.recommended' | translate }}</h2>
+      </div>
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+        <div class="artists-loop-track">
+          <app-artist-circle *ngFor="let artist of featuredArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of featuredArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
+        </div>
+      </div>
+    </section>
+
+    <section class="loop-section" *ngIf="!loadingPopular && popularArtists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'artists.popular' | translate }}</h2>
+      </div>
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+        <div class="artists-loop-track">
+          <app-artist-circle *ngFor="let artist of popularArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of popularArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
   <main class="artists-content">
 
     <section class="catalog-section">

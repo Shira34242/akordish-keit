@@ -169,19 +169,33 @@
 
         <!-- Artists Strip -->
         <div class="artists-section" *ngIf="artists.length > 0">
-            <div class="artists-strip">
-                <div class="artist-item"
-                     *ngFor="let artist of artists; trackBy: trackByArtist"
-                     [class.active]="selectedFilterArtistId === artist.id"
-                     (click)="selectFilterArtist(artist)">
-                    <div class="artist-avatar">
-                        <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-                             [alt]="artist.name"
-                             class="artist-img"
-                             loading="lazy">
+            <div class="artists-strip" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+                <div class="artists-loop-track">
+                    <div class="artist-item"
+                         *ngFor="let artist of artists; trackBy: trackByArtist"
+                         [class.active]="selectedFilterArtistId === artist.id"
+                         (click)="selectFilterArtist(artist)">
+                        <div class="artist-avatar">
+                            <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+                                 [alt]="artist.name"
+                                 class="artist-img"
+                                 loading="lazy">
+                        </div>
+                        <span class="artist-name">{{ artist.name }}</span>
                     </div>
-                    <span class="artist-name">{{ artist.name }}</span>
-                    <span class="artist-indicator" *ngIf="selectedFilterArtistId === artist.id"></span>
+                    <div class="artist-item"
+                         *ngFor="let artist of artists; trackBy: trackByArtist"
+                         [class.active]="selectedFilterArtistId === artist.id"
+                         (click)="selectFilterArtist(artist)"
+                         aria-hidden="true">
+                        <div class="artist-avatar">
+                            <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+                                 [alt]="artist.name"
+                                 class="artist-img"
+                                 loading="lazy">
+                        </div>
+                        <span class="artist-name">{{ artist.name }}</span>
+                    </div>
                 </div>
             </div>
         </div>

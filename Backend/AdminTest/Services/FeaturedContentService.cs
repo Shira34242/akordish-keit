@@ -2,6 +2,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
+using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Services
@@ -17,6 +18,8 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<FeaturedContentDto>> GetActiveFeaturedContentAsync()
         {
+            var now = DateTime.UtcNow;
+
             var featuredContents = await _context.FeaturedContents
                 .AsNoTracking()
                 .Include(fc => fc.Article)
@@ -25,7 +28,10 @@ namespace AkordishKeit.Services
                 .Include(fc => fc.Article)
                     .ThenInclude(a => a.ArticleTags)
                         .ThenInclude(at => at.Tag)
-                .Where(fc => fc.IsActive)
+                .Where(fc => fc.IsActive
+                    && fc.Article.Status == (int)ArticleStatus.Published
+                    && fc.Article.PublishDate <= now
+                    && fc.Article.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News))
                 .OrderBy(fc => fc.DisplayOrder)
                 .ToListAsync();
 
@@ -65,6 +71,8 @@ namespace AkordishKeit.Services
 
         public async Task<FeaturedContentDto> CreateFeaturedContentAsync(CreateFeaturedContentDto dto)
         {
+            await EnsureArticleCanBeFeaturedAsync(dto.ArticleId);
+
             // Check if article is already featured
             if (await IsArticleAlreadyFeaturedAsync(dto.ArticleId))
             {
@@ -115,6 +123,8 @@ namespace AkordishKeit.Services
             if (featuredContent == null)
                 return null;
 
+            await EnsureArticleCanBeFeaturedAsync(dto.ArticleId);
+
             // Check if article is already featured (excluding current)
             if (await IsArticleAlreadyFeaturedAsync(dto.ArticleId, id))
             {
@@ -160,6 +170,11 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<FeaturedContentDto>> UpdateFeaturedContentBulkAsync(UpdateFeaturedContentBulkDto dto)
         {
+            foreach (var item in dto.Items)
+            {
+                await EnsureArticleCanBeFeaturedAsync(item.ArticleId);
+            }
+
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -266,6 +281,7 @@ namespace AkordishKeit.Services
                 ViewCount = article.ViewCount,
                 LikeCount = article.LikeCount,
                 ReadTimeMinutes = article.ReadTimeMinutes,
+                TagIds = article.ArticleTags?.Select(at => at.TagId).ToList() ?? new List<int>(),
                 Tags = article.ArticleTags?.Select(at => at.Tag.Name).ToList() ?? new List<string>(),
                 GalleryImages = article.GalleryImages?.Select(gi => new ArticleGalleryImageDto
                 {
@@ -275,6 +291,30 @@ namespace AkordishKeit.Services
                     DisplayOrder = gi.DisplayOrder
                 }).ToList() ?? new List<ArticleGalleryImageDto>()
             };
+        }
+
+        private async Task EnsureArticleCanBeFeaturedAsync(int articleId)
+        {
+            var article = await _context.Articles
+                .Include(a => a.ArticleCategories)
+                    .ThenInclude(ac => ac.Category)
+                .FirstOrDefaultAsync(a => a.Id == articleId);
+
+            if (article == null)
+            {
+                throw new InvalidOperationException("הכתבה לא נמצאה");
+            }
+
+            if (article.Status != (int)ArticleStatus.Published || article.PublishDate > DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("ניתן לבחור לתוכן המרכזי רק כתבות שפורסמו");
+            }
+
+            var isNews = article.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News);
+            if (!isNews)
+            {
+                throw new InvalidOperationException("התוכן המרכזי של חדשות המוזיקה יכול לכלול רק כתבות מקטגוריות חדשות");
+            }
         }
     }
 }

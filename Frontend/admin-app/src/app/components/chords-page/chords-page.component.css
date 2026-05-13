@@ -487,18 +487,28 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
-   ARTISTS STRIP — פס אמנים
+   ARTISTS STRIP — פס אמנים בלולאה אוטומטית
 ═══════════════════════════════════════════════════════════════ */
 .artists-strip {
-    display: flex;
-    gap: var(--space-xl);
     overflow-x: auto;
-    padding-bottom: var(--space-sm);
+    overflow-y: hidden;
+    padding-top: var(--space-sm);
+    padding-bottom: var(--space-md);
+    direction: ltr;
     scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
 }
 
 .artists-strip::-webkit-scrollbar { display: none; }
+
+.artists-loop-track {
+    display: flex;
+    direction: rtl;
+    gap: var(--space-xl);
+    width: max-content;
+}
 
 .artist-item {
     display: flex;
@@ -518,6 +528,7 @@
     overflow: hidden;
     background: #F2F2F2;
     flex-shrink: 0;
+    transition: box-shadow 0.25s ease;
 }
 
 .artist-img {
@@ -525,11 +536,12 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    opacity: 0.5;
-    transition: opacity 0.25s;
+    opacity: 1;
 }
 
-.artist-item.active .artist-img { opacity: 1; }
+.artist-item.active .artist-avatar {
+    box-shadow: 0 0 0 2px #000000;
+}
 
 .artist-name {
     font-size: var(--font-xs);
@@ -546,14 +558,6 @@
 .artist-item.active .artist-name {
     font-weight: 800;
     color: #000;
-}
-
-.artist-indicator {
-    display: block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #000;
 }
 
 
@@ -857,7 +861,7 @@
 
     .artist-avatar { width: 52px; height: 52px; }
     .artist-name   { max-width: 60px; }
-    .artists-strip { gap: var(--space-lg); }
+    .artists-loop-track { gap: var(--space-lg); }
     .strip-card    { width: 240px; }
 }
 

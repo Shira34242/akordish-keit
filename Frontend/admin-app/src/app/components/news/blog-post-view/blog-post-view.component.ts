@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleCategory, ArticleStatus } from '../../../models/article.model';
+import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { LikedContentService } from '../../../services/liked-content.service';
@@ -142,7 +142,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   loadArticle(slug: string): void {
     this.loading = true;
-    this.articleService.getArticleBySlug(slug)
+    this.articleService.getArticleBySlug(slug, ArticleContentType.Blog)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (article) => {

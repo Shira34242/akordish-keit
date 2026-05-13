@@ -98,8 +98,13 @@ export class ArticleService {
   /**
    * Get article by slug
    */
-  getArticleBySlug(slug: string): Observable<Article> {
-    return this.http.get<Article>(`${this.apiUrl}/slug/${slug}`);
+  getArticleBySlug(slug: string, contentType?: ArticleContentType): Observable<Article> {
+    let params = new HttpParams();
+    if (contentType !== undefined) {
+      params = params.set('contentType', contentType.toString());
+    }
+
+    return this.http.get<Article>(`${this.apiUrl}/slug/${slug}`, { params });
   }
 
   /**

@@ -88,9 +88,9 @@ public class ArticleService : IArticleService
         return article == null ? null : MapToDto(article);
     }
 
-    public async Task<ArticleDto?> GetArticleBySlugAsync(string slug)
+    public async Task<ArticleDto?> GetArticleBySlugAsync(string slug, int? contentType = null)
     {
-        var article = await _context.Articles
+        var query = _context.Articles
             .AsNoTracking()
             .Include(a => a.ArticleCategories)
                 .ThenInclude(ac => ac.Category)
@@ -104,7 +104,17 @@ public class ArticleService : IArticleService
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == (int)ArticleStatus.Published);
+            .Where(a => a.Slug == slug
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= DateTime.UtcNow);
+
+        if (contentType.HasValue)
+        {
+            var section = (ArticleCategorySection)contentType.Value;
+            query = query.Where(a => a.ArticleCategories.Any(ac => ac.Category.Section == section));
+        }
+
+        var article = await query.FirstOrDefaultAsync();
 
         return article == null ? null : MapToDto(article);
     }

@@ -73,9 +73,9 @@ public class ArticlesController : ControllerBase
 
     // GET: api/Articles/slug/my-article-slug
     [HttpGet("slug/{slug}")]
-    public async Task<ActionResult<ArticleDto>> GetArticleBySlug(string slug)
+    public async Task<ActionResult<ArticleDto>> GetArticleBySlug(string slug, [FromQuery] int? contentType = null)
     {
-        var article = await _articleService.GetArticleBySlugAsync(slug);
+        var article = await _articleService.GetArticleBySlugAsync(slug, contentType);
 
         if (article == null)
         {

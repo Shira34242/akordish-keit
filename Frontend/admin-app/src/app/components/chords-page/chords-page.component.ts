@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
+import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { Subject, Subscription, EMPTY } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { MusicalKey } from '../../models/song.model';
@@ -15,7 +16,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 @Component({
     selector: 'app-chords-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, TranslatePipe],
+    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, TranslatePipe, AutoScrollDirective],
     templateUrl: './chords-page.component.html',
     styleUrls: ['./chords-page.component.css']
 })

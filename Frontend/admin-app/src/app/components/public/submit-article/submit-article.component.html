@@ -1,3 +1,110 @@
-<div class="submit-redirect" aria-live="polite">
-  פותח טופס הוספה...
+<div class="submit-article-page" dir="rtl">
+  <section class="submit-panel" *ngIf="!submitted">
+    <div class="submit-header">
+      <p class="submit-kicker">הגשת תוכן</p>
+      <h1>שליחת כתבה לבדיקה</h1>
+      <p>הכתבה תישמר כטיוטה ותעבור לאישור לפני פרסום באתר.</p>
+    </div>
+
+    <form class="submit-form" (ngSubmit)="onSubmit()">
+      <label class="form-field">
+        <span>כותרת</span>
+        <input type="text" [(ngModel)]="article.title" name="title" (input)="onTitleChange()" required>
+      </label>
+
+      <label class="form-field">
+        <span>כותרת משנה</span>
+        <input type="text" [(ngModel)]="article.subtitle" name="subtitle">
+      </label>
+
+      <div class="form-field">
+        <span>קטגוריות</span>
+        <div class="category-grid">
+          <label class="category-chip" *ngFor="let category of getVisibleCategories()">
+            <input
+              type="checkbox"
+              [checked]="isCategorySelected(category.id)"
+              (change)="toggleCategory(category.id)">
+            <span>{{ category.name }}</span>
+          </label>
+        </div>
+        <button
+          *ngIf="hasMoreCategories"
+          type="button"
+          class="inline-action"
+          (click)="toggleCategoriesExpanded()">
+          {{ categoriesExpanded ? 'הצג פחות' : 'הצג עוד קטגוריות' }}
+        </button>
+      </div>
+
+      <label class="form-field">
+        <span>תוכן הכתבה</span>
+        <textarea [(ngModel)]="article.content" name="content" rows="12" (input)="calculateReadTime()" required></textarea>
+      </label>
+
+      <label class="form-field">
+        <span>תקציר קצר</span>
+        <textarea [(ngModel)]="article.shortDescription" name="shortDescription" rows="3"></textarea>
+      </label>
+
+      <div class="form-grid">
+        <label class="form-field">
+          <span>שם המחבר</span>
+          <input type="text" [(ngModel)]="article.authorName" name="authorName">
+        </label>
+
+        <label class="form-field">
+          <span>תמונת קאבר</span>
+          <input type="url" [(ngModel)]="article.featuredImageUrl" name="featuredImageUrl" placeholder="https://...">
+        </label>
+      </div>
+
+      <div class="form-grid">
+        <label class="form-field">
+          <span>וידאו</span>
+          <input type="url" [(ngModel)]="article.videoEmbedUrl" name="videoEmbedUrl" (blur)="onVideoUrlChange()" placeholder="קישור יוטיוב או Embed">
+          <small *ngIf="youtubeMessage">{{ youtubeMessage }}</small>
+        </label>
+
+        <label class="form-field">
+          <span>אודיו</span>
+          <input type="url" [(ngModel)]="article.audioEmbedUrl" name="audioEmbedUrl" placeholder="קישור לקובץ או Embed">
+        </label>
+      </div>
+
+      <div class="form-field" *ngIf="artists.length > 0">
+        <span>אמנים קשורים</span>
+        <div class="category-grid">
+          <label class="category-chip" *ngFor="let artist of getVisibleArtists()">
+            <input
+              type="checkbox"
+              [checked]="isArtistSelected(artist.id)"
+              (change)="toggleArtist(artist.id)">
+            <span>{{ artist.name }}</span>
+          </label>
+        </div>
+        <button
+          *ngIf="hasMoreArtists"
+          type="button"
+          class="inline-action"
+          (click)="toggleArtistsExpanded()">
+          {{ artistsExpanded ? 'הצג פחות' : 'הצג עוד אמנים' }}
+        </button>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="goBack()" [disabled]="saving">ביטול</button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? 'שולח...' : 'שליחת כתבה' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="submit-panel submit-success" *ngIf="submitted">
+    <p class="submit-kicker">הכתבה נשלחה</p>
+    <h1>תודה, קיבלנו את התוכן</h1>
+    <p>הכתבה ממתינה לבדיקה ותופיע באתר אחרי אישור.</p>
+    <button type="button" class="btn-primary" (click)="goBack()">חזרה לאתר</button>
+  </section>
 </div>

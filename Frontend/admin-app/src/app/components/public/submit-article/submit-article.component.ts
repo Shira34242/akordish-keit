@@ -165,6 +165,10 @@ export class SubmitArticleComponent implements OnInit {
       alert(this.langService.translate('article.enter_content'));
       return false;
     }
+    if (!this.article.categoryIds || this.article.categoryIds.length === 0) {
+      alert('נא לבחור קטגוריה כדי שנדע איפה להציג את הכתבה');
+      return false;
+    }
     return true;
   }
 

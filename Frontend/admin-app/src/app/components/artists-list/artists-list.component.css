@@ -194,11 +194,64 @@
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+  padding: var(--space-xl) var(--space-xl) var(--space-4xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-3xl);
   box-sizing: border-box;
+}
+
+.banners-area {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: var(--space-4xl) 8px var(--space-2xl);
+  box-sizing: border-box;
+}
+
+.loop-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-base);
+  margin-bottom: var(--space-2xl);
+}
+
+.loop-section:last-child {
+  margin-bottom: 0;
+}
+
+.loop-section .section-header {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-family: 'Open Sans', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-variation-settings: "wdth" 100;
+  font-size: var(--font-lg);
+  color: #000000;
+  margin: 0;
+}
+
+.artists-loop-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  direction: ltr;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+
+.artists-loop-row::-webkit-scrollbar {
+  display: none;
+}
+
+.artists-loop-track {
+  display: flex;
+  direction: ltr;
+  gap: var(--space-base);
+  width: max-content;
 }
 
 .section-header {

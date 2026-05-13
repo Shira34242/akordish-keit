@@ -505,7 +505,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Artists list
     'artists.label': 'אמנים',
-    'artists.title': 'האמנים שלנו',
+    'artists.title': 'כל האומנים',
     'artists.site_count': 'אמנים באתר',
     'artists.search_placeholder': 'חפש אמן...',
     'artists.sort_az': 'א–ת',
@@ -514,6 +514,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'artists.songs_suffix': 'שירים',
     'artists.empty': 'לא נמצאו אמנים',
     'artists.empty_search': 'נסה מילת חיפוש אחרת',
+    'artists.recommended': 'אמנים מומלצים',
+    'artists.popular': 'אמנים פופולריים',
 
     // Events page
     'events.title': 'הופעות',
@@ -1814,7 +1816,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Artists list
     'artists.label': 'Artists',
-    'artists.title': 'Our Artists',
+    'artists.title': 'All Artists',
     'artists.site_count': 'artists on site',
     'artists.search_placeholder': 'Search artist...',
     'artists.sort_az': 'A–Z',
@@ -1823,6 +1825,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'artists.songs_suffix': 'songs',
     'artists.empty': 'No Artists Found',
     'artists.empty_search': 'Try a different search term',
+    'artists.recommended': 'Recommended Artists',
+    'artists.popular': 'Popular Artists',
 
     // Events page
     'events.title': 'Shows',
