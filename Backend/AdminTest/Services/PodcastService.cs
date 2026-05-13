@@ -48,20 +48,55 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<PodcastDto>> GetPublicPodcastsAsync()
         {
-            var podcasts = await _context.Podcasts
-                .Include(p => p.Episodes.Where(e => !e.IsDeleted && e.IsActive))
+            return await _context.Podcasts
                 .Where(p => !p.IsDeleted && p.IsActive)
                 .OrderBy(p => p.DisplayOrder)
                 .ThenBy(p => p.Name)
+                .Select(p => new PodcastDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    Description = p.Description,
+                    ImageUrl = p.ImageUrl,
+                    DisplayOrder = p.DisplayOrder,
+                    IsActive = p.IsActive,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    EpisodeCount = p.Episodes.Count(e => !e.IsDeleted && e.IsActive),
+                    LatestEpisode = p.Episodes
+                        .Where(e => !e.IsDeleted && e.IsActive)
+                        .OrderByDescending(e => e.PublishedAt)
+                        .Select(e => new PodcastEpisodeDto
+                        {
+                            Id = e.Id,
+                            PodcastId = p.Id,
+                            PodcastName = p.Name,
+                            PodcastSlug = p.Slug,
+                            Title = e.Title,
+                            Slug = e.Slug,
+                            Description = e.Description,
+                            EpisodeNumber = e.EpisodeNumber,
+                            SourceUrl = e.SourceUrl,
+                            EmbedUrl = e.EmbedUrl,
+                            ThumbnailUrl = e.ThumbnailUrl,
+                            Platform = e.Platform,
+                            ViewCount = e.ViewCount,
+                            PublishedAt = e.PublishedAt,
+                            DisplayOrder = e.DisplayOrder,
+                            IsActive = e.IsActive,
+                            CreatedAt = e.CreatedAt,
+                            UpdatedAt = e.UpdatedAt
+                        })
+                        .FirstOrDefault()
+                })
                 .ToListAsync();
-
-            return podcasts.Select(MapPodcast);
         }
 
         public async Task<PodcastDetailDto?> GetPodcastBySlugAsync(string slug, bool includeInactive = false)
         {
             var podcast = await _context.Podcasts
-                .Include(p => p.Episodes)
+                .Include(p => p.Episodes.Where(e => !e.IsDeleted))
                 .FirstOrDefaultAsync(p => p.Slug == slug && !p.IsDeleted && (includeInactive || p.IsActive));
 
             if (podcast == null) return null;
@@ -252,7 +287,7 @@ namespace AkordishKeit.Services
         public async Task<PodcastEpisodeDetailDto?> GetEpisodeBySlugAsync(string podcastSlug, string episodeSlug, bool includeInactive = false)
         {
             var podcast = await _context.Podcasts
-                .Include(p => p.Episodes)
+                .Include(p => p.Episodes.Where(e => !e.IsDeleted))
                 .FirstOrDefaultAsync(p => p.Slug == podcastSlug && !p.IsDeleted && (includeInactive || p.IsActive));
 
             if (podcast == null) return null;

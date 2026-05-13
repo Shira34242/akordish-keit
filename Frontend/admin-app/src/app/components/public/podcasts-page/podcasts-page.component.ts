@@ -2,7 +2,7 @@ import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, 
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Subject, debounceTime, distinctUntilChanged, of, switchMap, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { Podcast, PodcastDetail, PodcastEpisode, PodcastEpisodeDetail } from '../../../models/podcast.model';
 import { PodcastService } from '../../../services/podcast.service';
 
@@ -15,6 +15,7 @@ import { PodcastService } from '../../../services/podcast.service';
 })
 export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLElement>;
+  @ViewChild('collapseOverlay') private collapseOverlayRef?: ElementRef<HTMLElement>;
 
   private readonly podcastService = inject(PodcastService);
   private readonly route = inject(ActivatedRoute);
@@ -32,13 +33,16 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   safeEmbedUrl: SafeResourceUrl | null = null;
   searchQuery = '';
   searchEpisodes: PodcastEpisode[] = [];
+  searchPodcasts: Podcast[] = [];
   searchLoading = false;
 
   private readonly searchSubject = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
+  private readonly dateCache = new Map<string, string>();
   private fullHeroHeight = 0;
   private rafPending = false;
   private episodeRequestId = 0;
+  private resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   private skipNextQuerySync = false;
 
@@ -96,6 +100,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.resizeTimer !== null) clearTimeout(this.resizeTimer);
   }
 
   @HostListener('window:scroll')
@@ -110,7 +115,8 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.initHeroHeight();
+    if (this.resizeTimer !== null) clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(() => this.initHeroHeight(), 150);
   }
 
   get isViewingSeries(): boolean {
@@ -119,14 +125,6 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get seriesEpisodes(): PodcastEpisode[] {
     return this.selectedPodcast?.episodes ?? this.selectedEpisode?.seriesEpisodes ?? [];
-  }
-
-  get searchPodcasts(): Podcast[] {
-    const query = this.normalizeSearch(this.searchQuery);
-    if (query.length < 2) return [];
-    return this.podcasts.filter(podcast =>
-      this.normalizeSearch(`${podcast.name} ${podcast.description || ''}`).includes(query)
-    );
   }
 
   get showSearchResults(): boolean {
@@ -166,11 +164,16 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('he-IL', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    let formatted = this.dateCache.get(dateString);
+    if (!formatted) {
+      formatted = new Date(dateString).toLocaleDateString('he-IL', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      this.dateCache.set(dateString, formatted);
+    }
+    return formatted;
   }
 
   getEpisodeThumbnail(episode: PodcastEpisode): string | null {
@@ -181,50 +184,31 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery = value;
     this.searchSubject.next(value);
+    this.updateSearchPodcasts(value);
   }
 
   clearSearch(): void {
     this.searchQuery = '';
     this.searchEpisodes = [];
+    this.searchPodcasts = [];
     this.searchLoading = false;
     this.searchSubject.next('');
   }
 
   private loadPageData(): void {
     this.loading = true;
-    this.podcastService.getPublicPodcasts().subscribe({
-      next: podcasts => {
+    forkJoin({
+      podcasts: this.podcastService.getPublicPodcasts(),
+      latest: this.podcastService.getLatestEpisodes(10),
+      popular: this.podcastService.getPopularEpisodes(10)
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ podcasts, latest, popular }) => {
         this.podcasts = podcasts;
-        this.loadLatestEpisodes();
-      },
-      error: () => {
-        this.podcasts = [];
-        this.loadLatestEpisodes();
-      }
-    });
-  }
-
-  private loadLatestEpisodes(): void {
-    this.podcastService.getLatestEpisodes(10).subscribe({
-      next: episodes => {
-        this.latestEpisodes = episodes;
-        this.loadPopularEpisodes();
-      },
-      error: () => {
-        this.latestEpisodes = [];
-        this.loadPopularEpisodes();
-      }
-    });
-  }
-
-  private loadPopularEpisodes(): void {
-    this.podcastService.getPopularEpisodes(10).subscribe({
-      next: episodes => {
-        this.popularEpisodes = episodes;
+        this.latestEpisodes = latest;
+        this.popularEpisodes = popular;
         this.loading = false;
       },
       error: () => {
-        this.popularEpisodes = [];
         this.loading = false;
       }
     });
@@ -424,7 +408,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = `${newHeight}px`;
 
-    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    const collapseOverlay = this.collapseOverlayRef?.nativeElement;
     if (collapseOverlay) {
       const collapseRange = this.fullHeroHeight - minHeight;
       const collapseProgress = collapseRange > 0
@@ -432,6 +416,17 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         : 0;
       collapseOverlay.style.opacity = String(collapseProgress);
     }
+  }
+
+  private updateSearchPodcasts(query: string): void {
+    const normalized = this.normalizeSearch(query);
+    if (normalized.length < 2) {
+      this.searchPodcasts = [];
+      return;
+    }
+    this.searchPodcasts = this.podcasts.filter(podcast =>
+      this.normalizeSearch(`${podcast.name} ${podcast.description || ''}`).includes(normalized)
+    );
   }
 
   private normalizeSearch(value: string): string {
