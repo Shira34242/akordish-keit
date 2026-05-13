@@ -34,6 +34,29 @@ export interface YouTubeMetadataDto {
   errorMessage?: string;
 }
 
+export interface UpdateArticleCategoriesDto {
+  categoryIds: number[];
+  mode: 'add' | 'replace' | 'remove';
+}
+
+export interface BulkArticleIdsDto {
+  articleIds: number[];
+}
+
+export interface BulkUpdateArticleCategoriesDto extends UpdateArticleCategoriesDto {
+  articleIds: number[];
+}
+
+export interface BulkUpdateArticleStatusDto extends BulkArticleIdsDto {
+  status: ArticleStatus;
+}
+
+export interface BulkArticleActionResultDto {
+  requestedCount: number;
+  affectedCount: number;
+  articles: Article[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -156,6 +179,27 @@ export class ArticleService {
   }
 
   /**
+   * Update article categories without opening the full edit form
+   */
+  updateArticleCategories(id: number, dto: UpdateArticleCategoriesDto): Observable<Article> {
+    return this.http.patch<Article>(`${this.apiUrl}/${id}/categories`, dto);
+  }
+
+  /**
+   * Bulk update categories
+   */
+  bulkUpdateArticleCategories(dto: BulkUpdateArticleCategoriesDto): Observable<BulkArticleActionResultDto> {
+    return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/categories`, dto);
+  }
+
+  /**
+   * Bulk update status
+   */
+  bulkUpdateArticleStatus(dto: BulkUpdateArticleStatusDto): Observable<BulkArticleActionResultDto> {
+    return this.http.patch<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/status`, dto);
+  }
+
+  /**
    * Delete article (soft delete)
    */
   deleteArticle(id: number): Observable<void> {
@@ -167,6 +211,20 @@ export class ArticleService {
    */
   duplicateArticle(id: number): Observable<Article> {
     return this.http.post<Article>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
+
+  /**
+   * Duplicate multiple articles
+   */
+  bulkDuplicateArticles(dto: BulkArticleIdsDto): Observable<BulkArticleActionResultDto> {
+    return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/duplicate`, dto);
+  }
+
+  /**
+   * Soft-delete multiple articles
+   */
+  bulkDeleteArticles(dto: BulkArticleIdsDto): Observable<BulkArticleActionResultDto> {
+    return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk-delete`, dto);
   }
 
   /**

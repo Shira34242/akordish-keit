@@ -30,6 +30,16 @@ public interface IArticleService
 
     Task<ArticleDto> UpdateArticleStatusAsync(int id, int status);
 
+    Task<ArticleDto> UpdateArticleCategoriesAsync(int id, UpdateArticleCategoriesDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleCategoriesAsync(BulkUpdateArticleCategoriesDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleStatusAsync(BulkUpdateArticleStatusDto dto);
+
+    Task<BulkArticleActionResultDto> BulkDuplicateArticlesAsync(BulkArticleIdsDto dto);
+
+    Task<BulkArticleActionResultDto> BulkDeleteArticlesAsync(BulkArticleIdsDto dto);
+
     Task<bool> DeleteArticleAsync(int id);
 
     Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);

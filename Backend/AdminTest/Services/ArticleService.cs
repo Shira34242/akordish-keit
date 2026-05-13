@@ -393,6 +393,135 @@ public class ArticleService : IArticleService
         return (await GetArticleByIdAsync(id))!;
     }
 
+    public async Task<ArticleDto> UpdateArticleCategoriesAsync(int id, UpdateArticleCategoriesDto dto)
+    {
+        var article = await _context.Articles
+            .Include(a => a.ArticleCategories)
+            .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+        if (article == null)
+        {
+            throw new KeyNotFoundException("Article not found");
+        }
+
+        var categoryIds = await BuildCategoryIdsForModeAsync(
+            article.ArticleCategories.Select(ac => ac.CategoryId),
+            dto.CategoryIds,
+            dto.Mode);
+
+        var linksToRemove = article.ArticleCategories
+            .Where(ac => !categoryIds.Contains(ac.CategoryId))
+            .ToList();
+        _context.ArticleArticleCategories.RemoveRange(linksToRemove);
+
+        var existingIds = article.ArticleCategories
+            .Select(ac => ac.CategoryId)
+            .ToHashSet();
+        var categoryIdsToAdd = categoryIds
+            .Where(categoryId => !existingIds.Contains(categoryId))
+            .ToList();
+        if (categoryIdsToAdd.Count > 0)
+        {
+            await AddArticleCategoriesAsync(article.Id, categoryIdsToAdd);
+        }
+
+        article.ContentType = await ComputeContentTypeFromCategoriesAsync(categoryIds);
+        article.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return (await GetArticleByIdAsync(id))!;
+    }
+
+    public async Task<BulkArticleActionResultDto> BulkUpdateArticleCategoriesAsync(BulkUpdateArticleCategoriesDto dto)
+    {
+        var articleIds = dto.ArticleIds.Distinct().ToList();
+        var changedArticles = new List<ArticleDto>();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var articleId in articleIds)
+        {
+            changedArticles.Add(await UpdateArticleCategoriesAsync(articleId, new UpdateArticleCategoriesDto
+            {
+                CategoryIds = dto.CategoryIds,
+                Mode = dto.Mode
+            }));
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkArticleActionResultDto
+        {
+            RequestedCount = articleIds.Count,
+            AffectedCount = changedArticles.Count,
+            Articles = changedArticles
+        };
+    }
+
+    public async Task<BulkArticleActionResultDto> BulkUpdateArticleStatusAsync(BulkUpdateArticleStatusDto dto)
+    {
+        var articleIds = dto.ArticleIds.Distinct().ToList();
+        var changedArticles = new List<ArticleDto>();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var articleId in articleIds)
+        {
+            changedArticles.Add(await UpdateArticleStatusAsync(articleId, dto.Status));
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkArticleActionResultDto
+        {
+            RequestedCount = articleIds.Count,
+            AffectedCount = changedArticles.Count,
+            Articles = changedArticles
+        };
+    }
+
+    public async Task<BulkArticleActionResultDto> BulkDuplicateArticlesAsync(BulkArticleIdsDto dto)
+    {
+        var articleIds = dto.ArticleIds.Distinct().ToList();
+        var duplicates = new List<ArticleDto>();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var articleId in articleIds)
+        {
+            duplicates.Add(await DuplicateArticleAsync(articleId));
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkArticleActionResultDto
+        {
+            RequestedCount = articleIds.Count,
+            AffectedCount = duplicates.Count,
+            Articles = duplicates
+        };
+    }
+
+    public async Task<BulkArticleActionResultDto> BulkDeleteArticlesAsync(BulkArticleIdsDto dto)
+    {
+        var articleIds = dto.ArticleIds.Distinct().ToList();
+        var affectedCount = 0;
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var articleId in articleIds)
+        {
+            if (await DeleteArticleAsync(articleId))
+            {
+                affectedCount++;
+            }
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkArticleActionResultDto
+        {
+            RequestedCount = articleIds.Count,
+            AffectedCount = affectedCount
+        };
+    }
+
     public async Task<bool> DeleteArticleAsync(int id)
     {
         var article = await _context.Articles.FindAsync(id);
@@ -786,6 +915,31 @@ public class ArticleService : IArticleService
         {
             throw new InvalidOperationException("נבחרה קטגוריה שלא קיימת במערכת");
         }
+    }
+
+    private async Task<List<int>> BuildCategoryIdsForModeAsync(
+        IEnumerable<int> currentCategoryIds,
+        IEnumerable<int>? requestedCategoryIds,
+        string? mode)
+    {
+        var requestedIds = requestedCategoryIds?.Distinct().ToList() ?? new List<int>();
+        if (requestedIds.Count == 0)
+        {
+            throw new InvalidOperationException("נא לבחור לפחות קטגוריה אחת");
+        }
+
+        var normalizedMode = string.IsNullOrWhiteSpace(mode) ? "replace" : mode.Trim().ToLowerInvariant();
+        var currentIds = currentCategoryIds.Distinct().ToList();
+
+        var finalIds = normalizedMode switch
+        {
+            "add" => currentIds.Union(requestedIds).Distinct().ToList(),
+            "remove" => currentIds.Except(requestedIds).Distinct().ToList(),
+            _ => requestedIds
+        };
+
+        await EnsureValidArticleCategoriesAsync(finalIds);
+        return finalIds;
     }
 
     private static IQueryable<Article> ApplyFilters(

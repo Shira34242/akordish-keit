@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ArtistService } from '../../services/artist.service';
+import { LanguageService } from '../../services/language.service';
 import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
@@ -37,6 +38,7 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   filterPremium: boolean | undefined = undefined;
   sortBy: string = 'name';
   searchTerm: string = '';
+  showSortDropdown = false;
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
@@ -45,7 +47,8 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private artistService: ArtistService,
-    private router: Router
+    private router: Router,
+    private langService: LanguageService
   ) {}
 
   ngOnInit(): void {
@@ -85,6 +88,11 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('window:resize')
   onResize(): void {
     this.initHeroHeight();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showSortDropdown = false;
   }
 
   private initHeroHeight(): void {
@@ -180,6 +188,19 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   setSortBy(sort: string): void {
     this.sortBy = sort;
     this.loadAllArtists(1);
+  }
+
+  toggleSortDropdown(): void {
+    this.showSortDropdown = !this.showSortDropdown;
+  }
+
+  getSortLabel(): string {
+    const keys: Record<string, string> = {
+      'name': 'artists.sort_az',
+      'songcount': 'artists.sort_popular',
+      'created': 'artists.sort_new'
+    };
+    return this.langService.translate(keys[this.sortBy] || 'artists.sort_az');
   }
 
   navigateToArtist(artistId: number): void {

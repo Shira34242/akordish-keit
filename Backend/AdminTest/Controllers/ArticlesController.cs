@@ -241,6 +241,66 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // PATCH: api/Articles/5/categories
+    [HttpPatch("{id}/categories")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleDto>> UpdateArticleCategories(int id, [FromBody] UpdateArticleCategoriesDto dto)
+    {
+        try
+        {
+            var article = await _articleService.UpdateArticleCategoriesAsync(id, dto);
+            return Ok(article);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST: api/Articles/bulk/categories
+    [HttpPost("bulk/categories")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleCategories([FromBody] BulkUpdateArticleCategoriesDto dto)
+    {
+        try
+        {
+            var result = await _articleService.BulkUpdateArticleCategoriesAsync(dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // PATCH: api/Articles/bulk/status
+    [HttpPatch("bulk/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleStatus([FromBody] BulkUpdateArticleStatusDto dto)
+    {
+        try
+        {
+            var result = await _articleService.BulkUpdateArticleStatusAsync(dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // POST: api/Articles/5/duplicate
     [HttpPost("{id}/duplicate")]
     [Authorize(Roles = "Admin")]
@@ -255,6 +315,31 @@ public class ArticlesController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    // POST: api/Articles/bulk/duplicate
+    [HttpPost("bulk/duplicate")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkDuplicateArticles([FromBody] BulkArticleIdsDto dto)
+    {
+        try
+        {
+            var result = await _articleService.BulkDuplicateArticlesAsync(dto);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST: api/Articles/bulk-delete
+    [HttpPost("bulk-delete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkDeleteArticles([FromBody] BulkArticleIdsDto dto)
+    {
+        var result = await _articleService.BulkDeleteArticlesAsync(dto);
+        return Ok(result);
     }
 
     // DELETE: api/Articles/5

@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ArticleService } from '../../../../services/admin/article.service';
+import { ArticleService, UpdateArticleCategoriesDto } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../../models/article.model';
 import { PagedResult } from '../../../../models/pagination.model';
@@ -28,6 +28,12 @@ export class ArticlesListComponent implements OnInit {
   categories: SystemItem[] = [];
   loading = false;
   publishingArticleIds = new Set<number>();
+  selectedArticleIds = new Set<number>();
+  categoryModalOpen = false;
+  categoryModalArticle: Article | null = null;
+  categoryModalMode: UpdateArticleCategoriesDto['mode'] = 'add';
+  categoryModalCategoryIds: number[] = [];
+  bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
   activeTab: 'all' | 'news' | 'blog' | 'featured' = 'news';
@@ -82,6 +88,7 @@ export class ArticlesListComponent implements OnInit {
         this.articles = result.items;
         this.totalItems = result.totalCount;
         this.totalPages = result.totalPages;
+        this.clearSelection();
         this.loading = false;
       },
       error: (error) => {
@@ -94,6 +101,7 @@ export class ArticlesListComponent implements OnInit {
   switchTab(tab: 'all' | 'news' | 'blog' | 'featured'): void {
     this.activeTab = tab;
     this.currentPage = 1;
+    this.clearSelection();
     if (tab !== 'featured') {
       this.loadArticles();
     }
@@ -129,6 +137,195 @@ export class ArticlesListComponent implements OnInit {
     this.showFeaturedOnly = false;
     this.currentPage = 1;
     this.loadArticles();
+  }
+
+  get selectedCount(): number {
+    return this.selectedArticleIds.size;
+  }
+
+  get selectedArticleIdsArray(): number[] {
+    return Array.from(this.selectedArticleIds);
+  }
+
+  get allCurrentPageSelected(): boolean {
+    return this.articles.length > 0 && this.articles.every(article => this.selectedArticleIds.has(article.id));
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedArticleIds.size > 0;
+  }
+
+  isSelected(articleId: number): boolean {
+    return this.selectedArticleIds.has(articleId);
+  }
+
+  toggleArticleSelection(articleId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.selectedArticleIds.has(articleId)) {
+      this.selectedArticleIds.delete(articleId);
+      return;
+    }
+
+    this.selectedArticleIds.add(articleId);
+  }
+
+  toggleSelectCurrentPage(): void {
+    if (this.allCurrentPageSelected) {
+      this.articles.forEach(article => this.selectedArticleIds.delete(article.id));
+      return;
+    }
+
+    this.articles.forEach(article => this.selectedArticleIds.add(article.id));
+  }
+
+  clearSelection(): void {
+    this.selectedArticleIds.clear();
+  }
+
+  openCategoryModal(article?: Article): void {
+    this.categoryModalArticle = article ?? null;
+    this.categoryModalMode = article ? 'replace' : 'add';
+    this.categoryModalCategoryIds = article?.categoryIds ? [...article.categoryIds] : [];
+    this.categoryModalOpen = true;
+  }
+
+  closeCategoryModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.categoryModalOpen = false;
+    this.categoryModalArticle = null;
+    this.categoryModalCategoryIds = [];
+    this.categoryModalMode = 'add';
+  }
+
+  isModalCategorySelected(categoryId: number): boolean {
+    return this.categoryModalCategoryIds.includes(categoryId);
+  }
+
+  toggleModalCategory(categoryId: number): void {
+    if (this.isModalCategorySelected(categoryId)) {
+      this.categoryModalCategoryIds = this.categoryModalCategoryIds.filter(id => id !== categoryId);
+      return;
+    }
+
+    this.categoryModalCategoryIds = [...this.categoryModalCategoryIds, categoryId];
+  }
+
+  applyCategoryModal(): void {
+    const articleIds = this.categoryModalArticle ? [this.categoryModalArticle.id] : this.selectedArticleIdsArray;
+    if (articleIds.length === 0 || this.categoryModalCategoryIds.length === 0) {
+      alert('בחר קטגוריה אחת לפחות');
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    const payload: UpdateArticleCategoriesDto = {
+      categoryIds: this.categoryModalCategoryIds,
+      mode: this.categoryModalMode
+    };
+
+    const onSuccess = () => {
+      alert('הקטגוריות עודכנו בהצלחה');
+      this.bulkActionLoading = false;
+      this.closeCategoryModal();
+      this.loadArticles();
+    };
+    const onError = (error: any) => {
+      console.error('Error updating article categories:', error);
+      alert(error?.error?.message || 'שגיאה בעדכון הקטגוריות');
+      this.bulkActionLoading = false;
+    };
+
+    if (this.categoryModalArticle) {
+      this.articleService.updateArticleCategories(this.categoryModalArticle.id, payload).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
+
+    this.articleService.bulkUpdateArticleCategories({ ...payload, articleIds }).subscribe({
+      next: () => {
+        onSuccess();
+      },
+      error: onError
+    });
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedArticleIdsArray;
+    if (ids.length === 0) {
+      return;
+    }
+
+    if (!(await this.siteAlerts.confirm(`למחוק ${ids.length} כתבות שנבחרו?`))) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    this.articleService.bulkDeleteArticles({ articleIds: ids }).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadArticles();
+      },
+      error: (error) => {
+        console.error('Error deleting selected articles:', error);
+        alert(error?.error?.message || 'שגיאה במחיקת הכתבות');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = this.selectedArticleIdsArray;
+    if (ids.length === 0) {
+      return;
+    }
+
+    if (!(await this.siteAlerts.confirm(`לשכפל ${ids.length} כתבות שנבחרו?`))) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    this.articleService.bulkDuplicateArticles({ articleIds: ids }).subscribe({
+      next: (result) => {
+        alert(`${result.affectedCount} כתבות שוכפלו בהצלחה`);
+        this.bulkActionLoading = false;
+        this.loadArticles();
+      },
+      error: (error) => {
+        console.error('Error duplicating selected articles:', error);
+        alert(error?.error?.message || 'שגיאה בשכפול הכתבות');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkStatusSelected(status: ArticleStatus): Promise<void> {
+    const ids = this.selectedArticleIdsArray;
+    if (ids.length === 0) {
+      return;
+    }
+
+    const actionName = status === ArticleStatus.Published ? 'לפרסם' : 'להעביר לארכיון';
+    if (!(await this.siteAlerts.confirm(`${actionName} ${ids.length} כתבות שנבחרו?`))) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    this.articleService.bulkUpdateArticleStatus({ articleIds: ids, status }).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadArticles();
+      },
+      error: (error) => {
+        console.error('Error updating selected article status:', error);
+        alert(error?.error?.message || 'שגיאה בעדכון הסטטוס');
+        this.bulkActionLoading = false;
+      }
+    });
   }
 
   createNew(): void {
