@@ -166,7 +166,9 @@ export class SongService {
         );
     }
     getAllArtists(): Observable<any[]> {
-        return this.http.get<any[]>(`${environment.apiBaseUrl}/api/Artists`);
+        return this.http.get<any>(`${environment.apiBaseUrl}/api/Artists?pageSize=100&sortBy=songcount`).pipe(
+            map((res: any) => Array.isArray(res) ? res : (res.items || []))
+        );
     }
 
     getGenres(): Observable<any[]> {

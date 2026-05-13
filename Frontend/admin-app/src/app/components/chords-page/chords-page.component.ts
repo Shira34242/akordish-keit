@@ -238,11 +238,13 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.songService.getSongs(undefined, 1, 8, undefined, undefined, undefined, 'date')
             .subscribe({ next: (res) => this.recentSongs = res.songs || [], error: () => {} });
 
-        this.songService.getSongs(undefined, 1, 8, undefined, undefined, undefined, 'views')
-            .subscribe({ next: (res) => this.popularSongs = res.songs || [], error: () => {} });
-
-        this.songService.getSongs(undefined, 2, 8, undefined, undefined, undefined, 'views')
-            .subscribe({ next: (res) => this.mostViewedSongs = res.songs || [], error: () => {} });
+        // Single request for 16 view-sorted songs, split into two sections
+        this.songService.getSongs(undefined, 1, 16, undefined, undefined, undefined, 'views')
+            .subscribe({ next: (res) => {
+                const all = res.songs || [];
+                this.popularSongs = all.slice(0, 8);
+                this.mostViewedSongs = all.slice(8);
+            }, error: () => {} });
 
         this.songService.getSongs(undefined, 1, 8, undefined, undefined, undefined, 'name')
             .subscribe({ next: (res) => this.dontMissSongs = res.songs || [], error: () => {} });
@@ -355,18 +357,27 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     loadFilterData(): void {
-        this.songService.getMusicalKeys().subscribe(keys => {
-            this.musicalKeys = keys;
-            this.filteredKeys = keys.slice(0, 10);
-        });
+        // Artists load immediately — visible in the strip
         this.songService.getAllArtists().subscribe(artists => {
             this.artists = artists;
             this.filteredArtists = artists.slice(0, 10);
         });
-        this.songService.getGenres().subscribe(genres => {
-            this.genres = genres;
-            this.filteredGenres = genres.slice(0, 10);
-        });
+        // Keys and genres are only needed when the user opens a filter — defer them
+        const loadSecondary = () => {
+            this.songService.getMusicalKeys().subscribe(keys => {
+                this.musicalKeys = keys;
+                this.filteredKeys = keys.slice(0, 10);
+            });
+            this.songService.getGenres().subscribe(genres => {
+                this.genres = genres;
+                this.filteredGenres = genres.slice(0, 10);
+            });
+        };
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(loadSecondary, { timeout: 2000 });
+        } else {
+            setTimeout(loadSecondary, 800);
+        }
     }
 
     loadQuickTags(): void {
@@ -598,6 +609,10 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { this.isLoading = false; }
         });
     }
+
+    trackBySong(_: number, song: any): number { return song.id; }
+    trackByArtist(_: number, artist: any): number { return artist.id; }
+    trackByTag(_: number, tag: SystemItem): number { return tag.id; }
 
     private closeAllFilterDropdowns(): void {
         this.showArtistDropdown = false;
