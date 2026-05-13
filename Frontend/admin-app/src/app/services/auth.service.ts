@@ -87,7 +87,6 @@ export class AuthService {
             try {
                 this.currentUserSubject.next(JSON.parse(userJson));
             } catch (e) {
-                console.error('Error parsing user from storage', e);
                 localStorage.removeItem('currentUser');
             }
         }

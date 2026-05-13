@@ -526,8 +526,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.syncSelectedKeysWithOptions();
                 this.isLoadingKeys = false;
             },
-            error: (err) => {
-                console.error('Failed to load keys', err);
+            error: () => {
                 this.isLoadingKeys = false;
             }
         });
@@ -632,7 +631,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.songService.searchYouTubeSongs(query, 3).pipe(
             map(results => this.refineYouTubeResults(query, results)),
-            catchError(() => of([]))
+            catchError(() => of([])),
+            takeUntil(this.destroy$)
         ).subscribe(results => {
             this.youtubeSearchResults = results;
             this.isSearchingYouTube = false;
@@ -654,7 +654,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     autoFillUploaderFromCurrentUser(): void {
         if (!this.isProfessionalNonAdmin) return;
 
-        this.userService.getMyAllPages().subscribe(profiles => {
+        this.userService.getMyAllPages().pipe(takeUntil(this.destroy$)).subscribe(profiles => {
             this.myUploaderProfiles = profiles;
 
             if (!this.tagAsMyself) {
@@ -708,7 +708,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.clearUploaderProfile();
         this.profileSearchLoading = true;
         this.userService.searchUsersWithProfiles('', 100, this.profileTypeFilter)
-            .pipe(catchError(() => of([])))
+            .pipe(catchError(() => of([])), takeUntil(this.destroy$))
             .subscribe(results => {
                 this.profileSearchResults = results;
                 this.profileSearchLoading = false;
@@ -830,7 +830,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         if (target === 'easy'     || target === 'both') this.isDetectingEasyKey     = true;
 
         this.songService.detectKey(lyrics).pipe(
-            catchError(err => { console.error('[KeyDetect] API error:', err); return of(null); })
+            catchError(() => of(null)),
+            takeUntil(this.destroy$)
         ).subscribe(result => {
             if (target === 'original' || target === 'both') this.isDetectingOriginalKey = false;
             if (target === 'easy'     || target === 'both') this.isDetectingEasyKey     = false;
@@ -1145,7 +1146,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         const url = this.songForm.get('youtubeUrl')?.value;
         if (url && !this.songForm.get('youtubeUrl')?.errors) {
             this.isLoadingMetadata = true;
-            this.songService.getYouTubeMetadata(url).subscribe({
+            this.songService.getYouTubeMetadata(url).pipe(takeUntil(this.destroy$)).subscribe({
                 next: (metadata) => {
                     this.isLoadingMetadata = false;
                     this.youtubeMetadata = metadata;
@@ -1253,7 +1254,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         const primaryCandidate = this.extractSuggestedArtistCandidates(trimmedName)[0] || trimmedName;
         this.pendingSuggestedArtistName = primaryCandidate;
         this.artistMatchSuggestions = [];
-        this.resolveArtistMatches(primaryCandidate).subscribe(matches => {
+        this.resolveArtistMatches(primaryCandidate).pipe(takeUntil(this.destroy$)).subscribe(matches => {
             const bestMatch = matches[0];
 
             if (bestMatch && bestMatch.score >= 70) {
@@ -1692,7 +1693,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isDetectingEasyKey = true;
 
         this.songService.detectKey(lyrics).pipe(
-            catchError(() => of(null))
+            catchError(() => of(null)),
+            takeUntil(this.destroy$)
         ).subscribe(result => {
             this.isDetectingOriginalKey = false;
             this.isDetectingEasyKey = false;
@@ -1863,10 +1865,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.submissionError = res.message || this.langService.translate('song_modal.error_prefix');
                     }
                 },
-                error: (err) => {
+                error: () => {
                     this.isSubmitting = false;
-                    console.error('Full error:', err);
-                    console.error('Error details:', err.error);
                     const message = this.editMode
                         ? this.langService.translate('song_modal.error_update')
                         : this.langService.translate('song_modal.error_save');
