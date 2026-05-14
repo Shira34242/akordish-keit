@@ -39,5 +39,7 @@ public class ArticleTagConfiguration : IEntityTypeConfiguration<ArticleTag>
                .WithMany(t => t.ArticleTags)
                .HasForeignKey(e => e.TagId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(e => !e.Article.IsDeleted);
     }
 }

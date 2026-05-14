@@ -71,6 +71,7 @@ public class AkordishKeitDbContext : DbContext
 
     // News Page Dynamic Sections
     public DbSet<NewsPageSection> NewsPageSections { get; set; }
+    public DbSet<NewsPageSectionCategory> NewsPageSectionCategories { get; set; }
 
     // Agencies
     public DbSet<Agency> Agencies { get; set; }
@@ -213,6 +214,7 @@ public class AkordishKeitDbContext : DbContext
 
         // News Page Sections Configuration
         modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsPageSectionCategoryConfiguration());
 
         // Agencies Configuration
         modelBuilder.ApplyConfiguration(new AgencyConfiguration());

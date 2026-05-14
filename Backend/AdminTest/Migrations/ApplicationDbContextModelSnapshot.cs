@@ -2629,13 +2629,6 @@ namespace AkordishKeit.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CategoryIdsCsv")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasDefaultValue("");
-
                     b.Property<int?>("ContentTypeId")
                         .HasColumnType("int");
 
@@ -2670,6 +2663,22 @@ namespace AkordishKeit.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("NewsPageSections", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NewsPageSectionCategory", b =>
+                {
+                    b.Property<int>("NewsPageSectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("NewsPageSectionId", "CategoryId");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("IX_NewsPageSectionCategories_CategoryId");
+
+                    b.ToTable("NewsPageSectionCategories", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.Notification", b =>
@@ -4585,6 +4594,25 @@ namespace AkordishKeit.Migrations
                     b.Navigation("ServiceProvider");
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NewsPageSectionCategory", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.ArticleCategoryEntity", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AkordishKeit.Models.Entities.NewsPageSection", "NewsPageSection")
+                        .WithMany("Categories")
+                        .HasForeignKey("NewsPageSectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("NewsPageSection");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.Notification", b =>
                 {
                     b.HasOne("AkordishKeit.Models.Entities.User", "CreatedByUser")
@@ -5002,6 +5030,11 @@ namespace AkordishKeit.Migrations
             modelBuilder.Entity("AkordishKeit.Models.Entities.MusicServiceProviderCategory", b =>
                 {
                     b.Navigation("ServiceProviders");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.NewsPageSection", b =>
+                {
+                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.MusicalKey", b =>

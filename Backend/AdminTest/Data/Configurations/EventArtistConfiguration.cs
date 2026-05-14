@@ -37,5 +37,7 @@ public class EventArtistConfiguration : IEntityTypeConfiguration<EventArtist>
                .WithMany(a => a.EventArtists)
                .HasForeignKey(ea => ea.ArtistId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(ea => !ea.Event.IsDeleted);
     }
 }

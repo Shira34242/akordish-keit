@@ -30,8 +30,6 @@ namespace AkordishKeit.Models.Entities
         /// <summary>
         /// מזהי קטגוריות לבחירה מרובה, מופרדים בפסיקים
         /// </summary>
-        public string CategoryIdsCsv { get; set; } = string.Empty;
-
         /// <summary>
         /// סדר הצגה בדף (ממוין בסדר עולה)
         /// </summary>
@@ -49,5 +47,7 @@ namespace AkordishKeit.Models.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+
+        public virtual ICollection<NewsPageSectionCategory> Categories { get; set; } = new List<NewsPageSectionCategory>();
     }
 }

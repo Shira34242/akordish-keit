@@ -40,5 +40,7 @@ public class ArticleGalleryImageConfiguration : IEntityTypeConfiguration<Article
                .WithMany(a => a.GalleryImages)
                .HasForeignKey(e => e.ArticleId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(e => !e.Article.IsDeleted);
     }
 }

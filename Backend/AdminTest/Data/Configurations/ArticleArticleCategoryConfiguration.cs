@@ -31,5 +31,7 @@ public class ArticleArticleCategoryConfiguration : IEntityTypeConfiguration<Arti
 
         builder.HasIndex(e => e.CategoryId)
                .HasDatabaseName("IX_ArticleArticleCategories_CategoryId");
+
+        builder.HasQueryFilter(e => !e.Article.IsDeleted);
     }
 }

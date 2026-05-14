@@ -37,5 +37,7 @@ public class ArticleArtistConfiguration : IEntityTypeConfiguration<ArticleArtist
                .WithMany(a => a.ArticleArtists)
                .HasForeignKey(aa => aa.ArtistId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(aa => !aa.Article.IsDeleted);
     }
 }

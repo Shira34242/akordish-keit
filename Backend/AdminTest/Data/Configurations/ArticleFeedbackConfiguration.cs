@@ -43,5 +43,7 @@ public class ArticleFeedbackConfiguration : IEntityTypeConfiguration<ArticleFeed
             .HasForeignKey(f => f.UserId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasQueryFilter(f => !f.Article.IsDeleted);
     }
 }

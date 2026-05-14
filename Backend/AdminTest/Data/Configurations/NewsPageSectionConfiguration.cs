@@ -26,10 +26,6 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(x => x.ContentTypeId)
                 .IsRequired(false);
 
-            builder.Property(x => x.CategoryIdsCsv)
-                .HasMaxLength(500)
-                .HasDefaultValue("");
-
             builder.Property(x => x.DisplayOrder)
                 .IsRequired()
                 .HasDefaultValue(0);
@@ -48,6 +44,11 @@ namespace AkordishKeit.Data.Configurations
 
             builder.Property(x => x.UpdatedAt)
                 .IsRequired(false);
+
+            builder.HasMany(x => x.Categories)
+                .WithOne(x => x.NewsPageSection)
+                .HasForeignKey(x => x.NewsPageSectionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

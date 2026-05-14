@@ -18,6 +18,7 @@ namespace AkordishKeit.Services
         public async Task<List<NewsPageSectionDto>> GetActiveSectionsWithArticlesAsync()
         {
             var sections = await _context.NewsPageSections
+                .Include(s => s.Categories)
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.DisplayOrder)
                 .ToListAsync();
@@ -35,6 +36,7 @@ namespace AkordishKeit.Services
         public async Task<List<NewsPageSectionDto>> GetAllSectionsAsync()
         {
             var sections = await _context.NewsPageSections
+                .Include(s => s.Categories)
                 .OrderBy(s => s.DisplayOrder)
                 .ToListAsync();
 
@@ -43,7 +45,9 @@ namespace AkordishKeit.Services
 
         public async Task<NewsPageSectionDto?> GetSectionByIdAsync(int id)
         {
-            var section = await _context.NewsPageSections.FindAsync(id);
+            var section = await _context.NewsPageSections
+                .Include(s => s.Categories)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (section == null) return null;
 
             var articles = await LoadArticlesForSectionAsync(section);
@@ -52,18 +56,20 @@ namespace AkordishKeit.Services
 
         public async Task<NewsPageSectionDto> CreateSectionAsync(CreateNewsPageSectionDto dto)
         {
-            var categoryIds = NormalizeCategoryIds(dto.CategoryIds, dto.CategoryId);
+            var categoryIds = await NormalizeCategoryIdsAsync(dto.CategoryIds, dto.CategoryId, dto.ContentTypeId);
             var section = new NewsPageSection
             {
                 Title = ResolvePageTitle(dto.Title, dto.ContentTypeId),
                 SectionType = 0,
                 CategoryId = GetPrimaryCategoryId(categoryIds),
                 ContentTypeId = dto.ContentTypeId,
-                CategoryIdsCsv = SerializeCategoryIds(categoryIds),
                 DisplayOrder = dto.DisplayOrder,
                 IsActive = dto.IsActive && categoryIds.Count > 0,
                 ArticleCount = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Categories = categoryIds
+                    .Select(categoryId => new NewsPageSectionCategory { CategoryId = categoryId })
+                    .ToList()
             };
 
             _context.NewsPageSections.Add(section);
@@ -74,20 +80,22 @@ namespace AkordishKeit.Services
 
         public async Task<NewsPageSectionDto?> UpdateSectionAsync(int id, UpdateNewsPageSectionDto dto)
         {
-            var section = await _context.NewsPageSections.FindAsync(id);
+            var section = await _context.NewsPageSections
+                .Include(s => s.Categories)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (section == null) return null;
 
-            var categoryIds = NormalizeCategoryIds(dto.CategoryIds, dto.CategoryId);
+            var categoryIds = await NormalizeCategoryIdsAsync(dto.CategoryIds, dto.CategoryId, dto.ContentTypeId);
 
             section.Title = ResolvePageTitle(dto.Title, dto.ContentTypeId);
             section.SectionType = 0;
             section.CategoryId = GetPrimaryCategoryId(categoryIds);
             section.ContentTypeId = dto.ContentTypeId;
-            section.CategoryIdsCsv = SerializeCategoryIds(categoryIds);
             section.DisplayOrder = dto.DisplayOrder;
             section.IsActive = dto.IsActive && categoryIds.Count > 0;
             section.ArticleCount = 0;
             section.UpdatedAt = DateTime.UtcNow;
+            SyncSectionCategories(section, categoryIds);
 
             await _context.SaveChangesAsync();
 
@@ -96,7 +104,9 @@ namespace AkordishKeit.Services
 
         public async Task<bool> DeleteSectionAsync(int id)
         {
-            var section = await _context.NewsPageSections.FindAsync(id);
+            var section = await _context.NewsPageSections
+                .Include(s => s.Categories)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (section == null) return false;
 
             _context.NewsPageSections.Remove(section);
@@ -154,7 +164,10 @@ namespace AkordishKeit.Services
             };
         }
 
-        private static List<int> NormalizeCategoryIds(IEnumerable<int>? categoryIds, int? fallbackCategoryId)
+        private async Task<List<int>> NormalizeCategoryIdsAsync(
+            IEnumerable<int>? categoryIds,
+            int? fallbackCategoryId,
+            int? contentTypeId)
         {
             var ids = categoryIds?
                 .Where(id => id > 0)
@@ -166,12 +179,25 @@ namespace AkordishKeit.Services
                 ids.Add(fallbackCategoryId.Value);
             }
 
-            return ids;
-        }
+            if (ids.Count == 0)
+            {
+                return ids;
+            }
 
-        private static string SerializeCategoryIds(IEnumerable<int> categoryIds)
-        {
-            return string.Join(",", categoryIds.Where(id => id > 0).Distinct());
+            var validCategories = await _context.ArticleCategories
+                .Where(category => ids.Contains(category.Id))
+                .Select(category => new { category.Id, category.Section })
+                .ToListAsync();
+
+            if (contentTypeId.HasValue)
+            {
+                validCategories = validCategories
+                    .Where(category => (int)category.Section == contentTypeId.Value)
+                    .ToList();
+            }
+
+            var validIds = validCategories.Select(category => category.Id).ToHashSet();
+            return ids.Where(validIds.Contains).ToList();
         }
 
         private static int? GetPrimaryCategoryId(List<int> categoryIds)
@@ -191,12 +217,11 @@ namespace AkordishKeit.Services
 
         private static List<int> GetCategoryIds(NewsPageSection section)
         {
-            var ids = (section.CategoryIdsCsv ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(value => int.TryParse(value, out var id) ? id : 0)
+            var ids = section.Categories?
+                .Select(category => category.CategoryId)
                 .Where(id => id > 0)
                 .Distinct()
-                .ToList();
+                .ToList() ?? new List<int>();
 
             if (ids.Count == 0 && section.CategoryId.HasValue && section.CategoryId.Value > 0)
             {
@@ -204,6 +229,30 @@ namespace AkordishKeit.Services
             }
 
             return ids;
+        }
+
+        private static void SyncSectionCategories(NewsPageSection section, List<int> categoryIds)
+        {
+            var wantedIds = categoryIds.Where(id => id > 0).Distinct().ToHashSet();
+
+            var linksToRemove = section.Categories
+                .Where(link => !wantedIds.Contains(link.CategoryId))
+                .ToList();
+
+            foreach (var link in linksToRemove)
+            {
+                section.Categories.Remove(link);
+            }
+
+            var existingIds = section.Categories.Select(link => link.CategoryId).ToHashSet();
+            foreach (var categoryId in wantedIds.Where(id => !existingIds.Contains(id)))
+            {
+                section.Categories.Add(new NewsPageSectionCategory
+                {
+                    NewsPageSectionId = section.Id,
+                    CategoryId = categoryId
+                });
+            }
         }
 
         private static ArticleDto MapArticleToDto(Article article)

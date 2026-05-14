@@ -22,7 +22,8 @@ public class ContentSubmissionConfiguration : IEntityTypeConfiguration<ContentSu
         builder.Property(cs => cs.Status)
                .IsRequired()
                .HasConversion<int>()
-               .HasDefaultValue(SubmissionStatus.Pending);
+               .HasDefaultValue(SubmissionStatus.Pending)
+               .HasSentinel(SubmissionStatus.Pending);
 
         builder.Property(cs => cs.SubmittedByUserId)
                .IsRequired();

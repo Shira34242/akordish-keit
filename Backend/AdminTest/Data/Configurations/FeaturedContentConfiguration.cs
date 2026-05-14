@@ -46,6 +46,8 @@ namespace AkordishKeit.Data.Configurations
 
             builder.HasIndex(fc => new { fc.IsActive, fc.DisplayOrder })
                 .HasDatabaseName("IX_FeaturedContents_Active_Order");
+
+            builder.HasQueryFilter(fc => !fc.Article.IsDeleted);
         }
     }
 }

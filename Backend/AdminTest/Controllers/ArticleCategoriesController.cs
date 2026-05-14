@@ -208,32 +208,31 @@ public class ArticleCategoriesController : ControllerBase
             .ToListAsync();
         _context.ArticleArticleCategories.RemoveRange(articleLinks);
 
+        var pageLinks = await _context.NewsPageSectionCategories
+            .Where(link => ids.Contains(link.CategoryId))
+            .ToListAsync();
+        var affectedSectionIds = pageLinks
+            .Select(link => link.NewsPageSectionId)
+            .Distinct()
+            .ToArray();
+        _context.NewsPageSectionCategories.RemoveRange(pageLinks);
+
         var affectedSections = await _context.NewsPageSections
-            .Where(s => s.CategoryId.HasValue && ids.Contains(s.CategoryId.Value))
+            .Include(section => section.Categories)
+            .Where(section =>
+                affectedSectionIds.Contains(section.Id)
+                || (section.CategoryId.HasValue && ids.Contains(section.CategoryId.Value)))
             .ToListAsync();
 
         foreach (var section in affectedSections)
         {
-            section.CategoryId = null;
-            section.IsActive = false;
-            section.UpdatedAt = DateTime.UtcNow;
-        }
-
-        var sectionsWithMultipleCategories = await _context.NewsPageSections
-            .Where(s => s.CategoryIdsCsv != null && s.CategoryIdsCsv != "")
-            .ToListAsync();
-
-        foreach (var section in sectionsWithMultipleCategories)
-        {
-            var remainingIds = section.CategoryIdsCsv
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(value => int.TryParse(value, out var id) ? id : 0)
-                .Where(id => id > 0 && !ids.Contains(id))
+            var remainingIds = section.Categories
+                .Where(link => !ids.Contains(link.CategoryId))
+                .Select(link => link.CategoryId)
                 .Distinct()
                 .ToList();
 
-            section.CategoryIdsCsv = string.Join(",", remainingIds);
-            section.CategoryId = remainingIds.FirstOrDefault() == 0 ? null : remainingIds.FirstOrDefault();
+            section.CategoryId = remainingIds.Count > 0 ? remainingIds[0] : null;
             section.IsActive = remainingIds.Count > 0 && section.IsActive;
             section.UpdatedAt = DateTime.UtcNow;
         }
