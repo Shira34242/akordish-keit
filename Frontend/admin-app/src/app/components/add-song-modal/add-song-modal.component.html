@@ -209,7 +209,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" *ngIf="sheetMusicEnabled">
                             <label>{{ 'song_modal.sheet_music_label' | translate }}</label>
                             <app-file-upload-input
                                 [url]="songForm.get('sheetMusicUrl')?.value"
@@ -612,7 +612,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" *ngIf="sheetMusicEnabled">
                     <label>{{ 'song_modal.sheet_music_label' | translate }}</label>
                     <app-file-upload-input
                         [url]="songForm.get('sheetMusicUrl')?.value"

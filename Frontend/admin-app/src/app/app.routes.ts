@@ -356,7 +356,7 @@ export const routes: Routes = [
                     {
                         path: 'news-sections',
                         loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
-                        title: 'ניהול פסי חדשות - אקורדישקייט'
+                        title: 'ניהול קטגוריות דפים - אקורדישקייט'
                     },
                     {
                         path: 'ticker',
@@ -489,7 +489,7 @@ export const routes: Routes = [
                     {
                         path: 'news-sections',
                         loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
-                        title: 'פסי חדשות - אקורדישקייט'
+                        title: 'קטגוריות דפים - אקורדישקייט'
                     },
                     {
                         path: 'ticker',

@@ -26,8 +26,7 @@ namespace AkordishKeit.Services
 
             foreach (var section in sections)
             {
-                var articles = await LoadArticlesForSectionAsync(section);
-                result.Add(MapToDto(section, articles));
+                result.Add(MapToDto(section, new List<ArticleDto>()));
             }
 
             return result;
@@ -53,15 +52,17 @@ namespace AkordishKeit.Services
 
         public async Task<NewsPageSectionDto> CreateSectionAsync(CreateNewsPageSectionDto dto)
         {
+            var categoryIds = NormalizeCategoryIds(dto.CategoryIds, dto.CategoryId);
             var section = new NewsPageSection
             {
-                Title = dto.Title,
-                SectionType = dto.SectionType,
-                CategoryId = dto.CategoryId,
+                Title = ResolvePageTitle(dto.Title, dto.ContentTypeId),
+                SectionType = 0,
+                CategoryId = GetPrimaryCategoryId(categoryIds),
                 ContentTypeId = dto.ContentTypeId,
+                CategoryIdsCsv = SerializeCategoryIds(categoryIds),
                 DisplayOrder = dto.DisplayOrder,
-                IsActive = dto.IsActive,
-                ArticleCount = dto.ArticleCount,
+                IsActive = dto.IsActive && categoryIds.Count > 0,
+                ArticleCount = 0,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -76,13 +77,16 @@ namespace AkordishKeit.Services
             var section = await _context.NewsPageSections.FindAsync(id);
             if (section == null) return null;
 
-            section.Title = dto.Title;
-            section.SectionType = dto.SectionType;
-            section.CategoryId = dto.CategoryId;
+            var categoryIds = NormalizeCategoryIds(dto.CategoryIds, dto.CategoryId);
+
+            section.Title = ResolvePageTitle(dto.Title, dto.ContentTypeId);
+            section.SectionType = 0;
+            section.CategoryId = GetPrimaryCategoryId(categoryIds);
             section.ContentTypeId = dto.ContentTypeId;
+            section.CategoryIdsCsv = SerializeCategoryIds(categoryIds);
             section.DisplayOrder = dto.DisplayOrder;
-            section.IsActive = dto.IsActive;
-            section.ArticleCount = dto.ArticleCount;
+            section.IsActive = dto.IsActive && categoryIds.Count > 0;
+            section.ArticleCount = 0;
             section.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -117,26 +121,17 @@ namespace AkordishKeit.Services
                     && !a.IsDeleted)
                 .AsQueryable();
 
-            // SectionType 0: filter by category
-            if (section.SectionType == 0 && !section.CategoryId.HasValue)
+            var categoryIds = GetCategoryIds(section);
+
+            if (categoryIds.Count == 0)
             {
                 return new List<ArticleDto>();
             }
 
-            if (section.SectionType == 0 && section.CategoryId.HasValue)
-            {
-                query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == section.CategoryId.Value));
-            }
-            // SectionType 1: filter by site section (חדשות / תוכן) — derived from the categories' Section field.
-            else if (section.SectionType == 1 && section.ContentTypeId.HasValue)
-            {
-                var categorySection = (Models.Enum.ArticleCategorySection)section.ContentTypeId.Value;
-                query = query.Where(a => a.ArticleCategories.Any(ac => ac.Category.Section == categorySection));
-            }
+            query = query.Where(a => a.ArticleCategories.Any(ac => categoryIds.Contains(ac.CategoryId)));
 
             var articles = await query
                 .OrderByDescending(a => a.PublishDate)
-                .Take(section.ArticleCount)
                 .ToListAsync();
 
             return articles.Select(MapArticleToDto).ToList();
@@ -151,11 +146,64 @@ namespace AkordishKeit.Services
                 SectionType = section.SectionType,
                 CategoryId = section.CategoryId,
                 ContentTypeId = section.ContentTypeId,
+                CategoryIds = GetCategoryIds(section),
                 DisplayOrder = section.DisplayOrder,
                 IsActive = section.IsActive,
-                ArticleCount = section.ArticleCount,
+                ArticleCount = 0,
                 Articles = articles
             };
+        }
+
+        private static List<int> NormalizeCategoryIds(IEnumerable<int>? categoryIds, int? fallbackCategoryId)
+        {
+            var ids = categoryIds?
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList() ?? new List<int>();
+
+            if (ids.Count == 0 && fallbackCategoryId.HasValue && fallbackCategoryId.Value > 0)
+            {
+                ids.Add(fallbackCategoryId.Value);
+            }
+
+            return ids;
+        }
+
+        private static string SerializeCategoryIds(IEnumerable<int> categoryIds)
+        {
+            return string.Join(",", categoryIds.Where(id => id > 0).Distinct());
+        }
+
+        private static int? GetPrimaryCategoryId(List<int> categoryIds)
+        {
+            return categoryIds.Count > 0 ? categoryIds[0] : null;
+        }
+
+        private static string ResolvePageTitle(string? title, int? contentTypeId)
+        {
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                return title.Trim();
+            }
+
+            return contentTypeId == 1 ? "כתבות" : "חדשות המוזיקה";
+        }
+
+        private static List<int> GetCategoryIds(NewsPageSection section)
+        {
+            var ids = (section.CategoryIdsCsv ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => int.TryParse(value, out var id) ? id : 0)
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (ids.Count == 0 && section.CategoryId.HasValue && section.CategoryId.Value > 0)
+            {
+                ids.Add(section.CategoryId.Value);
+            }
+
+            return ids;
         }
 
         private static ArticleDto MapArticleToDto(Article article)

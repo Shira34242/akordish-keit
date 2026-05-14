@@ -80,8 +80,8 @@ export class AdminContentLayoutComponent {
 
         if (url.includes('/content/news-sections')) {
             return {
-                title: 'פסי חדשות',
-                subtitle: 'סידור מקטעי החדשות והפסים שמופיעים בעמודי התוכן.'
+                title: 'קטגוריות דפים',
+                subtitle: 'בחירת הקטגוריות שמופיעות בדף חדשות המוזיקה ובדף הכתבות.'
             };
         }
 

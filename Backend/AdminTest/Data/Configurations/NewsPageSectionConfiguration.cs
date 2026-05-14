@@ -26,6 +26,10 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(x => x.ContentTypeId)
                 .IsRequired(false);
 
+            builder.Property(x => x.CategoryIdsCsv)
+                .HasMaxLength(500)
+                .HasDefaultValue("");
+
             builder.Property(x => x.DisplayOrder)
                 .IsRequired()
                 .HasDefaultValue(0);

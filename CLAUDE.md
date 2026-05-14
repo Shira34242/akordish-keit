@@ -1,37 +1,83 @@
 # Project Guidelines
 
 ## Stack
-- Frontend: Angular (located in `Frontend/admin-app`)
-- Backend: ASP.NET Core (located in `Backend/AdminTest`)
+- Frontend: Angular (`Frontend/admin-app`)
+- Backend: ASP.NET Core (`Backend/AdminTest`)
 
 ---
 
-## Design
+## Purpose
 
-**Source of truth:** [`DESIGN_RULES.md`](DESIGN_RULES.md)
+This file defines **approval rules and task classification**.
 
-All design decisions — colors, fonts, spacing, border-radius, buttons, cards, layout, hero behavior — are defined in `DESIGN_RULES.md`.
-Before making any visual change, consult that file first.
-
-### Core constraints (summary)
-- RTL everywhere (`direction: rtl`)
-- 5 colors only: `#ffffff`, `#000000`, `#ddff53`, `#F2F2F2`, `#404040`
-- No shadows, no gradients, no sharp corners
-- Typography via `--font-*` variables only — never raw `px` for text
-- Spacing via `--space-*` variables only — never raw `px` for content spacing
+For design details, use `DESIGN_RULES.md`.
+For user communication preferences, use `CLAUDE.local.md`.
 
 ---
 
-## Development Rules
+## Current Phase
 
-### Visual-only changes (no approval needed)
-Any frontend change (HTML / CSS / TS) that affects **only appearance** — sizes, colors, layout, animations, dynamic CSS classes.
+The site is in a **final polish / maintenance phase**.
 
-### Requires developer approval
-1. Any backend change (API, server, database)
-2. Any frontend logic change that affects **behavior** (not just visuals)
+Default approach:
+- Improve existing pages carefully
+- Prefer small, accurate fixes
+- Preserve the current visual language
+- Do not rebuild an existing page unless explicitly requested
+- Check desktop and mobile when layout changes
 
-If approval is needed, stop and send this message to the developer:
+---
+
+## Task Classification
+
+Use one of these labels before starting meaningful work:
+
+### Visual Polish
+Small visual improvement on an existing page.
+
+Examples: font, color, spacing, alignment, hover, animation, small display-only classes.
+
+Approval needed: **No**
+
+### Layout Fix
+Responsive or structure fix that keeps the existing design.
+
+Examples: mobile/tablet adjustment, no horizontal scroll, overflow, wrapping, content staying inside the screen.
+
+Approval needed: **No**, if frontend-only and display-only.
+
+### Content/UI Behavior
+Small frontend-only change in what is shown.
+
+Examples: showing existing content in another existing slot, opening/closing panels, display-only sorting/filtering of already-loaded data.
+
+Approval needed: **Usually no**, if it does not touch backend, API, saved data, or real user flow.
+
+Simple explanation:
+
+```
+זה שינוי פרונט קטן שמשפיע רק על התצוגה, לכן אפשר לבצע.
+```
+
+### Backend/Data
+Any change touching backend, API, database, saved settings, auth, permissions, server behavior, or data model.
+
+Approval needed: **Yes**
+
+---
+
+## Requires Approval
+
+Stop before:
+1. Backend changes under `Backend/AdminTest`
+2. API contract changes
+3. Database or saved-data changes
+4. Authentication, permissions, or admin workflow changes
+5. Frontend logic that changes real user behavior, saved choices, or data flow
+6. Full rebuild of an existing page
+7. New visual pattern not based on `DESIGN_RULES.md`
+
+When approval is required, send:
 
 ```
 ⚠️ נדרש שינוי לוגי / בקאנד
@@ -42,73 +88,37 @@ If approval is needed, stop and send this message to the developer:
 ------------------------
 ```
 
-### Protected Design vs Rebuild
+---
 
-Before starting any task, state whether the page is **Protected** or **Rebuild**.
+## Existing Pages
 
-#### 🔒 Protected (do not break desktop)
-
-The following are reference designs — do not alter their desktop appearance:
+Old `Protected` pages are now treated as **stable existing designs**:
 - Artist page
 - Song page (chord view)
 - Article / News page
-- Header (top navigation)
+- Header
 
-All patterns derived from them are also protected:
-- Hero behavior
-- Song cards
-- News banner cards
-- Gallery (as in artist page)
-- Button system
-- Layout behavior
-
-**Rules:**
-- Do not change their desktop design
-- Do not change layout or visual hierarchy
-- Do not "improve" visually
-
-**Allowed:**
-- Code cleanup
-- Alignment with DESIGN_RULES
-- Responsive via media queries only
-
-#### 🧱 Rebuild (rest of the site)
-
-All pages not listed above must be rebuilt professionally according to DESIGN_RULES.md.
-
-**Order of work:**
-1. Build desktop correctly (layout, hierarchy, spacing)
-2. Adapt for tablet
-3. Adapt for mobile
-
-**Important:**
-- Do not rely on existing design if it is weak
-- Do use existing patterns (cards, buttons, etc.)
-
-#### 📱 Responsive — correct approach
-
-Protected: desktop stays exactly as-is; only add responsive overrides for small screens.
-
-Rebuild: build desktop first, then adapt for mobile. Do not create a different design — only adapt.
-
-#### ❗ Critical rules
-
-- No horizontal scroll under any condition
-- All content stays within the screen
-- No inventing new components
-- Use only what is defined in DESIGN_RULES
+Meaning:
+- Keep their identity and hierarchy
+- Polish carefully
+- Responsive fixes are allowed
+- Do not rebuild or visually reinvent without explicit request
 
 ---
 
-### Component reuse
-- Prefer using existing shared components before creating new ones
-- Do not duplicate styles or UI patterns that already exist
-- If a new component is needed, it must follow DESIGN_RULES.md
+## Critical Rules
+
+- No horizontal scroll
+- Maintain RTL
+- Reuse existing UI patterns
+- Do not change unrelated files
+- Avoid large refactors unless requested
 
 ---
 
-### Backend restart reminder
-After every session in which a backend file was changed (anything under `Backend/AdminTest` — `.cs`, `.csproj`, etc.), add this line at the end of the response:
+## Backend Restart Reminder
+
+If backend files changed, end the response with:
 
 ```
 🔄 שינית קבצי בקאנד — צריך להריץ מחדש את הבקאנד (dotnet run)
@@ -116,8 +126,9 @@ After every session in which a backend file was changed (anything under `Backend
 
 ---
 
-### Git commits
-End every commit message with a plain-language summary for the developer:
+## Git Commits
+
+End every commit message with:
 
 ```
 📋 סיכום לשליחה למתכנתת:

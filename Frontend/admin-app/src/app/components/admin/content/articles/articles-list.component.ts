@@ -10,6 +10,7 @@ import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { FeaturedContentManagementComponent } from '../featured-content/featured-content-management.component';
+import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-page-sections-management.component';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 
@@ -17,7 +18,7 @@ import { UserWithProfileDto } from '../../../../models/user.model';
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent],
+  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent],
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
@@ -55,7 +56,7 @@ export class ArticlesListComponent implements OnInit {
   bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
-  activeTab: 'all' | 'news' | 'blog' | 'featured' = 'news';
+  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' = 'news';
 
   // Pagination
   currentPage = 1;
@@ -125,13 +126,17 @@ export class ArticlesListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'all' | 'news' | 'blog' | 'featured'): void {
+  switchTab(tab: 'all' | 'news' | 'blog' | 'featured' | 'sections'): void {
     this.activeTab = tab;
     this.currentPage = 1;
     this.clearSelection();
-    if (tab !== 'featured') {
+    if (this.isArticleListTab) {
       this.loadArticles();
     }
+  }
+
+  get isArticleListTab(): boolean {
+    return this.activeTab !== 'featured' && this.activeTab !== 'sections';
   }
 
   onSearch(): void {

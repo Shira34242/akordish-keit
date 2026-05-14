@@ -687,6 +687,98 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // PATCH: api/Songs/{id}/artists
+    // Update song artists (Admin only)
+    // ============================================
+    [HttpPatch("{id}/artists")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SongDto>> UpdateSongArtists(int id, [FromBody] UpdateSongArtistsDto dto)
+    {
+        try
+        {
+            var song = await _songService.UpdateSongArtistsAsync(id, dto);
+            return Ok(song);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // ============================================
+    // POST: api/Songs/bulk/artists
+    // Bulk update song artists (Admin only)
+    // ============================================
+    [HttpPost("bulk/artists")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkSongActionResultDto>> BulkUpdateSongArtists([FromBody] BulkUpdateSongArtistsDto dto)
+    {
+        try
+        {
+            var result = await _songService.BulkUpdateSongArtistsAsync(dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // ============================================
+    // PATCH: api/Songs/{id}/uploader
+    // Update song uploader profile (Admin only)
+    // ============================================
+    [HttpPatch("{id}/uploader")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SongDto>> UpdateSongUploader(int id, [FromBody] UpdateSongUploaderDto dto)
+    {
+        try
+        {
+            var song = await _songService.UpdateSongUploaderAsync(id, dto, GetCurrentUserId());
+            return Ok(song);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // ============================================
+    // POST: api/Songs/bulk/uploader
+    // Bulk update song uploader profile (Admin only)
+    // ============================================
+    [HttpPost("bulk/uploader")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkSongActionResultDto>> BulkUpdateSongUploader([FromBody] BulkUpdateSongUploaderDto dto)
+    {
+        try
+        {
+            var result = await _songService.BulkUpdateSongUploaderAsync(dto, GetCurrentUserId());
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // ============================================
     // POST: api/Songs/{id}/increment-view
     // Increment unique view count with tracking
     // ============================================

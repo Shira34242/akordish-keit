@@ -1,7 +1,7 @@
 namespace AkordishKeit.Models.DTOs
 {
     /// <summary>
-    /// פס תוכן אחד בדף חדשות המוזיקה, כולל הכתבות שלו
+    /// הגדרת קטגוריות לדף תוכן ציבורי
     /// </summary>
     public class NewsPageSectionDto
     {
@@ -9,12 +9,13 @@ namespace AkordishKeit.Models.DTOs
         public string Title { get; set; } = string.Empty;
 
         /// <summary>
-        /// סוג הפס: 0 = לפי קטגוריה, 1 = לפי סוג תוכן
+        /// ערך ישן שנשמר לתאימות לאחור
         /// </summary>
         public int SectionType { get; set; }
 
         public int? CategoryId { get; set; }
         public int? ContentTypeId { get; set; }
+        public List<int> CategoryIds { get; set; } = new();
         public int DisplayOrder { get; set; }
         public bool IsActive { get; set; }
         public int ArticleCount { get; set; }
@@ -27,10 +28,11 @@ namespace AkordishKeit.Models.DTOs
 
     public class CreateNewsPageSectionDto
     {
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; }
         public int SectionType { get; set; }
         public int? CategoryId { get; set; }
         public int? ContentTypeId { get; set; }
+        public List<int> CategoryIds { get; set; } = new();
         public int DisplayOrder { get; set; }
         public bool IsActive { get; set; } = true;
         public int ArticleCount { get; set; } = 10;
@@ -38,10 +40,11 @@ namespace AkordishKeit.Models.DTOs
 
     public class UpdateNewsPageSectionDto
     {
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; }
         public int SectionType { get; set; }
         public int? CategoryId { get; set; }
         public int? ContentTypeId { get; set; }
+        public List<int> CategoryIds { get; set; } = new();
         public int DisplayOrder { get; set; }
         public bool IsActive { get; set; }
         public int ArticleCount { get; set; }

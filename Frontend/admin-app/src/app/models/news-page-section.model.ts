@@ -10,21 +10,22 @@ export interface NewsPageSection {
   title: string;
   sectionType: NewsSectionType;
   categoryId?: number;
+  categoryIds: number[];
   contentTypeId?: number;
   displayOrder: number;
   isActive: boolean;
-  articleCount: number;
+  articleCount?: number;
   articles: Article[];
 }
 
 export interface CreateNewsPageSectionDto {
-  title: string;
+  title?: string;
   sectionType: NewsSectionType;
   categoryId?: number;
+  categoryIds: number[];
   contentTypeId?: number;
   displayOrder: number;
   isActive: boolean;
-  articleCount: number;
 }
 
 export interface UpdateNewsPageSectionDto extends CreateNewsPageSectionDto {}

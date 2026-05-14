@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
+import { NewsPageSectionService } from '../../../services/news-page-section.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
 import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
@@ -21,6 +22,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
 
   private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
+  private readonly newsPageSectionService = inject(NewsPageSectionService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly managedSlots = Array.from({ length: 5 }, (_, index) => index);
@@ -36,9 +38,11 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private readonly pageSize = 12;
   private hasMore = true;
   private observer?: IntersectionObserver;
+  private visibleCategoryIds: number[] = [];
 
   ngOnInit(): void {
-    this.loadFeaturedContent()
+    this.loadVisibleCategorySettings()
+      .then(() => this.loadFeaturedContent())
       .then(() => this.loadNewsArticles())
       .then(() => {
         this.isLoading = false;
@@ -56,6 +60,26 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
           setTimeout(() => this.setupObserver(), 100);
         }
       });
+  }
+
+  private loadVisibleCategorySettings(): Promise<void> {
+    return new Promise((resolve) => {
+      this.newsPageSectionService.getActiveSections()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (sections) => {
+            this.visibleCategoryIds = sections
+              .filter(section => section.contentTypeId === ArticleContentType.News)
+              .flatMap(section => section.categoryIds?.length ? section.categoryIds : section.categoryId ? [section.categoryId] : [])
+              .filter((id, index, arr) => arr.indexOf(id) === index);
+
+            resolve();
+          },
+          error: () => {
+            resolve();
+          }
+        });
+    });
   }
 
   ngOnDestroy(): void {
@@ -93,7 +117,12 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
         undefined,
         undefined,
         ArticleContentType.News,
-        ArticleStatus.Published
+        ArticleStatus.Published,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        this.visibleCategoryIds
       )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -135,6 +164,31 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
 
   getFeaturedArticle(index: number): Article | null {
     return this.featuredArticles[index]?.article ?? null;
+  }
+
+  getManagedArticle(index: number): Article | null {
+    const featuredArticle = this.getFeaturedArticle(index);
+    if (featuredArticle) {
+      return featuredArticle;
+    }
+
+    const fallbackIndex = this.getFallbackIndexForSlot(index);
+    return this.newsArticles[fallbackIndex] ?? null;
+  }
+
+  getStreamArticles(): Article[] {
+    return this.newsArticles.slice(this.emptyManagedSlotCount);
+  }
+
+  private get emptyManagedSlotCount(): number {
+    return this.managedSlots.filter(slot => !this.getFeaturedArticle(slot)).length;
+  }
+
+  private getFallbackIndexForSlot(index: number): number {
+    return this.managedSlots
+      .slice(0, index + 1)
+      .filter(slot => !this.getFeaturedArticle(slot))
+      .length - 1;
   }
 
   getCellClass(index: number): string {

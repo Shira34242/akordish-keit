@@ -9,6 +9,7 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
+import { NewsPageSectionService } from '../../../services/news-page-section.service';
 
 @Component({
   selector: 'app-articles-list',
@@ -24,6 +25,7 @@ export class ArticlesListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
   private readonly systemTablesService = inject(SystemTablesService);
+  private readonly newsPageSectionService = inject(NewsPageSectionService);
 
   articles: Article[] = [];
   isLoading = true;
@@ -39,6 +41,7 @@ export class ArticlesListComponent implements OnInit {
   searchTerm = '';
   tagId?: number;
   tagName = '';
+  private visibleCategoryIds: number[] = [];
 
   get categories(): Array<{ id: ArticleCategory; key: string }> {
     return [
@@ -111,7 +114,26 @@ export class ArticlesListComponent implements OnInit {
           this.currentPage = 1;
         }
 
-        this.loadArticles();
+        this.loadVisibleCategorySettings();
+      });
+  }
+
+  private loadVisibleCategorySettings(): void {
+    this.newsPageSectionService.getActiveSections()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sections) => {
+          this.visibleCategoryIds = sections
+            .filter(section => section.contentTypeId === ArticleContentType.Blog)
+            .flatMap(section => section.categoryIds?.length ? section.categoryIds : section.categoryId ? [section.categoryId] : [])
+            .filter((id, index, arr) => arr.indexOf(id) === index);
+
+          this.loadArticles();
+        },
+        error: () => {
+          this.visibleCategoryIds = [];
+          this.loadArticles();
+        }
       });
   }
 
@@ -127,6 +149,10 @@ export class ArticlesListComponent implements OnInit {
   private loadArticles(): void {
     this.isLoading = true;
 
+    const categoryIds = this.categoryId === undefined && this.tagId === undefined
+      ? this.visibleCategoryIds
+      : undefined;
+
     this.articleService.getArticles(
       this.currentPage,
       this.pageSize,
@@ -137,7 +163,8 @@ export class ArticlesListComponent implements OnInit {
       undefined, // isFeatured
       undefined, // isPremium
       undefined, // authorName
-      this.tagId
+      this.tagId,
+      categoryIds
     ).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {

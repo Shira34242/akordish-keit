@@ -19,15 +19,15 @@
           *ngFor="let slot of managedSlots"
           class="managed-cell"
           [ngClass]="'mc-' + (slot + 1)">
-          <app-news-banner *ngIf="getFeaturedArticle(slot)" [article]="getFeaturedArticle(slot)!"></app-news-banner>
-          <div *ngIf="!getFeaturedArticle(slot)" class="cell-skeleton"></div>
+          <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!"></app-news-banner>
+          <div *ngIf="!getManagedArticle(slot)" class="cell-skeleton"></div>
         </div>
       </div>
 
       <div class="stream-grid">
         <div
           class="stream-cell"
-          *ngFor="let article of newsArticles; let i = index"
+          *ngFor="let article of getStreamArticles(); let i = index"
           [ngClass]="getCellClass(i)">
           <app-news-banner [article]="article"></app-news-banner>
         </div>

@@ -1,4 +1,5 @@
 export const environment = {
     production: true,
-    apiBaseUrl: 'https://api.akordishkayt.com'
+    apiBaseUrl: 'https://api.akordishkayt.com',
+    sheetMusicEnabled: false
 };

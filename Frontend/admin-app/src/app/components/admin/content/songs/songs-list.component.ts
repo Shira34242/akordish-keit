@@ -3,11 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { SongService } from '../../../../services/song.service';
+import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
 import { SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { ArtistService } from '../../../../services/artist.service';
+import { UserService } from '../../../../services/user.service';
+import { ArtistListDto } from '../../../../models/artist.model';
+import { UserWithProfileDto } from '../../../../models/user.model';
 
 
 @Component({
@@ -22,12 +26,27 @@ export class SongsListComponent implements OnInit {
   private readonly songService = inject(SongService);
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
+  private readonly artistService = inject(ArtistService);
+  private readonly userService = inject(UserService);
 
   // State
   songs: SongDto[] = [];
+  artists: ArtistListDto[] = [];
   loading = false;
   bulkActionLoading = false;
   selectedSongIds = new Set<number>();
+  artistModalOpen = false;
+  artistModalSong: SongDto | null = null;
+  artistModalMode: UpdateSongArtistsDto['mode'] = 'add';
+  artistModalArtistIds: number[] = [];
+  artistsExpanded = false;
+  uploaderModalOpen = false;
+  uploaderModalSong: SongDto | null = null;
+  uploaderProfileSearchQuery = '';
+  uploaderProfileSearchResults: UserWithProfileDto[] = [];
+  uploaderProfileSearchLoading = false;
+  uploaderProfileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+  selectedUploaderProfile: UserWithProfileDto | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
@@ -49,6 +68,7 @@ export class SongsListComponent implements OnInit {
   sortBy: string = 'date'; // date, views, name
 
   ngOnInit(): void {
+    this.loadArtists();
     this.loadSongs();
 
     // האזנה לעדכוני שירים (הוספה/עריכה)
@@ -101,6 +121,13 @@ export class SongsListComponent implements OnInit {
     this.loadSongs();
   }
 
+  loadArtists(): void {
+    this.artistService.getArtists(undefined, undefined, 1, 200, 'name').subscribe({
+      next: (result) => this.artists = result.items,
+      error: (err) => console.error('Error loading artists', err)
+    });
+  }
+
   get selectedCount(): number {
     return this.selectedSongIds.size;
   }
@@ -142,6 +169,187 @@ export class SongsListComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedSongIds.clear();
+  }
+
+  openArtistModal(song?: SongDto): void {
+    this.artistModalSong = song ?? null;
+    this.artistModalMode = song ? 'replace' : 'add';
+    this.artistModalArtistIds = song?.artists?.filter(artist => artist.id > 0).map(artist => artist.id) ?? [];
+    this.artistsExpanded = false;
+    this.artistModalOpen = true;
+  }
+
+  closeArtistModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.artistModalOpen = false;
+    this.artistModalSong = null;
+    this.artistModalArtistIds = [];
+    this.artistModalMode = 'add';
+    this.artistsExpanded = false;
+  }
+
+  isModalArtistSelected(artistId: number): boolean {
+    return this.artistModalArtistIds.includes(artistId);
+  }
+
+  toggleModalArtist(artistId: number): void {
+    if (this.isModalArtistSelected(artistId)) {
+      this.artistModalArtistIds = this.artistModalArtistIds.filter(id => id !== artistId);
+      return;
+    }
+
+    this.artistModalArtistIds = [...this.artistModalArtistIds, artistId];
+  }
+
+  get visibleModalArtists(): ArtistListDto[] {
+    return this.artistsExpanded ? this.artists : this.artists.slice(0, 24);
+  }
+
+  get hasMoreModalArtists(): boolean {
+    return this.artists.length > 24;
+  }
+
+  applyArtistModal(): void {
+    const songIds = this.artistModalSong ? [this.artistModalSong.id] : this.selectedSongIdsArray;
+    if (songIds.length === 0 || this.artistModalArtistIds.length === 0) {
+      alert('בחר אמן אחד לפחות');
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    const payload: UpdateSongArtistsDto = {
+      artistIds: this.artistModalArtistIds,
+      mode: this.artistModalMode
+    };
+
+    const onSuccess = () => {
+      alert('האמנים עודכנו בהצלחה');
+      this.bulkActionLoading = false;
+      this.closeArtistModal();
+      this.loadSongs();
+    };
+    const onError = (error: any) => {
+      console.error('Error updating song artists:', error);
+      alert(error?.error?.message || 'שגיאה בעדכון האמנים');
+      this.bulkActionLoading = false;
+    };
+
+    if (this.artistModalSong) {
+      this.songService.updateSongArtists(this.artistModalSong.id, payload).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
+
+    this.songService.bulkUpdateSongArtists({ ...payload, songIds }).subscribe({
+      next: onSuccess,
+      error: onError
+    });
+  }
+
+  openUploaderModal(song?: SongDto): void {
+    this.uploaderModalSong = song ?? null;
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.uploaderProfileSearchResults = [];
+    this.uploaderProfileTypeFilter = 'all';
+    this.uploaderModalOpen = true;
+    this.loadUploaderProfileResults();
+  }
+
+  closeUploaderModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.uploaderModalOpen = false;
+    this.uploaderModalSong = null;
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.uploaderProfileSearchResults = [];
+    this.uploaderProfileSearchLoading = false;
+  }
+
+  loadUploaderProfileResults(): void {
+    this.uploaderProfileSearchLoading = true;
+    this.userService.searchUsersWithProfiles(
+      this.uploaderProfileSearchQuery,
+      60,
+      this.uploaderProfileTypeFilter
+    ).subscribe({
+      next: (results) => {
+        this.uploaderProfileSearchResults = [...results].sort((a, b) =>
+          a.displayName.localeCompare(b.displayName, 'he')
+        );
+        this.uploaderProfileSearchLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading uploader profiles:', error);
+        this.uploaderProfileSearchLoading = false;
+      }
+    });
+  }
+
+  selectUploaderProfile(profile: UserWithProfileDto): void {
+    this.selectedUploaderProfile = profile;
+    this.uploaderProfileSearchQuery = profile.displayName;
+  }
+
+  clearSelectedUploaderProfile(): void {
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.loadUploaderProfileResults();
+  }
+
+  applyUploaderModal(): void {
+    const songIds = this.uploaderModalSong ? [this.uploaderModalSong.id] : this.selectedSongIdsArray;
+    if (songIds.length === 0 || !this.selectedUploaderProfile) {
+      alert('בחר משתמש או פרופיל לשיוך');
+      return;
+    }
+
+    const profile = this.selectedUploaderProfile;
+    this.bulkActionLoading = true;
+    const payload = {
+      uploaderUserId: profile.userId ?? undefined,
+      uploaderProfileType: profile.profileType === 'user' ? undefined : profile.profileType,
+      uploaderProfileId: profile.profileType === 'user' ? undefined : profile.profileId
+    };
+
+    const onSuccess = () => {
+      alert('השיוך עודכן בהצלחה');
+      this.bulkActionLoading = false;
+      this.closeUploaderModal();
+      this.loadSongs();
+    };
+    const onError = (error: any) => {
+      console.error('Error updating song uploader:', error);
+      alert(error?.error?.message || 'שגיאה בעדכון השיוך');
+      this.bulkActionLoading = false;
+    };
+
+    if (this.uploaderModalSong) {
+      this.songService.updateSongUploader(this.uploaderModalSong.id, payload).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
+
+    this.songService.bulkUpdateSongUploader({ ...payload, songIds }).subscribe({
+      next: onSuccess,
+      error: onError
+    });
+  }
+
+  getProfileTypeLabel(profile: UserWithProfileDto): string {
+    if (profile.profileType === 'artist') return 'אמן';
+    if (profile.profileType === 'user') return 'משתמש';
+    return profile.isTeacher ? 'מורה' : 'בעל מקצוע';
   }
 
   createNew(): void {

@@ -28,7 +28,8 @@ public class ArticleService : IArticleService
         string? authorName,
         int pageNumber,
         int pageSize,
-        int? tagId = null)
+        int? tagId = null,
+        IEnumerable<int>? categoryIds = null)
     {
         var query = _context.Articles
             .AsNoTracking()
@@ -47,7 +48,7 @@ public class ArticleService : IArticleService
             .AsQueryable();
 
         // Apply filters
-        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName, tagId);
+        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName, tagId, categoryIds);
 
         // Order by CreatedAt before pagination
         query = query.OrderByDescending(a => a.CreatedAt);
@@ -1107,7 +1108,8 @@ public class ArticleService : IArticleService
         bool? isFeatured,
         bool? isPremium,
         string? authorName,
-        int? tagId = null)
+        int? tagId = null,
+        IEnumerable<int>? categoryIds = null)
     {
         // Search filter
         if (!string.IsNullOrWhiteSpace(search))
@@ -1121,9 +1123,20 @@ public class ArticleService : IArticleService
         }
 
         // Category filter
-        if (categoryId.HasValue)
+        var selectedCategoryIds = categoryIds?
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList() ?? new List<int>();
+
+        if (categoryId.HasValue && categoryId.Value > 0)
         {
-            query = query.Where(a => a.ArticleCategories.Any(ac => ac.CategoryId == categoryId.Value));
+            selectedCategoryIds.Add(categoryId.Value);
+            selectedCategoryIds = selectedCategoryIds.Distinct().ToList();
+        }
+
+        if (selectedCategoryIds.Count > 0)
+        {
+            query = query.Where(a => a.ArticleCategories.Any(ac => selectedCategoryIds.Contains(ac.CategoryId)));
         }
 
         // Section filter is derived from the categories' Section field.

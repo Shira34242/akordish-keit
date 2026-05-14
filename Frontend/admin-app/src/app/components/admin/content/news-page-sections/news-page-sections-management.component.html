@@ -1,148 +1,56 @@
 <div class="sections-container" dir="rtl">
 
-  <!-- Header -->
   <div class="page-header">
-    <div class="header-row">
-      <div>
-        <h1>ניהול פסי חדשות</h1>
-        <p class="subtitle">קבע אילו קטגוריות מוצגות בדף חדשות המוזיקה ובאיזה סדר</p>
-      </div>
-      <button class="btn-add" (click)="openAddForm()">
-        <span class="material-symbols-outlined">add</span>
-        פס חדש
-      </button>
+    <div>
+      <h1>ניהול קטגוריות לדפים</h1>
+      <p class="subtitle">בחירת קטגוריות נפרדת לכל דף באתר</p>
     </div>
   </div>
 
-  <!-- Loading -->
   <div *ngIf="loading" class="loading">
     <div class="spinner"></div>
-    <p>טוען פסים...</p>
+    <p>טוען הגדרות...</p>
   </div>
 
-  <!-- Sections List -->
-  <div *ngIf="!loading" class="sections-list">
-
-    <div *ngIf="sections.length === 0" class="empty-state">
-      <span class="material-symbols-outlined">view_list</span>
-      <p>אין פסים מוגדרים</p>
-      <button class="btn-add" (click)="openAddForm()">הוסף פס ראשון</button>
-    </div>
-
-    <div *ngFor="let section of sections; let i = index" class="section-row" [class.inactive]="!section.isActive">
-
-      <!-- סדר + כותרת -->
-      <div class="section-order">{{ section.displayOrder }}</div>
-
-      <div class="section-info">
-        <span class="section-title-text">{{ section.title }}</span>
-        <span class="section-filter-label">{{ getSectionLabel(section) }}</span>
-        <span class="section-count-label">{{ section.articleCount }} כתבות</span>
-      </div>
-
-      <!-- Badge פעיל/לא פעיל -->
-      <span class="status-badge" [class.active]="section.isActive" [class.inactive-badge]="!section.isActive">
-        {{ section.isActive ? 'פעיל' : 'מושבת' }}
-      </span>
-
-      <!-- פעולות -->
-      <div class="section-actions">
-        <button class="btn-icon" (click)="moveUp(i)" [disabled]="i === 0" title="הזז למעלה">
-          <span class="material-symbols-outlined">arrow_upward</span>
-        </button>
-        <button class="btn-icon" (click)="moveDown(i)" [disabled]="i === sections.length - 1" title="הזז למטה">
-          <span class="material-symbols-outlined">arrow_downward</span>
-        </button>
-        <button class="btn-icon" (click)="toggleActive(section)" [title]="section.isActive ? 'השבת' : 'הפעל'">
-          <span class="material-symbols-outlined">{{ section.isActive ? 'visibility_off' : 'visibility' }}</span>
-        </button>
-        <button class="btn-icon btn-edit" (click)="openEditForm(section)" title="ערוך">
-          <span class="material-symbols-outlined">edit</span>
-        </button>
-        <button class="btn-icon btn-delete" (click)="deleteSection(section)" title="מחק">
-          <span class="material-symbols-outlined">delete</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Overlay Form -->
-  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()"></div>
-  <div class="form-panel" *ngIf="showForm">
-    <div class="form-header">
-      <h2>{{ editingSection ? 'עריכת פס' : 'פס חדש' }}</h2>
-      <button class="btn-icon" (click)="closeForm()">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-    </div>
-
-    <div class="form-body">
-
-      <!-- כותרת -->
-      <div class="form-group">
-        <label>כותרת הפס *</label>
-        <input type="text" [(ngModel)]="formTitle" name="sectionTitle" placeholder="לדוגמה: פופולאריים" class="form-input" required />
-      </div>
-
-      <!-- סוג -->
-      <div class="form-group">
-        <label>סוג סינון</label>
-        <div class="radio-group">
-          <label class="radio-option" [class.selected]="formSectionType === NewsSectionType.ByCategory">
-            <input type="radio" [(ngModel)]="formSectionType" [value]="NewsSectionType.ByCategory" />
-            לפי קטגוריה
-          </label>
-          <label class="radio-option" [class.selected]="formSectionType === NewsSectionType.ByContentType">
-            <input type="radio" [(ngModel)]="formSectionType" [value]="NewsSectionType.ByContentType" />
-            לפי סוג תוכן
-          </label>
+  <div *ngIf="!loading" class="page-settings-list">
+    <section *ngFor="let page of pageSettings" class="page-setting-card">
+      <div class="page-setting-header">
+        <div class="page-title-group">
+          <span class="page-icon material-symbols-outlined">{{ page.icon }}</span>
+          <div>
+            <h2>{{ page.title }}</h2>
+            <span class="selection-count">{{ page.categoryIds.length }} קטגוריות נבחרו</span>
+          </div>
         </div>
       </div>
 
-      <!-- קטגוריה -->
-      <div class="form-group" *ngIf="formSectionType === NewsSectionType.ByCategory">
-        <label>קטגוריה *</label>
-        <select [(ngModel)]="formCategoryId" name="sectionCategory" class="form-input" required>
-          <option [ngValue]="null">-- בחר קטגוריה --</option>
-          <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
-        </select>
+      <div class="category-picker" [class.empty]="getCategoriesForPage(page).length === 0">
+        <button
+          *ngFor="let cat of getCategoriesForPage(page)"
+          type="button"
+          class="category-chip"
+          [class.selected]="isPageCategorySelected(page, cat.id)"
+          (click)="togglePageCategory(page, cat.id)">
+          <span class="material-symbols-outlined">
+            {{ isPageCategorySelected(page, cat.id) ? 'check_circle' : 'radio_button_unchecked' }}
+          </span>
+          {{ cat.name }}
+        </button>
+
+        <p *ngIf="getCategoriesForPage(page).length === 0" class="empty-category-text">
+          אין קטגוריות זמינות לדף הזה
+        </p>
       </div>
 
-      <!-- סוג תוכן -->
-      <div class="form-group" *ngIf="formSectionType === NewsSectionType.ByContentType">
-        <label>סוג תוכן *</label>
-        <select [(ngModel)]="formContentTypeId" name="sectionContentType" class="form-input" required>
-          <option [ngValue]="null">-- בחר סוג --</option>
-          <option *ngFor="let ct of contentTypes" [ngValue]="ct.id">{{ ct.name }}</option>
-        </select>
+      <div class="page-setting-footer">
+        <span class="selection-summary">{{ getSelectionSummary(page) }}</span>
+        <button class="btn-save" (click)="savePageSetting(page)" [disabled]="page.saving">
+          <span class="material-symbols-outlined" *ngIf="!page.saving">save</span>
+          <span class="material-symbols-outlined spinning" *ngIf="page.saving">hourglass_empty</span>
+          {{ page.saving ? 'שומר...' : 'שמור לדף' }}
+        </button>
       </div>
-
-      <!-- מספר כתבות -->
-      <div class="form-group">
-        <label>מספר כתבות להצגה</label>
-        <input type="number" [(ngModel)]="formArticleCount" min="1" max="20" class="form-input form-input-narrow" />
-      </div>
-
-      <!-- פעיל -->
-      <div class="form-group form-group-inline">
-        <label>פעיל</label>
-        <label class="toggle-switch">
-          <input type="checkbox" [(ngModel)]="formIsActive" />
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-    </div>
-
-    <div class="form-footer">
-      <button class="btn-cancel" (click)="closeForm()">ביטול</button>
-      <button class="btn-save" (click)="saveForm()" [disabled]="saving">
-        <span class="material-symbols-outlined" *ngIf="!saving">save</span>
-        <span class="material-symbols-outlined spinning" *ngIf="saving">hourglass_empty</span>
-        {{ saving ? 'שומר...' : 'שמור' }}
-      </button>
-    </div>
+    </section>
   </div>
 
 </div>

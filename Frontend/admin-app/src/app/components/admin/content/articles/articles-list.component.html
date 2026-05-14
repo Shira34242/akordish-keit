@@ -22,14 +22,20 @@
       <button class="tab" [class.active]="activeTab === 'featured'" (click)="switchTab('featured')">
         מרכזי
       </button>
+      <button class="tab" [class.active]="activeTab === 'sections'" (click)="switchTab('sections')">
+        קטגוריות דפים
+      </button>
     </div>
   </div>
 
   <!-- Featured Content (tab: מרכזי) -->
   <app-featured-content-management *ngIf="activeTab === 'featured'"></app-featured-content-management>
 
+  <!-- Page category settings -->
+  <app-news-page-sections-management *ngIf="activeTab === 'sections'"></app-news-page-sections-management>
+
   <!-- Actions Bar -->
-  <div class="actions-bar" *ngIf="activeTab !== 'featured'">
+  <div class="actions-bar" *ngIf="isArticleListTab">
     <!-- Search -->
     <div class="search-box">
       <input type="text" placeholder="חיפוש לפי כותרת, תקציר או slug..." [(ngModel)]="searchTerm" (input)="onSearch()"
@@ -72,7 +78,7 @@
   </div>
 
   <!-- Bulk Actions -->
-  <div class="bulk-actions-bar" *ngIf="!loading && activeTab !== 'featured' && hasSelection">
+  <div class="bulk-actions-bar" *ngIf="!loading && isArticleListTab && hasSelection">
     <div class="bulk-summary">
       <span class="bulk-count">נבחרו {{ selectedCount }} כתבות</span>
       <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
@@ -104,7 +110,7 @@
   </div>
 
   <!-- Controls Bar -->
-  <div class="list-controls" *ngIf="!loading && activeTab !== 'featured'">
+  <div class="list-controls" *ngIf="!loading && isArticleListTab">
     <span class="results-info">{{ totalItems }} פריטים</span>
     <div class="view-controls">
       <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
@@ -117,7 +123,7 @@
   </div>
 
   <!-- Grid View -->
-  <div class="data-grid" *ngIf="!loading && articles.length > 0 && activeTab !== 'featured' && viewMode === 'grid'">
+  <div class="data-grid" *ngIf="!loading && articles.length > 0 && isArticleListTab && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let article of articles" [class.selected]="isSelected(article.id)">
       <label class="grid-card-select" title="בחירת כתבה">
         <input type="checkbox" [checked]="isSelected(article.id)" (change)="toggleArticleSelection(article.id, $event)">
@@ -144,7 +150,7 @@
   </div>
 
   <!-- Table -->
-  <div class="table-container" *ngIf="activeTab !== 'featured' && viewMode === 'list'">
+  <div class="table-container" *ngIf="isArticleListTab && viewMode === 'list'">
     <div *ngIf="loading" class="loading-state">
       <div class="spinner"></div>
       <p>טוען נתונים...</p>
@@ -286,7 +292,7 @@
   </div>
 
   <!-- Pagination -->
-  <div *ngIf="!loading && totalPages > 1 && activeTab !== 'featured'" class="pagination">
+  <div *ngIf="!loading && totalPages > 1 && isArticleListTab" class="pagination">
     <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
       ←
     </button>

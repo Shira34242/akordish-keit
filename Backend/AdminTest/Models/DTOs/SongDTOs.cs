@@ -394,6 +394,36 @@ public class ToggleApprovalDto
     public bool IsApproved { get; set; }
 }
 
+public class UpdateSongArtistsDto
+{
+    public List<int> ArtistIds { get; set; } = new();
+    public string Mode { get; set; } = "replace";
+}
+
+public class BulkUpdateSongArtistsDto : UpdateSongArtistsDto
+{
+    public List<int> SongIds { get; set; } = new();
+}
+
+public class UpdateSongUploaderDto
+{
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; }
+    public int? UploaderProfileId { get; set; }
+}
+
+public class BulkUpdateSongUploaderDto : UpdateSongUploaderDto
+{
+    public List<int> SongIds { get; set; } = new();
+}
+
+public class BulkSongActionResultDto
+{
+    public int RequestedCount { get; set; }
+    public int AffectedCount { get; set; }
+    public List<SongDto> Songs { get; set; } = new();
+}
+
 /// <summary>
 /// בקשת זיהוי סולם
 /// </summary>

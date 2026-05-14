@@ -1,32 +1,36 @@
 namespace AkordishKeit.Models.Entities
 {
     /// <summary>
-    /// פס תוכן דינמי בדף חדשות המוזיקה
-    /// מאפשר למנהל לקבוע אילו קטגוריות מוצגות ובאיזה סדר
+    /// הגדרת קטגוריות לתצוגה בדפי התוכן הציבוריים
     /// </summary>
     public class NewsPageSection
     {
         public int Id { get; set; }
 
         /// <summary>
-        /// כותרת הפס (לדוגמה: "פופולאריים", "קליפים", "תוכן")
+        /// שם ההגדרה בניהול
         /// </summary>
         public string Title { get; set; } = string.Empty;
 
         /// <summary>
-        /// סוג הפס: 0 = לפי קטגוריה, 1 = לפי סוג תוכן
+        /// ערך ישן שנשמר לתאימות לאחור
         /// </summary>
         public int SectionType { get; set; }
 
         /// <summary>
-        /// מזהה קטגוריה (בשימוש כאשר SectionType = 0)
+        /// מזהה קטגוריה ישן לתאימות לאחור
         /// </summary>
         public int? CategoryId { get; set; }
 
         /// <summary>
-        /// סוג תוכן (בשימוש כאשר SectionType = 1): 0 = חדשות, 1 = בלוג
+        /// הדף שבו ההגדרה פעילה: 0 = חדשות מוזיקה, 1 = כתבות
         /// </summary>
         public int? ContentTypeId { get; set; }
+
+        /// <summary>
+        /// מזהי קטגוריות לבחירה מרובה, מופרדים בפסיקים
+        /// </summary>
+        public string CategoryIdsCsv { get; set; } = string.Empty;
 
         /// <summary>
         /// סדר הצגה בדף (ממוין בסדר עולה)
@@ -39,7 +43,7 @@ namespace AkordishKeit.Models.Entities
         public bool IsActive { get; set; } = true;
 
         /// <summary>
-        /// מספר כתבות להצגה בפס
+        /// ערך ישן שנשמר לתאימות לאחור
         /// </summary>
         public int ArticleCount { get; set; } = 10;
 

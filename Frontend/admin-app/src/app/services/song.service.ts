@@ -5,6 +5,31 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, ImportSongFromUrlResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
 import { PagedResult } from '../models/pagination.model';
 
+export interface UpdateSongArtistsDto {
+    artistIds: number[];
+    mode: 'add' | 'replace' | 'remove';
+}
+
+export interface BulkUpdateSongArtistsDto extends UpdateSongArtistsDto {
+    songIds: number[];
+}
+
+export interface UpdateSongUploaderDto {
+    uploaderUserId?: number | null;
+    uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+    uploaderProfileId?: number;
+}
+
+export interface BulkUpdateSongUploaderDto extends UpdateSongUploaderDto {
+    songIds: number[];
+}
+
+export interface BulkSongActionResultDto {
+    requestedCount: number;
+    affectedCount: number;
+    songs: SongDto[];
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -191,6 +216,22 @@ export class SongService {
 
     duplicateSong(songId: number): Observable<SongDto> {
         return this.http.post<SongDto>(`${this.apiUrl}/${songId}/duplicate`, {});
+    }
+
+    updateSongArtists(songId: number, dto: UpdateSongArtistsDto): Observable<SongDto> {
+        return this.http.patch<SongDto>(`${this.apiUrl}/${songId}/artists`, dto);
+    }
+
+    bulkUpdateSongArtists(dto: BulkUpdateSongArtistsDto): Observable<BulkSongActionResultDto> {
+        return this.http.post<BulkSongActionResultDto>(`${this.apiUrl}/bulk/artists`, dto);
+    }
+
+    updateSongUploader(songId: number, dto: UpdateSongUploaderDto): Observable<SongDto> {
+        return this.http.patch<SongDto>(`${this.apiUrl}/${songId}/uploader`, dto);
+    }
+
+    bulkUpdateSongUploader(dto: BulkUpdateSongUploaderDto): Observable<BulkSongActionResultDto> {
+        return this.http.post<BulkSongActionResultDto>(`${this.apiUrl}/bulk/uploader`, dto);
     }
 
     /**

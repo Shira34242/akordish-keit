@@ -12,14 +12,14 @@ export class NewsPageSectionService {
   private readonly apiUrl = `${environment.apiBaseUrl}/api/NewsPageSections`;
 
   /**
-   * מחזיר את הפסים הפעילים עם הכתבות — לדף חדשות המוזיקה
+   * מחזיר את הגדרות הקטגוריות הפעילות לדפי התוכן
    */
   getActiveSections(): Observable<NewsPageSection[]> {
     return this.http.get<NewsPageSection[]>(this.apiUrl);
   }
 
   /**
-   * מחזיר את כל הפסים (כולל לא פעילים) — לממשק ניהול
+   * מחזיר את כל הגדרות הקטגוריות (כולל לא פעילות) — לממשק ניהול
    */
   getAllSections(): Observable<NewsPageSection[]> {
     return this.http.get<NewsPageSection[]>(`${this.apiUrl}/all`);

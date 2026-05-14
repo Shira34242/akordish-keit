@@ -96,7 +96,8 @@ export class ArticleService {
     isFeatured?: boolean,
     isPremium?: boolean,
     authorName?: string,
-    tagId?: number
+    tagId?: number,
+    categoryIds?: number[]
   ): Observable<PagedResult<Article>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -125,6 +126,13 @@ export class ArticleService {
     }
     if (tagId !== undefined) {
       params = params.set('tagId', tagId.toString());
+    }
+    if (categoryIds && categoryIds.length > 0) {
+      categoryIds
+        .filter((id, index, arr) => id !== undefined && id !== null && arr.indexOf(id) === index)
+        .forEach(id => {
+          params = params.append('categoryIds', id.toString());
+        });
     }
 
     return this.http.get<PagedResult<Article>>(this.apiUrl, { params });

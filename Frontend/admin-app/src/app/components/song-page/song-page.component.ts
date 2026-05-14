@@ -106,6 +106,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
+    sheetMusicEnabled = environment.sheetMusicEnabled;
     isSheetMusicMode: boolean = false;
     sheetMusicViewerUrl: SafeResourceUrl | null = null;
     sheetMusicDirectUrl: string | null = null;

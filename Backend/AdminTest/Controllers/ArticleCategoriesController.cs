@@ -219,6 +219,25 @@ public class ArticleCategoriesController : ControllerBase
             section.UpdatedAt = DateTime.UtcNow;
         }
 
+        var sectionsWithMultipleCategories = await _context.NewsPageSections
+            .Where(s => s.CategoryIdsCsv != null && s.CategoryIdsCsv != "")
+            .ToListAsync();
+
+        foreach (var section in sectionsWithMultipleCategories)
+        {
+            var remainingIds = section.CategoryIdsCsv
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => int.TryParse(value, out var id) ? id : 0)
+                .Where(id => id > 0 && !ids.Contains(id))
+                .Distinct()
+                .ToList();
+
+            section.CategoryIdsCsv = string.Join(",", remainingIds);
+            section.CategoryId = remainingIds.FirstOrDefault() == 0 ? null : remainingIds.FirstOrDefault();
+            section.IsActive = remainingIds.Count > 0 && section.IsActive;
+            section.UpdatedAt = DateTime.UtcNow;
+        }
+
         var categories = await _context.ArticleCategories
             .Where(c => ids.Contains(c.Id))
             .ToListAsync();

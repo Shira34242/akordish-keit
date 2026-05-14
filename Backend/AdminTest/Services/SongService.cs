@@ -878,6 +878,47 @@ public class SongService : ISongService
         }
     }
 
+    private async Task EnsureValidSongArtistsAsync(IEnumerable<int>? artistIds)
+    {
+        var ids = artistIds?.Distinct().ToList() ?? new List<int>();
+        if (ids.Count == 0) return;
+
+        var existingIds = await _context.Artists
+            .Where(a => !a.IsDeleted && ids.Contains(a.Id))
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        var missingIds = ids.Except(existingIds).ToList();
+        if (missingIds.Count > 0)
+        {
+            throw new InvalidOperationException("אחד האמנים שנבחרו לא נמצא");
+        }
+    }
+
+    private async Task<List<int>> BuildSongArtistIdsForModeAsync(
+        IEnumerable<int> currentArtistIds,
+        IEnumerable<int>? requestedArtistIds,
+        string? mode)
+    {
+        var requestedIds = requestedArtistIds?.Distinct().ToList() ?? new List<int>();
+        if (requestedIds.Count == 0)
+        {
+            throw new InvalidOperationException("נא לבחור לפחות אמן אחד");
+        }
+
+        await EnsureValidSongArtistsAsync(requestedIds);
+
+        var normalizedMode = string.IsNullOrWhiteSpace(mode) ? "replace" : mode.Trim().ToLowerInvariant();
+        var currentIds = currentArtistIds.Distinct().ToList();
+
+        return normalizedMode switch
+        {
+            "add" => currentIds.Union(requestedIds).Distinct().ToList(),
+            "remove" => currentIds.Except(requestedIds).Distinct().ToList(),
+            _ => requestedIds
+        };
+    }
+
     private async Task<(int? UserId, string? ProfileType, int? ProfileId)> NormalizeUploaderAsync(
         int currentUserId,
         int? requestedUserId,
@@ -1624,6 +1665,143 @@ public class SongService : ISongService
             Console.WriteLine($"Error toggling song approval: {ex.Message}");
             throw;
         }
+    }
+
+    public async Task<SongDto> UpdateSongArtistsAsync(int id, UpdateSongArtistsDto dto)
+    {
+        var song = await _context.Songs
+            .Include(s => s.SongArtists)
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+
+        if (song == null)
+        {
+            throw new KeyNotFoundException("Song not found");
+        }
+
+        var artistIds = await BuildSongArtistIdsForModeAsync(
+            song.SongArtists.Where(sa => sa.ArtistId.HasValue).Select(sa => sa.ArtistId!.Value),
+            dto.ArtistIds,
+            dto.Mode);
+
+        var normalizedMode = string.IsNullOrWhiteSpace(dto.Mode) ? "replace" : dto.Mode.Trim().ToLowerInvariant();
+        var linksToRemove = normalizedMode == "replace"
+            ? song.SongArtists.ToList()
+            : song.SongArtists
+                .Where(sa => sa.ArtistId.HasValue && !artistIds.Contains(sa.ArtistId.Value))
+                .ToList();
+
+        _context.SongArtists.RemoveRange(linksToRemove);
+
+        var existingIds = normalizedMode == "replace"
+            ? new HashSet<int>()
+            : song.SongArtists
+                .Where(sa => !linksToRemove.Contains(sa))
+                .Where(sa => sa.ArtistId.HasValue)
+                .Select(sa => sa.ArtistId!.Value)
+                .ToHashSet();
+
+        var artistIdsToAdd = artistIds
+            .Where(artistId => !existingIds.Contains(artistId))
+            .ToList();
+        var nextOrder = normalizedMode == "replace"
+            ? 1
+            : song.SongArtists
+                .Where(sa => !linksToRemove.Contains(sa))
+                .Select(sa => sa.Order)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+        foreach (var artistId in artistIdsToAdd)
+        {
+            _context.SongArtists.Add(new SongArtist
+            {
+                SongId = song.Id,
+                ArtistId = artistId,
+                Order = nextOrder++,
+                IsTemporary = false
+            });
+        }
+
+        song.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return (await GetSongByIdAsync(id, includeUnapproved: true))!;
+    }
+
+    public async Task<BulkSongActionResultDto> BulkUpdateSongArtistsAsync(BulkUpdateSongArtistsDto dto)
+    {
+        var songIds = dto.SongIds.Distinct().ToList();
+        var changedSongs = new List<SongDto>();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var songId in songIds)
+        {
+            changedSongs.Add(await UpdateSongArtistsAsync(songId, new UpdateSongArtistsDto
+            {
+                ArtistIds = dto.ArtistIds,
+                Mode = dto.Mode
+            }));
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkSongActionResultDto
+        {
+            RequestedCount = songIds.Count,
+            AffectedCount = changedSongs.Count,
+            Songs = changedSongs
+        };
+    }
+
+    public async Task<SongDto> UpdateSongUploaderAsync(int id, UpdateSongUploaderDto dto, int? callerUserId = null)
+    {
+        var song = await _context.Songs
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+
+        if (song == null)
+        {
+            throw new KeyNotFoundException("Song not found");
+        }
+
+        var uploader = await NormalizeUploaderAsync(
+            callerUserId ?? dto.UploaderUserId ?? song.UploadedByUserId ?? 0,
+            dto.UploaderUserId,
+            dto.UploaderProfileType,
+            dto.UploaderProfileId);
+
+        song.UploaderUserId = uploader.UserId;
+        song.UploaderProfileType = uploader.ProfileType;
+        song.UploaderProfileId = uploader.ProfileId;
+        song.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return (await GetSongByIdAsync(id, includeUnapproved: true))!;
+    }
+
+    public async Task<BulkSongActionResultDto> BulkUpdateSongUploaderAsync(BulkUpdateSongUploaderDto dto, int? callerUserId = null)
+    {
+        var songIds = dto.SongIds.Distinct().ToList();
+        var changedSongs = new List<SongDto>();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var songId in songIds)
+        {
+            changedSongs.Add(await UpdateSongUploaderAsync(songId, new UpdateSongUploaderDto
+            {
+                UploaderUserId = dto.UploaderUserId,
+                UploaderProfileType = dto.UploaderProfileType,
+                UploaderProfileId = dto.UploaderProfileId
+            }, callerUserId));
+        }
+
+        await transaction.CommitAsync();
+
+        return new BulkSongActionResultDto
+        {
+            RequestedCount = songIds.Count,
+            AffectedCount = changedSongs.Count,
+            Songs = changedSongs
+        };
     }
 
     public async Task<SongDto> DuplicateSongAsync(int id)

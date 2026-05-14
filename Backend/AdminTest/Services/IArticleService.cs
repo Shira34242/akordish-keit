@@ -14,7 +14,8 @@ public interface IArticleService
         string? authorName,
         int pageNumber,
         int pageSize,
-        int? tagId = null);
+        int? tagId = null,
+        IEnumerable<int>? categoryIds = null);
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 

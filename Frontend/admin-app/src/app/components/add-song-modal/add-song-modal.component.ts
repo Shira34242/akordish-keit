@@ -15,6 +15,7 @@ import { RequiredFieldFeedbackService } from '../../services/required-field-feed
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { environment } from '../../../environments/environment';
 
 export interface InitialSongRequest {
     songName: string;
@@ -85,6 +86,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @Output() close = new EventEmitter<void>();
     @Output() songAdded = new EventEmitter<void>();
+    sheetMusicEnabled = environment.sheetMusicEnabled;
 
     @Input() editMode: boolean = false;
     @Input() songToEdit: any = null;

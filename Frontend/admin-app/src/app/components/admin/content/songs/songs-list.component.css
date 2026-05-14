@@ -166,6 +166,204 @@
   color: #ffffff;
 }
 
+.category-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.category-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: var(--space-xl);
+  direction: rtl;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-base);
+  margin-bottom: var(--space-base);
+}
+
+.modal-header h2 {
+  margin: 0 0 var(--space-xs) 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xl);
+  font-weight: 800;
+  color: #000000;
+}
+
+.modal-header p {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: #000000;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: #F2F2F2;
+  border-radius: 999px;
+  margin-bottom: var(--space-base);
+}
+
+.mode-toggle button {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  padding: var(--space-sm) var(--space-base);
+  background: transparent;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.mode-toggle button.active {
+  background: #ddff53;
+  font-weight: 800;
+}
+
+.category-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-sm);
+}
+
+.category-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+  min-height: 44px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+  padding: var(--space-sm) var(--space-base);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  text-align: right;
+  cursor: pointer;
+}
+
+.category-option.selected {
+  border-color: #000000;
+  background: #ddff53;
+  font-weight: 800;
+}
+
+.modal-more-btn {
+  margin-top: var(--space-base);
+}
+
+.uploader-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+}
+
+.selected-profile,
+.profile-result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  padding: var(--space-sm) var(--space-base);
+  font-family: 'Open Sans', sans-serif;
+  text-align: right;
+}
+
+.selected-profile {
+  justify-content: flex-start;
+  margin-bottom: var(--space-base);
+}
+
+.selected-profile > div,
+.profile-result-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.selected-profile strong,
+.profile-result-text strong {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+}
+
+.selected-profile span,
+.profile-result-text small {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  line-height: var(--lh-small);
+}
+
+.profile-results {
+  display: grid;
+  gap: var(--space-sm);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.profile-result {
+  cursor: pointer;
+}
+
+.profile-result.selected {
+  background: #ddff53;
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #000000;
+  color: #ddff53;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.profile-loading {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  color: #000000;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-base);
+}
+
 /* Table */
 .table-container {
   background: #ffffff;
@@ -401,6 +599,8 @@
   .bulk-actions-bar,
   .bulk-buttons,
   .bulk-summary { align-items: stretch; flex-direction: column; }
+  .uploader-controls { grid-template-columns: 1fr; }
+  .modal-actions { flex-direction: column; }
   .songs-table { display: block; overflow-x: auto; }
   .pagination { flex-wrap: wrap; }
 }

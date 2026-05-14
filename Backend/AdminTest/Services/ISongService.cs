@@ -78,6 +78,14 @@ public interface ISongService
     /// </summary>
     Task<bool> ToggleSongApprovalAsync(int id, bool isApproved);
 
+    Task<SongDto> UpdateSongArtistsAsync(int id, UpdateSongArtistsDto dto);
+
+    Task<BulkSongActionResultDto> BulkUpdateSongArtistsAsync(BulkUpdateSongArtistsDto dto);
+
+    Task<SongDto> UpdateSongUploaderAsync(int id, UpdateSongUploaderDto dto, int? callerUserId = null);
+
+    Task<BulkSongActionResultDto> BulkUpdateSongUploaderAsync(BulkUpdateSongUploaderDto dto, int? callerUserId = null);
+
     /// <summary>
     /// Duplicate a song (Admin only)
     /// </summary>
