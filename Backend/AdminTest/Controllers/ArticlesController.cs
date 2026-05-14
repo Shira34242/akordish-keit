@@ -301,6 +301,86 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // PATCH: api/Articles/5/artists
+    [HttpPatch("{id}/artists")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleDto>> UpdateArticleArtists(int id, [FromBody] UpdateArticleArtistsDto dto)
+    {
+        try
+        {
+            var article = await _articleService.UpdateArticleArtistsAsync(id, dto);
+            return Ok(article);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST: api/Articles/bulk/artists
+    [HttpPost("bulk/artists")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleArtists([FromBody] BulkUpdateArticleArtistsDto dto)
+    {
+        try
+        {
+            var result = await _articleService.BulkUpdateArticleArtistsAsync(dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // PATCH: api/Articles/5/uploader
+    [HttpPatch("{id}/uploader")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleDto>> UpdateArticleUploader(int id, [FromBody] UpdateArticleUploaderDto dto)
+    {
+        try
+        {
+            var article = await _articleService.UpdateArticleUploaderAsync(id, dto, GetCurrentUserId());
+            return Ok(article);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST: api/Articles/bulk/uploader
+    [HttpPost("bulk/uploader")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleUploader([FromBody] BulkUpdateArticleUploaderDto dto)
+    {
+        try
+        {
+            var result = await _articleService.BulkUpdateArticleUploaderAsync(dto, GetCurrentUserId());
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // POST: api/Articles/5/duplicate
     [HttpPost("{id}/duplicate")]
     [Authorize(Roles = "Admin")]

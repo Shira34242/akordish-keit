@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { SongService } from '../../../../services/song.service';
 import { SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
@@ -25,6 +26,8 @@ export class SongsListComponent implements OnInit {
   // State
   songs: SongDto[] = [];
   loading = false;
+  bulkActionLoading = false;
+  selectedSongIds = new Set<number>();
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
@@ -78,6 +81,7 @@ export class SongsListComponent implements OnInit {
         this.pageNumber = this.currentPage;
         this.hasPreviousPage = result.hasPreviousPage ?? (this.currentPage > 1);
         this.hasNextPage = result.hasNextPage ?? (this.currentPage < this.totalPages);
+        this.clearSelection();
         this.loading = false;
       },
       error: (error) => {
@@ -95,6 +99,49 @@ export class SongsListComponent implements OnInit {
   onSortChange(): void {
     this.currentPage = 1;
     this.loadSongs();
+  }
+
+  get selectedCount(): number {
+    return this.selectedSongIds.size;
+  }
+
+  get selectedSongIdsArray(): number[] {
+    return Array.from(this.selectedSongIds);
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedSongIds.size > 0;
+  }
+
+  get allCurrentPageSelected(): boolean {
+    return this.songs.length > 0 && this.songs.every(song => this.selectedSongIds.has(song.id));
+  }
+
+  isSelected(songId: number): boolean {
+    return this.selectedSongIds.has(songId);
+  }
+
+  toggleSongSelection(songId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.selectedSongIds.has(songId)) {
+      this.selectedSongIds.delete(songId);
+      return;
+    }
+
+    this.selectedSongIds.add(songId);
+  }
+
+  toggleSelectCurrentPage(): void {
+    if (this.allCurrentPageSelected) {
+      this.songs.forEach(song => this.selectedSongIds.delete(song.id));
+      return;
+    }
+
+    this.songs.forEach(song => this.selectedSongIds.add(song.id));
+  }
+
+  clearSelection(): void {
+    this.selectedSongIds.clear();
   }
 
   createNew(): void {
@@ -158,6 +205,67 @@ export class SongsListComponent implements OnInit {
         }
       });
     }
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedSongIdsArray;
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} שירים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.songService.deleteSong(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadSongs();
+      },
+      error: (error) => {
+        console.error('Error deleting selected songs:', error);
+        alert('שגיאה במחיקת השירים');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = this.selectedSongIdsArray;
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} שירים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.songService.duplicateSong(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadSongs();
+      },
+      error: (error) => {
+        console.error('Error duplicating selected songs:', error);
+        alert('שגיאה בשכפול השירים');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkSetApproval(isApproved: boolean): Promise<void> {
+    const ids = this.selectedSongIdsArray;
+    if (ids.length === 0) return;
+
+    const action = isApproved ? 'לאשר' : 'להעביר לממתין';
+    if (!await this.siteAlerts.confirm(`${action} ${ids.length} שירים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.songService.toggleApproval(id, isApproved))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadSongs();
+      },
+      error: (error) => {
+        console.error('Error updating selected songs:', error);
+        alert('שגיאה בעדכון השירים');
+        this.bulkActionLoading = false;
+      }
+    });
   }
 
   viewSong(id: number): void {

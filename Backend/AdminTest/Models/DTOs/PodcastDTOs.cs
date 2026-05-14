@@ -74,6 +74,17 @@ namespace AkordishKeit.Models.DTOs
     {
     }
 
+    public class SubmitPodcastDto
+    {
+        [Required]
+        [StringLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(1000)]
+        public string SourceUrl { get; set; } = string.Empty;
+    }
+
     public class CreatePodcastEpisodeDto
     {
         [Required]
@@ -111,5 +122,19 @@ namespace AkordishKeit.Models.DTOs
 
     public class UpdatePodcastEpisodeDto : CreatePodcastEpisodeDto
     {
+    }
+
+    public class SubmitPodcastEpisodeDto
+    {
+        [Required]
+        public int PodcastId { get; set; }
+
+        [Required]
+        [StringLength(250)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(1000)]
+        public string SourceUrl { get; set; } = string.Empty;
     }
 }

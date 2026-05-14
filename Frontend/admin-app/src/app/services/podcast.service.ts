@@ -10,6 +10,8 @@ import {
   PodcastDetail,
   PodcastEpisode,
   PodcastEpisodeDetail,
+  SubmitPodcastDto,
+  SubmitPodcastEpisodeDto,
   UpdatePodcastDto,
   UpdatePodcastEpisodeDto
 } from '../models/podcast.model';
@@ -44,6 +46,10 @@ export class PodcastService {
 
   createPodcast(dto: CreatePodcastDto): Observable<Podcast> {
     return this.http.post<Podcast>(this.apiUrl, dto);
+  }
+
+  submitPodcast(dto: SubmitPodcastDto): Observable<Podcast> {
+    return this.http.post<Podcast>(`${this.apiUrl}/submit`, dto);
   }
 
   updatePodcast(id: number, dto: UpdatePodcastDto): Observable<Podcast> {
@@ -99,6 +105,10 @@ export class PodcastService {
 
   createEpisode(dto: CreatePodcastEpisodeDto): Observable<PodcastEpisode> {
     return this.http.post<PodcastEpisode>(`${this.apiUrl}/episodes`, dto);
+  }
+
+  submitEpisode(dto: SubmitPodcastEpisodeDto): Observable<PodcastEpisode> {
+    return this.http.post<PodcastEpisode>(`${this.apiUrl}/episodes/submit`, dto);
   }
 
   updateEpisode(id: number, dto: UpdatePodcastEpisodeDto): Observable<PodcastEpisode> {

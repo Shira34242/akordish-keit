@@ -2,12 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ArticleService, UpdateArticleCategoriesDto } from '../../../../services/admin/article.service';
+import { ArticleService, UpdateArticleArtistsDto, UpdateArticleCategoriesDto } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
+import { ArtistService } from '../../../../services/artist.service';
+import { UserService } from '../../../../services/user.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../../models/article.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { FeaturedContentManagementComponent } from '../featured-content/featured-content-management.component';
+import { ArtistListDto } from '../../../../models/artist.model';
+import { UserWithProfileDto } from '../../../../models/user.model';
 
 
 @Component({
@@ -22,10 +26,13 @@ export class ArticlesListComponent implements OnInit {
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
   private readonly systemTablesService = inject(SystemTablesService);
+  private readonly artistService = inject(ArtistService);
+  private readonly userService = inject(UserService);
 
   // State
   articles: Article[] = [];
   categories: SystemItem[] = [];
+  artists: ArtistListDto[] = [];
   loading = false;
   publishingArticleIds = new Set<number>();
   selectedArticleIds = new Set<number>();
@@ -33,6 +40,18 @@ export class ArticlesListComponent implements OnInit {
   categoryModalArticle: Article | null = null;
   categoryModalMode: UpdateArticleCategoriesDto['mode'] = 'add';
   categoryModalCategoryIds: number[] = [];
+  artistModalOpen = false;
+  artistModalArticle: Article | null = null;
+  artistModalMode: UpdateArticleArtistsDto['mode'] = 'add';
+  artistModalArtistIds: number[] = [];
+  artistsExpanded = false;
+  uploaderModalOpen = false;
+  uploaderModalArticle: Article | null = null;
+  uploaderProfileSearchQuery = '';
+  uploaderProfileSearchResults: UserWithProfileDto[] = [];
+  uploaderProfileSearchLoading = false;
+  uploaderProfileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
+  selectedUploaderProfile: UserWithProfileDto | null = null;
   bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
@@ -57,6 +76,7 @@ export class ArticlesListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
+    this.loadArtists();
     this.loadArticles();
   }
 
@@ -64,6 +84,13 @@ export class ArticlesListComponent implements OnInit {
     this.systemTablesService.getItems('article-categories', 1, 100).subscribe({
       next: (result) => this.categories = result.items,
       error: (err) => console.error('Error loading categories', err)
+    });
+  }
+
+  loadArtists(): void {
+    this.artistService.getArtists(undefined, undefined, 1, 200, 'name').subscribe({
+      next: (result) => this.artists = result.items,
+      error: (err) => console.error('Error loading artists', err)
     });
   }
 
@@ -198,6 +225,188 @@ export class ArticlesListComponent implements OnInit {
     this.categoryModalArticle = null;
     this.categoryModalCategoryIds = [];
     this.categoryModalMode = 'add';
+  }
+
+  openArtistModal(article?: Article): void {
+    this.artistModalArticle = article ?? null;
+    this.artistModalMode = article ? 'replace' : 'add';
+    this.artistModalArtistIds = article?.taggedArtists?.map(artist => artist.artistId) ?? [];
+    this.artistsExpanded = false;
+    this.artistModalOpen = true;
+  }
+
+  closeArtistModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.artistModalOpen = false;
+    this.artistModalArticle = null;
+    this.artistModalArtistIds = [];
+    this.artistModalMode = 'add';
+    this.artistsExpanded = false;
+  }
+
+  isModalArtistSelected(artistId: number): boolean {
+    return this.artistModalArtistIds.includes(artistId);
+  }
+
+  toggleModalArtist(artistId: number): void {
+    if (this.isModalArtistSelected(artistId)) {
+      this.artistModalArtistIds = this.artistModalArtistIds.filter(id => id !== artistId);
+      return;
+    }
+
+    this.artistModalArtistIds = [...this.artistModalArtistIds, artistId];
+  }
+
+  get visibleModalArtists(): ArtistListDto[] {
+    return this.artistsExpanded ? this.artists : this.artists.slice(0, 24);
+  }
+
+  get hasMoreModalArtists(): boolean {
+    return this.artists.length > 24;
+  }
+
+  applyArtistModal(): void {
+    const articleIds = this.artistModalArticle ? [this.artistModalArticle.id] : this.selectedArticleIdsArray;
+    if (articleIds.length === 0 || this.artistModalArtistIds.length === 0) {
+      alert('בחר אמן אחד לפחות');
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    const payload: UpdateArticleArtistsDto = {
+      artistIds: this.artistModalArtistIds,
+      mode: this.artistModalMode
+    };
+
+    const onSuccess = () => {
+      alert('האומנים עודכנו בהצלחה');
+      this.bulkActionLoading = false;
+      this.closeArtistModal();
+      this.loadArticles();
+    };
+    const onError = (error: any) => {
+      console.error('Error updating article artists:', error);
+      alert(error?.error?.message || 'שגיאה בעדכון האומנים');
+      this.bulkActionLoading = false;
+    };
+
+    if (this.artistModalArticle) {
+      this.articleService.updateArticleArtists(this.artistModalArticle.id, payload).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
+
+    this.articleService.bulkUpdateArticleArtists({ ...payload, articleIds }).subscribe({
+      next: onSuccess,
+      error: onError
+    });
+  }
+
+  openUploaderModal(article?: Article): void {
+    this.uploaderModalArticle = article ?? null;
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.uploaderProfileSearchResults = [];
+    this.uploaderProfileTypeFilter = 'all';
+    this.uploaderModalOpen = true;
+    this.loadUploaderProfileResults();
+  }
+
+  closeUploaderModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.uploaderModalOpen = false;
+    this.uploaderModalArticle = null;
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.uploaderProfileSearchResults = [];
+    this.uploaderProfileSearchLoading = false;
+  }
+
+  loadUploaderProfileResults(): void {
+    this.uploaderProfileSearchLoading = true;
+    this.userService.searchUsersWithProfiles(
+      this.uploaderProfileSearchQuery,
+      60,
+      this.uploaderProfileTypeFilter
+    ).subscribe({
+      next: (results) => {
+        this.uploaderProfileSearchResults = [...results].sort((a, b) =>
+          a.displayName.localeCompare(b.displayName, 'he')
+        );
+        this.uploaderProfileSearchLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading uploader profiles:', error);
+        this.uploaderProfileSearchLoading = false;
+      }
+    });
+  }
+
+  selectUploaderProfile(profile: UserWithProfileDto): void {
+    this.selectedUploaderProfile = profile;
+    this.uploaderProfileSearchQuery = profile.displayName;
+  }
+
+  clearSelectedUploaderProfile(): void {
+    this.selectedUploaderProfile = null;
+    this.uploaderProfileSearchQuery = '';
+    this.loadUploaderProfileResults();
+  }
+
+  applyUploaderModal(): void {
+    const articleIds = this.uploaderModalArticle ? [this.uploaderModalArticle.id] : this.selectedArticleIdsArray;
+    if (articleIds.length === 0 || !this.selectedUploaderProfile) {
+      alert('בחר משתמש או פרופיל לשיוך');
+      return;
+    }
+
+    const profile = this.selectedUploaderProfile;
+    this.bulkActionLoading = true;
+
+    const payload = {
+      uploaderUserId: profile.userId ?? undefined,
+      uploaderProfileType: profile.profileType === 'user' ? undefined : profile.profileType,
+      uploaderProfileId: profile.profileType === 'user' ? undefined : profile.profileId
+    };
+
+    const onSuccess = () => {
+      alert('השיוך עודכן בהצלחה');
+      this.bulkActionLoading = false;
+      this.closeUploaderModal();
+      this.loadArticles();
+    };
+    const onError = (error: any) => {
+      console.error('Error updating article uploader:', error);
+      alert(error?.error?.message || 'שגיאה בעדכון השיוך');
+      this.bulkActionLoading = false;
+    };
+
+    if (this.uploaderModalArticle) {
+      this.articleService.updateArticleUploader(this.uploaderModalArticle.id, payload).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
+
+    this.articleService.bulkUpdateArticleUploader({ ...payload, articleIds }).subscribe({
+      next: onSuccess,
+      error: onError
+    });
+  }
+
+  getProfileTypeLabel(profile: UserWithProfileDto): string {
+    if (profile.profileType === 'artist') return 'אמן';
+    if (profile.profileType === 'user') return 'משתמש';
+    return profile.isTeacher ? 'מורה' : 'בעל מקצוע';
   }
 
   isModalCategorySelected(categoryId: number): boolean {

@@ -38,6 +38,29 @@
     </button>
   </div>
 
+  <!-- Bulk Actions -->
+  <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">נבחרו {{ selectedCount }} שירים</span>
+      <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
+    </div>
+
+    <div class="bulk-buttons">
+      <button class="filter-btn bulk-btn" (click)="bulkSetApproval(true)" [disabled]="bulkActionLoading">
+        <span class="material-icons">check_circle</span> אישור
+      </button>
+      <button class="filter-btn bulk-btn" (click)="bulkSetApproval(false)" [disabled]="bulkActionLoading">
+        <span class="material-icons">schedule</span> ממתין
+      </button>
+      <button class="filter-btn bulk-btn" (click)="bulkDuplicateSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">content_copy</span> שכפול
+      </button>
+      <button class="filter-btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">delete</span> מחיקה
+      </button>
+    </div>
+  </div>
+
   <!-- Controls Bar -->
   <div class="list-controls" *ngIf="!loading">
     <span class="results-info">{{ totalItems }} שירים</span>
@@ -53,7 +76,10 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && songs.length > 0 && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let song of songs">
+    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)">
+      <label class="grid-card-select" title="בחירת שיר">
+        <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)">
+      </label>
       <div class="grid-card-avatar">
         <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title">
         <span *ngIf="!song.imageUrl" class="material-icons" style="font-size:28px">music_note</span>
@@ -83,6 +109,9 @@
     <table *ngIf="!loading && songs.length > 0" class="songs-table">
       <thead>
         <tr>
+          <th class="selection-cell">
+            <input type="checkbox" [checked]="allCurrentPageSelected" (change)="toggleSelectCurrentPage()" title="בחר הכל בעמוד">
+          </th>
           <th>תמונה</th>
           <th>שם השיר</th>
           <th>אמנים</th>
@@ -95,7 +124,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let song of songs" class="song-row">
+        <tr *ngFor="let song of songs" class="song-row" [class.selected]="isSelected(song.id)">
+          <!-- Selection -->
+          <td class="selection-cell">
+            <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)" title="בחירת שיר">
+          </td>
+
           <!-- Image -->
           <td class="image-cell">
             <div class="image-preview" *ngIf="song.imageUrl">

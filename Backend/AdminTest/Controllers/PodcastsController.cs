@@ -87,6 +87,42 @@ namespace AkordishKeit.Controllers
             return CreatedAtAction(nameof(GetPodcast), new { id = podcast.Id }, podcast);
         }
 
+        [HttpPost("submit")]
+        [Authorize]
+        public async Task<ActionResult<PodcastDto>> SubmitPodcast([FromBody] SubmitPodcastDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.SourceUrl))
+            {
+                return BadRequest(new { message = "נדרש שם פודקאסט וקישור" });
+            }
+
+            try
+            {
+                var podcast = await _podcastService.CreatePodcastAsync(new CreatePodcastDto
+                {
+                    Name = dto.Name.Trim(),
+                    IsActive = false,
+                    DisplayOrder = 0
+                });
+
+                await _podcastService.CreateEpisodeAsync(new CreatePodcastEpisodeDto
+                {
+                    PodcastId = podcast.Id,
+                    Title = dto.Name.Trim(),
+                    SourceUrl = dto.SourceUrl.Trim(),
+                    IsActive = false,
+                    DisplayOrder = 0
+                });
+
+                return Ok(podcast);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PodcastDto>> UpdatePodcast(int id, [FromBody] UpdatePodcastDto dto)
@@ -134,6 +170,35 @@ namespace AkordishKeit.Controllers
             {
                 var episode = await _podcastService.CreateEpisodeAsync(dto);
                 return CreatedAtAction(nameof(GetEpisode), new { id = episode.Id }, episode);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("episodes/submit")]
+        [Authorize]
+        public async Task<ActionResult<PodcastEpisodeDto>> SubmitEpisode([FromBody] SubmitPodcastEpisodeDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.SourceUrl))
+            {
+                return BadRequest(new { message = "נדרש שם פרק וקישור" });
+            }
+
+            try
+            {
+                var episode = await _podcastService.CreateEpisodeAsync(new CreatePodcastEpisodeDto
+                {
+                    PodcastId = dto.PodcastId,
+                    Title = dto.Title.Trim(),
+                    SourceUrl = dto.SourceUrl.Trim(),
+                    IsActive = false,
+                    DisplayOrder = 0
+                });
+
+                return Ok(episode);
             }
             catch (InvalidOperationException ex)
             {

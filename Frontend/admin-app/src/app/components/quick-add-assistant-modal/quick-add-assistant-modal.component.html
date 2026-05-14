@@ -362,6 +362,51 @@
           </div>
         </div>
 
+        <div class="embedded-flow" *ngIf="currentMode === 'podcast-series'">
+          <div class="smart-form">
+            <label class="smart-label">{{ 'fab.podcast_name' | translate }}</label>
+            <input class="smart-input" [(ngModel)]="podcastSeries.name" [placeholder]="'fab.podcast_name' | translate">
+
+            <label class="smart-label">{{ 'fab.podcast_link' | translate }}</label>
+            <input class="smart-input" type="url" [(ngModel)]="podcastSeries.sourceUrl" placeholder="https://...">
+
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
+              <button type="button" class="smart-submit" (click)="submitPodcastSeries()" [disabled]="isSubmitting">
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_approval' | translate) }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="embedded-flow" *ngIf="currentMode === 'podcast-episode'">
+          <div class="smart-form">
+            <label class="smart-label">{{ 'fab.podcast_series' | translate }}</label>
+            <select class="smart-input smart-select" [(ngModel)]="podcastEpisode.podcastId" [disabled]="isLoadingPodcasts || podcasts.length === 0">
+              <option [ngValue]="0" disabled>{{ isLoadingPodcasts ? ('fab.loading_podcasts' | translate) : ('fab.choose_podcast_series' | translate) }}</option>
+              <option *ngFor="let podcast of podcasts" [ngValue]="podcast.id">{{ podcast.name }}</option>
+            </select>
+
+            <label class="smart-label">{{ 'fab.podcast_episode_title' | translate }}</label>
+            <input class="smart-input" [(ngModel)]="podcastEpisode.title" [placeholder]="'fab.podcast_episode_title' | translate">
+
+            <label class="smart-label">{{ 'fab.podcast_episode_link' | translate }}</label>
+            <input class="smart-input" type="url" [(ngModel)]="podcastEpisode.sourceUrl" placeholder="https://...">
+
+            <div class="form-error" *ngIf="podcasts.length === 0 && !isLoadingPodcasts">{{ 'fab.no_podcast_series' | translate }}</div>
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
+              <button type="button" class="smart-submit" (click)="submitPodcastEpisode()" [disabled]="isSubmitting || isLoadingPodcasts || podcasts.length === 0">
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_approval' | translate) }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="embedded-flow" *ngIf="currentMode === 'chord-request'">
           <div class="smart-form">
             <label class="smart-label">{{ 'fab.chord_song_name' | translate }}</label>

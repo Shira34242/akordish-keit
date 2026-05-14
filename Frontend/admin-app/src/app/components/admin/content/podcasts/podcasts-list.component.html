@@ -29,6 +29,27 @@
     </div>
   </div>
 
+  <div class="bulk-actions-bar" *ngIf="hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">
+        נבחרו {{ selectedCount }} {{ activeTab === 'episodes' ? 'פרקים' : 'סדרות' }}
+      </span>
+      <button class="bulk-clear" type="button" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
+    </div>
+
+    <div class="bulk-buttons" *ngIf="activeTab === 'episodes'">
+      <button class="btn-secondary bulk-btn" type="button" (click)="bulkSetEpisodeStatus(true)" [disabled]="bulkActionLoading">הצגה באתר</button>
+      <button class="btn-secondary bulk-btn" type="button" (click)="bulkSetEpisodeStatus(false)" [disabled]="bulkActionLoading">טיוטה</button>
+      <button class="btn-secondary bulk-btn danger" type="button" (click)="bulkDeleteEpisodes()" [disabled]="bulkActionLoading">מחיקה</button>
+    </div>
+
+    <div class="bulk-buttons" *ngIf="activeTab === 'podcasts'">
+      <button class="btn-secondary bulk-btn" type="button" (click)="bulkSetPodcastStatus(true)" [disabled]="bulkActionLoading">הצגה באתר</button>
+      <button class="btn-secondary bulk-btn" type="button" (click)="bulkSetPodcastStatus(false)" [disabled]="bulkActionLoading">טיוטה</button>
+      <button class="btn-secondary bulk-btn danger" type="button" (click)="bulkDeletePodcasts()" [disabled]="bulkActionLoading">מחיקה</button>
+    </div>
+  </div>
+
   <div *ngIf="activeTab === 'episodes'">
     <div *ngIf="loading" class="state-box">טוען פרקים...</div>
     <div *ngIf="!loading && episodes.length === 0" class="state-box">לא נמצאו פרקים</div>
@@ -37,6 +58,9 @@
       <table>
         <thead>
           <tr>
+            <th class="selection-cell">
+              <input type="checkbox" [checked]="allCurrentEpisodesSelected" (change)="toggleSelectCurrentEpisodes()" title="בחר הכל בעמוד">
+            </th>
             <th>תמונה</th>
             <th>פרק</th>
             <th>סדרה</th>
@@ -46,7 +70,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let episode of episodes">
+          <tr *ngFor="let episode of episodes" [class.selected]="isEpisodeSelected(episode.id)">
+            <td class="selection-cell">
+              <input type="checkbox" [checked]="isEpisodeSelected(episode.id)" (change)="toggleEpisodeSelection(episode.id, $event)" title="בחירת פרק">
+            </td>
             <td>
               <span class="thumb" [style.background-image]="episode.thumbnailUrl ? 'url(' + episode.thumbnailUrl + ')' : ''">
                 <span *ngIf="!episode.thumbnailUrl" class="material-icons">play_circle</span>
@@ -92,7 +119,10 @@
   </div>
 
   <div *ngIf="activeTab === 'podcasts'" class="series-grid">
-    <div class="series-card" *ngFor="let podcast of podcasts">
+    <div class="series-card" *ngFor="let podcast of podcasts" [class.selected]="isPodcastSelected(podcast.id)">
+      <label class="series-select" title="בחירת סדרה">
+        <input type="checkbox" [checked]="isPodcastSelected(podcast.id)" (change)="togglePodcastSelection(podcast.id, $event)">
+      </label>
       <span class="series-image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
         <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
       </span>

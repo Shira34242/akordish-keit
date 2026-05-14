@@ -36,6 +36,14 @@ public interface IArticleService
 
     Task<BulkArticleActionResultDto> BulkUpdateArticleStatusAsync(BulkUpdateArticleStatusDto dto);
 
+    Task<ArticleDto> UpdateArticleArtistsAsync(int id, UpdateArticleArtistsDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleArtistsAsync(BulkUpdateArticleArtistsDto dto);
+
+    Task<ArticleDto> UpdateArticleUploaderAsync(int id, UpdateArticleUploaderDto dto, int? callerUserId = null);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleUploaderAsync(BulkUpdateArticleUploaderDto dto, int? callerUserId = null);
+
     Task<BulkArticleActionResultDto> BulkDuplicateArticlesAsync(BulkArticleIdsDto dto);
 
     Task<BulkArticleActionResultDto> BulkDeleteArticlesAsync(BulkArticleIdsDto dto);

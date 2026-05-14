@@ -51,6 +51,25 @@ export interface BulkUpdateArticleStatusDto extends BulkArticleIdsDto {
   status: ArticleStatus;
 }
 
+export interface UpdateArticleArtistsDto {
+  artistIds: number[];
+  mode: 'add' | 'replace' | 'remove';
+}
+
+export interface BulkUpdateArticleArtistsDto extends UpdateArticleArtistsDto {
+  articleIds: number[];
+}
+
+export interface UpdateArticleUploaderDto {
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
+}
+
+export interface BulkUpdateArticleUploaderDto extends UpdateArticleUploaderDto {
+  articleIds: number[];
+}
+
 export interface BulkArticleActionResultDto {
   requestedCount: number;
   affectedCount: number;
@@ -197,6 +216,34 @@ export class ArticleService {
    */
   bulkUpdateArticleStatus(dto: BulkUpdateArticleStatusDto): Observable<BulkArticleActionResultDto> {
     return this.http.patch<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/status`, dto);
+  }
+
+  /**
+   * Update tagged artists without opening the full edit form
+   */
+  updateArticleArtists(id: number, dto: UpdateArticleArtistsDto): Observable<Article> {
+    return this.http.patch<Article>(`${this.apiUrl}/${id}/artists`, dto);
+  }
+
+  /**
+   * Bulk update tagged artists
+   */
+  bulkUpdateArticleArtists(dto: BulkUpdateArticleArtistsDto): Observable<BulkArticleActionResultDto> {
+    return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/artists`, dto);
+  }
+
+  /**
+   * Update uploader profile without opening the full edit form
+   */
+  updateArticleUploader(id: number, dto: UpdateArticleUploaderDto): Observable<Article> {
+    return this.http.patch<Article>(`${this.apiUrl}/${id}/uploader`, dto);
+  }
+
+  /**
+   * Bulk update uploader profile
+   */
+  bulkUpdateArticleUploader(dto: BulkUpdateArticleUploaderDto): Observable<BulkArticleActionResultDto> {
+    return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk/uploader`, dto);
   }
 
   /**

@@ -7,6 +7,7 @@ import { AddSongModalComponent } from '../add-song-modal/add-song-modal.componen
 import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
 import { MediaService } from '../../services/admin/media.service';
+import { PodcastService } from '../../services/podcast.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistService } from '../../services/artist.service';
@@ -16,6 +17,7 @@ import { CreateArticleDto, ArticleContentType, ArticleStatus } from '../../model
 import { CreateEventDto } from '../../models/event.model';
 import { UserWithProfileDto } from '../../models/user.model';
 import { ArtistListDto } from '../../models/artist.model';
+import { Podcast } from '../../models/podcast.model';
 import { ChordRequestMatch } from '../../models/report.model';
 import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -32,14 +34,14 @@ export type QuickAddAction =
   | 'chord-requests'
   | 'admin-edit';
 
-type AssistantStep = 'root' | 'content' | 'index' | 'artist';
-type AssistantMode = 'choices' | 'song' | 'article' | 'event' | 'chord-request' | 'contact' | 'success';
+type AssistantStep = 'root' | 'content' | 'index' | 'artist' | 'podcast';
+type AssistantMode = 'choices' | 'song' | 'article' | 'event' | 'podcast-series' | 'podcast-episode' | 'chord-request' | 'contact' | 'success';
 type MessageTone = 'question' | 'helper' | 'user';
 
 interface AssistantOption {
   id: string;
   label: string;
-  action?: QuickAddAction | 'song' | 'content-news' | 'content-article' | `content-category:${number}` | 'event' | 'chord-request' | 'contact-form';
+  action?: QuickAddAction | 'song' | 'content-news' | 'content-article' | `content-category:${number}` | 'event' | 'podcast-series' | 'podcast-episode' | 'chord-request' | 'contact-form';
   nextStep?: AssistantStep;
   isSecondary?: boolean;
 }
@@ -67,6 +69,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
   private readonly articleService = inject(ArticleService);
   private readonly eventService = inject(EventService);
   private readonly mediaService = inject(MediaService);
+  private readonly podcastService = inject(PodcastService);
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly artistService = inject(ArtistService);
@@ -110,6 +113,10 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
   article: CreateArticleDto = this.createEmptyArticle(ArticleContentType.News);
   event: CreateEventDto = this.createEmptyEvent();
+  podcastSeries = { name: '', sourceUrl: '' };
+  podcastEpisode = { podcastId: 0, title: '', sourceUrl: '' };
+  podcasts: Podcast[] = [];
+  isLoadingPodcasts = false;
   chordRequest = { songName: '', artistName: '' };
   chordRequestMatch: ChordRequestMatch | null = null;
   chordRequestChecked = false;
@@ -144,6 +151,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.loadEventArtists();
     this.loadProfessionalCategories();
     this.loadArticleCategories();
+    this.loadPodcasts();
   }
 
   ngOnInit(): void {
@@ -323,6 +331,19 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         await this.typeMessage(this.langService.translate('quick_add.event_form_text'), 'question');
         this.currentMode = 'event';
         break;
+      case 'podcast-series':
+        this.modeOriginStep = this.currentStep;
+        this.podcastSeries = { name: '', sourceUrl: '' };
+        await this.typeMessage(this.langService.translate('quick_add.podcast_series_form_text'), 'question');
+        this.currentMode = 'podcast-series';
+        break;
+      case 'podcast-episode':
+        this.modeOriginStep = this.currentStep;
+        this.podcastEpisode = { podcastId: this.podcasts[0]?.id ?? 0, title: '', sourceUrl: '' };
+        this.loadPodcasts();
+        await this.typeMessage(this.langService.translate('quick_add.podcast_episode_form_text'), 'question');
+        this.currentMode = 'podcast-episode';
+        break;
       case 'index-teacher':
       case 'index-service-provider':
       case 'index-service-provider-general':
@@ -449,6 +470,90 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         if (this.destroyed) return;
         this.isSubmitting = false;
         this.pushError(this.langService.translate('quick_add.error_submit_event'));
+      }
+    });
+  }
+
+  submitPodcastSeries(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    const name = this.podcastSeries.name.trim();
+    const sourceUrl = this.podcastSeries.sourceUrl.trim();
+
+    if (!name) {
+      this.pushError(this.langService.translate('quick_add.enter_podcast_name'));
+      return;
+    }
+
+    if (!sourceUrl) {
+      this.pushError(this.langService.translate('quick_add.enter_podcast_link'));
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.podcastService.submitPodcast({ name, sourceUrl }).subscribe({
+      next: () => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        this.loadPodcasts();
+        const msg = this.langService.translate('fab.success_podcast');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
+        this.currentMode = 'success';
+        this.animateSuccessMessage(msg);
+      },
+      error: () => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        this.pushError(this.langService.translate('quick_add.error_submit_podcast'));
+      }
+    });
+  }
+
+  submitPodcastEpisode(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    const title = this.podcastEpisode.title.trim();
+    const sourceUrl = this.podcastEpisode.sourceUrl.trim();
+
+    if (!this.podcastEpisode.podcastId) {
+      this.pushError(this.langService.translate('quick_add.select_podcast_series'));
+      return;
+    }
+
+    if (!title) {
+      this.pushError(this.langService.translate('quick_add.enter_podcast_episode_title'));
+      return;
+    }
+
+    if (!sourceUrl) {
+      this.pushError(this.langService.translate('quick_add.enter_podcast_episode_link'));
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.podcastService.submitEpisode({
+      podcastId: this.podcastEpisode.podcastId,
+      title,
+      sourceUrl
+    }).subscribe({
+      next: () => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        const msg = this.langService.translate('fab.success_podcast_episode');
+        this.submittedMessage = msg;
+        this.successTypedMessage = '';
+        this.currentMode = 'success';
+        this.animateSuccessMessage(msg);
+      },
+      error: () => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        this.pushError(this.langService.translate('quick_add.error_submit_podcast_episode'));
       }
     });
   }
@@ -768,6 +873,25 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     });
   }
 
+  private loadPodcasts(): void {
+    this.isLoadingPodcasts = true;
+    this.podcastService.getPublicPodcasts().pipe(
+      catchError(() => of([] as Podcast[]))
+    ).subscribe({
+      next: (podcasts) => {
+        this.podcasts = podcasts ?? [];
+        if (!this.podcastEpisode.podcastId && this.podcasts.length > 0) {
+          this.podcastEpisode.podcastId = this.podcasts[0].id;
+        }
+        this.isLoadingPodcasts = false;
+      },
+      error: () => {
+        this.podcasts = [];
+        this.isLoadingPodcasts = false;
+      }
+    });
+  }
+
   trackByMessage(_: number, message: AssistantMessage): string {
     return message.id;
   }
@@ -811,6 +935,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.messages = [];
     this.article = this.createEmptyArticle(ArticleContentType.News);
     this.event = this.createEmptyEvent();
+    this.podcastSeries = { name: '', sourceUrl: '' };
+    this.podcastEpisode = { podcastId: this.podcasts[0]?.id ?? 0, title: '', sourceUrl: '' };
     this.chordRequest = { songName: '', artistName: '' };
     this.chordRequestMatch = null;
     this.chordRequestChecked = false;
@@ -1042,6 +1168,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
             { id: 'artist-community', label: t('fab.opt_artist_community'), action: 'artist-community' }
           ]
         };
+      case 'podcast':
+        return {
+          question: t('fab.podcast_question'),
+          options: [
+            { id: 'podcast-series', label: t('fab.opt_podcast_series'), action: 'podcast-series' },
+            { id: 'podcast-episode', label: t('fab.opt_podcast_episode'), action: 'podcast-episode' }
+          ]
+        };
       default: {
         const options: AssistantOption[] = [];
 
@@ -1057,6 +1191,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
           { id: 'song', label: t('fab.opt_chords'), action: 'song' },
           { id: 'content', label: t('fab.opt_content'), nextStep: 'content' },
           { id: 'event', label: t('fab.opt_event'), action: 'event' },
+          { id: 'podcast', label: t('fab.opt_podcast'), nextStep: 'podcast' },
           { id: 'index', label: t('fab.opt_index'), nextStep: 'index' },
           { id: 'artist', label: t('fab.opt_artist'), nextStep: 'artist' },
           { id: 'chord-request', label: t('fab.opt_chord_request'), action: 'chord-request', isSecondary: true },

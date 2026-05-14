@@ -30,6 +30,25 @@
     </button>
   </div>
 
+  <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">נבחרו {{ selectedCount }} הופעות</span>
+      <button class="bulk-clear" type="button" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
+    </div>
+
+    <div class="bulk-buttons">
+      <button class="btn btn-light bulk-btn" type="button" (click)="bulkSetStatus(true)" [disabled]="bulkActionLoading">
+        <span class="material-icons">check_circle</span> אישור
+      </button>
+      <button class="btn btn-light bulk-btn" type="button" (click)="bulkSetStatus(false)" [disabled]="bulkActionLoading">
+        <span class="material-icons">drafts</span> טיוטה
+      </button>
+      <button class="btn btn-light bulk-btn btn-danger" type="button" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">delete</span> מחיקה
+      </button>
+    </div>
+  </div>
+
   <div class="list-controls" *ngIf="!loading">
     <span class="results-info">{{ totalItems }} הופעות</span>
     <div class="view-controls">
@@ -48,7 +67,10 @@
   </div>
 
   <div class="data-grid" *ngIf="!loading && events.length > 0 && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let event of events">
+    <div class="grid-card" *ngFor="let event of events" [class.selected]="isSelected(event.id)">
+      <label class="grid-card-select" title="בחירת הופעה">
+        <input type="checkbox" [checked]="isSelected(event.id)" (change)="toggleEventSelection(event.id, $event)">
+      </label>
       <button class="grid-card-preview" type="button" (click)="previewEvent(event)" title="תצוגת הופעה">
         <div class="grid-card-avatar" [style.background-image]="event.imageUrl ? 'url(' + event.imageUrl + ')' : ''">
           <span *ngIf="!event.imageUrl" class="material-icons">event</span>
@@ -79,6 +101,9 @@
     <table class="events-table">
       <thead>
         <tr>
+          <th class="selection-cell">
+            <input type="checkbox" [checked]="allCurrentPageSelected" (change)="toggleSelectCurrentPage()" title="בחר הכל בעמוד">
+          </th>
           <th>תמונה</th>
           <th>כותרת</th>
           <th>אמן</th>
@@ -89,7 +114,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let event of events" [class.inactive]="!event.isActive">
+        <tr *ngFor="let event of events" [class.inactive]="!event.isActive" [class.selected]="isSelected(event.id)">
+          <td class="selection-cell">
+            <input type="checkbox" [checked]="isSelected(event.id)" (change)="toggleEventSelection(event.id, $event)" title="בחירת הופעה">
+          </td>
+
           <td>
             <button class="event-thumbnail-button" type="button" (click)="previewEvent(event)" title="תצוגת הופעה">
               <span class="event-thumbnail" [style.background-image]="event.imageUrl ? 'url(' + event.imageUrl + ')' : ''">
