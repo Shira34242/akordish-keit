@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    apiBaseUrl: 'https://REPLACE_WITH_PRODUCTION_DOMAIN'
+    apiBaseUrl: 'https://api.akordishkayt.com'
 };
