@@ -268,11 +268,15 @@
                [style.--agency-text]="agency.brandTextColor || '#000000'">
             <div class="agency-header-left">
               <img [src]="agency.logoUrl || '/logo.png'" [alt]="agency.name" class="agency-header-logo" imgFallback="/logo.png">
-              <span class="section-tag section-tag--accent">{{ agency.name }}</span>
+              <div class="agency-header-info">
+                <span class="agency-header-name">{{ agency.name }}</span>
+                <span class="agency-header-desc" *ngIf="agency.shortDescription">{{ agency.shortDescription }}</span>
+              </div>
             </div>
-            <button class="btn-show-all agency-show-all"
-                    (click)="viewAgency(agency.slug)">
-              הצג סוכנות ›
+            <button class="agency-arrow-btn"
+                    (click)="viewAgency(agency.slug)"
+                    [attr.aria-label]="agency.name">
+              <span class="material-icons">arrow_back</span>
             </button>
           </div>
 

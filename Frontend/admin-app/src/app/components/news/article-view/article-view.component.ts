@@ -142,7 +142,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   loadArticle(slug: string): void {
     this.loading = true;
-    this.articleService.getArticleBySlug(slug)
+    this.articleService.getArticleBySlug(slug, ArticleContentType.News)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (article) => {

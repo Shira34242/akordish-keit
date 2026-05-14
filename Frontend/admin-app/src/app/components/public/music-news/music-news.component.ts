@@ -6,7 +6,7 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
 import { FeaturedContent } from '../../../models/featured-content.model';
-import { Article, ArticleContentType } from '../../../models/article.model';
+import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
@@ -92,7 +92,8 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
         this.pageSize,
         undefined,
         undefined,
-        ArticleContentType.News
+        ArticleContentType.News,
+        ArticleStatus.Published
       )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({

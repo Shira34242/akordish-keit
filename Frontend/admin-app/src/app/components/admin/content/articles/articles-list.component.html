@@ -71,6 +71,38 @@
     </button>
   </div>
 
+  <!-- Bulk Actions -->
+  <div class="bulk-actions-bar" *ngIf="!loading && activeTab !== 'featured' && hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">נבחרו {{ selectedCount }} כתבות</span>
+      <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
+    </div>
+
+    <div class="bulk-buttons">
+      <button class="filter-btn bulk-btn" (click)="openCategoryModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">sell</span> שיוך קטגוריות
+      </button>
+      <button class="filter-btn bulk-btn" (click)="openArtistModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">groups</span> תיוג אומנים
+      </button>
+      <button class="filter-btn bulk-btn" (click)="openUploaderModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">person_add</span> שיוך משתמש
+      </button>
+      <button class="filter-btn bulk-btn" (click)="bulkStatusSelected(ArticleStatus.Published)" [disabled]="bulkActionLoading">
+        <span class="material-icons">publish</span> פרסום
+      </button>
+      <button class="filter-btn bulk-btn" (click)="bulkStatusSelected(ArticleStatus.Archived)" [disabled]="bulkActionLoading">
+        <span class="material-icons">archive</span> ארכיון
+      </button>
+      <button class="filter-btn bulk-btn" (click)="bulkDuplicateSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">content_copy</span> שכפול
+      </button>
+      <button class="filter-btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">delete</span> מחיקה
+      </button>
+    </div>
+  </div>
+
   <!-- Controls Bar -->
   <div class="list-controls" *ngIf="!loading && activeTab !== 'featured'">
     <span class="results-info">{{ totalItems }} פריטים</span>
@@ -86,7 +118,10 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && articles.length > 0 && activeTab !== 'featured' && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let article of articles">
+    <div class="grid-card" *ngFor="let article of articles" [class.selected]="isSelected(article.id)">
+      <label class="grid-card-select" title="בחירת כתבה">
+        <input type="checkbox" [checked]="isSelected(article.id)" (change)="toggleArticleSelection(article.id, $event)">
+      </label>
       <div class="grid-card-avatar">
         <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" [alt]="article.title">
         <span *ngIf="!article.featuredImageUrl" class="material-icons" style="font-size:28px">article</span>
@@ -98,7 +133,11 @@
       </div>
       <div class="grid-card-actions">
         <button class="btn-action" (click)="viewArticle(article)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="openCategoryModal(article)" title="שיוך קטגוריות"><span class="material-icons">sell</span></button>
+        <button class="btn-action" (click)="openArtistModal(article)" title="תיוג אומנים"><span class="material-icons">groups</span></button>
+        <button class="btn-action" (click)="openUploaderModal(article)" title="שיוך משתמש"><span class="material-icons">person_add</span></button>
         <button class="btn-action" (click)="editArticle(article.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action" (click)="duplicateArticle(article)" title="שכפל"><span class="material-icons">content_copy</span></button>
         <button class="btn-action btn-delete" (click)="deleteArticle(article)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
     </div>
@@ -114,6 +153,9 @@
     <table *ngIf="!loading && articles.length > 0" class="articles-table">
       <thead>
         <tr>
+          <th class="selection-cell">
+            <input type="checkbox" [checked]="allCurrentPageSelected" (change)="toggleSelectCurrentPage()" title="בחר הכל בעמוד">
+          </th>
           <th>תמונה</th>
           <th>כותרת</th>
           <th>קטגוריה</th>
@@ -125,7 +167,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let article of articles" class="article-row">
+        <tr *ngFor="let article of articles" class="article-row" [class.selected]="isSelected(article.id)">
+          <!-- Selection -->
+          <td class="selection-cell">
+            <input type="checkbox" [checked]="isSelected(article.id)" (change)="toggleArticleSelection(article.id, $event)" title="בחירת כתבה">
+          </td>
+
           <!-- Image -->
           <td class="image-cell">
             <div class="image-preview" *ngIf="article.featuredImageUrl">
@@ -203,6 +250,15 @@
             <button class="btn-action btn-view" (click)="viewArticle(article)" title="צפייה">
               <span class="material-icons">visibility</span>
             </button>
+            <button class="btn-action btn-category" (click)="openCategoryModal(article)" title="שיוך קטגוריות">
+              <span class="material-icons">sell</span>
+            </button>
+            <button class="btn-action" (click)="openArtistModal(article)" title="תיוג אומנים">
+              <span class="material-icons">groups</span>
+            </button>
+            <button class="btn-action" (click)="openUploaderModal(article)" title="שיוך משתמש">
+              <span class="material-icons">person_add</span>
+            </button>
             <button class="btn-action btn-edit" (click)="editArticle(article.id)" title="עריכה">
               <span class="material-icons">edit</span>
             </button>
@@ -246,6 +302,167 @@
 
     <div class="pagination-info">
       {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalItems) }} מתוך {{ totalItems }}
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="category-modal-backdrop" *ngIf="categoryModalOpen" (click)="closeCategoryModal()">
+    <div class="category-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ categoryModalArticle ? 'שיוך קטגוריות' : 'שיוך קטגוריות מרוכז' }}</h2>
+          <p>
+            {{ categoryModalArticle ? categoryModalArticle.title : selectedCount + ' כתבות נבחרו' }}
+          </p>
+        </div>
+        <button class="btn-action" (click)="closeCategoryModal()" [disabled]="bulkActionLoading" title="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="mode-toggle">
+        <button [class.active]="categoryModalMode === 'add'" (click)="categoryModalMode = 'add'">הוספה</button>
+        <button [class.active]="categoryModalMode === 'replace'" (click)="categoryModalMode = 'replace'">החלפה</button>
+        <button [class.active]="categoryModalMode === 'remove'" (click)="categoryModalMode = 'remove'">הסרה</button>
+      </div>
+
+      <div class="category-options">
+        <button
+          *ngFor="let cat of categories"
+          class="category-option"
+          [class.selected]="isModalCategorySelected(cat.id)"
+          (click)="toggleModalCategory(cat.id)">
+          <span class="material-icons">{{ isModalCategorySelected(cat.id) ? 'check_circle' : 'radio_button_unchecked' }}</span>
+          {{ cat.name }}
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="filter-btn" (click)="closeCategoryModal()" [disabled]="bulkActionLoading">ביטול</button>
+        <button class="btn-new" (click)="applyCategoryModal()" [disabled]="bulkActionLoading">
+          <span class="material-icons">{{ bulkActionLoading ? 'hourglass_empty' : 'check' }}</span>
+          שמירה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artists Modal -->
+  <div class="category-modal-backdrop" *ngIf="artistModalOpen" (click)="closeArtistModal()">
+    <div class="category-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ artistModalArticle ? 'תיוג אומנים' : 'תיוג אומנים מרוכז' }}</h2>
+          <p>
+            {{ artistModalArticle ? artistModalArticle.title : selectedCount + ' כתבות נבחרו' }}
+          </p>
+        </div>
+        <button class="btn-action" (click)="closeArtistModal()" [disabled]="bulkActionLoading" title="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="mode-toggle">
+        <button [class.active]="artistModalMode === 'add'" (click)="artistModalMode = 'add'">הוספה</button>
+        <button [class.active]="artistModalMode === 'replace'" (click)="artistModalMode = 'replace'">החלפה</button>
+        <button [class.active]="artistModalMode === 'remove'" (click)="artistModalMode = 'remove'">הסרה</button>
+      </div>
+
+      <div class="category-options">
+        <button
+          *ngFor="let artist of visibleModalArtists"
+          class="category-option"
+          [class.selected]="isModalArtistSelected(artist.id)"
+          (click)="toggleModalArtist(artist.id)">
+          <span class="material-icons">{{ isModalArtistSelected(artist.id) ? 'check_circle' : 'radio_button_unchecked' }}</span>
+          {{ artist.name }}
+        </button>
+      </div>
+
+      <button *ngIf="hasMoreModalArtists" class="filter-btn modal-more-btn" (click)="artistsExpanded = !artistsExpanded">
+        {{ artistsExpanded ? 'הצג פחות' : 'הצג עוד אומנים' }}
+      </button>
+
+      <div class="modal-actions">
+        <button class="filter-btn" (click)="closeArtistModal()" [disabled]="bulkActionLoading">ביטול</button>
+        <button class="btn-new" (click)="applyArtistModal()" [disabled]="bulkActionLoading">
+          <span class="material-icons">{{ bulkActionLoading ? 'hourglass_empty' : 'check' }}</span>
+          שמירה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Uploader Modal -->
+  <div class="category-modal-backdrop" *ngIf="uploaderModalOpen" (click)="closeUploaderModal()">
+    <div class="category-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ uploaderModalArticle ? 'שיוך משתמש' : 'שיוך משתמש מרוכז' }}</h2>
+          <p>
+            {{ uploaderModalArticle ? uploaderModalArticle.title : selectedCount + ' כתבות נבחרו' }}
+          </p>
+        </div>
+        <button class="btn-action" (click)="closeUploaderModal()" [disabled]="bulkActionLoading" title="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="uploader-controls">
+        <select
+          class="filter-select"
+          [(ngModel)]="uploaderProfileTypeFilter"
+          (change)="loadUploaderProfileResults()">
+          <option value="all">כל המשתמשים והפרופילים</option>
+          <option value="artist">אומנים</option>
+          <option value="teacher">מורים</option>
+          <option value="serviceProvider">בעלי מקצוע</option>
+          <option value="user">משתמשים רגילים</option>
+        </select>
+
+        <input
+          type="text"
+          class="search-input"
+          placeholder="חיפוש לפי שם..."
+          [(ngModel)]="uploaderProfileSearchQuery"
+          (input)="loadUploaderProfileResults()">
+      </div>
+
+      <div class="selected-profile" *ngIf="selectedUploaderProfile">
+        <span class="profile-avatar" *ngIf="!selectedUploaderProfile.imageUrl">{{ selectedUploaderProfile.displayName.charAt(0) }}</span>
+        <img class="profile-avatar" *ngIf="selectedUploaderProfile.imageUrl" [src]="selectedUploaderProfile.imageUrl" [alt]="selectedUploaderProfile.displayName">
+        <div>
+          <strong>{{ selectedUploaderProfile.displayName }}</strong>
+          <span>{{ getProfileTypeLabel(selectedUploaderProfile) }}</span>
+        </div>
+        <button class="btn-action" (click)="clearSelectedUploaderProfile()" title="נקה בחירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="profile-results">
+        <div class="profile-loading" *ngIf="uploaderProfileSearchLoading">טוען...</div>
+        <button
+          *ngFor="let profile of uploaderProfileSearchResults"
+          class="profile-result"
+          [class.selected]="selectedUploaderProfile === profile"
+          (click)="selectUploaderProfile(profile)">
+          <span class="profile-avatar" *ngIf="!profile.imageUrl">{{ profile.displayName.charAt(0) }}</span>
+          <img class="profile-avatar" *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName">
+          <span class="profile-result-text">
+            <strong>{{ profile.displayName }}</strong>
+            <small>{{ getProfileTypeLabel(profile) }}</small>
+          </span>
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="filter-btn" (click)="closeUploaderModal()" [disabled]="bulkActionLoading">ביטול</button>
+        <button class="btn-new" (click)="applyUploaderModal()" [disabled]="bulkActionLoading">
+          <span class="material-icons">{{ bulkActionLoading ? 'hourglass_empty' : 'check' }}</span>
+          שמירה
+        </button>
+      </div>
     </div>
   </div>
 </div>

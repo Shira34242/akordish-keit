@@ -70,3 +70,14 @@ export interface CreatePodcastEpisodeDto {
 }
 
 export interface UpdatePodcastEpisodeDto extends CreatePodcastEpisodeDto {}
+
+export interface SubmitPodcastDto {
+  name: string;
+  sourceUrl: string;
+}
+
+export interface SubmitPodcastEpisodeDto {
+  podcastId: number;
+  title: string;
+  sourceUrl: string;
+}

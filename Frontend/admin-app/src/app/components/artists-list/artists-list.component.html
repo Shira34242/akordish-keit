@@ -9,11 +9,26 @@
 
   <section class="hero-content-area">
     <div class="hero-content">
-      <span class="section-label">{{ 'artists.label' | translate }}</span>
-      <h1 class="page-title">{{ 'artists.title' | translate }}</h1>
-      <p class="page-subtitle">{{ totalCount }} {{ 'artists.site_count' | translate }}</p>
+      <h1 class="page-title">אמנים</h1>
 
       <div class="search-row">
+        <div class="filter-btn-wrap filter-btn-category"
+             [class.filter-active]="sortBy !== 'name'"
+             (click)="toggleSortDropdown(); $event.stopPropagation()">
+          <span class="filter-btn-label">{{ getSortLabel() }}</span>
+          <svg class="filter-btn-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+          <div class="filter-dropdown" *ngIf="showSortDropdown" (click)="$event.stopPropagation()">
+            <button class="filter-option" [class.active]="sortBy === 'name'"
+                    (click)="setSortBy('name'); showSortDropdown = false">{{ 'artists.sort_az' | translate }}</button>
+            <button class="filter-option" [class.active]="sortBy === 'songcount'"
+                    (click)="setSortBy('songcount'); showSortDropdown = false">{{ 'artists.sort_popular' | translate }}</button>
+            <button class="filter-option" [class.active]="sortBy === 'created'"
+                    (click)="setSortBy('created'); showSortDropdown = false">{{ 'artists.sort_new' | translate }}</button>
+          </div>
+        </div>
+
         <div class="search-wrapper">
           <span class="material-icons search-icon">search</span>
           <input
@@ -24,14 +39,36 @@
             (ngModelChange)="onSearchTermChange($event)">
         </div>
       </div>
-
-      <div class="sort-pills">
-        <button class="sort-pill" [class.active]="sortBy === 'name'" (click)="setSortBy('name')">{{ 'artists.sort_az' | translate }}</button>
-        <button class="sort-pill" [class.active]="sortBy === 'songcount'" (click)="setSortBy('songcount')">{{ 'artists.sort_popular' | translate }}</button>
-        <button class="sort-pill" [class.active]="sortBy === 'created'" (click)="setSortBy('created')">{{ 'artists.sort_new' | translate }}</button>
-      </div>
     </div>
   </section>
+
+  <div class="banners-area" *ngIf="!searchTerm && sortBy === 'name'">
+
+    <section class="loop-section" *ngIf="!loadingFeatured && featuredArtists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'artists.recommended' | translate }}</h2>
+      </div>
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+        <div class="artists-loop-track">
+          <app-artist-circle *ngFor="let artist of featuredArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of featuredArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
+        </div>
+      </div>
+    </section>
+
+    <section class="loop-section" *ngIf="!loadingPopular && popularArtists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'artists.popular' | translate }}</h2>
+      </div>
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+        <div class="artists-loop-track">
+          <app-artist-circle *ngFor="let artist of popularArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
+          <app-artist-circle *ngFor="let artist of popularArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
+        </div>
+      </div>
+    </section>
+
+  </div>
 
   <main class="artists-content">
 

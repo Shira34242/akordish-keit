@@ -752,12 +752,29 @@
 .see-all-link:hover { opacity: 1; }
 
 /* ========================================
-   Songs Grid — כרטיסי אקורדים, מלבן לרוחב 4:3
+   Songs Grid — גלילה אופקית (כמו דף הבית)
 ======================================== */
 .songs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.songs-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.songs-grid .song-card {
+  flex: 0 0 280px;
+  aspect-ratio: 12 / 5;
+}
+
+.songs-grid .song-card-title {
+  font-size: var(--font-lg);
+  line-height: 1.15;
 }
 
 .songs-expand-row {
@@ -837,36 +854,40 @@
 
 .artist-hit-card {
   flex: 0 0 min(78%, 300px);
-  background: #F2F2F2;
   border-radius: 16px;
   aspect-ratio: 4 / 2;
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-md);
   text-decoration: none;
   color: #000000;
   overflow: hidden;
   scroll-snap-align: start;
-  transition: background 0.15s;
+  position: relative;
+  transition: transform 0.15s;
 }
 
 .artist-hit-card:hover {
-  background: #e8e8e8;
+  transform: scale(1.02);
+}
+
+.artist-hit-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+  border-radius: 16px;
+  z-index: 1;
 }
 
 .artist-hit-image {
-  flex-shrink: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   background: #ddff53;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 0, 0, 0.45);
 }
 
 .artist-hit-image img {
@@ -876,7 +897,32 @@
   display: block;
 }
 
-.artist-hit-info,
+.artist-hit-image .material-icons {
+  font-size: 36px;
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.artist-hit-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--font-lg);
+  color: #ffffff;
+  text-align: center;
+  line-height: var(--lh-heading);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  padding: 0 var(--space-md);
+  width: 100%;
+}
+
 .artist-album-info {
   min-width: 0;
   display: flex;
@@ -884,8 +930,6 @@
   text-align: right;
 }
 
-.artist-card-label,
-.artist-card-link,
 .artist-album-year {
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
@@ -893,7 +937,6 @@
   color: rgba(0, 0, 0, 0.42);
 }
 
-.artist-hit-title,
 .artist-album-title {
   font-family: 'Open Sans', sans-serif;
   font-weight: 800;
@@ -1143,7 +1186,7 @@
     margin-top: var(--space-lg);
   }
 
-  .songs-grid { grid-template-columns: 1fr; }
+  .songs-grid .song-card { flex: 0 0 calc(100vw - var(--space-lg) * 2); }
   .articles-banners-grid { grid-template-columns: 1fr; }
 
   :host ::ng-deep .g3d-card {

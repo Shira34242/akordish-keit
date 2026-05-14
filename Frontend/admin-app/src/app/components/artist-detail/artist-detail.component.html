@@ -154,11 +154,7 @@
             <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט גדול'" loading="lazy">
             <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
           </div>
-          <div class="artist-hit-info">
-            <span class="artist-card-label">להיט גדול</span>
-            <span class="artist-hit-title">{{ hit.title || 'להיט גדול' }}</span>
-            <span class="artist-card-link">YouTube</span>
-          </div>
+          <span class="artist-hit-title">{{ hit.title || 'להיט גדול' }}</span>
         </a>
       </div>
     </div>

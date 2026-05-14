@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Podcast, PodcastEpisode } from '../../../../models/podcast.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { PodcastService } from '../../../../services/podcast.service';
@@ -22,8 +23,11 @@ export class PodcastsListComponent implements OnInit {
   podcasts: Podcast[] = [];
   episodes: PodcastEpisode[] = [];
   loading = true;
+  bulkActionLoading = false;
   savingEpisodeId: number | null = null;
   savingPodcastId: number | null = null;
+  selectedEpisodeIds = new Set<number>();
+  selectedPodcastIds = new Set<number>();
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
@@ -43,6 +47,7 @@ export class PodcastsListComponent implements OnInit {
     this.podcastService.getPodcasts(1, 200).subscribe({
       next: result => {
         this.podcasts = result.items;
+        this.selectedPodcastIds.clear();
       }
     });
   }
@@ -60,6 +65,7 @@ export class PodcastsListComponent implements OnInit {
         this.episodes = result.items;
         this.totalItems = result.totalCount;
         this.totalPages = result.totalPages;
+        this.selectedEpisodeIds.clear();
         this.loading = false;
       },
       error: () => {
@@ -71,6 +77,78 @@ export class PodcastsListComponent implements OnInit {
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadEpisodes();
+  }
+
+  switchTab(tab: 'podcasts' | 'episodes'): void {
+    this.activeTab = tab;
+    this.clearSelection();
+  }
+
+  get selectedCount(): number {
+    return this.activeTab === 'episodes' ? this.selectedEpisodeIds.size : this.selectedPodcastIds.size;
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedCount > 0;
+  }
+
+  get allCurrentEpisodesSelected(): boolean {
+    return this.episodes.length > 0 && this.episodes.every(episode => this.selectedEpisodeIds.has(episode.id));
+  }
+
+  get allCurrentPodcastsSelected(): boolean {
+    return this.podcasts.length > 0 && this.podcasts.every(podcast => this.selectedPodcastIds.has(podcast.id));
+  }
+
+  isEpisodeSelected(episodeId: number): boolean {
+    return this.selectedEpisodeIds.has(episodeId);
+  }
+
+  isPodcastSelected(podcastId: number): boolean {
+    return this.selectedPodcastIds.has(podcastId);
+  }
+
+  toggleEpisodeSelection(episodeId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.selectedEpisodeIds.has(episodeId)) {
+      this.selectedEpisodeIds.delete(episodeId);
+      return;
+    }
+
+    this.selectedEpisodeIds.add(episodeId);
+  }
+
+  togglePodcastSelection(podcastId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.selectedPodcastIds.has(podcastId)) {
+      this.selectedPodcastIds.delete(podcastId);
+      return;
+    }
+
+    this.selectedPodcastIds.add(podcastId);
+  }
+
+  toggleSelectCurrentEpisodes(): void {
+    if (this.allCurrentEpisodesSelected) {
+      this.episodes.forEach(episode => this.selectedEpisodeIds.delete(episode.id));
+      return;
+    }
+
+    this.episodes.forEach(episode => this.selectedEpisodeIds.add(episode.id));
+  }
+
+  toggleSelectCurrentPodcasts(): void {
+    if (this.allCurrentPodcastsSelected) {
+      this.podcasts.forEach(podcast => this.selectedPodcastIds.delete(podcast.id));
+      return;
+    }
+
+    this.podcasts.forEach(podcast => this.selectedPodcastIds.add(podcast.id));
+  }
+
+  clearSelection(): void {
+    this.selectedEpisodeIds.clear();
+    this.selectedPodcastIds.clear();
   }
 
   onPageChange(page: number): void {
@@ -161,6 +239,109 @@ export class PodcastsListComponent implements OnInit {
   async deleteEpisode(episode: PodcastEpisode): Promise<void> {
     if (!await this.siteAlerts.confirm(`למחוק את הפרק "${episode.title}"?`)) return;
     this.podcastService.deleteEpisode(episode.id).subscribe(() => this.loadEpisodes());
+  }
+
+  async bulkDeleteEpisodes(): Promise<void> {
+    const ids = Array.from(this.selectedEpisodeIds);
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} פרקים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.podcastService.deleteEpisode(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadEpisodes();
+      },
+      error: (error) => {
+        console.error('Error deleting selected episodes:', error);
+        alert('שגיאה במחיקת הפרקים');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkSetEpisodeStatus(isActive: boolean): Promise<void> {
+    const selectedEpisodes = this.episodes.filter(episode => this.selectedEpisodeIds.has(episode.id));
+    if (selectedEpisodes.length === 0) return;
+
+    const action = isActive ? 'להציג באתר' : 'להעביר לטיוטה';
+    if (!await this.siteAlerts.confirm(`${action} ${selectedEpisodes.length} פרקים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(selectedEpisodes.map(episode => this.podcastService.updateEpisode(episode.id, {
+      podcastId: episode.podcastId,
+      title: episode.title,
+      slug: episode.slug,
+      description: episode.description,
+      episodeNumber: episode.episodeNumber,
+      sourceUrl: episode.sourceUrl,
+      embedUrl: episode.embedUrl,
+      thumbnailUrl: episode.thumbnailUrl,
+      platform: episode.platform,
+      publishedAt: episode.publishedAt,
+      displayOrder: episode.displayOrder,
+      isActive
+    }))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadEpisodes();
+      },
+      error: (error) => {
+        console.error('Error updating selected episodes:', error);
+        alert('שגיאה בעדכון הפרקים');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkDeletePodcasts(): Promise<void> {
+    const ids = Array.from(this.selectedPodcastIds);
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} סדרות שנבחרו ואת כל הפרקים שלהן?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.podcastService.deletePodcast(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadPodcasts();
+        this.loadEpisodes();
+      },
+      error: (error) => {
+        console.error('Error deleting selected podcasts:', error);
+        alert('שגיאה במחיקת הסדרות');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkSetPodcastStatus(isActive: boolean): Promise<void> {
+    const selectedPodcasts = this.podcasts.filter(podcast => this.selectedPodcastIds.has(podcast.id));
+    if (selectedPodcasts.length === 0) return;
+
+    const action = isActive ? 'להציג באתר' : 'להעביר לטיוטה';
+    if (!await this.siteAlerts.confirm(`${action} ${selectedPodcasts.length} סדרות שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(selectedPodcasts.map(podcast => this.podcastService.updatePodcast(podcast.id, {
+      name: podcast.name,
+      slug: podcast.slug,
+      description: podcast.description,
+      imageUrl: podcast.imageUrl,
+      displayOrder: podcast.displayOrder,
+      isActive
+    }))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadPodcasts();
+      },
+      error: (error) => {
+        console.error('Error updating selected podcasts:', error);
+        alert('שגיאה בעדכון הסדרות');
+        this.bulkActionLoading = false;
+      }
+    });
   }
 
   formatDate(dateString: string): string {

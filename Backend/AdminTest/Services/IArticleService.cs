@@ -18,7 +18,7 @@ public interface IArticleService
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 
-    Task<ArticleDto?> GetArticleBySlugAsync(string slug);
+    Task<ArticleDto?> GetArticleBySlugAsync(string slug, int? contentType = null);
 
     Task<List<ArticleDto>> GetFeaturedArticlesAsync(int? contentType, int limit);
 
@@ -29,6 +29,24 @@ public interface IArticleService
     Task<ArticleDto> UpdateArticleAsync(int id, UpdateArticleDto dto, int? callerUserId = null);
 
     Task<ArticleDto> UpdateArticleStatusAsync(int id, int status);
+
+    Task<ArticleDto> UpdateArticleCategoriesAsync(int id, UpdateArticleCategoriesDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleCategoriesAsync(BulkUpdateArticleCategoriesDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleStatusAsync(BulkUpdateArticleStatusDto dto);
+
+    Task<ArticleDto> UpdateArticleArtistsAsync(int id, UpdateArticleArtistsDto dto);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleArtistsAsync(BulkUpdateArticleArtistsDto dto);
+
+    Task<ArticleDto> UpdateArticleUploaderAsync(int id, UpdateArticleUploaderDto dto, int? callerUserId = null);
+
+    Task<BulkArticleActionResultDto> BulkUpdateArticleUploaderAsync(BulkUpdateArticleUploaderDto dto, int? callerUserId = null);
+
+    Task<BulkArticleActionResultDto> BulkDuplicateArticlesAsync(BulkArticleIdsDto dto);
+
+    Task<BulkArticleActionResultDto> BulkDeleteArticlesAsync(BulkArticleIdsDto dto);
 
     Task<bool> DeleteArticleAsync(int id);
 

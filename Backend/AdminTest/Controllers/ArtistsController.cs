@@ -361,9 +361,15 @@ public class ArtistsController : ControllerBase
     {
         try
         {
-            var query = _context.ArticleArtists
-                .Where(aa => aa.ArtistId == id && !aa.Article.IsDeleted)
-                .Select(aa => aa.Article);
+            var now = DateTime.UtcNow;
+            var query = _context.Articles
+                .AsNoTracking()
+                .Include(a => a.ArticleCategories)
+                    .ThenInclude(ac => ac.Category)
+                .Where(a => a.ArticleArtists.Any(aa => aa.ArtistId == id)
+                    && a.Status == (int)ArticleStatus.Published
+                    && a.PublishDate <= now
+                    && !a.IsDeleted);
 
             var totalCount = await query.CountAsync();
 
@@ -379,7 +385,13 @@ public class ArtistsController : ControllerBase
                     FeaturedImageUrl = a.FeaturedImageUrl,
                     PublishDate = a.PublishDate,
                     ShortDescription = a.ShortDescription,
-                    Slug = a.Slug
+                    Slug = a.Slug,
+                    ContentType = a.ContentType,
+                    ContentTypeName = ((ArticleContentType)a.ContentType).ToString(),
+                    CategoryIds = a.ArticleCategories.Select(ac => ac.CategoryId).ToList(),
+                    CategoryNames = a.ArticleCategories.Select(ac => ac.Category.DisplayName).ToList(),
+                    Status = a.Status,
+                    StatusName = ((ArticleStatus)a.Status).ToString()
                 })
                 .ToListAsync();
 

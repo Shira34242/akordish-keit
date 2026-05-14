@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { EventService } from '../../../../services/admin/event.service';
 import { Event } from '../../../../models/event.model';
 import { PagedResult } from '../../../../models/pagination.model';
@@ -25,6 +26,8 @@ export class EventsListComponent implements OnInit {
   // State
   events: Event[] = [];
   loading = false;
+  bulkActionLoading = false;
+  selectedEventIds = new Set<number>();
   savingStatusId: number | null = null;
   selectedEventPreview: EventCardData | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view') as 'list' | 'grid') || 'list';
@@ -57,6 +60,7 @@ export class EventsListComponent implements OnInit {
         this.events = result.items;
         this.totalItems = result.totalCount;
         this.totalPages = result.totalPages;
+        this.clearSelection();
         this.loading = false;
       },
       error: (error) => {
@@ -80,6 +84,49 @@ export class EventsListComponent implements OnInit {
     if (this.statusFilter === 'active') return true;
     if (this.statusFilter === 'draft') return false;
     return undefined;
+  }
+
+  get selectedCount(): number {
+    return this.selectedEventIds.size;
+  }
+
+  get selectedEventIdsArray(): number[] {
+    return Array.from(this.selectedEventIds);
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedEventIds.size > 0;
+  }
+
+  get allCurrentPageSelected(): boolean {
+    return this.events.length > 0 && this.events.every(event => this.selectedEventIds.has(event.id));
+  }
+
+  isSelected(eventId: number): boolean {
+    return this.selectedEventIds.has(eventId);
+  }
+
+  toggleEventSelection(eventId: number, event?: globalThis.Event): void {
+    event?.stopPropagation();
+    if (this.selectedEventIds.has(eventId)) {
+      this.selectedEventIds.delete(eventId);
+      return;
+    }
+
+    this.selectedEventIds.add(eventId);
+  }
+
+  toggleSelectCurrentPage(): void {
+    if (this.allCurrentPageSelected) {
+      this.events.forEach(event => this.selectedEventIds.delete(event.id));
+      return;
+    }
+
+    this.events.forEach(event => this.selectedEventIds.add(event.id));
+  }
+
+  clearSelection(): void {
+    this.selectedEventIds.clear();
   }
 
   onPageChange(page: number): void {
@@ -147,6 +194,60 @@ export class EventsListComponent implements OnInit {
         console.error('Error updating event status:', error);
         alert('שגיאה בעדכון סטטוס ההופעה');
         this.savingStatusId = null;
+      }
+    });
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedEventIdsArray;
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} הופעות שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.eventService.deleteEvent(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadEvents();
+      },
+      error: (error) => {
+        console.error('Error deleting selected events:', error);
+        alert('שגיאה במחיקת ההופעות');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkSetStatus(isActive: boolean): Promise<void> {
+    const selectedEvents = this.events.filter(event => this.selectedEventIds.has(event.id));
+    if (selectedEvents.length === 0) return;
+
+    const action = isActive ? 'לאשר' : 'להעביר לטיוטה';
+    if (!await this.siteAlerts.confirm(`${action} ${selectedEvents.length} הופעות שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(selectedEvents.map(event => this.eventService.updateEvent(event.id, {
+      name: event.name,
+      description: event.description,
+      imageUrl: event.imageUrl,
+      bannerImageUrl: event.bannerImageUrl,
+      ticketUrl: event.ticketUrl,
+      eventDate: event.eventDate,
+      location: event.location,
+      artistName: event.taggedArtists?.length ? '' : event.artistName,
+      artistIds: event.taggedArtists?.map(artist => artist.artistId) ?? [],
+      price: event.price,
+      displayOrder: event.displayOrder,
+      isActive
+    }))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadEvents();
+      },
+      error: (error) => {
+        console.error('Error updating selected events:', error);
+        alert('שגיאה בעדכון ההופעות');
+        this.bulkActionLoading = false;
       }
     });
   }

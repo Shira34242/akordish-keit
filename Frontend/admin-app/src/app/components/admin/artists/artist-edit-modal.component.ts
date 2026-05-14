@@ -305,8 +305,10 @@ export class ArtistEditModalComponent implements OnInit {
         },
         error: (err) => {
           console.error('שגיאה בעדכון אומן:', err);
-          this.error = err.error?.message || err.error || err.message || 'שגיאה בעדכון פרטי האומן';
+          const message = this.extractErrorMessage(err, 'שגיאה בעדכון פרטי האומן');
+          this.error = message;
           this.saving = false;
+          window.alert(message);
         }
       });
     } else {
@@ -324,9 +326,10 @@ export class ArtistEditModalComponent implements OnInit {
         },
         error: (err) => {
           console.error('שגיאה ביצירת אומן:', err);
-          // Show the actual error message from backend
-          this.error = err.error?.message || err.error || err.message || 'שגיאה ביצירת האומן';
+          const message = this.extractErrorMessage(err, 'שגיאה ביצירת האומן');
+          this.error = message;
           this.saving = false;
+          window.alert(message);
         }
       });
     }
@@ -647,7 +650,8 @@ export class ArtistEditModalComponent implements OnInit {
         id: link.id,
         platform: Number(link.platform),
         url: link.url.trim()
-      }));
+      }))
+      .filter(link => Number.isFinite(link.platform) && link.platform >= 1 && link.platform <= 11);
   }
 
   private normalizedGalleryImages() {
@@ -726,5 +730,31 @@ export class ArtistEditModalComponent implements OnInit {
     if (event.target === event.currentTarget) {
       this.onClose();
     }
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (err.error) {
+      if (err.error.errors && typeof err.error.errors === 'object') {
+        const messages: string[] = [];
+        for (const [, fieldErrors] of Object.entries(err.error.errors)) {
+          if (Array.isArray(fieldErrors)) {
+            for (const msg of fieldErrors) {
+              if (typeof msg === 'string') messages.push(msg);
+            }
+          } else if (typeof fieldErrors === 'string') {
+            messages.push(fieldErrors as string);
+          }
+        }
+        if (messages.length > 0) return messages.join('\n');
+      }
+      if (typeof err.error === 'string' && err.error.trim()) return err.error.trim();
+      if (err.error.message) return err.error.message;
+      if (err.error.error) return err.error.error;
+      if (typeof err.error === 'object') {
+        try { return JSON.stringify(err.error); } catch { /* ignore */ }
+      }
+    }
+    if (err.message) return err.message;
+    return fallback;
   }
 }

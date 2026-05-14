@@ -5,14 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ArtistService } from '../../services/artist.service';
+import { LanguageService } from '../../services/language.service';
 import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
+import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 
 @Component({
   selector: 'app-artists-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, ArtistCircleComponent],
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, ArtistCircleComponent, AutoScrollDirective],
   templateUrl: './artists-list.component.html',
   styleUrls: ['./artists-list.component.css']
 })
@@ -20,9 +22,11 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
 
   featuredArtists: ArtistListDto[] = [];
+  popularArtists: ArtistListDto[] = [];
   allArtists: ArtistListDto[] = [];
 
   loadingFeatured = true;
+  loadingPopular = true;
   loadingAll = true;
 
   // Pagination
@@ -34,6 +38,7 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   filterPremium: boolean | undefined = undefined;
   sortBy: string = 'name';
   searchTerm: string = '';
+  showSortDropdown = false;
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
@@ -42,11 +47,13 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private artistService: ArtistService,
-    private router: Router
+    private router: Router,
+    private langService: LanguageService
   ) {}
 
   ngOnInit(): void {
     this.loadFeaturedArtists();
+    this.loadPopularArtists();
     this.loadAllArtists();
 
     // חיפוש שרת עם debounce — 300ms אחרי שהמשתמש מפסיק להקליד
@@ -83,6 +90,11 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.initHeroHeight();
   }
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showSortDropdown = false;
+  }
+
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
@@ -116,7 +128,7 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   loadFeaturedArtists(): void {
     this.loadingFeatured = true;
 
-    this.artistService.getFeaturedArtists(10).subscribe({
+    this.artistService.getFeaturedArtists(12).subscribe({
       next: (artists) => {
         this.featuredArtists = artists;
         this.loadingFeatured = false;
@@ -124,6 +136,21 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         console.error('Error loading featured artists:', error);
         this.loadingFeatured = false;
+      }
+    });
+  }
+
+  loadPopularArtists(): void {
+    this.loadingPopular = true;
+
+    this.artistService.getTopArtists(12).subscribe({
+      next: (artists) => {
+        this.popularArtists = artists;
+        this.loadingPopular = false;
+      },
+      error: (error) => {
+        console.error('Error loading popular artists:', error);
+        this.loadingPopular = false;
       }
     });
   }
@@ -163,6 +190,19 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadAllArtists(1);
   }
 
+  toggleSortDropdown(): void {
+    this.showSortDropdown = !this.showSortDropdown;
+  }
+
+  getSortLabel(): string {
+    const keys: Record<string, string> = {
+      'name': 'artists.sort_az',
+      'songcount': 'artists.sort_popular',
+      'created': 'artists.sort_new'
+    };
+    return this.langService.translate(keys[this.sortBy] || 'artists.sort_az');
+  }
+
   navigateToArtist(artistId: number): void {
     this.router.navigate(['/artist', artistId]);
   }
@@ -192,5 +232,9 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(['/subscription/select'], {
       queryParams: { from: 'become-artist' }
     });
+  }
+
+  trackById(index: number, item: any): number {
+    return item.id;
   }
 }

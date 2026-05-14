@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleContentType } from '../../../models/article.model';
+import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
@@ -43,7 +43,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
   }
 
   private loadInitialArticles(): void {
-    this.articleService.getArticles(1, this.pageSize, undefined, undefined, ArticleContentType.Blog)
+    this.articleService.getArticles(1, this.pageSize, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
@@ -69,7 +69,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
     if (!this.hasMore || this.isLoadingMore) return;
     this.isLoadingMore = true;
 
-    this.articleService.getArticles(this.currentPage, this.pageSize, undefined, undefined, ArticleContentType.Blog)
+    this.articleService.getArticles(this.currentPage, this.pageSize, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {

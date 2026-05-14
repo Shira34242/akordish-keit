@@ -125,6 +125,57 @@ public class UpdateArticleStatusDto
     public int Status { get; set; }
 }
 
+public class UpdateArticleCategoriesDto
+{
+    public List<int> CategoryIds { get; set; } = new();
+    public string Mode { get; set; } = "replace";
+}
+
+public class BulkArticleIdsDto
+{
+    public List<int> ArticleIds { get; set; } = new();
+}
+
+public class BulkUpdateArticleCategoriesDto : UpdateArticleCategoriesDto
+{
+    public List<int> ArticleIds { get; set; } = new();
+}
+
+public class BulkUpdateArticleStatusDto : BulkArticleIdsDto
+{
+    public int Status { get; set; }
+}
+
+public class UpdateArticleArtistsDto
+{
+    public List<int> ArtistIds { get; set; } = new();
+    public string Mode { get; set; } = "replace";
+}
+
+public class BulkUpdateArticleArtistsDto : UpdateArticleArtistsDto
+{
+    public List<int> ArticleIds { get; set; } = new();
+}
+
+public class UpdateArticleUploaderDto
+{
+    public int? UploaderUserId { get; set; }
+    public string? UploaderProfileType { get; set; }
+    public int? UploaderProfileId { get; set; }
+}
+
+public class BulkUpdateArticleUploaderDto : UpdateArticleUploaderDto
+{
+    public List<int> ArticleIds { get; set; } = new();
+}
+
+public class BulkArticleActionResultDto
+{
+    public int RequestedCount { get; set; }
+    public int AffectedCount { get; set; }
+    public List<ArticleDto> Articles { get; set; } = new();
+}
+
 /// <summary>כתבה בדירוג תוכן (לאדמין)</summary>
 public class ArticleRankDto
 {

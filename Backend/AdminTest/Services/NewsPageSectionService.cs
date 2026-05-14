@@ -112,7 +112,9 @@ namespace AkordishKeit.Services
                 .Include(a => a.GalleryImages)
                 .Include(a => a.ArticleArtists)
                     .ThenInclude(aa => aa.Artist)
-                .Where(a => a.Status == (int)ArticleStatus.Published && !a.IsDeleted)
+                .Where(a => a.Status == (int)ArticleStatus.Published
+                    && a.PublishDate <= DateTime.UtcNow
+                    && !a.IsDeleted)
                 .AsQueryable();
 
             // SectionType 0: filter by category
