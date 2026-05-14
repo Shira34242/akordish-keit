@@ -10,6 +10,7 @@ namespace AkordishKeit.Controllers
     {
         private readonly Cloudinary _cloudinary;
         private readonly HttpClient _httpClient;
+        private readonly ILogger<MediaController> _logger;
 
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
         private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
@@ -17,7 +18,7 @@ namespace AkordishKeit.Controllers
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
         private const long MaxPdfViewBytes = 30 * 1024 * 1024;
 
-        public MediaController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public MediaController(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<MediaController> logger)
         {
             var account = new Account(
                 configuration["Cloudinary:CloudName"],
@@ -27,6 +28,7 @@ namespace AkordishKeit.Controllers
             _cloudinary = new Cloudinary(account);
             _cloudinary.Api.Secure = true;
             _httpClient = httpClientFactory.CreateClient();
+            _logger = logger;
         }
 
         [HttpPost("upload")]
@@ -38,10 +40,18 @@ namespace AkordishKeit.Controllers
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
             if (!AllowedExtensions.Contains(fileExtension))
+            {
+                _logger.LogWarning("Upload rejected — invalid file type: {FileName} ({Extension}) IP={IP}",
+                    file.FileName, fileExtension, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP, MP3, WAV, M4A, AAC, OGG, PDF" });
+            }
 
             if (file.Length > 30 * 1024 * 1024)
+            {
+                _logger.LogWarning("Upload rejected — file too large: {FileName} ({SizeMB:F1}MB) IP={IP}",
+                    file.FileName, file.Length / 1024.0 / 1024.0, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "File size exceeds 30MB limit" });
+            }
 
             var now = DateTime.UtcNow;
             var folder = $"uploads/{now.Year}/{now.Month:D2}";
@@ -81,8 +91,15 @@ namespace AkordishKeit.Controllers
             }
 
             if (uploadResult.Error != null)
+            {
+                _logger.LogError("Cloudinary upload failed: {FileName} — {Error} IP={IP}",
+                    file.FileName, uploadResult.Error.Message, HttpContext.Connection.RemoteIpAddress);
                 return StatusCode(500, new { message = uploadResult.Error.Message });
+            }
 
+            _logger.LogInformation("File uploaded: {FileName} ({Extension}, {SizeMB:F1}MB) → {Url} IP={IP}",
+                file.FileName, fileExtension, file.Length / 1024.0 / 1024.0,
+                uploadResult.SecureUrl, HttpContext.Connection.RemoteIpAddress);
             return Ok(new { url = uploadResult.SecureUrl.ToString() });
         }
 
@@ -186,12 +203,19 @@ namespace AkordishKeit.Controllers
                 });
 
                 if (deleteResult.Result == "ok" || deleteResult.Result == "not found")
+                {
+                    _logger.LogInformation("File deleted from Cloudinary: {PublicId} Result={Result} IP={IP}",
+                        publicId, deleteResult.Result, HttpContext.Connection.RemoteIpAddress);
                     return Ok(new { message = "File deleted successfully" });
+                }
 
+                _logger.LogError("Cloudinary delete failed: {PublicId} Result={Result} IP={IP}",
+                    publicId, deleteResult.Result, HttpContext.Connection.RemoteIpAddress);
                 return StatusCode(500, new { message = "Failed to delete file" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Delete error: {Url} IP={IP}", url, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = $"Error deleting file: {ex.Message}" });
             }
         }

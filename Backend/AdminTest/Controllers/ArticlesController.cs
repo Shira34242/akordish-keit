@@ -20,6 +20,7 @@ public class ArticlesController : ControllerBase
     private readonly IUserTagService _userTagService;
     private readonly INotificationService _notificationService;
     private readonly IMemoryCache _cache;
+    private readonly ILogger<ArticlesController> _logger;
 
     public ArticlesController(
         AkordishKeitDbContext context,
@@ -27,7 +28,8 @@ public class ArticlesController : ControllerBase
         IYouTubeService youTubeService,
         IUserTagService userTagService,
         INotificationService notificationService,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        ILogger<ArticlesController> logger)
     {
         _context = context;
         _articleService = articleService;
@@ -35,6 +37,7 @@ public class ArticlesController : ControllerBase
         _userTagService = userTagService;
         _notificationService = notificationService;
         _cache = cache;
+        _logger = logger;
     }
 
     // GET: api/Articles
@@ -132,11 +135,13 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
-
+            _logger.LogInformation("Article created (admin): ArticleId={ArticleId} Title={Title}",
+                article.Id, article.Title);
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("Article creation failed: {Error}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -166,10 +171,13 @@ public class ArticlesController : ControllerBase
                 await _notificationService.NotifyArticleSubmittedAsync(userId.Value, article.Id, article.Title);
             }
 
+            _logger.LogInformation("Article submitted by user: ArticleId={ArticleId} Title={Title} UserId={UserId}",
+                article.Id, article.Title, userId);
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("Article submit failed: UserId={UserId} Error={Error}", GetCurrentUserId(), ex.Message);
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -193,6 +201,13 @@ public class ArticlesController : ControllerBase
                 {
                     await _userTagService.RecalculateTagAsync(submittedByUserId.Value);
                 }
+                _logger.LogInformation("Article published: ArticleId={ArticleId} Title={Title}",
+                    id, article.Title);
+            }
+            else
+            {
+                _logger.LogInformation("Article updated: ArticleId={ArticleId} Title={Title} Status={Status}",
+                    id, article.Title, dto.Status);
             }
 
             return Ok(article);
@@ -229,6 +244,8 @@ public class ArticlesController : ControllerBase
                 }
             }
 
+            _logger.LogInformation("Article status changed: ArticleId={ArticleId} Title={Title} NewStatus={Status}",
+                id, article.Title, (ArticleStatus)dto.Status);
             return Ok(article);
         }
         catch (KeyNotFoundException ex)
@@ -249,6 +266,8 @@ public class ArticlesController : ControllerBase
         try
         {
             var duplicate = await _articleService.DuplicateArticleAsync(id);
+            _logger.LogInformation("Article duplicated: OriginalId={OriginalId} NewId={NewId}",
+                id, duplicate.Id);
             return Ok(duplicate);
         }
         catch (InvalidOperationException ex)
@@ -269,6 +288,7 @@ public class ArticlesController : ControllerBase
             return NotFound(new { message = "Article not found" });
         }
 
+        _logger.LogInformation("Article deleted: ArticleId={ArticleId}", id);
         return NoContent();
     }
 

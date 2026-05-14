@@ -18,19 +18,22 @@ public class MusicServiceProvidersController : ControllerBase
     private readonly INotificationService _notificationService;
     private readonly ISongService _songService;
     private readonly IArticleService _articleService;
+    private readonly ILogger<MusicServiceProvidersController> _logger;
 
     public MusicServiceProvidersController(
         IMusicServiceProviderService service,
         AkordishKeitDbContext context,
         INotificationService notificationService,
         ISongService songService,
-        IArticleService articleService)
+        IArticleService articleService,
+        ILogger<MusicServiceProvidersController> logger)
     {
         _service = service;
         _context = context;
         _notificationService = notificationService;
         _songService = songService;
         _articleService = articleService;
+        _logger = logger;
     }
 
     // GET: api/MusicServiceProviders
@@ -322,10 +325,13 @@ public class MusicServiceProvidersController : ControllerBase
 
             await _notificationService.NotifyServiceProviderSubmittedAsync(userId, serviceProvider.Id, serviceProvider.DisplayName);
 
+            _logger.LogInformation("Service provider profile created (pending): ProviderId={ProviderId} UserId={UserId} Name={Name}",
+                serviceProvider.Id, userId, serviceProvider.DisplayName);
             return Ok(result);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Create service provider profile failed");
             return StatusCode(500, $"שגיאה ביצירת פרופיל בעל מקצוע: {ex.Message}");
         }
     }
@@ -356,6 +362,7 @@ public class MusicServiceProvidersController : ControllerBase
             return NotFound(new { message = "בעל המקצוע לא נמצא" });
         }
 
+        _logger.LogInformation("Service provider approved: ProviderId={ProviderId}", id);
         return Ok(new { message = "בעל המקצוע אושר בהצלחה" });
     }
 
@@ -371,6 +378,7 @@ public class MusicServiceProvidersController : ControllerBase
             return NotFound(new { message = "בעל המקצוע לא נמצא" });
         }
 
+        _logger.LogInformation("Service provider rejected: ProviderId={ProviderId}", id);
         return Ok(new { message = "בעל המקצוע נדחה" });
     }
 

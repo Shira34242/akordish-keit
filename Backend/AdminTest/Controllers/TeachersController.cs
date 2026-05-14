@@ -18,19 +18,22 @@ public class TeachersController : ControllerBase
     private readonly INotificationService _notificationService;
     private readonly ISongService _songService;
     private readonly IArticleService _articleService;
+    private readonly ILogger<TeachersController> _logger;
 
     public TeachersController(
         ITeacherService service,
         AkordishKeitDbContext context,
         INotificationService notificationService,
         ISongService songService,
-        IArticleService articleService)
+        IArticleService articleService,
+        ILogger<TeachersController> logger)
     {
         _service = service;
         _context = context;
         _notificationService = notificationService;
         _songService = songService;
         _articleService = articleService;
+        _logger = logger;
     }
 
     // GET: api/Teachers
@@ -310,10 +313,13 @@ public class TeachersController : ControllerBase
 
             await _notificationService.NotifyTeacherSubmittedAsync(userId, teacher.Id, serviceProvider.DisplayName);
 
+            _logger.LogInformation("Teacher profile created (pending): TeacherId={TeacherId} UserId={UserId} Name={Name}",
+                teacher.Id, userId, serviceProvider.DisplayName);
             return Ok(result);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Create teacher profile failed: UserId={UserId}", GetCurrentUserId());
             return StatusCode(500, $"שגיאה ביצירת פרופיל מורה: {ex.Message}");
         }
     }
@@ -329,6 +335,7 @@ public class TeachersController : ControllerBase
             return NotFound(new { message = "המורה לא נמצא" });
         }
 
+        _logger.LogInformation("Teacher deleted: TeacherId={TeacherId}", id);
         return NoContent();
     }
 
@@ -344,6 +351,7 @@ public class TeachersController : ControllerBase
             return NotFound(new { message = "המורה לא נמצא" });
         }
 
+        _logger.LogInformation("Teacher approved: TeacherId={TeacherId}", id);
         return Ok(new { message = "המורה אושר בהצלחה" });
     }
 
@@ -359,6 +367,7 @@ public class TeachersController : ControllerBase
             return NotFound(new { message = "המורה לא נמצא" });
         }
 
+        _logger.LogInformation("Teacher rejected: TeacherId={TeacherId}", id);
         return Ok(new { message = "המורה נדחה" });
     }
 
@@ -390,6 +399,12 @@ public class TeachersController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claim, out var id) ? id : null;
     }
 
     // POST: api/Teachers/5/duplicate

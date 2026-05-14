@@ -11,10 +11,12 @@ namespace AkordishKeit.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly ILogger<ReportsController> _logger;
 
-    public ReportsController(IReportService reportService)
+    public ReportsController(IReportService reportService, ILogger<ReportsController> logger)
     {
         _reportService = reportService;
+        _logger = logger;
     }
 
     // POST: api/Reports
@@ -40,10 +42,13 @@ public class ReportsController : ControllerBase
 
             var reportId = await _reportService.CreateReportAsync(dto, userId, ipAddress);
 
+            _logger.LogInformation("Report created: ReportId={ReportId} ContentType={ContentType} UserId={UserId} IP={IP}",
+                reportId, dto.ContentType, userId, ipAddress);
             return Ok(new { id = reportId, message = "הדיווח נשלח בהצלחה, תודה!" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Create report failed: ContentType={ContentType}", dto.ContentType);
             return BadRequest(new { message = "שגיאה בשליחת הדיווח", error = ex.Message });
         }
     }
@@ -159,10 +164,13 @@ public class ReportsController : ControllerBase
                 return NotFound(new { message = "דיווח לא נמצא" });
             }
 
+            _logger.LogInformation("Report status updated: ReportId={ReportId} NewStatus={Status} ResolvedBy={AdminId}",
+                id, dto.Status, resolvedByUserId);
             return Ok(new { message = "סטטוס הדיווח עודכן בהצלחה" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Update report status failed: ReportId={ReportId}", id);
             return BadRequest(new { message = "שגיאה בעדכון הדיווח", error = ex.Message });
         }
     }
@@ -183,6 +191,8 @@ public class ReportsController : ControllerBase
             if (!success)
                 return BadRequest(new { message });
 
+            _logger.LogInformation("New artist approved via report: ReportId={ReportId} ArtistId={ArtistId} AdminId={AdminId}",
+                id, artistId, adminUserId);
             return Ok(new { message, artistId });
         }
         catch (Exception ex)
@@ -203,6 +213,7 @@ public class ReportsController : ControllerBase
             return NotFound(new { message = "דיווח לא נמצא" });
         }
 
+        _logger.LogInformation("Report deleted: ReportId={ReportId}", id);
         return Ok(new { message = "הדיווח נמחק לצמיתות" });
     }
 }

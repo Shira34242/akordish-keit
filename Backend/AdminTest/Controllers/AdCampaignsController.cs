@@ -14,10 +14,12 @@ namespace AkordishKeit.Controllers
     public class AdCampaignsController : ControllerBase
     {
         private readonly AkordishKeitDbContext _context;
+        private readonly ILogger<AdCampaignsController> _logger;
 
-        public AdCampaignsController(AkordishKeitDbContext context)
+        public AdCampaignsController(AkordishKeitDbContext context, ILogger<AdCampaignsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/AdCampaigns
@@ -391,6 +393,8 @@ namespace AkordishKeit.Controllers
                 ClickThroughRate = 0
             };
 
+            _logger.LogInformation("Ad campaign created: CampaignId={CampaignId} Name={Name} ClientId={ClientId}",
+                campaign.Id, campaign.Name, campaign.ClientId);
             return CreatedAtAction(nameof(GetAdCampaign), new { id = campaign.Id }, campaignDto);
         }
 
@@ -457,6 +461,7 @@ namespace AkordishKeit.Controllers
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Ad campaign updated: CampaignId={CampaignId} Name={Name}", id, dto.Name);
             return NoContent();
         }
 
@@ -475,6 +480,7 @@ namespace AkordishKeit.Controllers
             _context.AdCampaigns.Remove(campaign);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Ad campaign deleted: CampaignId={CampaignId} Name={Name}", id, campaign.Name);
             return NoContent();
         }
 

@@ -12,10 +12,12 @@ namespace AkordishKeit.Controllers;
 public class UserKnownChordsController : ControllerBase
 {
     private readonly IUserKnownChordService _knownChordService;
+    private readonly ILogger<UserKnownChordsController> _logger;
 
-    public UserKnownChordsController(IUserKnownChordService knownChordService)
+    public UserKnownChordsController(IUserKnownChordService knownChordService, ILogger<UserKnownChordsController> logger)
     {
         _knownChordService = knownChordService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -51,6 +53,8 @@ public class UserKnownChordsController : ControllerBase
             return BadRequest(new { message = "האקורד או הכלי לא תקינים" });
         }
 
+        _logger.LogInformation("Known chord added: UserId={UserId} Instrument={Instrument} Chord={Chord}",
+            userId.Value, dto.Instrument, dto.ChordName);
         return Ok(knownChord);
     }
 
@@ -69,6 +73,8 @@ public class UserKnownChordsController : ControllerBase
             return NotFound(new { message = "האקורד לא נמצא ברשימה" });
         }
 
+        _logger.LogInformation("Known chord removed: UserId={UserId} Instrument={Instrument} Chord={Chord}",
+            userId.Value, instrument, chordName);
         return Ok(new { message = "האקורד הוסר מהרשימה" });
     }
 

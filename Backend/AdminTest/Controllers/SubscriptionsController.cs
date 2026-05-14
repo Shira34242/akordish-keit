@@ -35,6 +35,8 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscription = await _subscriptionService.CreateSubscriptionAsync(dto);
+            _logger.LogInformation("Subscription created (admin): SubscriptionId={SubscriptionId} UserId={UserId}",
+                subscription.Id, dto.UserId);
             return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, subscription);
         }
         catch (ArgumentException ex)
@@ -71,6 +73,8 @@ public class SubscriptionsController : ControllerBase
                 return Forbid(); // משתמש לא יכול ליצור מנוי עבור משתמש אחר
 
             var subscription = await _subscriptionService.CreateSubscriptionAsync(dto);
+            _logger.LogInformation("Subscription created (user): SubscriptionId={SubscriptionId} UserId={UserId}",
+                subscription.Id, userId);
             return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, subscription);
         }
         catch (ArgumentException ex)
@@ -155,6 +159,7 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscription = await _subscriptionService.UpgradeSubscriptionAsync(id, dto);
+            _logger.LogInformation("Subscription upgraded: SubscriptionId={SubscriptionId}", id);
             return Ok(subscription);
         }
         catch (ArgumentException ex)
@@ -185,6 +190,7 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscription = await _subscriptionService.CancelSubscriptionAsync(id, dto);
+            _logger.LogInformation("Subscription cancelled: SubscriptionId={SubscriptionId}", id);
             return Ok(subscription);
         }
         catch (ArgumentException ex)
@@ -209,6 +215,7 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscription = await _subscriptionService.RenewSubscriptionAsync(id);
+            _logger.LogInformation("Subscription renewed: SubscriptionId={SubscriptionId}", id);
             return Ok(subscription);
         }
         catch (ArgumentException ex)

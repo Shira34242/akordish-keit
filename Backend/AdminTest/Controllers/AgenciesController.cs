@@ -10,10 +10,12 @@ namespace AkordishKeit.Controllers;
 public class AgenciesController : ControllerBase
 {
     private readonly IAgencyService _service;
+    private readonly ILogger<AgenciesController> _logger;
 
-    public AgenciesController(IAgencyService service)
+    public AgenciesController(IAgencyService service, ILogger<AgenciesController> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -60,10 +62,12 @@ public class AgenciesController : ControllerBase
         try
         {
             var agency = await _service.CreateAgencyAsync(dto);
+            _logger.LogInformation("Agency created: AgencyId={AgencyId} Name={Name}", agency.Id, agency.Name);
             return CreatedAtAction(nameof(GetAgency), new { id = agency.Id }, agency);
         }
         catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
         {
+            _logger.LogWarning("Create agency failed: {Error}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -74,7 +78,9 @@ public class AgenciesController : ControllerBase
     {
         try
         {
-            return Ok(await _service.UpdateAgencyAsync(id, dto));
+            var agency = await _service.UpdateAgencyAsync(id, dto);
+            _logger.LogInformation("Agency updated: AgencyId={AgencyId}", id);
+            return Ok(agency);
         }
         catch (KeyNotFoundException ex)
         {
@@ -87,6 +93,8 @@ public class AgenciesController : ControllerBase
     public async Task<IActionResult> DeleteAgency(int id)
     {
         var deleted = await _service.DeleteAgencyAsync(id);
+        if (deleted)
+            _logger.LogInformation("Agency deleted: AgencyId={AgencyId}", id);
         return deleted ? NoContent() : NotFound(new { message = "הסוכנות לא נמצאה" });
     }
 

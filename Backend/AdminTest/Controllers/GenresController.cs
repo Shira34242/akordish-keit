@@ -12,10 +12,12 @@ namespace AkordishKeit.Controllers;
 public class GenresController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly ILogger<GenresController> _logger;
 
-    public GenresController(AkordishKeitDbContext context)
+    public GenresController(AkordishKeitDbContext context, ILogger<GenresController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -85,6 +87,7 @@ public class GenresController : ControllerBase
         _context.Genres.Add(genre);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Genre created: GenreId={GenreId} Name={Name}", genre.Id, genre.Name);
         var result = new SystemItemDto
         {
             Id = genre.Id,
@@ -123,6 +126,7 @@ public class GenresController : ControllerBase
             }
         }
 
+        _logger.LogInformation("Genre updated: GenreId={GenreId} Name={Name}", id, dto.Name);
         return NoContent();
     }
 
@@ -136,15 +140,6 @@ public class GenresController : ControllerBase
             return NotFound();
         }
 
-        // Check dependencies (SongGenres)
-        // If we have cascade delete on SongGenres it might delete links, but usually we want to block if used?
-        // Let's assume block if linked to songs?
-        // SongGenre is join table. 
-        // If we delete Genre, we delete SongGenre links. That's usually acceptable or we block.
-        // Let's rely on DB constraint or simple delete.
-        // But context.Genres.Remove(genre) will fail if FK constraint exists and cascade is not set.
-        // Let's try remove.
-        
         _context.Genres.Remove(genre);
         try {
             await _context.SaveChangesAsync();
@@ -152,6 +147,7 @@ public class GenresController : ControllerBase
             return BadRequest("Cannot delete genre heavily used or system error.");
         }
 
+        _logger.LogInformation("Genre deleted: GenreId={GenreId} Name={Name}", id, genre.Name);
         return NoContent();
     }
 
@@ -173,6 +169,8 @@ public class GenresController : ControllerBase
             return BadRequest("לא ניתן למחוק חלק מהפריטים (ייתכן שהם בשימוש)");
         }
 
+        _logger.LogInformation("Genres bulk-deleted: Count={Count} Ids={Ids}",
+            genres.Count, string.Join(",", dto.Ids));
         return Ok(new { deletedCount = genres.Count });
     }
 

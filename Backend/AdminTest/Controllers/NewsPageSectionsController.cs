@@ -10,10 +10,12 @@ namespace AkordishKeit.Controllers;
 public class NewsPageSectionsController : ControllerBase
 {
     private readonly INewsPageSectionService _service;
+    private readonly ILogger<NewsPageSectionsController> _logger;
 
-    public NewsPageSectionsController(INewsPageSectionService service)
+    public NewsPageSectionsController(INewsPageSectionService service, ILogger<NewsPageSectionsController> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     /// <summary>
@@ -58,6 +60,7 @@ public class NewsPageSectionsController : ControllerBase
     public async Task<ActionResult<NewsPageSectionDto>> CreateSection([FromBody] CreateNewsPageSectionDto dto)
     {
         var section = await _service.CreateSectionAsync(dto);
+        _logger.LogInformation("News page section created: SectionId={SectionId} Title={Title}", section.Id, section.Title);
         return CreatedAtAction(nameof(GetSection), new { id = section.Id }, section);
     }
 
@@ -71,6 +74,7 @@ public class NewsPageSectionsController : ControllerBase
     {
         var section = await _service.UpdateSectionAsync(id, dto);
         if (section == null) return NotFound();
+        _logger.LogInformation("News page section updated: SectionId={SectionId}", id);
         return Ok(section);
     }
 
@@ -84,6 +88,7 @@ public class NewsPageSectionsController : ControllerBase
     {
         var result = await _service.DeleteSectionAsync(id);
         if (!result) return NotFound();
+        _logger.LogInformation("News page section deleted: SectionId={SectionId}", id);
         return NoContent();
     }
 }

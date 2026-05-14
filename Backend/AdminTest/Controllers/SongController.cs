@@ -16,17 +16,20 @@ public class SongsController : ControllerBase
     private readonly IYouTubeService _youTubeService;
     private readonly IUserTagService _userTagService;
     private readonly ISmartSongImportService _smartSongImportService;
+    private readonly ILogger<SongsController> _logger;
 
     public SongsController(
         ISongService songService,
         IYouTubeService youTubeService,
         IUserTagService userTagService,
-        ISmartSongImportService smartSongImportService)
+        ISmartSongImportService smartSongImportService,
+        ILogger<SongsController> logger)
     {
         _songService = songService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
         _smartSongImportService = smartSongImportService;
+        _logger = logger;
     }
 
     // ============================================
@@ -65,17 +68,20 @@ public class SongsController : ControllerBase
 
             if (!result.Success)
             {
+                _logger.LogWarning("Song creation failed: UserId={UserId} Reason={Reason}", userId, result.Message);
                 return BadRequest(result);
             }
 
             // עדכון תג תרומת תוכן לאחר הוספת שיר מוצלחת
             await _userTagService.RecalculateTagAsync(userId.Value);
 
+            _logger.LogInformation("Song created: SongId={SongId} UserId={UserId} Title={Title}",
+                result.SongId, userId, dto.Title);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error adding song: {ex.Message}");
+            _logger.LogError(ex, "Error adding song: Title={Title}", dto.Title);
             return StatusCode(500, new AddSongResponseDto
             {
                 Success = false,
@@ -118,13 +124,20 @@ public class SongsController : ControllerBase
             if (result.Success && userId > 0)
             {
                 await _userTagService.RecalculateTagAsync(userId);
+                _logger.LogInformation("Song imported from URL: UserId={UserId} Url={Url} Title={Title}",
+                    userId, dto.Url, result.Draft?.Title);
+            }
+            else if (!result.Success)
+            {
+                _logger.LogWarning("Song import failed: UserId={UserId} Url={Url} Reason={Reason}",
+                    userId, dto.Url, result.Message);
             }
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error importing song from url: {ex.Message}");
+            _logger.LogError(ex, "Error importing song from URL: Url={Url}", dto.Url);
             return Ok(new ImportSongFromUrlResponseDto
             {
                 Success = false,
@@ -174,21 +187,18 @@ public class SongsController : ControllerBase
             if (!result.Success)
             {
                 if (result.Message.Contains("לא נמצא"))
-                {
                     return NotFound(result);
-                }
                 if (result.Message.Contains("הרשאה"))
-                {
                     return StatusCode(403, result);
-                }
                 return BadRequest(result);
             }
 
+            _logger.LogInformation("Song updated: SongId={SongId} UserId={UserId}", id, userId);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error updating song: {ex.Message}");
+            _logger.LogError(ex, "Error updating song: SongId={Id}", id);
             return StatusCode(500, new AddSongResponseDto
             {
                 Success = false,
@@ -253,7 +263,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting songs: {ex.Message}");
+            _logger.LogError(ex, "Error getting songs");
             return StatusCode(500, "אירעה שגיאה בטעינת השירים");
         }
     }
@@ -290,7 +300,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting songs for admin: {ex.Message}");
+            _logger.LogError(ex, "Error getting songs for admin");
             return StatusCode(500, "אירעה שגיאה בטעינת השירים");
         }
     }
@@ -330,7 +340,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting song: {ex.Message}");
+            _logger.LogError(ex, "Error getting song: SongId={Id}", id);
             return StatusCode(500, "אירעה שגיאה בטעינת השיר");
         }
     }
@@ -356,7 +366,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting song for admin: {ex.Message}");
+            _logger.LogError(ex, "Error getting song for admin: SongId={Id}", id);
             return StatusCode(500, "אירעה שגיאה בטעינת השיר");
         }
     }
@@ -381,7 +391,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting random song: {ex.Message}");
+            _logger.LogError(ex, "Error getting random song");
             return StatusCode(500, "אירעה שגיאה בטעינת שיר אקראי");
         }
     }
@@ -400,7 +410,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error checking duplicates: {ex.Message}");
+            _logger.LogError(ex, "Error checking duplicates: Title={Title}", title);
             return Ok(new DuplicateCheckResponseDto
             {
                 IsPotentialDuplicate = false,
@@ -432,7 +442,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting YouTube metadata: {ex.Message}");
+            _logger.LogWarning(ex, "Error getting YouTube metadata");
             return Ok(new YouTubeMetadataDto
             {
                 Success = false,
@@ -462,7 +472,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error searching YouTube videos: {ex.Message}");
+            _logger.LogWarning(ex, "Error searching YouTube videos: Query={Query}", query);
             return Ok(new List<YouTubeSearchResultDto>());
         }
     }
@@ -484,7 +494,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in autocomplete artists: {ex.Message}");
+            _logger.LogWarning(ex, "Error in autocomplete artists");
             return Ok(new List<AutocompleteResultDto>());
         }
     }
@@ -506,7 +516,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in autocomplete genres: {ex.Message}");
+            _logger.LogWarning(ex, "Error in autocomplete genres");
             return Ok(new List<AutocompleteResultDto>());
         }
     }
@@ -528,7 +538,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in autocomplete people: {ex.Message}");
+            _logger.LogWarning(ex, "Error in autocomplete people");
             return Ok(new List<AutocompleteResultDto>());
         }
     }
@@ -550,7 +560,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in autocomplete tags: {ex.Message}");
+            _logger.LogWarning(ex, "Error in autocomplete tags");
             return Ok(new List<AutocompleteResultDto>());
         }
     }
@@ -569,7 +579,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting musical keys: {ex.Message}");
+            _logger.LogError(ex, "Error getting musical keys");
             return StatusCode(500, "אירעה שגיאה בטעינת הסולמות");
         }
     }
@@ -611,7 +621,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting popular songs: {ex.Message}");
+            _logger.LogWarning(ex, "Error getting popular songs");
             return Ok(new List<SongBasicDto>());
         }
     }
@@ -630,7 +640,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting genres: {ex.Message}");
+            _logger.LogWarning(ex, "Error getting genres");
             return Ok(new List<GenreDto>());
         }
     }
@@ -656,6 +666,8 @@ public class SongsController : ControllerBase
                 }
             }
 
+            _logger.LogInformation("Song approval toggled: SongId={SongId} IsApproved={IsApproved} AdminUserId={AdminId}",
+                id, dto.IsApproved, User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
             return Ok(new
             {
                 success = true,
@@ -669,7 +681,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error toggling song approval: {ex.Message}");
+            _logger.LogError(ex, "Error toggling song approval: SongId={Id}", id);
             return StatusCode(500, new { message = "שגיאה בעדכון סטטוס האישור" });
         }
     }
@@ -718,7 +730,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error incrementing song view: {ex.Message}");
+            _logger.LogError(ex, "Error incrementing song view: SongId={Id}", id);
             return StatusCode(500, new { message = "שגיאה בעדכון צפיות" });
         }
     }
@@ -738,7 +750,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting daily limit status: {ex.Message}");
+            _logger.LogError(ex, "Error getting daily limit status");
             return StatusCode(500, new { message = "שגיאה בבדיקת מגבלה יומית" });
         }
     }
@@ -754,6 +766,8 @@ public class SongsController : ControllerBase
         try
         {
             var duplicate = await _songService.DuplicateSongAsync(id);
+            _logger.LogInformation("Song duplicated: OriginalId={OriginalId} NewId={NewId}",
+                id, duplicate.Id);
             return Ok(duplicate);
         }
         catch (InvalidOperationException ex)
@@ -762,7 +776,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error duplicating song: {ex.Message}");
+            _logger.LogError(ex, "Error duplicating song: SongId={Id}", id);
             return StatusCode(500, new { message = "שגיאה בשכפול השיר" });
         }
     }
@@ -786,7 +800,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting my songs: {ex.Message}");
+            _logger.LogError(ex, "Error getting my songs");
             return StatusCode(500, "אירעה שגיאה בטעינת השירים");
         }
     }
@@ -813,7 +827,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error rating song: {ex.Message}");
+            _logger.LogError(ex, "Error rating song: SongId={Id}", id);
             return StatusCode(500, new { message = "שגיאה בשמירת הדירוג" });
         }
     }
@@ -833,7 +847,7 @@ public class SongsController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting song rating: {ex.Message}");
+            _logger.LogWarning(ex, "Error getting song rating: SongId={Id}", id);
             return Ok(new SongRatingResponseDto { AverageRating = 0, RatingCount = 0, UserRating = null });
         }
     }

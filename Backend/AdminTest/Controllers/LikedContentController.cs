@@ -12,10 +12,12 @@ namespace AkordishKeit.Controllers;
 public class LikedContentController : ControllerBase
 {
     private readonly ILikedContentService _likedContentService;
+    private readonly ILogger<LikedContentController> _logger;
 
-    public LikedContentController(ILikedContentService likedContentService)
+    public LikedContentController(ILikedContentService likedContentService, ILogger<LikedContentController> logger)
     {
         _likedContentService = likedContentService;
+        _logger = logger;
     }
 
     private int? GetCurrentUserId()
@@ -82,6 +84,8 @@ public class LikedContentController : ControllerBase
         if (likedContent == null)
             return Conflict(new { message = "התוכן כבר במועדפים" });
 
+        _logger.LogInformation("Liked content added: UserId={UserId} ContentType={ContentType} ContentId={ContentId}",
+            userId.Value, dto.ContentType, dto.ContentId);
         return Ok(likedContent);
     }
 
@@ -101,6 +105,8 @@ public class LikedContentController : ControllerBase
         if (!success)
             return NotFound(new { message = "התוכן לא נמצא במועדפים" });
 
+        _logger.LogInformation("Liked content removed: UserId={UserId} ContentType={ContentType} ContentId={ContentId}",
+            userId.Value, contentType, contentId);
         return Ok(new { message = "התוכן הוסר מהמועדפים בהצלחה" });
     }
 }

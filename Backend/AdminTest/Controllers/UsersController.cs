@@ -10,10 +10,12 @@ namespace AkordishKeit.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _service;
+    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserService service)
+    public UsersController(IUserService service, ILogger<UsersController> logger)
     {
         _service = service;
+        _logger = logger;
     }
 
     // GET: api/Users/with-profiles?q=שם&limit=20
@@ -50,6 +52,7 @@ public class UsersController : ControllerBase
         if (userId == null) return Unauthorized();
         var profile = await _service.UpdateMyProfileAsync(userId.Value, dto);
         if (profile == null) return NotFound();
+        _logger.LogInformation("User profile updated: UserId={UserId}", userId);
         return Ok(profile);
     }
 
@@ -90,6 +93,8 @@ public class UsersController : ControllerBase
         if (userId == null) return Unauthorized();
         var success = await _service.RevokePageAsync(userId.Value, dto);
         if (!success) return NotFound();
+        _logger.LogInformation("User revoked page: UserId={UserId} ProfileType={ProfileType} ProfileId={ProfileId}",
+            userId, dto.ProfileType, dto.ProfileId);
         return Ok();
     }
 
@@ -107,6 +112,8 @@ public class UsersController : ControllerBase
         var page = await _service.SetPageVisibilityAsync(userId.Value, dto);
         if (page == null) return BadRequest(new { message = "לא ניתן לשנות סטטוס לדף הזה כרגע" });
 
+        _logger.LogInformation("User changed page visibility: UserId={UserId} ProfileType={ProfileType} ProfileId={ProfileId} IsActive={IsActive}",
+            userId, dto.ProfileType, dto.ProfileId, dto.IsActive);
         return Ok(page);
     }
 

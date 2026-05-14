@@ -15,12 +15,14 @@ namespace AkordishKeit.Controllers
         private readonly AkordishKeitDbContext _context;
         private readonly IEventService _eventService;
         private readonly IUserTagService _userTagService;
+        private readonly ILogger<EventsController> _logger;
 
-        public EventsController(AkordishKeitDbContext context, IEventService eventService, IUserTagService userTagService)
+        public EventsController(AkordishKeitDbContext context, IEventService eventService, IUserTagService userTagService, ILogger<EventsController> logger)
         {
             _context = context;
             _eventService = eventService;
             _userTagService = userTagService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace AkordishKeit.Controllers
                 return BadRequest(ModelState);
 
             var eventDto = await _eventService.CreateEventAsync(dto, GetCurrentUserId());
+            _logger.LogInformation("Event created (admin): EventId={EventId} Name={Name}", eventDto.Id, eventDto.Name);
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
         }
 
@@ -101,6 +104,8 @@ namespace AkordishKeit.Controllers
 
             await _userTagService.RecalculateTagAsync(userId.Value);
 
+            _logger.LogInformation("Event submitted by user (pending): EventId={EventId} UserId={UserId} Name={Name}",
+                eventDto.Id, userId.Value, eventDto.Name);
             return CreatedAtAction(nameof(GetEvent), new { id = eventDto.Id }, eventDto);
         }
 
@@ -143,7 +148,13 @@ namespace AkordishKeit.Controllers
                 if (submittedByUserId.HasValue)
                 {
                     await _userTagService.RecalculateTagAsync(submittedByUserId.Value);
+                    _logger.LogInformation("Event activated (published): EventId={EventId} SubmittedByUserId={UserId}",
+                        id, submittedByUserId.Value);
                 }
+            }
+            else
+            {
+                _logger.LogInformation("Event updated: EventId={EventId}", id);
             }
 
             return Ok(eventDto);
@@ -161,6 +172,7 @@ namespace AkordishKeit.Controllers
             if (!result)
                 return NotFound(new { message = "ההופעה לא נמצאה" });
 
+            _logger.LogInformation("Event deleted: EventId={EventId}", id);
             return NoContent();
         }
 

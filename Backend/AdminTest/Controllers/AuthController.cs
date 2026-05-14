@@ -30,6 +30,7 @@ namespace AkordishKeit.Controllers
         private readonly ICsrfTokenService _csrfTokenService; // 🔐 שירות CSRF
         private readonly Cloudinary _cloudinary;
         private readonly IEmailService _emailService;
+        private readonly ILogger<AuthController> _logger;
 
         // Simple in-memory storage for verification codes (in production, use Redis or database)
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -39,13 +40,15 @@ namespace AkordishKeit.Controllers
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             ICsrfTokenService csrfTokenService,
-            IEmailService emailService)
+            IEmailService emailService,
+            ILogger<AuthController> logger)
         {
             _context = context;
             _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _csrfTokenService = csrfTokenService;
             _emailService = emailService;
+            _logger = logger;
 
             var account = new Account(
                 configuration["Cloudinary:CloudName"],
@@ -85,6 +88,9 @@ namespace AkordishKeit.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            _logger.LogInformation("User logged out: UserId={UserId} IP={IP}",
+                userIdClaim ?? "anonymous", HttpContext.Connection.RemoteIpAddress);
             ExpireCookie("auth-token", httpOnly: true);
             ExpireCookie("XSRF-TOKEN", httpOnly: false);
             return Ok(new { message = "התנתקת בהצלחה" });
@@ -102,6 +108,8 @@ namespace AkordishKeit.Controllers
             var googleUser = await VerifyGoogleToken(request.IdToken);
             if (googleUser == null)
             {
+                _logger.LogWarning("Google login failed — invalid token IP={IP}",
+                    HttpContext.Connection.RemoteIpAddress);
                 return Unauthorized("Invalid Google Token");
             }
 
@@ -180,6 +188,13 @@ namespace AkordishKeit.Controllers
                 user.VisitCount++;
                 await _context.SaveChangesAsync();
             }
+
+            if (isNewGoogleUser)
+                _logger.LogInformation("New user registered via Google: UserId={UserId} Email={Email} IP={IP}",
+                    user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
+            else
+                _logger.LogInformation("Existing user login via Google: UserId={UserId} Email={Email} IP={IP}",
+                    user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
 
             // 4. 🔐 שימוש באימות מאובטח עם Cookies
             // הרשמה חדשה = הצג שאלות onboarding; כניסה חוזרת = אל תציג
@@ -371,12 +386,16 @@ namespace AkordishKeit.Controllers
             // 1. Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             {
+                _logger.LogWarning("Registration failed — duplicate username: {Username} IP={IP}",
+                    request.Username, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "שם המשתמש כבר קיים במערכת" });
             }
 
             // 2. Check if email already exists
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
+                _logger.LogWarning("Registration failed — duplicate email: {Email} IP={IP}",
+                    request.Email, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "כתובת האימייל כבר קיימת במערכת" });
             }
 
@@ -405,6 +424,9 @@ namespace AkordishKeit.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("New user registered: UserId={UserId} Email={Email} IP={IP}",
+                user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
+
             // 5. 🔐 שימוש באימות מאובטח עם Cookies - הרשמה חדשה, הצג שאלות onboarding
             return Ok(HandleSecureAuthentication(user, hasProfessionalProfile: false, isNewRegistration: true));
         }
@@ -427,24 +449,32 @@ namespace AkordishKeit.Controllers
 
             if (user == null)
             {
+                _logger.LogWarning("Login failed — user not found: {Identifier} IP={IP}",
+                    request.UsernameOrEmail, HttpContext.Connection.RemoteIpAddress);
                 return Unauthorized(new { message = "שם משתמש או סיסמא שגויים" });
             }
 
             // 2. Check if user has password (not Google-only account)
             if (string.IsNullOrEmpty(user.PasswordHash))
             {
+                _logger.LogWarning("Login failed — Google-only account tried password login: UserId={UserId} IP={IP}",
+                    user.Id, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "משתמש זה נרשם דרך Google. אנא השתמש בכפתור 'כניסה עם Google'" });
             }
 
             // 3. Verify password
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
+                _logger.LogWarning("Login failed — wrong password: UserId={UserId} IP={IP}",
+                    user.Id, HttpContext.Connection.RemoteIpAddress);
                 return Unauthorized(new { message = "שם משתמש או סיסמא שגויים" });
             }
 
             // 4. Check if user is active
             if (!user.IsActive)
             {
+                _logger.LogWarning("Login failed — account suspended: UserId={UserId} Email={Email} IP={IP}",
+                    user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
                 return Unauthorized(new { message = "החשבון הושעה. אנא צור קשר עם התמיכה" });
             }
 
@@ -452,6 +482,9 @@ namespace AkordishKeit.Controllers
             user.LastLoginAt = DateTime.UtcNow;
             user.VisitCount++;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User login success: UserId={UserId} Email={Email} IP={IP}",
+                user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
 
             // 6. 🔐 שימוש באימות מאובטח עם Cookies - כניסה חוזרת, אל תציג שאלות onboarding
             var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
@@ -734,9 +767,15 @@ namespace AkordishKeit.Controllers
             {
                 var sent = await _emailService.SendPasswordResetEmailAsync(user.Email, user.Username, code);
                 if (!sent)
+                {
+                    _logger.LogError("Password reset email failed to send: UserId={UserId} IP={IP}",
+                        user.Id, HttpContext.Connection.RemoteIpAddress);
                     return StatusCode(500, new { message = "שגיאה בשליחת המייל, נסה שוב מאוחר יותר" });
+                }
             }
 
+            _logger.LogInformation("Password reset code sent: UserId={UserId} Method={Method} IP={IP}",
+                user.Id, request.Method, HttpContext.Connection.RemoteIpAddress);
             return Ok(new { message = "קוד אימות נשלח למייל" });
         }
 
@@ -785,6 +824,8 @@ namespace AkordishKeit.Controllers
             // Remove used code
             _verificationCodes.Remove(key);
 
+            _logger.LogInformation("Password reset completed: UserId={UserId} IP={IP}",
+                user.Id, HttpContext.Connection.RemoteIpAddress);
             return Ok(new { message = "הסיסמא שונתה בהצלחה" });
         }
 

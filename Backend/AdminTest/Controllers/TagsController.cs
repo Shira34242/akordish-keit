@@ -12,10 +12,12 @@ namespace AkordishKeit.Controllers;
 public class TagsController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly ILogger<TagsController> _logger;
 
-    public TagsController(AkordishKeitDbContext context)
+    public TagsController(AkordishKeitDbContext context, ILogger<TagsController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -91,6 +93,7 @@ public class TagsController : ControllerBase
         _context.Tags.Add(tag);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Tag created: TagId={TagId} Name={Name}", tag.Id, tag.Name);
         var result = new SystemItemDto
         {
             Id = tag.Id,
@@ -133,6 +136,7 @@ public class TagsController : ControllerBase
             }
         }
 
+        _logger.LogInformation("Tag updated: TagId={TagId} Name={Name}", id, dto.Name);
         return NoContent();
     }
 
@@ -149,6 +153,7 @@ public class TagsController : ControllerBase
         _context.Tags.Remove(tag);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Tag deleted: TagId={TagId} Name={Name}", id, tag.Name);
         return NoContent();
     }
 
@@ -255,6 +260,8 @@ public class TagsController : ControllerBase
             return BadRequest("לא ניתן למחוק חלק מהפריטים (ייתכן שהם בשימוש)");
         }
 
+        _logger.LogInformation("Tags bulk-deleted: Count={Count} Ids={Ids}",
+            tags.Count, string.Join(",", dto.Ids));
         return Ok(new { deletedCount = tags.Count });
     }
 

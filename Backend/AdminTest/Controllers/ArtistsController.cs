@@ -17,17 +17,20 @@ public class ArtistsController : ControllerBase
     private readonly INotificationService _notificationService;
     private readonly ISongService _songService;
     private readonly IArticleService _articleService;
+    private readonly ILogger<ArtistsController> _logger;
 
     public ArtistsController(
         AkordishKeitDbContext context,
         INotificationService notificationService,
         ISongService songService,
-        IArticleService articleService)
+        IArticleService articleService,
+        ILogger<ArtistsController> logger)
     {
         _context = context;
         _notificationService = notificationService;
         _songService = songService;
         _articleService = articleService;
+        _logger = logger;
     }
 
     // ========================================
@@ -975,6 +978,8 @@ public class ArtistsController : ControllerBase
             await _context.SaveChangesAsync();
 
             await _notificationService.NotifyArtistSubmittedAsync(userId, artist.Id, artist.Name);
+            _logger.LogInformation("Artist profile created (pending approval): ArtistId={ArtistId} Name={Name} UserId={UserId} IsPremium={IsPremium}",
+                artist.Id, artist.Name, userId, artist.IsPremium);
 
             // החזרת פרטי האומן המלאים
             var result = await _context.Artists
@@ -1053,6 +1058,7 @@ public class ArtistsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error creating artist profile");
             return StatusCode(500, $"שגיאה ביצירת פרופיל אומן: {ex.Message}");
         }
     }
@@ -1240,10 +1246,13 @@ public class ArtistsController : ControllerBase
                 })
                 .FirstOrDefaultAsync();
 
+            _logger.LogInformation("Artist created by admin: ArtistId={ArtistId} Name={Name} Status={Status}",
+                artist.Id, artist.Name, artist.Status);
             return CreatedAtAction(nameof(GetArtistById), new { id = artist.Id }, result);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error creating artist (admin): Name={Name}", dto.Name);
             return StatusCode(500, $"שגיאה ביצירת אומן: {ex.Message}");
         }
     }
@@ -1264,10 +1273,13 @@ public class ArtistsController : ControllerBase
             artist.IsDeleted = true;
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Artist deleted: ArtistId={ArtistId} Name={Name}",
+                artist.Id, artist.Name);
             return NoContent();
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error deleting artist: ArtistId={Id}", id);
             return StatusCode(500, $"שגיאה במחיקת אומן: {ex.Message}");
         }
     }
@@ -1461,10 +1473,13 @@ public class ArtistsController : ControllerBase
                 })
                 .FirstOrDefaultAsync();
 
+            _logger.LogInformation("Artist duplicated: OriginalId={OriginalId} NewId={NewId}",
+                id, result?.Id);
             return Ok(result);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error duplicating artist: ArtistId={Id}", id);
             return StatusCode(500, $"שגיאה בשכפול אומן: {ex.Message}");
         }
     }
@@ -1691,10 +1706,13 @@ public class ArtistsController : ControllerBase
                 await _notificationService.NotifyArtistApprovedAsync(artist.UserId.Value, artist.Id, artist.Name);
             }
 
+            _logger.LogInformation("Artist status updated: ArtistId={ArtistId} Name={Name} NewStatus={Status}",
+                artist.Id, artist.Name, status);
             return NoContent();
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error updating artist status: ArtistId={Id} Status={Status}", id, status);
             return StatusCode(500, $"שגיאה בעדכון סטטוס: {ex.Message}");
         }
     }

@@ -16,11 +16,13 @@ public class PlaylistsController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
     private readonly IPlaylistService _playlistService;
+    private readonly ILogger<PlaylistsController> _logger;
 
-    public PlaylistsController(AkordishKeitDbContext context, IPlaylistService playlistService)
+    public PlaylistsController(AkordishKeitDbContext context, IPlaylistService playlistService, ILogger<PlaylistsController> logger)
     {
         _context = context;
         _playlistService = playlistService;
+        _logger = logger;
     }
 
     private int? GetCurrentUserId()
@@ -110,14 +112,18 @@ public class PlaylistsController : ControllerBase
         try
         {
             var playlist = await _playlistService.CreatePlaylistAsync(dto, userId.Value);
+            _logger.LogInformation("Playlist created: PlaylistId={PlaylistId} UserId={UserId} Name={Name}",
+                playlist.Id, userId.Value, playlist.Name);
             return CreatedAtAction(nameof(GetPlaylistById), new { id = playlist.Id }, playlist);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("Create playlist failed: UserId={UserId} Error={Error}", userId.Value, ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Create playlist error: UserId={UserId}", userId.Value);
             return StatusCode(500, new { message = ex.Message });
         }
     }
@@ -154,6 +160,7 @@ public class PlaylistsController : ControllerBase
         if (!success)
             return BadRequest(new { message = "לא ניתן למחוק רשימה זו" });
 
+        _logger.LogInformation("Playlist deleted: PlaylistId={PlaylistId} UserId={UserId}", id, userId.Value);
         return Ok(new { message = "הרשימה נמחקה בהצלחה" });
     }
 
@@ -213,10 +220,14 @@ public class PlaylistsController : ControllerBase
             if (!success)
                 return BadRequest(new { message = "לא ניתן להוסיף את השיר לרשימה" });
 
+            _logger.LogInformation("Song added to playlist: PlaylistId={PlaylistId} SongId={SongId} UserId={UserId}",
+                id, songId, userId.Value);
             return Ok(new { message = "השיר נוסף לרשימה בהצלחה" });
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("Add song to playlist failed: PlaylistId={PlaylistId} SongId={SongId} Error={Error}",
+                id, songId, ex.Message);
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -232,6 +243,8 @@ public class PlaylistsController : ControllerBase
         if (!success)
             return NotFound(new { message = "השיר לא נמצא ברשימה" });
 
+        _logger.LogInformation("Song removed from playlist: PlaylistId={PlaylistId} SongId={SongId} UserId={UserId}",
+            id, songId, userId.Value);
         return Ok(new { message = "השיר הוסר מהרשימה בהצלחה" });
     }
 

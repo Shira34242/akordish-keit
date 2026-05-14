@@ -64,6 +64,7 @@ Frontend/**/dist/
 Frontend/**/.angular/cache/
 
 # Compiled output
+Frontend/**/obj/
 Frontend/**/tmp/
 Frontend/**/out-tsc/
 

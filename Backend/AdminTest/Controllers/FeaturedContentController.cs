@@ -10,10 +10,12 @@ namespace AkordishKeit.Controllers
     public class FeaturedContentController : ControllerBase
     {
         private readonly IFeaturedContentService _featuredContentService;
+        private readonly ILogger<FeaturedContentController> _logger;
 
-        public FeaturedContentController(IFeaturedContentService featuredContentService)
+        public FeaturedContentController(IFeaturedContentService featuredContentService, ILogger<FeaturedContentController> logger)
         {
             _featuredContentService = featuredContentService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -65,10 +67,12 @@ namespace AkordishKeit.Controllers
             try
             {
                 var featuredContent = await _featuredContentService.CreateFeaturedContentAsync(dto);
+                _logger.LogInformation("Featured content created: FeaturedContentId={Id}", featuredContent.Id);
                 return CreatedAtAction(nameof(GetFeaturedContent), new { id = featuredContent.Id }, featuredContent);
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogWarning("Create featured content failed: {Error}", ex.Message);
                 return BadRequest(new { message = ex.Message });
             }
         }
@@ -90,6 +94,7 @@ namespace AkordishKeit.Controllers
                 if (featuredContent == null)
                     return NotFound(new { message = "התוכן המרכזי לא נמצא" });
 
+                _logger.LogInformation("Featured content updated: FeaturedContentId={Id}", id);
                 return Ok(featuredContent);
             }
             catch (InvalidOperationException ex)
@@ -131,6 +136,7 @@ namespace AkordishKeit.Controllers
             if (!result)
                 return NotFound(new { message = "התוכן המרכזי לא נמצא" });
 
+            _logger.LogInformation("Featured content deleted: FeaturedContentId={Id}", id);
             return NoContent();
         }
     }

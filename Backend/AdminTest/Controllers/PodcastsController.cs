@@ -10,10 +10,12 @@ namespace AkordishKeit.Controllers
     public class PodcastsController : ControllerBase
     {
         private readonly IPodcastService _podcastService;
+        private readonly ILogger<PodcastsController> _logger;
 
-        public PodcastsController(IPodcastService podcastService)
+        public PodcastsController(IPodcastService podcastService, ILogger<PodcastsController> logger)
         {
             _podcastService = podcastService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -84,6 +86,7 @@ namespace AkordishKeit.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var podcast = await _podcastService.CreatePodcastAsync(dto);
+            _logger.LogInformation("Podcast created: PodcastId={PodcastId} Name={Name}", podcast.Id, podcast.Name);
             return CreatedAtAction(nameof(GetPodcast), new { id = podcast.Id }, podcast);
         }
 
@@ -93,6 +96,8 @@ namespace AkordishKeit.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var podcast = await _podcastService.UpdatePodcastAsync(id, dto);
+            if (podcast != null)
+                _logger.LogInformation("Podcast updated: PodcastId={PodcastId}", id);
             return podcast == null ? NotFound(new { message = "הפודקאסט לא נמצא" }) : Ok(podcast);
         }
 
@@ -100,7 +105,10 @@ namespace AkordishKeit.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeletePodcast(int id)
         {
-            return await _podcastService.DeletePodcastAsync(id)
+            var deleted = await _podcastService.DeletePodcastAsync(id);
+            if (deleted)
+                _logger.LogInformation("Podcast deleted: PodcastId={PodcastId}", id);
+            return deleted
                 ? NoContent()
                 : NotFound(new { message = "הפודקאסט לא נמצא" });
         }
@@ -133,10 +141,13 @@ namespace AkordishKeit.Controllers
             try
             {
                 var episode = await _podcastService.CreateEpisodeAsync(dto);
+                _logger.LogInformation("Podcast episode created: EpisodeId={EpisodeId} PodcastId={PodcastId} Title={Title}",
+                    episode.Id, dto.PodcastId, episode.Title);
                 return CreatedAtAction(nameof(GetEpisode), new { id = episode.Id }, episode);
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogWarning("Create episode failed: PodcastId={PodcastId} Error={Error}", dto.PodcastId, ex.Message);
                 return BadRequest(new { message = ex.Message });
             }
         }
@@ -149,10 +160,13 @@ namespace AkordishKeit.Controllers
             try
             {
                 var episode = await _podcastService.UpdateEpisodeAsync(id, dto);
+                if (episode != null)
+                    _logger.LogInformation("Podcast episode updated: EpisodeId={EpisodeId}", id);
                 return episode == null ? NotFound(new { message = "הפרק לא נמצא" }) : Ok(episode);
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogWarning("Update episode failed: EpisodeId={EpisodeId} Error={Error}", id, ex.Message);
                 return BadRequest(new { message = ex.Message });
             }
         }
@@ -161,7 +175,10 @@ namespace AkordishKeit.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteEpisode(int id)
         {
-            return await _podcastService.DeleteEpisodeAsync(id)
+            var deleted = await _podcastService.DeleteEpisodeAsync(id);
+            if (deleted)
+                _logger.LogInformation("Podcast episode deleted: EpisodeId={EpisodeId}", id);
+            return deleted
                 ? NoContent()
                 : NotFound(new { message = "הפרק לא נמצא" });
         }

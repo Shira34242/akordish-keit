@@ -13,10 +13,12 @@ namespace AkordishKeit.Controllers;
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;
+    private readonly ILogger<NotificationsController> _logger;
 
-    public NotificationsController(INotificationService notificationService)
+    public NotificationsController(INotificationService notificationService, ILogger<NotificationsController> logger)
     {
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -129,14 +131,18 @@ public class NotificationsController : ControllerBase
 
             var notification = await _notificationService.SendAdminMessageAsync(dto, adminUserId.Value);
 
+            _logger.LogInformation("Admin sent user message: AdminId={AdminId} TargetUserId={TargetUserId} Title={Title}",
+                adminUserId.Value, dto.UserId, dto.Title);
             return Ok(notification);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("SendUserMessage validation failed: {Error}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "SendUserMessage failed: TargetUserId={TargetUserId}", dto.UserId);
             return StatusCode(500, new { message = $"שליחת ההודעה נכשלה: {ex.Message}" });
         }
     }
@@ -159,14 +165,18 @@ public class NotificationsController : ControllerBase
             }
 
             var result = await _notificationService.SendBroadcastAsync(dto, adminUserId.Value);
+            _logger.LogInformation("Admin sent broadcast: AdminId={AdminId} Title={Title} SentCount={SentCount}",
+                adminUserId.Value, dto.Title, result.SentCount);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("SendBroadcast validation failed: {Error}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "SendBroadcast failed: AdminId={AdminId}", GetCurrentUserId());
             return StatusCode(500, new { message = $"שליחת התפוצה נכשלה: {ex.Message}" });
         }
     }
@@ -192,6 +202,8 @@ public class NotificationsController : ControllerBase
             }
 
             var group = await _notificationService.CreateGroupAsync(dto, adminUserId.Value);
+            _logger.LogInformation("Notification group created: AdminId={AdminId} GroupId={GroupId} Name={Name}",
+                adminUserId.Value, group.Id, group.Name);
             return Ok(group);
         }
         catch (InvalidOperationException ex)
@@ -256,14 +268,18 @@ public class NotificationsController : ControllerBase
                 dto.ActionUrl,
                 adminUserId.Value);
 
+            _logger.LogInformation("Admin sent status update: AdminId={AdminId} TargetUserId={TargetUserId} Type={Type} Title={Title}",
+                adminUserId.Value, dto.UserId, dto.Type, dto.Title);
             return Ok(notification);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning("SendStatusUpdate validation failed: {Error}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "SendStatusUpdate failed: TargetUserId={TargetUserId}", dto.UserId);
             return StatusCode(500, new { message = $"שליחת עדכון הסטטוס נכשלה: {ex.Message}" });
         }
     }
