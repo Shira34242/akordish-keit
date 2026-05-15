@@ -317,3 +317,5 @@
   z-index: 2;
   cursor: pointer;
 }
+.bump-indicator { color: #ddff53; font-size: 0.8em; margin-inline-start: 4px; vertical-align: middle; }
+.grid-checkbox-label { position: absolute; top: 8px; right: 8px; z-index: 2; cursor: pointer; }

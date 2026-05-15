@@ -92,6 +92,10 @@ namespace AkordishKeit.Data.Configurations
 
             builder.Property(sp => sp.BumpedAt);
 
+            builder.Property(sp => sp.BumpCount)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             // Relationships
 
             // User (1:Many - משתמש יכול לנהל מספר פרופילים מקצועיים)

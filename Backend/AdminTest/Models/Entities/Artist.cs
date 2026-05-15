@@ -73,6 +73,8 @@ public class Artist
 
     // תאריכים
     public DateTime CreatedAt { get; set; }
+    public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public bool IsDeleted { get; set; }
 
     // Navigation Properties

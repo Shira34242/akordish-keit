@@ -43,6 +43,10 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
         builder.Property(p => p.BumpedAt)
             .IsRequired(false);
 
+        builder.Property(p => p.BumpCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         // Indexes
         builder.HasIndex(p => p.UserId)
             .HasDatabaseName("IX_Playlists_UserId");

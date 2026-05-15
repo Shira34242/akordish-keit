@@ -95,7 +95,7 @@
       </div>
       <div class="grid-card-name">
         {{ song.title }}
-        <span class="bump-indicator" *ngIf="song.bumpedAt" title="הוקפץ">⬆</span>
+        <span class="bump-indicator" *ngIf="song.bumpedAt" [title]="'הוקפץ ' + (song.bumpCount || 1) + ' פעמים, לאחרונה: ' + (song.bumpedAt | date:'short')">⬆{{ song.bumpCount && song.bumpCount > 1 ? song.bumpCount : '' }}</span>
       </div>
       <div class="grid-card-sub">{{ formatArtists(song) }}</div>
       <div class="grid-card-badges">
@@ -157,7 +157,7 @@
             <div class="song-info">
               <div class="song-title">
                 {{ song.title }}
-                <span class="bump-indicator" *ngIf="song.bumpedAt" title="הוקפץ">⬆</span>
+                <span class="bump-indicator" *ngIf="song.bumpedAt" [title]="'הוקפץ ' + (song.bumpCount || 1) + ' פעמים, לאחרונה: ' + (song.bumpedAt | date:'short')">⬆{{ song.bumpCount && song.bumpCount > 1 ? song.bumpCount : '' }}</span>
               </div>
               <div class="song-meta" *ngIf="song.originalKeyName">
                 מקור: {{ song.originalKeyName }}

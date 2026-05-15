@@ -68,6 +68,12 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(e => e.BumpedAt);
+
+        builder.Property(e => e.BumpCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.IsDeleted)
                .IsRequired()
                .HasDefaultValue(false);

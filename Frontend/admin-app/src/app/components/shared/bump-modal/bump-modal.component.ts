@@ -44,6 +44,7 @@ export class BumpModalComponent {
       case 'Article': return 'כתבות';
       case 'Playlist': return 'פלייליסטים';
       case 'ServiceProvider': return 'פרופילים';
+      case 'Artist': return 'אומנים';
       default: return 'פריטים';
     }
   }

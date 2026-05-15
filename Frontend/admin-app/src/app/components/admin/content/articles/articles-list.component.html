@@ -137,7 +137,7 @@
       </div>
       <div class="grid-card-name">
         {{ article.title }}
-        <span class="bump-indicator" *ngIf="article.bumpedAt" title="הוקפץ">⬆</span>
+        <span class="bump-indicator" *ngIf="article.bumpedAt" [title]="'הוקפץ ' + (article.bumpCount || 1) + ' פעמים, לאחרונה: ' + (article.bumpedAt | date:'short')">⬆{{ article.bumpCount && article.bumpCount > 1 ? article.bumpCount : '' }}</span>
       </div>
       <div class="grid-card-sub">{{ article.authorName }}</div>
       <div class="grid-card-badges">
@@ -200,7 +200,7 @@
             <div class="article-info">
               <div class="article-title">
                 {{ article.title }}
-                <span class="bump-indicator" *ngIf="article.bumpedAt" title="הוקפץ">⬆</span>
+                <span class="bump-indicator" *ngIf="article.bumpedAt" [title]="'הוקפץ ' + (article.bumpCount || 1) + ' פעמים, לאחרונה: ' + (article.bumpedAt | date:'short')">⬆{{ article.bumpCount && article.bumpCount > 1 ? article.bumpCount : '' }}</span>
                 <span *ngIf="article.isFeatured" class="featured-badge"><span class="material-icons">star</span></span>
                 <span *ngIf="article.isPremium" class="premium-badge"><span
                     class="material-icons">workspace_premium</span></span>

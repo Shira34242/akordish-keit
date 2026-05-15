@@ -40,6 +40,10 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Property(e => e.BumpedAt);
 
+        builder.Property(e => e.BumpCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.AuthorName)
                .HasMaxLength(100);
 

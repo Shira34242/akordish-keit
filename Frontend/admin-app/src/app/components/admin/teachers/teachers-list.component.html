@@ -2,9 +2,6 @@
   <div class="page-header">
     <h1>ניהול מורים</h1>
     <div style="display:flex;gap:var(--space-md);">
-      <button class="btn btn-light" (click)="toggleSelectionMode()">
-        {{ selectionMode ? 'בטל בחירה' : 'בחירה מרובה' }}
-      </button>
       <button class="btn btn-primary" (click)="addNewTeacher()">
         <span class="material-icons">add</span>
         הוסף מורה חדש
@@ -12,11 +9,9 @@
     </div>
   </div>
 
-  <div class="bulk-bar" *ngIf="selectionMode && selectedIds.size > 0">
+  <div class="bulk-bar" *ngIf="selectedIds.size > 0">
     <span>{{ selectedIds.size }} פרופילים נבחרו</span>
-    <button class="btn btn-light" (click)="toggleSelectAll()">
-      {{ isAllSelected ? 'בטל הכל' : 'בחר הכל' }}
-    </button>
+    <button class="btn btn-light" (click)="clearSelection()">נקה בחירה</button>
     <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
       <option [ngValue]="null" disabled>בחר סוכנות...</option>
       <option *ngFor="let a of agencies" [ngValue]="a.id">{{ a.name }}</option>
@@ -90,13 +85,16 @@
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let teacher of teachers">
+      <label class="grid-checkbox-label" (click)="$event.stopPropagation()">
+        <input type="checkbox" [checked]="selectedIds.has(teacher.id)" (change)="toggleTeacher(teacher.id)">
+      </label>
       <div class="grid-card-avatar">
         <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName" imgFallback>
         <span *ngIf="!teacher.profileImageUrl">{{ teacher.displayName.charAt(0) }}</span>
       </div>
       <div class="grid-card-name">
         {{ teacher.displayName }}
-        <span class="bump-indicator" *ngIf="teacher.bumpedAt" title="הוקפץ">⬆</span>
+        <span class="bump-indicator" *ngIf="teacher.bumpedAt" [title]="'הוקפץ ' + (teacher.bumpCount || 1) + ' פעמים, לאחרונה: ' + (teacher.bumpedAt | date:'short')">⬆{{ teacher.bumpCount && teacher.bumpCount > 1 ? teacher.bumpCount : '' }}</span>
       </div>
       <div class="grid-card-sub">{{ getLocationDisplay(teacher) }}</div>
       <div class="grid-card-badges">
@@ -117,7 +115,7 @@
     <table class="teachers-table">
       <thead>
         <tr>
-          <th *ngIf="selectionMode" style="width:40px"></th>
+          <th style="width:40px"></th>
           <th>תמונה</th>
           <th>שם תצוגה</th>
           <th>משתמש מקושר</th>
@@ -133,7 +131,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let teacher of teachers">
-          <td *ngIf="selectionMode">
+          <td>
             <input type="checkbox" [checked]="selectedIds.has(teacher.id)" (change)="toggleTeacher(teacher.id)">
           </td>
           <td>
@@ -144,7 +142,7 @@
               imgFallback
             />
           </td>
-          <td>{{ teacher.displayName }}<span class="bump-indicator" *ngIf="teacher.bumpedAt" title="הוקפץ">⬆</span></td>
+          <td>{{ teacher.displayName }}<span class="bump-indicator" *ngIf="teacher.bumpedAt" [title]="'הוקפץ ' + (teacher.bumpCount || 1) + ' פעמים, לאחרונה: ' + (teacher.bumpedAt | date:'short')">⬆{{ teacher.bumpCount && teacher.bumpCount > 1 ? teacher.bumpCount : '' }}</span></td>
           <td>
             <span *ngIf="teacher.userName" class="badge badge-success">{{ teacher.userName }}</span>
             <span *ngIf="!teacher.userName" class="badge badge-secondary">לא מחובר</span>

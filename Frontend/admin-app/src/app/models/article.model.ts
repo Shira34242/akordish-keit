@@ -29,6 +29,7 @@ export interface Article {
     createdAt: string;
     updatedAt?: string;
     bumpedAt?: string;
+    bumpCount?: number;
     authorName?: string;
     categoryIds: number[];
     categoryNames: string[];

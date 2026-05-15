@@ -18,6 +18,7 @@ public class PlaylistDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
 }
 
 public class PlaylistDetailDto
@@ -34,6 +35,7 @@ public class PlaylistDetailDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
 }
 
 public class PlaylistSongDto

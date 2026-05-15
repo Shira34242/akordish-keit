@@ -247,6 +247,7 @@ public class SongDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public int? UploadedByUserId { get; set; }
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; }

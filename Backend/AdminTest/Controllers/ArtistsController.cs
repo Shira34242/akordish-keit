@@ -73,7 +73,7 @@ public class ArtistsController : ControllerBase
                     .ThenByDescending(a => a.SongArtists.Count), // ואז לפי מספר שירים
                 "created" => query
                     .OrderByDescending(a => a.Tier)              // מנויים משלמים קודם
-                    .ThenByDescending(a => a.CreatedAt),         // ואז לפי תאריך
+                    .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt), // ואז לפי תאריך
                 _ => query
                     .OrderByDescending(a => a.Tier)              // מנויים משלמים קודם
                     .ThenBy(a => a.Name)                         // ואז לפי שם
@@ -92,7 +92,9 @@ public class ArtistsController : ControllerBase
                     IsPremium = a.IsPremium,
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
                     Status = a.Status,
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    BumpedAt = a.BumpedAt,
+                    BumpCount = a.BumpCount
                 })
                 .ToListAsync();
 
@@ -135,7 +137,9 @@ public class ArtistsController : ControllerBase
                     IsPremium = a.IsPremium,
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
                     Status = a.Status,
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    BumpedAt = a.BumpedAt,
+                    BumpCount = a.BumpCount
                 })
                 .ToListAsync();
 
@@ -1062,7 +1066,9 @@ public class ArtistsController : ControllerBase
                     SongCount = 0,
                     ArticleCount = 0,
                     UpcomingEventCount = 0,
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    BumpedAt = a.BumpedAt,
+                    BumpCount = a.BumpCount
                 })
                 .FirstOrDefaultAsync();
 
@@ -1254,7 +1260,9 @@ public class ArtistsController : ControllerBase
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
                     ArticleCount = 0, // TODO: כשיהיה מודל כתבות
                     UpcomingEventCount = 0, // TODO: כשיהיה מודל אירועים
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    BumpedAt = a.BumpedAt,
+                    BumpCount = a.BumpCount
                 })
                 .FirstOrDefaultAsync();
 
@@ -1481,7 +1489,9 @@ public class ArtistsController : ControllerBase
                     SongCount = 0,
                     ArticleCount = 0,
                     UpcomingEventCount = 0,
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    BumpedAt = a.BumpedAt,
+                    BumpCount = a.BumpCount
                 })
                 .FirstOrDefaultAsync();
 

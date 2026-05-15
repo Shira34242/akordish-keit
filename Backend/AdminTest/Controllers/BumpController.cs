@@ -76,6 +76,26 @@ public class BumpController : ControllerBase
         return Ok(new { bumpedCount = request.Ids.Count });
     }
 
+    [HttpGet("active-schedules")]
+    public async Task<IActionResult> GetActiveSchedules([FromQuery] string entityType)
+    {
+        if (string.IsNullOrWhiteSpace(entityType))
+            return BadRequest("חסר סוג ישות");
+
+        var schedules = await _context.BumpSchedules
+            .Where(s => s.EntityType == entityType && s.RemainingTimes > 0)
+            .Select(s => new
+            {
+                s.EntityId,
+                s.RemainingTimes,
+                s.IntervalHours,
+                s.NextBumpAt
+            })
+            .ToListAsync();
+
+        return Ok(schedules);
+    }
+
     private async Task BumpEntityAsync(string entityType, int entityId, DateTime bumpedAt)
     {
         switch (entityType)
@@ -83,22 +103,37 @@ public class BumpController : ControllerBase
             case "Song":
                 await _context.Songs
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "Article":
                 await _context.Articles
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "Playlist":
                 await _context.Playlists
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "ServiceProvider":
                 await _context.ServiceProviders
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                break;
+            case "Artist":
+                await _context.Artists
+                    .Where(e => e.Id == entityId)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
         }
     }

@@ -648,17 +648,41 @@ using (var scope = app.Services.CreateScope())
            AND COL_LENGTH(N'[Songs]', N'BumpedAt') IS NULL
             ALTER TABLE [Songs] ADD [BumpedAt] datetime2 NULL;
 
+        IF OBJECT_ID(N'[Songs]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Songs]', N'BumpCount') IS NULL
+            ALTER TABLE [Songs] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_Songs_BumpCount] DEFAULT 0;
+
         IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[Articles]', N'BumpedAt') IS NULL
             ALTER TABLE [Articles] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Articles]', N'BumpCount') IS NULL
+            ALTER TABLE [Articles] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_Articles_BumpCount] DEFAULT 0;
 
         IF OBJECT_ID(N'[Playlists]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[Playlists]', N'BumpedAt') IS NULL
             ALTER TABLE [Playlists] ADD [BumpedAt] datetime2 NULL;
 
+        IF OBJECT_ID(N'[Playlists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Playlists]', N'BumpCount') IS NULL
+            ALTER TABLE [Playlists] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_Playlists_BumpCount] DEFAULT 0;
+
         IF OBJECT_ID(N'[MusicServiceProviders]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[MusicServiceProviders]', N'BumpedAt') IS NULL
             ALTER TABLE [MusicServiceProviders] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[MusicServiceProviders]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviders]', N'BumpCount') IS NULL
+            ALTER TABLE [MusicServiceProviders] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_MusicServiceProviders_BumpCount] DEFAULT 0;
+
+        IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Artists]', N'BumpedAt') IS NULL
+            ALTER TABLE [Artists] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Artists]', N'BumpCount') IS NULL
+            ALTER TABLE [Artists] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_Artists_BumpCount] DEFAULT 0;
 
         IF OBJECT_ID(N'[BumpSchedules]', N'U') IS NULL
         BEGIN

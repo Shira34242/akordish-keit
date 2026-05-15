@@ -47,6 +47,8 @@ public class ArtistDetailDto
     public int UpcomingEventCount { get; set; }
 
     public DateTime CreatedAt { get; set; }
+    public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
 }
 
 /// <summary>
@@ -63,6 +65,8 @@ public class ArtistListDto
     public int SongCount { get; set; }
     public ArtistStatus Status { get; set; }  // נדרש עבור Admin
     public DateTime CreatedAt { get; set; }    // נדרש עבור Admin
+    public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
 }
 
 /// <summary>

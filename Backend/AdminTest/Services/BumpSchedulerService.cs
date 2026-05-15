@@ -95,22 +95,37 @@ public class BumpSchedulerService : BackgroundService
             case "Song":
                 context.Songs
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdate(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "Article":
                 context.Articles
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdate(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "Playlist":
                 context.Playlists
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdate(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
             case "ServiceProvider":
                 context.ServiceProviders
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s.SetProperty(e => e.BumpedAt, bumpedAt));
+                    .ExecuteUpdate(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                break;
+            case "Artist":
+                context.Artists
+                    .Where(e => e.Id == entityId)
+                    .ExecuteUpdate(s => s
+                        .SetProperty(e => e.BumpedAt, bumpedAt)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
                 break;
         }
     }

@@ -2,9 +2,6 @@
   <div class="page-header">
     <h1>ניהול בעלי מקצוע</h1>
     <div style="display:flex;gap:var(--space-md);">
-      <button class="btn btn-light" (click)="toggleSelectionMode()">
-        {{ selectionMode ? 'בטל בחירה' : 'בחירה מרובה' }}
-      </button>
       <button class="btn btn-primary" (click)="addNewProvider()">
         <span class="material-icons">add</span>
         הוסף בעל מקצוע חדש
@@ -12,11 +9,9 @@
     </div>
   </div>
 
-  <div class="bulk-bar" *ngIf="selectionMode && selectedIds.size > 0">
+  <div class="bulk-bar" *ngIf="selectedIds.size > 0">
     <span>{{ selectedIds.size }} פרופילים נבחרו</span>
-    <button class="btn btn-light" (click)="toggleSelectAll()">
-      {{ isAllSelected ? 'בטל הכל' : 'בחר הכל' }}
-    </button>
+    <button class="btn btn-light" (click)="clearSelection()">נקה בחירה</button>
     <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
       <option [ngValue]="null" disabled>בחר סוכנות...</option>
       <option *ngFor="let a of agencies" [ngValue]="a.id">{{ a.name }}</option>
@@ -105,13 +100,16 @@
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let provider of providers">
+      <label class="grid-checkbox-label" (click)="$event.stopPropagation()">
+        <input type="checkbox" [checked]="selectedIds.has(provider.id)" (change)="toggleProvider(provider.id)">
+      </label>
       <div class="grid-card-avatar">
         <img *ngIf="provider.profileImageUrl" [src]="provider.profileImageUrl" [alt]="provider.displayName" imgFallback>
         <span *ngIf="!provider.profileImageUrl">{{ provider.displayName.charAt(0) }}</span>
       </div>
       <div class="grid-card-name">
         {{ provider.displayName }}
-        <span class="bump-indicator" *ngIf="provider.bumpedAt" title="הוקפץ">⬆</span>
+        <span class="bump-indicator" *ngIf="provider.bumpedAt" [title]="'הוקפץ ' + (provider.bumpCount || 1) + ' פעמים, לאחרונה: ' + (provider.bumpedAt | date:'short')">⬆{{ provider.bumpCount && provider.bumpCount > 1 ? provider.bumpCount : '' }}</span>
       </div>
       <div class="grid-card-sub">{{ provider.categoryName || getLocationDisplay(provider) }}</div>
       <div class="grid-card-badges">
@@ -131,7 +129,7 @@
     <table class="providers-table">
       <thead>
         <tr>
-          <th *ngIf="selectionMode" style="width:40px"></th>
+          <th style="width:40px"></th>
           <th>תמונה</th>
           <th>שם תצוגה</th>
           <th>משתמש מקושר</th>
@@ -147,7 +145,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let provider of providers">
-          <td *ngIf="selectionMode">
+          <td>
             <input type="checkbox" [checked]="selectedIds.has(provider.id)" (change)="toggleProvider(provider.id)">
           </td>
           <td>
@@ -158,7 +156,7 @@
               imgFallback
             />
           </td>
-          <td>{{ provider.displayName }}<span class="bump-indicator" *ngIf="provider.bumpedAt" title="הוקפץ">⬆</span></td>
+          <td>{{ provider.displayName }}<span class="bump-indicator" *ngIf="provider.bumpedAt" [title]="'הוקפץ ' + (provider.bumpCount || 1) + ' פעמים, לאחרונה: ' + (provider.bumpedAt | date:'short')">⬆{{ provider.bumpCount && provider.bumpCount > 1 ? provider.bumpCount : '' }}</span></td>
           <td>
             <span *ngIf="provider.userName" class="badge badge-success">{{ provider.userName }}</span>
             <span *ngIf="!provider.userName" class="badge badge-secondary">לא מחובר</span>

@@ -74,6 +74,7 @@ export interface SongDto {
     createdAt: Date;
     updatedAt?: Date;
     bumpedAt?: Date;
+    bumpCount?: number;
     uploadedByUserId?: number;
     uploaderUserId?: number | null;
     uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';

@@ -724,6 +724,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             StatusName = entity.Status.ToString(),
             CreatedAt = entity.CreatedAt,
             BumpedAt = entity.BumpedAt,
+            BumpCount = entity.BumpCount,
             CategoriesCount = entity.Categories.Count,
             CategoryName = entity.Categories.FirstOrDefault()?.Category?.Name, // Get first category name
             BranchCityIds = GetBranchCityIds(entity.Branches)

@@ -67,6 +67,7 @@ export class TeachersListComponent implements OnInit {
   ngOnInit(): void {
     this.loadTeachers();
     this.loadCities();
+    this.loadAgencies();
   }
 
   loadTeachers(): void {
@@ -296,9 +297,12 @@ export class TeachersListComponent implements OnInit {
     if (!this.selectionMode) {
       this.selectedIds.clear();
       this.selectedAgencyId = null;
-    } else {
-      this.loadAgencies();
     }
+  }
+
+  clearSelection(): void {
+    this.selectedIds.clear();
+    this.selectedAgencyId = null;
   }
 
   toggleTeacher(id: number): void {

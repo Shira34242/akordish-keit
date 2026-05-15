@@ -67,6 +67,7 @@ export class ServiceProvidersListComponent implements OnInit {
   ngOnInit(): void {
     this.loadCities();
     this.loadProviders();
+    this.loadAgencies();
   }
 
   loadCities(): void {
@@ -293,9 +294,12 @@ export class ServiceProvidersListComponent implements OnInit {
     if (!this.selectionMode) {
       this.selectedIds.clear();
       this.selectedAgencyId = null;
-    } else {
-      this.loadAgencies();
     }
+  }
+
+  clearSelection(): void {
+    this.selectedIds.clear();
+    this.selectedAgencyId = null;
   }
 
   toggleProvider(id: number): void {

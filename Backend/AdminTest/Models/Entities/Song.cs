@@ -27,6 +27,7 @@ public class Song
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public int ViewCount { get; set; }
     public int PlayCount { get; set; }
     public bool IsDeleted { get; set; }

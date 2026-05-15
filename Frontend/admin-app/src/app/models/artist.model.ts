@@ -65,6 +65,8 @@ export interface ArtistListDto {
   songCount: number;
   status: ArtistStatus;      // נדרש עבור Admin
   createdAt: Date;           // נדרש עבור Admin
+  bumpedAt?: Date;
+  bumpCount?: number;
 }
 
 // ========================================

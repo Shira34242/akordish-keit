@@ -743,6 +743,7 @@ public class SongService : ISongService
                     CreatedAt = s.CreatedAt,
                     UpdatedAt = s.UpdatedAt,
                     BumpedAt = s.BumpedAt,
+                    BumpCount = s.BumpCount,
                     UploadedByUserId = s.UploadedByUserId,
                     UploaderUserId = s.UploaderUserId,
                     UploaderProfileType = s.UploaderProfileType,

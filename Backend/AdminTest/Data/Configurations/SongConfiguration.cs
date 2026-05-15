@@ -55,6 +55,10 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
 
         builder.Property(e => e.BumpedAt);
 
+        builder.Property(e => e.BumpCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.IsDeleted)
                .IsRequired()
                .HasDefaultValue(false);

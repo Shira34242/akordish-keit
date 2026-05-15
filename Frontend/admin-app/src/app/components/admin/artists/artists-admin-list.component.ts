@@ -12,13 +12,13 @@ import { ArtistEditModalComponent } from './artist-edit-modal.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
 import { environment } from '../../../../environments/environment';
-
 
 @Component({
   selector: 'app-artists-admin-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArtistEditModalComponent, ImgFallbackDirective],
+  imports: [CommonModule, FormsModule, ArtistEditModalComponent, ImgFallbackDirective, BumpModalComponent],
   templateUrl: './artists-admin-list.component.html',
   styleUrls: ['./artists-admin-list.component.css']
 })
@@ -78,12 +78,17 @@ export class ArtistsAdminListComponent implements OnInit {
   // Batch selection
   selectionMode = false;
   selectedIds = new Set<number>();
+  bumpModalOpen = false;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
 
   ngOnInit(): void {
     this.loadArtists();
-    this.layoutActions.addArtistRequest$.subscribe(() => this.addNewArtist());
+    this.loadAgencies();
+    this.layoutActions.addArtistRequest$.subscribe(() => {
+      this.showEditModal = true;
+      this.selectedArtistId = null;
+    });
   }
 
   loadArtists(): void {
@@ -265,9 +270,12 @@ export class ArtistsAdminListComponent implements OnInit {
     if (!this.selectionMode) {
       this.selectedIds.clear();
       this.selectedAgencyId = null;
-    } else {
-      this.loadAgencies();
     }
+  }
+
+  clearSelection(): void {
+    this.selectedIds.clear();
+    this.selectedAgencyId = null;
   }
 
   toggleArtist(id: number): void {
@@ -288,6 +296,20 @@ export class ArtistsAdminListComponent implements OnInit {
 
   get isAllSelected(): boolean {
     return this.artists.length > 0 && this.artists.every(a => this.selectedIds.has(a.id));
+  }
+
+  get selectedIdsArray(): number[] {
+    return Array.from(this.selectedIds);
+  }
+
+  openBumpModal(): void {
+    this.bumpModalOpen = true;
+  }
+
+  onBumped(): void {
+    this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadArtists();
   }
 
   private loadAgencies(): void {

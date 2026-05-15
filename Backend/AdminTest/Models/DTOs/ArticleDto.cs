@@ -11,6 +11,7 @@ public class ArticleDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public string? AuthorName { get; set; }
     public List<int> CategoryIds { get; set; } = new();
     public List<string> CategoryNames { get; set; } = new();

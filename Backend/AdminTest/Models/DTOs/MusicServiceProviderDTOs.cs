@@ -415,6 +415,7 @@ public class MusicServiceProviderListDto
     public string StatusName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public int CategoriesCount { get; set; }
     public string? CategoryName { get; set; } // Primary category name for professionals
     public List<int> BranchCityIds { get; set; } = new();

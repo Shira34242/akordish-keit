@@ -706,6 +706,7 @@ public class TeacherService : ITeacherService
             StatusName = entity.ServiceProvider.Status.ToString(),
             CreatedAt = entity.ServiceProvider.CreatedAt,
             BumpedAt = entity.ServiceProvider.BumpedAt,
+            BumpCount = entity.ServiceProvider.BumpCount,
             CategoriesCount = entity.ServiceProvider.Categories.Count,
             InstrumentsCount = entity.Instruments.Count,
             PrimaryInstrument = primaryInstrument?.Instrument.Name,

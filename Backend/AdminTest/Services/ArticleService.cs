@@ -1192,6 +1192,7 @@ public class ArticleService : IArticleService
             CreatedAt = article.CreatedAt,
             UpdatedAt = article.UpdatedAt,
             BumpedAt = article.BumpedAt,
+            BumpCount = article.BumpCount,
             AuthorName = article.AuthorName,
 
             CategoryIds = article.ArticleCategories.Select(ac => ac.CategoryId).ToList(),

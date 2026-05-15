@@ -11,6 +11,7 @@ public class Article
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }
+    public int BumpCount { get; set; }
     public string? AuthorName { get; set; }
     public int ContentType { get; set; }
     public string Slug { get; set; }

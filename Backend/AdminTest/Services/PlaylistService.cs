@@ -46,7 +46,8 @@ public class PlaylistService : IPlaylistService
                     .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-                BumpedAt = p.BumpedAt
+                BumpedAt = p.BumpedAt,
+                BumpCount = p.BumpCount
             })
             .ToListAsync();
 
@@ -122,7 +123,8 @@ public class PlaylistService : IPlaylistService
                     .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-                BumpedAt = p.BumpedAt
+                BumpedAt = p.BumpedAt,
+                BumpCount = p.BumpCount
             })
             .FirstOrDefaultAsync();
 
@@ -153,7 +155,8 @@ public class PlaylistService : IPlaylistService
                     .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-                BumpedAt = p.BumpedAt
+                BumpedAt = p.BumpedAt,
+                BumpCount = p.BumpCount
             })
             .ToListAsync();
 
@@ -193,7 +196,8 @@ public class PlaylistService : IPlaylistService
                     .ToList(),
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
-                BumpedAt = p.BumpedAt
+                BumpedAt = p.BumpedAt,
+                BumpCount = p.BumpCount
             })
             .ToListAsync();
 

@@ -524,6 +524,11 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("BumpCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("BumpedAt")
                         .HasColumnType("datetime2");
 
@@ -944,6 +949,14 @@ namespace AkordishKeit.Migrations
                     b.Property<string>("Biography")
                         .HasMaxLength(3000)
                         .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int>("BumpCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("BumpedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -2052,6 +2065,11 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int>("BumpCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("BumpedAt")
                         .HasColumnType("datetime2");
 
@@ -2975,6 +2993,11 @@ namespace AkordishKeit.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BumpCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("BumpedAt")
                         .HasColumnType("datetime2");
 
@@ -3225,6 +3248,11 @@ namespace AkordishKeit.Migrations
 
                     b.Property<int?>("ArrangerId")
                         .HasColumnType("int");
+
+                    b.Property<int>("BumpCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("BumpedAt")
                         .HasColumnType("datetime2");

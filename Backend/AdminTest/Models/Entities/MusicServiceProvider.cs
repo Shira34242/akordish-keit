@@ -172,6 +172,8 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public DateTime? BumpedAt { get; set; }
 
+        public int BumpCount { get; set; }
+
         /// <summary>
         /// מחיקה רכה
         /// </summary>
