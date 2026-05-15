@@ -125,7 +125,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         query = query
             .OrderByDescending(sp => sp.IsFeatured)      // מומלצים ראשון
             .ThenByDescending(sp => sp.Tier)             // מנויים משלמים (Subscribed=1) לפני חינמיים (Free=0)
-            .ThenByDescending(sp => sp.CreatedAt);       // החדשים לפני
+            .ThenByDescending(sp => sp.BumpedAt ?? sp.CreatedAt);       // החדשים לפני
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -723,6 +723,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Status = (int)entity.Status,
             StatusName = entity.Status.ToString(),
             CreatedAt = entity.CreatedAt,
+            BumpedAt = entity.BumpedAt,
             CategoriesCount = entity.Categories.Count,
             CategoryName = entity.Categories.FirstOrDefault()?.Category?.Name, // Get first category name
             BranchCityIds = GetBranchCityIds(entity.Branches)

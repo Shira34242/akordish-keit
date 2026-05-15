@@ -1,0 +1,57 @@
+<div *ngIf="ids.length > 0" class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-top-bar">
+      <h2 class="modal-title">הקפצת {{ entityLabel() }}</h2>
+      <button class="overlay-pill overlay-pill--close" (click)="close.emit()" aria-label="סגור">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="bump-count">נבחרו {{ ids.length }} {{ entityLabel() }}</p>
+
+      <button class="bump-btn bump-btn--now" (click)="bumpNow()" [disabled]="loading">
+        <span class="material-icons">trending_up</span>
+        הקפץ עכשיו
+      </button>
+
+      <div class="bump-divider">
+        <span>— או —</span>
+      </div>
+
+      <div class="bump-schedule" *ngIf="!scheduleMode">
+        <button class="bump-btn bump-btn--schedule" (click)="scheduleMode = true" [disabled]="loading">
+          <span class="material-icons">schedule</span>
+          הקפצה אוטומטית
+        </button>
+      </div>
+
+      <div class="bump-schedule-form" *ngIf="scheduleMode">
+        <div class="schedule-row">
+          <label class="schedule-label">מספר פעמים:</label>
+          <select [(ngModel)]="times" class="schedule-select">
+            <option *ngFor="let t of timesOptions" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="schedule-row">
+          <label class="schedule-label">תדירות:</label>
+          <select [(ngModel)]="intervalHours" class="schedule-select">
+            <option *ngFor="let opt of intervalOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div class="schedule-summary">
+          יוקפץ {{ times }} פעמים, {{ intervalLabel() }}
+        </div>
+
+        <button class="bump-btn bump-btn--confirm" (click)="bumpScheduled()" [disabled]="loading">
+          <span class="material-icons">check</span>
+          אישור הקפצה אוטומטית
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

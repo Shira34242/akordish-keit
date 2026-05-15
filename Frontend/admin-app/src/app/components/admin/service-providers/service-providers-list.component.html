@@ -24,6 +24,9 @@
     <button class="btn btn-primary" [disabled]="!selectedAgencyId" (click)="assignToAgency()">
       שייך לסוכנות
     </button>
+    <button class="btn btn-bump" (click)="openBumpModal()">
+      <span class="material-icons">trending_up</span> הקפצה
+    </button>
   </div>
 
   <!-- Filters Section -->
@@ -106,7 +109,10 @@
         <img *ngIf="provider.profileImageUrl" [src]="provider.profileImageUrl" [alt]="provider.displayName" imgFallback>
         <span *ngIf="!provider.profileImageUrl">{{ provider.displayName.charAt(0) }}</span>
       </div>
-      <div class="grid-card-name">{{ provider.displayName }}</div>
+      <div class="grid-card-name">
+        {{ provider.displayName }}
+        <span class="bump-indicator" *ngIf="provider.bumpedAt" title="הוקפץ">⬆</span>
+      </div>
       <div class="grid-card-sub">{{ provider.categoryName || getLocationDisplay(provider) }}</div>
       <div class="grid-card-badges">
         <span class="badge" [ngClass]="getStatusBadgeClass(provider.status)">{{ provider.statusName }}</span>
@@ -152,7 +158,7 @@
               imgFallback
             />
           </td>
-          <td>{{ provider.displayName }}</td>
+          <td>{{ provider.displayName }}<span class="bump-indicator" *ngIf="provider.bumpedAt" title="הוקפץ">⬆</span></td>
           <td>
             <span *ngIf="provider.userName" class="badge badge-success">{{ provider.userName }}</span>
             <span *ngIf="!provider.userName" class="badge badge-secondary">לא מחובר</span>
@@ -273,4 +279,12 @@
     </span>
   </div>
 </div>
+
+<app-bump-modal
+  *ngIf="bumpModalOpen"
+  entityType="ServiceProvider"
+  [ids]="selectedIdsArray"
+  (close)="bumpModalOpen = false"
+  (bumped)="onBumped()">
+</app-bump-modal>
 

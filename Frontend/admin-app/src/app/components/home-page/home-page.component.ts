@@ -454,7 +454,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
             .map(article => this.withContentType(article, ArticleContentType.News))
             .slice(0, 12);
           this.blogArticles = this.allPublishedArticles
-            .filter(article => this.isContentArticle(article))
+            .filter(article => !this.isMusicNewsArticle(article))
             .map(article => this.withContentType(article, ArticleContentType.Blog))
             .slice(0, 12);
         },

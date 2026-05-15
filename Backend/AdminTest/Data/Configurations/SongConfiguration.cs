@@ -53,6 +53,8 @@ public class SongConfiguration : IEntityTypeConfiguration<Song>
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(e => e.BumpedAt);
+
         builder.Property(e => e.IsDeleted)
                .IsRequired()
                .HasDefaultValue(false);

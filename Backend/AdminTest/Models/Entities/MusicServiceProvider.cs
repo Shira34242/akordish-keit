@@ -168,6 +168,11 @@ namespace AkordishKeit.Models.Entities
         public DateTime? UpdatedAt { get; set; }
 
         /// <summary>
+        /// תאריך הקפצה אחרון (משמש לקידום ברשימות)
+        /// </summary>
+        public DateTime? BumpedAt { get; set; }
+
+        /// <summary>
         /// מחיקה רכה
         /// </summary>
         public bool IsDeleted { get; set; }

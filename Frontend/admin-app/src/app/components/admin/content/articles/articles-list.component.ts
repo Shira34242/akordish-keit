@@ -13,12 +13,12 @@ import { FeaturedContentManagementComponent } from '../featured-content/featured
 import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-page-sections-management.component';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
-
+import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent],
+  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent, BumpModalComponent],
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
@@ -37,6 +37,7 @@ export class ArticlesListComponent implements OnInit {
   loading = false;
   publishingArticleIds = new Set<number>();
   selectedArticleIds = new Set<number>();
+  bumpModalOpen = false;
   categoryModalOpen = false;
   categoryModalArticle: Article | null = null;
   categoryModalMode: UpdateArticleCategoriesDto['mode'] = 'add';
@@ -637,6 +638,16 @@ export class ArticlesListComponent implements OnInit {
       [ArticleStatus.Archived]: 'status-archived'
     };
     return classes[status] || '';
+  }
+
+  openBumpModal(): void {
+    this.bumpModalOpen = true;
+  }
+
+  onBumped(): void {
+    this.bumpModalOpen = false;
+    this.clearSelection();
+    this.loadArticles();
   }
 
   formatDate(dateString: string): string {

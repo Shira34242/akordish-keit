@@ -17,6 +17,7 @@ public class PlaylistDto
     public List<string> ThumbnailSongImages { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? BumpedAt { get; set; }
 }
 
 public class PlaylistDetailDto
@@ -32,6 +33,7 @@ public class PlaylistDetailDto
     public List<PlaylistSongDto> Songs { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? BumpedAt { get; set; }
 }
 
 public class PlaylistSongDto

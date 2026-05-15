@@ -12,12 +12,12 @@ import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
-
+import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 
 @Component({
   selector: 'app-songs-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, BumpModalComponent],
   templateUrl: './songs-list.component.html',
   styleUrls: ['./songs-list.component.css']
 })
@@ -35,6 +35,7 @@ export class SongsListComponent implements OnInit {
   loading = false;
   bulkActionLoading = false;
   selectedSongIds = new Set<number>();
+  bumpModalOpen = false;
   artistModalOpen = false;
   artistModalSong: SongDto | null = null;
   artistModalMode: UpdateSongArtistsDto['mode'] = 'add';
@@ -486,6 +487,16 @@ export class SongsListComponent implements OnInit {
 
   formatGenres(song: SongDto): string {
     return song.genres?.map(g => g.name).join(', ') || '';
+  }
+
+  openBumpModal(): void {
+    this.bumpModalOpen = true;
+  }
+
+  onBumped(): void {
+    this.bumpModalOpen = false;
+    this.clearSelection();
+    this.loadSongs();
   }
 
   formatDate(dateString: string | Date): string {

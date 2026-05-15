@@ -61,8 +61,11 @@
       <button class="filter-btn bulk-btn" (click)="bulkDuplicateSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">content_copy</span> שכפול
       </button>
-      <button class="filter-btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+      <button class="filter-btn bulk-btn" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
+      </button>
+      <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">trending_up</span> הקפצה
       </button>
     </div>
   </div>
@@ -90,7 +93,10 @@
         <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title">
         <span *ngIf="!song.imageUrl" class="material-icons" style="font-size:28px">music_note</span>
       </div>
-      <div class="grid-card-name">{{ song.title }}</div>
+      <div class="grid-card-name">
+        {{ song.title }}
+        <span class="bump-indicator" *ngIf="song.bumpedAt" title="הוקפץ">⬆</span>
+      </div>
       <div class="grid-card-sub">{{ formatArtists(song) }}</div>
       <div class="grid-card-badges">
         <span class="badge" [class.badge-success]="song.isApproved" [class.badge-warning]="!song.isApproved">
@@ -151,6 +157,7 @@
             <div class="song-info">
               <div class="song-title">
                 {{ song.title }}
+                <span class="bump-indicator" *ngIf="song.bumpedAt" title="הוקפץ">⬆</span>
               </div>
               <div class="song-meta" *ngIf="song.originalKeyName">
                 מקור: {{ song.originalKeyName }}
@@ -373,3 +380,11 @@
     </div>
   </div>
 </div>
+
+<app-bump-modal
+  *ngIf="bumpModalOpen"
+  entityType="Song"
+  [ids]="selectedSongIdsArray"
+  (close)="bumpModalOpen = false"
+  (bumped)="onBumped()">
+</app-bump-modal>

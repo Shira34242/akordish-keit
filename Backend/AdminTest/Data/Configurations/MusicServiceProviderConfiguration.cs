@@ -90,6 +90,8 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(sp => sp.CreatedAt)
                 .HasDefaultValueSql("GETDATE()");
 
+            builder.Property(sp => sp.BumpedAt);
+
             // Relationships
 
             // User (1:Many - משתמש יכול לנהל מספר פרופילים מקצועיים)

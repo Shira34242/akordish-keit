@@ -117,6 +117,9 @@ public class AkordishKeitDbContext : DbContext
     // Boosts (חדש!)
     public DbSet<Boost> Boosts { get; set; }
 
+    // Bump Schedules
+    public DbSet<BumpSchedule> BumpSchedules { get; set; }
+
     // System Settings — Feature Flags
     public DbSet<SystemSetting> SystemSettings { get; set; }
 
@@ -211,6 +214,9 @@ public class AkordishKeitDbContext : DbContext
 
         // Boost Configuration (חדש!)
         modelBuilder.ApplyConfiguration(new BoostConfiguration());
+
+        // Bump Schedule Configuration
+        modelBuilder.ApplyConfiguration(new BumpScheduleConfiguration());
 
         // News Page Sections Configuration
         modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());

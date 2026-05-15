@@ -664,7 +664,7 @@ public class SongService : ISongService
             {
                 "views" or "popularity" => query.OrderByDescending(s => s.ViewCount),
                 "name" => query.OrderBy(s => s.Title),
-                _ => query.OrderByDescending(s => s.CreatedAt)
+                _ => query.OrderByDescending(s => s.BumpedAt ?? s.CreatedAt)
             };
 
             var totalCount = await query.CountAsync();
@@ -742,6 +742,7 @@ public class SongService : ISongService
                     DurationSeconds = s.DurationSeconds,
                     CreatedAt = s.CreatedAt,
                     UpdatedAt = s.UpdatedAt,
+                    BumpedAt = s.BumpedAt,
                     UploadedByUserId = s.UploadedByUserId,
                     UploaderUserId = s.UploaderUserId,
                     UploaderProfileType = s.UploaderProfileType,
@@ -864,6 +865,7 @@ public class SongService : ISongService
                 DurationSeconds = song.DurationSeconds,
                 CreatedAt = song.CreatedAt,
                 UpdatedAt = song.UpdatedAt,
+                BumpedAt = song.BumpedAt,
                 UploadedByUserId = song.UploadedByUserId,
                 UploaderUserId = song.UploaderUserId,
                 UploaderProfileType = song.UploaderProfileType,
@@ -1236,6 +1238,7 @@ public class SongService : ISongService
                 DurationSeconds = song.DurationSeconds,
                 CreatedAt = song.CreatedAt,
                 UpdatedAt = song.UpdatedAt,
+                BumpedAt = song.BumpedAt,
                 UploadedByUserId = song.UploadedByUserId
             };
         }
@@ -1416,6 +1419,7 @@ public class SongService : ISongService
             DurationSeconds = song.DurationSeconds,
             CreatedAt = song.CreatedAt,
             UpdatedAt = song.UpdatedAt,
+            BumpedAt = song.BumpedAt,
             UploadedByUserId = song.UploadedByUserId,
             UploaderUserId = song.UploaderUserId,
             UploaderProfileType = song.UploaderProfileType,

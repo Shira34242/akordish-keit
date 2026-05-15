@@ -45,14 +45,15 @@ public class PlaylistService : IPlaylistService
                     .Select(ps => ps.Song.ImageUrl!)
                     .ToList(),
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                BumpedAt = p.BumpedAt
             })
             .ToListAsync();
 
         // רשימת ברירת המחדל תמיד ראשונה
         return playlists
             .OrderByDescending(p => p.IsDefault)
-            .ThenByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.BumpedAt ?? p.CreatedAt)
             .ToList();
     }
 
@@ -120,7 +121,8 @@ public class PlaylistService : IPlaylistService
                     .Select(ps => ps.Song.ImageUrl!)
                     .ToList(),
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                BumpedAt = p.BumpedAt
             })
             .FirstOrDefaultAsync();
 
@@ -131,7 +133,7 @@ public class PlaylistService : IPlaylistService
         // שולף רק את הרשימות הנחוצות, ממוינות ב-DB
         var others = await _context.Playlists
             .Where(p => p.UserId == userId && !p.IsDefault)
-            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+            .OrderByDescending(p => p.BumpedAt ?? p.CreatedAt)
             .Take(recentCount)
             .Select(p => new PlaylistDto
             {
@@ -150,7 +152,8 @@ public class PlaylistService : IPlaylistService
                     .Select(ps => ps.Song.ImageUrl!)
                     .ToList(),
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                BumpedAt = p.BumpedAt
             })
             .ToListAsync();
 
@@ -169,7 +172,7 @@ public class PlaylistService : IPlaylistService
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .OrderByDescending(p => p.CreatedAt)
+            .OrderByDescending(p => p.BumpedAt ?? p.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(p => new PlaylistDto
@@ -189,7 +192,8 @@ public class PlaylistService : IPlaylistService
                     .Select(ps => ps.Song.ImageUrl!)
                     .ToList(),
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                BumpedAt = p.BumpedAt
             })
             .ToListAsync();
 

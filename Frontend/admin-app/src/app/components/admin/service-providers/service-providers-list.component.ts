@@ -11,13 +11,13 @@ import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
 import { environment } from '../../../../environments/environment';
-
 
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
@@ -60,6 +60,7 @@ export class ServiceProvidersListComponent implements OnInit {
   // Batch selection
   selectionMode = false;
   selectedIds = new Set<number>();
+  bumpModalOpen = false;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
 
@@ -307,6 +308,20 @@ export class ServiceProvidersListComponent implements OnInit {
 
   get isAllSelected(): boolean {
     return this.providers.length > 0 && this.providers.every(p => this.selectedIds.has(p.id));
+  }
+
+  get selectedIdsArray(): number[] {
+    return Array.from(this.selectedIds);
+  }
+
+  openBumpModal(): void {
+    this.bumpModalOpen = true;
+  }
+
+  onBumped(): void {
+    this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadProviders();
   }
 
   private loadAgencies(): void {

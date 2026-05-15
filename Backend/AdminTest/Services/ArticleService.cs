@@ -51,7 +51,7 @@ public class ArticleService : IArticleService
         query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName, tagId, categoryIds);
 
         // Order by CreatedAt before pagination
-        query = query.OrderByDescending(a => a.CreatedAt);
+        query = query.OrderByDescending(a => a.BumpedAt ?? a.CreatedAt);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -1191,6 +1191,7 @@ public class ArticleService : IArticleService
             PublishDate = article.PublishDate,
             CreatedAt = article.CreatedAt,
             UpdatedAt = article.UpdatedAt,
+            BumpedAt = article.BumpedAt,
             AuthorName = article.AuthorName,
 
             CategoryIds = article.ArticleCategories.Select(ac => ac.CategoryId).ToList(),

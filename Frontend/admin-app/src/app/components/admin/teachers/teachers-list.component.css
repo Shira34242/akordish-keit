@@ -226,3 +226,4 @@
   margin-bottom: var(--space-base);
   flex-wrap: wrap;
 }
+.bump-indicator { color: #ddff53; font-size: 0.8em; margin-inline-start: 4px; vertical-align: middle; }

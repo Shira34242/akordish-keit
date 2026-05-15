@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
@@ -97,6 +98,7 @@ builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
 
 // Add Background Services
 builder.Services.AddHostedService<CleanupService>();
+builder.Services.AddHostedService<BumpSchedulerService>();
 
 // Add DbContext
 builder.Services.AddDbContext<AkordishKeitDbContext>(options =>
@@ -192,7 +194,14 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            dbContext.Database.Migrate();
+            try
+            {
+                dbContext.Database.Migrate();
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogWarning(ex, "Migration skipped (some tables may already exist). Continuing with startup.");
+            }
         }
     }
 
@@ -631,6 +640,41 @@ using (var scope = app.Services.CreateScope())
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NotificationGroupMembers_UserId' AND object_id = OBJECT_ID(N'[NotificationGroupMembers]'))
         BEGIN
             CREATE INDEX [IX_NotificationGroupMembers_UserId] ON [NotificationGroupMembers] ([UserId]);
+        END
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[Songs]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Songs]', N'BumpedAt') IS NULL
+            ALTER TABLE [Songs] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[Articles]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Articles]', N'BumpedAt') IS NULL
+            ALTER TABLE [Articles] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[Playlists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Playlists]', N'BumpedAt') IS NULL
+            ALTER TABLE [Playlists] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[MusicServiceProviders]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviders]', N'BumpedAt') IS NULL
+            ALTER TABLE [MusicServiceProviders] ADD [BumpedAt] datetime2 NULL;
+
+        IF OBJECT_ID(N'[BumpSchedules]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [BumpSchedules] (
+                [Id] int NOT NULL IDENTITY,
+                [EntityType] nvarchar(50) NOT NULL,
+                [EntityId] int NOT NULL,
+                [TotalTimes] int NOT NULL,
+                [RemainingTimes] int NOT NULL,
+                [IntervalHours] int NOT NULL,
+                [NextBumpAt] datetime2 NOT NULL,
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_BumpSchedules_CreatedAt] DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_BumpSchedules] PRIMARY KEY ([Id])
+            );
+            CREATE INDEX [IX_BumpSchedules_EntityType_EntityId] ON [BumpSchedules] ([EntityType], [EntityId]);
+            CREATE INDEX [IX_BumpSchedules_NextBumpAt] ON [BumpSchedules] ([NextBumpAt]);
         END
     ");
 }

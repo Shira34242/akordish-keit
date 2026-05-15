@@ -73,6 +73,7 @@ export interface SongDto {
     durationSeconds?: number;
     createdAt: Date;
     updatedAt?: Date;
+    bumpedAt?: Date;
     uploadedByUserId?: number;
     uploaderUserId?: number | null;
     uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';

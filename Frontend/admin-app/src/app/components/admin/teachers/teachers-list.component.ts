@@ -11,13 +11,13 @@ import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
 import { environment } from '../../../../environments/environment';
-
 
 @Component({
   selector: 'app-teachers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent],
   templateUrl: './teachers-list.component.html',
   styleUrls: ['./teachers-list.component.css']
 })
@@ -60,6 +60,7 @@ export class TeachersListComponent implements OnInit {
   // Batch selection
   selectionMode = false;
   selectedIds = new Set<number>();
+  bumpModalOpen = false;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
 
@@ -310,6 +311,20 @@ export class TeachersListComponent implements OnInit {
 
   get isAllSelected(): boolean {
     return this.teachers.length > 0 && this.teachers.every(t => this.selectedIds.has(t.id));
+  }
+
+  get selectedIdsArray(): number[] {
+    return Array.from(this.selectedIds);
+  }
+
+  openBumpModal(): void {
+    this.bumpModalOpen = true;
+  }
+
+  onBumped(): void {
+    this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadTeachers();
   }
 
   private loadAgencies(): void {

@@ -55,6 +55,7 @@ export interface MusicServiceProviderListDto {
   subscriptionId?: number;
   isPrimaryProfile: boolean;
   createdAt: string;
+  bumpedAt?: string;
   categoriesCount: number;
   categoryName?: string;
   branchCityIds: number[];

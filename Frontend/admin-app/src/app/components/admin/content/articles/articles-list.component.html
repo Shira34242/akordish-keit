@@ -106,6 +106,9 @@
       <button class="filter-btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
       </button>
+      <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">trending_up</span> הקפצה
+      </button>
     </div>
   </div>
 
@@ -132,7 +135,10 @@
         <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" [alt]="article.title">
         <span *ngIf="!article.featuredImageUrl" class="material-icons" style="font-size:28px">article</span>
       </div>
-      <div class="grid-card-name">{{ article.title }}</div>
+      <div class="grid-card-name">
+        {{ article.title }}
+        <span class="bump-indicator" *ngIf="article.bumpedAt" title="הוקפץ">⬆</span>
+      </div>
       <div class="grid-card-sub">{{ article.authorName }}</div>
       <div class="grid-card-badges">
         <span class="badge" [ngClass]="getStatusClass(article.status)">{{ getStatusName(article.status) }}</span>
@@ -194,6 +200,7 @@
             <div class="article-info">
               <div class="article-title">
                 {{ article.title }}
+                <span class="bump-indicator" *ngIf="article.bumpedAt" title="הוקפץ">⬆</span>
                 <span *ngIf="article.isFeatured" class="featured-badge"><span class="material-icons">star</span></span>
                 <span *ngIf="article.isPremium" class="premium-badge"><span
                     class="material-icons">workspace_premium</span></span>
@@ -472,3 +479,11 @@
     </div>
   </div>
 </div>
+
+<app-bump-modal
+  *ngIf="bumpModalOpen"
+  entityType="Article"
+  [ids]="selectedArticleIdsArray"
+  (close)="bumpModalOpen = false"
+  (bumped)="onBumped()">
+</app-bump-modal>

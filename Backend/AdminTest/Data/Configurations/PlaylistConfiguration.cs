@@ -40,6 +40,9 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
         builder.Property(p => p.UpdatedAt)
             .IsRequired(false);
 
+        builder.Property(p => p.BumpedAt)
+            .IsRequired(false);
+
         // Indexes
         builder.HasIndex(p => p.UserId)
             .HasDatabaseName("IX_Playlists_UserId");

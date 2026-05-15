@@ -38,6 +38,8 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Property(e => e.UpdatedAt);
 
+        builder.Property(e => e.BumpedAt);
+
         builder.Property(e => e.AuthorName)
                .HasMaxLength(100);
 

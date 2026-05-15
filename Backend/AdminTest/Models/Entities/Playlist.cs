@@ -47,6 +47,7 @@ public class Playlist
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? BumpedAt { get; set; }
 
     // ════════════════════════════════════
     //      Navigation Properties

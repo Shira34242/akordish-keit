@@ -87,7 +87,7 @@ public class TeacherService : ITeacherService
         query = query
             .OrderByDescending(t => t.ServiceProvider.IsFeatured)      // מומלצים ראשון
             .ThenByDescending(t => t.ServiceProvider.Tier)             // מנויים משלמים (Subscribed=1) לפני חינמיים (Free=0)
-            .ThenByDescending(t => t.ServiceProvider.CreatedAt);       // החדשים לפני
+            .ThenByDescending(t => t.ServiceProvider.BumpedAt ?? t.ServiceProvider.CreatedAt);       // החדשים לפני
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -705,6 +705,7 @@ public class TeacherService : ITeacherService
             Status = (int)entity.ServiceProvider.Status,
             StatusName = entity.ServiceProvider.Status.ToString(),
             CreatedAt = entity.ServiceProvider.CreatedAt,
+            BumpedAt = entity.ServiceProvider.BumpedAt,
             CategoriesCount = entity.ServiceProvider.Categories.Count,
             InstrumentsCount = entity.Instruments.Count,
             PrimaryInstrument = primaryInstrument?.Instrument.Name,

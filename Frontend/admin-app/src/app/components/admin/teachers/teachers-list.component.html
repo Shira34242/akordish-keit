@@ -24,6 +24,9 @@
     <button class="btn btn-primary" [disabled]="!selectedAgencyId" (click)="assignToAgency()">
       שייך לסוכנות
     </button>
+    <button class="btn btn-bump" (click)="openBumpModal()">
+      <span class="material-icons">trending_up</span> הקפצה
+    </button>
   </div>
 
   <!-- Filters Section -->
@@ -91,7 +94,10 @@
         <img *ngIf="teacher.profileImageUrl" [src]="teacher.profileImageUrl" [alt]="teacher.displayName" imgFallback>
         <span *ngIf="!teacher.profileImageUrl">{{ teacher.displayName.charAt(0) }}</span>
       </div>
-      <div class="grid-card-name">{{ teacher.displayName }}</div>
+      <div class="grid-card-name">
+        {{ teacher.displayName }}
+        <span class="bump-indicator" *ngIf="teacher.bumpedAt" title="הוקפץ">⬆</span>
+      </div>
       <div class="grid-card-sub">{{ getLocationDisplay(teacher) }}</div>
       <div class="grid-card-badges">
         <span class="badge" [ngClass]="getStatusBadgeClass(teacher.status)">{{ getStatusLabel(teacher.status) }}</span>
@@ -138,7 +144,7 @@
               imgFallback
             />
           </td>
-          <td>{{ teacher.displayName }}</td>
+          <td>{{ teacher.displayName }}<span class="bump-indicator" *ngIf="teacher.bumpedAt" title="הוקפץ">⬆</span></td>
           <td>
             <span *ngIf="teacher.userName" class="badge badge-success">{{ teacher.userName }}</span>
             <span *ngIf="!teacher.userName" class="badge badge-secondary">לא מחובר</span>
@@ -286,3 +292,11 @@
     </span>
   </div>
 </div>
+
+<app-bump-modal
+  *ngIf="bumpModalOpen"
+  entityType="ServiceProvider"
+  [ids]="selectedIdsArray"
+  (close)="bumpModalOpen = false"
+  (bumped)="onBumped()">
+</app-bump-modal>
