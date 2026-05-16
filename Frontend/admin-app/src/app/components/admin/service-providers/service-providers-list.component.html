@@ -1,36 +1,4 @@
 <div class="providers-container" dir="rtl">
-  <div class="page-header">
-    <h1>ניהול בעלי מקצוע</h1>
-    <div style="display:flex;gap:var(--space-md);">
-      <button class="btn btn-primary" (click)="addNewProvider()">
-        <span class="material-icons">add</span>
-        הוסף בעל מקצוע חדש
-      </button>
-    </div>
-  </div>
-
-  <div class="bulk-bar" *ngIf="selectedIds.size > 0">
-    <span>{{ selectedIds.size }} פרופילים נבחרו</span>
-    <button class="btn btn-light" (click)="toggleSelectAll()">
-      {{ isAllSelected ? 'נקה הכל' : 'בחר הכל' }}
-    </button>
-    <button class="btn btn-light" (click)="clearSelection()">נקה בחירה</button>
-    <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
-      <option [ngValue]="null" disabled>בחר סוכנות...</option>
-      <option *ngFor="let a of agencies" [ngValue]="a.id">{{ a.name }}</option>
-    </select>
-    <button class="btn btn-primary" [disabled]="!selectedAgencyId" (click)="assignToAgency()">
-      שייך לסוכנות
-    </button>
-    <button class="btn btn-bump" (click)="openBumpModal()">
-      <span class="material-icons">trending_up</span> הקפצה
-    </button>
-    <button class="btn btn-danger" (click)="bulkDeleteSelected()">
-      <span class="material-icons">delete</span> מחיקה
-    </button>
-  </div>
-
-  <!-- Filters Section -->
   <div class="filters-section">
     <div class="filters-row">
       <div class="filter-group">
