@@ -12,6 +12,9 @@
   <!-- Bulk action bar -->
   <div class="bulk-bar" *ngIf="selectedIds.size > 0">
     <span>{{ selectedIds.size }} פרופילים נבחרו</span>
+    <button class="btn btn-light" (click)="toggleSelectAll()">
+      {{ isAllSelected ? 'נקה הכל' : 'בחר הכל' }}
+    </button>
     <button class="btn btn-light" (click)="clearSelection()">נקה בחירה</button>
     <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
       <option [ngValue]="null" disabled>בחר סוכנות...</option>
@@ -22,6 +25,9 @@
     </button>
     <button class="btn btn-bump" (click)="openBumpModal()">
       <span class="material-icons">trending_up</span> הקפצה
+    </button>
+    <button class="btn btn-danger" (click)="bulkDeleteSelected()">
+      <span class="material-icons">delete</span> מחיקה
     </button>
   </div>
 
@@ -93,8 +99,8 @@
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let artist of artists">
-      <label class="grid-checkbox-label" (click)="$event.stopPropagation()">
-        <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
+      <label class="grid-checkbox-label">
+        <input type="checkbox" [checked]="selectedIds.has(artist.id)" (click)="$event.stopPropagation(); toggleArtist(artist.id)">
       </label>
       <div class="grid-card-avatar">
         <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.name" imgFallback>
@@ -137,7 +143,7 @@
       <tbody>
         <tr *ngFor="let artist of artists">
           <td>
-            <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
+            <input type="checkbox" [checked]="selectedIds.has(artist.id)" (click)="toggleArtist(artist.id)">
           </td>
           <td>
             <img

@@ -151,7 +151,9 @@ export class AgencyFormComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'לא הצלחנו לטעון את הסוכנות';
+        const detail = err?.error?.detail || '';
+        const type = err?.error?.type || '';
+        this.error = detail ? `${err?.error?.message || 'שגיאה'}: ${type} — ${detail}` : (err?.error?.message || err?.message || 'לא הצלחנו לטעון את הסוכנות');
         this.loading = false;
       }
     });
@@ -276,19 +278,28 @@ export class AgencyFormComponent implements OnInit {
   }
 
   private searchContent(q: string): void {
-    const endpoint = this.contentForm.contentType === 'article'
-      ? this.http.get(`${environment.apiBaseUrl}/api/Articles`, { params: { search: q, pageSize: 10 } })
-      : this.http.get(`${environment.apiBaseUrl}/api/Songs`, { params: { search: q, pageSize: 10 } });
+    const endpoint = this.getContentSearchEndpoint(q);
     endpoint.subscribe({
       next: (data: any) => {
         this.contentSearchResults = (data?.items || data || []).map((item: any) => ({
           id: item.id,
-          name: item.title || ''
+          name: item.title || item.name || ''
         })).filter((r: SearchResult) => r.name);
         this.contentSearchOpen = this.contentSearchResults.length > 0;
       },
       error: () => this.contentSearchResults = []
     });
+  }
+
+  private getContentSearchEndpoint(q: string): Observable<any> {
+    switch (this.contentForm.contentType) {
+      case 'article':
+        return this.http.get(`${environment.apiBaseUrl}/api/Articles`, { params: { search: q, pageSize: 10 } });
+      case 'podcast':
+        return this.http.get(`${environment.apiBaseUrl}/api/Podcasts`, { params: { search: q, pageSize: 10 } });
+      default:
+        return this.http.get(`${environment.apiBaseUrl}/api/Songs`, { params: { search: q, pageSize: 10 } });
+    }
   }
 
   // ============================================================
@@ -343,6 +354,12 @@ export class AgencyFormComponent implements OnInit {
       next: () => this.loadAgency(),
       error: () => alert('לא הצלחנו להסיר את התוכן')
     });
+  }
+
+  getContentTypeLabel(contentType: AgencyContentDto['contentType']): string {
+    if (contentType === 'article') return 'כתבה';
+    if (contentType === 'podcast') return 'פודקאסט';
+    return 'שיר';
   }
 
   // ============================================================

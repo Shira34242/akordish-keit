@@ -11,6 +11,9 @@
 
   <div class="bulk-bar" *ngIf="selectedIds.size > 0">
     <span>{{ selectedIds.size }} פרופילים נבחרו</span>
+    <button class="btn btn-light" (click)="toggleSelectAll()">
+      {{ isAllSelected ? 'נקה הכל' : 'בחר הכל' }}
+    </button>
     <button class="btn btn-light" (click)="clearSelection()">נקה בחירה</button>
     <select class="form-control" [(ngModel)]="selectedAgencyId" style="max-width:200px">
       <option [ngValue]="null" disabled>בחר סוכנות...</option>
@@ -21,6 +24,9 @@
     </button>
     <button class="btn btn-bump" (click)="openBumpModal()">
       <span class="material-icons">trending_up</span> הקפצה
+    </button>
+    <button class="btn btn-danger" (click)="bulkDeleteSelected()">
+      <span class="material-icons">delete</span> מחיקה
     </button>
   </div>
 
@@ -100,8 +106,8 @@
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let provider of providers">
-      <label class="grid-checkbox-label" (click)="$event.stopPropagation()">
-        <input type="checkbox" [checked]="selectedIds.has(provider.id)" (change)="toggleProvider(provider.id)">
+      <label class="grid-checkbox-label">
+        <input type="checkbox" [checked]="selectedIds.has(provider.id)" (click)="$event.stopPropagation(); toggleProvider(provider.id)">
       </label>
       <div class="grid-card-avatar">
         <img *ngIf="provider.profileImageUrl" [src]="provider.profileImageUrl" [alt]="provider.displayName" imgFallback>
@@ -146,7 +152,7 @@
       <tbody>
         <tr *ngFor="let provider of providers">
           <td>
-            <input type="checkbox" [checked]="selectedIds.has(provider.id)" (change)="toggleProvider(provider.id)">
+            <input type="checkbox" [checked]="selectedIds.has(provider.id)" (click)="toggleProvider(provider.id)">
           </td>
           <td>
             <img

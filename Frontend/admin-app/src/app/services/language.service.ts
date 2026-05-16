@@ -52,6 +52,10 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Song page
     'song.chords_subtitle': 'אקורדים לשיר',
+    'song.view_title_guitar': 'אקורדים לגיטרה לשיר',
+    'song.view_title_piano': 'אקורדים לקלידים לשיר',
+    'song.view_title_ukulele': 'אקורדים ליוקלילי לשיר',
+    'song.view_title_lyrics': 'מילים לשיר',
     'song.lyrics': 'מילים:',
     'song.music': 'לחן:',
     'song.add_to_playlist': 'הוסף לרשימה',
@@ -1386,6 +1390,10 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Song page
     'song.chords_subtitle': 'Song Chords',
+    'song.view_title_guitar': 'Guitar chords for',
+    'song.view_title_piano': 'Keyboard chords for',
+    'song.view_title_ukulele': 'Ukulele chords for',
+    'song.view_title_lyrics': 'Lyrics for',
     'song.lyrics': 'Lyrics:',
     'song.music': 'Music:',
     'song.add_to_playlist': 'Add to Playlist',

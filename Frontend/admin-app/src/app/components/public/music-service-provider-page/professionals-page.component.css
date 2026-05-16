@@ -1037,6 +1037,18 @@
   margin: 0;
 }
 
+.agency-profiles-error {
+  text-align: center;
+  padding: var(--space-lg);
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(220, 38, 38, 0.7);
+}
+
+.agency-profiles-error p {
+  margin: 0;
+}
+
 /* ════════════════════════════════════════
    AD SLOTS
 ════════════════════════════════════════ */

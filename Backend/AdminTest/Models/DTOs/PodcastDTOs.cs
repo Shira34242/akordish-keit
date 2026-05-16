@@ -15,6 +15,7 @@ namespace AkordishKeit.Models.DTOs
         public DateTime? UpdatedAt { get; set; }
         public int EpisodeCount { get; set; }
         public PodcastEpisodeDto? LatestEpisode { get; set; }
+        public AgencyContentBannerDto? AgencyBanner { get; set; }
     }
 
     public class PodcastDetailDto : PodcastDto

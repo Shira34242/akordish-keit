@@ -127,6 +127,18 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedPodcast?.episodes ?? this.selectedEpisode?.seriesEpisodes ?? [];
   }
 
+  get agencyBanner() {
+    return this.selectedPodcast?.agencyBanner ?? null;
+  }
+
+  get agencyBannerVars(): Record<string, string> {
+    const banner = this.agencyBanner;
+    return {
+      '--podcast-agency-primary': banner?.brandPrimaryColor || '#ddff53',
+      '--podcast-agency-text': banner?.brandTextColor || '#000000'
+    };
+  }
+
   get showSearchResults(): boolean {
     return this.searchQuery.trim().length >= 2;
   }
@@ -157,6 +169,11 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.selectedPodcast) {
       this.updateUrl(this.selectedPodcast.slug);
     }
+  }
+
+  goToAgency(): void {
+    const slug = this.agencyBanner?.slug;
+    if (slug) this.router.navigate(['/agency', slug]);
   }
 
   trackById(_index: number, item: { id: number }): number {

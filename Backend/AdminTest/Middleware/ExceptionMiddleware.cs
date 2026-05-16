@@ -33,8 +33,9 @@ public class ExceptionMiddleware
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 context.Response.ContentType = "application/json";
+                var isAgencyPath = context.Request.Path.Value?.Contains("/Agencies", StringComparison.OrdinalIgnoreCase) == true;
                 await context.Response.WriteAsync(
-                    JsonSerializer.Serialize(new { message = "שגיאת שרת פנימית" }));
+                    JsonSerializer.Serialize(new { message = "שגיאת שרת פנימית", type = ex.GetType().Name, detail = ex.Message, stack = isAgencyPath ? ex.StackTrace?.Split('\n').Take(5) : null }));
             }
         }
     }

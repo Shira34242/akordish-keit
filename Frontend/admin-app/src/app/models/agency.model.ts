@@ -1,4 +1,5 @@
 import { Article } from './article.model';
+import { Podcast } from './podcast.model';
 import { SongDto } from './song.model';
 import { SocialPlatform } from './artist.model';
 
@@ -59,6 +60,7 @@ export interface AgencyPublicDto extends AgencyDto {
   teachers: AgencyProfileCardDto[];
   directArticles: Article[];
   directSongs: SongDto[];
+  directPodcasts: Podcast[];
   memberArticles: Article[];
   memberSongs: SongDto[];
 }
@@ -81,7 +83,7 @@ export interface AgencyProfileDto {
 export interface AgencyContentDto {
   id: number;
   agencyId: number;
-  contentType: 'article' | 'song';
+  contentType: 'article' | 'song' | 'podcast';
   contentId: number;
   isFeatured: boolean;
   displayOrder: number;
@@ -146,7 +148,7 @@ export interface UpsertAgencyProfileDto {
 }
 
 export interface UpsertAgencyContentDto {
-  contentType: 'article' | 'song';
+  contentType: 'article' | 'song' | 'podcast';
   contentId: number;
   isFeatured: boolean;
   displayOrder: number;

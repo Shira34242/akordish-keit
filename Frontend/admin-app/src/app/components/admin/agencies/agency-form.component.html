@@ -135,6 +135,7 @@
         <select [(ngModel)]="contentForm.contentType" (change)="contentSearch=''; contentSearchResults=[]">
           <option value="article">כתבה</option>
           <option value="song">שיר</option>
+          <option value="podcast">פודקאסט</option>
         </select>
         <div class="search-wrap">
           <input type="text" [(ngModel)]="contentSearch" placeholder="חפש תוכן..."
@@ -155,7 +156,7 @@
         <div class="linked-row" *ngFor="let content of agency.contents">
           <div>
             <strong>{{ content.title || ('תוכן #' + content.contentId) }}</strong>
-            <span>{{ content.contentType === 'article' ? 'כתבה' : 'שיר' }}</span>
+            <span>{{ getContentTypeLabel(content.contentType) }}</span>
           </div>
           <button class="btn-action btn-delete" type="button" (click)="removeContent(content)"><span class="material-icons">delete</span></button>
         </div>

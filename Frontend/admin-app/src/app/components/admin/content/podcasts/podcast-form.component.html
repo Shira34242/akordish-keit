@@ -39,6 +39,18 @@
     </section>
 
     <section class="form-section">
+      <h2>שיוך סוכנות</h2>
+      <div class="form-group">
+        <label>סוכנות משויכת</label>
+        <select [(ngModel)]="selectedAgencyId" name="agencyId">
+          <option [ngValue]="null">ללא סוכנות</option>
+          <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
+        </select>
+      </div>
+      <p class="form-help">הסדרה תופיע בדף הסוכנות, ובדף הסדרה יוצג באנר של הסוכנות.</p>
+    </section>
+
+    <section class="form-section">
       <h2>תצוגה</h2>
       <div class="form-row">
         <div class="form-group">

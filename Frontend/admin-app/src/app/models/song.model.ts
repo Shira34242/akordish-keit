@@ -53,6 +53,7 @@ export interface SongDto {
     title: string;
     artists: ArtistBasicDto[];
     lyricsWithChords: string;
+    hasFullContent?: boolean;
     originalKeyId: number;
     originalKeyName: string;
     easyKeyId?: number;

@@ -9,13 +9,25 @@ namespace AkordishKeit.Services;
 
 public class ArticleService : IArticleService
 {
+    private const string NewsCleanupAutoEnabledKey = "article_news_cleanup_auto_enabled";
+    private const string NewsCleanupRetentionDaysKey = "article_news_cleanup_retention_days";
+    private const string NewsCleanupLastRunAtKey = "article_news_cleanup_last_run_at";
+    private const int DefaultNewsCleanupRetentionDays = 365;
+    private const int MinNewsCleanupRetentionDays = 30;
+    private const int MaxNewsCleanupRetentionDays = 3650;
+
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly ISystemSettingsService _systemSettings;
 
-    public ArticleService(AkordishKeitDbContext context, INotificationService notificationService)
+    public ArticleService(
+        AkordishKeitDbContext context,
+        INotificationService notificationService,
+        ISystemSettingsService systemSettings)
     {
         _context = context;
         _notificationService = notificationService;
+        _systemSettings = systemSettings;
     }
 
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
@@ -656,6 +668,80 @@ public class ArticleService : IArticleService
         return true;
     }
 
+    public async Task<ArticleNewsCleanupSettingsDto> GetNewsCleanupSettingsAsync()
+    {
+        var retentionDaysValue = await _systemSettings.GetValueAsync(NewsCleanupRetentionDaysKey);
+        var lastRunValue = await _systemSettings.GetValueAsync(NewsCleanupLastRunAtKey);
+
+        return new ArticleNewsCleanupSettingsDto
+        {
+            AutoDeleteEnabled = await _systemSettings.GetBoolAsync(NewsCleanupAutoEnabledKey),
+            RetentionDays = NormalizeNewsCleanupDays(retentionDaysValue),
+            LastRunAt = DateTime.TryParse(lastRunValue, out var lastRunAt) ? lastRunAt : null
+        };
+    }
+
+    public async Task<ArticleNewsCleanupSettingsDto> UpdateNewsCleanupSettingsAsync(UpdateArticleNewsCleanupSettingsDto dto)
+    {
+        var retentionDays = NormalizeNewsCleanupDays(dto.RetentionDays);
+
+        await _systemSettings.UpsertAsync(
+            NewsCleanupAutoEnabledKey,
+            dto.AutoDeleteEnabled ? "true" : "false",
+            "Automatic cleanup for old music news articles");
+
+        await _systemSettings.UpsertAsync(
+            NewsCleanupRetentionDaysKey,
+            retentionDays.ToString(),
+            "Retention period in days for old music news articles");
+
+        return await GetNewsCleanupSettingsAsync();
+    }
+
+    public async Task<ArticleNewsCleanupResultDto> CleanupOldNewsAsync(int olderThanDays, CancellationToken cancellationToken = default)
+    {
+        var normalizedDays = NormalizeNewsCleanupDays(olderThanDays);
+        var cutoffDate = DateTime.UtcNow.AddDays(-normalizedDays);
+
+        var query = _context.Articles
+            .Where(a => (a.ContentType == (int)ArticleContentType.News
+                    || a.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News))
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate < cutoffDate);
+
+        var matchedCount = await query.CountAsync(cancellationToken);
+
+        var deletedCount = await query.ExecuteUpdateAsync(
+            setters => setters
+                .SetProperty(a => a.IsDeleted, true)
+                .SetProperty(a => a.UpdatedAt, DateTime.UtcNow),
+            cancellationToken);
+
+        await _systemSettings.UpsertAsync(
+            NewsCleanupLastRunAtKey,
+            DateTime.UtcNow.ToString("O"),
+            "Last old music news cleanup run time");
+
+        return new ArticleNewsCleanupResultDto
+        {
+            OlderThanDays = normalizedDays,
+            CutoffDate = cutoffDate,
+            MatchedCount = matchedCount,
+            DeletedCount = deletedCount
+        };
+    }
+
+    public async Task<ArticleNewsCleanupResultDto?> RunAutomaticNewsCleanupAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await GetNewsCleanupSettingsAsync();
+        if (!settings.AutoDeleteEnabled)
+        {
+            return null;
+        }
+
+        return await CleanupOldNewsAsync(settings.RetentionDays, cancellationToken);
+    }
+
     public async Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer)
     {
         var article = await _context.Articles.FindAsync(id);
@@ -1002,6 +1088,18 @@ public class ArticleService : IArticleService
     }
 
     #region Private Helper Methods
+
+    private static int NormalizeNewsCleanupDays(string? value)
+    {
+        return int.TryParse(value, out var days)
+            ? NormalizeNewsCleanupDays(days)
+            : DefaultNewsCleanupRetentionDays;
+    }
+
+    private static int NormalizeNewsCleanupDays(int days)
+    {
+        return Math.Clamp(days, MinNewsCleanupRetentionDays, MaxNewsCleanupRetentionDays);
+    }
 
     // ContentType מחושב מהקטגוריות של הכתבה:
     // אם יש קטגוריה אחת לפחות באזור "חדשות" → News (0). אחרת → Blog (1).

@@ -728,6 +728,75 @@
   margin-top: var(--space-base);
 }
 
+.agency-series-banner {
+  width: 100%;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-base);
+  margin-bottom: var(--space-base);
+  border: 0;
+  border-radius: 18px;
+  background: var(--podcast-agency-primary, #ddff53);
+  color: var(--podcast-agency-text, #000000);
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+.agency-series-banner:hover {
+  opacity: 0.88;
+}
+
+.media-copy .agency-series-banner__logo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  font-size: var(--font-lg);
+  font-weight: 800;
+}
+
+.agency-series-banner__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-copy .agency-series-banner__copy {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-xs);
+  color: inherit;
+}
+
+.media-copy .agency-series-banner__copy small,
+.media-copy .agency-series-banner__copy strong {
+  display: block;
+  color: inherit;
+  line-height: var(--lh-heading);
+}
+
+.media-copy .agency-series-banner__copy small {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  opacity: 0.72;
+}
+
+.media-copy .agency-series-banner__copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-base);
+  font-weight: 800;
+}
+
 .now-playing {
   margin-top: var(--space-base);
   padding-top: var(--space-base);

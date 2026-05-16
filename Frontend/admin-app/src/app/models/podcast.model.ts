@@ -1,3 +1,15 @@
+export interface AgencyPodcastBanner {
+  id: number;
+  name: string;
+  slug: string;
+  logoUrl?: string;
+  bannerImageUrl?: string;
+  shortDescription?: string;
+  brandPrimaryColor?: string;
+  brandSecondaryColor?: string;
+  brandTextColor?: string;
+}
+
 export interface Podcast {
   id: number;
   name: string;
@@ -10,6 +22,7 @@ export interface Podcast {
   updatedAt?: string;
   episodeCount: number;
   latestEpisode?: PodcastEpisode;
+  agencyBanner?: AgencyPodcastBanner;
 }
 
 export interface PodcastDetail extends Podcast {

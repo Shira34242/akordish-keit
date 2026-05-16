@@ -76,6 +76,28 @@ export interface BulkArticleActionResultDto {
   articles: Article[];
 }
 
+export interface ArticleNewsCleanupSettingsDto {
+  autoDeleteEnabled: boolean;
+  retentionDays: number;
+  lastRunAt?: string | null;
+}
+
+export interface UpdateArticleNewsCleanupSettingsDto {
+  autoDeleteEnabled: boolean;
+  retentionDays: number;
+}
+
+export interface CleanupOldNewsDto {
+  olderThanDays: number;
+}
+
+export interface ArticleNewsCleanupResultDto {
+  olderThanDays: number;
+  cutoffDate: string;
+  matchedCount: number;
+  deletedCount: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -280,6 +302,18 @@ export class ArticleService {
    */
   bulkDeleteArticles(dto: BulkArticleIdsDto): Observable<BulkArticleActionResultDto> {
     return this.http.post<BulkArticleActionResultDto>(`${this.apiUrl}/bulk-delete`, dto);
+  }
+
+  getNewsCleanupSettings(): Observable<ArticleNewsCleanupSettingsDto> {
+    return this.http.get<ArticleNewsCleanupSettingsDto>(`${this.apiUrl}/news-cleanup/settings`);
+  }
+
+  updateNewsCleanupSettings(dto: UpdateArticleNewsCleanupSettingsDto): Observable<ArticleNewsCleanupSettingsDto> {
+    return this.http.put<ArticleNewsCleanupSettingsDto>(`${this.apiUrl}/news-cleanup/settings`, dto);
+  }
+
+  cleanupOldNews(dto: CleanupOldNewsDto): Observable<ArticleNewsCleanupResultDto> {
+    return this.http.post<ArticleNewsCleanupResultDto>(`${this.apiUrl}/news-cleanup/run`, dto);
   }
 
   /**

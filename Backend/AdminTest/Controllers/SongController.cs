@@ -252,6 +252,14 @@ public class SongsController : ControllerBase
             var result = await _songService.GetSongsAsync(
                 page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: false);
 
+            if (!GetCurrentUserId().HasValue)
+            {
+                foreach (var song in result.Items)
+                {
+                    LockSongContent(song);
+                }
+            }
+
             return Ok(new
             {
                 songs = result.Items,
@@ -314,7 +322,10 @@ public class SongsController : ControllerBase
     {
         try
         {
-            var (userId, ipAddress) = GetUserIdentity();
+            var userId = GetCurrentUserId();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            if (userId.HasValue)
+            {
             var limitStatus = await _songService.GetDailyLimitStatusAsync(userId, ipAddress);
 
             if (limitStatus.LimitExceeded)
@@ -329,11 +340,18 @@ public class SongsController : ControllerBase
                 });
             }
 
+            }
+
             var song = await _songService.GetSongByIdAsync(id, includeUnapproved: false);
 
             if (song == null)
             {
                 return NotFound(new { message = "השיר לא נמצא" });
+            }
+
+            if (!userId.HasValue)
+            {
+                LockSongContent(song);
             }
 
             return Ok(song);
@@ -385,6 +403,11 @@ public class SongsController : ControllerBase
             if (song == null)
             {
                 return NotFound(new { message = "לא נמצאו שירים מאושרים במערכת" });
+            }
+
+            if (!GetCurrentUserId().HasValue)
+            {
+                LockSongContent(song);
             }
 
             return Ok(song);
@@ -788,14 +811,10 @@ public class SongsController : ControllerBase
         try
         {
             // Extract HTTP-specific info
-            int? userId = null;
-            if (User.Identity?.IsAuthenticated == true)
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
+                return Unauthorized(new { message = "יש להתחבר כדי לצפות באקורדים" });
             }
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -942,6 +961,12 @@ public class SongsController : ControllerBase
             _logger.LogWarning(ex, "Error getting song rating: SongId={Id}", id);
             return Ok(new SongRatingResponseDto { AverageRating = 0, RatingCount = 0, UserRating = null });
         }
+    }
+
+    private static void LockSongContent(SongDto song)
+    {
+        song.LyricsWithChords = string.Empty;
+        song.HasFullContent = false;
     }
 
     // ============================================

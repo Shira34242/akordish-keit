@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { ArtistService } from '../../../services/artist.service';
 import { AgencyService } from '../../../services/agency.service';
 import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
@@ -310,6 +311,22 @@ export class ArtistsAdminListComponent implements OnInit {
     this.bumpModalOpen = false;
     this.selectedIds.clear();
     this.loadArtists();
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} אומנים? פעולה זו אינה הפיכה.`)) return;
+    forkJoin(ids.map(id => this.artistService.deleteArtist(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadArtists();
+      },
+      error: (err) => {
+        console.error('שגיאה במחיקה מרובה:', err);
+        alert('שגיאה במחיקת האומנים');
+      }
+    });
   }
 
   private loadAgencies(): void {

@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { TeacherService } from '../../../services/teacher.service';
 import { CitiesService, City } from '../../../services/cities.service';
@@ -40,6 +40,8 @@ interface Instrument {
 interface AgencyWithProfiles extends AgencyListDto {
   profileCards: AgencyProfileDto[];
   loadingProfiles: boolean;
+  profilesError: boolean;
+  profilesErrorMessage: string;
 }
 
 @Component({
@@ -192,29 +194,46 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.agencyBanners = agencies.map(a => ({
           ...a,
           profileCards: [] as AgencyProfileDto[],
-          loadingProfiles: true
+          loadingProfiles: true,
+          profilesError: false,
+          profilesErrorMessage: ''
         }));
         if (this.agencyBanners.length > 0) {
-          const profileRequests = this.agencyBanners.map(item =>
-            this.agencyService.getAgency(item.id)
+          const profileRequests = this.agencyBanners.map((item, i) =>
+            this.agencyService.getAgency(item.id).pipe(
+              catchError((err) => {
+                this.agencyBanners[i].profilesError = true;
+                this.agencyBanners[i].loadingProfiles = false;
+                const detail = err?.error?.detail || '';
+                const type = err?.error?.type || '';
+                this.agencyBanners[i].profilesErrorMessage = detail ? `${type}: ${detail}` : (err?.message || 'שגיאה');
+                return of(null);
+              })
+            )
           );
           forkJoin(profileRequests).subscribe({
-            next: (agencyDetails: AgencyDto[]) => {
+            next: (agencyDetails: Array<AgencyDto | null>) => {
               agencyDetails.forEach((detail, i) => {
-                if (this.agencyBanners[i]) {
-                  this.agencyBanners[i].profileCards = detail.profiles?.slice(0, 12) || [];
+                if (this.agencyBanners[i] && detail) {
+                  this.agencyBanners[i].profileCards = (detail.profiles || [])
+                    .filter(profile => this.isVisibleAgencyProfile(profile))
+                    .slice(0, 12);
                   this.agencyBanners[i].loadingProfiles = false;
                 }
               });
             },
             error: () => {
-              this.agencyBanners.forEach(a => a.loadingProfiles = false);
+              this.agencyBanners.forEach(a => { a.loadingProfiles = false; a.profilesError = true; });
             }
           });
         }
       },
       error: () => this.agencyBanners = []
     });
+  }
+
+  private isVisibleAgencyProfile(profile: AgencyProfileDto | null | undefined): profile is AgencyProfileDto {
+    return !!profile && !!profile.profileId;
   }
 
   ngAfterViewInit(): void {

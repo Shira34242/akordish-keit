@@ -50,7 +50,7 @@ public class AgencyContent
 {
     public int Id { get; set; }
     public int AgencyId { get; set; }
-    public string ContentType { get; set; } = string.Empty; // "article" | "song"
+    public string ContentType { get; set; } = string.Empty; // "article" | "song" | "podcast"
     public int ContentId { get; set; }
     public bool IsFeatured { get; set; }
     public int DisplayOrder { get; set; }

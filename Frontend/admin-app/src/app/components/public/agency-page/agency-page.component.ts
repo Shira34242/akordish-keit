@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AgencyProfileCardDto, AgencyPublicDto, AgencyGalleryImageDto, AgencySocialLinkDto } from '../../../models/agency.model';
 import { Article } from '../../../models/article.model';
+import { Podcast } from '../../../models/podcast.model';
 import { SongDto } from '../../../models/song.model';
 import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
@@ -124,8 +125,10 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
           this.initGallery3D();
         }, 0);
       },
-      error: () => {
-        this.error = 'לא מצאנו את דף הסוכנות';
+      error: (err) => {
+        const detail = err?.error?.detail || '';
+        const type = err?.error?.type || '';
+        this.error = detail ? `שגיאה: ${type} — ${detail}` : 'לא מצאנו את דף הסוכנות';
         this.loading = false;
       }
     });
@@ -141,11 +144,19 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
 
   get allProfiles(): AgencyProfileCardDto[] {
     if (!this.agency) return [];
-    return [...this.agency.artists, ...this.agency.serviceProviders, ...this.agency.teachers];
+    return [
+      ...this.agency.artists,
+      ...this.agency.serviceProviders,
+      ...this.agency.teachers
+    ].filter(profile => this.isVisibleProfile(profile));
   }
 
   get directSongs(): SongDto[] {
     return this.agency?.directSongs || [];
+  }
+
+  get directPodcasts(): Podcast[] {
+    return this.agency?.directPodcasts || [];
   }
 
   get directArticles(): Article[] {
@@ -161,7 +172,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   }
 
   get hasDirectContent(): boolean {
-    return this.directArticles.length > 0 || this.directSongs.length > 0;
+    return this.directArticles.length > 0 || this.directSongs.length > 0 || this.directPodcasts.length > 0;
   }
 
   get hasMemberContent(): boolean {
@@ -173,7 +184,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   }
 
   get directContentCount(): number {
-    return this.directArticles.length + this.directSongs.length;
+    return this.directArticles.length + this.directSongs.length + this.directPodcasts.length;
   }
 
   get memberContentCount(): number {
@@ -192,6 +203,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   }
 
   goToProfile(profile: AgencyProfileCardDto): void {
+    if (!profile.profileUrl) return;
     if (this.agency) {
       this.analytics.trackInteraction('agency_profile_click', this.agency.id, `${this.agency.name} | ${profile.profileType} | ${profile.name}`);
     }
@@ -210,6 +222,13 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
       this.analytics.trackInteraction('agency_content_click', this.agency.id, `${this.agency.name} | song | ${song.title}`);
     }
     this.router.navigate(['/song', song.id]);
+  }
+
+  goToPodcast(podcast: Podcast): void {
+    if (this.agency) {
+      this.analytics.trackInteraction('agency_content_click', this.agency.id, `${this.agency.name} | podcast | ${podcast.name}`);
+    }
+    this.router.navigate(['/podcasts'], { queryParams: { series: podcast.slug } });
   }
 
   toggleContact(): void {
@@ -361,6 +380,10 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
     if (profile.isTeacher) return 'מורה';
     if (profile.profileType === 'artist') return 'אמן';
     return 'נותן שירות';
+  }
+
+  private isVisibleProfile(profile: AgencyProfileCardDto | null | undefined): profile is AgencyProfileCardDto {
+    return !!profile && !!profile.name?.trim() && !!profile.profileUrl?.trim();
   }
 
   // ============================================================

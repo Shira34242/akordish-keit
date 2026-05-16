@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { TeacherService } from '../../../services/teacher.service';
 import { AgencyService } from '../../../services/agency.service';
 import { TeacherListDto } from '../../../models/teacher.model';
@@ -329,6 +330,22 @@ export class TeachersListComponent implements OnInit {
     this.bumpModalOpen = false;
     this.selectedIds.clear();
     this.loadTeachers();
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} מורים? פעולה זו אינה הפיכה.`)) return;
+    forkJoin(ids.map(id => this.teacherService.deleteTeacher(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadTeachers();
+      },
+      error: (err) => {
+        console.error('שגיאה במחיקה מרובה:', err);
+        alert('שגיאה במחיקת המורים');
+      }
+    });
   }
 
   private loadAgencies(): void {

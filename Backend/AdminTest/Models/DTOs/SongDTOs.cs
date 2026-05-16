@@ -216,6 +216,7 @@ public class SongDto
     public List<ArtistBasicDto> Artists { get; set; } = new();
 
     public string LyricsWithChords { get; set; } = string.Empty;
+    public bool HasFullContent { get; set; } = true;
 
     // סולמות
     public int OriginalKeyId { get; set; }

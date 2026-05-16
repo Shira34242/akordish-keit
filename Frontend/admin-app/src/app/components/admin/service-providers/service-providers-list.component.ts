@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { AgencyService } from '../../../services/agency.service';
 import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
@@ -326,6 +327,22 @@ export class ServiceProvidersListComponent implements OnInit {
     this.bumpModalOpen = false;
     this.selectedIds.clear();
     this.loadProviders();
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} בעלי מקצוע? פעולה זו אינה הפיכה.`)) return;
+    forkJoin(ids.map(id => this.providerService.deleteServiceProvider(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadProviders();
+      },
+      error: (err) => {
+        console.error('שגיאה במחיקה מרובה:', err);
+        alert('שגיאה במחיקת בעלי המקצוע');
+      }
+    });
   }
 
   private loadAgencies(): void {

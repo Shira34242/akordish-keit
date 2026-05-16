@@ -2,7 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ArticleService, UpdateArticleArtistsDto, UpdateArticleCategoriesDto } from '../../../../services/admin/article.service';
+import {
+  ArticleNewsCleanupSettingsDto,
+  ArticleService,
+  UpdateArticleArtistsDto,
+  UpdateArticleCategoriesDto
+} from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
@@ -57,7 +62,16 @@ export class ArticlesListComponent implements OnInit {
   bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
-  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' = 'news';
+  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup' = 'news';
+  cleanupSettings: ArticleNewsCleanupSettingsDto = {
+    autoDeleteEnabled: false,
+    retentionDays: 365,
+    lastRunAt: null
+  };
+  cleanupSettingsDraft = { autoDeleteEnabled: false, retentionDays: 365 };
+  manualCleanupDays = 365;
+  cleanupLoading = false;
+  cleanupSettingsLoading = false;
 
   // Pagination
   currentPage = 1;
@@ -80,6 +94,7 @@ export class ArticlesListComponent implements OnInit {
     this.loadCategories();
     this.loadArtists();
     this.loadArticles();
+    this.loadCleanupSettings();
   }
 
   loadCategories(): void {
@@ -127,17 +142,19 @@ export class ArticlesListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'all' | 'news' | 'blog' | 'featured' | 'sections'): void {
+  switchTab(tab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup'): void {
     this.activeTab = tab;
     this.currentPage = 1;
     this.clearSelection();
     if (this.isArticleListTab) {
       this.loadArticles();
+    } else if (tab === 'cleanup') {
+      this.loadCleanupSettings();
     }
   }
 
   get isArticleListTab(): boolean {
-    return this.activeTab !== 'featured' && this.activeTab !== 'sections';
+    return this.activeTab !== 'featured' && this.activeTab !== 'sections' && this.activeTab !== 'cleanup';
   }
 
   onSearch(): void {
@@ -170,6 +187,76 @@ export class ArticlesListComponent implements OnInit {
     this.showFeaturedOnly = false;
     this.currentPage = 1;
     this.loadArticles();
+  }
+
+  loadCleanupSettings(): void {
+    this.cleanupSettingsLoading = true;
+    this.articleService.getNewsCleanupSettings().subscribe({
+      next: (settings) => {
+        this.cleanupSettings = settings;
+        this.cleanupSettingsDraft = {
+          autoDeleteEnabled: settings.autoDeleteEnabled,
+          retentionDays: settings.retentionDays
+        };
+        this.manualCleanupDays = settings.retentionDays || this.manualCleanupDays;
+        this.cleanupSettingsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading news cleanup settings:', error);
+        this.cleanupSettingsLoading = false;
+      }
+    });
+  }
+
+  saveCleanupSettings(): void {
+    this.cleanupLoading = true;
+    this.articleService.updateNewsCleanupSettings({
+      autoDeleteEnabled: this.cleanupSettingsDraft.autoDeleteEnabled,
+      retentionDays: this.cleanupSettingsDraft.retentionDays
+    }).subscribe({
+      next: (settings) => {
+        this.cleanupSettings = settings;
+        this.cleanupSettingsDraft = {
+          autoDeleteEnabled: settings.autoDeleteEnabled,
+          retentionDays: settings.retentionDays
+        };
+        this.manualCleanupDays = settings.retentionDays;
+        this.cleanupLoading = false;
+        alert('הגדרות הניקוי נשמרו בהצלחה');
+      },
+      error: (error) => {
+        console.error('Error saving news cleanup settings:', error);
+        alert(error?.error?.message || 'שגיאה בשמירת הגדרות הניקוי');
+        this.cleanupLoading = false;
+      }
+    });
+  }
+
+  async runManualCleanup(): Promise<void> {
+    const days = this.manualCleanupDays;
+    if (!days || days < 30) {
+      alert('בחר לפחות 30 ימים כדי למנוע מחיקה רחבה מדי');
+      return;
+    }
+
+    if (!(await this.siteAlerts.confirm(`למחוק חדשות מוזיקה שפורסמו לפני יותר מ-${days} ימים?`))) {
+      return;
+    }
+
+    this.cleanupLoading = true;
+    this.articleService.cleanupOldNews({ olderThanDays: days }).subscribe({
+      next: (result) => {
+        this.cleanupLoading = false;
+        this.loadCleanupSettings();
+        this.loadArticles();
+        alert(`נמחקו ${result.deletedCount} כתבות חדשות ישנות`);
+      },
+      error: (error) => {
+        console.error('Error cleaning old news:', error);
+        alert(error?.error?.message || 'שגיאה במחיקת חדשות ישנות');
+        this.cleanupLoading = false;
+      }
+    });
   }
 
   get selectedCount(): number {

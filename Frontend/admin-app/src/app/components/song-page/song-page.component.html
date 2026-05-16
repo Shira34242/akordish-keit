@@ -46,7 +46,7 @@
 
             <!-- Info Section -->
             <div class="header-info-section">
-                <p class="header-subtitle">{{ 'song.chords_subtitle' | translate }}</p>
+                <p class="header-subtitle">{{ songViewSubtitle }}</p>
                 <h1 class="main-title">{{ song.title }}</h1>
                 <div class="artist-names">
                     <ng-container *ngFor="let artist of song.artists; let last = last">
@@ -110,6 +110,7 @@
             <div class="instrument-group">
                 <!-- קלידים -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'piano'"
+                    [disabled]="!hasFullSongContent"
                     (click)="selectInstrument('piano')" [attr.title]="'song.instr_piano' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -123,6 +124,7 @@
                 </button>
                 <!-- גיטרה -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'guitar'"
+                    [disabled]="!hasFullSongContent"
                     (click)="selectInstrument('guitar')" [attr.title]="'song.instr_guitar' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="1 -12 511.99887 511" fill="currentColor">
                         <path d="m458.457031.5-173.089843 173.257812c-3.390626-27.449218 11.734374-58.269531 23.042968-76.867187 6.582032-10.816406 6.21875-24.027344-.945312-34.476563-7.152344-10.429687-19.324219-15.519531-31.765625-13.285156-21.292969 3.824219-51.707031 13.417969-75.683594 37.390625-13.042969 13.042969-21.066406 31.382813-28.148437 47.5625-5.152344 11.773438-10.480469 23.949219-15.734376 29.003907l-.273437.269531c-16.121094 16.121093-37.671875 21.6875-60.484375 27.578125-22.648438 5.847656-46.066406 11.894531-63.402344 29.230468-21.03125 21.019532-32.085937 46.753907-31.972656 74.417969.167969 40.558594 23.269531 84.148438 66.8125 126.082031 40.777344 42.339844 83.589844 65.105469 123.828125 65.832032.644531.011718 1.28125.015625 1.925781.015625 27.9375 0 53.714844-11.03125 74.652344-31.976563 17.210938-17.210937 22.902344-39.980468 28.410156-61.996094 5.726563-22.894531 11.132813-44.515624 28.515625-61.898437l.269531-.273437c2.9375-3.054688 11.523438-7.246094 19.097657-10.941407 18.070312-8.820312 40.554687-19.792969 54.835937-42.164062 5.851563-9.167969 6.195313-20.773438.898438-30.289063-5.308594-9.527344-15.410156-15.371094-26.261719-15.207031-17.613281.222656-42.5625-2.136719-66.660156-22.386719l168.714843-168.878906h36.960938v-40zm-84.9375 271.257812c-.003906 0-.007812 0-.011719 0 .003907.003907.007813 0 .011719 0zm-49.757812-7.203124c9.210937 3.105468 17.960937 4.910156 25.863281 5.941406-7.199219 4.949218-15.503906 9-23.660156 12.980468-11.511719 5.621094-22.390625 10.929688-30.230469 19.003907-25.113281 25.191406-32.765625 55.773437-38.910156 80.351562-4.566407 18.265625-8.511719 34.039063-17.894531 43.417969-13.945313 13.953125-29.523438 20.554688-47.566407 20.25-29.042969-.523438-63.128906-19.644531-95.984375-53.835938l-.5625-.566406c-35.230468-33.847656-54.695312-68.539062-54.816406-97.683594-.066406-16.996093 6.742188-32.460937 20.253906-45.964843 9.621094-9.621094 26.074219-13.867188 45.121094-18.789063 25.703125-6.636718 54.828125-14.15625 78.640625-37.890625 10.894531-10.558593 17.503906-25.664062 24.5-41.652343 5.9375-13.570313 12.078125-27.605469 19.789063-35.316407 10.898437-10.902343 24.167968-17.597656 36.425781-21.714843-21.765625 42.617187-25.710938 81.632812-11.515625 112.855468l-34.304688 34.339844-18.714844-18.867188-28.398437 28.171876 65.007813 65.527343 28.394531-28.171875-18.117188-18.265625 30.886719-30.914062c13.78125 12.175781 29.117188 21.167969 45.792969 26.792969zm-180.5625 13.332031 65.003906 65.527343-28.394531 28.171876-65.007813-65.527344zm0 0"/>
@@ -130,6 +132,7 @@
                 </button>
                 <!-- יוקלילי -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'ukulele'"
+                    [disabled]="!hasFullSongContent"
                     (click)="selectInstrument('ukulele')" [attr.title]="'song.instr_ukulele' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -142,6 +145,7 @@
                 </button>
                 <!-- מילים בלבד -->
                 <button class="toolbar-btn instrument-btn" [class.active]="selectedInstrument === 'lyrics'"
+                    [disabled]="!hasFullSongContent"
                     (click)="selectInstrument('lyrics')" [attr.title]="'song.instr_lyrics' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -160,7 +164,7 @@
             <div class="transpose-group">
                 <span class="current-key-label"><span class="key-prefix-text">{{ 'song.key_prefix' | translate }} </span>{{ currentKey }}</span>
 
-                <button class="toolbar-btn" (click)="transpose(-1)" [attr.title]="'song.transpose_down' | translate">
+                <button class="toolbar-btn" [disabled]="!hasFullSongContent" (click)="transpose(-1)" [attr.title]="'song.transpose_down' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14"></path>
@@ -169,7 +173,7 @@
 
                 <span class="transpose-val" dir="ltr">{{ transposeDisplay }}</span>
 
-                <button class="toolbar-btn" (click)="transpose(1)" [attr.title]="'song.transpose_up' | translate">
+                <button class="toolbar-btn" [disabled]="!hasFullSongContent" (click)="transpose(1)" [attr.title]="'song.transpose_up' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14"></path>
@@ -177,7 +181,7 @@
                     </svg>
                 </button>
 
-                <button class="toolbar-btn toolbar-btn-reset" (click)="resetTranspose()" [attr.title]="'song.transpose_reset' | translate"
+                <button class="toolbar-btn toolbar-btn-reset" [disabled]="!hasFullSongContent" (click)="resetTranspose()" [attr.title]="'song.transpose_reset' | translate"
                     *ngIf="transposeStep !== 0 || isEasyMode">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -191,6 +195,7 @@
 
             <!-- Easy Version -->
             <button class="toolbar-btn btn-easy btn-text"
+                    [disabled]="!hasFullSongContent"
                     *ngIf="song.easyKeyId && !isEasyMode"
                     (click)="toggleEasyMode()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
@@ -203,14 +208,14 @@
 
             <!-- Font Size -->
             <div class="font-size-group">
-                <button class="toolbar-btn btn-text" (click)="changeFontSize(-1)" [attr.title]="'song.font_decrease' | translate">A-</button>
-                <button class="toolbar-btn btn-text" (click)="changeFontSize(1)" [attr.title]="'song.font_increase' | translate">A+</button>
+                <button class="toolbar-btn btn-text" [disabled]="!hasFullSongContent" (click)="changeFontSize(-1)" [attr.title]="'song.font_decrease' | translate">A-</button>
+                <button class="toolbar-btn btn-text" [disabled]="!hasFullSongContent" (click)="changeFontSize(1)" [attr.title]="'song.font_increase' | translate">A+</button>
             </div>
 
             <div class="toolbar-divider"></div>
 
             <!-- Auto Scroll -->
-            <button *ngIf="!isAutoScroll" class="toolbar-btn btn-scroll btn-text" (click)="toggleAutoScroll()">
+            <button *ngIf="!isAutoScroll" class="toolbar-btn btn-scroll btn-text" [disabled]="!hasFullSongContent" (click)="toggleAutoScroll()">
                 <svg class="btn-scroll-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 2v20"></path>
@@ -221,21 +226,21 @@
 
             <!-- Auto Scroll Speed Controls (shown when active) -->
             <div class="autoscroll-controls" *ngIf="isAutoScroll">
-                <button class="toolbar-btn toolbar-btn-sm" (click)="changeScrollSpeed(-1)" [attr.title]="'song.scroll_slow' | translate">
+                <button class="toolbar-btn toolbar-btn-sm" [disabled]="!hasFullSongContent" (click)="changeScrollSpeed(-1)" [attr.title]="'song.scroll_slow' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14"></path>
                     </svg>
                 </button>
                 <span class="scroll-speed-display">{{ scrollSpeed }}</span>
-                <button class="toolbar-btn toolbar-btn-sm" (click)="changeScrollSpeed(1)" [attr.title]="'song.scroll_fast' | translate">
+                <button class="toolbar-btn toolbar-btn-sm" [disabled]="!hasFullSongContent" (click)="changeScrollSpeed(1)" [attr.title]="'song.scroll_fast' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14"></path>
                         <path d="M12 5v14"></path>
                     </svg>
                 </button>
-                <button class="toolbar-btn toolbar-btn-sm btn-stop" (click)="toggleAutoScroll()" [attr.title]="'song.scroll_stop' | translate">
+                <button class="toolbar-btn toolbar-btn-sm btn-stop" [disabled]="!hasFullSongContent" (click)="toggleAutoScroll()" [attr.title]="'song.scroll_stop' | translate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="6" y="4" width="4" height="16"></rect>
@@ -247,7 +252,7 @@
             <div class="toolbar-divider"></div>
 
             <!-- Dark Mode Toggle -->
-            <button class="toolbar-btn" (click)="toggleTheme()" [attr.title]="(isDarkMode ? 'song.day_mode' : 'song.night_mode') | translate">
+            <button class="toolbar-btn" [disabled]="!hasFullSongContent" (click)="toggleTheme()" [attr.title]="(isDarkMode ? 'song.day_mode' : 'song.night_mode') | translate">
                 <svg *ngIf="!isDarkMode" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
@@ -272,6 +277,7 @@
             <button *ngIf="selectedInstrument !== 'lyrics'"
                     class="toolbar-btn"
                     [class.active]="showInlineChordDiagrams"
+                    [disabled]="!hasFullSongContent"
                     (click)="toggleInlineChordDiagrams()"
                     [attr.title]="'song.show_diagrams' | translate">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -297,7 +303,7 @@
     <div class="main-layout">
 
         <div class="song-main-column" #mainColumn>
-            <div class="chord-diagrams-panel" *ngIf="!isSheetMusicMode && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
+            <div class="chord-diagrams-panel" *ngIf="!isSheetMusicMode && hasFullSongContent && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
                 <div class="chord-diagrams-head">
                     <h3>{{ 'song.chord_diagrams_title' | translate }}</h3>
                     <p>{{ 'song.chord_diagrams_sub' | translate }}</p>
@@ -318,7 +324,7 @@
             [style.--lyrics-font-size.px]="fontSize">
 
             <!-- Capo Hint -->
-            <div class="capo-hint" *ngIf="capoFret !== null && selectedInstrument === 'guitar'">
+            <div class="capo-hint" *ngIf="hasFullSongContent && capoFret !== null && selectedInstrument === 'guitar'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -329,11 +335,20 @@
                 {{ 'song.capo_prefix' | translate }} {{ capoFret }} {{ 'song.capo_suffix' | translate }}
             </div>
 
-            <div class="lyrics-content" [innerHTML]="formattedLyricsHtml"
+            <div class="lyrics-content" *ngIf="hasFullSongContent; else lockedSongContent" [innerHTML]="formattedLyricsHtml"
                 (mouseover)="handleLyricsMouseOver($event)"
                 (mouseleave)="handleLyricsLeave()"
                 (click)="handleLyricsClick($event)">
             </div>
+
+            <ng-template #lockedSongContent>
+                <div class="daily-limit-card" style="position:relative;margin:var(--space-xl) auto 0;">
+                    <h2 class="daily-limit-title">התחברו לצפייה בתוכן הדף</h2>
+                    <button type="button" class="daily-limit-btn primary" (click)="openLoginForSong()">
+                        התחברות / הרשמה
+                    </button>
+                </div>
+            </ng-template>
 
             <!-- Chord Tooltip (hover + pinned) -->
             <app-chord-tooltip

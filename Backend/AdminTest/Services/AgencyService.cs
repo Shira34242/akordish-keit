@@ -7,16 +7,19 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AkordishKeit.Services;
 
 public class AgencyService : IAgencyService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly ILogger<AgencyService> _logger;
 
-    public AgencyService(AkordishKeitDbContext context)
+    public AgencyService(AkordishKeitDbContext context, ILogger<AgencyService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<PagedResult<AgencyListDto>> GetAgenciesAsync(string? search, bool? isActive, int pageNumber, int pageSize)
@@ -395,49 +398,68 @@ public class AgencyService : IAgencyService
 
     private async Task<AgencyDto> MapToDtoAsync(Agency agency)
     {
-        var profiles = await Task.WhenAll(agency.Profiles.OrderBy(p => p.DisplayOrder).Select(EnrichProfileDtoAsync));
-        var contents = await Task.WhenAll(agency.Contents.OrderBy(c => c.DisplayOrder).Select(EnrichContentDtoAsync));
-
-        return new AgencyDto
+        try
         {
-            Id = agency.Id,
-            Name = agency.Name,
-            Slug = agency.Slug,
-            LogoUrl = agency.LogoUrl,
-            BannerImageUrl = agency.BannerImageUrl,
-            ShortDescription = agency.ShortDescription,
-            FullDescription = agency.FullDescription,
-            PhoneNumber = agency.PhoneNumber,
-            WhatsAppNumber = agency.WhatsAppNumber,
-            Email = agency.Email,
-            WebsiteUrl = agency.WebsiteUrl,
-            BrandPrimaryColor = agency.BrandPrimaryColor,
-            BrandSecondaryColor = agency.BrandSecondaryColor,
-            BrandTextColor = agency.BrandTextColor,
-            IsActive = agency.IsActive,
-            ShowInIndexBanner = agency.ShowInIndexBanner,
-            DisplayOrder = agency.DisplayOrder,
-            ProfilesCount = agency.Profiles.Count,
-            ContentsCount = agency.Contents.Count,
-            CreatedAt = agency.CreatedAt,
-            Profiles = profiles.ToList(),
-            Contents = contents.ToList(),
-            GalleryImages = agency.GalleryImages.OrderBy(g => g.DisplayOrder).Select(g => new AgencyGalleryImageDto
+            var profiles = new List<AgencyProfileDto>();
+            foreach (var p in agency.Profiles.OrderBy(p => p.DisplayOrder))
             {
-                Id = g.Id,
-                AgencyId = g.AgencyId,
-                ImageUrl = g.ImageUrl,
-                Caption = g.Caption,
-                DisplayOrder = g.DisplayOrder
-            }).ToList(),
-            SocialLinks = agency.SocialLinks.Select(s => new AgencySocialLinkDto
+                profiles.Add(await EnrichProfileDtoAsync(p));
+            }
+
+            var contents = new List<AgencyContentDto>();
+            foreach (var c in agency.Contents.OrderBy(c => c.DisplayOrder))
             {
-                Id = s.Id,
-                AgencyId = s.AgencyId,
-                Platform = s.Platform,
-                Url = s.Url
-            }).ToList()
-        };
+                contents.Add(await EnrichContentDtoAsync(c));
+            }
+
+            return new AgencyDto
+            {
+                Id = agency.Id,
+                Name = agency.Name,
+                Slug = agency.Slug,
+                LogoUrl = agency.LogoUrl,
+                BannerImageUrl = agency.BannerImageUrl,
+                ShortDescription = agency.ShortDescription,
+                FullDescription = agency.FullDescription,
+                PhoneNumber = agency.PhoneNumber,
+                WhatsAppNumber = agency.WhatsAppNumber,
+                Email = agency.Email,
+                WebsiteUrl = agency.WebsiteUrl,
+                BrandPrimaryColor = agency.BrandPrimaryColor,
+                BrandSecondaryColor = agency.BrandSecondaryColor,
+                BrandTextColor = agency.BrandTextColor,
+                IsActive = agency.IsActive,
+                ShowInIndexBanner = agency.ShowInIndexBanner,
+                DisplayOrder = agency.DisplayOrder,
+                ProfilesCount = agency.Profiles.Count,
+                ContentsCount = agency.Contents.Count,
+                CreatedAt = agency.CreatedAt,
+                Profiles = profiles.ToList(),
+                Contents = contents.ToList(),
+                GalleryImages = agency.GalleryImages.OrderBy(g => g.DisplayOrder).Select(g => new AgencyGalleryImageDto
+                {
+                    Id = g.Id,
+                    AgencyId = g.AgencyId,
+                    ImageUrl = g.ImageUrl,
+                    Caption = g.Caption,
+                    DisplayOrder = g.DisplayOrder
+                }).ToList(),
+                SocialLinks = agency.SocialLinks.Select(s => new AgencySocialLinkDto
+                {
+                    Id = s.Id,
+                    AgencyId = s.AgencyId,
+                    Platform = s.Platform,
+                    Url = s.Url
+                }).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "MapToDtoAsync failed — AgencyId={AgencyId} AgencyName={AgencyName} ProfilesCount={ProfilesCount} ContentsCount={ContentsCount}",
+                agency.Id, agency.Name, agency.Profiles?.Count ?? -1, agency.Contents?.Count ?? -1);
+            throw;
+        }
     }
 
     private async Task<AgencyPublicDto> MapToPublicDtoAsync(Agency agency)
@@ -504,40 +526,50 @@ public class AgencyService : IAgencyService
 
     private async Task FillContentAsync(AgencyPublicDto dto, Agency agency)
     {
-        var directArticleIds = agency.Contents.Where(c => c.ContentType == "article").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
-        var directSongIds = agency.Contents.Where(c => c.ContentType == "song").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
+        try
+        {
+            var directArticleIds = agency.Contents.Where(c => c.ContentType == "article").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
+            var directSongIds = agency.Contents.Where(c => c.ContentType == "song").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
 
-        dto.DirectArticles = await GetArticlesByIdsAsync(directArticleIds);
-        dto.DirectSongs = await GetSongsByIdsAsync(directSongIds);
+            dto.DirectArticles = await GetArticlesByIdsAsync(directArticleIds);
+            dto.DirectSongs = await GetSongsByIdsAsync(directSongIds);
 
-        var memberProfiles = agency.Profiles.Select(p => new { p.ProfileType, p.ProfileId }).ToList();
-        var artistIds = memberProfiles.Where(p => p.ProfileType == "artist").Select(p => p.ProfileId).ToList();
-        var providerIds = memberProfiles.Where(p => p.ProfileType == "serviceProvider").Select(p => p.ProfileId).ToList();
+            var memberProfiles = agency.Profiles.Select(p => new { p.ProfileType, p.ProfileId }).ToList();
+            var artistIds = memberProfiles.Where(p => p.ProfileType == "artist").Select(p => p.ProfileId).ToList();
+            var providerIds = memberProfiles.Where(p => p.ProfileType == "serviceProvider").Select(p => p.ProfileId).ToList();
 
-        var memberArticleEntities = await _context.Articles
-            .AsNoTracking()
-            .Include(a => a.ArticleCategories).ThenInclude(c => c.Category)
-            .Include(a => a.ArticleTags).ThenInclude(t => t.Tag)
-            .Where(a => !a.IsDeleted && a.Status == (int)ArticleStatus.Published)
-            .Where(a =>
-                (a.UploaderProfileType == "artist" && a.UploaderProfileId.HasValue && artistIds.Contains(a.UploaderProfileId.Value)) ||
-                (a.UploaderProfileType == "serviceProvider" && a.UploaderProfileId.HasValue && providerIds.Contains(a.UploaderProfileId.Value)))
-            .OrderByDescending(a => a.PublishDate)
-            .Take(12)
-            .ToListAsync();
-        dto.MemberArticles = memberArticleEntities.Select(MapArticle).ToList();
+            var memberArticleEntities = await _context.Articles
+                .AsNoTracking()
+                .Include(a => a.ArticleCategories).ThenInclude(c => c.Category)
+                .Include(a => a.ArticleTags).ThenInclude(t => t.Tag)
+                .Where(a => !a.IsDeleted && a.Status == (int)ArticleStatus.Published)
+                .Where(a =>
+                    (a.UploaderProfileType == "artist" && a.UploaderProfileId.HasValue && artistIds.Contains(a.UploaderProfileId.Value)) ||
+                    (a.UploaderProfileType == "serviceProvider" && a.UploaderProfileId.HasValue && providerIds.Contains(a.UploaderProfileId.Value)))
+                .OrderByDescending(a => a.PublishDate)
+                .Take(12)
+                .ToListAsync();
+            dto.MemberArticles = memberArticleEntities.Select(MapArticle).ToList();
 
-        var memberSongEntities = await _context.Songs
-            .AsNoTracking()
-            .Include(s => s.SongArtists).ThenInclude(sa => sa.Artist)
-            .Where(s => s.IsApproved && !s.IsDeleted)
-            .Where(s =>
-                (s.UploaderProfileType == "artist" && s.UploaderProfileId.HasValue && artistIds.Contains(s.UploaderProfileId.Value)) ||
-                (s.UploaderProfileType == "serviceProvider" && s.UploaderProfileId.HasValue && providerIds.Contains(s.UploaderProfileId.Value)))
-            .OrderByDescending(s => s.CreatedAt)
-            .Take(12)
-            .ToListAsync();
-        dto.MemberSongs = memberSongEntities.Select(MapSong).ToList();
+            var memberSongEntities = await _context.Songs
+                .AsNoTracking()
+                .Include(s => s.SongArtists).ThenInclude(sa => sa.Artist)
+                .Where(s => s.IsApproved && !s.IsDeleted)
+                .Where(s =>
+                    (s.UploaderProfileType == "artist" && s.UploaderProfileId.HasValue && artistIds.Contains(s.UploaderProfileId.Value)) ||
+                    (s.UploaderProfileType == "serviceProvider" && s.UploaderProfileId.HasValue && providerIds.Contains(s.UploaderProfileId.Value)))
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(12)
+                .ToListAsync();
+            dto.MemberSongs = memberSongEntities.Select(MapSong).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "FillContentAsync failed — AgencyId={AgencyId} AgencyName={AgencyName} ProfilesCount={ProfilesCount} ContentsCount={ContentsCount}",
+                agency.Id, agency.Name, agency.Profiles?.Count ?? -1, agency.Contents?.Count ?? -1);
+            throw;
+        }
     }
 
     private async Task<List<ArticleDto>> GetArticlesByIdsAsync(List<int> ids)
@@ -565,6 +597,60 @@ public class AgencyService : IAgencyService
             .ToListAsync();
         var songs = songEntities.Select(MapSong).ToList();
         return songs.OrderBy(s => order.GetValueOrDefault(s.Id)).ToList();
+    }
+
+    private async Task<List<PodcastDto>> GetPodcastsByIdsAsync(List<int> ids)
+    {
+        if (ids.Count == 0) return new List<PodcastDto>();
+
+        var order = ids.Select((id, index) => new { id, index }).ToDictionary(x => x.id, x => x.index);
+        var podcastEntities = await _context.Podcasts
+            .AsNoTracking()
+            .Include(p => p.Episodes)
+            .Where(p => ids.Contains(p.Id) && p.IsActive && !p.IsDeleted)
+            .ToListAsync();
+
+        var podcasts = podcastEntities.Select(p =>
+        {
+            var activeEpisodes = p.Episodes.Where(e => !e.IsDeleted && e.IsActive).ToList();
+            var latest = activeEpisodes.OrderByDescending(e => e.PublishedAt).FirstOrDefault();
+            return new PodcastDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Slug = p.Slug,
+                Description = p.Description,
+                ImageUrl = p.ImageUrl,
+                DisplayOrder = p.DisplayOrder,
+                IsActive = p.IsActive,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                EpisodeCount = activeEpisodes.Count,
+                LatestEpisode = latest == null ? null : new PodcastEpisodeDto
+                {
+                    Id = latest.Id,
+                    PodcastId = latest.PodcastId,
+                    PodcastName = p.Name,
+                    PodcastSlug = p.Slug,
+                    Title = latest.Title,
+                    Slug = latest.Slug,
+                    Description = latest.Description,
+                    EpisodeNumber = latest.EpisodeNumber,
+                    SourceUrl = latest.SourceUrl,
+                    EmbedUrl = latest.EmbedUrl,
+                    ThumbnailUrl = latest.ThumbnailUrl,
+                    Platform = latest.Platform,
+                    ViewCount = latest.ViewCount,
+                    PublishedAt = latest.PublishedAt,
+                    DisplayOrder = latest.DisplayOrder,
+                    IsActive = latest.IsActive,
+                    CreatedAt = latest.CreatedAt,
+                    UpdatedAt = latest.UpdatedAt
+                }
+            };
+        }).ToList();
+
+        return podcasts.OrderBy(p => order.GetValueOrDefault(p.Id)).ToList();
     }
 
     private static ArticleDto MapArticle(Article article)
@@ -654,53 +740,76 @@ public class AgencyService : IAgencyService
 
     private async Task<AgencyProfileDto> EnrichProfileDtoAsync(AgencyProfile profile)
     {
-        var dto = new AgencyProfileDto
+        try
         {
-            Id = profile.Id,
-            AgencyId = profile.AgencyId,
-            ProfileType = profile.ProfileType,
-            ProfileId = profile.ProfileId,
-            ContactMode = profile.ContactMode,
-            ShowBadge = profile.ShowBadge,
-            IsFeaturedByAgency = profile.IsFeaturedByAgency,
-            DisplayOrder = profile.DisplayOrder
-        };
+            var dto = new AgencyProfileDto
+            {
+                Id = profile.Id,
+                AgencyId = profile.AgencyId,
+                ProfileType = profile.ProfileType,
+                ProfileId = profile.ProfileId,
+                ContactMode = profile.ContactMode,
+                ShowBadge = profile.ShowBadge,
+                IsFeaturedByAgency = profile.IsFeaturedByAgency,
+                DisplayOrder = profile.DisplayOrder
+            };
 
-        if (profile.ProfileType == "artist")
-        {
-            var artist = await _context.Artists.AsNoTracking().FirstOrDefaultAsync(a => a.Id == profile.ProfileId && !a.IsDeleted);
-            dto.ProfileName = artist?.Name;
-            dto.ProfileImageUrl = artist?.ImageUrl;
-            dto.ProfileUrl = artist == null ? null : $"/artist/{artist.Id}";
-        }
-        else
-        {
-            var provider = await _context.ServiceProviders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == profile.ProfileId && !p.IsDeleted);
-            dto.ProfileName = provider?.DisplayName;
-            dto.ProfileImageUrl = provider?.ProfileImageUrl;
-            dto.IsTeacher = provider?.IsTeacher ?? false;
-            dto.ProfileUrl = provider == null ? null : (provider.IsTeacher ? $"/teacher/{provider.Id}" : $"/professional/{provider.Id}");
-        }
+            if (profile.ProfileType == "artist")
+            {
+                var artist = await _context.Artists.AsNoTracking().FirstOrDefaultAsync(a => a.Id == profile.ProfileId && !a.IsDeleted);
+                dto.ProfileName = artist?.Name;
+                dto.ProfileImageUrl = artist?.ImageUrl;
+                dto.ProfileUrl = artist == null ? null : $"/artist/{artist.Id}";
+            }
+            else
+            {
+                var provider = await _context.ServiceProviders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == profile.ProfileId && !p.IsDeleted);
+                dto.ProfileName = provider?.DisplayName;
+                dto.ProfileImageUrl = provider?.ProfileImageUrl;
+                dto.IsTeacher = provider?.IsTeacher ?? false;
+                dto.ProfileUrl = provider == null ? null : (provider.IsTeacher ? $"/teacher/{provider.Id}" : $"/professional/{provider.Id}");
+            }
 
-        return dto;
+            return dto;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "EnrichProfileDtoAsync failed — AgencyProfileLinkId={LinkId} AgencyId={AgencyId} ProfileType={ProfileType} ProfileId={ProfileId}",
+                profile.Id, profile.AgencyId, profile.ProfileType, profile.ProfileId);
+            throw;
+        }
     }
 
     private async Task<AgencyContentDto> EnrichContentDtoAsync(AgencyContent content)
     {
-        var title = content.ContentType == "article"
-            ? await _context.Articles.AsNoTracking().Where(a => a.Id == content.ContentId).Select(a => a.Title).FirstOrDefaultAsync()
-            : await _context.Songs.AsNoTracking().Where(s => s.Id == content.ContentId).Select(s => s.Title).FirstOrDefaultAsync();
-
-        return new AgencyContentDto
+        try
         {
-            Id = content.Id,
-            AgencyId = content.AgencyId,
-            ContentType = content.ContentType,
-            ContentId = content.ContentId,
-            IsFeatured = content.IsFeatured,
-            DisplayOrder = content.DisplayOrder,
-            Title = title
-        };
+            var title = content.ContentType switch
+            {
+                "article" => await _context.Articles.AsNoTracking().Where(a => a.Id == content.ContentId).Select(a => a.Title).FirstOrDefaultAsync(),
+                "podcast" => await _context.Podcasts.AsNoTracking().Where(p => p.Id == content.ContentId).Select(p => p.Name).FirstOrDefaultAsync(),
+                _ => await _context.Songs.AsNoTracking().Where(s => s.Id == content.ContentId).Select(s => s.Title).FirstOrDefaultAsync()
+            };
+
+            return new AgencyContentDto
+            {
+                Id = content.Id,
+                AgencyId = content.AgencyId,
+                ContentType = content.ContentType,
+                ContentId = content.ContentId,
+                IsFeatured = content.IsFeatured,
+                DisplayOrder = content.DisplayOrder,
+                Title = title
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "EnrichContentDtoAsync failed — AgencyContentLinkId={LinkId} AgencyId={AgencyId} ContentType={ContentType} ContentId={ContentId}",
+                content.Id, content.AgencyId, content.ContentType, content.ContentId);
+            throw;
+        }
     }
 
     private async Task EnsureProfileExistsAsync(string profileType, int profileId)
@@ -713,9 +822,12 @@ public class AgencyService : IAgencyService
 
     private async Task EnsureContentExistsAsync(string contentType, int contentId)
     {
-        var exists = contentType == "article"
-            ? await _context.Articles.AnyAsync(a => a.Id == contentId && !a.IsDeleted)
-            : await _context.Songs.AnyAsync(s => s.Id == contentId);
+        var exists = contentType switch
+        {
+            "article" => await _context.Articles.AnyAsync(a => a.Id == contentId && !a.IsDeleted),
+            "podcast" => await _context.Podcasts.AnyAsync(p => p.Id == contentId && !p.IsDeleted),
+            _ => await _context.Songs.AnyAsync(s => s.Id == contentId)
+        };
         if (!exists) throw new KeyNotFoundException("התוכן לא נמצא");
     }
 
@@ -757,6 +869,7 @@ public class AgencyService : IAgencyService
         {
             "article" => "article",
             "song" => "song",
+            "podcast" => "podcast",
             _ => null
         };
     }

@@ -122,6 +122,7 @@ namespace AkordishKeit.Services
                 UpdatedAt = podcast.UpdatedAt,
                 EpisodeCount = episodes.Count,
                 LatestEpisode = episodes.OrderByDescending(e => e.PublishedAt).FirstOrDefault(),
+                AgencyBanner = await GetAgencyBannerForPodcastAsync(podcast.Id),
                 Episodes = episodes
             };
         }
@@ -132,7 +133,11 @@ namespace AkordishKeit.Services
                 .Include(p => p.Episodes.Where(e => !e.IsDeleted))
                 .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
-            return podcast == null ? null : MapPodcast(podcast);
+            if (podcast == null) return null;
+
+            var dto = MapPodcast(podcast);
+            dto.AgencyBanner = await GetAgencyBannerForPodcastAsync(podcast.Id);
+            return dto;
         }
 
         public async Task<PodcastDto> CreatePodcastAsync(CreatePodcastDto dto)
@@ -465,6 +470,31 @@ namespace AkordishKeit.Services
             CreatedAt = episode.CreatedAt,
             UpdatedAt = episode.UpdatedAt
         };
+
+        private async Task<AgencyContentBannerDto?> GetAgencyBannerForPodcastAsync(int podcastId)
+        {
+            return await _context.AgencyContents
+                .AsNoTracking()
+                .Include(c => c.Agency)
+                .Where(c => c.ContentType == "podcast" && c.ContentId == podcastId)
+                .Where(c => !c.Agency.IsDeleted && c.Agency.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.Agency.DisplayOrder)
+                .ThenBy(c => c.Agency.Name)
+                .Select(c => new AgencyContentBannerDto
+                {
+                    Id = c.Agency.Id,
+                    Name = c.Agency.Name,
+                    Slug = c.Agency.Slug,
+                    LogoUrl = c.Agency.LogoUrl,
+                    BannerImageUrl = c.Agency.BannerImageUrl,
+                    ShortDescription = c.Agency.ShortDescription,
+                    BrandPrimaryColor = c.Agency.BrandPrimaryColor,
+                    BrandSecondaryColor = c.Agency.BrandSecondaryColor,
+                    BrandTextColor = c.Agency.BrandTextColor
+                })
+                .FirstOrDefaultAsync();
+        }
 
         private async Task<string> EnsureUniquePodcastSlugAsync(string? requestedSlug, string fallback, int? currentId = null)
         {

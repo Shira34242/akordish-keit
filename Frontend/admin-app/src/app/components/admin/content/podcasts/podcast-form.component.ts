@@ -2,7 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map, of, switchMap } from 'rxjs';
+import { AgencyListDto } from '../../../../models/agency.model';
 import { PodcastService } from '../../../../services/podcast.service';
+import { AgencyService } from '../../../../services/agency.service';
 import { CreatePodcastDto, UpdatePodcastDto } from '../../../../models/podcast.model';
 
 @Component({
@@ -14,6 +17,7 @@ import { CreatePodcastDto, UpdatePodcastDto } from '../../../../models/podcast.m
 })
 export class PodcastFormComponent implements OnInit {
   private readonly podcastService = inject(PodcastService);
+  private readonly agencyService = inject(AgencyService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -21,6 +25,9 @@ export class PodcastFormComponent implements OnInit {
   podcastId?: number;
   loading = false;
   saving = false;
+  agencies: AgencyListDto[] = [];
+  selectedAgencyId: number | null = null;
+  private originalAgencyId: number | null = null;
 
   podcast: CreatePodcastDto | UpdatePodcastDto = {
     name: '',
@@ -32,6 +39,8 @@ export class PodcastFormComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    this.loadAgencies();
+
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
 
@@ -48,6 +57,8 @@ export class PodcastFormComponent implements OnInit {
           displayOrder: podcast.displayOrder,
           isActive: podcast.isActive
         };
+        this.selectedAgencyId = podcast.agencyBanner?.id ?? null;
+        this.originalAgencyId = this.selectedAgencyId;
         this.loading = false;
       },
       error: () => {
@@ -77,15 +88,65 @@ export class PodcastFormComponent implements OnInit {
       : this.podcastService.createPodcast(payload);
 
     request.subscribe({
+      next: podcast => this.syncAgencyLink(podcast.id),
+      error: () => {
+        this.saving = false;
+        alert('שמירת הפודקאסט נכשלה');
+      }
+    });
+  }
+
+  private loadAgencies(): void {
+    this.agencyService.getAgencies(undefined, true, 1, 200).subscribe({
+      next: result => this.agencies = result.items || [],
+      error: () => this.agencies = []
+    });
+  }
+
+  private syncAgencyLink(podcastId: number): void {
+    this.buildAgencySyncRequest(podcastId).subscribe({
       next: () => {
         this.saving = false;
         this.goBack();
       },
       error: () => {
         this.saving = false;
-        alert('שמירת הפודקאסט נכשלה');
+        alert('הפודקאסט נשמר, אבל שיוך הסוכנות נכשל');
       }
     });
+  }
+
+  private buildAgencySyncRequest(podcastId: number) {
+    const previousAgencyId = this.originalAgencyId;
+    const nextAgencyId = this.selectedAgencyId;
+
+    if (previousAgencyId === nextAgencyId) return of(undefined);
+
+    const removePrevious$ = previousAgencyId
+      ? this.agencyService.getAgency(previousAgencyId).pipe(
+          switchMap(agency => {
+            const link = (agency.contents || []).find(content =>
+              content.contentType === 'podcast' && content.contentId === podcastId
+            );
+            return link
+              ? this.agencyService.removeContent(previousAgencyId, link.id)
+              : of(undefined);
+          })
+        )
+      : of(undefined);
+
+    return removePrevious$.pipe(
+      switchMap(() => nextAgencyId
+        ? this.agencyService.addContent(nextAgencyId, {
+            contentType: 'podcast',
+            contentId: podcastId,
+            isFeatured: false,
+            displayOrder: 0
+          })
+        : of(undefined)
+      ),
+      map(() => undefined)
+    );
   }
 
   goBack(): void {

@@ -442,6 +442,41 @@ public class ArticlesController : ControllerBase
         return Ok(result);
     }
 
+    // GET: api/Articles/news-cleanup/settings
+    [HttpGet("news-cleanup/settings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleNewsCleanupSettingsDto>> GetNewsCleanupSettings()
+    {
+        var settings = await _articleService.GetNewsCleanupSettingsAsync();
+        return Ok(settings);
+    }
+
+    // PUT: api/Articles/news-cleanup/settings
+    [HttpPut("news-cleanup/settings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleNewsCleanupSettingsDto>> UpdateNewsCleanupSettings([FromBody] UpdateArticleNewsCleanupSettingsDto dto)
+    {
+        var settings = await _articleService.UpdateNewsCleanupSettingsAsync(dto);
+        _logger.LogInformation(
+            "News cleanup settings updated: AutoDeleteEnabled={AutoDeleteEnabled} RetentionDays={RetentionDays}",
+            settings.AutoDeleteEnabled,
+            settings.RetentionDays);
+        return Ok(settings);
+    }
+
+    // POST: api/Articles/news-cleanup/run
+    [HttpPost("news-cleanup/run")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleNewsCleanupResultDto>> CleanupOldNews([FromBody] CleanupOldNewsDto dto)
+    {
+        var result = await _articleService.CleanupOldNewsAsync(dto.OlderThanDays);
+        _logger.LogInformation(
+            "Old news cleanup executed manually: OlderThanDays={OlderThanDays} DeletedCount={DeletedCount}",
+            result.OlderThanDays,
+            result.DeletedCount);
+        return Ok(result);
+    }
+
     // DELETE: api/Articles/5
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]

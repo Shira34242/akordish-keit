@@ -163,6 +163,21 @@
         </div>
 
         <div class="media-copy">
+          <button
+            type="button"
+            class="agency-series-banner"
+            *ngIf="agencyBanner as banner"
+            [ngStyle]="agencyBannerVars"
+            (click)="goToAgency()">
+            <span class="agency-series-banner__logo">
+              <img *ngIf="banner.logoUrl" [src]="banner.logoUrl" [alt]="banner.name" loading="lazy">
+              <span *ngIf="!banner.logoUrl">{{ banner.name.charAt(0) }}</span>
+            </span>
+            <span class="agency-series-banner__copy">
+              <small>סדרה של</small>
+              <strong>{{ banner.name }}</strong>
+            </span>
+          </button>
           <span class="media-kicker">פודקאסט</span>
           <h2>{{ selectedPodcast.name }}</h2>
           <p *ngIf="selectedPodcast.description">{{ selectedPodcast.description }}</p>

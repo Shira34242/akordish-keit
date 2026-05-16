@@ -7,6 +7,7 @@ import { AddSongModalComponent } from '../add-song-modal/add-song-modal.componen
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
 
 import {
     transposeChord,
@@ -132,6 +133,23 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     get isLoggedIn(): boolean { return this.authService.isLoggedIn; }
 
+    get hasFullSongContent(): boolean {
+        return !!this.song?.hasFullContent && !!this.song?.lyricsWithChords;
+    }
+
+    get songViewSubtitle(): string {
+        switch (this.selectedInstrument) {
+            case 'lyrics':
+                return this.langService.translate('song.view_title_lyrics');
+            case 'piano':
+                return this.langService.translate('song.view_title_piano');
+            case 'ukulele':
+                return this.langService.translate('song.view_title_ukulele');
+            default:
+                return this.langService.translate('song.view_title_guitar');
+        }
+    }
+
     getDailyLimitMessage(): string {
         if (!this.dailyLimitInfo) return '';
         const tpl = this.langService.translate('song.daily_limit_message');
@@ -155,6 +173,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     // Auto Scroll State
     private scrollInterval: any = null;
+    private authSubscription?: Subscription;
 
     constructor(
         private route: ActivatedRoute,
@@ -193,6 +212,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
         this.route.queryParams.subscribe(queryParams => {
             const playlistId = queryParams['playlistId'];
+            const view = queryParams['view'];
+            if (this.isSongView(view) && view !== this.selectedInstrument) {
+                this.selectInstrument(view, false);
+            }
             if (playlistId) {
                 const numId = +playlistId;
                 this.playlistNavDismissed = false;
@@ -207,6 +230,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         });
 
         // All native listeners run outside Angular zone — no change detection on scroll/click
+        this.authSubscription = this.authService.currentUser$.subscribe(user => {
+            if (user && this.songId && this.song?.hasFullContent === false) {
+                this.loadSong(this.songId);
+            }
+        });
+
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
             window.addEventListener('scroll', this.nativeWindowScroll, { passive: true });
@@ -224,6 +253,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         document.removeEventListener('copy', this.preventCopy);
         document.removeEventListener('contextmenu', this.preventContextMenu);
         document.removeEventListener('selectstart', this.preventSelect);
+        this.authSubscription?.unsubscribe();
         this.stopAutoScroll();
         this.isAutoScroll = false;
         this.stopNewsObserver();
@@ -279,15 +309,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                 this.isLoading = false;
                 this.applySeo();
 
-                this.preferFlat = analyzePreferFlat(
-                    this.song.lyricsWithChords,
-                    this.song.originalKeyName
-                );
+                this.preferFlat = this.hasFullSongContent
+                    ? analyzePreferFlat(this.song.lyricsWithChords, this.song.originalKeyName)
+                    : false;
 
                 this.transposeStep = 0;
                 this.fontSize = window.innerWidth <= 600 ? 14 : 18;
                 this.isSongSaved = false;
                 this.shouldAutoSaveOnPopupOpen = false;
+                this.showInlineChordDiagrams = false;
                 this.stopAutoScroll();
                 this.isAutoScroll = false;
                 this.checkEditPermission(id);
@@ -296,24 +326,28 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                 this.loadPopularSongs();
                 this.loadMusicNews();
                 this.loadSongSavedState();
-                this.loadKnownChordsForCurrentInstrument();
+                if (this.hasFullSongContent) {
+                    this.loadKnownChordsForCurrentInstrument();
+                }
                 this.loadRating(id);
 
                 // Increment view count with unique tracking
-                this.songService.incrementView(id).subscribe({
-                    next: (response) => {
-                        // Update the view count in the UI
-                        if (this.song && response.viewCount) {
-                            this.song.viewCount = response.viewCount;
+                if (this.hasFullSongContent) {
+                    this.songService.incrementView(id).subscribe({
+                        next: (response) => {
+                            // Update the view count in the UI
+                            if (this.song && response.viewCount) {
+                                this.song.viewCount = response.viewCount;
+                            }
+                        },
+                        error: (err) => {
+                            if (err.status === 429) {
+                                this.dailyLimitInfo = err.error || null;
+                            }
+                            console.error('Error incrementing view count:', err);
                         }
-                    },
-                    error: (err) => {
-                        if (err.status === 429) {
-                            this.dailyLimitInfo = err.error || null;
-                        }
-                        console.error('Error incrementing view count:', err);
-                    }
-                });
+                    });
+                }
 
             },
             error: (err) => {
@@ -347,16 +381,13 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     private applySeo(): void {
         if (!this.song || !this.songId) return;
         const artistName = this.getArtistNames();
-        const titleChords = this.langService.translate('song_page.seo_title_chords');
+        const viewText = this.getSeoViewText();
         const title = artistName
-            ? `${this.song.title} - ${artistName}${titleChords}`
-            : `${this.song.title}${titleChords}`;
-        const pre = this.langService.translate('song_page.seo_desc_pre');
-        const by = this.langService.translate('song_page.seo_desc_by');
-        const suf = this.langService.translate('song_page.seo_desc_suf');
+            ? `${this.song.title} - ${artistName} ${viewText}`
+            : `${this.song.title} ${viewText}`;
         const description = artistName
-            ? `${pre}${this.song.title}${by}${artistName}${suf}`
-            : `${pre}${this.song.title}${suf}`;
+            ? `${viewText} לשיר ${this.song.title} של ${artistName}, כולל סולם וכלי נגינה לגיטרה, קלידים ויוקלילי.`
+            : `${viewText} לשיר ${this.song.title}, כולל סולם וכלי נגינה לגיטרה, קלידים ויוקלילי.`;
         const path = `/song/${this.songId}`;
 
         this.seo.set({
@@ -381,6 +412,19 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                 }
             ]
         });
+    }
+
+    private getSeoViewText(): string {
+        switch (this.selectedInstrument) {
+            case 'lyrics':
+                return 'מילים';
+            case 'piano':
+                return 'אקורדים לקלידים';
+            case 'ukulele':
+                return 'אקורדים ליוקלילי';
+            default:
+                return 'אקורדים לגיטרה';
+        }
     }
 
     private getArtistNames(): string {
@@ -543,11 +587,26 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     }
 
 
-    selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics') {
+    private isSongView(value: unknown): value is 'guitar' | 'piano' | 'ukulele' | 'lyrics' {
+        return value === 'guitar' || value === 'piano' || value === 'ukulele' || value === 'lyrics';
+    }
+
+    selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics', updateUrl: boolean = true) {
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
         this.showKnownChordSummary = true;
+        this.showInlineChordDiagrams = this.showInlineChordDiagrams && this.hasFullSongContent;
         this.loadKnownChordsForCurrentInstrument();
+        this.applySeo();
+
+        if (updateUrl) {
+            this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { view: instrument === 'guitar' ? null : instrument },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+        }
     }
 
     toggleTheme() {
@@ -685,11 +744,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     private loadKnownChordsForCurrentInstrument(): void {
         const instrument = this.activeKnownInstrument;
-        if (!instrument || !this.authService.isLoggedIn) return;
+        if (!instrument || !this.authService.isLoggedIn || !this.hasFullSongContent) return;
         this.knownChordService.ensureLoaded(instrument).subscribe();
     }
 
     toggleInlineChordDiagrams() {
+        if (!this.hasFullSongContent) {
+            this.openLoginForSong();
+            return;
+        }
         this.showInlineChordDiagrams = !this.showInlineChordDiagrams;
     }
 
@@ -706,7 +769,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     // ⭐ הלוגיקה החדשה - תמיכה גם ב-Inline וגם ב-Block (Line over Line)
     get formattedLyricsHtml(): SafeHtml {
-        if (!this.song || !this.song.lyricsWithChords) return '';
+        if (!this.hasFullSongContent) return '';
 
         // Cache key — recompute only when relevant inputs change
         const cacheKey = `${this.song.lyricsWithChords}|${this.transposeStep}|${this.showChords}|${this.isEasyMode}|${this.activePreferFlat}`;
@@ -864,7 +927,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     handlePrint() {
         if (!this.song) return;
+        if (!this.hasFullSongContent) {
+            this.openLoginForSong();
+            return;
+        }
         this.isPrintPanelOpen = true;
+    }
+
+    openLoginForSong(): void {
+        this.authService.requestLogin(this.router.url);
     }
 
     closePrintPanel() {

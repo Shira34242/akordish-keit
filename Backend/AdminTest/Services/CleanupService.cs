@@ -52,6 +52,7 @@ public class CleanupService : BackgroundService
                 // Perform cleanup
                 await CleanupOldViews(stoppingToken);
                 await CleanupExpiredSubscriptions(stoppingToken);
+                await CleanupOldNewsArticles(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -146,6 +147,31 @@ public class CleanupService : BackgroundService
         {
             _logger.LogError(ex, "Error occurred during View cleanup.");
             throw;
+        }
+    }
+
+    private async Task CleanupOldNewsArticles(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var articleService = scope.ServiceProvider.GetRequiredService<IArticleService>();
+
+        try
+        {
+            var result = await articleService.RunAutomaticNewsCleanupAsync(stoppingToken);
+            if (result == null)
+            {
+                _logger.LogInformation("Automatic old news cleanup is disabled.");
+                return;
+            }
+
+            _logger.LogInformation(
+                "Automatic old news cleanup completed. Deleted {DeletedCount} articles older than {OlderThanDays} days.",
+                result.DeletedCount,
+                result.OlderThanDays);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during automatic old news cleanup.");
         }
     }
 }

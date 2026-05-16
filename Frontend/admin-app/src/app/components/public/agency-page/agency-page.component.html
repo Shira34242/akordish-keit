@@ -1,4 +1,4 @@
-<div class="agency-page" dir="rtl" *ngIf="!loading" [ngStyle]="agencyThemeVars">
+<div class="agency-page" dir="rtl" *ngIf="!loading && !error" [ngStyle]="agencyThemeVars">
   <div class="top-scroll-mask"></div>
 
   <!-- ================================================================== -->
@@ -6,7 +6,7 @@
   <!-- ================================================================== -->
   <section #agencyHeroBg class="agency-hero-bg" [class.has-hero-image]="!!heroImage">
     <div class="hero-image-wrapper" *ngIf="heroImage">
-      <img [src]="heroImage" alt="" class="hero-bg-photo" />
+      <img [src]="heroImage" alt="" class="hero-bg-photo" imgFallback="/logo.png" />
       <div class="hero-dark-overlay"></div>
     </div>
     <div class="hero-placeholder" *ngIf="!heroImage"></div>
@@ -15,7 +15,7 @@
     <div class="hero-content">
       <div class="hero-info-side">
       <div class="hero-logo-side" *ngIf="logoUrl">
-        <img [src]="logoUrl" alt="" class="hero-logo" />
+        <img [src]="logoUrl" alt="" class="hero-logo" imgFallback="/logo.png" />
       </div>
 
       <div class="hero-text-block">
@@ -107,7 +107,7 @@
             [routerLink]="profile.profileUrl ? null : null"
             (click)="goToProfile(profile); $event.preventDefault()">
             <div class="person-avatar">
-              <img [src]="profile.imageUrl || '/logo.png'" alt="" appImgFallback="/logo.png" />
+              <img [src]="profile.imageUrl || '/logo.png'" alt="" imgFallback="/logo.png" />
             </div>
             <p class="person-name">{{ profile.name }}</p>
             <p class="person-sub">{{ profileTypeLabel(profile) }}</p>
@@ -141,6 +141,25 @@
             *ngFor="let song of directSongs"
             [song]="song">
           </app-song-card>
+        </div>
+      </div>
+
+      <div class="content-subsection" *ngIf="directPodcasts.length > 0">
+        <h3 class="content-subtitle">פודקאסטים <span class="subtitle-count">{{ directPodcasts.length }}</span></h3>
+        <div class="podcasts-grid">
+          <button
+            type="button"
+            class="podcast-card"
+            *ngFor="let podcast of directPodcasts"
+            (click)="goToPodcast(podcast)">
+            <span class="podcast-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+            </span>
+            <span class="podcast-card__copy">
+              <strong>{{ podcast.name }}</strong>
+              <small>{{ podcast.episodeCount }} פרקים</small>
+            </span>
+          </button>
         </div>
       </div>
     </section>

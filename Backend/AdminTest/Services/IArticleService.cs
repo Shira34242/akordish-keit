@@ -51,6 +51,14 @@ public interface IArticleService
 
     Task<bool> DeleteArticleAsync(int id);
 
+    Task<ArticleNewsCleanupSettingsDto> GetNewsCleanupSettingsAsync();
+
+    Task<ArticleNewsCleanupSettingsDto> UpdateNewsCleanupSettingsAsync(UpdateArticleNewsCleanupSettingsDto dto);
+
+    Task<ArticleNewsCleanupResultDto> CleanupOldNewsAsync(int olderThanDays, CancellationToken cancellationToken = default);
+
+    Task<ArticleNewsCleanupResultDto?> RunAutomaticNewsCleanupAsync(CancellationToken cancellationToken = default);
+
     Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);
 
     Task<int> IncrementLikeCountAsync(int id);

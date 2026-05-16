@@ -22,6 +22,19 @@ public class AgencyListDto
     public DateTime CreatedAt { get; set; }
 }
 
+public class AgencyContentBannerDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string? LogoUrl { get; set; }
+    public string? BannerImageUrl { get; set; }
+    public string? ShortDescription { get; set; }
+    public string? BrandPrimaryColor { get; set; }
+    public string? BrandSecondaryColor { get; set; }
+    public string? BrandTextColor { get; set; }
+}
+
 public class AgencyDto : AgencyListDto
 {
     public string? FullDescription { get; set; }
@@ -42,6 +55,7 @@ public class AgencyPublicDto : AgencyDto
     public List<AgencyProfileCardDto> Teachers { get; set; } = new();
     public List<ArticleDto> DirectArticles { get; set; } = new();
     public List<SongDto> DirectSongs { get; set; } = new();
+    public List<PodcastDto> DirectPodcasts { get; set; } = new();
     public List<ArticleDto> MemberArticles { get; set; } = new();
     public List<SongDto> MemberSongs { get; set; } = new();
 }

@@ -18,7 +18,6 @@ export const routes: Routes = [
             {
                 path: 'song/:id',
                 component: SongPageComponent,
-                canActivate: [authGuard],
                 title: 'אקורדישקייט'
             },
             {

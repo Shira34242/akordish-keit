@@ -178,6 +178,32 @@ public class BulkArticleActionResultDto
     public List<ArticleDto> Articles { get; set; } = new();
 }
 
+public class ArticleNewsCleanupSettingsDto
+{
+    public bool AutoDeleteEnabled { get; set; }
+    public int RetentionDays { get; set; }
+    public DateTime? LastRunAt { get; set; }
+}
+
+public class UpdateArticleNewsCleanupSettingsDto
+{
+    public bool AutoDeleteEnabled { get; set; }
+    public int RetentionDays { get; set; }
+}
+
+public class CleanupOldNewsDto
+{
+    public int OlderThanDays { get; set; }
+}
+
+public class ArticleNewsCleanupResultDto
+{
+    public int OlderThanDays { get; set; }
+    public DateTime CutoffDate { get; set; }
+    public int MatchedCount { get; set; }
+    public int DeletedCount { get; set; }
+}
+
 /// <summary>כתבה בדירוג תוכן (לאדמין)</summary>
 public class ArticleRankDto
 {
