@@ -49,9 +49,16 @@
                             <a routerLink="/admin/analytics" [queryParams]="{tab:'ads'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">פרסומות</a>
                         </div>
                     </div>
-                    <a routerLink="/admin/advertising" routerLinkActive="active" class="nav-item">
-                        <span>פרסום</span>
-                    </a>
+                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                        <a routerLink="/admin/advertising" class="nav-item nav-parent">
+                            <span>פרסום</span>
+                        </a>
+                        <div class="nav-submenu" aria-label="ניהול פרסום">
+                            <a routerLink="/admin/advertising" routerLinkActive="active-sub" class="sub-nav-item">קמפיינים</a>
+                            <a routerLink="/admin/advertising/spots" routerLinkActive="active-sub" class="sub-nav-item">שדות פרסום</a>
+                            <a routerLink="/admin/advertising/clients" routerLinkActive="active-sub" class="sub-nav-item">לקוחות</a>
+                        </div>
+                    </div>
                     <a routerLink="/admin/email" routerLinkActive="active" class="nav-item">
                         <span>מיילים</span>
                     </a>
@@ -69,6 +76,8 @@
                             <span>מערכת</span>
                         </a>
                         <div class="nav-submenu" aria-label="הגדרות מערכת">
+                            <a routerLink="/admin/system/tables" routerLinkActive="active-sub" class="sub-nav-item">טבלאות מערכת</a>
+                            <a routerLink="/admin/system/settings" routerLinkActive="active-sub" class="sub-nav-item">הגדרות</a>
                             <a routerLink="/admin/system/smart-add" routerLinkActive="active-sub" class="sub-nav-item">הוספה חכמה</a>
                             <a routerLink="/admin/system/news-sections" routerLinkActive="active-sub" class="sub-nav-item">קטגוריות דפים</a>
                             <a routerLink="/admin/system/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>

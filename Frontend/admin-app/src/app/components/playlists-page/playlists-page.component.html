@@ -14,8 +14,8 @@
           {{ 'playlists.community_btn' | translate }}
           <span class="material-icons hero-cta-arrow">arrow_back</span>
         </a>
-      </div>
-    </div>
+             </div>
+          </a>
   </div>
 
   <div class="state-block" *ngIf="isLoading">
@@ -77,7 +77,7 @@
         <div class="pcard"
              *ngFor="let playlist of personalPlaylists">
 
-          <div class="pcard-thumb" (click)="viewPlaylist(playlist.id)">
+          <a class="pcard-thumb" [routerLink]="['/playlist', playlist.id]">
             <img *ngIf="playlist.imageUrl"
                  class="pcard-thumb-img"
                  [src]="playlist.imageUrl"
@@ -114,14 +114,14 @@
             </div>
           </div>
 
-          <div class="pcard-body" (click)="viewPlaylist(playlist.id)">
+          <a class="pcard-body" [routerLink]="['/playlist', playlist.id]">
             <h3 class="pcard-title">{{ playlist.name }}</h3>
             <div class="pcard-meta">
               <span>{{ playlist.songCount }} {{ 'playlists.songs_count' | translate }}</span>
               <span class="pcard-dot"></span>
               <span>{{ playlist.isPublic ? ('playlists.public' | translate) : ('playlists.private' | translate) }}</span>
             </div>
-          </div>
+          </a>
 
           <div class="pcard-actions" (click)="$event.stopPropagation()">
             <div class="pcard-dots-wrap">

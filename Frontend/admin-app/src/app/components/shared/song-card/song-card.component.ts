@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
+import { songSlug } from '../../../utils/slug';
 
 @Component({
     selector: 'app-song-card',
@@ -16,6 +17,11 @@ export class SongCardComponent {
     @Input() layout: 'overlay' | 'card' = 'overlay';
 
     private readonly langService = inject(LanguageService);
+
+    get songLink(): (string | number)[] {
+        const slug = this.song?.slug || songSlug(this.song);
+        return slug ? ['/song', this.song.id, slug] : ['/song', this.song.id];
+    }
 
     get chordMatchText(): string {
         const t = (k: string) => this.langService.translate(k);

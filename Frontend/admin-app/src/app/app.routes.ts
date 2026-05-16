@@ -16,6 +16,11 @@ export const routes: Routes = [
                 title: 'אקורדישקייט - המאגר הגדול לאקורדים'
             },
             {
+                path: 'song/:id/:slug',
+                component: SongPageComponent,
+                title: 'אקורדישקייט'
+            },
+            {
                 path: 'song/:id',
                 component: SongPageComponent,
                 title: 'אקורדישקייט'
@@ -33,7 +38,7 @@ export const routes: Routes = [
             {
                 path: 'tuner',
                 loadComponent: () => import('./components/tuner/tuner.component').then(m => m.TunerComponent),
-                title: 'כיוון גיטרה ויוקלילי - אקורדישקייט'
+                title: 'כיוון גיטרה אונליין – טיונר גיטרה חינמי | אקורדישקייט'
             },
             {
                 path: 'music-news',
@@ -500,7 +505,13 @@ export const routes: Routes = [
         ]
     },
     {
+        path: '404',
+        loadComponent: () => import('./components/public/not-found-page/not-found-page.component').then(m => m.NotFoundPageComponent),
+        title: 'דף לא נמצא - אקורדישקייט'
+    },
+    {
         path: '**',
-        redirectTo: ''
+        loadComponent: () => import('./components/public/not-found-page/not-found-page.component').then(m => m.NotFoundPageComponent),
+        title: 'דף לא נמצא - אקורדישקייט'
     }
 ];

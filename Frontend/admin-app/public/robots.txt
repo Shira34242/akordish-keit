@@ -7,4 +7,4 @@ Disallow: /notifications
 Disallow: /subscription
 Disallow: /chord-requests
 
-Sitemap: /sitemap.xml
+Sitemap: https://akordishkayt.com/sitemap.xml

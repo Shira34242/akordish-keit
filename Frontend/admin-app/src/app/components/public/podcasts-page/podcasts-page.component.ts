@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, debounceTime, distinctUntilChanged, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { Podcast, PodcastDetail, PodcastEpisode, PodcastEpisodeDetail } from '../../../models/podcast.model';
 import { PodcastService } from '../../../services/podcast.service';
+import { SeoService } from '../../../services/seo.service';
 
 @Component({
   selector: 'app-podcasts-page',
@@ -21,6 +22,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly seo = inject(SeoService);
 
   loading = true;
   seriesLoading = false;
@@ -158,6 +160,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.safeEmbedUrl = null;
     this.seriesLoading = false;
     this.episodeLoading = false;
+    this.applySeoDefault();
     if (updateUrl) this.updateUrl();
   }
 
@@ -166,6 +169,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedEpisode = null;
     this.safeEmbedUrl = null;
     this.episodeLoading = false;
+    if (this.selectedPodcast) this.applySeoForSeries(this.selectedPodcast);
     if (this.selectedPodcast) {
       this.updateUrl(this.selectedPodcast.slug);
     }
@@ -245,6 +249,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       next: podcast => {
         this.selectedPodcast = podcast;
         this.seriesLoading = false;
+        this.applySeoForSeries(podcast);
         if (updateUrl) this.updateUrl(podcast.slug);
         this.scrollToViewer();
       },
@@ -275,6 +280,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         if (requestId !== this.episodeRequestId) return;
 
         this.selectedEpisode = episode;
+        this.applySeoForEpisode(episode);
         const playableUrl = this.buildPlayableUrl(episode.embedUrl, episode.sourceUrl, episode.thumbnailUrl);
         this.safeEmbedUrl = playableUrl
           ? this.sanitizer.bypassSecurityTrustResourceUrl(playableUrl)
@@ -474,5 +480,44 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private extractYouTubeId(url: string): string | null {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|img\.youtube\.com\/vi\/)([A-Za-z0-9_-]{6,})/i);
     return match?.[1] ?? null;
+  }
+
+  private applySeoForSeries(podcast: PodcastDetail): void {
+    const title = `${podcast.name} - פודקאסט | אקורדישקייט`;
+    const description = podcast.description
+      ? podcast.description.replace(/\s+/g, ' ').trim().slice(0, 160)
+      : `${podcast.name} – פודקאסט. ${podcast.episodeCount ? `${podcast.episodeCount} פרקים. ` : ''}האזינו באקורדישקייט.`;
+
+    this.seo.set({
+      title,
+      description,
+      path: `/podcasts?series=${podcast.slug}`,
+      imageUrl: podcast.imageUrl
+    });
+  }
+
+  private applySeoForEpisode(episode: PodcastEpisodeDetail): void {
+    const seriesName = this.selectedPodcast?.name || episode.podcastName;
+    const title = `${episode.title} - ${seriesName} | אקורדישקייט`;
+    const description = episode.description
+      ? episode.description.replace(/\s+/g, ' ').trim().slice(0, 160)
+      : `${episode.title} – פרק בפודקאסט ${seriesName}. האזינו באקורדישקייט.`;
+
+    this.seo.set({
+      title,
+      description,
+      path: `/podcasts?series=${episode.podcastSlug}&episode=${episode.slug}`,
+      imageUrl: episode.thumbnailUrl,
+      structuredData: [
+        this.seo.organizationSchema()
+      ]
+    });
+  }
+
+  private applySeoDefault(): void {
+    this.seo.set({
+      title: 'פודקאסטים - אקורדישקייט',
+      description: 'פודקאסטים בנושא מוזיקה יהודית, ראיונות עם אמנים, תוכן מוזיקלי והפקות. האזינו ישירות באקורדישקייט.'
+    });
   }
 }

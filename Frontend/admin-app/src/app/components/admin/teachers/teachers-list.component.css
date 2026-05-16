@@ -64,7 +64,7 @@
 }
 
 .btn-primary { background: #ddff53; color: #000000; }
-.btn-primary:hover { background: #ddff53; }
+.btn-primary:hover { background: #000000; color: #ddff53; }
 .btn-light { background: #F2F2F2; color: #000000; }
 .btn-light:hover { background: #ddff53; }
 
@@ -78,7 +78,7 @@
 
 .table-container { overflow-x: auto; border-right: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; }
 
-.teachers-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); font-weight: 300; }
+.teachers-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); font-weight: 300; min-width: 800px; }
 
 .teachers-table th {
   padding: var(--space-sm) var(--space-base);

@@ -19,6 +19,7 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { LanguageService } from '../../../services/language.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
+import { SeoService } from '../../../services/seo.service';
 
 type GalleryMediaItem = {
   type: 'image' | 'video';
@@ -50,6 +51,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
 
   private readonly analytics = inject(AnalyticsService);
   private readonly langService = inject(LanguageService);
+  private readonly seo = inject(SeoService);
 
   professional: MusicServiceProviderDto | null = null;
   agencyBadge: AgencyBadgeDto | null = null;
@@ -115,6 +117,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     this.professionalService.getServiceProviderById(professionalId).subscribe({
       next: professional => {
         this.professional = professional;
+        this.applySeo(professional);
         this.loadAgencyBadge(professionalId);
         this.branches = professional.branches ?? [];
         this.rebuildGalleryMedia();
@@ -607,5 +610,33 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     };
 
     return this.sanitizer.bypassSecurityTrustHtml(icons[platform] ?? icons[SocialPlatform.Website]);
+  }
+
+  private applySeo(professional: MusicServiceProviderDto): void {
+    const cityName = this.getCityName(professional.cityId);
+    const categories = professional.categories?.length
+      ?       professional.categories.map(c => c.categoryName).filter(Boolean).join(', ')
+      : 'בעל מקצוע';
+    const location = cityName ? ` ב${cityName}` : '';
+    const title = `${professional.displayName} - ${categories}${location}`;
+    const description = professional.shortBio
+      ? professional.shortBio.replace(/\s+/g, ' ').trim().slice(0, 160)
+      : `${professional.displayName} – ${categories}${location}. ${professional.yearsOfExperience ? `מעל ${professional.yearsOfExperience} שנות ניסיון. ` : ''}לפרטים היכנסו לאקורדישקייט.`;
+
+    this.seo.set({
+      title,
+      description,
+      path: `/professional/${professional.id}`,
+      imageUrl: professional.profileImageUrl || professional.bannerImageUrl,
+      type: 'profile',
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'אינדקס עולם המוזיקה', path: '/professionals' },
+          { name: professional.displayName, path: `/professional/${professional.id}` }
+        ])
+      ]
+    });
   }
 }

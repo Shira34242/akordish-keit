@@ -94,11 +94,15 @@
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
 }
 
 .admin-nav::-webkit-scrollbar {
-    display: none;
+    height: 3px;
+}
+
+.admin-nav::-webkit-scrollbar-thumb {
+    background: #cccccc;
+    border-radius: 999px;
 }
 
 .nav-group {
@@ -110,7 +114,8 @@
     transition: background 0.15s ease;
 }
 
-.nav-group.expanded {
+.nav-group.expanded,
+.nav-group:hover {
     background: #ffffff;
 }
 
@@ -155,7 +160,8 @@
     white-space: nowrap;
 }
 
-.nav-group.expanded .nav-submenu {
+.nav-group.expanded .nav-submenu,
+.nav-group:hover .nav-submenu {
     max-width: min(48vw, 46rem);
     opacity: 1;
     overflow-x: auto;
@@ -328,52 +334,6 @@
     color: #000000 !important;
 }
 
-:host ::ng-deep .table-container,
-:host ::ng-deep .table-wrap {
-    overflow-x: auto;
-    border-right: 1px solid #f0f0f0;
-    border-left: 1px solid #f0f0f0;
-}
-
-:host ::ng-deep .table-container table,
-:host ::ng-deep .table-wrap table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--font-sm);
-    font-weight: 300;
-}
-
-:host ::ng-deep .table-container th,
-:host ::ng-deep .table-wrap th {
-    padding: var(--space-sm) var(--space-base);
-    text-align: right;
-    font-weight: 300;
-    font-size: var(--font-xs);
-    color: rgba(0,0,0,0.4);
-    border-bottom: 1px solid #ebebeb;
-    white-space: nowrap;
-    letter-spacing: 0.02em;
-    background: transparent;
-}
-
-:host ::ng-deep .table-container td,
-:host ::ng-deep .table-wrap td {
-    padding: var(--space-sm) var(--space-base);
-    border-bottom: 1px solid #f0f0f0;
-    vertical-align: middle;
-    color: #000000;
-}
-
-:host ::ng-deep .table-container tbody tr:last-child td,
-:host ::ng-deep .table-wrap tbody tr:last-child td {
-    border-bottom: none;
-}
-
-:host ::ng-deep .table-container tbody tr:hover td,
-:host ::ng-deep .table-wrap tbody tr:hover td {
-    background: #fafafa;
-}
-
 
 /* ─── Global visual corrections across all admin pages ─── */
 
@@ -450,6 +410,7 @@
 /* Table: remove redundant side borders */
 :host ::ng-deep .table-container,
 :host ::ng-deep .table-wrap {
+    overflow-x: auto;
     border-right: none !important;
     border-left: none !important;
 }

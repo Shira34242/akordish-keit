@@ -208,11 +208,11 @@
           <span class="section-tag section-tag--accent">נמצאו {{ filteredProfessionals.length }} תוצאות</span>
         </div>
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
-          <div class="prof-card" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+          <a class="prof-card" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
-            </div>
+            </a>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -239,11 +239,11 @@
             <button class="btn-show-all" (click)="onViewMore('featured')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+            <a class="prof-card" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -316,11 +316,11 @@
             <button class="btn-show-all" (click)="setTopFilter('teachers')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+            <a class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -340,10 +340,10 @@
             <button class="btn-show-all" (click)="onViewMore('musicStores')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+            <a class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -363,10 +363,10 @@
             <button class="btn-show-all" (click)="onViewMore('recordingStudios')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+            <a class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -386,10 +386,10 @@
             <button class="btn-show-all" (click)="onViewMore('amplification')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+            <a class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -416,10 +416,10 @@
           <span class="total-badge">{{ additionalProfessionals.length + additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
-          <div class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" (click)="viewProfessional(p.id)">
+          <a class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-            </div>
+            </a>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -429,10 +429,10 @@
               </div>
             </div>
           </div>
-          <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+          <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-            </div>
+            </a>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -465,11 +465,11 @@
           <span class="section-tag section-tag--accent">נמצאו {{ filteredTeachers.length }} מורים</span>
         </div>
         <div class="professionals-grid" *ngIf="filteredTeachers.length > 0">
-          <div class="prof-card" *ngFor="let t of filteredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+          <a class="prof-card" *ngFor="let t of filteredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-            </div>
+            </a>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -496,11 +496,11 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('featured')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+            <a class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -525,10 +525,10 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('organ')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+            <a class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לאורגן</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -548,10 +548,10 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('sound')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+            <a class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לסאונד</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -571,10 +571,10 @@
             <button class="btn-show-all" (click)="onViewMoreTeachers('vocal')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <div class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+            <a class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </div>
+              </a>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לפיתוח קול</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -596,10 +596,10 @@
           <span class="total-badge">{{ additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
-          <div class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" (click)="viewTeacher(t.id)">
+          <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-            </div>
+            </a>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>

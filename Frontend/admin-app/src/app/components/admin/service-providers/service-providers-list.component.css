@@ -57,7 +57,7 @@
 }
 
 .btn-primary { background: #ddff53; color: #000000; }
-.btn-primary:hover { background: #ddff53; }
+.btn-primary:hover { background: #000000; color: #ddff53; }
 .btn-light { background: #F2F2F2; color: #000000; }
 .btn-light:hover { background: #ddff53; }
 

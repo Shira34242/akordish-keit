@@ -83,7 +83,8 @@
 }
 
 .btn-primary:hover {
-  background: #ddff53;
+  background: #000000;
+  color: #ddff53;
 }
 
 .btn-light {

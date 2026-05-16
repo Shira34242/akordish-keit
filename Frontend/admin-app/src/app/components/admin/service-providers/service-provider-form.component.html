@@ -39,14 +39,14 @@
 
       <div class="form-group" *ngIf="isEditMode">
         <label class="form-label">משתמש מקושר</label>
-        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
-          <span *ngIf="userName" style="color: #2d7a3e; font-weight: 500;">
-            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person</span>
+        <div class="linked-user-info">
+          <span *ngIf="userName" class="linked-user-name">
+            <span class="material-icons">person</span>
             {{ userName }}
-            <span *ngIf="userEmail" style="color: #666; font-size: 0.9em;">({{ userEmail }})</span>
+            <span *ngIf="userEmail" class="linked-user-email">({{ userEmail }})</span>
           </span>
-          <span *ngIf="!userName" style="color: #666;">
-            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">person_off</span>
+          <span *ngIf="!userName" class="linked-user-none">
+            <span class="material-icons">person_off</span>
             לא מקושר למשתמש - פרופיל צף
           </span>
         </div>

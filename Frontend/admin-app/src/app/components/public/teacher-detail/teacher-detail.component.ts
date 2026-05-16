@@ -21,6 +21,7 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
+import { SeoService } from '../../../services/seo.service';
 
 @Component({
   selector: 'app-teacher-detail',
@@ -39,6 +40,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private readonly analytics = inject(AnalyticsService);
   private readonly langService = inject(LanguageService);
+  private readonly seo = inject(SeoService);
 
   teacher: TeacherDto | null = null;
   agencyBadge: AgencyBadgeDto | null = null;
@@ -136,6 +138,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.teacherService.getTeacherById(id).subscribe({
       next: teacher => {
         this.teacher = teacher;
+        this.applySeo(teacher);
         this.loadAgencyBadge(id);
         this.rebuildGalleryMedia();
         this.loadTeacherContent(id);
@@ -777,6 +780,34 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     };
 
     return this.sanitizer.bypassSecurityTrustHtml(icons[platform] ?? icons[SocialPlatform.Website]);
+  }
+
+  private applySeo(teacher: TeacherDto): void {
+    const cityName = this.getCityName(teacher.cityId);
+    const instruments = teacher.instruments?.length
+      ?       teacher.instruments.map(i => i.instrumentName).filter(Boolean).join(', ')
+      : 'מוזיקה';
+    const location = cityName ? `${cityName}` : '';
+    const title = `${teacher.displayName} - מורה ל${instruments}${location ? ` ב${location}` : ''}`;
+    const description = teacher.shortBio
+      ? teacher.shortBio.replace(/\s+/g, ' ').trim().slice(0, 160)
+      : `${teacher.displayName} – מורה ל${instruments}${location ? ` ב${location}` : ''}. ${teacher.yearsOfExperience ? `מעל ${teacher.yearsOfExperience} שנות ניסיון. ` : ''}לפרטים וקביעת שיעור היכנסו לאקורדישקייט.`;
+
+    this.seo.set({
+      title,
+      description,
+      path: `/teacher/${teacher.id}`,
+      imageUrl: teacher.profileImageUrl || teacher.bannerImageUrl,
+      type: 'profile',
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'אינדקס עולם המוזיקה', path: '/professionals' },
+          { name: teacher.displayName, path: `/teacher/${teacher.id}` }
+        ])
+      ]
+    });
   }
 
   getSafeVideoUrl(url: string): SafeResourceUrl {

@@ -18,6 +18,7 @@ import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../models/agency.model';
 import { AgencyService } from '../../services/agency.service';
+import { songSlug } from '../../utils/slug';
 import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
@@ -774,7 +775,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToSong(songId: number): void {
-    this.router.navigate(['/song', songId]);
+    const song = this.visibleSongs?.find((s: any) => s.id === songId);
+    const slug = song ? songSlug(song) : '';
+    this.router.navigate(slug ? ['/song', songId, slug] : ['/song', songId]);
   }
 
   navigateToArticle(slug: string): void {

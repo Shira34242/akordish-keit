@@ -60,10 +60,9 @@
 
 /* Status badges */
 .status-badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 800; }
-.status-new, .status-Pending { background: #ddff53; color: #000000; }
-.status-open { background: #F2F2F2; color: #000000; }
-.status-Resolved, .status-resolved { background: #404040; color: #ffffff; }
-.status-Dismissed, .status-closed { background: #F2F2F2; color: #000000; }
+.status-pending { background: #ddff53; color: #000000; }
+.status-resolved { background: #404040; color: #ffffff; }
+.status-dismissed { background: #F2F2F2; color: #000000; }
 
 /* Action buttons */
 .actions-cell { white-space: nowrap; }

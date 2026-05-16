@@ -12,6 +12,7 @@ import { Subject, Subscription, EMPTY } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { MusicalKey } from '../../models/song.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { songSlug } from '../../utils/slug';
 
 @Component({
     selector: 'app-chords-page',
@@ -159,7 +160,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.songService.getRandomSong().subscribe({
             next: (song: any) => {
                 if (song?.id) {
-                    this.router.navigate(['/song', song.id]);
+                    const slug = songSlug(song);
+                    this.router.navigate(slug ? ['/song', song.id, slug] : ['/song', song.id]);
                 }
             },
             error: (err: any) => console.error('Failed to get random song', err)

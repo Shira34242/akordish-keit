@@ -31,6 +31,7 @@ import { Podcast, PodcastEpisode } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
+import { songSlug } from '../../utils/slug';
 
 interface HeroParticle {
   x: number; y: number;
@@ -332,7 +333,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       playlist: '/playlist'
     };
     const base = routes[item.type];
-    if (base) this.router.navigate([base, item.id]);
+    if (base) {
+      if (item.type === 'song' && item.title) {
+        const slug = songSlug({ title: item.title, artistName: item.subtitle || '' });
+        this.router.navigate(slug ? ['/song', item.id, slug] : ['/song', item.id]);
+      } else {
+        this.router.navigate([base, item.id]);
+      }
+    }
   }
 
   trackById(_index: number, item: { id: number | string }): number | string {

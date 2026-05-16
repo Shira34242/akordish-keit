@@ -530,9 +530,11 @@ public class AgencyService : IAgencyService
         {
             var directArticleIds = agency.Contents.Where(c => c.ContentType == "article").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
             var directSongIds = agency.Contents.Where(c => c.ContentType == "song").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
+            var directPodcastIds = agency.Contents.Where(c => c.ContentType == "podcast").OrderBy(c => c.DisplayOrder).Select(c => c.ContentId).ToList();
 
             dto.DirectArticles = await GetArticlesByIdsAsync(directArticleIds);
             dto.DirectSongs = await GetSongsByIdsAsync(directSongIds);
+            dto.DirectPodcasts = await GetPodcastsByIdsAsync(directPodcastIds);
 
             var memberProfiles = agency.Profiles.Select(p => new { p.ProfileType, p.ProfileId }).ToList();
             var artistIds = memberProfiles.Where(p => p.ProfileType == "artist").Select(p => p.ProfileId).ToList();

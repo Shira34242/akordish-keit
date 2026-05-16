@@ -95,3 +95,8 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .table-with-pagination { display: flex; flex-direction: column; gap: 0; }
+
+@media (max-width: 900px) {
+  .layout-container { flex-direction: column; }
+  .sidebar { width: 100%; flex-shrink: 1; }
+}

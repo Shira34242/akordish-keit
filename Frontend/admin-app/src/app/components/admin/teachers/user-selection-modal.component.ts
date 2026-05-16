@@ -78,69 +78,76 @@ import { UserListDto } from '../../../models/user.model';
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 20px;
+      padding: var(--space-lg);
+      animation: fadeIn 0.15s ease-out;
     }
 
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
     .modal-content {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      background: #ffffff;
+      border-radius: 24px;
       max-width: 500px;
       width: 100%;
       max-height: 80vh;
       display: flex;
       flex-direction: column;
+      animation: slideUp 0.2s ease-out;
     }
+
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: var(--space-lg) var(--space-xl);
+      background: #F2F2F2;
+      border-radius: 24px 24px 0 0;
     }
 
     .modal-header h2 {
       margin: 0;
-      font-size: 1.5rem;
-      color: #333;
+      font-family: 'Open Sans', sans-serif;
+      font-size: var(--font-xl);
+      font-weight: 800;
+      color: #000000;
     }
 
     .btn-close {
-      background: none;
+      background: #ffffff;
       border: none;
       cursor: pointer;
-      padding: 5px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      border-radius: 50%;
+      transition: background 0.15s ease;
     }
 
-    .btn-close:hover {
-      background-color: #f5f5f5;
-    }
+    .btn-close:hover { background: #404040; }
 
-    .btn-close .material-icons {
-      font-size: 24px;
-      color: #666;
-    }
+    .btn-close:hover .material-icons { color: #ffffff; }
+
+    .btn-close .material-icons { font-size: 18px; color: #000000; }
 
     .modal-body {
-      padding: 20px;
+      padding: var(--space-xl);
       overflow-y: auto;
       flex: 1;
     }
 
     .search-box {
       position: relative;
-      margin-bottom: 20px;
+      margin-bottom: var(--space-base);
     }
 
     .search-icon {
@@ -148,23 +155,26 @@ import { UserListDto } from '../../../models/user.model';
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: #999;
+      color: #404040;
       font-size: 20px;
+      opacity: 0.4;
     }
 
     .search-input {
       width: 100%;
-      padding: 12px 40px 12px 40px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.2s;
+      padding: var(--space-md) 40px var(--space-md) 40px;
+      border: 2px solid #F2F2F2;
+      border-radius: 999px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: var(--font-sm);
+      color: #000000;
+      background: #ffffff;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease;
     }
 
-    .search-input:focus {
-      outline: none;
-      border-color: #2d7a3e;
-    }
+    .search-input:focus { outline: none; border-color: #ddff53; }
 
     .btn-clear-search {
       position: absolute;
@@ -179,17 +189,12 @@ import { UserListDto } from '../../../models/user.model';
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      transition: background-color 0.2s;
+      transition: background 0.15s ease;
     }
 
-    .btn-clear-search:hover {
-      background-color: #f5f5f5;
-    }
+    .btn-clear-search:hover { background: #F2F2F2; }
 
-    .btn-clear-search .material-icons {
-      font-size: 18px;
-      color: #999;
-    }
+    .btn-clear-search .material-icons { font-size: 18px; color: #404040; }
 
     .users-list {
       max-height: 400px;
@@ -199,86 +204,85 @@ import { UserListDto } from '../../../models/user.model';
     .user-item {
       display: flex;
       align-items: center;
-      padding: 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      margin-bottom: 8px;
+      padding: var(--space-md) var(--space-base);
+      background: #F2F2F2;
+      border-radius: 16px;
+      margin-bottom: var(--space-sm);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.15s ease;
+      border: none;
     }
 
-    .user-item:hover {
-      background-color: #f9f9f9;
-      border-color: #2d7a3e;
-      transform: translateX(-2px);
-    }
+    .user-item:hover { background: #ddff53; }
 
     .user-icon {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: #e8f5e9;
+      background: #000000;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-left: 12px;
     }
 
-    .user-icon .material-icons {
-      color: #2d7a3e;
-      font-size: 24px;
-    }
+    .user-icon .material-icons { color: #ddff53; font-size: 24px; }
 
-    .user-info {
-      flex: 1;
-    }
+    .user-info { flex: 1; }
 
     .user-name {
-      font-weight: 500;
-      color: #333;
-      margin-bottom: 4px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 800;
+      color: #000000;
+      margin-bottom: 2px;
+      font-size: var(--font-sm);
     }
 
     .user-email {
-      font-size: 0.9em;
-      color: #666;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: var(--font-xs);
+      color: #404040;
     }
 
     .select-icon {
-      color: #999;
+      color: #404040;
       font-size: 24px;
     }
 
     .no-results {
       text-align: center;
-      padding: 40px 20px;
-      color: #999;
+      padding: var(--space-3xl) var(--space-lg);
+      color: #404040;
     }
 
     .no-results .material-icons {
       font-size: 48px;
-      margin-bottom: 10px;
-      opacity: 0.5;
+      margin-bottom: var(--space-sm);
+      opacity: 0.2;
+      color: #000000;
     }
 
     .no-results p {
       margin: 0;
-      font-size: 1.1em;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: var(--font-base);
     }
 
     .loading {
       text-align: center;
-      padding: 40px 20px;
+      padding: var(--space-3xl) var(--space-lg);
     }
 
     .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #2d7a3e;
+      border: 3px solid #F2F2F2;
+      border-top: 3px solid #000000;
       border-radius: 50%;
       width: 40px;
       height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 15px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto var(--space-base);
     }
 
     @keyframes spin {
@@ -287,25 +291,27 @@ import { UserListDto } from '../../../models/user.model';
     }
 
     .modal-footer {
-      padding: 15px 20px;
-      border-top: 1px solid #e0e0e0;
+      padding: var(--space-lg) var(--space-xl);
+      background: #F2F2F2;
+      border-radius: 0 0 24px 24px;
       display: flex;
       justify-content: flex-end;
     }
 
     .btn-cancel {
-      padding: 10px 20px;
-      border: 1px solid #ddd;
-      background: white;
-      border-radius: 4px;
+      padding: var(--space-md) var(--space-xl);
+      border: none;
+      background: #ffffff;
+      border-radius: 999px;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
+      font-family: 'Open Sans', sans-serif;
+      font-size: var(--font-sm);
+      font-weight: 800;
+      color: #000000;
+      transition: background 0.15s ease;
     }
 
-    .btn-cancel:hover {
-      background: #f5f5f5;
-    }
+    .btn-cancel:hover { background: #ddff53; }
   `]
 })
 export class UserSelectionModalComponent {

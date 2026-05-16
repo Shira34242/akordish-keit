@@ -37,6 +37,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
+import { songSlug } from '../../utils/slug';
 
 @Component({
     selector: 'app-song-page',
@@ -194,7 +195,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         this.songService.getRandomSong().subscribe({
             next: (song: any) => {
                 if (song?.id) {
-                    this.router.navigate(['/song', song.id]);
+                    const slug = songSlug(song);
+                    this.router.navigate(slug ? ['/song', song.id, slug] : ['/song', song.id]);
                 }
             },
             error: (err: any) => console.error('Failed to get random song', err)
@@ -204,9 +206,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     ngOnInit(): void {
         this.route.params.subscribe(params => {
             const id = params['id'];
+            const slug = params['slug'];
             if (id) {
                 this.songId = +id;
-                this.loadSong(this.songId);
+                this.loadSong(this.songId, slug);
             }
         });
 
@@ -292,7 +295,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         }
     };
 
-    loadSong(id: number) {
+    loadSong(id: number, currentSlug?: string) {
         window.scrollTo(0, 0);
         this.headerLayoutDone = false;
         this.isLoading = true;
@@ -303,10 +306,22 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         this.showKnownChordSummary = true;
         this.closeSheetMusic();
 
+        if (currentSlug === undefined) {
+            const snapshotSlug = this.route.snapshot.paramMap.get('slug');
+            currentSlug = snapshotSlug || undefined;
+        }
+
         this.songService.getSongById(id).subscribe({
             next: (data) => {
                 this.song = data;
                 this.isLoading = false;
+
+                const expectedSlug = songSlug(this.song);
+                if (expectedSlug && currentSlug !== expectedSlug) {
+                    this.router.navigate(['/song', id, expectedSlug], { replaceUrl: true });
+                    return;
+                }
+
                 this.applySeo();
 
                 this.preferFlat = this.hasFullSongContent
@@ -388,7 +403,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         const description = artistName
             ? `${viewText} לשיר ${this.song.title} של ${artistName}, כולל סולם וכלי נגינה לגיטרה, קלידים ויוקלילי.`
             : `${viewText} לשיר ${this.song.title}, כולל סולם וכלי נגינה לגיטרה, קלידים ויוקלילי.`;
-        const path = `/song/${this.songId}`;
+        const slug = songSlug(this.song);
+        const path = slug ? `/song/${this.songId}/${slug}` : `/song/${this.songId}`;
 
         this.seo.set({
             title,

@@ -11,7 +11,7 @@
 
 .page-header h2 {
   font-size: var(--font-xl);
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 var(--space-xs);
 }
 
@@ -62,7 +62,7 @@
 
 .setting-label {
   font-size: var(--font-base);
-  font-weight: 600;
+  font-weight: 800;
   margin-bottom: var(--space-xs);
 }
 
@@ -116,7 +116,7 @@
   min-width: 32px;
 }
 
-.toggle-label.active { color: #000; font-weight: 600; }
+.toggle-label.active { color: #000; font-weight: 800; }
 
 .toggle-btn {
   position: relative;

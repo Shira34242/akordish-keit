@@ -189,7 +189,7 @@
       </div>
       <div class="loading-small" *ngIf="loadingSongs">טוען שירים...</div>
       <div class="songs-grid" #songsGridEl *ngIf="!loadingSongs && songs.length > 0">
-        <div *ngFor="let song of visibleSongs" class="song-card" (click)="navigateToSong(song.id)">
+        <a *ngFor="let song of visibleSongs" class="song-card" [routerLink]="['/song', song.id, song.slug || '']">
           <div class="song-card-image">
             <img *ngIf="song.imageUrl" [src]="song.imageUrl" [alt]="song.title" class="song-card-img" loading="lazy">
             <span *ngIf="!song.imageUrl" class="song-cover-initial">{{ song.title.charAt(0) }}</span>
@@ -204,7 +204,7 @@
               <polyline points="15,18 9,12 15,6"/>
             </svg>
           </div>
-        </div>
+        </a>
       </div>
       <p class="no-content" *ngIf="!loadingSongs && songs.length === 0">אין שירים זמינים</p>
       <div class="songs-expand-row" *ngIf="!loadingSongs && songs.length > defaultSongsCount">

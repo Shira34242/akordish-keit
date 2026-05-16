@@ -53,42 +53,6 @@
   white-space: nowrap;
 }
 
-.wa-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-base);
-  background: #F2F2F2;
-  padding: var(--space-xs);
-  border-radius: 999px;
-  width: fit-content;
-  max-width: 100%;
-}
-
-.tab-link {
-  display: flex;
-  align-items: center;
-  padding: var(--space-sm) var(--space-base);
-  color: #404040;
-  text-decoration: none;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-sm);
-  border-radius: 999px;
-  transition: background 0.15s ease;
-  white-space: nowrap;
-}
-
-.tab-link:hover {
-  background: #ffffff;
-}
-
-.tab-link.active {
-  background: #ffffff;
-  color: #000000;
-  font-weight: 800;
-}
-
 .layout-content {
   animation: fadeIn 0.2s ease-out;
 }
@@ -119,14 +83,5 @@
 
   .primary-action {
     width: 100%;
-  }
-
-  .wa-tabs {
-    width: 100%;
-  }
-
-  .tab-link {
-    flex: 1 1 auto;
-    justify-content: center;
   }
 }

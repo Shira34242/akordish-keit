@@ -17,6 +17,7 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { SocialIconsService } from '../../../services/social-icons.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { SocialPlatform } from '../../../models/artist.model';
+import { SeoService } from '../../../services/seo.service';
 
 @Component({
   selector: 'app-agency-page',
@@ -39,6 +40,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly socialIcons = inject(SocialIconsService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly seo = inject(SeoService);
 
   agency: AgencyPublicDto | null = null;
   loading = true;
@@ -116,6 +118,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
     this.agencyService.getAgencyBySlug(slug).subscribe({
       next: agency => {
         this.agency = agency;
+        this.applySeo(agency);
         this.contactItems = this.buildContactItems();
         this.analytics.trackInteraction('agency_view', agency.id, agency.name);
         this.loading = false;
@@ -662,5 +665,28 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
 
   getSocialIconSvg(platform: SocialPlatform): SafeHtml {
     return this.socialIcons.getIconSvg(platform);
+  }
+
+  private applySeo(agency: AgencyPublicDto): void {
+    const path = `/agency/${agency.slug}`;
+    const title = `${agency.name} - סוכנות מוזיקה | אקורדישקייט`;
+    const description = agency.shortDescription
+      ? agency.shortDescription.replace(/\s+/g, ' ').trim().slice(0, 160)
+      : `${agency.name} – סוכנות מוזיקה. אמנים, בעלי מקצוע, מורים ותכנים במוזיקה היהודית.`;
+
+    this.seo.set({
+      title,
+      description,
+      path,
+      imageUrl: agency.bannerImageUrl || agency.logoUrl,
+      structuredData: [
+        this.seo.organizationSchema(),
+        this.seo.breadcrumbSchema([
+          { name: 'בית', path: '/' },
+          { name: 'אינדקס עולם המוזיקה', path: '/professionals' },
+          { name: agency.name, path }
+        ])
+      ]
+    });
   }
 }
