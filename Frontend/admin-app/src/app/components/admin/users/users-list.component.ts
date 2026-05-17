@@ -6,12 +6,14 @@ import { UserService } from '../../../services/user.service';
 import { UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
+import { TeacherFormComponent } from '../teachers/teacher-form.component';
+import { ServiceProviderFormComponent } from '../service-providers/service-provider-form.component';
 
 
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TeacherFormComponent, ServiceProviderFormComponent],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.css']
 })
@@ -22,6 +24,9 @@ export class UsersListComponent implements OnInit {
   error: string | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-users-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-users-view', mode); }
+  showTeacherFormModal = false;
+  showProviderFormModal = false;
+  selectedProfileUserId: number | undefined = undefined;
 
   // Pagination
   currentPage = 1;
@@ -141,15 +146,20 @@ export class UsersListComponent implements OnInit {
   }
 
   upgradeToTeacher(userId: number): void {
-    this.router.navigate(['/admin/users/teachers/new'], {
-      queryParams: { userId: userId }
-    });
+    this.selectedProfileUserId = userId;
+    this.showTeacherFormModal = true;
   }
 
   upgradeToServiceProvider(userId: number): void {
-    this.router.navigate(['/admin/users/service-providers/new'], {
-      queryParams: { userId: userId }
-    });
+    this.selectedProfileUserId = userId;
+    this.showProviderFormModal = true;
+  }
+
+  closeProfileFormModal(): void {
+    this.showTeacherFormModal = false;
+    this.showProviderFormModal = false;
+    this.selectedProfileUserId = undefined;
+    this.loadUsers();
   }
 
   getRoleBadgeClass(role: UserRole): string {

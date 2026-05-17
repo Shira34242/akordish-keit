@@ -191,18 +191,46 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       .length - 1;
   }
 
-  getCellClass(index: number): string {
-    const patterns = [
-      'sc-third',
-      'sc-third',
-      'sc-third',
-      'sc-duo-narrow',
-      'sc-duo-wide',
-      'sc-third-tall',
-      'sc-third-tall',
-      'sc-third-tall'
+  getManagedRows(): { slots: number[]; gridCols: string }[] {
+    return [
+      { slots: [0, 1], gridCols: '1fr 1fr' },
+      { slots: [2, 3, 4], gridCols: '1fr 1fr 1fr' }
     ];
+  }
 
-    return patterns[index % patterns.length];
+  getStreamRows(): { articles: Article[]; gridCols: string }[] {
+    const articles = this.getStreamArticles();
+    const rows: { articles: Article[]; gridCols: string }[] = [];
+    let i = 0;
+
+    const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
+    const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];
+
+    let twoIdx = 0;
+    let threeIdx = 0;
+    let rowType = 0;
+
+    while (i < articles.length) {
+      const cols = rowType % 2 === 0 ? 2 : 3;
+      const end = Math.min(i + cols, articles.length);
+      const actualCols = end - i;
+
+      let gridCols: string;
+      if (actualCols === 1) {
+        gridCols = '1fr';
+      } else if (actualCols === 2) {
+        gridCols = twoColPatterns[twoIdx % twoColPatterns.length];
+        twoIdx++;
+      } else {
+        gridCols = threeColPatterns[threeIdx % threeColPatterns.length];
+        threeIdx++;
+      }
+
+      rows.push({ articles: articles.slice(i, end), gridCols });
+      i = end;
+      rowType++;
+    }
+
+    return rows;
   }
 }

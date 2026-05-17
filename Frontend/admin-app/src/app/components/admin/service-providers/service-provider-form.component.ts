@@ -45,6 +45,7 @@ export class ServiceProviderFormComponent implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   @Input() embedded = false;
   @Input() serviceProviderIdInput?: number;
+  @Input() userIdInput?: number;
   @Output() close = new EventEmitter<void>();
 
   private readonly serviceProviderService = inject(MusicServiceProviderService);
@@ -128,10 +129,11 @@ export class ServiceProviderFormComponent implements OnInit {
       this.serviceProviderId = resolvedId;
       this.loadServiceProvider();
     } else {
-      // Check for userId in query params (upgrade from user)
+      // Check for userId input/query params (upgrade from user)
       const userIdParam = this.route.snapshot.queryParamMap.get('userId');
-      if (userIdParam) {
-        this.userId = +userIdParam;
+      const resolvedUserId = this.userIdInput ?? (userIdParam ? +userIdParam : undefined);
+      if (resolvedUserId) {
+        this.userId = resolvedUserId;
       }
     }
   }
@@ -167,6 +169,7 @@ export class ServiceProviderFormComponent implements OnInit {
     this.userService.getUsers(undefined, undefined, undefined, 1, 1000).subscribe({
       next: (result) => {
         this.availableUsers = result.items;
+        this.syncSelectedUserFromList();
         this.loadingUsers = false;
       },
       error: (error: any) => {
@@ -174,6 +177,15 @@ export class ServiceProviderFormComponent implements OnInit {
         this.loadingUsers = false;
       }
     });
+  }
+
+  private syncSelectedUserFromList(): void {
+    if (!this.userId || this.userName) return;
+    const selectedUser = this.availableUsers.find(user => user.id === this.userId);
+    if (!selectedUser) return;
+
+    this.userName = selectedUser.username;
+    this.userEmail = selectedUser.email;
   }
 
   loadServiceProvider(): void {
@@ -352,7 +364,9 @@ export class ServiceProviderFormComponent implements OnInit {
     }
 
     if (!this.selectedCategoryId) {
-      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-category]');
+      setTimeout(() => {
+        this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-category]');
+      });
       return false;
     }
 

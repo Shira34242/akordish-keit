@@ -16,20 +16,26 @@
     <div class="news-content">
       <div class="managed-grid">
         <div
-          *ngFor="let slot of managedSlots"
-          class="managed-cell"
-          [ngClass]="'mc-' + (slot + 1)">
-          <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!"></app-news-banner>
-          <div *ngIf="!getManagedArticle(slot)" class="cell-skeleton"></div>
+          class="managed-row"
+          *ngFor="let row of getManagedRows()"
+          [ngStyle]="{'grid-template-columns': row.gridCols}">
+          <div class="managed-cell" *ngFor="let slot of row.slots">
+            <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!"></app-news-banner>
+            <div *ngIf="!getManagedArticle(slot)" class="cell-skeleton"></div>
+          </div>
         </div>
       </div>
 
       <div class="stream-grid">
         <div
-          class="stream-cell"
-          *ngFor="let article of getStreamArticles(); let i = index"
-          [ngClass]="getCellClass(i)">
-          <app-news-banner [article]="article"></app-news-banner>
+          class="stream-row"
+          *ngFor="let row of getStreamRows()"
+          [ngStyle]="{'grid-template-columns': row.gridCols}">
+          <div
+            class="stream-cell"
+            *ngFor="let article of row.articles">
+            <app-news-banner [article]="article"></app-news-banner>
+          </div>
         </div>
       </div>
 

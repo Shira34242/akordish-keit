@@ -36,12 +36,12 @@ export class AdminUsersLayoutComponent {
         const url = this.router.url;
 
         if (url.includes('/users/teachers')) {
-            this.router.navigate(['/admin/users/teachers/new']);
+            this.actions.requestAddTeacher();
             return;
         }
 
         if (url.includes('/users/service-providers')) {
-            this.router.navigate(['/admin/users/service-providers/new']);
+            this.actions.requestAddServiceProvider();
             return;
         }
 

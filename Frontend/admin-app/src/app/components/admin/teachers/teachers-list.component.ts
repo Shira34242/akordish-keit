@@ -13,12 +13,14 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
+import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
+import { TeacherFormComponent } from './teacher-form.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-teachers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, TeacherFormComponent],
   templateUrl: './teachers-list.component.html',
   styleUrls: ['./teachers-list.component.css']
 })
@@ -30,6 +32,8 @@ export class TeachersListComponent implements OnInit {
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-teachers-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-teachers-view', mode); }
   cities: City[] = [];
+  showTeacherFormModal = false;
+  selectedTeacherId: number | undefined = undefined;
  
   // Pagination
   currentPage = 1;
@@ -55,7 +59,8 @@ export class TeachersListComponent implements OnInit {
     private agencyService: AgencyService,
     private http: HttpClient,
     private citiesService: CitiesService,
-    private router: Router
+    private router: Router,
+    private layoutActions: AdminUsersLayoutActionsService
   ) { }
   
   // Batch selection
@@ -69,6 +74,7 @@ export class TeachersListComponent implements OnInit {
     this.loadTeachers();
     this.loadCities();
     this.loadAgencies();
+    this.layoutActions.addTeacherRequest$.subscribe(() => this.addNewTeacher());
   }
 
   loadTeachers(): void {
@@ -134,7 +140,8 @@ export class TeachersListComponent implements OnInit {
   }
 
   editTeacher(id: number): void {
-    this.router.navigate(['/admin/users/teachers/edit', id]);
+    this.selectedTeacherId = id;
+    this.showTeacherFormModal = true;
   }
 
   viewTeacher(id: number): void {
@@ -246,7 +253,14 @@ export class TeachersListComponent implements OnInit {
   }
 
   addNewTeacher(): void {
-    this.router.navigate(['/admin/users/teachers/new']);
+    this.selectedTeacherId = undefined;
+    this.showTeacherFormModal = true;
+  }
+
+  closeTeacherFormModal(): void {
+    this.showTeacherFormModal = false;
+    this.selectedTeacherId = undefined;
+    this.loadTeachers();
   }
 
   getStatusBadgeClass(status: number): string {

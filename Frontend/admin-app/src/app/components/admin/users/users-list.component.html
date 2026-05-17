@@ -223,3 +223,23 @@
     </span>
   </div>
 </div>
+
+<div class="profile-form-backdrop" *ngIf="showTeacherFormModal" (click)="closeProfileFormModal()">
+  <div class="profile-form-modal" (click)="$event.stopPropagation()">
+    <app-teacher-form
+      [embedded]="true"
+      [userIdInput]="selectedProfileUserId"
+      (close)="closeProfileFormModal()">
+    </app-teacher-form>
+  </div>
+</div>
+
+<div class="profile-form-backdrop" *ngIf="showProviderFormModal" (click)="closeProfileFormModal()">
+  <div class="profile-form-modal" (click)="$event.stopPropagation()">
+    <app-service-provider-form
+      [embedded]="true"
+      [userIdInput]="selectedProfileUserId"
+      (close)="closeProfileFormModal()">
+    </app-service-provider-form>
+  </div>
+</div>

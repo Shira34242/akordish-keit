@@ -384,3 +384,32 @@ select.form-control {
   .filter-group { width: 100%; }
   .table-container { overflow-x: auto; }
 }
+
+.profile-form-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.profile-form-modal {
+  width: min(960px, 100%);
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: #F2F2F2;
+  border-radius: 24px;
+  direction: rtl;
+}
+
+@media (max-width: 768px) {
+  .profile-form-backdrop { padding: 0; }
+  .profile-form-modal {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}
