@@ -40,10 +40,10 @@
             <div class="form-section">
                 <p class="section-label">{{ 'report.what_problem' | translate }}</p>
                 <div class="chip-group">
-                    <label *ngFor="let type of reportTypes" class="chip">
+                    <label *ngFor="let type of reportTypes; trackBy: trackByReportType" class="chip">
                         <input type="radio" name="reportType" [value]="type.value"
                             [(ngModel)]="selectedReportType" />
-                        <span>{{ type.label }}</span>
+                        <span>{{ type.labelKey | translate }}</span>
                     </label>
                 </div>
             </div>

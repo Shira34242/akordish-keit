@@ -1,69 +1,81 @@
 <div class="articles-page">
 
-  <!-- Loading -->
   <div *ngIf="isLoading" class="page-loading">
     <div class="spinner"></div>
   </div>
 
   <div *ngIf="!isLoading" class="news-content">
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1 class="page-title">
-        <ng-container *ngIf="tagId; else titleNoTag">תגית: {{ tagName || '#' + tagId }}</ng-container>
-        <ng-template #titleNoTag>{{ categoryName || ('articles.all_title' | translate) }}</ng-template>
-      </h1>
-      <a *ngIf="tagId" class="tag-filter-clear" [routerLink]="['/articles']" title="הסר סינון תגית">
-        × הסר סינון תגית
-      </a>
-    </div>
+    <section class="archive-hero" aria-labelledby="articles-title">
+      <div class="archive-hero__content">
+        <span class="archive-kicker">ארכיון תוכן</span>
+        <h1 id="articles-title" class="page-title">
+          <ng-container *ngIf="tagId; else titleNoTag">תגית: {{ tagName || '#' + tagId }}</ng-container>
+          <ng-template #titleNoTag>{{ categoryName || ('articles.all_title' | translate) }}</ng-template>
+        </h1>
+        <p class="archive-subtitle">חיפוש, סינון ומיון של כל הכתבות במקום אחד.</p>
 
-    <!-- Filter Bar -->
-    <section class="filter-bar">
-      <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        [placeholder]="'articles.search_placeholder' | translate"
-        class="filter-input"
-        (keyup.enter)="applyFilters()"
-      >
-      <select [(ngModel)]="categoryId" class="filter-select">
-        <option [value]="undefined">{{ 'articles.all_categories' | translate }}</option>
-        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.key | translate }}</option>
-      </select>
-      <select [(ngModel)]="contentType" class="filter-select">
-        <option [value]="undefined">{{ 'articles.all_types' | translate }}</option>
-        <option *ngFor="let type of contentTypes" [value]="type.id">{{ type.key | translate }}</option>
-      </select>
-      <div class="filter-actions">
-        <button class="btn-search" (click)="applyFilters()">{{ 'shared.search' | translate }}</button>
-        <button class="btn-reset" (click)="resetFilters()">{{ 'shared.reset' | translate }}</button>
+        <form class="filter-bar" (ngSubmit)="applyFilters()">
+          <label class="search-wrap">
+            <span class="material-icons search-icon">search</span>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              name="searchTerm"
+              [placeholder]="'articles.search_placeholder' | translate"
+              class="filter-input">
+          </label>
+
+          <div class="filter-controls">
+            <select [(ngModel)]="categoryId" name="categoryId" class="filter-select" aria-label="קטגוריה">
+              <option [ngValue]="undefined">{{ 'articles.all_categories' | translate }}</option>
+              <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.key | translate }}</option>
+            </select>
+
+            <select [(ngModel)]="contentType" name="contentType" class="filter-select" aria-label="סוג תוכן">
+              <option [ngValue]="undefined">{{ 'articles.all_types' | translate }}</option>
+              <option *ngFor="let type of contentTypes" [ngValue]="type.id">{{ type.key | translate }}</option>
+            </select>
+
+            <select [(ngModel)]="sortMode" name="sortMode" class="filter-select" aria-label="מיון">
+              <option value="recent">חדשים קודם</option>
+              <option value="popular">הכי נצפים</option>
+              <option value="liked">הכי אהובים</option>
+              <option value="title">לפי שם</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button class="btn-search" type="submit">{{ 'shared.search' | translate }}</button>
+            <button class="btn-reset" type="button" (click)="resetFilters()" [class.btn-reset--active]="hasActiveFilters">
+              {{ 'shared.reset' | translate }}
+            </button>
+          </div>
+        </form>
+
+        <div class="archive-meta">
+          <span class="results-count" *ngIf="totalCount > 0">{{ totalCount }} {{ 'articles.count_suffix' | translate }}</span>
+          <a *ngIf="tagId" class="tag-filter-clear" [routerLink]="['/articles']" title="הסר סינון תגית">
+            הסר סינון תגית
+          </a>
+        </div>
       </div>
     </section>
 
-    <!-- Results count -->
-    <div class="results-count" *ngIf="totalCount > 0">
-      {{ totalCount }} {{ 'articles.count_suffix' | translate }}
-    </div>
-
-    <!-- Articles Grid -->
-    <section class="articles-grid" *ngIf="articles.length > 0">
-      <div
-        class="article-cell"
-        *ngFor="let article of articles; let i = index"
-        [ngClass]="getCellClass(i)">
-        <app-news-banner [article]="article"></app-news-banner>
-      </div>
+    <section class="viral-grid" *ngIf="sortedArticles.length > 0">
+      <app-news-banner
+        *ngFor="let article of sortedArticles"
+        class="news-banner-card"
+        [article]="article">
+      </app-news-banner>
     </section>
 
-    <!-- No Results -->
-    <div *ngIf="articles.length === 0" class="no-results">
+    <div *ngIf="sortedArticles.length === 0" class="no-results">
       <p>{{ 'articles.no_results' | translate }}</p>
     </div>
 
-    <!-- Pagination -->
     <div class="pagination" *ngIf="totalPages > 1">
-      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">›</button>
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
       <button
         *ngFor="let page of pageNumbers"
         class="btn-page"
@@ -71,7 +83,7 @@
         (click)="goToPage(page)">
         {{ page }}
       </button>
-      <button class="btn-page" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">‹</button>
+      <button class="btn-page" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
     </div>
 
   </div>

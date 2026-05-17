@@ -114,8 +114,7 @@
     transition: background 0.15s ease;
 }
 
-.nav-group.expanded,
-.nav-group:hover {
+.nav-group.expanded {
     background: #ffffff;
 }
 
@@ -160,8 +159,7 @@
     white-space: nowrap;
 }
 
-.nav-group.expanded .nav-submenu,
-.nav-group:hover .nav-submenu {
+.nav-group.expanded .nav-submenu {
     max-width: min(48vw, 46rem);
     opacity: 1;
     overflow-x: auto;
@@ -193,6 +191,23 @@
 
 .sub-nav-item.active-sub {
     font-weight: 800;
+}
+
+.report-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #E53935;
+    color: #ffffff;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
 }
 
 /* Back button */

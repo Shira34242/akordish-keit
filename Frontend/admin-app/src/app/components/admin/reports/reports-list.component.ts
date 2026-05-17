@@ -29,6 +29,7 @@ export class ReportsListComponent implements OnInit {
   pageSize = 25;
   totalItems = 0;
   totalPages = 0;
+  visiblePages: number[] = [];
 
   // Filters
   selectedStatus?: string;
@@ -66,6 +67,7 @@ export class ReportsListComponent implements OnInit {
         this.reports = result.items;
         this.totalItems = result.totalCount;
         this.totalPages = result.totalPages;
+        this.visiblePages = this.buildVisiblePages();
         this.loading = false;
       },
       error: (error) => {
@@ -205,7 +207,15 @@ export class ReportsListComponent implements OnInit {
     this.loadReports();
   }
 
-  get pages(): number[] {
+  trackByReportId(_index: number, report: Report): number {
+    return report.id;
+  }
+
+  trackByPage(_index: number, page: number): number {
+    return page;
+  }
+
+  private buildVisiblePages(): number[] {
     const pages: number[] = [];
     const start = Math.max(1, this.currentPage - 2);
     const end = Math.min(this.totalPages, this.currentPage + 2);

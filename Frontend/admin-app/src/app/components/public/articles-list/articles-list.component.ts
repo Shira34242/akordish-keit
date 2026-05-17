@@ -41,6 +41,7 @@ export class ArticlesListComponent implements OnInit {
   searchTerm = '';
   tagId?: number;
   tagName = '';
+  sortMode: 'recent' | 'popular' | 'liked' | 'title' = 'recent';
   private visibleCategoryIds: number[] = [];
 
   get categories(): Array<{ id: ArticleCategory; key: string }> {
@@ -180,6 +181,34 @@ export class ArticlesListComponent implements OnInit {
       });
   }
 
+  get sortedArticles(): Article[] {
+    const articles = [...this.articles];
+
+    switch (this.sortMode) {
+      case 'popular':
+        return articles.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      case 'liked':
+        return articles.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+      case 'title':
+        return articles.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'he'));
+      case 'recent':
+      default:
+        return articles.sort((a, b) => this.getArticleDateValue(b) - this.getArticleDateValue(a));
+    }
+  }
+
+  get hasActiveFilters(): boolean {
+    return this.categoryId !== undefined ||
+      this.contentType !== undefined ||
+      !!this.searchTerm ||
+      this.tagId !== undefined ||
+      this.sortMode !== 'recent';
+  }
+
+  private getArticleDateValue(article: Article): number {
+    return new Date(article.publishDate || article.createdAt || 0).getTime();
+  }
+
   private getCategoryName(categoryId: ArticleCategory): string {
     const categoryKeys: { [key: number]: string } = {
       [ArticleCategory.General]: 'articles.cat_general',
@@ -206,29 +235,6 @@ export class ArticlesListComponent implements OnInit {
   navigateToArticle(article: Article): void {
     const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
     this.router.navigate([route, article.slug]);
-  }
-
-  getCellClass(index: number): string {
-    if (index === 0) {
-      return 'sc-feature-main';
-    }
-
-    if (index === 1) {
-      return 'sc-feature-side';
-    }
-
-    const patterns = [
-      'sc-third',
-      'sc-third',
-      'sc-third',
-      'sc-duo-narrow',
-      'sc-duo-wide',
-      'sc-third-tall',
-      'sc-third-tall',
-      'sc-third-tall'
-    ];
-
-    return patterns[(index - 2) % patterns.length];
   }
 
   goToPage(page: number): void {
@@ -307,6 +313,7 @@ export class ArticlesListComponent implements OnInit {
     this.categoryId = undefined;
     this.contentType = undefined;
     this.searchTerm = '';
+    this.sortMode = 'recent';
     this.currentPage = 1;
 
     this.router.navigate(['/articles']);

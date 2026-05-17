@@ -80,7 +80,7 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngFor="let report of reports">
+        <ng-container *ngFor="let report of reports; trackBy: trackByReportId">
           <!-- Main Row -->
           <tr class="report-row" [class.expanded]="expandedReportId === report.id">
             <!-- Date -->
@@ -190,7 +190,7 @@
       <span class="material-icons">chevron_right</span>
     </button>
 
-    <button *ngFor="let page of pages" class="page-btn" [class.active]="page === currentPage"
+    <button *ngFor="let page of visiblePages; trackBy: trackByPage" class="page-btn" [class.active]="page === currentPage"
       (click)="goToPage(page)">
       {{ page }}
     </button>

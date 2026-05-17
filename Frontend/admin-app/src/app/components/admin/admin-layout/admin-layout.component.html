@@ -69,7 +69,10 @@
                         </a>
                         <div class="nav-submenu" aria-label="סוגי התראות">
                             <a routerLink="/admin/notifications/messages" routerLinkActive="active-sub" class="sub-nav-item">צ׳אטים</a>
-                            <a routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">דיווחים</a>
+                            <a routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">
+                                <span>דיווחים</span>
+                                <span class="report-badge" *ngIf="pendingReportsCount > 0">{{ pendingReportsCount > 99 ? '99+' : pendingReportsCount }}</span>
+                            </a>
                         </div>
                     </div>
                     <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">

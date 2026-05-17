@@ -1,10 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../../services/report.service';
-import { CreateReportDto, ReportTypeLabels } from '../../../models/report.model';
+import { CreateReportDto } from '../../../models/report.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
+
+type ReportOption = {
+  value: 'ContentError' | 'InappropriateContent' | 'Other';
+  labelKey: string;
+};
 
 @Component({
   selector: 'app-report-modal',
@@ -13,7 +18,7 @@ import { LanguageService } from '../../../services/language.service';
   templateUrl: './report-modal.component.html',
   styleUrls: ['./report-modal.component.css']
 })
-export class ReportModalComponent implements OnInit {
+export class ReportModalComponent implements OnChanges {
   @Input() isOpen: boolean = false;
   @Input() contentType!: 'Song' | 'Article' | 'BlogPost' | 'General';
   @Input() contentId!: number;
@@ -21,28 +26,25 @@ export class ReportModalComponent implements OnInit {
 
   @Output() close = new EventEmitter<void>();
 
-  private readonly langService = inject(LanguageService);
-
   selectedReportType: 'ContentError' | 'InappropriateContent' | 'Other' = 'ContentError';
   description: string = '';
   isSubmitting: boolean = false;
   showSuccess: boolean = false;
   errorMessage: string = '';
 
-  get reportTypes() {
-    const t = (k: string) => this.langService.translate(k);
-    return [
-      { value: 'ContentError' as const, label: t('report.type_error') },
-      { value: 'InappropriateContent' as const, label: t('report.type_inappropriate') },
-      { value: 'Other' as const, label: t('report.type_other') }
-    ];
-  }
+  readonly reportTypes: ReportOption[] = [
+    { value: 'ContentError', labelKey: 'report.type_error' },
+    { value: 'InappropriateContent', labelKey: 'report.type_inappropriate' },
+    { value: 'Other', labelKey: 'report.type_other' }
+  ];
 
-  constructor(private reportService: ReportService) {}
+  constructor(
+    private reportService: ReportService,
+    private langService: LanguageService
+  ) {}
 
-  ngOnInit(): void {
-    // Reset form when modal opens
-    if (this.isOpen) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isOpen']?.currentValue === true && changes['isOpen'].previousValue !== true) {
       this.resetForm();
     }
   }
@@ -53,6 +55,10 @@ export class ReportModalComponent implements OnInit {
   }
 
   submitReport(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
     if (!this.description.trim() || this.description.length < 10) {
       this.errorMessage = this.langService.translate('report.validation');
       return;
@@ -83,6 +89,10 @@ export class ReportModalComponent implements OnInit {
         this.isSubmitting = false;
       }
     });
+  }
+
+  trackByReportType(_index: number, type: ReportOption): string {
+    return type.value;
   }
 
   private resetForm(): void {
