@@ -9,6 +9,8 @@ import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { EventCardData } from '../../../../utils/event.utils';
 import { EventModalComponent } from '../../../shared/event-modal/event-modal.component';
+import { ArtistService } from '../../../../services/artist.service';
+import { ArtistListDto } from '../../../../models/artist.model';
 
 
 @Component({
@@ -22,9 +24,11 @@ export class EventsListComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
+  private readonly artistService = inject(ArtistService);
 
   // State
   events: Event[] = [];
+  artists: ArtistListDto[] = [];
   loading = false;
   bulkActionLoading = false;
   selectedEventIds = new Set<number>();
@@ -42,9 +46,22 @@ export class EventsListComponent implements OnInit {
   // Filters
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
+  selectedArtistId?: number;
+  uploaderSearch = '';
+  dateFrom = '';
+  dateTo = '';
+  sortBy = 'eventDate';
 
   ngOnInit(): void {
+    this.loadArtists();
     this.loadEvents();
+  }
+
+  loadArtists(): void {
+    this.artistService.getArtists(undefined, undefined, 1, 200, 'name').subscribe({
+      next: (result) => this.artists = result.items,
+      error: (err) => console.error('Error loading artists', err)
+    });
   }
 
   loadEvents(): void {
@@ -54,7 +71,14 @@ export class EventsListComponent implements OnInit {
       this.currentPage,
       this.pageSize,
       this.searchTerm || undefined,
-      this.getActiveFilter()
+      this.getActiveFilter(),
+      undefined,
+      undefined,
+      this.selectedArtistId,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<Event>) => {
         this.events = result.items;
@@ -76,6 +100,11 @@ export class EventsListComponent implements OnInit {
   }
 
   onStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.loadEvents();
+  }
+
+  onFilterChange(): void {
     this.currentPage = 1;
     this.loadEvents();
   }

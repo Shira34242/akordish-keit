@@ -165,6 +165,10 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         return !this.isLegacyFlow;
     }
 
+    get isAdminLongForm(): boolean {
+        return this.flowMode === 'legacy' && !this.editMode;
+    }
+
     get totalSteps(): number {
         return 3;
     }
@@ -1884,7 +1888,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             this.songForm.markAllAsTouched();
             const invalidField = this.getFirstInvalidSongField();
             if (invalidField) {
-                this.currentStep = invalidField.step;
+                if (!this.isAdminLongForm) {
+                    this.currentStep = invalidField.step;
+                }
                 this.showRequiredField(invalidField.selector);
             }
         }

@@ -23,7 +23,7 @@
 
 
         <!-- Stepper -->
-        <div class="stepper" *ngIf="isLegacyFlow">
+        <div class="stepper" *ngIf="isLegacyFlow && !isAdminLongForm">
             <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
                 <div class="step-circle">1</div>
             </div>
@@ -345,7 +345,7 @@
             <ng-container *ngIf="!showInlineSuccess && isLegacyFlow">
 
             <!-- STEP 1: Basic Info -->
-            <div *ngIf="currentStep === 1" class="step-content">
+            <div *ngIf="currentStep === 1 || isAdminLongForm" class="step-content">
               <div class="step-header">
                 <p class="step-subtitle">{{ 'song_modal.song_details' | translate }}</p>
             </div>
@@ -595,7 +595,7 @@
             </div>
 
             <!-- STEP 2: Content -->
-            <div *ngIf="currentStep === 2" class="step-content">
+            <div *ngIf="currentStep === 2 || isAdminLongForm" class="step-content">
                 <div class="step-header">
                     <h2>{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
                     <p class="step-subtitle">{{ 'song_modal.content_header' | translate }}</p>
@@ -675,14 +675,14 @@
             </div>
 
             <!-- STEP 3: Preview & Submit -->
-            <div *ngIf="currentStep === 3" class="step-content preview-step">
+            <div *ngIf="currentStep === 3 || isAdminLongForm" class="step-content preview-step">
            <div class="preview-header">
                 <h2>{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
                 <p class="preview-subtitle">{{ 'song_modal.preview_title' | translate }}</p>
-                <p class="preview-description">{{ (editMode ? 'song_modal.preview_check_edit' : 'song_modal.preview_check_new') | translate }}</p>
+                <p class="preview-description" *ngIf="!isAdminLongForm">{{ (editMode ? 'song_modal.preview_check_edit' : 'song_modal.preview_check_new') | translate }}</p>
             </div>
 
-                <div class="preview-card">
+                <div class="preview-card" *ngIf="!isAdminLongForm">
                     <div class="preview-card-header">
                         <div class="song-info">
                             <h3 class="song-title">{{ songForm.get('title')?.value }}</h3>
@@ -825,15 +825,15 @@
 
         <div class="modal-footer" *ngIf="!showInlineSuccess && isLegacyFlow">
             <div class="left-buttons">
-                <button class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()">{{ 'song_modal.back' | translate }}</button>
-                <button class="btn-secondary" *ngIf="currentStep === 1" (click)="closeModal()">{{ 'song_modal.cancel' | translate }}</button>
+                <button class="btn-secondary" *ngIf="currentStep > 1 && !isAdminLongForm" (click)="prevStep()">{{ 'song_modal.back' | translate }}</button>
+                <button class="btn-secondary" *ngIf="currentStep === 1 || isAdminLongForm" (click)="closeModal()">{{ 'song_modal.cancel' | translate }}</button>
             </div>
 
             <div class="right-buttons">
-                <button class="btn-primary btn-large" *ngIf="currentStep === 2" (click)="nextStep()">{{ 'song_modal.preview_next' | translate }}</button>
-                <button class="btn-primary" *ngIf="currentStep === 1" (click)="nextStep()">{{ 'song_modal.next' | translate }}</button>
+                <button class="btn-primary btn-large" *ngIf="currentStep === 2 && !isAdminLongForm" (click)="nextStep()">{{ 'song_modal.preview_next' | translate }}</button>
+                <button class="btn-primary" *ngIf="currentStep === 1 && !isAdminLongForm" (click)="nextStep()">{{ 'song_modal.next' | translate }}</button>
               <div class="submission-error" *ngIf="submissionError">{{ submissionError }}</div>
-              <button class="btn-primary btn-submit" *ngIf="currentStep === 3" (click)="submit()" [disabled]="isSubmitting">
+              <button class="btn-primary btn-submit" *ngIf="currentStep === 3 || isAdminLongForm" (click)="submit()" [disabled]="isSubmitting">
                     <span *ngIf="isSubmitting">{{ 'song_modal.saving' | translate }}</span>
                     <span *ngIf="!isSubmitting && editMode">{{ 'song_modal.save_edit' | translate }}</span>
                     <span *ngIf="!isSubmitting && !editMode && !songForm.get('isApproved')?.value">{{ 'song_modal.send_approval' | translate }}</span>

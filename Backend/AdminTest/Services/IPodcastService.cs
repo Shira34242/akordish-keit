@@ -4,14 +4,14 @@ namespace AkordishKeit.Services
 {
     public interface IPodcastService
     {
-        Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive);
+        Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null);
         Task<IEnumerable<PodcastDto>> GetPublicPodcastsAsync();
         Task<PodcastDetailDto?> GetPodcastBySlugAsync(string slug, bool includeInactive = false);
         Task<PodcastDto?> GetPodcastByIdAsync(int id);
         Task<PodcastDto> CreatePodcastAsync(CreatePodcastDto dto);
         Task<PodcastDto?> UpdatePodcastAsync(int id, UpdatePodcastDto dto);
         Task<bool> DeletePodcastAsync(int id);
-        Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive);
+        Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null);
         Task<PagedResult<PodcastEpisodeDto>> GetPublicEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search);
         Task<IEnumerable<PodcastEpisodeDto>> GetLatestEpisodesAsync(int limit);
         Task<IEnumerable<PodcastEpisodeDto>> GetPopularEpisodesAsync(int limit, int? podcastId = null);

@@ -19,6 +19,17 @@
         <option value="active">מוצגים באתר</option>
         <option value="draft">טיוטות</option>
       </select>
+
+      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" title="מתאריך פרסום">
+      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" title="עד תאריך פרסום">
+
+      <select [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="date">תאריך פרסום</option>
+        <option value="date_asc">תאריך פרסום ישן קודם</option>
+        <option value="podcast">סדרה</option>
+        <option value="title">כותרת</option>
+        <option value="views">צפיות</option>
+      </select>
     </div>
     <div class="actions">
       <button type="button" class="btn-secondary" (click)="createPodcast()">סדרה חדשה</button>

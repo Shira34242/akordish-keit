@@ -53,10 +53,16 @@ public class ArticlesController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] int? tagId = null,
-        [FromQuery] List<int>? categoryIds = null)
+        [FromQuery] List<int>? categoryIds = null,
+        [FromQuery] int? artistId = null,
+        [FromQuery] string? uploaderSearch = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null,
+        [FromQuery] string? sortBy = null)
     {
         var result = await _articleService.GetArticlesAsync(
-            search, categoryId, contentType, status, isFeatured, isPremium, authorName, pageNumber, pageSize, tagId, categoryIds);
+            search, categoryId, contentType, status, isFeatured, isPremium, authorName, pageNumber, pageSize,
+            tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo, sortBy);
 
         return Ok(result);
     }

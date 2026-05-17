@@ -143,6 +143,7 @@
 }
 
 .search-box input,
+.search-filters > input,
 select {
   border: none;
   outline: none;

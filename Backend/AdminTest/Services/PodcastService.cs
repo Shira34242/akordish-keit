@@ -17,7 +17,7 @@ namespace AkordishKeit.Services
             _context = context;
         }
 
-        public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive)
+        public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
         {
             var query = _context.Podcasts
                 .Include(p => p.Episodes.Where(e => !e.IsDeleted))
@@ -34,7 +34,24 @@ namespace AkordishKeit.Services
                 query = query.Where(p => p.IsActive == isActive.Value);
             }
 
-            query = query.OrderBy(p => p.DisplayOrder).ThenBy(p => p.Name);
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt >= dateFrom.Value.Date);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var exclusiveDateTo = dateTo.Value.Date.AddDays(1);
+                query = query.Where(p => p.CreatedAt < exclusiveDateTo);
+            }
+
+            query = sortBy switch
+            {
+                "date" => query.OrderByDescending(p => p.CreatedAt),
+                "date_asc" => query.OrderBy(p => p.CreatedAt),
+                "name" => query.OrderBy(p => p.Name),
+                _ => query.OrderBy(p => p.DisplayOrder).ThenBy(p => p.Name)
+            };
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastDto>
@@ -199,7 +216,7 @@ namespace AkordishKeit.Services
             return true;
         }
 
-        public async Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive)
+        public async Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
         {
             var query = _context.PodcastEpisodes
                 .Include(e => e.Podcast)
@@ -213,7 +230,25 @@ namespace AkordishKeit.Services
                 query = query.Where(e => e.Title.Contains(search) || e.Podcast.Name.Contains(search));
             }
 
-            query = query.OrderByDescending(e => e.PublishedAt).ThenBy(e => e.DisplayOrder);
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(e => e.PublishedAt >= dateFrom.Value.Date);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var exclusiveDateTo = dateTo.Value.Date.AddDays(1);
+                query = query.Where(e => e.PublishedAt < exclusiveDateTo);
+            }
+
+            query = sortBy switch
+            {
+                "title" => query.OrderBy(e => e.Title),
+                "podcast" => query.OrderBy(e => e.Podcast.Name).ThenByDescending(e => e.PublishedAt),
+                "views" => query.OrderByDescending(e => e.ViewCount),
+                "date_asc" => query.OrderBy(e => e.PublishedAt),
+                _ => query.OrderByDescending(e => e.PublishedAt).ThenBy(e => e.DisplayOrder)
+            };
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastEpisodeDto>

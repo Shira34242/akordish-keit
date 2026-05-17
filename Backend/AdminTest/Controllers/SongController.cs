@@ -245,12 +245,16 @@ public class SongsController : ControllerBase
         [FromQuery] int? genreId = null,
         [FromQuery] int? keyId = null,
         [FromQuery] int? tagId = null,
-        [FromQuery] string? sortBy = "date")
+        [FromQuery] string? sortBy = "date",
+        [FromQuery] string? uploaderSearch = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
         try
         {
             var result = await _songService.GetSongsAsync(
-                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: false);
+                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: false,
+                uploaderSearch: uploaderSearch, dateFrom: dateFrom, dateTo: dateTo);
 
             if (!GetCurrentUserId().HasValue)
             {
@@ -290,12 +294,16 @@ public class SongsController : ControllerBase
         [FromQuery] int? genreId = null,
         [FromQuery] int? keyId = null,
         [FromQuery] int? tagId = null,
-        [FromQuery] string? sortBy = "date")
+        [FromQuery] string? sortBy = "date",
+        [FromQuery] string? uploaderSearch = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
     {
         try
         {
             var result = await _songService.GetSongsAsync(
-                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: true);
+                page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: true,
+                uploaderSearch: uploaderSearch, dateFrom: dateFrom, dateTo: dateTo);
 
             return Ok(new
             {

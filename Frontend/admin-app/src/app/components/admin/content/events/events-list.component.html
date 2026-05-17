@@ -22,6 +22,24 @@
         <option value="active">מאושרות</option>
         <option value="draft">טיוטה / לא מאושר</option>
       </select>
+
+      <select class="filter-select" [(ngModel)]="selectedArtistId" (change)="onFilterChange()">
+        <option [ngValue]="undefined">כל האמנים</option>
+        <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
+      </select>
+
+      <input type="text" [(ngModel)]="uploaderSearch" (input)="onFilterChange()" placeholder="מי העלה" class="filter-input">
+      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input" title="מתאריך העלאה">
+      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input" title="עד תאריך העלאה">
+
+      <select class="filter-select" [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="eventDate">תאריך הופעה</option>
+        <option value="created">תאריך העלאה</option>
+        <option value="created_asc">תאריך העלאה ישן קודם</option>
+        <option value="artist">אמן</option>
+        <option value="uploader">מי העלה</option>
+        <option value="name">שם</option>
+      </select>
     </div>
 
     <button class="btn-new" type="button" (click)="createNewEvent()">

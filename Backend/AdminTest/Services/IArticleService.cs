@@ -15,7 +15,12 @@ public interface IArticleService
         int pageNumber,
         int pageSize,
         int? tagId = null,
-        IEnumerable<int>? categoryIds = null);
+        IEnumerable<int>? categoryIds = null,
+        int? artistId = null,
+        string? uploaderSearch = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        string? sortBy = null);
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 

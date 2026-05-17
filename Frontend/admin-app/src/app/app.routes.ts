@@ -484,6 +484,11 @@ export const routes: Routes = [
                         title: 'קטגוריות דפים - אקורדישקייט'
                     },
                     {
+                        path: 'news-cleanup',
+                        loadComponent: () => import('./components/admin/system/news-cleanup/news-cleanup.component').then(m => m.NewsCleanupComponent),
+                        title: 'ניקוי חדשות - אקורדישקייט'
+                    },
+                    {
                         path: 'ticker',
                         loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
                         title: 'פס הירו - אקורדישקייט'

@@ -35,10 +35,16 @@ namespace AkordishKeit.Controllers
             [FromQuery] string? search = null,
             [FromQuery] bool? isActive = null,
             [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] int? artistId = null,
+            [FromQuery] string? uploaderSearch = null,
+            [FromQuery] DateTime? createdFrom = null,
+            [FromQuery] DateTime? createdTo = null,
+            [FromQuery] string? sortBy = null)
         {
             var result = await _eventService.GetEventsAsync(
-                pageNumber, pageSize, search, isActive, fromDate, toDate);
+                pageNumber, pageSize, search, isActive, fromDate, toDate,
+                artistId, uploaderSearch, createdFrom, createdTo, sortBy);
 
             return Ok(result);
         }

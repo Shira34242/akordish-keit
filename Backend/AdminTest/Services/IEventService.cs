@@ -13,7 +13,12 @@ namespace AkordishKeit.Services
             string? search = null,
             bool? isActive = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null);
+            DateTime? toDate = null,
+            int? artistId = null,
+            string? uploaderSearch = null,
+            DateTime? createdFrom = null,
+            DateTime? createdTo = null,
+            string? sortBy = null);
 
         /// <summary>
         /// קבלת הופעה לפי מזהה

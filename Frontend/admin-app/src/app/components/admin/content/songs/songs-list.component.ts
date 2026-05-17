@@ -67,6 +67,9 @@ export class SongsListComponent implements OnInit, OnDestroy {
   selectedArtistId?: number;
   selectedGenreId?: number;
   selectedKeyId?: number;
+  uploaderSearch = '';
+  dateFrom = '';
+  dateTo = '';
   sortBy: string = 'date'; // date, views, name
 
   ngOnInit(): void {
@@ -97,7 +100,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
       this.selectedArtistId,
       this.selectedGenreId,
       this.selectedKeyId,
-      this.sortBy
+      this.sortBy,
+      undefined,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined
     ).subscribe({
       next: (result: any) => {
         this.songs = result.songs || result.items || result.data || [];
@@ -123,6 +130,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(): void {
+    this.currentPage = 1;
+    this.loadSongs();
+  }
+
+  onFilterChange(): void {
     this.currentPage = 1;
     this.loadSongs();
   }

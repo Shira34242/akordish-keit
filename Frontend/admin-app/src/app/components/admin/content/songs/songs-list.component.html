@@ -13,12 +13,29 @@
 
     <!-- Sort -->
     <div class="filters">
+      <select [(ngModel)]="selectedArtistId" (change)="onFilterChange()" class="filter-select">
+        <option [ngValue]="undefined">כל האמנים</option>
+        <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
+      </select>
+
+      <input
+        type="text"
+        placeholder="מי העלה"
+        [(ngModel)]="uploaderSearch"
+        (input)="onFilterChange()"
+        class="filter-input">
+
+      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input" title="מתאריך העלאה">
+      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input" title="עד תאריך העלאה">
       <select
         [(ngModel)]="sortBy"
         (change)="onSortChange()"
         class="filter-select">
         <option value="date">תאריך העלאה</option>
         <option value="views">צפיות</option>
+        <option value="date_asc">תאריך העלאה ישן קודם</option>
+        <option value="artist">אמן</option>
+        <option value="uploader">מי העלה</option>
         <option value="name">שם השיר (א-ב)</option>
       </select>
     </div>

@@ -23,9 +23,12 @@ namespace AkordishKeit.Controllers
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null)
+            [FromQuery] bool? isActive = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] string? sortBy = null)
         {
-            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive));
+            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive, dateFrom, dateTo, sortBy));
         }
 
         [HttpGet("public")]
@@ -156,9 +159,12 @@ namespace AkordishKeit.Controllers
             [FromQuery] int pageSize = 20,
             [FromQuery] int? podcastId = null,
             [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null)
+            [FromQuery] bool? isActive = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] string? sortBy = null)
         {
-            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive));
+            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive, dateFrom, dateTo, sortBy));
         }
 
         [HttpGet("episodes/{id:int}")]
