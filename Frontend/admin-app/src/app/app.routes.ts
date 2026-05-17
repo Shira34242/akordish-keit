@@ -359,13 +359,13 @@ export const routes: Routes = [
                     },
                     {
                         path: 'news-sections',
-                        loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
-                        title: 'ניהול קטגוריות דפים - אקורדישקייט'
+                        redirectTo: '/admin/system/news-sections',
+                        pathMatch: 'full'
                     },
                     {
                         path: 'ticker',
-                        loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
-                        title: 'ניהול פס חדשות הירו - אקורדישקייט'
+                        redirectTo: '/admin/system/ticker',
+                        pathMatch: 'full'
                     },
                     {
                         path: 'events',
@@ -436,15 +436,7 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
                 title: 'שליחת מייל - אקורדישקייט'
             },
-            { path: 'reports', redirectTo: 'notifications/reports', pathMatch: 'full' },
-            { path: 'teachers', redirectTo: 'users/teachers', pathMatch: 'full' },
-            { path: 'teachers/new', redirectTo: 'users/teachers/new', pathMatch: 'full' },
-            { path: 'teachers/edit/:id', redirectTo: 'users/teachers/edit/:id', pathMatch: 'full' },
-            { path: 'service-providers', redirectTo: 'users/service-providers', pathMatch: 'full' },
-            { path: 'service-providers/new', redirectTo: 'users/service-providers/new', pathMatch: 'full' },
-            { path: 'service-providers/edit/:id', redirectTo: 'users/service-providers/edit/:id', pathMatch: 'full' },
-            { path: 'artists', redirectTo: 'users/artists', pathMatch: 'full' },
-            { path: 'agencies', redirectTo: 'users/agencies', pathMatch: 'full' },
+            { path: 'content/stats', redirectTo: '/admin/analytics', pathMatch: 'full' },
             {
                 path: 'advertising',
                 loadComponent: () => import('./components/admin/advertisements/campaigns/campaigns-list.component').then(m => m.CampaignsListComponent),
@@ -464,11 +456,6 @@ export const routes: Routes = [
                 path: 'analytics',
                 loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
                 title: 'אנליטיקס - אקורדישקייט'
-            },
-            {
-                path: 'content/stats',
-                redirectTo: '/admin/analytics',
-                pathMatch: 'full'
             },
             {
                 path: 'system',

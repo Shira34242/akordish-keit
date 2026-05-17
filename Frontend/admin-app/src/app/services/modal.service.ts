@@ -8,6 +8,13 @@ export interface ModalState {
   songPrefill?: any;
 }
 
+export interface ReportModalState {
+  isOpen: boolean;
+  contentType: 'Song' | 'Article' | 'BlogPost' | 'General';
+  contentId: number;
+  contentTitle?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,9 +26,16 @@ export class ModalService {
   });
 
   private songUpdated = new Subject<void>();
+  private reportModalState = new BehaviorSubject<ReportModalState>({
+    isOpen: false,
+    contentType: 'General',
+    contentId: 0,
+    contentTitle: undefined
+  });
 
   modalState$ = this.modalState.asObservable();
   songUpdated$ = this.songUpdated.asObservable();
+  reportModalState$ = this.reportModalState.asObservable();
 
   openAddSongModal() {
     this.modalState.next({
@@ -61,5 +75,23 @@ export class ModalService {
 
   notifySongUpdated() {
     this.songUpdated.next();
+  }
+
+  openReportModal(report: Partial<Omit<ReportModalState, 'isOpen'>> = {}) {
+    this.reportModalState.next({
+      isOpen: true,
+      contentType: report.contentType || 'General',
+      contentId: report.contentId || 0,
+      contentTitle: report.contentTitle
+    });
+  }
+
+  closeReportModal() {
+    this.reportModalState.next({
+      isOpen: false,
+      contentType: 'General',
+      contentId: 0,
+      contentTitle: undefined
+    });
   }
 }

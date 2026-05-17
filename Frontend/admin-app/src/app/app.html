@@ -11,4 +11,12 @@
     (close)="closeAddSongModal()"
     (songAdded)="onSongAdded()">
   </app-add-song-modal>
+
+  <app-report-modal
+    [isOpen]="reportModal.isOpen"
+    [contentType]="reportModal.contentType"
+    [contentId]="reportModal.contentId"
+    [contentTitle]="reportModal.contentTitle"
+    (close)="closeReportModal()">
+  </app-report-modal>
 </div>

@@ -3,7 +3,7 @@ import { LanguageService } from '../../../services/language.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
@@ -47,7 +47,7 @@ interface AgencyWithProfiles extends AgencyListDto {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent],
+  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })

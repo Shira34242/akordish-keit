@@ -229,6 +229,11 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     return `https://wa.me/${digits}`;
   }
 
+  getSongLink(song: SongDto): (string | number)[] {
+    const slug = songSlug(song);
+    return slug ? ['/song', song.id, slug] : ['/song', song.id];
+  }
+
   get showAgencyContact(): boolean {
     return !!this.agencyBadge &&
       (this.agencyBadge.contactMode === AgencyContactMode.Agency ||

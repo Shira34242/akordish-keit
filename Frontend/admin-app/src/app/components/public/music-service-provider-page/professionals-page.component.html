@@ -212,7 +212,7 @@
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
-            </a>
+            </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -221,7 +221,7 @@
                 {{ getProviderCityLine(p) }}
               </div>
             </div>
-          </div>
+          </a>
         </div>
         <div class="empty-state" *ngIf="filteredProfessionals.length === 0">
           <p>לא נמצאו תוצאות עבור החיפוש</p>
@@ -243,7 +243,7 @@
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -252,7 +252,7 @@
                   {{ getProviderCityLine(p) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -320,7 +320,7 @@
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -329,7 +329,7 @@
                   {{ getCityName(t.cityId) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -343,7 +343,7 @@
             <a class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -352,7 +352,7 @@
                   {{ getProviderCityLine(p) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -366,7 +366,7 @@
             <a class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -375,7 +375,7 @@
                   {{ getProviderCityLine(p) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -389,7 +389,7 @@
             <a class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
                 <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -398,7 +398,7 @@
                   {{ getProviderCityLine(p) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -419,7 +419,7 @@
           <a class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <img [src]="p.profileImageUrl || '/default-user.svg'" [alt]="p.displayName" loading="lazy" imgFallback>
-            </a>
+            </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
               <h3 class="prof-card-name">{{ p.displayName }}</h3>
@@ -428,11 +428,11 @@
                   {{ getProviderCityLine(p) }}
               </div>
             </div>
-          </div>
+          </a>
           <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-            </a>
+            </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -441,7 +441,7 @@
                 {{ getCityName(t.cityId) }}
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
 
@@ -469,7 +469,7 @@
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-            </a>
+            </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -478,7 +478,7 @@
                 {{ getCityName(t.cityId) }}
               </div>
             </div>
-          </div>
+          </a>
         </div>
         <div class="empty-state" *ngIf="filteredTeachers.length === 0">
           <p>לא נמצאו מורים התואמים לחיפוש</p>
@@ -500,7 +500,7 @@
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -509,7 +509,7 @@
                   {{ getCityName(t.cityId) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -528,7 +528,7 @@
             <a class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לאורגן</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -537,7 +537,7 @@
                   {{ getCityName(t.cityId) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -551,7 +551,7 @@
             <a class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לסאונד</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -560,7 +560,7 @@
                   {{ getCityName(t.cityId) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -574,7 +574,7 @@
             <a class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
                 <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-              </a>
+              </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לפיתוח קול</p>
                 <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -583,7 +583,7 @@
                   {{ getCityName(t.cityId) }}
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
@@ -599,7 +599,7 @@
           <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
               <img [src]="t.profileImageUrl || '/default-user.svg'" [alt]="t.displayName" loading="lazy" imgFallback>
-            </a>
+            </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
               <h3 class="prof-card-name">{{ t.displayName }}</h3>
@@ -608,7 +608,7 @@
                 {{ getCityName(t.cityId) }}
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
 
@@ -631,3 +631,5 @@
   </div>
 
 </div>
+
+

@@ -318,7 +318,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
                 const expectedSlug = songSlug(this.song);
                 if (expectedSlug && currentSlug !== expectedSlug) {
-                    this.router.navigate(['/song', id, expectedSlug], { replaceUrl: true });
+                    this.router.navigate(['/song', id, expectedSlug], {
+                        replaceUrl: true,
+                        queryParams: this.route.snapshot.queryParams
+                    });
                     return;
                 }
 

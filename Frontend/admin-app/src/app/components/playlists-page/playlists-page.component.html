@@ -14,8 +14,8 @@
           {{ 'playlists.community_btn' | translate }}
           <span class="material-icons hero-cta-arrow">arrow_back</span>
         </a>
-             </div>
-          </a>
+      </div>
+    </div>
   </div>
 
   <div class="state-block" *ngIf="isLoading">
@@ -95,7 +95,7 @@
                  class="pcard-thumb-placeholder">
               <span class="material-icons">queue_music</span>
             </div>
-          </div>
+          </a>
 
           <div class="pcard-image-edit" *ngIf="editingImageId === playlist.id"
                (click)="$event.stopPropagation()">

@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AddSongModalComponent } from './components/add-song-modal/add-song-modal.component';
+import { ReportModalComponent } from './components/shared/report-modal/report-modal.component';
 import { CommonModule } from '@angular/common';
-import { ModalService } from './services/modal.service';
+import { ModalService, ReportModalState } from './services/modal.service';
 import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts.component';
 import { SiteAlertService } from './services/site-alert.service';
 import { GoogleOneTapService } from './services/google-one-tap.service';
@@ -13,7 +14,7 @@ import { SeoRouteService } from './services/seo-route.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AddSongModalComponent, CommonModule, SiteAlertsComponent],
+  imports: [RouterOutlet, AddSongModalComponent, ReportModalComponent, CommonModule, SiteAlertsComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
@@ -23,6 +24,12 @@ export class AppComponent implements OnInit {
   editMode = false;
   songToEdit: any = null;
   songPrefill: any = null;
+  reportModal: ReportModalState = {
+    isOpen: false,
+    contentType: 'General',
+    contentId: 0,
+    contentTitle: undefined
+  };
 
   constructor(
     private modalService: ModalService,
@@ -49,6 +56,10 @@ export class AppComponent implements OnInit {
       this.songToEdit = state.songToEdit;
       this.songPrefill = state.songPrefill;
     });
+
+    this.modalService.reportModalState$.subscribe(state => {
+      this.reportModal = state;
+    });
   }
 
   openAddSongModal() {
@@ -63,5 +74,9 @@ export class AppComponent implements OnInit {
     this.modalService.closeModal();
     // מודיע לכל הרכיבים שהשיר עודכן
     this.modalService.notifySongUpdated();
+  }
+
+  closeReportModal() {
+    this.modalService.closeReportModal();
   }
 }
