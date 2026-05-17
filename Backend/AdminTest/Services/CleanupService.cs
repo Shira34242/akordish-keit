@@ -30,12 +30,11 @@ public class CleanupService : BackgroundService
             try
             {
                 // Calculate next run time (2:00 AM)
-                var now = DateTime.Now;
-                var nextRun = now.Date.AddDays(1).AddHours(2); // Tomorrow at 2:00 AM
+                var now = DateTime.UtcNow;
+                var nextRun = now.Date.AddDays(1).AddHours(2); // Tomorrow at 2:00 AM UTC
 
                 if (now.Hour < 2)
                 {
-                    // If it's before 2:00 AM today, run today at 2:00 AM
                     nextRun = now.Date.AddHours(2);
                 }
 

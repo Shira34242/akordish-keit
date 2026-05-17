@@ -56,7 +56,7 @@ public class BumpSchedulerService : BackgroundService
         {
             try
             {
-                BumpEntity(context, schedule.EntityType, schedule.EntityId, now);
+                await BumpEntityAsync(context, schedule.EntityType, schedule.EntityId, now, stoppingToken);
 
                 schedule.RemainingTimes--;
 
@@ -88,45 +88,47 @@ public class BumpSchedulerService : BackgroundService
             await context.SaveChangesAsync(stoppingToken);
     }
 
-    private static void BumpEntity(AkordishKeitDbContext context, string entityType, int entityId, DateTime bumpedAt)
+    private static async Task BumpEntityAsync(AkordishKeitDbContext context, string entityType, int entityId, DateTime bumpedAt, CancellationToken ct)
     {
         switch (entityType)
         {
             case "Song":
-                context.Songs
+                await context.Songs
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s
+                    .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1), ct);
                 break;
             case "Article":
-                context.Articles
+                await context.Articles
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s
+                    .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1), ct);
                 break;
             case "Playlist":
-                context.Playlists
+                await context.Playlists
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s
+                    .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1), ct);
                 break;
             case "ServiceProvider":
-                context.ServiceProviders
+                await context.ServiceProviders
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s
+                    .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1), ct);
                 break;
             case "Artist":
-                context.Artists
+                await context.Artists
                     .Where(e => e.Id == entityId)
-                    .ExecuteUpdate(s => s
+                    .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1), ct);
                 break;
+            default:
+                throw new InvalidOperationException($"Unknown bump entity type: {entityType}");
         }
     }
 }

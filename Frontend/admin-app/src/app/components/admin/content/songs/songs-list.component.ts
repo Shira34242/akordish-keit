@@ -1,8 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
 import { SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
@@ -21,7 +21,8 @@ import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.compon
   templateUrl: './songs-list.component.html',
   styleUrls: ['./songs-list.component.css']
 })
-export class SongsListComponent implements OnInit {
+export class SongsListComponent implements OnInit, OnDestroy {
+  private songUpdatedSub?: Subscription;
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
   private readonly router = inject(Router);
@@ -73,9 +74,13 @@ export class SongsListComponent implements OnInit {
     this.loadSongs();
 
     // האזנה לעדכוני שירים (הוספה/עריכה)
-    this.modalService.songUpdated$.subscribe(() => {
+    this.songUpdatedSub = this.modalService.songUpdated$.subscribe(() => {
       this.loadSongs();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.songUpdatedSub?.unsubscribe();
   }
   
   loadSongs(): void {

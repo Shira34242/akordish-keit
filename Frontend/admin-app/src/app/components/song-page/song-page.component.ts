@@ -175,6 +175,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     // Auto Scroll State
     private scrollInterval: any = null;
     private authSubscription?: Subscription;
+    private routeSub?: Subscription;
+    private queryParamsSub?: Subscription;
 
     constructor(
         private route: ActivatedRoute,
@@ -204,7 +206,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     }
 
     ngOnInit(): void {
-        this.route.params.subscribe(params => {
+        this.routeSub = this.route.params.subscribe(params => {
             const id = params['id'];
             const slug = params['slug'];
             if (id) {
@@ -213,7 +215,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             }
         });
 
-        this.route.queryParams.subscribe(queryParams => {
+        this.queryParamsSub = this.route.queryParams.subscribe(queryParams => {
             const playlistId = queryParams['playlistId'];
             const view = queryParams['view'];
             if (this.isSongView(view) && view !== this.selectedInstrument) {
@@ -257,6 +259,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         document.removeEventListener('contextmenu', this.preventContextMenu);
         document.removeEventListener('selectstart', this.preventSelect);
         this.authSubscription?.unsubscribe();
+        this.routeSub?.unsubscribe();
+        this.queryParamsSub?.unsubscribe();
         this.stopAutoScroll();
         this.isAutoScroll = false;
         this.stopNewsObserver();
