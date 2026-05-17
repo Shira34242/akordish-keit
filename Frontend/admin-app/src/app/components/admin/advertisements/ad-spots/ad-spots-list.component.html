@@ -49,14 +49,63 @@
     </button>
   </div>
 
+  <div class="list-controls" *ngIf="!loading">
+    <span class="results-info">{{ totalCount }} שטחי פרסום</span>
+    <div class="view-controls">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="data-grid" *ngIf="!loading && filteredAdSpots.length > 0 && viewMode === 'grid'">
+    <div class="grid-card" *ngFor="let spot of filteredAdSpots">
+      <div class="grid-card-avatar">
+        <span class="material-icons">view_quilt</span>
+      </div>
+      <div class="grid-card-name">{{ spot.name }}</div>
+      <div class="grid-card-sub" *ngIf="spot.description">{{ spot.description }}</div>
+      <code class="technical-id">{{ spot.technicalId }}</code>
+      <div class="grid-card-badges">
+        <span class="status-badge" [ngClass]="spot.isActive ? 'active' : 'inactive'">
+          {{ spot.isActive ? 'פעיל' : 'לא פעיל' }}
+        </span>
+        <span class="availability-badge" [ngClass]="getAvailabilityClass(spot.availability)">
+          {{ getAvailabilityText(spot.availability) }}
+        </span>
+      </div>
+      <div class="grid-card-meta">
+        <span>{{ spot.dimensions }}</span>
+        <span>{{ formatCurrency(spot.totalRevenue) }}</span>
+        <span>{{ spot.activeCampaigns }} פעילים</span>
+      </div>
+      <div class="grid-card-actions">
+        <button class="btn-action btn-edit" type="button" (click)="editSpot(spot)" title="ערוך">
+          <span class="material-icons">edit</span>
+        </button>
+        <button class="btn-action btn-delete" type="button" (click)="deleteSpot(spot)" title="מחק">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && filteredAdSpots.length === 0 && viewMode === 'grid'" class="empty-grid-state">
+    לא נמצאו מקומות פרסום
+  </div>
+
   <!-- Table -->
-  <div class="table-container">
+  <div class="table-container" *ngIf="loading || viewMode === 'list'">
     <div *ngIf="loading" class="loading-state">
       <div class="spinner"></div>
       <p>טוען נתונים...</p>
     </div>
 
-    <table *ngIf="!loading" class="ad-spots-table">
+    <table *ngIf="!loading && viewMode === 'list'" class="ad-spots-table">
       <thead>
         <tr>
           <th>שם המיקום</th>
@@ -152,6 +201,17 @@
       (pageChange)="onPageChange($event)">
     </app-pagination>
   </div>
+
+  <app-pagination
+    *ngIf="!loading && viewMode === 'grid'"
+    [totalCount]="totalCount"
+    [pageNumber]="pageNumber"
+    [pageSize]="pageSize"
+    [totalPages]="totalPages"
+    [hasPreviousPage]="hasPreviousPage"
+    [hasNextPage]="hasNextPage"
+    (pageChange)="onPageChange($event)">
+  </app-pagination>
 </div>
 
 <!-- Ad Spot Form Modal -->

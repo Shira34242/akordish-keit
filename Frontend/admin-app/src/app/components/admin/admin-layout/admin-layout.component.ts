@@ -39,8 +39,4 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
             error: () => this.pendingReportsCount = 0
         });
     }
-
-    goBackToSite() {
-        this.router.navigate(['/']);
-    }
 }

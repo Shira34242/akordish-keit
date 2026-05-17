@@ -93,6 +93,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() songPrefill: ImportedSongDraft | null = null;
     @Input() embedded: boolean = false;
     @Input() initialSongRequest: InitialSongRequest | null = null;
+    @Input() flowMode: 'smart' | 'legacy' = 'smart';
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -341,6 +342,10 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.setupKeyAutoDetect();
         this.initProfileSearch();
         this.setupYouTubeSearch();
+
+        if (this.flowMode === 'legacy') {
+            this.isManualAddMode = true;
+        }
 
         // Only setup duplicate check for new songs
         if (!this.editMode) {

@@ -14,7 +14,6 @@
 .overview-grid,
 .intelligence-grid,
 .detail-actions,
-.tab-bar,
 .tab-content {
   padding-inline: var(--space-2xl);
 }
@@ -161,39 +160,11 @@
 }
 
 .btn-refresh .material-icons,
-.tab-btn .material-icons,
 .metric-head .material-icons,
 .insight-item .material-icons,
 .thumb-placeholder .material-icons,
 .error-state .material-icons {
   font-size: 20px;
-}
-
-.tab-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  padding-block: 0 var(--space-lg);
-}
-
-.tab-btn {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  border: 0;
-  border-radius: 999px;
-  background: #F2F2F2;
-  color: #000000;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-weight: 800;
-  padding: 0 var(--space-base);
-}
-
-.tab-btn.active,
-.tab-btn:hover {
-  background: #ddff53;
 }
 
 .overview-grid {
@@ -416,6 +387,42 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
+}
+
+.agency-details-panel {
+  margin-bottom: var(--space-lg);
+}
+
+.agency-details-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-sm);
+}
+
+.agency-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  border-radius: 16px;
+  background: #F2F2F2;
+  padding: var(--space-md) var(--space-base);
+}
+
+.agency-detail-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 300;
+}
+
+.agency-detail-row strong {
+  color: #000000;
+  font-size: var(--font-base);
+  font-weight: 800;
 }
 
 .kpi-card {
@@ -645,7 +652,6 @@
   .overview-grid,
   .intelligence-grid,
   .detail-actions,
-  .tab-bar,
   .tab-content {
     padding-inline: var(--space-lg);
   }
@@ -680,7 +686,6 @@
   .overview-grid,
   .intelligence-grid,
   .detail-actions,
-  .tab-bar,
   .tab-content {
     padding-inline: var(--space-base);
   }

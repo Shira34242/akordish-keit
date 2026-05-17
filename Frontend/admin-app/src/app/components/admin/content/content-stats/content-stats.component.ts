@@ -54,6 +54,11 @@ export class ContentStatsComponent implements OnInit {
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
     if (tab === 'agencies') this.loadAgencyAnalytics();
   }
 
@@ -79,6 +84,7 @@ export class ContentStatsComponent implements OnInit {
   private loadAll(): void {
     this.loadArticles();
     this.loadDashboard();
+    if (this.activeTab === 'agencies') this.loadAgencyAnalytics();
   }
 
   loadArticles(): void {

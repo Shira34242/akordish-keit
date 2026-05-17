@@ -360,7 +360,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
 
   createNew(): void {
     // פתיחת המודאל של הוספת שיר
-    this.modalService.openAddSongModal();
+    this.modalService.openAddSongModal({ flowMode: 'legacy' });
   }
 
   editSong(id: number): void {

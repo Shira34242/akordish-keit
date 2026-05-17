@@ -2,19 +2,10 @@
     <!-- Admin Header -->
     <header class="admin-header">
         <div class="header-inner">
-            <div class="header-right">
-                <div class="logo-area">
-                    <span class="material-symbols-outlined logo-icon">music_note</span>
-                    <span class="logo-text">אקורדישקייט</span>
-                    <span class="admin-badge">ניהול</span>
-                </div>
-            </div>
+            <a routerLink="/admin/dashboard" routerLinkActive="active" class="btn-dashboard header-dashboard">מרכז הבקרה</a>
 
             <div class="header-center">
                 <nav class="admin-nav">
-                    <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
-                        <span>מרכז בקרה</span>
-                    </a>
                     <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/users" class="nav-item nav-parent">
                             <span>משתמשים</span>
@@ -48,6 +39,7 @@
                             <a routerLink="/admin/analytics" [queryParams]="{tab:'events'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">הופעות</a>
                             <a routerLink="/admin/analytics" [queryParams]="{tab:'buttons'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">לחצנים</a>
                             <a routerLink="/admin/analytics" [queryParams]="{tab:'ads'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">פרסומות</a>
+                            <a routerLink="/admin/analytics" [queryParams]="{tab:'agencies'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">סוכנויות</a>
                         </div>
                     </div>
                     <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
@@ -60,9 +52,6 @@
                             <a routerLink="/admin/advertising/clients" routerLinkActive="active-sub" class="sub-nav-item">לקוחות</a>
                         </div>
                     </div>
-                    <a routerLink="/admin/email" routerLinkActive="active" class="nav-item">
-                        <span>מיילים</span>
-                    </a>
                     <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/notifications" class="nav-item nav-parent">
                             <span>התראות</span>
@@ -73,6 +62,7 @@
                                 <span>דיווחים</span>
                                 <span class="report-badge" *ngIf="pendingReportsCount > 0">{{ pendingReportsCount > 99 ? '99+' : pendingReportsCount }}</span>
                             </a>
+                            <a routerLink="/admin/notifications/email" routerLinkActive="active-sub" class="sub-nav-item">מיילים</a>
                         </div>
                     </div>
                     <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
@@ -91,10 +81,39 @@
             </div>
 
             <div class="header-left">
-                <button class="btn-back-site" (click)="goBackToSite()">
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                    <span>חזרה לאתר</span>
-                </button>
+                <div class="header-left-group" aria-label="מעבר מהיר לדפי האתר">
+                    <button type="button" class="site-menu-trigger" aria-label="פתיחת תפריט האתר">
+                        <span class="material-symbols-outlined">apps</span>
+                        <span>תפריט האתר</span>
+                    </button>
+
+                    <div class="site-menu-panel">
+                    <nav class="desktop-nav">
+                        <div class="nav-pills">
+                            <ul class="main-nav">
+                                <li>
+                                    <a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a>
+                                </li>
+                                <li>
+                                    <a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a>
+                                </li>
+                                <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+                                    <a class="nav-link nav-parent" routerLink="/music-news">חדשות</a>
+                                    <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
+                                        <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
+                                        <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
+                                        <a routerLink="/podcasts" routerLinkActive="active-sub" class="site-sub-nav-item">פודקאסטים</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </nav>
+                    <a class="btn-music-index" routerLink="/professionals">
+                        <span class="material-icons index-search-icon">search</span>
+                        <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
+                    </a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>

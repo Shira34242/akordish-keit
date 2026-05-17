@@ -32,6 +32,7 @@ export class PodcastsListComponent implements OnInit {
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
   activeTab: 'podcasts' | 'episodes' = 'episodes';
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-podcasts-view') as 'list' | 'grid') || 'list';
 
   currentPage = 1;
   pageSize = 25;
@@ -82,6 +83,11 @@ export class PodcastsListComponent implements OnInit {
   switchTab(tab: 'podcasts' | 'episodes'): void {
     this.activeTab = tab;
     this.clearSelection();
+  }
+
+  setView(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
+    localStorage.setItem('admin-podcasts-view', mode);
   }
 
   get selectedCount(): number {

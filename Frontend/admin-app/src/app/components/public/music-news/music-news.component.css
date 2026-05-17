@@ -251,14 +251,13 @@
 
   .managed-row,
   .stream-row {
-    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);
   }
 
   .managed-cell,
   .stream-cell {
     border-radius: 14px;
-    height: 190px;
+    height: 160px;
   }
 
   .managed-cell ::ng-deep .banner-title { font-size: var(--font-sm); line-height: 1.2; }

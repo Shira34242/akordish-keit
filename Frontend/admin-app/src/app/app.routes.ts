@@ -428,14 +428,15 @@ export const routes: Routes = [
                         path: 'reports',
                         loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
                         title: 'ניהול דיווחים - אקורדישקייט'
+                    },
+                    {
+                        path: 'email',
+                        loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
+                        title: 'שליחת מייל - אקורדישקייט'
                     }
                 ]
             },
-            {
-                path: 'email',
-                loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
-                title: 'שליחת מייל - אקורדישקייט'
-            },
+            { path: 'email', redirectTo: 'notifications/email', pathMatch: 'full' },
             { path: 'content/stats', redirectTo: '/admin/analytics', pathMatch: 'full' },
             {
                 path: 'advertising',

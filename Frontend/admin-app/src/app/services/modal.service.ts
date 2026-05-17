@@ -6,6 +6,7 @@ export interface ModalState {
   editMode: boolean;
   songToEdit?: any;
   songPrefill?: any;
+  flowMode?: 'smart' | 'legacy';
 }
 
 export interface ReportModalState {
@@ -22,7 +23,8 @@ export class ModalService {
   private modalState = new BehaviorSubject<ModalState>({
     isOpen: false,
     editMode: false,
-    songToEdit: null
+    songToEdit: null,
+    flowMode: 'smart'
   });
 
   private songUpdated = new Subject<void>();
@@ -37,12 +39,13 @@ export class ModalService {
   songUpdated$ = this.songUpdated.asObservable();
   reportModalState$ = this.reportModalState.asObservable();
 
-  openAddSongModal() {
+  openAddSongModal(options: { flowMode?: 'smart' | 'legacy' } = {}) {
     this.modalState.next({
       isOpen: true,
       editMode: false,
       songToEdit: null,
-      songPrefill: null
+      songPrefill: null,
+      flowMode: options.flowMode ?? 'smart'
     });
   }
 
@@ -51,7 +54,8 @@ export class ModalService {
       isOpen: true,
       editMode: false,
       songToEdit: null,
-      songPrefill
+      songPrefill,
+      flowMode: 'legacy'
     });
   }
 
@@ -60,7 +64,8 @@ export class ModalService {
       isOpen: true,
       editMode: true,
       songToEdit: song,
-      songPrefill: null
+      songPrefill: null,
+      flowMode: 'legacy'
     });
   }
 
@@ -69,7 +74,8 @@ export class ModalService {
       isOpen: false,
       editMode: false,
       songToEdit: null,
-      songPrefill: null
+      songPrefill: null,
+      flowMode: 'smart'
     });
   }
 

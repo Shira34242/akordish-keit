@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -19,6 +19,10 @@ export class BlogListComponent implements OnInit, OnDestroy {
 
   private readonly articleService = inject(ArticleService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
+
+  isMobile = false;
+  private mobileMql?: MediaQueryList;
 
 
   private readonly pageSize = 12;
@@ -35,11 +39,18 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private observer?: IntersectionObserver;
 
   ngOnInit(): void {
+    this.mobileMql = window.matchMedia('(max-width: 640px)');
+    this.isMobile = this.mobileMql.matches;
+    this.mobileMql.addEventListener('change', (e) => {
+      this.ngZone.run(() => { this.isMobile = e.matches; });
+    });
+
     this.loadInitialArticles();
   }
 
   ngOnDestroy(): void {
     this.observer?.disconnect();
+    this.mobileMql?.removeEventListener('change', () => {});
   }
 
   private loadInitialArticles(): void {
@@ -100,6 +111,13 @@ export class BlogListComponent implements OnInit, OnDestroy {
   }
 
   getManagedRows(): { slots: number[]; gridCols: string }[] {
+    if (this.isMobile) {
+      return [
+        { slots: [0, 1], gridCols: '1fr 1fr' },
+        { slots: [2], gridCols: '1fr' },
+        { slots: [3, 4], gridCols: '1fr 1fr' }
+      ];
+    }
     return [
       { slots: [0, 1], gridCols: '1fr 1fr' },
       { slots: [2, 3, 4], gridCols: '1fr 1fr 1fr' }
@@ -109,6 +127,18 @@ export class BlogListComponent implements OnInit, OnDestroy {
   getStreamRows(): { articles: Article[]; gridCols: string }[] {
     const rows: { articles: Article[]; gridCols: string }[] = [];
     let i = 0;
+
+    if (this.isMobile) {
+      let rowType = 0;
+      while (i < this.streamArticles.length) {
+        const count = rowType % 2 === 0 ? 2 : 1;
+        const end = Math.min(i + count, this.streamArticles.length);
+        rows.push({ articles: this.streamArticles.slice(i, end), gridCols: count === 2 ? '1fr 1fr' : '1fr' });
+        i = end;
+        rowType++;
+      }
+      return rows;
+    }
 
     const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
     const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];

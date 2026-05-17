@@ -94,6 +94,44 @@
   color: #ffffff;
 }
 
+.list-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  padding: var(--space-base) var(--space-xl);
+  border-radius: 20px;
+  background: #F2F2F2;
+}
+
+.results-info {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: #000000;
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.view-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  cursor: pointer;
+}
+
+.view-btn.active,
+.view-btn:hover {
+  background: #ddff53;
+}
+
 .search-box {
   display: flex;
   align-items: center;
@@ -117,7 +155,8 @@ select {
 }
 
 .status-cell select,
-.series-status {
+.series-status,
+.episode-status {
   min-height: 32px;
   background: #ffffff;
 }
@@ -157,7 +196,8 @@ tbody tr.selected {
 }
 
 .selection-cell input,
-.series-select input {
+.series-select input,
+.episode-select input {
   width: 18px;
   height: 18px;
   accent-color: #000000;
@@ -249,7 +289,14 @@ td small,
   gap: var(--space-md);
 }
 
-.series-card {
+.episodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-md);
+}
+
+.series-card,
+.episode-card {
   position: relative;
   min-height: 12rem;
   padding: var(--space-lg);
@@ -260,11 +307,13 @@ td small,
   align-content: start;
 }
 
-.series-card.selected {
+.series-card.selected,
+.episode-card.selected {
   background: #fbffd9;
 }
 
-.series-select {
+.series-select,
+.episode-select {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
@@ -275,7 +324,8 @@ td small,
   justify-content: center;
 }
 
-.series-image {
+.series-image,
+.episode-image {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 16px;
@@ -286,6 +336,22 @@ td small,
   place-items: center;
 }
 
-.series-image .material-icons {
+.series-image .material-icons,
+.episode-image .material-icons {
   font-size: 34px;
+}
+
+.episode-card h3 {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 800;
+  line-height: var(--lh-heading);
+  color: #000000;
+}
+
+.episode-card p,
+.episode-card small {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
 }

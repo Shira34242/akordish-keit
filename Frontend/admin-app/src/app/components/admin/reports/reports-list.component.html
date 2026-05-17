@@ -52,11 +52,64 @@
     <!-- Stats -->
     <div class="stats">
       <span class="stat-item">סה"כ: {{ totalItems }}</span>
+      <div class="view-controls" *ngIf="!loading">
+        <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+          <span class="material-icons">view_list</span>
+        </button>
+        <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+          <span class="material-icons">grid_view</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="reports-grid" *ngIf="!loading && reports.length > 0 && viewMode === 'grid'">
+    <div class="report-card" *ngFor="let report of reports; trackBy: trackByReportId" [class.expanded]="expandedReportId === report.id">
+      <div class="report-card-header">
+        <span class="date-cell">{{ report.reportedAt | date:'d/M/yy HH:mm' }}</span>
+        <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+          {{ statusLabels[report.status] }}
+        </span>
+      </div>
+      <h3>{{ report.contentTitle }}</h3>
+      <div class="report-card-badges">
+        <span class="content-type-badge">{{ contentTypeLabels[report.contentType] }}</span>
+        <span class="report-type-badge">{{ reportTypeLabels[report.reportType] }}</span>
+      </div>
+      <p class="reporter-line">{{ report.reporterUsername || 'אורח' }}</p>
+      <p class="description" *ngIf="expandedReportId === report.id">{{ report.description }}</p>
+
+      <div class="report-card-actions">
+        <button class="action-btn btn-expand" type="button" (click)="toggleExpand(report.id)" title="הצג פרטים">
+          <span class="material-icons">{{ expandedReportId === report.id ? 'expand_less' : 'expand_more' }}</span>
+        </button>
+        <button class="action-btn btn-link" type="button" (click)="goToContent(report)" title="עבור לתוכן" *ngIf="!isNewContentReport(report)">
+          <span class="material-icons">open_in_new</span>
+        </button>
+        <ng-container *ngIf="isNewContentReport(report) && report.status === 'Pending'">
+          <button *ngIf="report.reportType === 'NewArtist'" class="action-btn btn-approve" type="button" (click)="approveNewArtist(report)" title="צור פרופיל אמן">
+            <span class="material-icons">person_add</span>
+          </button>
+          <button *ngIf="report.reportType !== 'NewArtist'" class="action-btn btn-approve" type="button" (click)="resolveAsPending(report)" title="אשר">
+            <span class="material-icons">check</span>
+          </button>
+          <button class="action-btn btn-dismiss" type="button" (click)="dismissItem(report)" title="דחה">
+            <span class="material-icons">close</span>
+          </button>
+        </ng-container>
+        <button class="action-btn btn-edit" type="button" (click)="openStatusModal(report)" title="עדכן סטטוס" *ngIf="!isNewContentReport(report) && report.status === 'Pending'">
+          <span class="material-icons">edit</span>
+        </button>
+        <button class="action-btn btn-delete" type="button" (click)="deleteReport(report.id)" title="מחק">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="table-container">
+  <div class="table-container" *ngIf="loading || reports.length === 0 || viewMode === 'list'">
     <div *ngIf="loading" class="loading-state">
       <div class="spinner"></div>
       <p>טוען דיווחים...</p>
@@ -67,7 +120,7 @@
       <p>אין דיווחים להצגה</p>
     </div>
 
-    <table *ngIf="!loading && reports.length > 0" class="reports-table">
+    <table *ngIf="!loading && reports.length > 0 && viewMode === 'list'" class="reports-table">
       <thead>
         <tr>
           <th>תאריך</th>
