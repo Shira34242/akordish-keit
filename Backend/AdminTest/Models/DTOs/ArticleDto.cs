@@ -3,9 +3,9 @@ namespace AkordishKeit.Models.DTOs;
 public class ArticleDto
 {
     public int Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public string? Subtitle { get; set; }
-    public string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
     public string? FeaturedImageUrl { get; set; }
     public DateTime PublishDate { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -16,8 +16,8 @@ public class ArticleDto
     public List<int> CategoryIds { get; set; } = new();
     public List<string> CategoryNames { get; set; } = new();
     public int ContentType { get; set; }
-    public string ContentTypeName { get; set; }
-    public string Slug { get; set; }
+    public string ContentTypeName { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
     public string? CanonicalUrl { get; set; }
     public string? VideoEmbedUrl { get; set; }
     public string? AudioEmbedUrl { get; set; }
@@ -26,7 +26,7 @@ public class ArticleDto
     public bool IsFeatured { get; set; }
     public int DisplayOrder { get; set; }
     public int Status { get; set; }
-    public string StatusName { get; set; }
+    public string StatusName { get; set; } = string.Empty;
     public DateTime? ScheduledDate { get; set; }
     public bool IsPremium { get; set; }
     public string? MetaTitle { get; set; }
@@ -84,7 +84,7 @@ public class ArticleArtistDto
 public class ArticleGalleryImageDto
 {
     public int Id { get; set; }
-    public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }
     public int DisplayOrder { get; set; }
 }

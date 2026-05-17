@@ -3,9 +3,9 @@ namespace AkordishKeit.Models.Entities;
 public class Article
 {
     public int Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public string? Subtitle { get; set; }
-    public string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
     public string? FeaturedImageUrl { get; set; }
     public DateTime PublishDate { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -14,7 +14,7 @@ public class Article
     public int BumpCount { get; set; }
     public string? AuthorName { get; set; }
     public int ContentType { get; set; }
-    public string Slug { get; set; }
+    public string Slug { get; set; } = string.Empty;
     public string? CanonicalUrl { get; set; }
     public string? VideoEmbedUrl { get; set; }
     public string? AudioEmbedUrl { get; set; }
@@ -47,10 +47,10 @@ public class Article
     public int? SubmittedByUserId { get; set; }
 
     // Navigation Properties
-    public virtual ICollection<ArticleTag> ArticleTags { get; set; }
-    public virtual ICollection<ArticleGalleryImage> GalleryImages { get; set; }
-    public virtual ICollection<ArticleArticleCategory> ArticleCategories { get; set; }
-    public virtual ICollection<ArticleArtist> ArticleArtists { get; set; }
+    public virtual ICollection<ArticleTag> ArticleTags { get; set; } = new List<ArticleTag>();
+    public virtual ICollection<ArticleGalleryImage> GalleryImages { get; set; } = new List<ArticleGalleryImage>();
+    public virtual ICollection<ArticleArticleCategory> ArticleCategories { get; set; } = new List<ArticleArticleCategory>();
+    public virtual ICollection<ArticleArtist> ArticleArtists { get; set; } = new List<ArticleArtist>();
     public virtual User? UploaderUser { get; set; }
     public virtual User? SubmittedByUser { get; set; }
 }

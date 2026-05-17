@@ -9,7 +9,7 @@ namespace AkordishKeit.Models.DTOs
 
     public class GoogleLoginRequest
     {
-        public string IdToken { get; set; }
+        public string IdToken { get; set; } = string.Empty;
         public bool TermsApproved { get; set; }
         public bool MarketingConsent { get; set; }
     }
@@ -138,8 +138,8 @@ namespace AkordishKeit.Models.DTOs
         // לא מחזירים יותר JWT Token בגוף התגובה
         // JWT נשלח ב-httpOnly cookie (מאובטח יותר)
         // במקום זה מחזירים CSRF Token (לשליחה ב-headers)
-        public string CsrfToken { get; set; }
-        public UserDto User { get; set; }
+        public string CsrfToken { get; set; } = string.Empty;
+        public UserDto User { get; set; } = null!;
         public bool RequiresProfileCompletion { get; set; }
     }
 
@@ -149,16 +149,16 @@ namespace AkordishKeit.Models.DTOs
         public int Id { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("username")]
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         [System.Text.Json.Serialization.JsonPropertyName("email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [System.Text.Json.Serialization.JsonPropertyName("profileImageUrl")]
         public string? ProfileImageUrl { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("role")]
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
 
         [System.Text.Json.Serialization.JsonPropertyName("level")]
         public int Level { get; set; }

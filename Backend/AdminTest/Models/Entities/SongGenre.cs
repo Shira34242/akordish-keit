@@ -8,6 +8,6 @@ public class SongGenre
     public int GenreId { get; set; }
 
     // Navigation Properties
-    public virtual Song Song { get; set; }
-    public virtual Genre Genre { get; set; }
+    public virtual Song Song { get; set; } = null!;
+    public virtual Genre Genre { get; set; } = null!;
 }

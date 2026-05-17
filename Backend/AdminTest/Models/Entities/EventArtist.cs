@@ -11,6 +11,6 @@ public class EventArtist
     public DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public virtual Event Event { get; set; }
-    public virtual Artist Artist { get; set; }
+    public virtual Event Event { get; set; } = null!;
+    public virtual Artist Artist { get; set; } = null!;
 }

@@ -53,7 +53,10 @@ public class SearchController : ControllerBase
                 {
                     Id = s.Id,
                     Title = s.Title,
-                    Subtitle = s.SongArtists.Select(sa => sa.Artist.Name).FirstOrDefault(),
+                    Subtitle = s.SongArtists
+                        .Where(sa => sa.Artist != null)
+                        .Select(sa => sa.Artist!.Name)
+                        .FirstOrDefault(),
                     ImageUrl = s.ImageUrl,
                     Type = "song"
                 })
@@ -72,7 +75,10 @@ public class SearchController : ControllerBase
             {
                 Id = s.Id,
                 Title = s.Title,
-                Subtitle = s.SongArtists.Select(sa => sa.Artist.Name).FirstOrDefault(),
+                Subtitle = s.SongArtists
+                    .Where(sa => sa.Artist != null)
+                    .Select(sa => sa.Artist!.Name)
+                    .FirstOrDefault(),
                 ImageUrl = s.ImageUrl,
                 Type = "song"
             })

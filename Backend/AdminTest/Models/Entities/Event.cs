@@ -97,7 +97,7 @@ namespace AkordishKeit.Models.Entities
         public int? SubmittedByUserId { get; set; }
 
         // Navigation Properties
-        public virtual ICollection<EventArtist> EventArtists { get; set; }
+        public virtual ICollection<EventArtist> EventArtists { get; set; } = new List<EventArtist>();
         public virtual User? SubmittedByUser { get; set; }
     }
 }

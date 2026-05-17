@@ -8,7 +8,7 @@ namespace AkordishKeit.Models.DTOs;
 public class ArtistDetailDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? EnglishName { get; set; }
     public string? ShortBio { get; set; }
     public string? Biography { get; set; }
@@ -57,7 +57,7 @@ public class ArtistDetailDto
 public class ArtistListDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? ShortBio { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsVerified { get; set; }
@@ -75,7 +75,7 @@ public class ArtistListDto
 public class ArtistGalleryImageDto
 {
     public int Id { get; set; }
-    public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }
     public int DisplayOrder { get; set; }
 }
@@ -86,7 +86,7 @@ public class ArtistGalleryImageDto
 public class ArtistVideoDto
 {
     public int Id { get; set; }
-    public string VideoUrl { get; set; }
+    public string VideoUrl { get; set; } = string.Empty;
     public string? Title { get; set; }
     public int DisplayOrder { get; set; }
 }
@@ -125,7 +125,7 @@ public class SocialLinkDto
 {
     public int? Id { get; set; }  // null עבור קישורים חדשים
     public SocialPlatform Platform { get; set; }
-    public string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
 }
 
 /// <summary>

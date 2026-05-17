@@ -11,6 +11,6 @@ public class ArticleArtist
     public DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public virtual Article Article { get; set; }
-    public virtual Artist Artist { get; set; }
+    public virtual Article Article { get; set; } = null!;
+    public virtual Artist Artist { get; set; } = null!;
 }

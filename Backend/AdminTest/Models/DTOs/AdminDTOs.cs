@@ -18,13 +18,13 @@ namespace AkordishKeit.Models.DTOs
     public class RecentJoinDto
     {
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [System.Text.Json.Serialization.JsonPropertyName("date")]
         public DateTime Date { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
 
         [System.Text.Json.Serialization.JsonPropertyName("profileImageUrl")]
         public string? ProfileImageUrl { get; set; }

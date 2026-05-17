@@ -16,6 +16,6 @@ public class SongArtist
     public bool IsTemporary { get; set; } // האם זה אמן זמני
 
     // Navigation Properties
-    public virtual Song Song { get; set; }
+    public virtual Song Song { get; set; } = null!;
     public virtual Artist? Artist { get; set; } // nullable כי אמן זמני לא קשור לטבלת Artists
 }

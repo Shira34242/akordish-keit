@@ -7,11 +7,11 @@ public class ArtistGalleryImage
 {
     public int Id { get; set; }
     public int ArtistId { get; set; }
-    public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }           // כיתוב לתמונה
     public int DisplayOrder { get; set; }           // סדר תצוגה
     public DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public virtual Artist Artist { get; set; }
+    public virtual Artist Artist { get; set; } = null!;
 }

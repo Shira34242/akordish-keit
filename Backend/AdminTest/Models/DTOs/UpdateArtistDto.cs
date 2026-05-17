@@ -68,7 +68,7 @@ public class PerformanceEventInputDto
 /// </summary>
 public class AddGalleryImageDto
 {
-    public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }
     public int DisplayOrder { get; set; }
 }
@@ -78,7 +78,7 @@ public class AddGalleryImageDto
 /// </summary>
 public class AddVideoDto
 {
-    public string VideoUrl { get; set; }
+    public string VideoUrl { get; set; } = string.Empty;
     public string? Title { get; set; }
     public int DisplayOrder { get; set; }
 }
@@ -122,7 +122,7 @@ public class UpdateSocialLinksDto
 public class BoostArtistResponse
 {
     public bool Success { get; set; }
-    public string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
     public DateTime? BoostEndDate { get; set; }
 }
 
@@ -132,6 +132,6 @@ public class BoostArtistResponse
 public class UpgradeToPremiumResponse
 {
     public bool Success { get; set; }
-    public string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
     public string? PaymentUrl { get; set; }
 }

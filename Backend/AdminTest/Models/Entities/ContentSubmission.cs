@@ -20,8 +20,8 @@ namespace AkordishKeit.Models.Entities
         public bool IsDeleted { get; set; }
 
         // Navigation Properties
-        public virtual Song Song { get; set; }
-        public virtual User SubmittedByUser { get; set; }
+        public virtual Song Song { get; set; } = null!;
+        public virtual User SubmittedByUser { get; set; } = null!;
         public virtual User? ReviewedByUser { get; set; }
     }
 

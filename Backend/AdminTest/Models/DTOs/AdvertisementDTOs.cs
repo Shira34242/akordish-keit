@@ -7,10 +7,10 @@ namespace AkordishKeit.Models.DTOs;
 public class ClientDto
 {
     public int Id { get; set; }
-    public string BusinessName { get; set; }
-    public string ContactPerson { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string ContactPerson { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -24,19 +24,19 @@ public class ClientDto
 
 public class CreateClientDto
 {
-    public string BusinessName { get; set; }
-    public string ContactPerson { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string ContactPerson { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
 }
 
 public class UpdateClientDto
 {
-    public string BusinessName { get; set; }
-    public string ContactPerson { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string ContactPerson { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public bool IsActive { get; set; }
 }
@@ -46,9 +46,9 @@ public class UpdateClientDto
 public class AdSpotDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string TechnicalId { get; set; }
-    public string Dimensions { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string TechnicalId { get; set; } = string.Empty;
+    public string Dimensions { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public int RotationIntervalMs { get; set; }
     public string? Description { get; set; }
@@ -58,24 +58,24 @@ public class AdSpotDto
     public int TotalCampaigns { get; set; }
     public int ActiveCampaigns { get; set; }
     public decimal TotalRevenue { get; set; }
-    public string Availability { get; set; } // "Available", "Occupied", "Scheduled"
+    public string Availability { get; set; } = string.Empty; // "Available", "Occupied", "Scheduled"
     public DateTime? NextAvailableDate { get; set; }
 }
 
 public class CreateAdSpotDto
 {
-    public string Name { get; set; }
-    public string TechnicalId { get; set; }
-    public string Dimensions { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string TechnicalId { get; set; } = string.Empty;
+    public string Dimensions { get; set; } = string.Empty;
     public int RotationIntervalMs { get; set; } = 30000;
     public string? Description { get; set; }
 }
 
 public class UpdateAdSpotDto
 {
-    public string Name { get; set; }
-    public string TechnicalId { get; set; }
-    public string Dimensions { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string TechnicalId { get; set; } = string.Empty;
+    public string Dimensions { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public int RotationIntervalMs { get; set; }
     public string? Description { get; set; }
@@ -86,16 +86,16 @@ public class UpdateAdSpotDto
 public class AdCampaignDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
-    public string AdSpotName { get; set; }
+    public string AdSpotName { get; set; } = string.Empty;
     public int ClientId { get; set; }
-    public string ClientName { get; set; }
+    public string ClientName { get; set; } = string.Empty;
     public string? KnownUrl { get; set; }
     public string? MediaUrl { get; set; }
     public string? MobileMediaUrl { get; set; }
     public int Priority { get; set; }
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public decimal Budget { get; set; }
@@ -111,7 +111,7 @@ public class AdCampaignDto
 
 public class CreateAdCampaignDto
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
     public int ClientId { get; set; }
     public string? KnownUrl { get; set; }
@@ -126,7 +126,7 @@ public class CreateAdCampaignDto
 
 public class UpdateAdCampaignDto
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
     public int ClientId { get; set; }
     public string? KnownUrl { get; set; }

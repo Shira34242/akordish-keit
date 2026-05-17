@@ -6,6 +6,6 @@ public class ArticleArticleCategory
     public int CategoryId { get; set; }
 
     // Navigation Properties
-    public virtual Article Article { get; set; }
-    public virtual ArticleCategoryEntity Category { get; set; }
+    public virtual Article Article { get; set; } = null!;
+    public virtual ArticleCategoryEntity Category { get; set; } = null!;
 }

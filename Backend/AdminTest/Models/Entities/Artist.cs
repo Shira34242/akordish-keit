@@ -6,7 +6,7 @@ namespace AkordishKeit.Models.Entities;
 public class Artist
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? EnglishName { get; set; }
 
     // ביוגרפיה
@@ -83,12 +83,12 @@ public class Artist
     public virtual Person? Person { get; set; }
     public virtual Subscription? Subscription { get; set; }  // 🆕 המנוי שמממן את הפרופיל
     public virtual Event? PerformanceEvent { get; set; }     // אירוע מקושר לבאנר ההופעה
-    public virtual ICollection<SongArtist> SongArtists { get; set; }
-    public virtual ICollection<ArtistSocialLink> SocialLinks { get; set; }
-    public virtual ICollection<ArtistGalleryImage> GalleryImages { get; set; }
-    public virtual ICollection<ArtistVideo> Videos { get; set; }
-    public virtual ICollection<ArtistHit> Hits { get; set; }
-    public virtual ICollection<ArtistAlbum> Albums { get; set; }
-    public virtual ICollection<ArticleArtist> ArticleArtists { get; set; }
-    public virtual ICollection<EventArtist> EventArtists { get; set; }
+    public virtual ICollection<SongArtist> SongArtists { get; set; } = new List<SongArtist>();
+    public virtual ICollection<ArtistSocialLink> SocialLinks { get; set; } = new List<ArtistSocialLink>();
+    public virtual ICollection<ArtistGalleryImage> GalleryImages { get; set; } = new List<ArtistGalleryImage>();
+    public virtual ICollection<ArtistVideo> Videos { get; set; } = new List<ArtistVideo>();
+    public virtual ICollection<ArtistHit> Hits { get; set; } = new List<ArtistHit>();
+    public virtual ICollection<ArtistAlbum> Albums { get; set; } = new List<ArtistAlbum>();
+    public virtual ICollection<ArticleArtist> ArticleArtists { get; set; } = new List<ArticleArtist>();
+    public virtual ICollection<EventArtist> EventArtists { get; set; } = new List<EventArtist>();
 }

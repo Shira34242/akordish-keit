@@ -175,7 +175,7 @@ public class ArtistsController : ControllerBase
 
             return Ok(artists);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, "אירעה שגיאה בטעינת האמנים המובילים");
         }

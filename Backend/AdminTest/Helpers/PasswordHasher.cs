@@ -7,7 +7,7 @@ namespace AkordishKeit.Helpers
     /// </summary>
     public class PasswordHasher
     {
-        public static void Main(string[] args)
+        public static void GenerateHash(string[] args)
         {
             // שנה את הסיסמא כאן למה שאת רוצה
             string password = "YourPassword123!";

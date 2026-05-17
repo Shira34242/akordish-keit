@@ -12,6 +12,6 @@ public class SongRating
     public DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public virtual User User { get; set; }
-    public virtual Song Song { get; set; }
+    public virtual User User { get; set; } = null!;
+    public virtual Song Song { get; set; } = null!;
 }

@@ -6,13 +6,13 @@ public class UpdateArticleDto
 {
     [Required]
     [StringLength(250)]
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? Subtitle { get; set; }
 
     [Required]
-    public string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? FeaturedImageUrl { get; set; }
@@ -22,14 +22,14 @@ public class UpdateArticleDto
 
     [Required]
     [MinLength(1)]
-    public List<int> CategoryIds { get; set; }
+    public List<int> CategoryIds { get; set; } = new();
 
     [Required]
     public int ContentType { get; set; }
 
     [Required]
     [StringLength(300)]
-    public string Slug { get; set; }
+    public string Slug { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? CanonicalUrl { get; set; }

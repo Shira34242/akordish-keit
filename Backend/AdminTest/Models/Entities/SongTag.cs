@@ -8,6 +8,6 @@ public class SongTag
     public int TagId { get; set; }
 
     // Navigation Properties
-    public virtual Song Song { get; set; }
-    public virtual Tag Tag { get; set; }
+    public virtual Song Song { get; set; } = null!;
+    public virtual Tag Tag { get; set; } = null!;
 }

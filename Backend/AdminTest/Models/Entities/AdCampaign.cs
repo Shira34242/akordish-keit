@@ -5,7 +5,7 @@ namespace AkordishKeit.Models.Entities;
 public class AdCampaign
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
     public int ClientId { get; set; }
     public string? KnownUrl { get; set; }
@@ -24,8 +24,8 @@ public class AdCampaign
     public int? UpdatedByUserId { get; set; }
 
     // Navigation Properties
-    public virtual AdSpot AdSpot { get; set; }
-    public virtual Client Client { get; set; }
+    public virtual AdSpot AdSpot { get; set; } = null!;
+    public virtual Client Client { get; set; } = null!;
     public virtual User? CreatedByUser { get; set; }
     public virtual User? UpdatedByUser { get; set; }
 }

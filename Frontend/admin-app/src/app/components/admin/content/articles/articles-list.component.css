@@ -40,11 +40,11 @@
 .tabs {
   display: flex;
   gap: var(--space-xs);
-  padding: var(--space-sm) 0 0;
+  padding: var(--space-md) 0 0;
 }
 
 .tab {
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
   background: transparent;
   border: none;
   border-radius: 999px;

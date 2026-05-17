@@ -7,11 +7,11 @@ public class ArtistVideo
 {
     public int Id { get; set; }
     public int ArtistId { get; set; }
-    public string VideoUrl { get; set; }            // YouTube/Vimeo embed URL
+    public string VideoUrl { get; set; } = string.Empty;            // YouTube/Vimeo embed URL
     public string? Title { get; set; }
     public int DisplayOrder { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public virtual Artist Artist { get; set; }
+    public virtual Artist Artist { get; set; } = null!;
 }

@@ -6,13 +6,13 @@ public class CreateArticleDto
 {
     [Required]
     [StringLength(250)]
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? Subtitle { get; set; }
 
     [Required]
-    public string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? FeaturedImageUrl { get; set; }
@@ -21,14 +21,14 @@ public class CreateArticleDto
     public string? AuthorName { get; set; }
 
     [Required]
-    public List<int> CategoryIds { get; set; }
+    public List<int> CategoryIds { get; set; } = new();
 
     [Required]
     public int ContentType { get; set; }
 
     [Required]
     [StringLength(300)]
-    public string Slug { get; set; }
+    public string Slug { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? CanonicalUrl { get; set; }
@@ -90,7 +90,7 @@ public class CreateArticleGalleryImageDto
 {
     [Required]
     [StringLength(500)]
-    public string ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? Caption { get; set; }
