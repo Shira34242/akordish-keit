@@ -6,7 +6,7 @@
     height: 56px;
     position: sticky;
     top: 8px;
-    z-index: 900;
+    z-index: var(--z-base-header);
     direction: rtl;
 }
 
@@ -131,13 +131,17 @@
     padding: 0 var(--space-xs);
     opacity: 1;
     overflow-x: auto;
-    scrollbar-width: none;
     pointer-events: all;
     transition: max-width 0.44s cubic-bezier(0.2, 0.82, 0.22, 1), opacity 0.22s ease 0.08s;
 }
 
 .site-nav-submenu::-webkit-scrollbar {
-    display: none;
+    height: 3px;
+}
+
+.site-nav-submenu::-webkit-scrollbar-thumb {
+    background: #cccccc;
+    border-radius: 999px;
 }
 
 .site-sub-nav-item {
@@ -278,15 +282,12 @@
     max-height: min(72vh, 560px);
     background: transparent;
     border-radius: 0;
-    z-index: 1200;
+    z-index: var(--z-notification-popup);
     direction: rtl;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
-    box-sizing: border-box;
-    border: none;
-    transform-origin: top right;
     animation: notificationPopupIn 0.18s ease-out;
 }
 
@@ -330,11 +331,15 @@
     gap: var(--space-xs);
     overflow: auto;
     padding: 0;
-    scrollbar-width: none;
 }
 
 .notifications-popup-list::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+}
+
+.notifications-popup-list::-webkit-scrollbar-thumb {
+    background: #cccccc;
+    border-radius: 999px;
 }
 
 .notifications-popup-item {
@@ -528,7 +533,7 @@
     position: fixed;
     inset: 0;
     background: rgba(255, 255, 255, 0.82);
-    z-index: 1250;
+    z-index: var(--z-notification-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -574,11 +579,15 @@
     gap: var(--space-xs);
     overflow: auto;
     padding: var(--space-xs);
-    scrollbar-width: none;
 }
 
 .notifications-chat-list::-webkit-scrollbar {
-    display: none;
+    width: 4px;
+}
+
+.notifications-chat-list::-webkit-scrollbar-thumb {
+    background: #cccccc;
+    border-radius: 999px;
 }
 
 .notifications-chat-bubble {
@@ -679,7 +688,7 @@
     right: 0;
     background: transparent;
     min-width: 0;
-    z-index: 1000;
+    z-index: var(--z-dropdown-menu);
     animation: slideDown 0.2s ease-out;
     direction: rtl;
     display: flex;
@@ -724,12 +733,18 @@
     font-size: var(--font-sm);
     color: #000;
     margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-menu-email {
     font-family: 'Open Sans', sans-serif;
     font-size: var(--font-xs);
     color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-menu-divider {
@@ -943,7 +958,7 @@
     position: fixed;
     bottom: 24px;
     left: 24px;
-    z-index: 1000;
+    z-index: var(--z-dropdown-menu);
     display: flex;
     flex-direction: column-reverse;
     align-items: flex-end;
@@ -1013,7 +1028,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
-    z-index: 1300;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;

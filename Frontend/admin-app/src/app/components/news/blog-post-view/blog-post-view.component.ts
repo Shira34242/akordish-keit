@@ -133,7 +133,6 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadArticle(slug);

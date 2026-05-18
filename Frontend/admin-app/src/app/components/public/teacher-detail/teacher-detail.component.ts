@@ -134,7 +134,6 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   loadTeacher(id: number): void {
     this.loading = true;
-    window.scrollTo(0, 0);
     this.teacherService.getTeacherById(id).subscribe({
       next: teacher => {
         this.teacher = teacher;

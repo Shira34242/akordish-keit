@@ -5,6 +5,18 @@
 :root {
   --color-error: #d93025;
 
+  /* Z-Index Layers */
+  --z-base-header: 900;
+  --z-sticky-elements: 950;
+  --z-dropdown-menu: 1000;
+  --z-site-menu-panel: 1100;
+  --z-notification-popup: 1200;
+  --z-notification-overlay: 1250;
+  --z-modal: 1300;
+  --z-modal-top: 2000;
+  --z-tooltip: 2100;
+  --z-max-overlay: 10000;
+
   /* Font Sizes */
   --font-xs:   0.75rem;   /* 12px  — תגיות, מטא-מידע, כיתובי תמונה */
   --font-sm:   0.875rem;  /* 14px  — טקסט משני, ניווט, כפתורים */
@@ -184,10 +196,8 @@ body::-webkit-scrollbar-button,
 /* ========================================
    Events page — single-screen, no scroll, no footer
    ======================================== */
-html:has(app-events-page),
 body:has(app-events-page) {
   overflow: hidden;
-  height: 100vh;
 }
 
 body:has(app-events-page) .main-footer {
@@ -197,4 +207,5 @@ body:has(app-events-page) .main-footer {
 body:has(app-events-page) .main-content {
   min-height: 0;
   flex: 0 0 auto;
+  overflow: hidden;
 }

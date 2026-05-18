@@ -122,7 +122,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    window.scrollTo(0, 0);
     this.route.params.subscribe(params => {
       const id = +params['id'];
       if (id) this.loadArtist(id);
