@@ -150,7 +150,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       },
       error: () => {
         this.loading = false;
-        this.router.navigate(['/teachers']);
+        this.router.navigate(['/404']);
       }
     });
   }

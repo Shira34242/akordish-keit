@@ -47,6 +47,11 @@
     </button>
   </div>
 
+  <div class="permission-alert" *ngIf="!loading && loadError" role="alert">
+    <span class="material-icons">lock</span>
+    <span>{{ loadError }}</span>
+  </div>
+
   <!-- Bulk Actions -->
   <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
     <div class="bulk-summary">

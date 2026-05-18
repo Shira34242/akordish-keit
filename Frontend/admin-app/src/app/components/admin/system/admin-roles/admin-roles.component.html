@@ -18,7 +18,7 @@
       <button
         type="button"
         class="role-row"
-        *ngFor="let role of roles"
+        *ngFor="let role of roles; trackBy: trackByRoleId"
         [class.active]="selectedRole?.id === role.id"
         (click)="editRole(role)">
         <span>
@@ -29,7 +29,7 @@
       </button>
     </aside>
 
-    <form class="role-editor" (ngSubmit)="saveRole()">
+    <form class="role-editor" (ngSubmit)="saveRole()" #roleForm="ngForm">
       <div class="editor-head">
         <div>
           <h3>{{ selectedRole ? 'עריכת תפקיד' : 'תפקיד חדש' }}</h3>
@@ -63,17 +63,21 @@
       </div>
 
       <div class="permissions-panel">
-        <div class="permissions-group" *ngFor="let group of permissionsByGroup()">
+        <div class="permissions-group" *ngFor="let group of permissionGroups; trackBy: trackByGroupKey">
           <h4>{{ group.group }}</h4>
           <div class="permission-options">
             <button
               type="button"
               class="permission-chip"
-              *ngFor="let permission of group.items"
+              *ngFor="let permission of group.items; trackBy: trackByPermissionKey"
               [class.selected]="hasPermission(permission.key)"
-              (click)="togglePermission(permission.key)">
+              [title]="permission.description"
+              (click)="togglePermission(permission.key, $event)">
               <span class="material-icons">{{ hasPermission(permission.key) ? 'check' : 'add' }}</span>
-              {{ permission.label }}
+              <span class="permission-chip-text">
+                <span class="permission-chip-label">{{ permission.label }}</span>
+                <span class="permission-chip-desc">{{ permission.description }}</span>
+              </span>
             </button>
           </div>
         </div>

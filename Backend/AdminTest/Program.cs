@@ -114,7 +114,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.MapInboundClaims = true;
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -155,10 +155,17 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("SubscribedTier", policy =>
         policy.Requirements.Add(new SubscribedTierRequirement()));
+
+    foreach (var perm in AdminRoleService.AllPermissionKeys)
+    {
+        options.AddPolicy(perm, policy =>
+            policy.Requirements.Add(new PermissionRequirement(perm)));
+    }
 });
 
 // Register Authorization Handlers
 builder.Services.AddScoped<IAuthorizationHandler, SubscribedTierHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
 // Add CORS for Angular
 // ⚠️ חשוב! AllowCredentials() מאפשר שליחת cookies בין domains

@@ -2,6 +2,7 @@ export interface AdminPermission {
   key: string;
   label: string;
   group: string;
+  description?: string;
 }
 
 export interface AdminRole {

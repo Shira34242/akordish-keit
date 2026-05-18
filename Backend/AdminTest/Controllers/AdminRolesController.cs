@@ -7,7 +7,7 @@ namespace AkordishKeit.Controllers;
 
 [Route("api/admin/roles")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "roles.manage")]
 public class AdminRolesController : ControllerBase
 {
     private readonly IAdminRoleService _service;

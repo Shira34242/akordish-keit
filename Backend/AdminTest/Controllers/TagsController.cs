@@ -80,7 +80,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<SystemItemDto>> PostTag(CreateSystemItemDto dto)
     {
         var tag = new Tag
@@ -106,7 +106,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> PutTag(int id, CreateSystemItemDto dto)
     {
         var tag = await _context.Tags.FindAsync(id);
@@ -141,7 +141,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteTag(int id)
     {
         var tag = await _context.Tags.FindAsync(id);
@@ -243,7 +243,7 @@ public class TagsController : ControllerBase
     }
 
     [HttpPost("bulk-delete")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");

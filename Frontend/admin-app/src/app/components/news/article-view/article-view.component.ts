@@ -174,8 +174,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         error: (error) => {
           console.error('Error loading article:', error);
           this.loading = false;
-          // Navigate back to home on error
-          this.router.navigate(['/']);
+          this.router.navigate(['/404']);
         }
       });
   }

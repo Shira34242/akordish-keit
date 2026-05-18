@@ -116,7 +116,7 @@ public class ReportsController : ControllerBase
 
     // GET: api/Reports
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "reports.manage")]
     public async Task<ActionResult<PagedResult<ReportDto>>> GetReports(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -130,7 +130,7 @@ public class ReportsController : ControllerBase
 
     // GET: api/Reports/5
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "reports.manage")]
     public async Task<ActionResult<ReportDto>> GetReport(int id)
     {
         var report = await _reportService.GetReportByIdAsync(id);
@@ -145,7 +145,7 @@ public class ReportsController : ControllerBase
 
     // PATCH: api/Reports/5/status
     [HttpPatch("{id}/status")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "reports.manage")]
     public async Task<IActionResult> UpdateReportStatus(int id, [FromBody] UpdateReportStatusDto dto)
     {
         try
@@ -177,7 +177,7 @@ public class ReportsController : ControllerBase
 
     // POST: api/Reports/5/approve-artist
     [HttpPost("{id}/approve-artist")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "reports.manage")]
     public async Task<IActionResult> ApproveNewArtist(int id)
     {
         try
@@ -203,7 +203,7 @@ public class ReportsController : ControllerBase
 
     // DELETE: api/Reports/5
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "reports.manage")]
     public async Task<IActionResult> DeleteReport(int id)
     {
         var success = await _reportService.DeleteReportAsync(id);

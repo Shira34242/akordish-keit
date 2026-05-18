@@ -2,6 +2,7 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Outpu
 import { CommonModule } from '@angular/common';
 import { LanguageService } from '../../services/language.service';
 import { HttpEventType } from '@angular/common/http';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TeacherService } from '../../services/teacher.service';
@@ -24,10 +25,20 @@ import {
   SubscriptionDto
 } from '../../models/subscription.model';
 
+const SOCIAL_SVG_ICONS: Record<number, string> = {
+  [SocialPlatform.Instagram]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-width="3"/></svg>`,
+  [SocialPlatform.Facebook]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
+  [SocialPlatform.YouTube]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z M9.75 8.98 L15.5 12 L9.75 15.02 Z"/></svg>`,
+  [SocialPlatform.TikTok]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.77a8.18 8.18 0 0 0 4.79 1.53V6.86a4.85 4.85 0 0 1-1.02-.17z"/></svg>`,
+  [SocialPlatform.Twitter]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  [SocialPlatform.Spotify]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>`,
+  [SocialPlatform.Zing]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M8 10.5L16 7v2.5L8 13.5z"/></svg>`,
+};
+
 interface PlatformLinkOption {
   platform: SocialPlatform;
   label: string;
-  icon: string;
+  svg: SafeHtml;
   placeholder: string;
 }
 
@@ -83,6 +94,7 @@ export class TeacherCreateComponent implements OnInit {
   socialLinks: SocialLinkDto[] = [];
   activeSocialPlatform: SocialPlatform | null = null;
   profileImageUploading = false;
+  bannerImageUploading = false;
   galleryUploadingCount = 0;
   galleryUploadProgress = 0;
   showVideoLinkInput = false;
@@ -100,13 +112,13 @@ export class TeacherCreateComponent implements OnInit {
   audienceOptions = getTargetAudienceOptions();
   get socialPlatformOptions(): PlatformLinkOption[] {
     return [
-      { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: this.langService.translate('create.link_instagram') },
-      { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: this.langService.translate('create.link_facebook') },
-      { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: this.langService.translate('create.link_youtube') },
-      { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: this.langService.translate('create.link_tiktok') },
-      { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: this.langService.translate('create.link_x') },
-      { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'album', placeholder: this.langService.translate('create.link_spotify') },
-      { platform: SocialPlatform.Zing, label: 'Zing', icon: 'library_music', placeholder: this.langService.translate('create.link_zing') },
+      { platform: SocialPlatform.Instagram, label: 'Instagram', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Instagram]), placeholder: this.langService.translate('create.link_instagram') },
+      { platform: SocialPlatform.Facebook, label: 'Facebook', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Facebook]), placeholder: this.langService.translate('create.link_facebook') },
+      { platform: SocialPlatform.YouTube, label: 'YouTube', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.YouTube]), placeholder: this.langService.translate('create.link_youtube') },
+      { platform: SocialPlatform.TikTok, label: 'TikTok', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.TikTok]), placeholder: this.langService.translate('create.link_tiktok') },
+      { platform: SocialPlatform.Twitter, label: 'Twitter / X', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Twitter]), placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Spotify, label: 'Spotify', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Spotify]), placeholder: this.langService.translate('create.link_spotify') },
+      { platform: SocialPlatform.Zing, label: 'Zing', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Zing]), placeholder: this.langService.translate('create.link_zing') },
     ];
   }
 
@@ -129,7 +141,8 @@ export class TeacherCreateComponent implements OnInit {
     public router: Router,
     private host: ElementRef<HTMLElement>,
     private requiredFieldFeedback: RequiredFieldFeedbackService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit() {
@@ -410,6 +423,26 @@ export class TeacherCreateComponent implements OnInit {
     });
   }
 
+  onBannerImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.bannerImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (result) => {
+        this.bannerImageUrl = result.url;
+        this.bannerImageUploading = false;
+        input.value = '';
+      },
+      error: (error) => {
+        console.error('Error uploading banner image:', error);
+        this.bannerImageUploading = false;
+        input.value = '';
+      }
+    });
+  }
+
   onGalleryFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
@@ -673,13 +706,13 @@ export class TeacherCreateComponent implements OnInit {
 
     if (!this.email || !this.email.trim()) {
       this.error = this.langService.translate('common.enter_email');
-      this.showRequiredStep(2, '#email');
+      this.showRequiredStep(1, '#email');
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = this.langService.translate('common.enter_phone');
-      this.showRequiredStep(2, '#phoneNumber');
+      this.showRequiredStep(1, '#phoneNumber');
       return false;
     }
 

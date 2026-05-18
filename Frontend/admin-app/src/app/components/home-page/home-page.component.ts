@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, E
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
@@ -188,6 +188,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    HomePageComponent.savedScrollY = window.scrollY;
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
     this.viralObserver?.disconnect();
@@ -238,61 +239,77 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private pendingContentLoads = 0;
+  private static savedScrollY = 0;
+
   loadContent() {
+    this.pendingContentLoads = 0;
     this.loadHomeArticleCategories();
-    this.deferNonCriticalContent();
+    this.loadNonCriticalContent();
   }
 
   private loadNonCriticalContent(): void {
-    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.pendingContentLoads += 8;
+
+    const onDone = () => {
+      this.pendingContentLoads--;
+      this.checkAllContentLoaded();
+    };
+
+    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
     });
 
-    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (songs: any[]) => { this.popularSongs = songs; },
       error: (err) => console.error('loadContent: popular songs', err)
     });
 
-    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
 
-    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
       error: (err) => console.error('loadContent: events', err)
     });
 
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (res: any) => { this.featuredTeachers = res.items || []; },
       error: (err) => console.error('loadContent: teachers', err)
     });
 
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
     });
 
-    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: episodes => { this.latestPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: podcasts', err)
     });
 
-    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
       error: err => console.error('loadContent: podcast series', err)
     });
 
-    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: episodes => { this.popularPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: popular episodes', err)
     });
   }
 
   private loadHomeArticleCategories(): void {
+    this.pendingContentLoads += 2;
+
     this.systemTablesService.getItems('article-categories', 1, 200)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.pendingContentLoads--;
+        this.checkAllContentLoaded();
+      })).subscribe({
         next: (res: any) => {
           this.setArticleCategorySections(res.items || []);
           this.loadHomeArticles();
@@ -304,13 +321,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  private deferNonCriticalContent(): void {
-    const load = () => this.loadNonCriticalContent();
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(load, { timeout: 1500 });
-      return;
-    }
-    setTimeout(load, 600);
+  private onAllContentLoaded(): void {
+    this.pendingContentLoads = 0;
+    const targetY = HomePageComponent.savedScrollY;
+    if (targetY <= 0) return;
+    HomePageComponent.savedScrollY = 0;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, targetY);
+      });
+    });
   }
 
   onSearchInput(query: string) {
@@ -462,7 +482,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadHomeArticles(): void {
     this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.pendingContentLoads--;
+        this.checkAllContentLoaded();
+      })).subscribe({
         next: (res: any) => {
           this.allPublishedArticles = this.uniqueArticles(res.items || []);
           this.newsArticles = this.allPublishedArticles
@@ -476,6 +499,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => console.error('loadContent: home articles', err)
       });
+  }
+
+  private checkAllContentLoaded(): void {
+    if (this.pendingContentLoads <= 0) {
+      this.onAllContentLoaded();
+    }
   }
 
   private setArticleCategorySections(categories: SystemItem[]): void {

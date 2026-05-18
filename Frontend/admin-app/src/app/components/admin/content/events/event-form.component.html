@@ -17,17 +17,21 @@
     <div class="form-section">
       <h2 class="section-title">תמונה וכרטיסים</h2>
 
-      <div class="form-group">
-        <label class="form-label required">תמונת ההופעה</label>
+      <div class="form-group" data-required-event-image data-required-anchor tabindex="-1" [attr.data-required-empty]="!event.imageUrl.trim()">
+        <label class="form-label required" for="event-image-url">תמונת ההופעה</label>
         <app-file-upload-input
+          inputId="event-image-url"
           [(url)]="event.imageUrl"
+          (urlChange)="imageRequiredMissing = false"
           placeholder="https://..."
         />
+        <small class="required-note" *ngIf="imageRequiredMissing">שדה חובה</small>
       </div>
 
       <div class="form-group">
-        <label class="form-label required">קישור לרכישת כרטיסים</label>
+        <label class="form-label required" for="event-ticket-url">קישור לרכישת כרטיסים</label>
         <input
+          id="event-ticket-url"
           type="url"
           [(ngModel)]="event.ticketUrl"
           name="ticketUrl"
@@ -50,11 +54,12 @@
 
       <div *ngIf="!loadingArtists" class="artists-selection">
         <div class="form-group">
-          <label class="form-label">חיפוש או שם אמן</label>
+          <label class="form-label" for="event-artist-search">חיפוש או שם אמן</label>
 
           <div class="custom-dropdown" [class.open]="dropdownOpen">
             <div class="dropdown-input" (click)="toggleDropdown()">
               <input
+                id="event-artist-search"
                 type="text"
                 [(ngModel)]="artistSearchTerm"
                 name="artistSearch"
@@ -113,8 +118,9 @@
       <h2 class="section-title">פרטים בסיסיים</h2>
 
       <div class="form-group">
-        <label class="form-label">כותרת ההופעה</label>
+        <label class="form-label" for="event-name">כותרת ההופעה</label>
         <input
+          id="event-name"
           type="text"
           [(ngModel)]="event.name"
           name="name"
@@ -125,8 +131,9 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">תיאור</label>
+        <label class="form-label" for="event-description">תיאור</label>
         <textarea
+          id="event-description"
           [(ngModel)]="event.description"
           name="description"
           class="form-textarea"
@@ -137,8 +144,9 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">מיקום ההופעה</label>
+          <label class="form-label" for="event-location">מיקום ההופעה</label>
           <input
+            id="event-location"
             type="text"
             [(ngModel)]="event.location"
             name="location"
@@ -148,8 +156,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">מחיר כרטיס</label>
+          <label class="form-label" for="event-price">מחיר כרטיס</label>
           <input
+            id="event-price"
             type="number"
             [(ngModel)]="event.price"
             name="price"
@@ -167,8 +176,9 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label required">תאריך ושעת ההופעה</label>
+          <label class="form-label required" for="event-date">תאריך ושעת ההופעה</label>
           <input
+            id="event-date"
             type="datetime-local"
             [(ngModel)]="event.eventDate"
             name="eventDate"
@@ -178,8 +188,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">סדר תצוגה</label>
+          <label class="form-label" for="event-display-order">סדר תצוגה</label>
           <input
+            id="event-display-order"
             type="number"
             [(ngModel)]="event.displayOrder"
             name="displayOrder"

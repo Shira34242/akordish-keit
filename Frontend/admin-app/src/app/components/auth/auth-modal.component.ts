@@ -25,6 +25,7 @@ export class AuthModalComponent implements OnDestroy {
   loading = false;
   errorMessage = '';
   showPassword = false; // Password visibility toggle
+  fieldErrors: Record<string, string> = {};
 
   // Form fields
   username = '';
@@ -65,6 +66,7 @@ export class AuthModalComponent implements OnDestroy {
   toggleMode() {
     this.isLogin = !this.isLogin;
     this.errorMessage = '';
+    this.fieldErrors = {};
     this.clearForm();
   }
 
@@ -82,6 +84,11 @@ export class AuthModalComponent implements OnDestroy {
     this.showPassword = false;
     this.passwordStrength = null;
     this.passwordErrors = [];
+    this.fieldErrors = {};
+  }
+
+  onFieldInput(field: string): void {
+    delete this.fieldErrors[field];
   }
 
   get shouldShowConsentRows(): boolean {
@@ -157,6 +164,7 @@ export class AuthModalComponent implements OnDestroy {
 
   onSubmit() {
     this.errorMessage = '';
+    this.fieldErrors = {};
     this.loading = true;
 
     if (this.isLogin) {
@@ -167,6 +175,18 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleLogin() {
+    if (!this.username) {
+      this.fieldErrors['loginEmail'] = 'שדה חובה';
+    }
+    if (!this.password) {
+      this.fieldErrors['password'] = 'שדה חובה';
+    }
+
+    if (Object.keys(this.fieldErrors).length > 0) {
+      this.loading = false;
+      return;
+    }
+
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
         this.loading = false;
@@ -180,8 +200,17 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleRegister() {
-    if (!this.email || !this.username || !this.password) {
-      this.errorMessage = this.langService.translate('auth.fill_all_fields');
+    if (!this.username) {
+      this.fieldErrors['username'] = 'שדה חובה';
+    }
+    if (!this.email) {
+      this.fieldErrors['email'] = 'שדה חובה';
+    }
+    if (!this.password) {
+      this.fieldErrors['password'] = 'שדה חובה';
+    }
+
+    if (Object.keys(this.fieldErrors).length > 0) {
       this.loading = false;
       return;
     }

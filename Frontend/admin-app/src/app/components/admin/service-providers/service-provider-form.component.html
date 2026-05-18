@@ -53,8 +53,9 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label required">שם תצוגה</label>
+        <label class="form-label required" for="provider-display-name">שם תצוגה</label>
         <input
+          id="provider-display-name"
           type="text"
           [(ngModel)]="displayName"
           name="displayName"
@@ -88,8 +89,9 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label required">אימייל</label>
+          <label class="form-label required" for="provider-email">אימייל</label>
           <input
+            id="provider-email"
             type="email"
             [(ngModel)]="email"
             name="email"
@@ -100,8 +102,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label required">טלפון</label>
+          <label class="form-label required" for="provider-phone">טלפון</label>
           <input
+            id="provider-phone"
             type="tel"
             [(ngModel)]="phoneNumber"
             name="phoneNumber"
@@ -241,9 +244,9 @@
       </div>
 
       <div class="form-group" data-required-admin-category data-required-anchor tabindex="-1">
-        <label class="form-label required">קטגוריית שירות</label>
+        <label class="form-label required" for="provider-category-trigger">קטגוריית שירות</label>
         <div class="custom-dropdown" [class.open]="categoryDropdownOpen">
-          <div class="dropdown-trigger" (click)="toggleCategoryDropdown()">
+          <div id="provider-category-trigger" class="dropdown-trigger" (click)="toggleCategoryDropdown()" tabindex="0">
             <span class="dropdown-value">
               {{ getSelectedCategoryText() }}
             </span>
@@ -372,8 +375,9 @@
       <h2 class="section-title">מדיה</h2>
 
       <div class="form-group">
-        <label class="form-label">תמונת פרופיל</label>
+        <label class="form-label" for="provider-profile-image">תמונת פרופיל</label>
         <app-file-upload-input
+          inputId="provider-profile-image"
           [(url)]="profileImageUrl"
           placeholder="https://..."
         />

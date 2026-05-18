@@ -34,6 +34,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
   songs: SongDto[] = [];
   artists: ArtistListDto[] = [];
   loading = false;
+  loadError = '';
   bulkActionLoading = false;
   selectedSongIds = new Set<number>();
   bumpModalOpen = false;
@@ -88,6 +89,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
   
   loadSongs(): void {
     this.loading = true;
+    this.loadError = '';
 
     const search = this.searchTerm || undefined;
     const page = Number(this.currentPage);
@@ -119,6 +121,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading songs:', error);
+        this.songs = [];
+        this.totalItems = 0;
+        this.loadError = error?.status === 403
+          ? 'אין לך הרשאה לצפות במסך ניהול האקורדים. אם זו הרשאה שאמורה להיות פתוחה עבורך, צריך לעדכן את התפקיד או ההרשאה במערכת.'
+          : (error?.message || 'לא הצלחנו לטעון את רשימת האקורדים.');
         this.loading = false;
       }
     });

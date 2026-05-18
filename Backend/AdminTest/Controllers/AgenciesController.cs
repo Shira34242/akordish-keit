@@ -56,7 +56,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencyDto>> CreateAgency([FromBody] CreateAgencyDto dto)
     {
         try
@@ -73,7 +73,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencyDto>> UpdateAgency(int id, [FromBody] UpdateAgencyDto dto)
     {
         try
@@ -89,7 +89,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteAgency(int id)
     {
         var deleted = await _service.DeleteAgencyAsync(id);
@@ -99,7 +99,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPost("{agencyId:int}/profiles")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencyProfileDto>> AddProfile(int agencyId, [FromBody] UpsertAgencyProfileDto dto)
     {
         try
@@ -113,7 +113,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpDelete("{agencyId:int}/profiles/{profileLinkId:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> RemoveProfile(int agencyId, int profileLinkId)
     {
         var removed = await _service.RemoveProfileAsync(agencyId, profileLinkId);
@@ -121,7 +121,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPost("{agencyId:int}/contents")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencyContentDto>> AddContent(int agencyId, [FromBody] UpsertAgencyContentDto dto)
     {
         try
@@ -135,7 +135,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpDelete("{agencyId:int}/contents/{contentLinkId:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> RemoveContent(int agencyId, int contentLinkId)
     {
         var removed = await _service.RemoveContentAsync(agencyId, contentLinkId);
@@ -149,7 +149,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPost("{agencyId:int}/gallery")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencyGalleryImageDto>> AddGalleryImage(int agencyId, [FromBody] AgencyGalleryImageDto dto)
     {
         try
@@ -163,7 +163,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpDelete("{agencyId:int}/gallery/{imageId:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> RemoveGalleryImage(int agencyId, int imageId)
     {
         var removed = await _service.RemoveGalleryImageAsync(agencyId, imageId);
@@ -177,7 +177,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpPost("{agencyId:int}/social-links")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<AgencySocialLinkDto>> UpsertSocialLink(int agencyId, [FromBody] AgencySocialLinkDto dto)
     {
         try
@@ -191,7 +191,7 @@ public class AgenciesController : ControllerBase
     }
 
     [HttpDelete("{agencyId:int}/social-links/{linkId:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> RemoveSocialLink(int agencyId, int linkId)
     {
         var removed = await _service.RemoveSocialLinkAsync(agencyId, linkId);

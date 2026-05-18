@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, DestroyRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
@@ -9,6 +9,7 @@ import { NewsPageSectionService } from '../../../services/news-page-section.serv
 import { FeaturedContent } from '../../../models/featured-content.model';
 import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { getArticleRoute } from '../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-music-news',
@@ -23,6 +24,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
   private readonly newsPageSectionService = inject(NewsPageSectionService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly ngZone = inject(NgZone);
 
@@ -262,5 +264,10 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     }
 
     return rows;
+  }
+
+  navigateToArticle(article: Article): void {
+    if (!article.slug) return;
+    this.router.navigate([getArticleRoute(article), article.slug]);
   }
 }

@@ -506,6 +506,9 @@ export class TeacherFormComponent implements OnInit {
     }
 
     if (this.selectedInstrumentIds.length === 0) {
+      this.instrumentsDropdownOpen = true;
+      this.instrumentSearchText = '';
+      this.filteredInstruments = this.availableInstruments;
       setTimeout(() => {
         this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-instruments]');
       });

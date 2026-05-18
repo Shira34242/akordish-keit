@@ -49,6 +49,7 @@ export const routes: Routes = [
             {
                 path: 'articles',
                 loadComponent: () => import('./components/public/articles-list/articles-list.component').then(m => m.ArticlesListComponent),
+                canActivate: [authGuard],
                 title: 'כתבות - אקורדישקייט'
             },
             {
@@ -106,6 +107,7 @@ export const routes: Routes = [
             {
                 path: 'artists',
                 loadComponent: () => import('./components/artists-list/artists-list.component').then(m => m.ArtistsListComponent),
+                canActivate: [authGuard],
                 title: 'אומנים - אקורדישקייט'
             },
             // ===== יצירת פרופילים מקצועיים =====
@@ -131,6 +133,7 @@ export const routes: Routes = [
             {
                 path: 'artist/:id',
                 loadComponent: () => import('./components/artist-detail/artist-detail.component').then(m => m.ArtistDetailComponent),
+                canActivate: [authGuard],
                 title: 'אקורדישקייט'
             },
             {

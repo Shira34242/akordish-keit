@@ -33,7 +33,7 @@ export class UsersListComponent implements OnInit {
   savingUser = false;
   editUserError: string | null = null;
   adminRoles: AdminRole[] = [];
-  roleAssignment = 'regular';
+  roleAssignment = '0';
   userEditForm: AdminUpdateUserDto = {
     username: '',
     email: '',
@@ -89,7 +89,7 @@ export class UsersListComponent implements OnInit {
   }
 
   loadAdminRoles(): void {
-    this.adminRoleService.getRoles(false).subscribe({
+    this.adminRoleService.getRoles(true).subscribe({
       next: roles => this.adminRoles = roles,
       error: err => console.error('שגיאה בטעינת תפקידי ניהול:', err)
     });
@@ -210,7 +210,7 @@ export class UsersListComponent implements OnInit {
         },
         error: (err: any) => {
           console.error('שגיאה בשדרוג למנהל:', err);
-          alert('לא הצלחנו לשדרג את המשתמש למנהל');
+          this.siteAlerts.show('לא הצלחנו לשדרג את המשתמש למנהל');
         }
       });
     }
@@ -240,12 +240,12 @@ export class UsersListComponent implements OnInit {
     if (await this.siteAlerts.confirm('האם למחוק את המשתמש? פעולה זו אינה הפיכה.')) {
       this.userService.deleteUser(id).subscribe({
         next: () => {
-          alert('המשתמש נמחק בהצלחה');
+          this.siteAlerts.show('המשתמש נמחק בהצלחה');
           this.loadUsers();
         },
         error: (err: any) => {
           console.error('שגיאה במחיקת משתמש:', err);
-          alert('שגיאה במחיקת המשתמש');
+          this.siteAlerts.show('שגיאה במחיקת המשתמש');
         }
       });
     }

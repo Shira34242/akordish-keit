@@ -189,7 +189,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => {
         this.loading = false;
-        this.router.navigate(['/']);
+        this.router.navigate(['/404']);
       }
     });
   }

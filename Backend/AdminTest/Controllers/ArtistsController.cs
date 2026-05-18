@@ -1089,7 +1089,7 @@ public class ArtistsController : ControllerBase
     /// יצירת אומן חדש (Admin בלבד)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<ArtistDetailDto>> CreateArtist([FromBody] UpdateArtistDto dto)
     {
         try
@@ -1281,7 +1281,7 @@ public class ArtistsController : ControllerBase
     /// מחיקת אומן (Admin בלבד)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteArtist(int id)
     {
         try
@@ -1308,7 +1308,7 @@ public class ArtistsController : ControllerBase
     /// שכפול אומן (Admin בלבד)
     /// </summary>
     [HttpPost("{id}/duplicate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<ArtistDetailDto>> DuplicateArtist(int id)
     {
         try
@@ -1710,7 +1710,7 @@ public class ArtistsController : ControllerBase
     /// שינוי סטטוס אומן (Admin בלבד)
     /// </summary>
     [HttpPut("{id}/status")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> UpdateArtistStatus(int id, [FromBody] ArtistStatus status)
     {
         try

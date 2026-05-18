@@ -58,7 +58,7 @@ public class UsersController : ControllerBase
 
     // PUT: api/Users/{id}
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "users.manage")]
     public async Task<ActionResult<UserListDto>> AdminUpdateUser(int id, [FromBody] AdminUpdateUserDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Email))
@@ -142,6 +142,7 @@ public class UsersController : ControllerBase
 
     // GET: api/Users
     [HttpGet]
+    [Authorize(Policy = "users.manage")]
     public async Task<ActionResult<PagedResult<UserListDto>>> GetUsers(
         [FromQuery] string? search = null,
         [FromQuery] int? role = null,

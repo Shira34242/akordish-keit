@@ -32,7 +32,7 @@ namespace AkordishKeit.Controllers
         /// קבלת כל התוכן המרכזי (כולל לא פעיל - לאדמין)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult<IEnumerable<FeaturedContentDto>>> GetAllFeaturedContent()
         {
             var featuredContent = await _featuredContentService.GetAllFeaturedContentAsync();
@@ -43,7 +43,7 @@ namespace AkordishKeit.Controllers
         /// קבלת תוכן מרכזי לפי מזהה
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult<FeaturedContentDto>> GetFeaturedContent(int id)
         {
             var featuredContent = await _featuredContentService.GetFeaturedContentByIdAsync(id);
@@ -58,7 +58,7 @@ namespace AkordishKeit.Controllers
         /// יצירת תוכן מרכזי חדש (רק מנהל)
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult<FeaturedContentDto>> CreateFeaturedContent([FromBody] CreateFeaturedContentDto dto)
         {
             if (!ModelState.IsValid)
@@ -81,7 +81,7 @@ namespace AkordishKeit.Controllers
         /// עדכון תוכן מרכזי (רק מנהל)
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult<FeaturedContentDto>> UpdateFeaturedContent(int id, [FromBody] UpdateFeaturedContentDto dto)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace AkordishKeit.Controllers
         /// עדכון מהיר של כל 4 הכתבות בבת אחת (רק מנהל)
         /// </summary>
         [HttpPut("bulk")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult<IEnumerable<FeaturedContentDto>>> UpdateFeaturedContentBulk([FromBody] UpdateFeaturedContentBulkDto dto)
         {
             if (!ModelState.IsValid)
@@ -128,7 +128,7 @@ namespace AkordishKeit.Controllers
         /// מחיקת תוכן מרכזי (רק מנהל)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.manage")]
         public async Task<ActionResult> DeleteFeaturedContent(int id)
         {
             var result = await _featuredContentService.DeleteFeaturedContentAsync(id);

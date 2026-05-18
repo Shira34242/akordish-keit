@@ -12,37 +12,37 @@
 
   <form class="form-panel" (ngSubmit)="save()" *ngIf="!loading">
     <div class="form-grid">
-      <label>
+      <label for="agency-name">
         <span>שם סוכנות</span>
-        <input name="name" [(ngModel)]="form.name" required>
+        <input id="agency-name" name="name" [(ngModel)]="form.name" required>
       </label>
-      <label>
+      <label for="agency-slug">
         <span>קישור קצר</span>
-        <input name="slug" [(ngModel)]="form.slug" placeholder="נוצר אוטומטית אם ריק">
+        <input id="agency-slug" name="slug" [(ngModel)]="form.slug" placeholder="נוצר אוטומטית אם ריק">
       </label>
-      <label>
+      <label for="agency-logo">
         <span>לוגו</span>
-        <app-file-upload-input [(url)]="form.logoUrl" placeholder="כתובת לוגו או העלאת קובץ"></app-file-upload-input>
+        <app-file-upload-input inputId="agency-logo" [(url)]="form.logoUrl" placeholder="כתובת לוגו או העלאת קובץ"></app-file-upload-input>
       </label>
-      <label>
+      <label for="agency-banner">
         <span>תמונת באנר</span>
-        <app-file-upload-input [(url)]="form.bannerImageUrl" placeholder="כתובת באנר או העלאת קובץ"></app-file-upload-input>
+        <app-file-upload-input inputId="agency-banner" [(url)]="form.bannerImageUrl" placeholder="כתובת באנר או העלאת קובץ"></app-file-upload-input>
       </label>
-      <label>
+      <label for="agency-phone">
         <span>טלפון</span>
-        <input name="phoneNumber" [(ngModel)]="form.phoneNumber">
+        <input id="agency-phone" name="phoneNumber" [(ngModel)]="form.phoneNumber">
       </label>
-      <label>
+      <label for="agency-whatsapp">
         <span>ווטסאפ</span>
-        <input name="whatsAppNumber" [(ngModel)]="form.whatsAppNumber">
+        <input id="agency-whatsapp" name="whatsAppNumber" [(ngModel)]="form.whatsAppNumber">
       </label>
-      <label>
+      <label for="agency-email">
         <span>אימייל</span>
-        <input name="email" type="email" [(ngModel)]="form.email">
+        <input id="agency-email" name="email" type="email" [(ngModel)]="form.email">
       </label>
-      <label>
+      <label for="agency-website">
         <span>אתר</span>
-        <input name="websiteUrl" [(ngModel)]="form.websiteUrl">
+        <input id="agency-website" name="websiteUrl" [(ngModel)]="form.websiteUrl">
       </label>
       <div class="brand-colors full">
         <label>

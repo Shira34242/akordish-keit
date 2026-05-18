@@ -35,7 +35,10 @@
         </div>
 
         <form *ngIf="!submitted" (ngSubmit)="onSubmit()" id="teacherCreateForm" class="quick-form">
+          <!-- ===== STEP 1: PROFILE ===== -->
           <section class="flow-step" *ngIf="currentStep === 1">
+            <p class="step-intro">מלא את פרטי הדף הציבורי שלך שיוצג באתר</p>
+
             <button type="button" class="profile-upload" [class.has-image]="profileImageUrl" (click)="profileImageInput.click()" aria-label="העלאת תמונת פרופיל">
               <img *ngIf="profileImageUrl" [src]="profileImageUrl" alt="תמונת פרופיל" />
               <span class="material-icons">{{ profileImageUrl ? 'edit' : 'add_photo_alternate' }}</span>
@@ -43,7 +46,15 @@
             </button>
             <input #profileImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
 
+            <button type="button" class="banner-upload" [class.has-image]="bannerImageUrl" (click)="bannerImageInput.click()" aria-label="העלאת תמונת באנר">
+              <img *ngIf="bannerImageUrl" [src]="bannerImageUrl" alt="תמונת באנר" />
+              <span class="material-icons">{{ bannerImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+              <strong>{{ bannerImageUploading ? 'מעלה באנר...' : 'תמונת באנר (רשות)' }}</strong>
+            </button>
+            <input #bannerImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
+
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם מלא *" />
+            <p class="field-note center">השם שיוצג בדף הציבורי שלך</p>
 
             <div class="two-fields">
               <div class="custom-dropdown">
@@ -61,6 +72,7 @@
 
             <div class="soft-block instrument-picker" data-required-anchor tabindex="-1">
               <div class="soft-label">כלי נגינה *</div>
+              <p class="field-note soft-note">סמן את הכלים שאתה מלמד</p>
               <div class="pill-grid" *ngIf="availableInstruments.length; else instrumentsLoading">
                 <button type="button" *ngFor="let instrument of availableInstruments" class="choice-pill" [class.selected]="isInstrumentSelected(instrument.id)" (click)="toggleInstrument(instrument.id)">
                   {{ instrument.name }}
@@ -71,11 +83,6 @@
               </ng-template>
             </div>
 
-            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" class="text-area" rows="3" placeholder="משפט קצר עליך ועל הלימוד"></textarea>
-            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="text-area large" rows="4" placeholder="תיאור נוסף למי שרוצה להכיר אותך טוב יותר"></textarea>
-          </section>
-
-          <section class="flow-step" *ngIf="currentStep === 2">
             <input id="email" type="email" [(ngModel)]="email" name="email" class="text-input" required placeholder="אימייל *" />
 
             <div class="phone-line">
@@ -91,19 +98,57 @@
 
             <div class="soft-block">
               <div class="soft-label">רשתות חברתיות</div>
+              <p class="field-note soft-note">לחץ על סמל הרשת להדבקת קישור</p>
               <div class="social-row">
                 <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (click)="selectSocialPlatform(option.platform)">
-                  <span class="material-icons">{{ option.icon }}</span>
+                  <span class="social-svg" [innerHTML]="option.svg"></span>
                 </button>
               </div>
               <input *ngIf="activeSocialPlatform" type="url" class="text-input" name="activeSocialLink" [placeholder]="getActiveSocialPlaceholder()" [ngModel]="getPlatformLink(activeSocialPlatform)" (ngModelChange)="setPlatformLink(activeSocialPlatform, $event)" />
             </div>
 
-            <div class="two-fields">
-              <input id="yearsOfExperience" type="number" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="text-input" placeholder="שנות ניסיון" />
-              <input id="lessonTypes" type="text" [(ngModel)]="lessonTypes" name="lessonTypes" class="text-input" placeholder="סוגי שיעורים" />
-              <input id="availability" type="text" [(ngModel)]="availability" name="availability" class="text-input" placeholder="זמינות" />
-              <input id="workingHours" type="text" [(ngModel)]="workingHours" name="workingHours" class="text-input" placeholder="שעות פעילות" />
+            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" class="text-area" rows="3" placeholder="משפט קצר עליך ועל הלימוד"></textarea>
+            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="text-area large" rows="4" placeholder="תיאור נוסף למי שרוצה להכיר אותך טוב יותר"></textarea>
+          </section>
+
+          <!-- ===== STEP 2: DETAILS ===== -->
+          <section class="flow-step" *ngIf="currentStep === 2">
+            <p class="step-intro">עוד כמה פרטים קטנים... (לא חובה)</p>
+
+            <div class="soft-block">
+              <label for="yearsOfExperience" class="soft-label">שנות ניסיון</label>
+              <p class="field-note soft-note">וותק מקצועי בהוראת נגינה</p>
+              <input id="yearsOfExperience" type="number" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="text-input" placeholder="למשל 5" />
+            </div>
+
+            <div class="soft-block">
+              <label for="lessonTypes" class="soft-label">סוגי שיעורים</label>
+              <p class="field-note soft-note">פרטי, קבוצתי, אונליין וכו'</p>
+              <input id="lessonTypes" type="text" [(ngModel)]="lessonTypes" name="lessonTypes" class="text-input" placeholder="למשל: שיעורים פרטיים וקבוצתיים" />
+            </div>
+
+            <div class="soft-block">
+              <label for="availability" class="soft-label">זמינות</label>
+              <p class="field-note soft-note">ימים, שעות או ציון היקף כללי</p>
+              <input id="availability" type="text" [(ngModel)]="availability" name="availability" class="text-input" placeholder="למשל: א,ג,ה אחרי 16:00" />
+            </div>
+
+            <div class="soft-block">
+              <label for="workingHours" class="soft-label">שעות פעילות</label>
+              <p class="field-note soft-note">טווח שעות אופייני להוראה</p>
+              <input id="workingHours" type="text" [(ngModel)]="workingHours" name="workingHours" class="text-input" placeholder="למשל: 14:00-20:00" />
+            </div>
+
+            <div class="soft-block">
+              <label for="education" class="soft-label">השכלה</label>
+              <p class="field-note soft-note">לימודים, תארים או קורסים מקצועיים</p>
+              <input id="education" type="text" [(ngModel)]="education" name="education" class="text-input" placeholder="למשל: בוגר בית ספר רימון" />
+            </div>
+
+            <div class="soft-block">
+              <label for="specializations" class="soft-label">התמחויות</label>
+              <p class="field-note soft-note">סגנונות מוזיקליים, תחומי התמחות מיוחדים</p>
+              <input id="specializations" type="text" [(ngModel)]="specializations" name="specializations" class="text-input" placeholder="למשל: ג'אז, מוזיקה קלאסית, אלתור" />
             </div>
 
             <div class="two-fields">
@@ -132,8 +177,15 @@
               </div>
             </div>
 
-            <textarea id="priceList" [(ngModel)]="priceList" name="priceList" class="text-area" rows="3" placeholder="מחירון או מידע על עלויות"></textarea>
+            <div class="soft-block">
+              <label for="priceList" class="soft-label">מחירון</label>
+              <p class="field-note soft-note">מחיר לשיעור, חבילות, או מידע על עלויות</p>
+              <textarea id="priceList" [(ngModel)]="priceList" name="priceList" class="text-area" rows="3" placeholder="מחירון או מידע על עלויות"></textarea>
+            </div>
+          </section>
 
+          <!-- ===== STEP 3: GALLERY & TESTIMONIALS ===== -->
+          <section class="flow-step" *ngIf="currentStep === 3">
             <div class="soft-block">
               <div class="soft-label">המלצות תלמידים</div>
               <div class="horizontal-strip">
@@ -157,9 +209,7 @@
                 </article>
               </div>
             </div>
-          </section>
 
-          <section class="flow-step" *ngIf="currentStep === 3">
             <div class="gallery-head">
               <h2>גלריה</h2>
               <p>אפשר להוסיף כמה תמונות יחד, וגם כמה קישורי וידאו שרוצים.</p>

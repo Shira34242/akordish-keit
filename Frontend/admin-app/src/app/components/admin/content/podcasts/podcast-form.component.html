@@ -13,23 +13,23 @@
     <section class="form-section">
       <h2>פרטי סדרה</h2>
       <div class="form-group">
-        <label>שם הפודקאסט</label>
-        <input type="text" [(ngModel)]="podcast.name" name="name" required />
+        <label for="podcast-name">שם הפודקאסט</label>
+        <input id="podcast-name" type="text" [(ngModel)]="podcast.name" name="name" required />
       </div>
 
       <div class="form-group">
-        <label>כתובת ידידותית</label>
-        <input type="text" [(ngModel)]="podcast.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
+        <label for="podcast-slug">כתובת ידידותית</label>
+        <input id="podcast-slug" type="text" [(ngModel)]="podcast.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
       </div>
 
       <div class="form-group">
-        <label>תיאור קצר</label>
-        <textarea [(ngModel)]="podcast.description" name="description" rows="4"></textarea>
+        <label for="podcast-description">תיאור קצר</label>
+        <textarea id="podcast-description" [(ngModel)]="podcast.description" name="description" rows="4"></textarea>
       </div>
 
       <div class="form-group">
-        <label>תמונת סדרה</label>
-        <input type="url" [(ngModel)]="podcast.imageUrl" name="imageUrl" placeholder="קישור לתמונה שתופיע בעמוד הסדרה ובכרטיסי סדרות" />
+        <label for="podcast-image-url">תמונת סדרה</label>
+        <input id="podcast-image-url" type="url" [(ngModel)]="podcast.imageUrl" name="imageUrl" placeholder="קישור לתמונה שתופיע בעמוד הסדרה ובכרטיסי סדרות" />
       </div>
 
       <div class="series-preview" *ngIf="podcast.imageUrl">
@@ -41,8 +41,8 @@
     <section class="form-section">
       <h2>שיוך סוכנות</h2>
       <div class="form-group">
-        <label>סוכנות משויכת</label>
-        <select [(ngModel)]="selectedAgencyId" name="agencyId">
+        <label for="podcast-agency">סוכנות משויכת</label>
+        <select id="podcast-agency" [(ngModel)]="selectedAgencyId" name="agencyId">
           <option [ngValue]="null">ללא סוכנות</option>
           <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
         </select>

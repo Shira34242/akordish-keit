@@ -16,6 +16,7 @@ export class FileUploadInputComponent {
   @Input() accept: string = 'image/*';
   @Input() placeholder: string = 'https://...';
   @Input() showPreview: boolean = true;
+  @Input() inputId?: string;
 
   uploading = false;
   private readonly langService = inject(LanguageService);

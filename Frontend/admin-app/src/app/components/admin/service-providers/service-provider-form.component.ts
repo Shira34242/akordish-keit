@@ -364,6 +364,9 @@ export class ServiceProviderFormComponent implements OnInit {
     }
 
     if (!this.selectedCategoryId) {
+      this.categoryDropdownOpen = true;
+      this.categorySearchText = '';
+      this.filteredCategories = this.availableCategories;
       setTimeout(() => {
         this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-category]');
       });

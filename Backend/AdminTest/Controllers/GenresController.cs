@@ -76,7 +76,7 @@ public class GenresController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<SystemItemDto>> PostGenre(CreateSystemItemDto dto)
     {
         var genre = new Genre
@@ -98,7 +98,7 @@ public class GenresController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> PutGenre(int id, CreateSystemItemDto dto)
     {
         var genre = await _context.Genres.FindAsync(id);
@@ -131,7 +131,7 @@ public class GenresController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteGenre(int id)
     {
         var genre = await _context.Genres.FindAsync(id);
@@ -152,7 +152,7 @@ public class GenresController : ControllerBase
     }
 
     [HttpPost("bulk-delete")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");
