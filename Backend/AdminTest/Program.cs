@@ -92,6 +92,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAgencyService, AgencyService>();
 builder.Services.AddScoped<IPodcastService, PodcastService>();
+builder.Services.AddScoped<IAdminRoleService, AdminRoleService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
@@ -434,6 +435,60 @@ using (var scope = app.Services.CreateScope())
         }
     }
     dbContext.SaveChanges();
+
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'[AdminRoles]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [AdminRoles] (
+                [Id] int NOT NULL IDENTITY,
+                [Name] nvarchar(100) NOT NULL,
+                [Description] nvarchar(500) NULL,
+                [IsActive] bit NOT NULL CONSTRAINT [DF_AdminRoles_IsActive] DEFAULT CAST(1 AS bit),
+                [IsSystem] bit NOT NULL CONSTRAINT [DF_AdminRoles_IsSystem] DEFAULT CAST(0 AS bit),
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_AdminRoles_CreatedAt] DEFAULT (GETUTCDATE()),
+                [UpdatedAt] datetime2 NULL,
+                [IsDeleted] bit NOT NULL CONSTRAINT [DF_AdminRoles_IsDeleted] DEFAULT CAST(0 AS bit),
+                CONSTRAINT [PK_AdminRoles] PRIMARY KEY ([Id])
+            );
+        END
+
+        IF OBJECT_ID(N'[AdminRolePermissions]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [AdminRolePermissions] (
+                [Id] int NOT NULL IDENTITY,
+                [AdminRoleId] int NOT NULL,
+                [PermissionKey] nvarchar(100) NOT NULL,
+                CONSTRAINT [PK_AdminRolePermissions] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_AdminRolePermissions_AdminRoles_AdminRoleId] FOREIGN KEY ([AdminRoleId]) REFERENCES [AdminRoles] ([Id]) ON DELETE CASCADE
+            );
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'AdminRoleId') IS NULL
+        BEGIN
+            ALTER TABLE [Users] ADD [AdminRoleId] int NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND OBJECT_ID(N'[AdminRoles]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Users_AdminRoles_AdminRoleId')
+        BEGIN
+            ALTER TABLE [Users]
+            ADD CONSTRAINT [FK_Users_AdminRoles_AdminRoleId] FOREIGN KEY ([AdminRoleId]) REFERENCES [AdminRoles] ([Id]) ON DELETE SET NULL;
+        END
+
+        IF OBJECT_ID(N'[AdminRoles]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AdminRoles_Name' AND object_id = OBJECT_ID(N'[AdminRoles]'))
+            CREATE UNIQUE INDEX [IX_AdminRoles_Name] ON [AdminRoles] ([Name]) WHERE [IsDeleted] = 0;
+
+        IF OBJECT_ID(N'[AdminRolePermissions]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AdminRolePermissions_Role_Key' AND object_id = OBJECT_ID(N'[AdminRolePermissions]'))
+            CREATE UNIQUE INDEX [IX_AdminRolePermissions_Role_Key] ON [AdminRolePermissions] ([AdminRoleId], [PermissionKey]);
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Users_AdminRoleId' AND object_id = OBJECT_ID(N'[Users]'))
+            CREATE INDEX [IX_Users_AdminRoleId] ON [Users] ([AdminRoleId]);
+    ");
 
     dbContext.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL

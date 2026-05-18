@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
-import { UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
+import { AdminUpdateUserDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { TeacherFormComponent } from '../teachers/teacher-form.component';
 import { ServiceProviderFormComponent } from '../service-providers/service-provider-form.component';
+import { AdminRole } from '../../../models/admin-role.model';
+import { AdminRoleService } from '../../../services/admin-role.service';
 
 
 @Component({
@@ -27,6 +29,18 @@ export class UsersListComponent implements OnInit {
   showTeacherFormModal = false;
   showProviderFormModal = false;
   selectedProfileUserId: number | undefined = undefined;
+  editingUser: UserListDto | null = null;
+  savingUser = false;
+  editUserError: string | null = null;
+  adminRoles: AdminRole[] = [];
+  roleAssignment = 'regular';
+  userEditForm: AdminUpdateUserDto = {
+    username: '',
+    email: '',
+    phone: '',
+    role: UserRole.Regular,
+    isActive: true
+  };
 
   // Pagination
   currentPage = 1;
@@ -57,17 +71,28 @@ export class UsersListComponent implements OnInit {
     { value: 4, label: 'מנהל מערכת' }
   ];
 
+  editableRoleOptions = this.roleOptions.filter(option => option.value !== null) as { value: UserRole; label: string }[];
+
   // UserRole enum reference for template
   UserRole = UserRole;
   UserContentTag = UserContentTag;
 
   constructor(
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private adminRoleService: AdminRoleService
   ) { }
 
   ngOnInit(): void {
+    this.loadAdminRoles();
     this.loadUsers();
+  }
+
+  loadAdminRoles(): void {
+    this.adminRoleService.getRoles(false).subscribe({
+      next: roles => this.adminRoles = roles,
+      error: err => console.error('שגיאה בטעינת תפקידי ניהול:', err)
+    });
   }
 
   loadUsers(): void {
@@ -126,8 +151,89 @@ export class UsersListComponent implements OnInit {
     this.router.navigate(['/admin/users/view', id]);
   }
 
-  editUser(id: number): void {
-    this.router.navigate(['/admin/users/edit', id]);
+  editUser(user: UserListDto): void {
+    this.editingUser = user;
+    this.editUserError = null;
+    this.userEditForm = {
+      username: user.username,
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role,
+      adminRoleId: user.adminRoleId ?? null,
+      isActive: user.isActive
+    };
+    this.roleAssignment = user.adminRoleId ? `custom:${user.adminRoleId}` : String(user.role);
+  }
+
+  closeEditUserModal(): void {
+    if (this.savingUser) return;
+    this.editingUser = null;
+    this.editUserError = null;
+  }
+
+  saveUser(): void {
+    if (!this.editingUser) return;
+
+    this.savingUser = true;
+    this.editUserError = null;
+
+    const payload = this.buildUserUpdatePayload();
+
+    this.userService.updateUser(this.editingUser.id, payload).subscribe({
+      next: (updated) => {
+        this.users = this.users.map(user => user.id === updated.id ? updated : user);
+        this.savingUser = false;
+        this.closeEditUserModal();
+      },
+      error: (err: any) => {
+        console.error('שגיאה בעדכון משתמש:', err);
+        this.editUserError = 'לא הצלחנו לשמור את פרטי המשתמש';
+        this.savingUser = false;
+      }
+    });
+  }
+
+  async upgradeToAdmin(user: UserListDto): Promise<void> {
+    if (user.role === UserRole.Admin) return;
+
+    if (await this.siteAlerts.confirm(`לשדרג את ${user.username} למנהל מערכת?`)) {
+      this.userService.updateUser(user.id, {
+        username: user.username,
+        email: user.email,
+      phone: user.phone || '',
+      role: UserRole.Admin,
+      adminRoleId: null,
+      isActive: user.isActive
+      }).subscribe({
+        next: (updated) => {
+          this.users = this.users.map(existing => existing.id === updated.id ? updated : existing);
+        },
+        error: (err: any) => {
+          console.error('שגיאה בשדרוג למנהל:', err);
+          alert('לא הצלחנו לשדרג את המשתמש למנהל');
+        }
+      });
+    }
+  }
+
+  onRoleAssignmentChange(): void {
+    if (this.roleAssignment.startsWith('custom:')) {
+      const roleId = Number(this.roleAssignment.replace('custom:', ''));
+      this.userEditForm.adminRoleId = roleId;
+      this.userEditForm.role = UserRole.Manager;
+      return;
+    }
+
+    this.userEditForm.adminRoleId = null;
+    this.userEditForm.role = Number(this.roleAssignment) as UserRole;
+  }
+
+  private buildUserUpdatePayload(): AdminUpdateUserDto {
+    this.onRoleAssignmentChange();
+    return {
+      ...this.userEditForm,
+      adminRoleId: this.userEditForm.adminRoleId ?? null
+    };
   }
 
   async deleteUser(id: number): Promise<void> {
@@ -182,6 +288,10 @@ export class UsersListComponent implements OnInit {
       case UserRole.Regular: return 'משתמש רגיל';
       default: return 'לא ידוע';
     }
+  }
+
+  getUserRoleLabel(user: UserListDto): string {
+    return user.adminRoleName || this.getRoleLabel(user.role);
   }
 
   getContentTagLabel(tag: UserContentTag): string {

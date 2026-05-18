@@ -1000,6 +1000,75 @@
 }
 
 /* ============================================
+   PODCAST EPISODES ROW (פרקים מובילים)
+============================================ */
+.podcast-episodes-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  direction: rtl;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.podcast-episodes-row::-webkit-scrollbar {
+  display: none;
+}
+
+.podcast-episodes-track {
+  display: flex;
+  direction: rtl;
+  gap: var(--space-md);
+  width: max-content;
+}
+
+.podcast-episodes-track > .podcast-episode-card {
+  flex: 0 0 19rem;
+}
+
+.podcast-episode-card {
+  min-width: 0;
+}
+
+.podcast-episode-card ::ng-deep .episode-banner {
+  aspect-ratio: 1.35 / 1;
+  border-radius: 24px;
+  width: 100%;
+}
+
+.podcast-episode-card ::ng-deep .banner-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.44) 48%, rgba(0, 0, 0, 0.08) 100%);
+}
+
+.podcast-episode-card ::ng-deep .banner-text {
+  right: 16px;
+  bottom: 16px;
+  left: 68px;
+}
+
+.podcast-episode-card ::ng-deep .banner-title {
+  font-size: var(--font-lg);
+  line-height: 1.12;
+  -webkit-line-clamp: 3;
+}
+
+.podcast-episode-card ::ng-deep .banner-subtitle {
+  margin-top: 4px;
+  font-size: var(--font-sm);
+  line-height: 1.25;
+}
+
+.podcast-episode-card ::ng-deep .banner-arrow-btn {
+  left: 16px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+/* ============================================
    PODCASTS HOME
 ============================================ */
 .podcasts-home-panel {
@@ -1175,6 +1244,10 @@
     flex: 0 0 13rem;
   }
 
+  .podcast-episodes-track > .podcast-episode-card {
+    flex: 0 0 13rem;
+  }
+
   .provider-showcase-card {
     width: 10rem;
     min-height: 14rem;
@@ -1228,6 +1301,10 @@
   }
 
   .news-banner-track > .news-banner-card {
+    flex: 0 0 11rem;
+  }
+
+  .podcast-episodes-track > .podcast-episode-card {
     flex: 0 0 11rem;
   }
 
@@ -1321,6 +1398,33 @@
 
   .podcasts-home-track {
     gap: var(--space-md);
+  }
+
+  .podcast-episode-card ::ng-deep .episode-banner {
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+  }
+
+  .podcast-episode-card ::ng-deep .banner-text {
+    right: 12px;
+    bottom: 12px;
+    left: 52px;
+  }
+
+  .podcast-episode-card ::ng-deep .banner-title {
+    font-size: var(--font-lg);
+  }
+
+  .podcast-episode-card ::ng-deep .banner-subtitle {
+    font-size: var(--font-xs);
+  }
+
+  .podcast-episode-card ::ng-deep .banner-arrow-btn {
+    left: 10px;
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 
   .home-series-image-card {

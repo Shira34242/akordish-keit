@@ -63,20 +63,18 @@
           <span>{{ podcasts.length }} פודקאסטים</span>
         </div>
 
-        <div class="series-strip">
-          <button
-            type="button"
-            class="series-card"
-            *ngFor="let podcast of podcasts; trackBy: trackById"
-            (click)="selectPodcast(podcast)">
-            <span class="series-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
-              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
-            </span>
-            <span class="series-card__copy">
-              <strong>{{ podcast.name }}</strong>
-              <small>{{ podcast.episodeCount }} פרקים</small>
-            </span>
-          </button>
+        <div class="podcasts-home-panel">
+          <div class="podcasts-home-track">
+            <a
+              class="home-series-image-card"
+              *ngFor="let podcast of podcasts; trackBy: trackById"
+              (click)="selectPodcast(podcast)"
+              [attr.aria-label]="podcast.name">
+              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+                <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -86,45 +84,33 @@
           <span>{{ latestEpisodes.length }} פרקים</span>
         </div>
 
-        <div class="episode-grid">
-          <button
-            type="button"
-            class="episode-card"
-            *ngFor="let episode of latestEpisodes; trackBy: trackById"
-            (click)="openEpisode(episode)">
-            <span class="episode-card__thumb">
-              <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
-              <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
-            </span>
-            <span class="episode-card__copy">
-              <strong>{{ episode.title }}</strong>
-              <small>{{ episode.podcastName }}</small>
-            </span>
-          </button>
+        <div class="podcast-episodes-row">
+          <div class="podcast-episodes-track">
+            <app-podcast-episode-banner
+              *ngFor="let episode of latestEpisodes; trackBy: trackById"
+              class="podcast-episode-card"
+              [episode]="episode"
+              [showDescription]="true">
+            </app-podcast-episode-banner>
+          </div>
         </div>
       </section>
 
       <section class="podcasts-section" *ngIf="popularEpisodes.length > 0">
         <div class="section-header">
-          <h2>פרקים פופולאריים</h2>
+          <h2>פרקים מובילים</h2>
           <span>לפי צפיות באתר</span>
         </div>
 
-        <div class="episode-grid">
-          <button
-            type="button"
-            class="episode-card"
-            *ngFor="let episode of popularEpisodes; trackBy: trackById"
-            (click)="openEpisode(episode)">
-            <span class="episode-card__thumb">
-              <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
-              <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
-            </span>
-            <span class="episode-card__copy">
-              <strong>{{ episode.title }}</strong>
-              <small>{{ episode.podcastName }}</small>
-            </span>
-          </button>
+        <div class="podcast-episodes-row">
+          <div class="podcast-episodes-track">
+            <app-podcast-episode-banner
+              *ngFor="let episode of popularEpisodes; trackBy: trackById"
+              class="podcast-episode-card"
+              [episode]="episode"
+              [showDescription]="true">
+            </app-podcast-episode-banner>
+          </div>
         </div>
       </section>
     </ng-container>

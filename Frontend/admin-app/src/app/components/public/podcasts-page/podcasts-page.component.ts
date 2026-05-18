@@ -6,11 +6,12 @@ import { Subject, debounceTime, distinctUntilChanged, forkJoin, of, switchMap, t
 import { Podcast, PodcastDetail, PodcastEpisode, PodcastEpisodeDetail } from '../../../models/podcast.model';
 import { PodcastService } from '../../../services/podcast.service';
 import { SeoService } from '../../../services/seo.service';
+import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
 
 @Component({
   selector: 'app-podcasts-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PodcastEpisodeBannerComponent],
   templateUrl: './podcasts-page.component.html',
   styleUrls: ['./podcasts-page.component.css']
 })

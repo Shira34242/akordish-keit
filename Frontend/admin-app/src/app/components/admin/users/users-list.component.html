@@ -88,14 +88,15 @@
       <div class="grid-card-sub">{{ user.email }}</div>
       <div class="grid-card-sub" *ngIf="user.phone">{{ user.phone }}</div>
       <div class="grid-card-badges">
-        <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ getRoleLabel(user.role) }}</span>
+        <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ getUserRoleLabel(user) }}</span>
         <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">
           {{ user.isActive ? 'פעיל' : 'לא פעיל' }}
         </span>
       </div>
       <div class="grid-card-actions">
         <button class="btn-action" (click)="viewUser(user.id)" title="צפייה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" (click)="editUser(user.id)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action" (click)="editUser(user)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-admin" (click)="upgradeToAdmin(user)" title="שדרג למנהל מערכת" [disabled]="user.role === UserRole.Admin"><span class="material-icons">admin_panel_settings</span></button>
         <button class="btn-action btn-delete" (click)="deleteUser(user.id)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
     </div>
@@ -124,7 +125,7 @@
           <td>{{ user.phone || '-' }}</td>
           <td>
             <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
-              {{ getRoleLabel(user.role) }}
+              {{ getUserRoleLabel(user) }}
             </span>
           </td>
           <td>
@@ -154,10 +155,18 @@
               </button>
               <button
                 class="btn-action btn-edit"
-                (click)="editUser(user.id)"
+                (click)="editUser(user)"
                 title="עריכה"
               >
                 <span class="material-icons">edit</span>
+              </button>
+              <button
+                class="btn-action btn-admin"
+                (click)="upgradeToAdmin(user)"
+                [disabled]="user.role === UserRole.Admin"
+                title="שדרג למנהל מערכת"
+              >
+                <span class="material-icons">admin_panel_settings</span>
               </button>
               <button
                 class="btn-action btn-upgrade"
@@ -222,6 +231,65 @@
       עמוד {{ currentPage }} מתוך {{ totalPages }}
     </span>
   </div>
+</div>
+
+<div class="profile-form-backdrop" *ngIf="editingUser" (click)="closeEditUserModal()">
+  <form class="user-edit-modal" (click)="$event.stopPropagation()" (ngSubmit)="saveUser()">
+    <div class="modal-head">
+      <div>
+        <h2>עריכת משתמש</h2>
+        <p>{{ editingUser.username }}</p>
+      </div>
+      <button type="button" class="modal-close" (click)="closeEditUserModal()" title="סגירה">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="edit-form-grid">
+      <label>
+        <span>שם משתמש</span>
+        <input class="form-control" name="username" [(ngModel)]="userEditForm.username" required>
+      </label>
+
+      <label>
+        <span>אימייל</span>
+        <input class="form-control" name="email" type="email" [(ngModel)]="userEditForm.email" required>
+      </label>
+
+      <label>
+        <span>טלפון</span>
+        <input class="form-control" name="phone" [(ngModel)]="userEditForm.phone">
+      </label>
+
+      <label>
+        <span>תפקיד</span>
+        <select class="form-control" name="roleAssignment" [(ngModel)]="roleAssignment" (change)="onRoleAssignmentChange()">
+          <option value="0">חבר רגיל</option>
+          <option value="1">מורה</option>
+          <option value="2">אמן</option>
+          <option value="3">מנהל תוכן</option>
+          <option value="4">מנהל מערכת</option>
+          <option *ngFor="let option of adminRoles" [value]="'custom:' + option.id">
+            {{ option.name }}
+          </option>
+        </select>
+      </label>
+
+      <label class="status-toggle">
+        <input type="checkbox" name="isActive" [(ngModel)]="userEditForm.isActive">
+        <span>משתמש פעיל</span>
+      </label>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="editUserError">{{ editUserError }}</div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-light" (click)="closeEditUserModal()" [disabled]="savingUser">ביטול</button>
+      <button type="submit" class="btn btn-primary" [disabled]="savingUser">
+        {{ savingUser ? 'שומר...' : 'שמור שינויים' }}
+      </button>
+    </div>
+  </form>
 </div>
 
 <div class="profile-form-backdrop" *ngIf="showTeacherFormModal" (click)="closeProfileFormModal()">

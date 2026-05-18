@@ -16,6 +16,9 @@ export interface User {
     profileImageUrl?: string;
     role: string | number;
     roleName?: string;
+    adminRoleId?: number | null;
+    adminRoleName?: string | null;
+    permissions?: string[];
     level: number;
     points: number;
     preferredInstrumentId?: number | null;
@@ -265,6 +268,13 @@ export class AuthService {
                 || normalizedRole.includes('manager')
                 || normalizedRole.includes('מנהל');
         });
+    }
+
+    hasPermission(permission: string, user: User | null = this.currentUserSubject.value): boolean {
+        if (!user) return false;
+        const role = typeof user.role === 'number' ? user.role : String(user.role).trim().toLowerCase();
+        if (role === 4 || role === 'admin' || role === '4') return true;
+        return (user.permissions || []).includes(permission);
     }
 
     updateCurrentUser(user: User) {

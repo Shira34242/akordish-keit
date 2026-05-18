@@ -4,6 +4,7 @@ import { SongPageComponent } from './components/song-page/song-page.component';
 import { ChordsPageComponent } from './components/chords-page/chords-page.component';
 import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
+import { permissionGuard } from './guards/permission.guard';
 
 export const routes: Routes = [
     {
@@ -263,6 +264,8 @@ export const routes: Routes = [
             {
                 path: 'users',
                 loadComponent: () => import('./components/admin/users/users-layout/users-layout.component').then(m => m.AdminUsersLayoutComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['users.manage'] },
                 children: [
                     { path: '', redirectTo: 'clients', pathMatch: 'full' },
                     {
@@ -325,6 +328,8 @@ export const routes: Routes = [
             {
                 path: 'content',
                 loadComponent: () => import('./components/admin/content/content-layout/content-layout.component').then(m => m.AdminContentLayoutComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['content.manage', 'content.songs', 'content.articles', 'content.events', 'content.podcasts'] },
                 children: [
                     { path: '', redirectTo: 'songs', pathMatch: 'full' },
                     {
@@ -335,26 +340,36 @@ export const routes: Routes = [
                     {
                         path: 'songs',
                         loadComponent: () => import('./components/admin/content/songs/songs-list.component').then(m => m.SongsListComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.songs'] },
                         title: 'ניהול שירים - אקורדישקייט'
                     },
                     {
                         path: 'articles',
                         loadComponent: () => import('./components/admin/content/articles/articles-list.component').then(m => m.ArticlesListComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.articles'] },
                         title: 'ניהול תוכן - כתבות - אקורדישקייט'
                     },
                     {
                         path: 'articles/new',
                         loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.articles'] },
                         title: 'כתבה חדשה - אקורדישקייט'
                     },
                     {
                         path: 'articles/edit/:id',
                         loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.articles'] },
                         title: 'עריכת כתבה - אקורדישקייט'
                     },
                     {
                         path: 'featured',
                         loadComponent: () => import('./components/admin/content/featured-content/featured-content-management.component').then(m => m.FeaturedContentManagementComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage'] },
                         title: 'ניהול תוכן מרכזי - אקורדישקייט'
                     },
                     {
@@ -370,46 +385,64 @@ export const routes: Routes = [
                     {
                         path: 'events',
                         loadComponent: () => import('./components/admin/content/events/events-list.component').then(m => m.EventsListComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.events'] },
                         title: 'ניהול הופעות - אקורדישקייט'
                     },
                     {
                         path: 'podcasts',
                         loadComponent: () => import('./components/admin/content/podcasts/podcasts-list.component').then(m => m.PodcastsListComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.podcasts'] },
                         title: 'ניהול פודקאסטים - אקורדישקייט'
                     },
                     {
                         path: 'podcasts/new',
                         loadComponent: () => import('./components/admin/content/podcasts/podcast-form.component').then(m => m.PodcastFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.podcasts'] },
                         title: 'פודקאסט חדש - אקורדישקייט'
                     },
                     {
                         path: 'podcasts/edit/:id',
                         loadComponent: () => import('./components/admin/content/podcasts/podcast-form.component').then(m => m.PodcastFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.podcasts'] },
                         title: 'עריכת פודקאסט - אקורדישקייט'
                     },
                     {
                         path: 'podcasts/episodes/new',
                         loadComponent: () => import('./components/admin/content/podcasts/podcast-episode-form.component').then(m => m.PodcastEpisodeFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.podcasts'] },
                         title: 'פרק פודקאסט חדש - אקורדישקייט'
                     },
                     {
                         path: 'podcasts/episodes/edit/:id',
                         loadComponent: () => import('./components/admin/content/podcasts/podcast-episode-form.component').then(m => m.PodcastEpisodeFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.podcasts'] },
                         title: 'עריכת פרק פודקאסט - אקורדישקייט'
                     },
                     {
                         path: 'events/new',
                         loadComponent: () => import('./components/admin/content/events/event-form.component').then(m => m.EventFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.events'] },
                         title: 'הופעה חדשה - אקורדישקייט'
                     },
                     {
                         path: 'events/edit/:id',
                         loadComponent: () => import('./components/admin/content/events/event-form.component').then(m => m.EventFormComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage', 'content.events'] },
                         title: 'עריכת הופעה - אקורדישקייט'
                     },
                     {
                         path: 'stats',
                         loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['analytics.view'] },
                         title: 'סטטיסטיקות תוכן - אקורדישקייט'
                     }
                 ]
@@ -417,21 +450,29 @@ export const routes: Routes = [
             {
                 path: 'notifications',
                 loadComponent: () => import('./components/admin/notifications/notifications-layout/notifications-layout.component').then(m => m.AdminNotificationsLayoutComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['notifications.manage', 'reports.manage'] },
                 children: [
                     { path: '', redirectTo: 'messages', pathMatch: 'full' },
                     {
                         path: 'messages',
                         loadComponent: () => import('./components/admin/notifications/admin-notifications.component').then(m => m.AdminNotificationsComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['notifications.manage'] },
                         title: 'התראות - ניהול'
                     },
                     {
                         path: 'reports',
                         loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['reports.manage'] },
                         title: 'ניהול דיווחים - אקורדישקייט'
                     },
                     {
                         path: 'email',
                         loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['notifications.manage'] },
                         title: 'שליחת מייל - אקורדישקייט'
                     }
                 ]
@@ -441,56 +482,85 @@ export const routes: Routes = [
             {
                 path: 'advertising',
                 loadComponent: () => import('./components/admin/advertisements/campaigns/campaigns-list.component').then(m => m.CampaignsListComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['advertising.manage'] },
                 title: 'ניהול פרסום - קמפיינים - אקורדישקייט'
             },
             {
                 path: 'advertising/spots',
                 loadComponent: () => import('./components/admin/advertisements/ad-spots/ad-spots-list.component').then(m => m.AdSpotsListComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['advertising.manage'] },
                 title: 'ניהול פרסום - שדות פרסום - אקורדישקייט'
             },
             {
                 path: 'advertising/clients',
                 loadComponent: () => import('./components/admin/advertisements/clients/clients-list.component').then(m => m.ClientsListComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['advertising.manage'] },
                 title: 'ניהול פרסום - לקוחות - אקורדישקייט'
             },
             {
                 path: 'analytics',
                 loadComponent: () => import('./components/admin/content/content-stats/content-stats.component').then(m => m.ContentStatsComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['analytics.view'] },
                 title: 'אנליטיקס - אקורדישקייט'
             },
             {
                 path: 'system',
                 loadComponent: () => import('./components/admin/system/system-layout/system-layout.component').then(m => m.SystemLayoutComponent),
+                canActivate: [permissionGuard],
+                data: { permissions: ['system.manage', 'roles.manage', 'content.manage'] },
                 children: [
                     { path: '', redirectTo: 'tables', pathMatch: 'full' },
                     {
                         path: 'smart-add',
                         loadComponent: () => import('./components/admin/content/smart-add/smart-add.component').then(m => m.SmartAddComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['content.manage'] },
                         title: 'הוספה חכמה - אקורדישקייט'
                     },
                     {
                         path: 'tables',
                         loadComponent: () => import('./components/admin/system/value-tables/value-tables.component').then(m => m.ValueTablesComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['system.manage'] },
                         title: 'טבלאות מערכת - אקורדישקייט'
                     },
                     {
                         path: 'settings',
                         loadComponent: () => import('./components/admin/system/system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['system.manage'] },
                         title: 'הגדרות מערכת - אקורדישקייט'
+                    },
+                    {
+                        path: 'roles',
+                        loadComponent: () => import('./components/admin/system/admin-roles/admin-roles.component').then(m => m.AdminRolesComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['roles.manage'] },
+                        title: 'תפקידים והרשאות - אקורדישקייט'
                     },
                     {
                         path: 'news-sections',
                         loadComponent: () => import('./components/admin/content/news-page-sections/news-page-sections-management.component').then(m => m.NewsPageSectionsMangementComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['system.manage'] },
                         title: 'קטגוריות דפים - אקורדישקייט'
                     },
                     {
                         path: 'news-cleanup',
                         loadComponent: () => import('./components/admin/system/news-cleanup/news-cleanup.component').then(m => m.NewsCleanupComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['system.manage'] },
                         title: 'ניקוי חדשות - אקורדישקייט'
                     },
                     {
                         path: 'ticker',
                         loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
+                        canActivate: [permissionGuard],
+                        data: { permissions: ['system.manage'] },
                         title: 'פס הירו - אקורדישקייט'
                     }
                 ]

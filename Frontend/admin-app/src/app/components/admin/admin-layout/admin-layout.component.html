@@ -1,12 +1,11 @@
 <div class="admin-container">
-    <!-- Admin Header -->
     <header class="admin-header">
         <div class="header-inner">
             <a routerLink="/admin/dashboard" routerLinkActive="active" class="btn-dashboard header-dashboard">מרכז הבקרה</a>
 
             <div class="header-center">
                 <nav class="admin-nav">
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+                    <div class="nav-group" *ngIf="can('users.manage')" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/users" class="nav-item nav-parent">
                             <span>משתמשים</span>
                         </a>
@@ -18,19 +17,21 @@
                             <a routerLink="/admin/users/agencies" routerLinkActive="active-sub" class="sub-nav-item">סוכנויות</a>
                         </div>
                     </div>
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+
+                    <div class="nav-group" *ngIf="canAny(['content.manage','content.songs','content.articles','content.events','content.podcasts'])" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/content" class="nav-item nav-parent">
                             <span>תוכן</span>
                         </a>
                         <div class="nav-submenu" aria-label="סוגי תוכן">
-                            <a routerLink="/admin/content/songs" routerLinkActive="active-sub" class="sub-nav-item">אקורדים</a>
-                            <a routerLink="/admin/content/articles" routerLinkActive="active-sub" class="sub-nav-item">כתבות</a>
-                            <a routerLink="/admin/content/events" routerLinkActive="active-sub" class="sub-nav-item">הופעות</a>
-                            <a routerLink="/admin/content/podcasts" routerLinkActive="active-sub" class="sub-nav-item">פודקאסטים</a>
-                            <a routerLink="/admin/content/featured" routerLinkActive="active-sub" class="sub-nav-item">תוכן מרכזי</a>
+                            <a *ngIf="canAny(['content.manage','content.songs'])" routerLink="/admin/content/songs" routerLinkActive="active-sub" class="sub-nav-item">אקורדים</a>
+                            <a *ngIf="canAny(['content.manage','content.articles'])" routerLink="/admin/content/articles" routerLinkActive="active-sub" class="sub-nav-item">כתבות</a>
+                            <a *ngIf="canAny(['content.manage','content.events'])" routerLink="/admin/content/events" routerLinkActive="active-sub" class="sub-nav-item">הופעות</a>
+                            <a *ngIf="canAny(['content.manage','content.podcasts'])" routerLink="/admin/content/podcasts" routerLinkActive="active-sub" class="sub-nav-item">פודקאסטים</a>
+                            <a *ngIf="can('content.manage')" routerLink="/admin/content/featured" routerLinkActive="active-sub" class="sub-nav-item">תוכן מרכזי</a>
                         </div>
                     </div>
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+
+                    <div class="nav-group" *ngIf="can('analytics.view')" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/analytics" [queryParams]="{tab:'articles'}" class="nav-item nav-parent">
                             <span>אנליטיקס</span>
                         </a>
@@ -42,7 +43,8 @@
                             <a routerLink="/admin/analytics" [queryParams]="{tab:'agencies'}" routerLinkActive="active-sub" [routerLinkActiveOptions]="{exact: true, queryParams: 'exact'}" class="sub-nav-item">סוכנויות</a>
                         </div>
                     </div>
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+
+                    <div class="nav-group" *ngIf="can('advertising.manage')" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/advertising" class="nav-item nav-parent">
                             <span>פרסום</span>
                         </a>
@@ -52,30 +54,33 @@
                             <a routerLink="/admin/advertising/clients" routerLinkActive="active-sub" class="sub-nav-item">לקוחות</a>
                         </div>
                     </div>
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+
+                    <div class="nav-group" *ngIf="canAny(['notifications.manage','reports.manage'])" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/notifications" class="nav-item nav-parent">
                             <span>התראות</span>
                         </a>
                         <div class="nav-submenu" aria-label="סוגי התראות">
-                            <a routerLink="/admin/notifications/messages" routerLinkActive="active-sub" class="sub-nav-item">צ׳אטים</a>
-                            <a routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">
+                            <a *ngIf="can('notifications.manage')" routerLink="/admin/notifications/messages" routerLinkActive="active-sub" class="sub-nav-item">צ׳אטים</a>
+                            <a *ngIf="can('reports.manage')" routerLink="/admin/notifications/reports" routerLinkActive="active-sub" class="sub-nav-item">
                                 <span>דיווחים</span>
                                 <span class="report-badge" *ngIf="pendingReportsCount > 0">{{ pendingReportsCount > 99 ? '99+' : pendingReportsCount }}</span>
                             </a>
-                            <a routerLink="/admin/notifications/email" routerLinkActive="active-sub" class="sub-nav-item">מיילים</a>
+                            <a *ngIf="can('notifications.manage')" routerLink="/admin/notifications/email" routerLinkActive="active-sub" class="sub-nav-item">מיילים</a>
                         </div>
                     </div>
-                    <div class="nav-group" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
+
+                    <div class="nav-group" *ngIf="canAny(['system.manage','roles.manage','content.manage'])" routerLinkActive="active expanded" [routerLinkActiveOptions]="{ exact: false }">
                         <a routerLink="/admin/system" class="nav-item nav-parent">
                             <span>מערכת</span>
                         </a>
                         <div class="nav-submenu" aria-label="הגדרות מערכת">
-                            <a routerLink="/admin/system/tables" routerLinkActive="active-sub" class="sub-nav-item">טבלאות מערכת</a>
-                            <a routerLink="/admin/system/settings" routerLinkActive="active-sub" class="sub-nav-item">הגדרות</a>
-                            <a routerLink="/admin/system/smart-add" routerLinkActive="active-sub" class="sub-nav-item">הוספה חכמה</a>
-                            <a routerLink="/admin/system/news-sections" routerLinkActive="active-sub" class="sub-nav-item">קטגוריות דפים</a>
-                            <a routerLink="/admin/system/news-cleanup" routerLinkActive="active-sub" class="sub-nav-item">ניקוי חדשות</a>
-                            <a routerLink="/admin/system/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>
+                            <a *ngIf="can('system.manage')" routerLink="/admin/system/tables" routerLinkActive="active-sub" class="sub-nav-item">טבלאות מערכת</a>
+                            <a *ngIf="can('system.manage')" routerLink="/admin/system/settings" routerLinkActive="active-sub" class="sub-nav-item">הגדרות</a>
+                            <a *ngIf="can('roles.manage')" routerLink="/admin/system/roles" routerLinkActive="active-sub" class="sub-nav-item">תפקידים והרשאות</a>
+                            <a *ngIf="can('content.manage')" routerLink="/admin/system/smart-add" routerLinkActive="active-sub" class="sub-nav-item">הוספה חכמה</a>
+                            <a *ngIf="can('system.manage')" routerLink="/admin/system/news-sections" routerLinkActive="active-sub" class="sub-nav-item">קטגוריות דפים</a>
+                            <a *ngIf="can('system.manage')" routerLink="/admin/system/news-cleanup" routerLinkActive="active-sub" class="sub-nav-item">ניקוי חדשות</a>
+                            <a *ngIf="can('system.manage')" routerLink="/admin/system/ticker" routerLinkActive="active-sub" class="sub-nav-item">פס הירו</a>
                         </div>
                     </div>
                 </nav>
@@ -89,39 +94,37 @@
                     </button>
 
                     <div class="site-menu-panel">
-                    <nav class="desktop-nav">
-                        <div class="nav-pills">
-                            <ul class="main-nav">
-                                <li>
-                                    <a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a>
-                                </li>
-                                <li>
-                                    <a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a>
-                                </li>
-                                <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-                                    <a class="nav-link nav-parent" routerLink="/music-news">חדשות</a>
-                                    <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
-                                        <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
-                                        <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
-                                        <a routerLink="/podcasts" routerLinkActive="active-sub" class="site-sub-nav-item">פודקאסטים</a>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </nav>
-                    <a class="btn-music-index" routerLink="/professionals">
-                        <span class="material-icons index-search-icon">search</span>
-                        <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
-                    </a>
+                        <nav class="desktop-nav">
+                            <div class="nav-pills">
+                                <ul class="main-nav">
+                                    <li>
+                                        <a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">בית</a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link" routerLink="/chords" routerLinkActive="active">אקורדים</a>
+                                    </li>
+                                    <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+                                        <a class="nav-link nav-parent" routerLink="/music-news">חדשות</a>
+                                        <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
+                                            <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
+                                            <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
+                                            <a routerLink="/podcasts" routerLinkActive="active-sub" class="site-sub-nav-item">פודקאסטים</a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </nav>
+                        <a class="btn-music-index" routerLink="/professionals">
+                            <span class="material-icons index-search-icon">search</span>
+                            <span class="btn-music-index-text">אינדקס עולם המוזיקה</span>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="admin-main">
         <router-outlet></router-outlet>
     </main>
-
 </div>

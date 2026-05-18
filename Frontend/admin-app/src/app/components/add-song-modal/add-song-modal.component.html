@@ -224,6 +224,34 @@
                             <span>{{ lyricsHelperText }}</span>
                         </div>
                     </div>
+
+                    <div class="smart-manual-key-panel" *ngIf="keyDetectionFailed">
+                        <div class="smart-message-row">
+                            <div class="smart-bot-icon"><span class="material-icons">help_outline</span></div>
+                            <div class="smart-bubble smart-bubble-info">
+                                <span>{{ 'song_modal.key_not_detected_prompt' | translate }}</span>
+                            </div>
+                        </div>
+                        <div class="keys-row smart-keys-row">
+                            <div class="key-field">
+                                <label class="key-label">{{ 'song_modal.original_key_field' | translate }}</label>
+                                <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
+                                    <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
+                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                </select>
+                                <div class="error" *ngIf="songForm.get('originalKeyId')?.invalid && songForm.get('originalKeyId')?.touched">
+                                    {{ 'song_modal.key_error' | translate }}
+                                </div>
+                            </div>
+                            <div class="key-field">
+                                <label class="key-label">{{ 'song_modal.easy_key_field' | translate }}</label>
+                                <select formControlName="easyKeyId" (change)="userChangedEasyKey = true">
+                                    <option [ngValue]="null">{{ 'song_modal.select_easy_key' | translate }}</option>
+                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div *ngIf="currentStep === 3" class="step-content smart-step-panel preview-step">

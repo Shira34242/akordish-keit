@@ -133,6 +133,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     userChangedEasyKey = false;
     autoDetectedOriginalKeyName: string | null = null;
     autoDetectedEasyKeyName: string | null = null;
+    keyDetectionFailed = false;
 
     // Metadata
     youtubeMetadata: YouTubeMetadata | null = null;
@@ -1728,11 +1729,13 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             if (this.songForm.get('originalKeyId')?.value) {
+                this.keyDetectionFailed = false;
                 this.currentStep = 3;
                 this.scrollModalToTop();
                 return;
             }
 
+            this.keyDetectionFailed = true;
             this.songForm.get('originalKeyId')?.markAsTouched();
         });
     }
@@ -1791,6 +1794,19 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                         return;
                     }
 
+                    if (this.keyDetectionFailed) {
+                        const keyValid = this.songForm.get('originalKeyId')?.valid;
+                        if (!keyValid) {
+                            this.songForm.get('originalKeyId')?.markAsTouched();
+                            this.showRequiredField('[formControlName="originalKeyId"]');
+                            return;
+                        }
+                        this.keyDetectionFailed = false;
+                        this.currentStep = 3;
+                        this.scrollModalToTop();
+                        return;
+                    }
+
                     this.moveToPreview();
                     return;
                 }
@@ -1810,6 +1826,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.currentStep > 1) {
             if (!this.isLegacyFlow && this.currentStep === 3) {
                 this.currentStep = 2;
+                this.keyDetectionFailed = false;
                 this.scrollModalToTop();
                 return;
             }

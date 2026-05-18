@@ -299,6 +299,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.modeOriginStep = this.currentStep;
         await this.typeMessage(this.langService.translate('fab.song_selected'), 'question');
         this.currentMode = 'song';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'chord-request':
         this.modeOriginStep = this.currentStep;
@@ -307,6 +308,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.chordRequestChecked = false;
         await this.typeMessage(this.langService.translate('fab.chord_request_question'), 'question');
         this.currentMode = 'chord-request';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'contact-form':
         this.modeOriginStep = this.currentStep;
@@ -315,6 +317,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.autoFillContactFromCurrentUser();
         await this.typeMessage(this.langService.translate('quick_add.contact_form_text'), 'question');
         this.currentMode = 'contact';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'content-article':
         await this.typeMessage(this.langService.translate('quick_add.content_form_text'), 'question');
@@ -330,12 +333,14 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.showEventArtistDropdown = false;
         await this.typeMessage(this.langService.translate('quick_add.event_form_text'), 'question');
         this.currentMode = 'event';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'podcast-series':
         this.modeOriginStep = this.currentStep;
         this.podcastSeries = { name: '', sourceUrl: '' };
         await this.typeMessage(this.langService.translate('quick_add.podcast_series_form_text'), 'question');
         this.currentMode = 'podcast-series';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'podcast-episode':
         this.modeOriginStep = this.currentStep;
@@ -343,6 +348,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.loadPodcasts();
         await this.typeMessage(this.langService.translate('quick_add.podcast_episode_form_text'), 'question');
         this.currentMode = 'podcast-episode';
+        this.scrollToActiveFlowStart(true);
         break;
       case 'index-teacher':
       case 'index-service-provider':
@@ -699,6 +705,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.article.featuredImageUrl = '';
   }
 
+  showArticleOptionalFields(): void {
+    this.showArticleOptional = true;
+    this.scrollToActiveFlowStart(false);
+  }
+
+  toggleArticleImageLinkInput(): void {
+    this.showArticleImageLinkInput = !this.showArticleImageLinkInput;
+    if (this.showArticleImageLinkInput) {
+      this.scrollToActiveFlowStart(false);
+    }
+  }
+
   onEventImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -725,6 +743,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
   clearEventImage(): void {
     this.event.imageUrl = '';
+  }
+
+  showEventOptionalFields(): void {
+    this.showEventOptional = true;
+    this.scrollToActiveFlowStart(false);
+  }
+
+  toggleEventImageLinkInput(): void {
+    this.showEventImageLinkInput = !this.showEventImageLinkInput;
+    if (this.showEventImageLinkInput) {
+      this.scrollToActiveFlowStart(false);
+    }
   }
 
   onEventArtistSearchFocus(): void {
@@ -907,6 +937,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.showArticleOptional = false;
     this.showArticleImageLinkInput = false;
     this.isUploadingArticleImage = false;
+    this.scrollToActiveFlowStart(true);
   }
 
   private async resetConversation(): Promise<void> {
@@ -951,6 +982,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
       this.currentMode = 'contact';
       this.modeOriginStep = 'root';
       this.autoFillContactFromCurrentUser();
+      this.scrollToActiveFlowStart(true);
     } else if (this.entryPoint === 'news') {
       await this.typeMessage(this.langService.translate('quick_add.news_form_text'), 'question');
       this.openArticleFlow(ArticleContentType.News);
@@ -961,6 +993,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
       await this.typeMessage(this.langService.translate('quick_add.event_form_text'), 'question');
       this.modeOriginStep = 'root';
       this.currentMode = 'event';
+      this.scrollToActiveFlowStart(true);
     } else {
       await this.appendBotStep(initialStep);
     }
@@ -1123,6 +1156,40 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         content.scrollTo({ top: content.scrollHeight, behavior: 'smooth' });
       }
     }, 20);
+    this.trackTimer(id);
+  }
+
+  private scrollToActiveFlowStart(focusFirstField: boolean): void {
+    const id = window.setTimeout(() => {
+      if (this.destroyed) return;
+
+      const content = document.querySelector('.modal-content') as HTMLElement | null;
+      const flow = document.querySelector('.embedded-flow') as HTMLElement | null;
+      if (!content || !flow) return;
+
+      const contentRect = content.getBoundingClientRect();
+      const flowRect = flow.getBoundingClientRect();
+      const targetTop = content.scrollTop + flowRect.top - contentRect.top;
+
+      content.scrollTo({
+        top: Math.max(0, targetTop - 8),
+        behavior: 'smooth'
+      });
+
+      if (!focusFirstField) return;
+
+      const focusId = window.setTimeout(() => {
+        if (this.destroyed) return;
+        const firstField = flow.querySelector(
+          'input:not([type="file"]):not([hidden]), textarea, select'
+        ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+
+        firstField?.focus({ preventScroll: true });
+      }, 180);
+
+      this.trackTimer(focusId);
+    }, 40);
+
     this.trackTimer(id);
   }
 

@@ -1,0 +1,90 @@
+<section class="roles-page" dir="rtl">
+  <div class="roles-toolbar">
+    <div>
+      <h2>תפקידים והרשאות</h2>
+      <p>הגדרה של תפקידי ניהול מותאמים ושיוך הרשאות לכל תפקיד.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="startNew()">
+      <span class="material-icons">add</span>
+      תפקיד חדש
+    </button>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div class="loading-state" *ngIf="loading">טוען תפקידים...</div>
+
+  <div class="roles-grid" *ngIf="!loading">
+    <aside class="roles-list">
+      <button
+        type="button"
+        class="role-row"
+        *ngFor="let role of roles"
+        [class.active]="selectedRole?.id === role.id"
+        (click)="editRole(role)">
+        <span>
+          <strong>{{ role.name }}</strong>
+          <small>{{ role.usersCount }} משתמשים · {{ role.permissions.length }} הרשאות</small>
+        </span>
+        <span class="role-status" [class.inactive]="!role.isActive">{{ role.isActive ? 'פעיל' : 'כבוי' }}</span>
+      </button>
+    </aside>
+
+    <form class="role-editor" (ngSubmit)="saveRole()">
+      <div class="editor-head">
+        <div>
+          <h3>{{ selectedRole ? 'עריכת תפקיד' : 'תפקיד חדש' }}</h3>
+          <p>בחר שם ברור והרשאות שמתאימות לתפקיד.</p>
+        </div>
+        <button
+          *ngIf="selectedRole && !selectedRole.isSystem"
+          type="button"
+          class="icon-danger"
+          title="מחיקה"
+          (click)="deleteRole(selectedRole)">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>שם תפקיד</span>
+          <input class="form-control" name="name" [(ngModel)]="form.name" required placeholder="לדוגמה: תוכן">
+        </label>
+
+        <label>
+          <span>תיאור קצר</span>
+          <input class="form-control" name="description" [(ngModel)]="form.description" placeholder="מה התפקיד הזה אמור לעשות">
+        </label>
+
+        <label class="status-toggle">
+          <input type="checkbox" name="isActive" [(ngModel)]="form.isActive">
+          <span>תפקיד פעיל</span>
+        </label>
+      </div>
+
+      <div class="permissions-panel">
+        <div class="permissions-group" *ngFor="let group of permissionsByGroup()">
+          <h4>{{ group.group }}</h4>
+          <div class="permission-options">
+            <button
+              type="button"
+              class="permission-chip"
+              *ngFor="let permission of group.items"
+              [class.selected]="hasPermission(permission.key)"
+              (click)="togglePermission(permission.key)">
+              <span class="material-icons">{{ hasPermission(permission.key) ? 'check' : 'add' }}</span>
+              {{ permission.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button type="button" class="btn btn-light" (click)="startNew()" [disabled]="saving">נקה</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'שומר...' : 'שמור תפקיד' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

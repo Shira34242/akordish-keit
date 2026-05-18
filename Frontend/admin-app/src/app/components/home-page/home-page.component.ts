@@ -17,6 +17,7 @@ import { SystemItem, SystemTablesService } from '../../services/system-tables.se
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { PodcastEpisodeBannerComponent } from '../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
@@ -50,6 +51,7 @@ interface HeroParticle {
     SongCardComponent,
     ArtistCircleComponent,
     NewsBannerComponent,
+    PodcastEpisodeBannerComponent,
     NewsTickerComponent,
     EventCardComponent,
     EventModalComponent,
@@ -93,6 +95,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredProviders: MusicServiceProviderListDto[] = [];
   homePodcasts: Podcast[] = [];
   latestPodcastEpisodes: PodcastEpisode[] = [];
+  popularPodcastEpisodes: PodcastEpisode[] = [];
 
 
   isMobile = window.innerWidth <= 768;
@@ -279,6 +282,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
       error: err => console.error('loadContent: podcast series', err)
+    });
+
+    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: episodes => { this.popularPodcastEpisodes = episodes; },
+      error: err => console.error('loadContent: popular episodes', err)
     });
   }
 

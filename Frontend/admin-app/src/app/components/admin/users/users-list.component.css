@@ -181,6 +181,13 @@ select.form-control {
 
 .btn-action .material-icons { font-size: 18px; color: #000000; }
 .btn-action:hover { background: #ddff53; }
+.btn-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.btn-action:disabled:hover { background: #F2F2F2; }
+.btn-admin:hover { background: #000000; }
+.btn-admin:hover .material-icons { color: #ddff53; }
 .btn-delete:hover { background: #404040; }
 .btn-delete:hover .material-icons { color: #ffffff; }
 
@@ -405,6 +412,93 @@ select.form-control {
   direction: rtl;
 }
 
+.user-edit-modal {
+  width: min(560px, 100%);
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: var(--space-xl);
+  direction: rtl;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-base);
+  align-items: flex-start;
+  margin-bottom: var(--space-lg);
+}
+
+.modal-head h2 {
+  margin: 0;
+  color: #000000;
+  font-size: var(--font-xl);
+  font-weight: 800;
+}
+
+.modal-head p {
+  margin: var(--space-xs) 0 0;
+  color: #404040;
+  font-size: var(--font-sm);
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #F2F2F2;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover { background: #ddff53; }
+.modal-close .material-icons { font-size: 20px; }
+
+.edit-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-base);
+}
+
+.edit-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.status-toggle {
+  grid-column: 1 / -1;
+  flex-direction: row !important;
+  align-items: center;
+  gap: var(--space-sm) !important;
+  min-height: 42px;
+}
+
+.status-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #000000;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.modal-actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .profile-form-backdrop { padding: 0; }
   .profile-form-modal {
@@ -412,4 +506,12 @@ select.form-control {
     max-height: 100dvh;
     border-radius: 0;
   }
+
+  .user-edit-modal {
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .edit-form-grid { grid-template-columns: 1fr; }
 }
