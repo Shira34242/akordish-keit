@@ -96,6 +96,9 @@ builder.Services.AddScoped<IPodcastService, PodcastService>();
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
 
+// Storage
+builder.Services.AddSingleton<IAzureBlobService, AzureBlobService>();
+
 // Add Background Services
 builder.Services.AddHostedService<CleanupService>();
 builder.Services.AddHostedService<BumpSchedulerService>();

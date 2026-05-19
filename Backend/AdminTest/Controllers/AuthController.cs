@@ -3,8 +3,6 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,19 +18,16 @@ namespace AkordishKeit.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        // תמונת פרופיל אחידה למשתמשים שנרשמו ידנית (ללא Google).
-        // משתמשי Google מקבלים תמונה אמיתית שמורדת מ-Google ל-Cloudinary.
         private const string DEFAULT_PROFILE_IMAGE_URL = "/default-avatar.svg";
 
         private readonly AkordishKeitDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly ICsrfTokenService _csrfTokenService; // 🔐 שירות CSRF
-        private readonly Cloudinary _cloudinary;
+        private readonly ICsrfTokenService _csrfTokenService;
+        private readonly IAzureBlobService _blobService;
         private readonly IEmailService _emailService;
         private readonly ILogger<AuthController> _logger;
 
-        // Simple in-memory storage for verification codes (in production, use Redis or database)
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
 
         public AuthController(
@@ -40,6 +35,7 @@ namespace AkordishKeit.Controllers
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             ICsrfTokenService csrfTokenService,
+            IAzureBlobService blobService,
             IEmailService emailService,
             ILogger<AuthController> logger)
         {
@@ -47,16 +43,9 @@ namespace AkordishKeit.Controllers
             _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _csrfTokenService = csrfTokenService;
+            _blobService = blobService;
             _emailService = emailService;
             _logger = logger;
-
-            var account = new Account(
-                configuration["Cloudinary:CloudName"],
-                configuration["Cloudinary:ApiKey"],
-                configuration["Cloudinary:ApiSecret"]
-            );
-            _cloudinary = new Cloudinary(account);
-            _cloudinary.Api.Secure = true;
         }
 
         [Authorize]
@@ -130,7 +119,7 @@ namespace AkordishKeit.Controllers
                     message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם"
                 });
             }
-            // שמירת תמונת פרופיל ב-Cloudinary (במקום URL ישיר מ-Google שעלול להשתנות)
+            // שמירת תמונת פרופיל ב-Azure Blob (במקום URL ישיר מ-Google שעלול להשתנות)
             // מבוצע כשאין תמונה שמורה, או כשהתמונה הקיימת היא URL ישיר מ-Google
             bool needsImageUpload = user == null
                 || string.IsNullOrEmpty(user.ProfileImageUrl)
@@ -829,24 +818,15 @@ namespace AkordishKeit.Controllers
             return Ok(new { message = "הסיסמא שונתה בהצלחה" });
         }
 
-        // הורדת תמונת פרופיל מ-Google ושמירה ב-Cloudinary
-        // מחזיר URL של Cloudinary, או null אם נכשל (במקרה כזה נשמר ה-Google URL כגיבוי)
+        // הורדת תמונת פרופיל מ-Google ושמירה ב-Azure Blob
+        // מחזיר URL של Azure, או null אם נכשל (במקרה כזה נשמר ה-Google URL כגיבוי)
         private async Task<string?> UploadGoogleProfileImageAsync(string googleImageUrl)
         {
             try
             {
                 var imageBytes = await _httpClient.GetByteArrayAsync(googleImageUrl);
                 using var stream = new MemoryStream(imageBytes);
-
-                var uploadResult = await _cloudinary.UploadAsync(new ImageUploadParams
-                {
-                    File = new FileDescription("profile.jpg", stream),
-                    PublicId = $"profile-images/{Guid.NewGuid()}",
-                    Overwrite = false,
-                    Transformation = new Transformation().Width(200).Height(200).Crop("fill").Gravity("face")
-                });
-
-                return uploadResult.Error == null ? uploadResult.SecureUrl.ToString() : null;
+                return await _blobService.UploadAsync(stream, "profile.jpg", "image/jpeg", "profile-images");
             }
             catch
             {

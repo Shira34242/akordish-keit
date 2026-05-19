@@ -1,5 +1,5 @@
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
+using AkordishKeit.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AkordishKeit.Controllers
@@ -8,7 +8,7 @@ namespace AkordishKeit.Controllers
     [ApiController]
     public class MediaController : ControllerBase
     {
-        private readonly Cloudinary _cloudinary;
+        private readonly IAzureBlobService _blobService;
         private readonly HttpClient _httpClient;
         private readonly ILogger<MediaController> _logger;
 
@@ -16,22 +16,18 @@ namespace AkordishKeit.Controllers
         private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
         private static readonly string[] DocumentExtensions = { ".pdf" };
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
-        private const long MaxPdfViewBytes = 30 * 1024 * 1024;
+        private const long MaxFileSizeBytes = 30 * 1024 * 1024; // 30MB
 
-        public MediaController(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<MediaController> logger)
+        public MediaController(IAzureBlobService blobService, IHttpClientFactory httpClientFactory, ILogger<MediaController> logger)
         {
-            var account = new Account(
-                configuration["Cloudinary:CloudName"],
-                configuration["Cloudinary:ApiKey"],
-                configuration["Cloudinary:ApiSecret"]
-            );
-            _cloudinary = new Cloudinary(account);
-            _cloudinary.Api.Secure = true;
+            _blobService = blobService;
             _httpClient = httpClientFactory.CreateClient();
             _logger = logger;
         }
 
         [HttpPost("upload")]
+        [Authorize]
+        [RequestSizeLimit(31_457_280)]
         public async Task<ActionResult<string>> UploadMedia(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -46,61 +42,24 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP, MP3, WAV, M4A, AAC, OGG, PDF" });
             }
 
-            if (file.Length > 30 * 1024 * 1024)
+            if (file.Length > MaxFileSizeBytes)
             {
                 _logger.LogWarning("Upload rejected — file too large: {FileName} ({SizeMB:F1}MB) IP={IP}",
                     file.FileName, file.Length / 1024.0 / 1024.0, HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "File size exceeds 30MB limit" });
             }
 
-            var now = DateTime.UtcNow;
-            var folder = $"uploads/{now.Year}/{now.Month:D2}";
-            var publicId = $"{folder}/{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}";
-
+            var contentType = GetContentType(fileExtension);
             using var stream = file.OpenReadStream();
-            var fileDescription = new FileDescription(file.FileName, stream);
+            var url = await _blobService.UploadAsync(stream, file.FileName, contentType);
 
-            UploadResult uploadResult;
-
-            if (DocumentExtensions.Contains(fileExtension))
-            {
-                uploadResult = await _cloudinary.UploadAsync(new RawUploadParams
-                {
-                    File = fileDescription,
-                    PublicId = $"{publicId}{fileExtension}",
-                    Overwrite = false
-                });
-            }
-            else if (VideoExtensions.Contains(fileExtension) || AudioExtensions.Contains(fileExtension))
-            {
-                uploadResult = await _cloudinary.UploadAsync(new VideoUploadParams
-                {
-                    File = fileDescription,
-                    PublicId = publicId,
-                    Overwrite = false
-                });
-            }
-            else
-            {
-                uploadResult = await _cloudinary.UploadAsync(new ImageUploadParams
-                {
-                    File = fileDescription,
-                    PublicId = publicId,
-                    Overwrite = false
-                });
-            }
-
-            if (uploadResult.Error != null)
-            {
-                _logger.LogError("Cloudinary upload failed: {FileName} — {Error} IP={IP}",
-                    file.FileName, uploadResult.Error.Message, HttpContext.Connection.RemoteIpAddress);
-                return StatusCode(500, new { message = uploadResult.Error.Message });
-            }
+            if (url == null)
+                return StatusCode(500, new { message = "Upload failed. Please try again." });
 
             _logger.LogInformation("File uploaded: {FileName} ({Extension}, {SizeMB:F1}MB) → {Url} IP={IP}",
-                file.FileName, fileExtension, file.Length / 1024.0 / 1024.0,
-                uploadResult.SecureUrl, HttpContext.Connection.RemoteIpAddress);
-            return Ok(new { url = uploadResult.SecureUrl.ToString() });
+                file.FileName, fileExtension, file.Length / 1024.0 / 1024.0, url, HttpContext.Connection.RemoteIpAddress);
+
+            return Ok(new { url });
         }
 
         [HttpGet("pdf-view")]
@@ -109,11 +68,19 @@ namespace AkordishKeit.Controllers
             if (!IsSafePdfUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid PDF URL" });
 
-            var pdfBytes = await TryLoadPdfBytes(uri);
-            if (pdfBytes == null)
+            byte[]? pdfBytes = null;
+            using var request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, uri.AbsoluteUri);
+            request.Headers.UserAgent.ParseAdd("AkordishKeit/1.0");
+            request.Headers.Accept.ParseAdd("application/pdf");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                pdfBytes = await response.Content.ReadAsByteArrayAsync();
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
                 return StatusCode(502, new { message = "PDF could not be loaded" });
 
-            if (pdfBytes.Length > MaxPdfViewBytes)
+            if (pdfBytes.Length > MaxFileSizeBytes)
                 return BadRequest(new { message = "PDF file is too large" });
 
             if (!IsPdfContent(pdfBytes))
@@ -124,139 +91,51 @@ namespace AkordishKeit.Controllers
             return File(pdfBytes, "application/pdf", enableRangeProcessing: true);
         }
 
-        private async Task<byte[]?> TryLoadPdfBytes(Uri uri)
-        {
-            foreach (var candidate in GetPdfFetchCandidates(uri).DistinctBy(candidate => candidate.AbsoluteUri))
-            {
-                using var request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, candidate.AbsoluteUri);
-                request.Headers.UserAgent.ParseAdd("AkordishKeit/1.0");
-                request.Headers.Accept.ParseAdd("application/pdf");
-
-                using var response = await _httpClient.SendAsync(request);
-                if (!response.IsSuccessStatusCode)
-                    continue;
-
-                if (response.Content.Headers.ContentLength > MaxPdfViewBytes)
-                    return null;
-
-                var bytes = await response.Content.ReadAsByteArrayAsync();
-                if (bytes.Length > MaxPdfViewBytes)
-                    return null;
-
-                if (IsPdfContent(bytes))
-                    return bytes;
-            }
-
-            return null;
-        }
-
-        private IEnumerable<Uri> GetPdfFetchCandidates(Uri uri)
-        {
-            yield return uri;
-
-            if (!IsCloudinaryRawUrl(uri, out var publicId))
-                yield break;
-
-            if (!uri.AbsolutePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                var withPdfExtension = new UriBuilder(uri)
-                {
-                    Path = $"{uri.AbsolutePath}.pdf"
-                };
-                yield return withPdfExtension.Uri;
-            }
-
-            var publicIdWithoutExtension = Path.ChangeExtension(publicId, null);
-            var expiresAt = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds();
-            var signedUrl = _cloudinary.DownloadPrivate(publicIdWithoutExtension, false, "pdf", "upload", expiresAt, "raw");
-            if (Uri.TryCreate(signedUrl, UriKind.Absolute, out var signedUri))
-                yield return signedUri;
-        }
-
         [HttpDelete("delete")]
+        [Authorize]
         public async Task<ActionResult> DeleteMedia([FromQuery] string url)
         {
             if (string.IsNullOrEmpty(url))
                 return BadRequest(new { message = "URL is required" });
 
-            try
-            {
-                // Cloudinary URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{public_id}.{ext}
-                var uri = new Uri(url);
-                var pathSegments = uri.AbsolutePath.Split("/upload/");
-                if (pathSegments.Length < 2)
-                    return BadRequest(new { message = "Invalid Cloudinary URL" });
+            var deleted = await _blobService.DeleteAsync(url);
+            _logger.LogInformation("Delete requested: {Url} deleted={Deleted} IP={IP}",
+                url, deleted, HttpContext.Connection.RemoteIpAddress);
 
-                // Remove version prefix (v1234/) and file extension to get public_id
-                var withoutVersion = System.Text.RegularExpressions.Regex.Replace(pathSegments[1], @"^v\d+/", "");
-                var publicId = Path.ChangeExtension(withoutVersion, null);
-
-                var resourceType = uri.AbsolutePath.Contains("/video/")
-                    ? ResourceType.Video
-                    : uri.AbsolutePath.Contains("/raw/")
-                        ? ResourceType.Raw
-                        : ResourceType.Image;
-
-                var deleteResult = await _cloudinary.DestroyAsync(new DeletionParams(publicId)
-                {
-                    ResourceType = resourceType
-                });
-
-                if (deleteResult.Result == "ok" || deleteResult.Result == "not found")
-                {
-                    _logger.LogInformation("File deleted from Cloudinary: {PublicId} Result={Result} IP={IP}",
-                        publicId, deleteResult.Result, HttpContext.Connection.RemoteIpAddress);
-                    return Ok(new { message = "File deleted successfully" });
-                }
-
-                _logger.LogError("Cloudinary delete failed: {PublicId} Result={Result} IP={IP}",
-                    publicId, deleteResult.Result, HttpContext.Connection.RemoteIpAddress);
-                return StatusCode(500, new { message = "Failed to delete file" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Delete error: {Url} IP={IP}", url, HttpContext.Connection.RemoteIpAddress);
-                return BadRequest(new { message = $"Error deleting file: {ex.Message}" });
-            }
+            return Ok(new { message = deleted ? "File deleted successfully" : "File not found or already deleted" });
         }
+
+        private static string GetContentType(string extension) => extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png"            => "image/png",
+            ".gif"            => "image/gif",
+            ".webp"           => "image/webp",
+            ".mp4"            => "video/mp4",
+            ".webm"           => "video/webm",
+            ".mp3"            => "audio/mpeg",
+            ".wav"            => "audio/wav",
+            ".m4a"            => "audio/mp4",
+            ".aac"            => "audio/aac",
+            ".ogg"            => "audio/ogg",
+            ".pdf"            => "application/pdf",
+            _                 => "application/octet-stream"
+        };
 
         private static bool IsSafePdfUrl(string url, out Uri uri)
         {
             uri = null!;
             if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
                 return false;
-
             if (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp)
                 return false;
-
             if (parsed.IsLoopback || string.IsNullOrWhiteSpace(parsed.Host))
                 return false;
-
             uri = parsed;
             return true;
         }
 
-        private static bool IsCloudinaryRawUrl(Uri uri, out string publicId)
-        {
-            publicId = string.Empty;
-            if (!uri.Host.EndsWith("res.cloudinary.com", StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            var pathSegments = uri.AbsolutePath.Split("/raw/upload/", StringSplitOptions.None);
-            if (pathSegments.Length < 2)
-                return false;
-
-            publicId = System.Text.RegularExpressions.Regex.Replace(pathSegments[1], @"^v\d+/", "");
-            return !string.IsNullOrWhiteSpace(publicId);
-        }
-
-        private static bool IsPdfContent(byte[] bytes)
-        {
-            return bytes.Length >= 4
-                && bytes[0] == '%'
-                && bytes[1] == 'P'
-                && bytes[2] == 'D'
-                && bytes[3] == 'F';
-        }
+        private static bool IsPdfContent(byte[] bytes) =>
+            bytes.Length >= 4 && bytes[0] == '%' && bytes[1] == 'P' && bytes[2] == 'D' && bytes[3] == 'F';
     }
 }
