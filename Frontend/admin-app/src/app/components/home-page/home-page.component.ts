@@ -33,6 +33,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { songSlug } from '../../utils/slug';
+import { getArticleRoute } from '../../utils/article-route.utils';
 
 interface HeroParticle {
   x: number; y: number;
@@ -343,8 +344,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (item.type === 'article') {
       this.articleService.getArticle(item.id).pipe(take(1)).subscribe({
         next: article => {
-          const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
-          this.router.navigate([route, article.slug]);
+          this.router.navigate([getArticleRoute(article), article.slug]);
         },
         error: () => {
           alert(this.langService.translate('common.article_open_error'));

@@ -53,6 +53,11 @@ export const routes: Routes = [
                 title: 'כתבות - אקורדישקייט'
             },
             {
+                path: 'news/id/:id',
+                loadComponent: () => import('./components/news/article-view/article-view.component').then(m => m.ArticleViewComponent),
+                title: 'אקורדישקייט - חדשות המוזיקה'
+            },
+            {
                 path: 'news/:slug',
                 loadComponent: () => import('./components/news/article-view/article-view.component').then(m => m.ArticleViewComponent),
                 title: 'אקורדישקייט - חדשות המוזיקה'
@@ -61,6 +66,11 @@ export const routes: Routes = [
                 path: 'blog',
                 loadComponent: () => import('./components/public/blog-list/blog-list.component').then(m => m.BlogListComponent),
                 title: 'בלוג - אקורדישקייט'
+            },
+            {
+                path: 'blog/id/:id',
+                loadComponent: () => import('./components/news/blog-post-view/blog-post-view.component').then(m => m.BlogPostViewComponent),
+                title: 'אקורדישקייט - כתבות'
             },
             {
                 path: 'blog/:slug',

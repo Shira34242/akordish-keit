@@ -19,6 +19,7 @@ import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-p
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
+import { getArticleRoute } from '../../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-articles-list',
@@ -663,8 +664,7 @@ export class ArticlesListComponent implements OnInit {
   }
 
   viewArticle(article: Article): void {
-    const path = article.contentType === ArticleContentType.News ? 'news' : 'blog';
-    this.router.navigate([path, article.slug]);
+    this.router.navigate([getArticleRoute(article), article.slug]);
   }
 
   async publishArticle(article: Article): Promise<void> {

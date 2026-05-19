@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, RouterLink } from '@angular/router';
+import { RouterModule, RouterLink } from '@angular/router';
 import { Article } from '../../../models/article.model';
 import { getArticleRoute } from '../../../utils/article-route.utils';
 
@@ -14,18 +14,15 @@ import { getArticleRoute } from '../../../utils/article-route.utils';
 export class NewsBannerComponent {
   @Input() article!: Article;
   @Input() showDescription = true;
-
-  constructor(private router: Router) {}
+  @Input() routePrefix?: '/news' | '/blog';
 
   get articleRoute(): string {
-    return getArticleRoute(this.article);
+    return this.routePrefix ?? getArticleRoute(this.article);
   }
 
-  navigate(event?: MouseEvent): void {
-    if (event) {
-      event.preventDefault();
-    }
-    if (!this.article.slug) return;
-    this.router.navigate([this.articleRoute, this.article.slug]);
+  get articleLink(): string[] {
+    return this.article.slug
+      ? [this.articleRoute, this.article.slug]
+      : [this.articleRoute, 'id', String(this.article.id)];
   }
 }

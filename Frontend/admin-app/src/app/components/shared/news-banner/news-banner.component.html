@@ -1,22 +1,18 @@
-<a class="news-banner" *ngIf="article.slug" [routerLink]="[articleRoute, article.slug]" (click)="navigate($event)">
+<a class="news-banner" [routerLink]="articleLink">
 
-  <!-- תמונת רקע -->
   <img
     class="banner-bg"
     [src]="article.featuredImageUrl || 'assets/default-article.png'"
     [alt]="article.title"
     loading="lazy">
 
-  <!-- שכבת כהייה בפינה הימנית תחתונה -->
   <div class="banner-overlay"></div>
 
-  <!-- טקסט — פינה ימנית תחתונה -->
   <div class="banner-text">
     <h3 class="banner-title">{{ article.title }}</h3>
     <p class="banner-subtitle" *ngIf="showDescription && article.shortDescription">{{ article.shortDescription }}</p>
   </div>
 
-  <!-- כפתור חץ — פינה שמאלית תחתונה -->
   <span class="banner-arrow-btn" aria-label="לכתבה">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -26,32 +22,3 @@
   </span>
 
 </a>
-
-<div class="news-banner disabled-banner" *ngIf="!article.slug" (click)="navigate($event)">
-
-  <!-- תמונת רקע -->
-  <img
-    class="banner-bg"
-    [src]="article.featuredImageUrl || 'assets/default-article.png'"
-    [alt]="article.title"
-    loading="lazy">
-
-  <!-- שכבת כהייה בפינה הימנית תחתונה -->
-  <div class="banner-overlay"></div>
-
-  <!-- טקסט — פינה ימנית תחתונה -->
-  <div class="banner-text">
-    <h3 class="banner-title">{{ article.title }}</h3>
-    <p class="banner-subtitle" *ngIf="showDescription && article.shortDescription">{{ article.shortDescription }}</p>
-  </div>
-
-  <!-- כפתור חץ — פינה שמאלית תחתונה -->
-  <span class="banner-arrow-btn" aria-label="לכתבה">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"></line>
-      <polyline points="12 19 5 12 12 5"></polyline>
-    </svg>
-  </span>
-
-</div>
