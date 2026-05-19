@@ -39,27 +39,33 @@ public class AdminRoleService : IAdminRoleService
     {
         IQueryable<AdminRole> query = _context.AdminRoles
             .Include(r => r.Permissions)
-            .Include(r => r.Users)
             .Where(r => !r.IsDeleted);
 
         if (!includeInactive)
             query = query.Where(r => r.IsActive);
 
-        var roles = await query
-            .OrderBy(r => r.Name)
-            .ToListAsync();
+        var roles = await query.OrderBy(r => r.Name).ToListAsync();
 
-        return roles.Select(MapToDto).ToList();
+        var roleIds = roles.Select(r => r.Id).ToList();
+        var userCounts = await _context.Users
+            .Where(u => u.AdminRoleId.HasValue && roleIds.Contains(u.AdminRoleId!.Value) && !u.IsDeleted)
+            .GroupBy(u => u.AdminRoleId!.Value)
+            .Select(g => new { RoleId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.RoleId, x => x.Count);
+
+        return roles.Select(r => MapToDto(r, userCounts.GetValueOrDefault(r.Id, 0))).ToList();
     }
 
     public async Task<AdminRoleDto?> GetRoleAsync(int id)
     {
         var role = await _context.AdminRoles
             .Include(r => r.Permissions)
-            .Include(r => r.Users)
             .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
 
-        return role == null ? null : MapToDto(role);
+        if (role == null) return null;
+
+        var usersCount = await _context.Users.CountAsync(u => u.AdminRoleId == id && !u.IsDeleted);
+        return MapToDto(role, usersCount);
     }
 
     public async Task<AdminRoleDto> CreateRoleAsync(SaveAdminRoleDto dto)
@@ -136,7 +142,7 @@ public class AdminRoleService : IAdminRoleService
             .ToList();
     }
 
-    private static AdminRoleDto MapToDto(AdminRole role)
+    private static AdminRoleDto MapToDto(AdminRole role, int usersCount = 0)
     {
         return new AdminRoleDto
         {
@@ -145,7 +151,7 @@ public class AdminRoleService : IAdminRoleService
             Description = role.Description,
             IsActive = role.IsActive,
             IsSystem = role.IsSystem,
-            UsersCount = role.Users.Count(u => !u.IsDeleted),
+            UsersCount = usersCount,
             Permissions = role.Permissions.Select(p => p.PermissionKey).OrderBy(p => p).ToList()
         };
     }

@@ -180,7 +180,7 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
-                  .AllowAnyMethod()
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                   .AllowCredentials(); // 🔐 מאפשר cookies ו-authentication credentials
         });
 });

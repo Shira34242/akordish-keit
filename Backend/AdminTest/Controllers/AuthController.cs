@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -29,6 +30,8 @@ namespace AkordishKeit.Controllers
         private readonly ILogger<AuthController> _logger;
 
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
+        private static readonly Dictionary<string, int> _resetAttempts = new();
+        private const int MaxResetAttempts = 5;
 
         public AuthController(
             AkordishKeitDbContext context,
@@ -59,6 +62,7 @@ namespace AkordishKeit.Controllers
             }
 
             var user = await _context.Users
+                .AsNoTracking()
                 .Include(u => u.AdminRole)
                     .ThenInclude(r => r!.Permissions)
                 .Include(u => u.ServiceProviderProfiles)
@@ -199,11 +203,12 @@ namespace AkordishKeit.Controllers
         {
             try
             {
-                var response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", cts.Token);
                 if (!response.IsSuccessStatusCode)
                     return null;
 
-                var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync(cts.Token);
                 return JsonSerializer.Deserialize<GoogleTokenInfo>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
             catch
@@ -770,13 +775,24 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "למשתמש אין מספר טלפון רשום" });
             }
 
-            // Generate 6-digit verification code
-            var random = new Random();
-            var code = random.Next(100000, 999999).ToString();
+            // Clean up expired codes before adding a new one (prevents memory leak)
+            var expiredKeys = _verificationCodes
+                .Where(kv => kv.Value.Expiry < DateTime.UtcNow)
+                .Select(kv => kv.Key)
+                .ToList();
+            foreach (var expiredKey in expiredKeys)
+            {
+                _verificationCodes.Remove(expiredKey);
+                _resetAttempts.Remove(expiredKey);
+            }
 
-            // Store code with expiry (15 minutes)
+            // Generate cryptographically secure 6-digit code
+            var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+
+            // Store code with expiry (15 minutes) and reset attempt counter
             var key = user.Email.ToLower();
             _verificationCodes[key] = (code, DateTime.UtcNow.AddMinutes(15));
+            _resetAttempts[key] = 0;
 
             if (request.Method == "email")
             {
@@ -818,16 +834,29 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "קוד אימות לא תקין או פג תוקפו" });
             }
 
+            // Enforce attempt limit (brute-force protection)
+            _resetAttempts.TryGetValue(key, out var attempts);
+            if (attempts >= MaxResetAttempts)
+            {
+                _verificationCodes.Remove(key);
+                _resetAttempts.Remove(key);
+                _logger.LogWarning("Password reset blocked — too many attempts: UserId={UserId} IP={IP}",
+                    user.Id, HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "חריגה ממספר הניסיונות המותרים. אנא בקש קוד חדש" });
+            }
+
             var (storedCode, expiry) = _verificationCodes[key];
 
             if (DateTime.UtcNow > expiry)
             {
                 _verificationCodes.Remove(key);
+                _resetAttempts.Remove(key);
                 return BadRequest(new { message = "קוד האימות פג תוקפו. אנא בקש קוד חדש" });
             }
 
             if (storedCode != request.VerificationCode)
             {
+                _resetAttempts[key] = attempts + 1;
                 return BadRequest(new { message = "קוד אימות שגוי" });
             }
 
@@ -836,8 +865,9 @@ namespace AkordishKeit.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Remove used code
+            // Remove used code and attempt counter
             _verificationCodes.Remove(key);
+            _resetAttempts.Remove(key);
 
             _logger.LogInformation("Password reset completed: UserId={UserId} IP={IP}",
                 user.Id, HttpContext.Connection.RemoteIpAddress);
