@@ -352,7 +352,7 @@ public class MusicServiceProvidersController : ControllerBase
 
     // POST: api/MusicServiceProviders/5/approve
     [HttpPost("{id}/approve")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "users.manage")]
     public async Task<ActionResult> ApproveServiceProvider(int id)
     {
         var result = await _service.ApproveServiceProviderAsync(id);
@@ -368,7 +368,7 @@ public class MusicServiceProvidersController : ControllerBase
 
     // POST: api/MusicServiceProviders/5/reject
     [HttpPost("{id}/reject")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "users.manage")]
     public async Task<ActionResult> RejectServiceProvider(int id)
     {
         var result = await _service.RejectServiceProviderAsync(id);

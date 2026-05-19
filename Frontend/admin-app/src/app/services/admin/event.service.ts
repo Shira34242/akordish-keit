@@ -21,7 +21,12 @@ export class EventService {
     search?: string,
     isActive?: boolean,
     fromDate?: string,
-    toDate?: string
+    toDate?: string,
+    artistId?: number,
+    uploaderSearch?: string,
+    createdFrom?: string,
+    createdTo?: string,
+    sortBy?: string
   ): Observable<PagedResult<Event>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -38,6 +43,21 @@ export class EventService {
     }
     if (toDate) {
       params = params.set('toDate', toDate);
+    }
+    if (artistId !== undefined) {
+      params = params.set('artistId', artistId);
+    }
+    if (uploaderSearch) {
+      params = params.set('uploaderSearch', uploaderSearch);
+    }
+    if (createdFrom) {
+      params = params.set('createdFrom', createdFrom);
+    }
+    if (createdTo) {
+      params = params.set('createdTo', createdTo);
+    }
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
     }
 
     return this.http.get<PagedResult<Event>>(this.apiUrl, { params });

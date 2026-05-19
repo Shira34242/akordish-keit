@@ -87,7 +87,7 @@ export class PodcastService {
     return this.http.get<PodcastEpisodeDetail>(`${this.apiUrl}/episode/${podcastSlug}/${episodeSlug}`);
   }
 
-  getEpisodes(pageNumber = 1, pageSize = 20, podcastId?: number, search?: string, isActive?: boolean): Observable<PagedResult<PodcastEpisode>> {
+  getEpisodes(pageNumber = 1, pageSize = 20, podcastId?: number, search?: string, isActive?: boolean, dateFrom?: string, dateTo?: string, sortBy?: string): Observable<PagedResult<PodcastEpisode>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber)
       .set('pageSize', pageSize);
@@ -95,6 +95,9 @@ export class PodcastService {
     if (podcastId !== undefined) params = params.set('podcastId', podcastId);
     if (search) params = params.set('search', search);
     if (isActive !== undefined) params = params.set('isActive', isActive);
+    if (dateFrom) params = params.set('dateFrom', dateFrom);
+    if (dateTo) params = params.set('dateTo', dateTo);
+    if (sortBy) params = params.set('sortBy', sortBy);
 
     return this.http.get<PagedResult<PodcastEpisode>>(`${this.apiUrl}/episodes`, { params });
   }

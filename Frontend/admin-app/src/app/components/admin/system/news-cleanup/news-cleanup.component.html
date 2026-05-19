@@ -1,0 +1,55 @@
+<section class="cleanup-panel" dir="rtl">
+  <div class="cleanup-card">
+    <div class="cleanup-card-header">
+      <div>
+        <h2>ניקוי חדשות מוזיקה ישנות</h2>
+        <p>מחיקה רכה לפי תאריך הפרסום, רק לכתבות מסוג חדשות.</p>
+      </div>
+      <span class="cleanup-status" [class.active]="cleanupSettings.autoDeleteEnabled">
+        {{ cleanupSettings.autoDeleteEnabled ? 'אוטומטי פעיל' : 'אוטומטי כבוי' }}
+      </span>
+    </div>
+
+    <div class="cleanup-grid">
+      <div class="cleanup-section">
+        <h3>מחיקה ידנית</h3>
+        <label class="cleanup-field">
+          <span>מחק חדשות שפורסמו לפני יותר מ</span>
+          <input type="number" min="30" max="3650" [(ngModel)]="manualCleanupDays">
+          <span>ימים</span>
+        </label>
+        <button class="primary-btn cleanup-action" type="button" (click)="runManualCleanup()" [disabled]="cleanupLoading">
+          <span class="material-icons">{{ cleanupLoading ? 'hourglass_empty' : 'delete_sweep' }}</span>
+          מחיקה ידנית
+        </button>
+      </div>
+
+      <div class="cleanup-section">
+        <h3>מחיקה אוטומטית</h3>
+        <label class="cleanup-toggle">
+          <input type="checkbox" [(ngModel)]="cleanupSettingsDraft.autoDeleteEnabled">
+          <span>להפעיל ניקוי יומי אוטומטי</span>
+        </label>
+        <label class="cleanup-field">
+          <span>למחוק אחרי</span>
+          <input type="number" min="30" max="3650" [(ngModel)]="cleanupSettingsDraft.retentionDays">
+          <span>ימים</span>
+        </label>
+        <button class="secondary-btn cleanup-action" type="button" (click)="saveCleanupSettings()" [disabled]="cleanupLoading || cleanupSettingsLoading">
+          <span class="material-icons">{{ cleanupLoading ? 'hourglass_empty' : 'save' }}</span>
+          שמירת הגדרות
+        </button>
+      </div>
+    </div>
+
+    <div class="cleanup-note">
+      <span class="material-icons">info</span>
+      <span>
+        טווח מותר: 30 עד 3650 ימים.
+        <ng-container *ngIf="cleanupSettings.lastRunAt">
+          ניקוי אחרון: {{ formatDate(cleanupSettings.lastRunAt) }}.
+        </ng-container>
+      </span>
+    </div>
+  </div>
+</section>

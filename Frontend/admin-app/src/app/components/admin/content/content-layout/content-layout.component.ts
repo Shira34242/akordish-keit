@@ -36,7 +36,7 @@ export class AdminContentLayoutComponent {
         const url = this.router.url;
 
         if (url.includes('/content/songs')) {
-            this.modalService.openAddSongModal();
+            this.modalService.openAddSongModal({ flowMode: 'legacy' });
             return;
         }
 

@@ -56,7 +56,7 @@ export class SmartAddComponent {
   }
 
   openSongEditor(): void {
-    this.modalService.openAddSongModal();
+    this.modalService.openAddSongModal({ flowMode: 'legacy' });
   }
 
   openDraftEditor(): void {

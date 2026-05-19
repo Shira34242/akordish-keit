@@ -123,7 +123,6 @@ export class SongService {
         if (tagId) {
             params = params.set('tagId', tagId.toString());
         }
-
         return this.http.get<any>(this.apiUrl, { params });
     }
 
@@ -252,7 +251,10 @@ export class SongService {
         genreId?: number,
         keyId?: number,
         sortBy: string = 'date',
-        tagId?: number
+        tagId?: number,
+        uploaderSearch?: string,
+        dateFrom?: string,
+        dateTo?: string
     ): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
@@ -273,6 +275,15 @@ export class SongService {
         }
         if (tagId) {
             params = params.set('tagId', tagId.toString());
+        }
+        if (uploaderSearch) {
+            params = params.set('uploaderSearch', uploaderSearch);
+        }
+        if (dateFrom) {
+            params = params.set('dateFrom', dateFrom);
+        }
+        if (dateTo) {
+            params = params.set('dateTo', dateTo);
         }
 
         return this.http.get<any>(`${this.apiUrl}/admin/all`, { params });

@@ -481,7 +481,7 @@
     padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3xl);
+    gap: var(--space-2xl);
     box-sizing: border-box;
 }
 
@@ -609,7 +609,7 @@
 .sections-area {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3xl);
+    gap: var(--space-2xl);
 }
 
 
@@ -849,10 +849,10 @@
 
     .chords-content {
         padding: var(--space-xl) var(--space-lg) var(--space-3xl);
-        gap: var(--space-2xl);
+        gap: var(--space-xl);
     }
 
-    .sections-area { gap: var(--space-2xl); }
+    .sections-area { gap: var(--space-xl); }
 
     /* כותרות קטגוריה — קטנות יותר */
     .section-tag { font-size: var(--font-sm); }

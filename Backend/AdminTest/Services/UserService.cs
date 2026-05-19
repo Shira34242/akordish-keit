@@ -27,6 +27,8 @@ public class UserService : IUserService
     {
         var query = _context.Users
             .Include(u => u.PreferredInstrument)
+            .Include(u => u.AdminRole)
+                .ThenInclude(r => r!.Permissions)
             .Where(u => !u.IsDeleted)
             .AsQueryable();
 
@@ -273,6 +275,51 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<UserListDto?> AdminUpdateUserAsync(int userId, AdminUpdateUserDto dto)
+    {
+        if (!Enum.IsDefined(typeof(UserRole), dto.Role))
+            return null;
+
+        var user = await _context.Users
+            .Include(u => u.AdminRole)
+                .ThenInclude(r => r!.Permissions)
+            .Include(u => u.PreferredInstrument)
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user == null) return null;
+
+        user.Username = dto.Username.Trim();
+        user.Email = dto.Email.Trim();
+        user.Phone = string.IsNullOrWhiteSpace(dto.Phone) ? null : dto.Phone.Trim();
+        if (dto.AdminRoleId.HasValue)
+        {
+            var adminRoleExists = await _context.AdminRoles
+                .AnyAsync(r => r.Id == dto.AdminRoleId.Value && r.IsActive && !r.IsDeleted);
+
+            if (!adminRoleExists) return null;
+
+            user.AdminRoleId = dto.AdminRoleId;
+            user.Role = UserRole.Manager;
+        }
+        else
+        {
+            user.AdminRoleId = null;
+            user.Role = (UserRole)dto.Role;
+        }
+
+        user.IsActive = dto.IsActive;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        if (user.AdminRoleId.HasValue)
+        {
+            await _context.Entry(user).Reference(u => u.AdminRole).LoadAsync();
+            if (user.AdminRole != null)
+                await _context.Entry(user.AdminRole).Collection(r => r.Permissions).LoadAsync();
+        }
+        return MapToListDto(user);
+    }
+
     public async Task<List<UserWithProfileDto>> GetMyAllPagesAsync(int userId)
     {
         var results = new List<UserWithProfileDto>();
@@ -422,6 +469,11 @@ public class UserService : IUserService
             Phone = entity.Phone,
             Role = (int)entity.Role,
             RoleName = entity.Role.ToString(),
+            AdminRoleId = entity.AdminRoleId,
+            AdminRoleName = entity.AdminRole?.Name,
+            Permissions = entity.Role == UserRole.Admin
+                ? AdminRoleService.AllPermissionKeys
+                : entity.AdminRole?.Permissions.Select(p => p.PermissionKey).OrderBy(p => p).ToList() ?? new List<string>(),
             Level = (int)entity.ContentTag,
             Points = entity.UploadCount,
             IsActive = entity.IsActive,

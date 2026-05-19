@@ -9,6 +9,10 @@
     </h1>
   </div>
 
+  <div class="form-alert" *ngIf="saveError" role="alert">
+    {{ saveError }}
+  </div>
+
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
@@ -24,24 +28,24 @@
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label required">כותרת</label>
-          <input type="text" class="form-input" [(ngModel)]="article.title" name="title" (input)="onTitleChange()"
+          <label class="form-label required" for="article-title">כותרת</label>
+          <input id="article-title" type="text" class="form-input" [(ngModel)]="article.title" name="title" (input)="onTitleChange()"
             placeholder="הזן כותרת..." required>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label">כותרת משנה</label>
-          <input type="text" class="form-input" [(ngModel)]="article.subtitle" name="subtitle"
+          <label class="form-label" for="article-subtitle">כותרת משנה</label>
+          <input id="article-subtitle" type="text" class="form-input" [(ngModel)]="article.subtitle" name="subtitle"
             placeholder="כותרת משנה (אופציונלי)">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group full-width">
-          <label class="form-label required">תוכן הכתבה</label>
-          <textarea class="form-textarea" [(ngModel)]="article.content" name="content" (input)="calculateReadTime()"
+          <label class="form-label required" for="article-content">תוכן הכתבה</label>
+          <textarea id="article-content" class="form-textarea" [(ngModel)]="article.content" name="content" (input)="calculateReadTime()"
             rows="15" placeholder="תוכן הכתבה..." required></textarea>
           <div class="field-hint" *ngIf="article.readTimeMinutes">
             זמן קריאה משוער: {{ article.readTimeMinutes }} דקות

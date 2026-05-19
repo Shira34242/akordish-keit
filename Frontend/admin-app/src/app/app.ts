@@ -24,6 +24,7 @@ export class AppComponent implements OnInit {
   editMode = false;
   songToEdit: any = null;
   songPrefill: any = null;
+  songModalFlowMode: 'smart' | 'legacy' = 'smart';
   reportModal: ReportModalState = {
     isOpen: false,
     contentType: 'General',
@@ -55,6 +56,7 @@ export class AppComponent implements OnInit {
       this.editMode = state.editMode;
       this.songToEdit = state.songToEdit;
       this.songPrefill = state.songPrefill;
+      this.songModalFlowMode = state.flowMode ?? 'smart';
     });
 
     this.modalService.reportModalState$.subscribe(state => {

@@ -23,11 +23,17 @@ namespace AkordishKeit.Services
             string? search = null,
             bool? isActive = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateTime? toDate = null,
+            int? artistId = null,
+            string? uploaderSearch = null,
+            DateTime? createdFrom = null,
+            DateTime? createdTo = null,
+            string? sortBy = null)
         {
             var query = _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
+                .Include(e => e.SubmittedByUser)
                 .Where(e => !e.IsDeleted)
                 .AsQueryable();
 
@@ -55,8 +61,43 @@ namespace AkordishKeit.Services
                 query = query.Where(e => e.EventDate <= toDate.Value);
             }
 
-            // Order by event date
-            query = query.OrderBy(e => e.EventDate).ThenBy(e => e.DisplayOrder);
+            if (artistId.HasValue)
+            {
+                query = query.Where(e => e.EventArtists.Any(ea => ea.ArtistId == artistId.Value));
+            }
+
+            if (!string.IsNullOrWhiteSpace(uploaderSearch))
+            {
+                var uploaderPattern = $"%{uploaderSearch.Trim()}%";
+                query = query.Where(e =>
+                    e.SubmittedByUser != null &&
+                    (EF.Functions.Like(e.SubmittedByUser.Username, uploaderPattern) ||
+                     EF.Functions.Like(e.SubmittedByUser.Email, uploaderPattern)));
+            }
+
+            if (createdFrom.HasValue)
+            {
+                query = query.Where(e => e.CreatedAt >= createdFrom.Value.Date);
+            }
+
+            if (createdTo.HasValue)
+            {
+                var exclusiveCreatedTo = createdTo.Value.Date.AddDays(1);
+                query = query.Where(e => e.CreatedAt < exclusiveCreatedTo);
+            }
+
+            query = sortBy switch
+            {
+                "created" => query.OrderByDescending(e => e.CreatedAt),
+                "created_asc" => query.OrderBy(e => e.CreatedAt),
+                "name" => query.OrderBy(e => e.Name),
+                "artist" => query.OrderBy(e => e.EventArtists
+                    .OrderBy(ea => ea.Artist.Name)
+                    .Select(ea => ea.Artist.Name)
+                    .FirstOrDefault()).ThenBy(e => e.Name),
+                "uploader" => query.OrderBy(e => e.SubmittedByUser != null ? e.SubmittedByUser.Username : string.Empty).ThenBy(e => e.Name),
+                _ => query.OrderBy(e => e.EventDate).ThenBy(e => e.DisplayOrder)
+            };
 
             // Apply pagination
             var pagedResult = await query.ToPagedResultAsync(pageNumber, pageSize);

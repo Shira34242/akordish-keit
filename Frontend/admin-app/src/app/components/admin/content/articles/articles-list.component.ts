@@ -62,7 +62,7 @@ export class ArticlesListComponent implements OnInit {
   bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
-  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup' = 'news';
+  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup' = 'all';
   cleanupSettings: ArticleNewsCleanupSettingsDto = {
     autoDeleteEnabled: false,
     retentionDays: 365,
@@ -83,6 +83,11 @@ export class ArticlesListComponent implements OnInit {
   searchTerm = '';
   selectedCategory?: number;
   selectedStatus?: ArticleStatus;
+  selectedArtistId?: number;
+  uploaderSearch = '';
+  dateFrom = '';
+  dateTo = '';
+  sortBy = 'date';
   showFeaturedOnly = false;
 
   // Enums for template
@@ -94,7 +99,6 @@ export class ArticlesListComponent implements OnInit {
     this.loadCategories();
     this.loadArtists();
     this.loadArticles();
-    this.loadCleanupSettings();
   }
 
   loadCategories(): void {
@@ -126,7 +130,16 @@ export class ArticlesListComponent implements OnInit {
       this.selectedCategory, // This variable name might be confusing now, it holds ID
       contentType,
       this.selectedStatus,
-      this.showFeaturedOnly ? true : undefined
+      this.showFeaturedOnly ? true : undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.selectedArtistId,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<Article>) => {
         this.articles = result.items;
@@ -148,8 +161,6 @@ export class ArticlesListComponent implements OnInit {
     this.clearSelection();
     if (this.isArticleListTab) {
       this.loadArticles();
-    } else if (tab === 'cleanup') {
-      this.loadCleanupSettings();
     }
   }
 
@@ -174,6 +185,11 @@ export class ArticlesListComponent implements OnInit {
     this.loadArticles();
   }
 
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadArticles();
+  }
+
   toggleFeaturedFilter(): void {
     this.showFeaturedOnly = !this.showFeaturedOnly;
     this.currentPage = 1;
@@ -184,6 +200,11 @@ export class ArticlesListComponent implements OnInit {
     this.searchTerm = '';
     this.selectedCategory = undefined;
     this.selectedStatus = undefined;
+    this.selectedArtistId = undefined;
+    this.uploaderSearch = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.sortBy = 'date';
     this.showFeaturedOnly = false;
     this.currentPage = 1;
     this.loadArticles();

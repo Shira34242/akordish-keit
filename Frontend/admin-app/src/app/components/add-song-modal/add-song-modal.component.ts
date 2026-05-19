@@ -93,6 +93,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() songPrefill: ImportedSongDraft | null = null;
     @Input() embedded: boolean = false;
     @Input() initialSongRequest: InitialSongRequest | null = null;
+    @Input() flowMode: 'smart' | 'legacy' = 'smart';
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -132,6 +133,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     userChangedEasyKey = false;
     autoDetectedOriginalKeyName: string | null = null;
     autoDetectedEasyKeyName: string | null = null;
+    keyDetectionFailed = false;
 
     // Metadata
     youtubeMetadata: YouTubeMetadata | null = null;
@@ -162,6 +164,10 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
     get isSmartFlow(): boolean {
         return !this.isLegacyFlow;
+    }
+
+    get isAdminLongForm(): boolean {
+        return this.flowMode === 'legacy' && !this.editMode;
     }
 
     get totalSteps(): number {
@@ -341,6 +347,10 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.setupKeyAutoDetect();
         this.initProfileSearch();
         this.setupYouTubeSearch();
+
+        if (this.flowMode === 'legacy') {
+            this.isManualAddMode = true;
+        }
 
         // Only setup duplicate check for new songs
         if (!this.editMode) {
@@ -1719,11 +1729,13 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             if (this.songForm.get('originalKeyId')?.value) {
+                this.keyDetectionFailed = false;
                 this.currentStep = 3;
                 this.scrollModalToTop();
                 return;
             }
 
+            this.keyDetectionFailed = true;
             this.songForm.get('originalKeyId')?.markAsTouched();
         });
     }
@@ -1782,6 +1794,19 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                         return;
                     }
 
+                    if (this.keyDetectionFailed) {
+                        const keyValid = this.songForm.get('originalKeyId')?.valid;
+                        if (!keyValid) {
+                            this.songForm.get('originalKeyId')?.markAsTouched();
+                            this.showRequiredField('[formControlName="originalKeyId"]');
+                            return;
+                        }
+                        this.keyDetectionFailed = false;
+                        this.currentStep = 3;
+                        this.scrollModalToTop();
+                        return;
+                    }
+
                     this.moveToPreview();
                     return;
                 }
@@ -1801,6 +1826,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.currentStep > 1) {
             if (!this.isLegacyFlow && this.currentStep === 3) {
                 this.currentStep = 2;
+                this.keyDetectionFailed = false;
                 this.scrollModalToTop();
                 return;
             }
@@ -1879,7 +1905,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             this.songForm.markAllAsTouched();
             const invalidField = this.getFirstInvalidSongField();
             if (invalidField) {
-                this.currentStep = invalidField.step;
+                if (!this.isAdminLongForm) {
+                    this.currentStep = invalidField.step;
+                }
                 this.showRequiredField(invalidField.selector);
             }
         }

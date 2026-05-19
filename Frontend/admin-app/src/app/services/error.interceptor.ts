@@ -29,22 +29,19 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               break;
             }
 
-            console.warn('401 Unauthorized - logging out user');
-            errorMessage = 'תוקף החיבור פג. אנא התחבר שנית.';
-
-            authService.logout();
-
-            const currentUrl = router.url;
-            authService.requestLogin(currentUrl);
+            if (authService.isLoggedIn) {
+              console.warn('401 Unauthorized - logging out user');
+              errorMessage = 'תוקף החיבור פג. אנא התחבר שנית.';
+              authService.logout();
+              const currentUrl = router.url;
+              authService.requestLogin(currentUrl);
+            }
             break;
           }
 
           case 403:
             errorMessage = 'אין לך הרשאות לבצע פעולה זו.';
 
-            if (req.url.includes('/admin')) {
-              router.navigate(['/']);
-            }
             break;
 
           case 500:

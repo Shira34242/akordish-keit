@@ -119,7 +119,12 @@ export class ArticleService {
     isPremium?: boolean,
     authorName?: string,
     tagId?: number,
-    categoryIds?: number[]
+    categoryIds?: number[],
+    artistId?: number,
+    uploaderSearch?: string,
+    dateFrom?: string,
+    dateTo?: string,
+    sortBy?: string
   ): Observable<PagedResult<Article>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -155,6 +160,21 @@ export class ArticleService {
         .forEach(id => {
           params = params.append('categoryIds', id.toString());
         });
+    }
+    if (artistId !== undefined) {
+      params = params.set('artistId', artistId);
+    }
+    if (uploaderSearch) {
+      params = params.set('uploaderSearch', uploaderSearch);
+    }
+    if (dateFrom) {
+      params = params.set('dateFrom', dateFrom);
+    }
+    if (dateTo) {
+      params = params.set('dateTo', dateTo);
+    }
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
     }
 
     return this.http.get<PagedResult<Article>>(this.apiUrl, { params });

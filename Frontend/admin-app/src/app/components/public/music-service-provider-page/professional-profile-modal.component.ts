@@ -112,7 +112,6 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     this.loading = true;
     this.error = null;
     this.contactOpen = false;
-    window.scrollTo(0, 0);
 
     this.professionalService.getServiceProviderById(professionalId).subscribe({
       next: professional => {

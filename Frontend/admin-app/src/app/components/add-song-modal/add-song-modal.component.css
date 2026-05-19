@@ -1366,6 +1366,39 @@ select option {
     color: rgba(0, 0, 0, 0.68);
 }
 
+.smart-manual-key-panel {
+    margin-top: 16px;
+    padding: 0 8px;
+}
+
+.smart-manual-key-panel .smart-bubble-info {
+    background: rgba(255, 255, 255, 0.72);
+    color: #000;
+    font-size: var(--font-sm);
+}
+
+.smart-keys-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.smart-keys-row .key-field {
+    flex: 1;
+    min-width: 140px;
+}
+
+.smart-keys-row .key-field select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: 14px;
+    font-size: var(--font-base);
+    font-family: 'Open Sans', sans-serif;
+    background: #ffffff;
+}
+
 .preview-inline-editor {
     margin-top: 18px;
     padding: 18px;

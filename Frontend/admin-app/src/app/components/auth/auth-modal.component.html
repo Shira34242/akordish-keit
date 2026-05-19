@@ -20,9 +20,11 @@
           [(ngModel)]="username"
           name="username"
           [placeholder]="'auth.username' | translate"
-          required
           [disabled]="loading"
+          [class.input-error]="fieldErrors['username']"
+          (input)="onFieldInput('username')"
         />
+        <span class="field-error" *ngIf="fieldErrors['username']">{{ fieldErrors['username'] }}</span>
       </div>
 
       <div class="form-group" *ngIf="!isLogin">
@@ -32,9 +34,11 @@
           [(ngModel)]="email"
           name="email"
           [placeholder]="'auth.email' | translate"
-          required
           [disabled]="loading"
+          [class.input-error]="fieldErrors['email']"
+          (input)="onFieldInput('email')"
         />
+        <span class="field-error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'] }}</span>
       </div>
       <div class="form-group" *ngIf="isLogin">
         <input
@@ -43,22 +47,33 @@
           [(ngModel)]="username"
           name="loginEmail"
           [placeholder]="'auth.email' | translate"
-          required
           [disabled]="loading"
+          [class.input-error]="fieldErrors['loginEmail']"
+          (input)="onFieldInput('loginEmail')"
         />
+        <span class="field-error" *ngIf="fieldErrors['loginEmail']">{{ fieldErrors['loginEmail'] }}</span>
       </div>
 
       <div class="form-group">
-        <input
-          [type]="showPassword ? 'text' : 'password'"
-          id="password"
-          [(ngModel)]="password"
-          (ngModelChange)="onPasswordChange()"
-          name="password"
-          [placeholder]="'auth.password' | translate"
-          required
-          [disabled]="loading"
-        />
+        <div class="password-field-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="password"
+            (ngModelChange)="onPasswordChange()"
+            name="password"
+            [placeholder]="'auth.password' | translate"
+            [disabled]="loading"
+            [class.input-error]="fieldErrors['password']"
+            (input)="onFieldInput('password')"
+          />
+          <button type="button" class="password-toggle-btn"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading" tabindex="-1">
+            <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <span class="field-error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'] }}</span>
       </div>
       <p class="password-hint" *ngIf="!isLogin">{{ 'auth.password_hint' | translate }}</p>
 

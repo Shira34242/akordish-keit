@@ -1,5 +1,6 @@
 /* === SERVICE PROVIDER FORM — Design System === */
-.service-provider-form-container { max-width: 900px; margin: 0 auto; direction: rtl; }
+.service-provider-form-container,
+.provider-form-container { max-width: 900px; margin: 0 auto; direction: rtl; }
 
 .form-header { display: flex; align-items: center; gap: var(--space-base); margin-bottom: var(--space-xl); }
 .btn-back { display: flex; align-items: center; gap: var(--space-sm); background: #F2F2F2; border: none; padding: var(--space-md) var(--space-lg); border-radius: 999px; cursor: pointer; transition: background 0.15s ease; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: var(--font-sm); color: #000000; }
@@ -11,7 +12,9 @@
 .spinner { border: 3px solid #F2F2F2; border-top: 3px solid #000000; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.service-provider-form { display: flex; flex-direction: column; gap: var(--space-base); }
+.service-provider-form,
+.provider-form { display: flex; flex-direction: column; gap: var(--space-base); }
+
 .form-section { background: #ffffff; border-radius: 24px; padding: var(--space-xl); }
 .section-title { font-family: 'Open Sans', sans-serif; font-size: var(--font-lg); font-weight: 800; color: #000000; margin: 0 0 var(--space-lg) 0; padding-bottom: var(--space-md); border-bottom: 2px solid #ddff53; }
 
@@ -106,13 +109,16 @@
 .media-card-remove { position: absolute; top: var(--space-sm); left: var(--space-sm); width: 32px; height: 32px; border: none; border-radius: 50%; background: #000000; color: #ddff53; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .media-card-remove .material-icons { font-size: 18px; }
 
-.form-actions { display: flex; justify-content: flex-end; gap: var(--space-md); padding: var(--space-lg) var(--space-xl); background: #ffffff; border-radius: 24px; position: sticky; bottom: var(--space-base); z-index: 10; }
-.btn-primary, .btn-secondary { padding: var(--space-md) var(--space-xl); border: none; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: var(--font-sm); font-weight: 800; cursor: pointer; transition: background 0.15s ease; min-width: 120px; }
-.btn-primary { background: #ddff53; color: #000000; }
+.form-actions { display: flex; justify-content: flex-end; gap: var(--space-md); padding: var(--space-lg) var(--space-xl); background: #ffffff; border-radius: 24px; position: sticky; bottom: var(--space-base); z-index: 15; }
+.btn-primary, .btn-secondary, .btn-submit, .btn-cancel { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm); min-height: 34px; padding: 0 var(--space-xl); border: none; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: var(--font-sm); font-weight: 800; cursor: pointer; transition: background 0.15s ease; min-width: 120px; }
+.btn-primary, .btn-submit { background: #ddff53; color: #000000; }
 .btn-primary:hover:not(:disabled) { background: #000000; color: #ddff53; }
-.btn-primary:disabled { background: #F2F2F2; opacity: 0.5; cursor: not-allowed; }
-.btn-secondary { background: #F2F2F2; color: #000000; }
-.btn-secondary:hover:not(:disabled) { background: #ddff53; }
+.btn-submit:hover:not(:disabled) { background: #000000; color: #ddff53; }
+.btn-primary:disabled, .btn-submit:disabled { background: #F2F2F2; opacity: 0.5; cursor: not-allowed; }
+.btn-secondary, .btn-cancel { background: #F2F2F2; color: #000000; }
+.btn-secondary:hover:not(:disabled), .btn-cancel:hover:not(:disabled) { background: #ddff53; }
+.btn-submit .material-icons, .btn-cancel .material-icons { font-size: 18px; }
+.spinning { animation: spin 1s linear infinite; }
 
 .alert { padding: var(--space-base) var(--space-xl); border-radius: 16px; margin-bottom: var(--space-base); font-family: 'Open Sans', sans-serif; font-weight: 300; }
 .alert-danger { background: #404040; color: #ffffff; }
@@ -129,4 +135,4 @@
 .branch-card-detail { display: flex; align-items: center; gap: var(--space-sm); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #404040; overflow-wrap: anywhere; }
 .branch-card-detail .material-icons { font-size: 14px; color: #000000; flex: 0 0 auto; }
 
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column; } .btn-primary, .btn-secondary { width: 100%; } }
+@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column-reverse; } .btn-primary, .btn-secondary, .btn-submit, .btn-cancel { width: 100%; justify-content: center; } }

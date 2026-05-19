@@ -23,38 +23,6 @@
     </div>
   </div>
 
-  <div class="analytics-panel" *ngIf="analytics">
-    <div class="metric-card">
-      <span>צפיות בדפי סוכנות</span>
-      <strong>{{ analytics.totals.pageViews }}</strong>
-    </div>
-    <div class="metric-card">
-      <span>קליקים מבאנרים</span>
-      <strong>{{ analytics.totals.bannerClicks }}</strong>
-    </div>
-    <div class="metric-card">
-      <span>פניות לסוכנויות</span>
-      <strong>{{ analytics.totals.contactClicks }}</strong>
-    </div>
-    <div class="metric-card">
-      <span>מעבר לפרופילים/תוכן</span>
-      <strong>{{ analytics.totals.profileClicks + analytics.totals.contentClicks }}</strong>
-    </div>
-  </div>
-
-  <div class="details-panel" *ngIf="analytics?.topDetails?.length">
-    <div class="details-header">
-      <h2>פעולות מובילות</h2>
-      <span>30 יום אחרונים</span>
-    </div>
-    <div class="details-list">
-      <div class="detail-row" *ngFor="let item of analytics!.topDetails">
-        <span>{{ item.itemLabel }}</span>
-        <strong>{{ item.count }}</strong>
-      </div>
-    </div>
-  </div>
-
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
     <p>טוען סוכנויות...</p>
@@ -71,7 +39,6 @@
           <th>פרופילים</th>
           <th>תוכן</th>
           <th>באנר אינדקס</th>
-          <th>אנליטיקס 30 יום</th>
           <th>סטטוס</th>
           <th>פעולות</th>
         </tr>
@@ -91,14 +58,6 @@
           <td>{{ agency.profilesCount }}</td>
           <td>{{ agency.contentsCount }}</td>
           <td><span class="badge" [class.badge-success]="agency.showInIndexBanner">{{ agency.showInIndexBanner ? 'מוצג' : 'מוסתר' }}</span></td>
-          <td>
-            <div class="mini-analytics" *ngIf="getAgencyAnalytics(agency.id) as stats; else noStats">
-              <span>{{ stats.pageViews }} צפיות</span>
-              <span>{{ stats.contactClicks }} פניות</span>
-              <span>{{ stats.totalInteractions }} פעולות</span>
-            </div>
-            <ng-template #noStats><span class="muted">אין נתונים</span></ng-template>
-          </td>
           <td><span class="badge" [class.badge-success]="agency.isActive">{{ agency.isActive ? 'פעילה' : 'כבויה' }}</span></td>
           <td>
             <div class="action-buttons">
@@ -109,7 +68,7 @@
           </td>
         </tr>
         <tr *ngIf="agencies.length === 0">
-          <td colspan="8" class="no-data">לא נמצאו סוכנויות</td>
+          <td colspan="7" class="no-data">לא נמצאו סוכנויות</td>
         </tr>
       </tbody>
     </table>

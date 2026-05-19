@@ -13,7 +13,7 @@ registerLocaleData(localeHe, 'he-IL');
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: LOCALE_ID, useValue: 'he-IL' },
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
     // 🔒 Interceptors: authInterceptor מוסיף טוקן, errorInterceptor מטפל בשגיאות
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     importProvidersFrom([

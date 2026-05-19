@@ -3,7 +3,7 @@ import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } from '../models/user.model';
+import { AdminUpdateUserDto, UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -79,6 +79,10 @@ export class UserService {
 
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  updateUser(id: number, data: AdminUpdateUserDto): Observable<UserListDto> {
+    return this.http.put<UserListDto>(`${this.apiUrl}/${id}`, data, { withCredentials: true });
   }
 
   getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number }> {

@@ -133,7 +133,6 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadArticle(slug);
@@ -175,8 +174,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
         error: (error) => {
           console.error('Error loading blog post:', error);
           this.loading = false;
-          // Navigate back to home on error
-          this.router.navigate(['/']);
+          this.router.navigate(['/404']);
         }
       });
   }

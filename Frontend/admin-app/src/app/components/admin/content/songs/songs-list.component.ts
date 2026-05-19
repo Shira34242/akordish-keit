@@ -34,6 +34,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
   songs: SongDto[] = [];
   artists: ArtistListDto[] = [];
   loading = false;
+  loadError = '';
   bulkActionLoading = false;
   selectedSongIds = new Set<number>();
   bumpModalOpen = false;
@@ -67,6 +68,9 @@ export class SongsListComponent implements OnInit, OnDestroy {
   selectedArtistId?: number;
   selectedGenreId?: number;
   selectedKeyId?: number;
+  uploaderSearch = '';
+  dateFrom = '';
+  dateTo = '';
   sortBy: string = 'date'; // date, views, name
 
   ngOnInit(): void {
@@ -85,6 +89,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
   
   loadSongs(): void {
     this.loading = true;
+    this.loadError = '';
 
     const search = this.searchTerm || undefined;
     const page = Number(this.currentPage);
@@ -97,7 +102,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
       this.selectedArtistId,
       this.selectedGenreId,
       this.selectedKeyId,
-      this.sortBy
+      this.sortBy,
+      undefined,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined
     ).subscribe({
       next: (result: any) => {
         this.songs = result.songs || result.items || result.data || [];
@@ -112,6 +121,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading songs:', error);
+        this.songs = [];
+        this.totalItems = 0;
+        this.loadError = error?.status === 403
+          ? 'אין לך הרשאה לצפות במסך ניהול האקורדים. אם זו הרשאה שאמורה להיות פתוחה עבורך, צריך לעדכן את התפקיד או ההרשאה במערכת.'
+          : (error?.message || 'לא הצלחנו לטעון את רשימת האקורדים.');
         this.loading = false;
       }
     });
@@ -123,6 +137,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(): void {
+    this.currentPage = 1;
+    this.loadSongs();
+  }
+
+  onFilterChange(): void {
     this.currentPage = 1;
     this.loadSongs();
   }
@@ -360,7 +379,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
 
   createNew(): void {
     // פתיחת המודאל של הוספת שיר
-    this.modalService.openAddSongModal();
+    this.modalService.openAddSongModal({ flowMode: 'legacy' });
   }
 
   editSong(id: number): void {

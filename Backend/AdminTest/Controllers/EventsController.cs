@@ -35,10 +35,16 @@ namespace AkordishKeit.Controllers
             [FromQuery] string? search = null,
             [FromQuery] bool? isActive = null,
             [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] int? artistId = null,
+            [FromQuery] string? uploaderSearch = null,
+            [FromQuery] DateTime? createdFrom = null,
+            [FromQuery] DateTime? createdTo = null,
+            [FromQuery] string? sortBy = null)
         {
             var result = await _eventService.GetEventsAsync(
-                pageNumber, pageSize, search, isActive, fromDate, toDate);
+                pageNumber, pageSize, search, isActive, fromDate, toDate,
+                artistId, uploaderSearch, createdFrom, createdTo, sortBy);
 
             return Ok(result);
         }
@@ -72,7 +78,7 @@ namespace AkordishKeit.Controllers
         /// יצירת הופעה חדשה (רק מנהל)
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.events")]
         public async Task<ActionResult<EventDto>> CreateEvent([FromBody] CreateEventDto dto)
         {
             if (!ModelState.IsValid)
@@ -128,7 +134,7 @@ namespace AkordishKeit.Controllers
         /// עדכון הופעה (רק מנהל)
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.events")]
         public async Task<ActionResult<EventDto>> UpdateEvent(int id, [FromBody] UpdateEventDto dto)
         {
             if (!ModelState.IsValid)
@@ -164,7 +170,7 @@ namespace AkordishKeit.Controllers
         /// מחיקת הופעה (רק מנהל)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.events")]
         public async Task<ActionResult> DeleteEvent(int id)
         {
             var result = await _eventService.DeleteEventAsync(id);

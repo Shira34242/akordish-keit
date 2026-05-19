@@ -6,7 +6,6 @@
   direction: rtl;
   background: #ffffff;
   min-height: 100vh;
-  margin-top: -56px;
 }
 
 /* ============================================
@@ -47,7 +46,7 @@
 }
 
 /* ============================================
-   NEWS CONTENT (grids)
+   NEWS CONTENT
 ============================================ */
 
 .news-content {
@@ -55,6 +54,7 @@
   flex-direction: column;
   gap: var(--space-md);
   padding: 8px 8px 120px;
+  margin-top: -56px;
 }
 
 /* ============================================
@@ -63,14 +63,15 @@
 
 .managed-grid,
 .stream-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
 }
 
-.managed-grid {
-  height: calc(100vh - 8px);
-  grid-template-rows: 2fr 1fr;
+.managed-row,
+.stream-row {
+  display: grid;
+  gap: var(--space-md);
 }
 
 .managed-cell,
@@ -79,6 +80,8 @@
   overflow: hidden;
   border-radius: 24px;
   background: #F2F2F2;
+  height: 310px;
+  min-height: 0;
 }
 
 .managed-cell app-news-banner,
@@ -102,91 +105,39 @@
   background: #F2F2F2;
 }
 
-/* Managed cell positions */
-.mc-1 { grid-column: 1 / 8; grid-row: 1 / 2; }
-.mc-2 { grid-column: 8 / 13; grid-row: 1 / 2; }
-.mc-3 { grid-column: 1 / 4; grid-row: 2 / 3; }
-.mc-4 { grid-column: 4 / 9; grid-row: 2 / 3; }
-.mc-5 { grid-column: 9 / 13; grid-row: 2 / 3; }
-
-/* Stream cell sizes */
-.stream-grid {
-  grid-auto-rows: 0.55rem;
-  grid-auto-flow: row dense;
-}
-
-.sc-third      { grid-column: span 4; grid-row: span 28; }
-.sc-duo-narrow { grid-column: span 5; grid-row: span 40; }
-.sc-duo-wide   { grid-column: span 7; grid-row: span 40; }
-.sc-third-tall { grid-column: span 4; grid-row: span 30; }
-
 /* ============================================
    BANNER OVERRIDES
 ============================================ */
 
-.mc-1 ::ng-deep .banner-overlay {
-  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.28) 48%, rgba(0,0,0,0.04) 100%);
-}
-
-.mc-1 ::ng-deep .banner-text {
-  right: var(--space-xl);
-  left: 5.75rem;
-  bottom: var(--space-lg);
-}
-
-.mc-1 ::ng-deep .banner-title {
-  font-size: var(--font-4xl);
-  line-height: 1.05;
-  -webkit-line-clamp: 3;
-}
-
-.mc-1 ::ng-deep .banner-subtitle {
-  font-size: var(--font-lg);
-  line-height: 1.35;
-  margin-top: var(--space-sm);
-  -webkit-line-clamp: 2;
-}
-
-.mc-1 ::ng-deep .banner-arrow-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  left: var(--space-lg);
-  bottom: var(--space-lg);
-}
-
-.mc-2 ::ng-deep .banner-title,
-.mc-4 ::ng-deep .banner-title,
-.sc-duo-narrow ::ng-deep .banner-title,
-.sc-duo-wide ::ng-deep .banner-title {
-  font-size: var(--font-xl);
-  line-height: 1.15;
-}
-
-.mc-2 ::ng-deep .banner-subtitle,
-.mc-4 ::ng-deep .banner-subtitle,
-.sc-duo-narrow ::ng-deep .banner-subtitle,
-.sc-duo-wide ::ng-deep .banner-subtitle {
-  font-size: var(--font-sm);
-}
-
-.mc-3 ::ng-deep .banner-text,
-.mc-4 ::ng-deep .banner-text,
-.mc-5 ::ng-deep .banner-text,
-.sc-third ::ng-deep .banner-text,
-.sc-third-tall ::ng-deep .banner-text {
+.managed-cell ::ng-deep .banner-text,
+.stream-cell ::ng-deep .banner-text {
   right: var(--space-base);
   left: 3.5rem;
   bottom: var(--space-base);
 }
 
-.mc-3 ::ng-deep .banner-arrow-btn,
-.mc-4 ::ng-deep .banner-arrow-btn,
-.mc-5 ::ng-deep .banner-arrow-btn,
-.sc-third ::ng-deep .banner-arrow-btn,
-.sc-third-tall ::ng-deep .banner-arrow-btn {
+.managed-cell ::ng-deep .banner-arrow-btn,
+.stream-cell ::ng-deep .banner-arrow-btn {
   left: var(--space-base);
   bottom: var(--space-base);
+}
+
+.managed-cell ::ng-deep .banner-title {
+  font-size: var(--font-base);
+  line-height: 1.3;
+}
+
+.managed-cell ::ng-deep .banner-subtitle {
+  font-size: var(--font-xs);
+}
+
+.stream-cell ::ng-deep .banner-title {
+  font-size: var(--font-sm);
+  line-height: 1.35;
+}
+
+.stream-cell ::ng-deep .banner-subtitle {
+  font-size: var(--font-xs);
 }
 
 /* ============================================
@@ -251,13 +202,13 @@
 ============================================ */
 
 @media (max-width: 768px) {
-  .blog-list-page {
+  .news-content {
     margin-top: -50px;
   }
 }
 
 @media (max-width: 480px) {
-  .blog-list-page {
+  .news-content {
     margin-top: -46px;
   }
 }
@@ -273,29 +224,15 @@
     gap: var(--space-sm);
   }
 
-  .managed-grid {
-    height: calc(100vh - 8px);
-    grid-template-rows: 2fr 1fr;
-  }
-
   .managed-cell,
   .stream-cell {
     border-radius: 16px;
+    height: 265px;
   }
 
-  .mc-1 { grid-column: 1 / 8; grid-row: 1 / 2; }
-  .mc-2 { grid-column: 8 / 13; grid-row: 1 / 2; }
-  .mc-3 { grid-column: 1 / 5; grid-row: 2 / 3; }
-  .mc-4 { grid-column: 5 / 9; grid-row: 2 / 3; }
-  .mc-5 { grid-column: 9 / 13; grid-row: 2 / 3; }
-
-  .sc-third      { grid-column: span 4; grid-row: span 24; }
-  .sc-third-tall { grid-column: span 4; grid-row: span 26; }
-  .sc-duo-narrow { grid-column: span 5; grid-row: span 32; }
-  .sc-duo-wide   { grid-column: span 7; grid-row: span 32; }
-
-  .mc-1 ::ng-deep .banner-title { font-size: var(--font-3xl); }
-  .mc-1 ::ng-deep .banner-subtitle { font-size: var(--font-base); }
+  .managed-cell ::ng-deep .banner-title { font-size: var(--font-sm); }
+  .managed-cell ::ng-deep .banner-subtitle,
+  .stream-cell ::ng-deep .banner-subtitle { font-size: var(--font-xs); }
 }
 
 /* ============================================
@@ -309,48 +246,22 @@
 
   .managed-grid,
   .stream-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
   }
 
-  .managed-grid {
-    height: auto;
-    grid-template-rows: unset;
-    grid-auto-rows: minmax(8rem, auto);
+  .managed-row,
+  .stream-row {
+    gap: var(--space-sm);
   }
 
   .managed-cell,
   .stream-cell {
     border-radius: 14px;
+    height: 160px;
   }
 
-  .mc-1 { grid-column: 1 / 3; grid-row: span 2; }
-  .mc-2 { grid-column: 1 / 3; grid-row: unset; }
-  .mc-3 { grid-column: 1 / 2; grid-row: unset; }
-  .mc-4 { grid-column: 2 / 3; grid-row: unset; }
-  .mc-5 { grid-column: 1 / 3; grid-row: unset; }
-
-  .sc-third,
-  .sc-third-tall { grid-column: span 1; grid-row: span 22; }
-
-  .sc-duo-narrow,
-  .sc-duo-wide   { grid-column: span 1; grid-row: span 26; }
-
-  .mc-1 ::ng-deep .banner-text {
-    right: var(--space-base);
-    left: 3.75rem;
-    bottom: var(--space-base);
-  }
-
-  .mc-1 ::ng-deep .banner-title { font-size: var(--font-2xl); line-height: 1.1; }
-  .mc-1 ::ng-deep .banner-subtitle { font-size: var(--font-sm); line-height: 1.4; }
-
-  .mc-1 ::ng-deep .banner-arrow-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    left: var(--space-base);
-    bottom: var(--space-base);
-  }
+  .managed-cell ::ng-deep .banner-title { font-size: var(--font-sm); line-height: 1.2; }
+  .stream-cell ::ng-deep .banner-title { font-size: var(--font-xs); }
 
   .tab-bar {
     bottom: 18px;

@@ -32,6 +32,7 @@ public class User
 
     public string? ProfileImageUrl { get; set; }
     public UserRole Role { get; set; }  // הרשאות (enum)
+    public int? AdminRoleId { get; set; }
     public int Level { get; set; }
     public int Points { get; set; }
 
@@ -95,6 +96,7 @@ public class User
     // ════════════════════════════════════
 
     public virtual Instrument? PreferredInstrument { get; set; }
+    public virtual AdminRole? AdminRole { get; set; }
 
     /// <summary>כלי הנגינה שהמשתמש מנגן עליהם (Many-to-Many דרך UserInstruments)</summary>
     public virtual ICollection<UserInstrument> Instruments { get; set; } = new List<UserInstrument>();

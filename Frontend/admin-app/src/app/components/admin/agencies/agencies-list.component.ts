@@ -3,7 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AgencyListDto } from '../../../models/agency.model';
-import { AgencyAnalyticsSummary, AgencyService } from '../../../services/agency.service';
+import { AgencyService } from '../../../services/agency.service';
 import { SiteAlertService } from '../../../services/site-alert.service';
 
 @Component({
@@ -27,11 +27,9 @@ export class AgenciesListComponent implements OnInit {
   pageSize = 20;
   totalCount = 0;
   totalPages = 0;
-  analytics: AgencyAnalyticsSummary | null = null;
 
   ngOnInit(): void {
     this.loadAgencies();
-    this.loadAnalytics();
   }
 
   loadAgencies(): void {
@@ -50,17 +48,6 @@ export class AgenciesListComponent implements OnInit {
           this.loading = false;
         }
       });
-  }
-
-  loadAnalytics(): void {
-    this.agencyService.getAnalytics().subscribe({
-      next: data => this.analytics = data,
-      error: () => this.analytics = null
-    });
-  }
-
-  getAgencyAnalytics(agencyId: number): AgencyAnalyticsSummary['byAgency'][number] | null {
-    return this.analytics?.byAgency.find(item => item.agencyId === agencyId) || null;
   }
 
   onSearch(): void {

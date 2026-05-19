@@ -30,7 +30,10 @@ public interface ISongService
         int? keyId = null,
         int? tagId = null,
         string? sortBy = null,
-        bool includeUnapproved = false);
+        bool includeUnapproved = false,
+        string? uploaderSearch = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null);
 
     /// <summary>
     /// Get a single song by ID

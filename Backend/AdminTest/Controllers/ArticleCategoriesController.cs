@@ -75,7 +75,7 @@ public class ArticleCategoriesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<ArticleCategoryDto>> PostArticleCategory(CreateArticleCategoryDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
@@ -111,7 +111,7 @@ public class ArticleCategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> PutArticleCategory(int id, CreateArticleCategoryDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
@@ -143,7 +143,7 @@ public class ArticleCategoriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteArticleCategory(int id)
     {
         try
@@ -162,7 +162,7 @@ public class ArticleCategoriesController : ControllerBase
     }
 
     [HttpPost("bulk-delete")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");

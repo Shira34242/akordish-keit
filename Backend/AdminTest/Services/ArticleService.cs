@@ -41,7 +41,12 @@ public class ArticleService : IArticleService
         int pageNumber,
         int pageSize,
         int? tagId = null,
-        IEnumerable<int>? categoryIds = null)
+        IEnumerable<int>? categoryIds = null,
+        int? artistId = null,
+        string? uploaderSearch = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        string? sortBy = null)
     {
         var query = _context.Articles
             .AsNoTracking()
@@ -60,10 +65,10 @@ public class ArticleService : IArticleService
             .AsQueryable();
 
         // Apply filters
-        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName, tagId, categoryIds);
+        query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName,
+            tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo);
 
-        // Order by CreatedAt before pagination
-        query = query.OrderByDescending(a => a.BumpedAt ?? a.CreatedAt);
+        query = ApplySorting(query, sortBy);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -1207,7 +1212,11 @@ public class ArticleService : IArticleService
         bool? isPremium,
         string? authorName,
         int? tagId = null,
-        IEnumerable<int>? categoryIds = null)
+        IEnumerable<int>? categoryIds = null,
+        int? artistId = null,
+        string? uploaderSearch = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null)
     {
         // Search filter
         if (!string.IsNullOrWhiteSpace(search))
@@ -1274,7 +1283,51 @@ public class ArticleService : IArticleService
             query = query.Where(a => a.ArticleTags.Any(at => at.TagId == tagId.Value));
         }
 
+        if (artistId.HasValue)
+        {
+            query = query.Where(a => a.ArticleArtists.Any(aa => aa.ArtistId == artistId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(uploaderSearch))
+        {
+            var uploaderPattern = $"%{uploaderSearch.Trim()}%";
+            query = query.Where(a =>
+                a.UploaderUser != null &&
+                (EF.Functions.Like(a.UploaderUser.Username, uploaderPattern) ||
+                 EF.Functions.Like(a.UploaderUser.Email, uploaderPattern) ||
+                 (a.UploaderUser.ManagedArtist != null && EF.Functions.Like(a.UploaderUser.ManagedArtist.Name, uploaderPattern)) ||
+                 a.UploaderUser.ServiceProviderProfiles.Any(profile => EF.Functions.Like(profile.DisplayName, uploaderPattern))));
+        }
+
+        if (dateFrom.HasValue)
+        {
+            query = query.Where(a => a.CreatedAt >= dateFrom.Value.Date);
+        }
+
+        if (dateTo.HasValue)
+        {
+            var exclusiveDateTo = dateTo.Value.Date.AddDays(1);
+            query = query.Where(a => a.CreatedAt < exclusiveDateTo);
+        }
+
         return query;
+    }
+
+    private static IQueryable<Article> ApplySorting(IQueryable<Article> query, string? sortBy)
+    {
+        return sortBy switch
+        {
+            "title" => query.OrderBy(a => a.Title),
+            "artist" => query.OrderBy(a => a.ArticleArtists
+                .OrderBy(aa => aa.Artist.Name)
+                .Select(aa => aa.Artist.Name)
+                .FirstOrDefault()).ThenBy(a => a.Title),
+            "uploader" => query.OrderBy(a => a.UploaderUser != null ? a.UploaderUser.Username : string.Empty).ThenBy(a => a.Title),
+            "publish" => query.OrderByDescending(a => a.PublishDate),
+            "date_asc" => query.OrderBy(a => a.CreatedAt),
+            "views" => query.OrderByDescending(a => a.ViewCount),
+            _ => query.OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+        };
     }
 
     private ArticleDto MapToDto(Article article)

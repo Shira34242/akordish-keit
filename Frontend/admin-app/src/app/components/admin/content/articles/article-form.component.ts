@@ -63,6 +63,7 @@ export class ArticleFormComponent implements OnInit {
   articleId?: number;
   loading = false;
   saving = false;
+  saveError = '';
   fetchingYouTube = false;
   youtubeMessage = '';
 
@@ -545,6 +546,8 @@ export class ArticleFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    this.saveError = '';
+
     if (!this.validateForm()) {
       return;
     }
@@ -560,6 +563,7 @@ export class ArticleFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating article:', error);
+          this.saveError = 'לא הצלחנו לשמור את הכתבה: ' + this.getArticleErrorMessage(error);
           alert('שגיאה בעדכון הכתבה: ' + this.getArticleErrorMessage(error));
           this.saving = false;
         }
@@ -572,6 +576,7 @@ export class ArticleFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating article:', error);
+          this.saveError = 'לא הצלחנו לשמור את הכתבה: ' + this.getArticleErrorMessage(error);
           alert('שגיאה ביצירת הכתבה: ' + this.getArticleErrorMessage(error));
           this.saving = false;
         }

@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Article, ArticleContentType } from '../../../models/article.model';
+import { Article } from '../../../models/article.model';
+import { getArticleRoute } from '../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-article-card',
@@ -15,7 +16,7 @@ export class ArticleCardComponent {
   @Input() layout: 'overlay' | 'card' = 'overlay';
 
   get articleRoute(): string {
-    return this.article.contentType === ArticleContentType.News ? '/news' : '/blog';
+    return getArticleRoute(this.article);
   }
 
   formatDate(dateString: string): string {

@@ -597,6 +597,9 @@
   padding: var(--space-base) var(--space-xl);
   background: #ffffff;
   border-radius: 24px;
+  position: sticky;
+  bottom: var(--space-base);
+  z-index: 15;
 }
 
 /* ── Buttons ── */

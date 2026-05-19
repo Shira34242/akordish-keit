@@ -607,7 +607,10 @@ public class SongService : ISongService
         int? keyId = null,
         int? tagId = null,
         string? sortBy = null,
-        bool includeUnapproved = false)
+        bool includeUnapproved = false,
+        string? uploaderSearch = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null)
     {
         try
         {
@@ -647,6 +650,28 @@ public class SongService : ISongService
                 query = query.Where(s => s.SongTags.Any(st => st.TagId == tagId.Value));
             }
 
+            if (!string.IsNullOrWhiteSpace(uploaderSearch))
+            {
+                var uploaderPattern = $"%{uploaderSearch.Trim()}%";
+                query = query.Where(s =>
+                    s.UploaderUser != null &&
+                    (EF.Functions.Like(s.UploaderUser.Username, uploaderPattern) ||
+                     EF.Functions.Like(s.UploaderUser.Email, uploaderPattern) ||
+                     (s.UploaderUser.ManagedArtist != null && EF.Functions.Like(s.UploaderUser.ManagedArtist.Name, uploaderPattern)) ||
+                     s.UploaderUser.ServiceProviderProfiles.Any(profile => EF.Functions.Like(profile.DisplayName, uploaderPattern))));
+            }
+
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(s => s.CreatedAt >= dateFrom.Value.Date);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var exclusiveDateTo = dateTo.Value.Date.AddDays(1);
+                query = query.Where(s => s.CreatedAt < exclusiveDateTo);
+            }
+
             // Search filter
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -664,6 +689,12 @@ public class SongService : ISongService
             {
                 "views" or "popularity" => query.OrderByDescending(s => s.ViewCount),
                 "name" => query.OrderBy(s => s.Title),
+                "artist" => query.OrderBy(s => s.SongArtists
+                    .OrderBy(sa => sa.Order)
+                    .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName)
+                    .FirstOrDefault()).ThenBy(s => s.Title),
+                "uploader" => query.OrderBy(s => s.UploaderUser != null ? s.UploaderUser.Username : string.Empty).ThenBy(s => s.Title),
+                "date_asc" => query.OrderBy(s => s.CreatedAt),
                 _ => query.OrderByDescending(s => s.BumpedAt ?? s.CreatedAt)
             };
 

@@ -30,6 +30,7 @@ export class TeacherFormComponent implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   @Input() embedded = false;
   @Input() teacherIdInput?: number;
+  @Input() userIdInput?: number;
   @Output() close = new EventEmitter<void>();
 
   private readonly teacherService = inject(TeacherService);
@@ -129,10 +130,11 @@ export class TeacherFormComponent implements OnInit {
       this.teacherId = resolvedId;
       this.loadTeacher();
     } else {
-      // Check for userId in query params (upgrade from user)
+      // Check for userId input/query params (upgrade from user)
       const userIdParam = this.route.snapshot.queryParamMap.get('userId');
-      if (userIdParam) {
-        this.userId = +userIdParam;
+      const resolvedUserId = this.userIdInput ?? (userIdParam ? +userIdParam : undefined);
+      if (resolvedUserId) {
+        this.userId = resolvedUserId;
       }
     }
   }
@@ -315,6 +317,7 @@ export class TeacherFormComponent implements OnInit {
     this.userService.getUsers(undefined, undefined, undefined, 1, 1000).subscribe({
       next: (result) => {
         this.availableUsers = result.items;
+        this.syncSelectedUserFromList();
         this.loadingUsers = false;
       },
       error: (error: any) => {
@@ -322,6 +325,15 @@ export class TeacherFormComponent implements OnInit {
         this.loadingUsers = false;
       }
     });
+  }
+
+  private syncSelectedUserFromList(): void {
+    if (!this.userId || this.userName) return;
+    const selectedUser = this.availableUsers.find(user => user.id === this.userId);
+    if (!selectedUser) return;
+
+    this.userName = selectedUser.username;
+    this.userEmail = selectedUser.email;
   }
 
   loadTeacher(): void {
@@ -494,7 +506,12 @@ export class TeacherFormComponent implements OnInit {
     }
 
     if (this.selectedInstrumentIds.length === 0) {
-      this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-instruments]');
+      this.instrumentsDropdownOpen = true;
+      this.instrumentSearchText = '';
+      this.filteredInstruments = this.availableInstruments;
+      setTimeout(() => {
+        this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-admin-instruments]');
+      });
       return false;
     }
 

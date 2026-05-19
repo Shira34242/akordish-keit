@@ -10,6 +10,7 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
 import { NewsPageSectionService } from '../../../services/news-page-section.service';
+import { getArticleRoute } from '../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-articles-list',
@@ -233,8 +234,8 @@ export class ArticlesListComponent implements OnInit {
   }
 
   navigateToArticle(article: Article): void {
-    const route = article.contentType === ArticleContentType.News ? '/news' : '/blog';
-    this.router.navigate([route, article.slug]);
+    if (!article.slug) return;
+    this.router.navigate([getArticleRoute(article), article.slug]);
   }
 
   goToPage(page: number): void {

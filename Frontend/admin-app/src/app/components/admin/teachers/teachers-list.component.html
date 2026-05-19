@@ -265,6 +265,16 @@
   </div>
 </div>
 
+<div class="profile-form-backdrop" *ngIf="showTeacherFormModal" (click)="closeTeacherFormModal()">
+  <div class="profile-form-modal" (click)="$event.stopPropagation()">
+    <app-teacher-form
+      [embedded]="true"
+      [teacherIdInput]="selectedTeacherId"
+      (close)="closeTeacherFormModal()">
+    </app-teacher-form>
+  </div>
+</div>
+
 <app-bump-modal
   *ngIf="bumpModalOpen"
   entityType="ServiceProvider"

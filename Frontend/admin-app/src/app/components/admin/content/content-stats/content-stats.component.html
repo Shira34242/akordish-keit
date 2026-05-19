@@ -28,29 +28,6 @@
     </button>
   </div>
 
-  <div class="tab-bar" aria-label="ניווט אנליטיקס">
-    <button class="tab-btn" [class.active]="activeTab === 'articles'" (click)="setTab('articles')">
-      <span class="material-icons">article</span>
-      כתבות
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'events'" (click)="setTab('events')">
-      <span class="material-icons">event</span>
-      הופעות
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'buttons'" (click)="setTab('buttons')">
-      <span class="material-icons">ads_click</span>
-      לחצנים
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'ads'" (click)="setTab('ads')">
-      <span class="material-icons">campaign</span>
-      פרסומות
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'agencies'" (click)="setTab('agencies')">
-      <span class="material-icons">business</span>
-      סוכנויות
-    </button>
-  </div>
-
   <div *ngIf="dashboard && !dashboardLoading" class="overview-grid">
     <section class="metric-card accent">
       <div class="metric-head">
@@ -417,6 +394,22 @@
       <div class="kpi-card">
         <span class="kpi-label">סה"כ אינטראקציות</span>
         <span class="kpi-value">{{ agencySummary.totals.totalInteractions | number }}</span>
+      </div>
+    </div>
+
+    <div class="agency-details-panel" *ngIf="agencySummary?.topDetails?.length">
+      <div class="section-header">
+        <div>
+          <span class="section-pill">פעולות מובילות</span>
+          <h2>פריטים שהובילו לאינטראקציה</h2>
+        </div>
+        <span class="period-badge">{{ periodLabel }}</span>
+      </div>
+      <div class="agency-details-list">
+        <div class="agency-detail-row" *ngFor="let item of agencySummary!.topDetails">
+          <span>{{ item.itemLabel }}</span>
+          <strong>{{ item.count | number }}</strong>
+        </div>
       </div>
     </div>
 

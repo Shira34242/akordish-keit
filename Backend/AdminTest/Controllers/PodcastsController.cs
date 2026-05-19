@@ -23,9 +23,12 @@ namespace AkordishKeit.Controllers
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null)
+            [FromQuery] bool? isActive = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] string? sortBy = null)
         {
-            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive));
+            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive, dateFrom, dateTo, sortBy));
         }
 
         [HttpGet("public")]
@@ -73,7 +76,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastDto>> GetPodcast(int id)
         {
             var podcast = await _podcastService.GetPodcastByIdAsync(id);
@@ -81,7 +84,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastDto>> CreatePodcast([FromBody] CreatePodcastDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -127,7 +130,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastDto>> UpdatePodcast(int id, [FromBody] UpdatePodcastDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -138,7 +141,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult> DeletePodcast(int id)
         {
             var deleted = await _podcastService.DeletePodcastAsync(id);
@@ -150,19 +153,22 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpGet("episodes")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PagedResult<PodcastEpisodeDto>>> GetEpisodes(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] int? podcastId = null,
             [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null)
+            [FromQuery] bool? isActive = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] string? sortBy = null)
         {
-            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive));
+            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive, dateFrom, dateTo, sortBy));
         }
 
         [HttpGet("episodes/{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastEpisodeDto>> GetEpisode(int id)
         {
             var episode = await _podcastService.GetEpisodeByIdAsync(id);
@@ -170,7 +176,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpPost("episodes")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastEpisodeDto>> CreateEpisode([FromBody] CreatePodcastEpisodeDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -218,7 +224,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpPut("episodes/{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult<PodcastEpisodeDto>> UpdateEpisode(int id, [FromBody] UpdatePodcastEpisodeDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -237,7 +243,7 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpDelete("episodes/{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "content.podcasts")]
         public async Task<ActionResult> DeleteEpisode(int id)
         {
             var deleted = await _podcastService.DeleteEpisodeAsync(id);

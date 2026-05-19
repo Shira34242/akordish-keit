@@ -57,6 +57,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .IsRequired()
                .HasDefaultValue(UserRole.Regular);
 
+        builder.HasIndex(e => e.AdminRoleId)
+               .HasDatabaseName("IX_Users_AdminRoleId");
+
         builder.Property(e => e.Level)
                .IsRequired()
                .HasDefaultValue(1);
@@ -114,6 +117,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasOne(u => u.PreferredInstrument)
                .WithMany(i => i.Users)
                .HasForeignKey(u => u.PreferredInstrumentId)
+               .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(u => u.AdminRole)
+               .WithMany(r => r.Users)
+               .HasForeignKey(u => u.AdminRoleId)
                .OnDelete(DeleteBehavior.SetNull);
 
         // ManagedArtist

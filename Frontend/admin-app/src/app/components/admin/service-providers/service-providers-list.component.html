@@ -252,6 +252,16 @@
   </div>
 </div>
 
+<div class="profile-form-backdrop" *ngIf="showProviderFormModal" (click)="closeProviderFormModal()">
+  <div class="profile-form-modal" (click)="$event.stopPropagation()">
+    <app-service-provider-form
+      [embedded]="true"
+      [serviceProviderIdInput]="selectedProviderId"
+      (close)="closeProviderFormModal()">
+    </app-service-provider-form>
+  </div>
+</div>
+
 <app-bump-modal
   *ngIf="bumpModalOpen"
   entityType="ServiceProvider"

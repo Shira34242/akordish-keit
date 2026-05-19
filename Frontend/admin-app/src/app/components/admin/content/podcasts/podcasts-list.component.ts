@@ -31,7 +31,11 @@ export class PodcastsListComponent implements OnInit {
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
+  dateFrom = '';
+  dateTo = '';
+  sortBy = 'date';
   activeTab: 'podcasts' | 'episodes' = 'episodes';
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-podcasts-view') as 'list' | 'grid') || 'list';
 
   currentPage = 1;
   pageSize = 25;
@@ -59,7 +63,10 @@ export class PodcastsListComponent implements OnInit {
       this.pageSize,
       this.selectedPodcastId,
       this.searchTerm || undefined,
-      this.getActiveFilter()
+      this.getActiveFilter(),
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<PodcastEpisode>) => {
         this.episodes = result.items;
@@ -82,6 +89,11 @@ export class PodcastsListComponent implements OnInit {
   switchTab(tab: 'podcasts' | 'episodes'): void {
     this.activeTab = tab;
     this.clearSelection();
+  }
+
+  setView(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
+    localStorage.setItem('admin-podcasts-view', mode);
   }
 
   get selectedCount(): number {

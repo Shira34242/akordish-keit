@@ -104,7 +104,7 @@
                     <span>{{ isUploadingArticleImage ? ('fab.uploading' | translate) : ('fab.upload_image' | translate) }}</span>
                   </label>
 
-                  <button type="button" class="assistant-chip assistant-chip-muted" (click)="showArticleImageLinkInput = !showArticleImageLinkInput">
+                  <button type="button" class="assistant-chip assistant-chip-muted" (click)="toggleArticleImageLinkInput()">
                     {{ 'fab.image_link' | translate }}
                   </button>
 
@@ -206,7 +206,7 @@
               </div>
             </div>
 
-            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showArticleOptional" (click)="showArticleOptional = true">
+            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showArticleOptional" (click)="showArticleOptionalFields()">
               {{ articleOptionalLabel }}
             </button>
 
@@ -260,7 +260,7 @@
                   <span>{{ isUploadingEventImage ? ('fab.uploading' | translate) : ('fab.upload_image' | translate) }}</span>
                 </label>
 
-                <button type="button" class="assistant-chip assistant-chip-muted" (click)="showEventImageLinkInput = !showEventImageLinkInput">
+                <button type="button" class="assistant-chip assistant-chip-muted" (click)="toggleEventImageLinkInput()">
                   {{ 'fab.image_link' | translate }}
                 </button>
               </div>
@@ -277,10 +277,6 @@
 
             <label class="smart-label">{{ 'fab.event_ticket_link' | translate }}</label>
             <input class="smart-input" [(ngModel)]="event.ticketUrl" placeholder="https://...">
-
-            <label class="smart-label">{{ 'fab.event_date' | translate }}</label>
-            <input class="smart-input" type="datetime-local" [(ngModel)]="event.eventDate">
-
 
             <div class="smart-tag-block">
               <label class="smart-label">{{ 'fab.event_tag_artist' | translate }}</label>
@@ -324,7 +320,7 @@
               </div>
             </div>
 
-            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showEventOptional" (click)="showEventOptional = true">
+            <button type="button" class="assistant-chip assistant-chip-back" *ngIf="!showEventOptional" (click)="showEventOptionalFields()">
               {{ eventOptionalLabel }}
             </button>
 

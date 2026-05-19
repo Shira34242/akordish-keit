@@ -7,7 +7,7 @@ namespace AkordishKeit.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "notifications.manage")]
 public class EmailController : ControllerBase
 {
     private readonly IEmailService _emailService;

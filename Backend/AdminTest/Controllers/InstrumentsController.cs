@@ -76,7 +76,7 @@ public class InstrumentsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<ActionResult<InstrumentDto>> PostInstrument(CreateInstrumentDto dto)
     {
         var instrument = new Instrument
@@ -99,7 +99,7 @@ public class InstrumentsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> PutInstrument(int id, CreateInstrumentDto dto)
     {
         var instrument = await _context.Instruments.FindAsync(id);
@@ -132,7 +132,7 @@ public class InstrumentsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> DeleteInstrument(int id)
     {
         var instrument = await _context.Instruments.FindAsync(id);
@@ -148,7 +148,7 @@ public class InstrumentsController : ControllerBase
     }
 
     [HttpPost("bulk-delete")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "content.manage")]
     public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");

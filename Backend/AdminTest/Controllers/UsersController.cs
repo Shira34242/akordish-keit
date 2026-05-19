@@ -56,6 +56,22 @@ public class UsersController : ControllerBase
         return Ok(profile);
     }
 
+    // PUT: api/Users/{id}
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = "users.manage")]
+    public async Task<ActionResult<UserListDto>> AdminUpdateUser(int id, [FromBody] AdminUpdateUserDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest(new { message = "שם משתמש ואימייל הם שדות חובה" });
+
+        var updated = await _service.AdminUpdateUserAsync(id, dto);
+        if (updated == null)
+            return NotFound();
+
+        _logger.LogInformation("Admin updated user: UserId={UserId} Role={Role} IsActive={IsActive}", id, dto.Role, dto.IsActive);
+        return Ok(updated);
+    }
+
     // GET: api/Users/me/uploader-profile
     // מחזיר את פרופיל המעלה של המשתמש המחובר (אמן / מורה / בעל מקצוע) — או 204 אם אין
     [HttpGet("me/uploader-profile")]
@@ -126,6 +142,7 @@ public class UsersController : ControllerBase
 
     // GET: api/Users
     [HttpGet]
+    [Authorize(Policy = "users.manage")]
     public async Task<ActionResult<PagedResult<UserListDto>>> GetUsers(
         [FromQuery] string? search = null,
         [FromQuery] int? role = null,

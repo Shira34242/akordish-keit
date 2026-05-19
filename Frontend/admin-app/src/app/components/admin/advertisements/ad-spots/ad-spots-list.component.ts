@@ -28,6 +28,7 @@ export class AdSpotsListComponent implements OnInit {
   saving = false;
   searchTerm = '';
   activeTab: 'campaigns' | 'spots' | 'clients' = 'spots';
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-ad-spots-view') as 'list' | 'grid') || 'list';
 
   // Pagination
   totalCount = 0;
@@ -79,6 +80,11 @@ export class AdSpotsListComponent implements OnInit {
       spot.name.toLowerCase().includes(term) ||
       spot.technicalId.toLowerCase().includes(term)
     );
+  }
+
+  setView(mode: 'list' | 'grid') {
+    this.viewMode = mode;
+    localStorage.setItem('admin-ad-spots-view', mode);
   }
 
   getAvailabilityClass(availability: string): string {

@@ -43,6 +43,7 @@ export class ReportsListComponent implements OnInit {
 
   // Expanded row for details
   expandedReportId: number | null = null;
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-reports-view') as 'list' | 'grid') || 'list';
 
   // Edit modal
   editingReportId: number | null = null;
@@ -106,6 +107,11 @@ export class ReportsListComponent implements OnInit {
 
   toggleExpand(reportId: number): void {
     this.expandedReportId = this.expandedReportId === reportId ? null : reportId;
+  }
+
+  setView(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
+    localStorage.setItem('admin-reports-view', mode);
   }
 
   openStatusModal(report: Report): void {

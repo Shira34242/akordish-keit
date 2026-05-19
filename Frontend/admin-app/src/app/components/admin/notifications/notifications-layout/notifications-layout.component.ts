@@ -36,6 +36,13 @@ export class AdminNotificationsLayoutComponent {
       };
     }
 
+    if (url.includes('/notifications/email')) {
+      return {
+        title: 'מיילים',
+        subtitle: 'שליחת מיילים לקבוצות משתמשים מתוך אזור ההתראות.'
+      };
+    }
+
     return {
       title: 'צ׳אטים וקבוצות',
       subtitle: 'ניהול הודעות אישיות וקבוצתיות במבנה קל ונקי.'

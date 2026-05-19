@@ -13,12 +13,14 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
+import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
+import { ServiceProviderFormComponent } from './service-provider-form.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, ServiceProviderFormComponent],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
@@ -29,6 +31,8 @@ export class ServiceProvidersListComponent implements OnInit {
   error: string | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-providers-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-providers-view', mode); }
+  showProviderFormModal = false;
+  selectedProviderId: number | undefined = undefined;
 
   currentPage = 1;
   pageSize = 25;
@@ -55,7 +59,8 @@ export class ServiceProvidersListComponent implements OnInit {
     private agencyService: AgencyService,
     private http: HttpClient,
     private citiesService: CitiesService,
-    private router: Router
+    private router: Router,
+    private layoutActions: AdminUsersLayoutActionsService
   ) { }
   
   // Batch selection
@@ -69,6 +74,7 @@ export class ServiceProvidersListComponent implements OnInit {
     this.loadCities();
     this.loadProviders();
     this.loadAgencies();
+    this.layoutActions.addServiceProviderRequest$.subscribe(() => this.addNewProvider());
   }
 
   loadCities(): void {
@@ -138,7 +144,8 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   editProvider(id: number): void {
-    this.router.navigate(['/admin/users/service-providers/edit', id]);
+    this.selectedProviderId = id;
+    this.showProviderFormModal = true;
   }
 
   viewProvider(id: number): void {
@@ -250,7 +257,14 @@ export class ServiceProvidersListComponent implements OnInit {
   }
 
   addNewProvider(): void {
-    this.router.navigate(['/admin/users/service-providers/new']);
+    this.selectedProviderId = undefined;
+    this.showProviderFormModal = true;
+  }
+
+  closeProviderFormModal(): void {
+    this.showProviderFormModal = false;
+    this.selectedProviderId = undefined;
+    this.loadProviders();
   }
 
   getStatusBadgeClass(status: number): string {

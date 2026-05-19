@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -7,6 +7,7 @@ import { ArtistService } from '../../../../services/artist.service';
 import { CreateEventDto, UpdateEventDto, Event } from '../../../../models/event.model';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
+import { RequiredFieldFeedbackService } from '../../../../services/required-field-feedback.service';
 
 @Component({
   selector: 'app-event-form',
@@ -20,12 +21,15 @@ export class EventFormComponent implements OnInit {
   private readonly artistService = inject(ArtistService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   isEditMode = false;
   eventId?: number;
   loading = false;
   saving = false;
   loadingArtists = false;
+  imageRequiredMissing = false;
 
   // רשימת כל האמנים זמינים במערכת
   allArtists: ArtistListDto[] = [];
@@ -251,7 +255,10 @@ export class EventFormComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.event.imageUrl.trim()) {
-      alert('נא להעלות תמונה להופעה');
+      this.imageRequiredMissing = true;
+      setTimeout(() => {
+        this.requiredFieldFeedback.showRequiredBySelector(this.host.nativeElement, '[data-required-event-image]');
+      });
       return false;
     }
 

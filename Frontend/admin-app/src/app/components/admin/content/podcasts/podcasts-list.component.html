@@ -1,7 +1,7 @@
 <div class="podcast-admin" dir="rtl">
   <div class="admin-tabs">
-    <button type="button" [class.active]="activeTab === 'episodes'" (click)="activeTab = 'episodes'">פרקים</button>
-    <button type="button" [class.active]="activeTab === 'podcasts'" (click)="activeTab = 'podcasts'">סדרות</button>
+    <button type="button" [class.active]="activeTab === 'episodes'" (click)="switchTab('episodes')">פרקים</button>
+    <button type="button" [class.active]="activeTab === 'podcasts'" (click)="switchTab('podcasts')">סדרות</button>
   </div>
 
   <div class="actions-bar">
@@ -18,6 +18,17 @@
         <option value="all">כל הסטטוסים</option>
         <option value="active">מוצגים באתר</option>
         <option value="draft">טיוטות</option>
+      </select>
+
+      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" title="מתאריך פרסום">
+      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" title="עד תאריך פרסום">
+
+      <select [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="date">תאריך פרסום</option>
+        <option value="date_asc">תאריך פרסום ישן קודם</option>
+        <option value="podcast">סדרה</option>
+        <option value="title">כותרת</option>
+        <option value="views">צפיות</option>
       </select>
     </div>
     <div class="actions">
@@ -50,11 +61,54 @@
     </div>
   </div>
 
+  <div class="list-controls" *ngIf="!loading">
+    <span class="results-info">{{ activeTab === 'episodes' ? totalItems : podcasts.length }} {{ activeTab === 'episodes' ? 'פרקים' : 'סדרות' }}</span>
+    <div class="view-controls">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+        <span class="material-icons">view_list</span>
+      </button>
+      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+        <span class="material-icons">grid_view</span>
+      </button>
+    </div>
+  </div>
+
   <div *ngIf="activeTab === 'episodes'">
     <div *ngIf="loading" class="state-box">טוען פרקים...</div>
     <div *ngIf="!loading && episodes.length === 0" class="state-box">לא נמצאו פרקים</div>
 
-    <div *ngIf="!loading && episodes.length > 0" class="table-box">
+    <div class="episodes-grid" *ngIf="!loading && episodes.length > 0 && viewMode === 'grid'">
+      <div class="episode-card" *ngFor="let episode of episodes" [class.selected]="isEpisodeSelected(episode.id)">
+        <label class="episode-select" title="בחירת פרק">
+          <input type="checkbox" [checked]="isEpisodeSelected(episode.id)" (change)="toggleEpisodeSelection(episode.id, $event)">
+        </label>
+        <span class="episode-image" [style.background-image]="episode.thumbnailUrl ? 'url(' + episode.thumbnailUrl + ')' : ''">
+          <span *ngIf="!episode.thumbnailUrl" class="material-icons">play_circle</span>
+        </span>
+        <span class="badge" [class.inactive]="!episode.isActive">{{ getStatusLabel(episode.isActive) }}</span>
+        <h3>{{ episode.title }}</h3>
+        <p>{{ episode.podcastName }}</p>
+        <small *ngIf="episode.episodeNumber">פרק {{ episode.episodeNumber }}</small>
+        <small>{{ formatDate(episode.publishedAt) }}</small>
+        <select
+          class="episode-status"
+          [ngModel]="episode.isActive ? 'active' : 'draft'"
+          (ngModelChange)="setEpisodeStatus(episode, $event === 'active')"
+          [disabled]="savingEpisodeId === episode.id">
+          <option value="active">מוצג באתר</option>
+          <option value="draft">טיוטה</option>
+        </select>
+        <div class="row-actions">
+          <a class="icon-btn" [routerLink]="['/podcasts', episode.podcastSlug, episode.slug]" target="_blank" title="תצוגה"><span class="material-icons">open_in_new</span></a>
+          <a class="icon-btn" [href]="episode.sourceUrl" target="_blank" rel="noopener" title="מקור"><span class="material-icons">link</span></a>
+          <button type="button" class="icon-btn" (click)="editEpisode(episode)" title="עריכה"><span class="material-icons">edit</span></button>
+          <button type="button" class="icon-btn" (click)="duplicateEpisode(episode)" title="שכפול"><span class="material-icons">content_copy</span></button>
+          <button type="button" class="icon-btn danger" (click)="deleteEpisode(episode)" title="מחיקה"><span class="material-icons">delete</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && episodes.length > 0 && viewMode === 'list'" class="table-box">
       <table>
         <thead>
           <tr>
@@ -118,7 +172,60 @@
     </div>
   </div>
 
-  <div *ngIf="activeTab === 'podcasts'" class="series-grid">
+  <div *ngIf="activeTab === 'podcasts' && viewMode === 'list'" class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th class="selection-cell">
+            <input type="checkbox" [checked]="allCurrentPodcastsSelected" (change)="toggleSelectCurrentPodcasts()" title="בחר הכל">
+          </th>
+          <th>תמונה</th>
+          <th>סדרה</th>
+          <th>פרקים</th>
+          <th>סטטוס</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let podcast of podcasts" [class.selected]="isPodcastSelected(podcast.id)">
+          <td class="selection-cell">
+            <input type="checkbox" [checked]="isPodcastSelected(podcast.id)" (change)="togglePodcastSelection(podcast.id, $event)" title="בחירת סדרה">
+          </td>
+          <td>
+            <span class="thumb" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+            </span>
+          </td>
+          <td>
+            <strong>{{ podcast.name }}</strong>
+            <small>{{ podcast.description || 'אין תיאור' }}</small>
+          </td>
+          <td>{{ podcast.episodeCount }}</td>
+          <td>
+            <div class="status-cell">
+              <span class="badge" [class.inactive]="!podcast.isActive">{{ getStatusLabel(podcast.isActive) }}</span>
+              <select
+                [ngModel]="podcast.isActive ? 'active' : 'draft'"
+                (ngModelChange)="setPodcastStatus(podcast, $event === 'active')"
+                [disabled]="savingPodcastId === podcast.id">
+                <option value="active">מוצג באתר</option>
+                <option value="draft">טיוטה</option>
+              </select>
+            </div>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="icon-btn" [routerLink]="['/podcasts', podcast.slug]" target="_blank" title="תצוגה"><span class="material-icons">open_in_new</span></a>
+              <button type="button" class="icon-btn" (click)="editPodcast(podcast)" title="עריכה"><span class="material-icons">edit</span></button>
+              <button type="button" class="icon-btn danger" (click)="deletePodcast(podcast)" title="מחיקה"><span class="material-icons">delete</span></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="activeTab === 'podcasts' && viewMode === 'grid'" class="series-grid">
     <div class="series-card" *ngFor="let podcast of podcasts" [class.selected]="isPodcastSelected(podcast.id)">
       <label class="series-select" title="בחירת סדרה">
         <input type="checkbox" [checked]="isPodcastSelected(podcast.id)" (change)="togglePodcastSelection(podcast.id, $event)">

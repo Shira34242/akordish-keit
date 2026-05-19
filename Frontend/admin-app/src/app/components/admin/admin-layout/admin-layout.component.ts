@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { ReportService } from '../../../services/report.service';
 import { filter, Subscription } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
     selector: 'app-admin-layout',
@@ -17,7 +18,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
     constructor(
         private router: Router,
-        private reportService: ReportService
+        private reportService: ReportService,
+        private authService: AuthService
     ) { }
 
     ngOnInit() {
@@ -40,7 +42,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         });
     }
 
-    goBackToSite() {
-        this.router.navigate(['/']);
+    can(permission: string): boolean {
+        return this.authService.hasPermission(permission);
+    }
+
+    canAny(permissions: string[]): boolean {
+        return permissions.some(permission => this.can(permission));
     }
 }
