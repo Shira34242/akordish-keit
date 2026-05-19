@@ -20,7 +20,7 @@
           *ngFor="let row of getManagedRows()"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
           <div class="managed-cell" *ngFor="let slot of row.slots">
-            <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!" (click)="navigateToArticle(getManagedArticle(slot)!)"></app-news-banner>
+            <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!" routePrefix="/news"></app-news-banner>
             <div *ngIf="!getManagedArticle(slot)" class="cell-skeleton"></div>
           </div>
         </div>
@@ -34,7 +34,7 @@
           <div
             class="stream-cell"
             *ngFor="let article of row.articles">
-            <app-news-banner [article]="article" (click)="navigateToArticle(article)"></app-news-banner>
+            <app-news-banner [article]="article" routePrefix="/news"></app-news-banner>
           </div>
         </div>
       </div>

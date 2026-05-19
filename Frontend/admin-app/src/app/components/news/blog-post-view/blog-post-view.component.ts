@@ -133,10 +133,30 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
     const slug = this.route.snapshot.paramMap.get('slug');
+    if (id) {
+      this.loadArticleById(+id);
+      return;
+    }
+
     if (slug) {
       this.loadArticle(slug);
     }
+  }
+
+  loadArticleById(id: number): void {
+    this.loading = true;
+    this.articleService.getArticle(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (article) => this.handleLoadedArticle(article),
+        error: (error) => {
+          console.error('Error loading blog post:', error);
+          this.loading = false;
+          this.router.navigate(['/404']);
+        }
+      });
   }
 
   loadArticle(slug: string): void {
@@ -145,31 +165,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (article) => {
-          this.article = article;
-          this.contentPageService.setCurrentArticle(article.id);
-          this.applySeo(article);
-
-          // Increment view count
-          this.articleService.incrementView(article.id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe();
-
-          // Set safe video URL if exists - convert to embed URL if needed
-          if (article.videoEmbedUrl) {
-            const embedUrl = this.convertToYouTubeEmbedUrl(article.videoEmbedUrl);
-            this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
-          }
-
-          // Load related articles
-          this.loadRelatedArticles(article);
-
-          // Check if blog post is liked
-          this.checkIfLiked(article.id);
-
-          // Load feedback counts
-          this.loadFeedback(article.id);
-
-          this.loading = false;
+          this.handleLoadedArticle(article);
         },
         error: (error) => {
           console.error('Error loading blog post:', error);
@@ -177,6 +173,26 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
           this.router.navigate(['/404']);
         }
       });
+  }
+
+  private handleLoadedArticle(article: Article): void {
+    this.article = article;
+    this.contentPageService.setCurrentArticle(article.id);
+    this.applySeo(article);
+
+    this.articleService.incrementView(article.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+
+    if (article.videoEmbedUrl) {
+      const embedUrl = this.convertToYouTubeEmbedUrl(article.videoEmbedUrl);
+      this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    }
+
+    this.loadRelatedArticles(article);
+    this.checkIfLiked(article.id);
+    this.loadFeedback(article.id);
+    this.loading = false;
   }
 
   loadRelatedArticles(article: Article): void {
