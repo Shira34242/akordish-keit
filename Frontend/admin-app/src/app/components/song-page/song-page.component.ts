@@ -314,7 +314,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             currentSlug = snapshotSlug || undefined;
         }
 
-        this.songService.getSongById(id).subscribe({
+        const isPreview = this.route.snapshot.queryParamMap.get('preview') === 'true';
+        const songRequest = isPreview
+            ? this.songService.getSongByIdForAdmin(id)
+            : this.songService.getSongById(id);
+
+        songRequest.subscribe({
             next: (data) => {
                 this.song = data;
                 this.isLoading = false;

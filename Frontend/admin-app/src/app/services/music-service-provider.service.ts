@@ -8,6 +8,8 @@ import {
   CreateMusicServiceProviderDto,
   UpdateMusicServiceProviderDto
 } from '../models/music-service-provider.model';
+import { SongDto } from '../models/song.model';
+import { Article } from '../models/article.model';
 import { PagedResult } from '../models/user.model';
 
 @Injectable({
@@ -105,5 +107,17 @@ export class MusicServiceProviderService {
 
   duplicateServiceProvider(id: number): Observable<MusicServiceProviderDto> {
     return this.http.post<MusicServiceProviderDto>(`${this.apiUrl}/${id}/duplicate`, {});
+  }
+
+  getServiceProviderSongs(id: number, limit: number = 12): Observable<SongDto[]> {
+    return this.http.get<SongDto[]>(`${this.apiUrl}/${id}/songs`, {
+      params: new HttpParams().set('limit', limit.toString())
+    });
+  }
+
+  getServiceProviderArticles(id: number, limit: number = 12): Observable<Article[]> {
+    return this.http.get<Article[]>(`${this.apiUrl}/${id}/articles`, {
+      params: new HttpParams().set('limit', limit.toString())
+    });
   }
 }

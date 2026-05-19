@@ -901,6 +901,32 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // DELETE: api/Songs/{id}
+    // Soft-delete a song (Admin only)
+    // ============================================
+    [HttpDelete("{id}")]
+    [Authorize(Policy = "content.songs")]
+    public async Task<IActionResult> DeleteSong(int id)
+    {
+        try
+        {
+            var success = await _songService.DeleteSongAsync(id);
+            _logger.LogInformation("Song deleted: SongId={SongId} AdminUserId={AdminId}",
+                id, User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            return Ok(new { success = true, message = "השיר נמחק בהצלחה" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "השיר לא נמצא" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting song: SongId={Id}", id);
+            return StatusCode(500, new { message = "שגיאה במחיקת השיר" });
+        }
+    }
+
+    // ============================================
     // GET: api/Songs/my
     // Get songs uploaded by the current user
     // ============================================

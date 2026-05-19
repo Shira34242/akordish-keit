@@ -54,6 +54,11 @@
                     </ng-container>
                 </div>
 
+                <!-- Uploader Badge -->
+                <div *ngIf="song.uploaderProfile" class="header-uploader-badge">
+                    <app-content-uploader-badge [profile]="song.uploaderProfile" />
+                </div>
+
                 <div class="credits-block" *ngIf="song.lyricist || song.composer">
                     <span class="credit-line" *ngIf="song.lyricist">{{ 'song.lyrics' | translate }} {{ song.lyricist.name }}</span>
                     <span class="credit-line" *ngIf="song.composer">{{ 'song.music' | translate }} {{ song.composer.name }}</span>
@@ -525,6 +530,8 @@
             <p class="rating-login-hint" *ngIf="!isLoggedIn">{{ 'song.login_to_rate' | translate }}</p>
         </div>
 
+        <p class="copyright-notice">כל הזכויות שמורות לאתר אקורדישקייט ולמחברים. כל העתקה / הפצה של חומר זה ללא אישור אסורה בהחלט ©</p>
+
         </div>
         <!-- Left Column: Sidebar -->
         <div class="sidebar-column">
@@ -673,11 +680,6 @@
                 </div>
             </div>
 
-            <!-- Uploader Badge -->
-            <div *ngIf="song.uploaderProfile" class="sidebar-card uploader-card">
-                <h3>{{ 'song.uploaded_by' | translate }}</h3>
-                <app-content-uploader-badge [profile]="song.uploaderProfile" />
-            </div>
             </ng-container>
 
         </div>

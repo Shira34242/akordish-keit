@@ -8,6 +8,14 @@
     top: 8px;
     z-index: var(--z-base-header);
     direction: rtl;
+    pointer-events: none;
+}
+
+.header-right,
+.header-mobile-actions,
+.mobile-nav-scroll,
+.header-left-group {
+    pointer-events: auto;
 }
 
 

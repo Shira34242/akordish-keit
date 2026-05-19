@@ -28,6 +28,9 @@
           <span *ngIf="event.location">{{ event.location }}</span>
         </p>
         <p class="modal-date">{{ formattedDateTime }}</p>
+        <div *ngIf="event.uploaderProfile" class="modal-uploader-badge">
+          <app-content-uploader-badge [profile]="event.uploaderProfile" />
+        </div>
       </div>
       <a
         *ngIf="event.ticketUrl && !isPast"

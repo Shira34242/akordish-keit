@@ -170,6 +170,9 @@
           <div class="now-playing" *ngIf="selectedEpisode">
             <span>מנגן עכשיו</span>
             <strong>{{ selectedEpisode.title }}</strong>
+            <div *ngIf="selectedEpisode.uploaderProfile" class="podcast-uploader-badge">
+              <app-content-uploader-badge [profile]="selectedEpisode.uploaderProfile" />
+            </div>
           </div>
           <button type="button" class="pill-button" *ngIf="selectedEpisode" (click)="closeEpisode()">חזרה לתמונת הפודקאסט</button>
         </div>

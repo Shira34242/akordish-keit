@@ -74,6 +74,7 @@ builder.Services.AddScoped<IUserTagService, UserTagService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddHttpClient<ISmartSongImportService, SmartSongImportService>();
+builder.Services.AddHttpClient<ISmartContentImportService, SmartContentImportService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IFeaturedContentService, FeaturedContentService>();
 builder.Services.AddScoped<IMusicServiceProviderService, MusicServiceProviderService>();

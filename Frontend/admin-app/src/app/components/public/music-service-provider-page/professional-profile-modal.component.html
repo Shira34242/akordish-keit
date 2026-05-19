@@ -274,6 +274,30 @@
       </div>
     </section>
 
+    <section class="songs-section" *ngIf="songs.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">אקורדים</h2>
+      </div>
+      <div class="songs-grid">
+        <app-song-card *ngFor="let song of visibleSongs" [song]="song"></app-song-card>
+      </div>
+      <button class="show-more-btn" *ngIf="songs.length > defaultSongsCount" type="button" (click)="toggleSongsExpanded()">
+        {{ songsExpanded ? 'הצג פחות' : 'הצג עוד' }}
+      </button>
+    </section>
+
+    <section class="articles-section" *ngIf="articles.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">כתבות</h2>
+      </div>
+      <div class="articles-grid">
+        <app-news-banner *ngFor="let article of visibleArticles" [article]="article" [showDescription]="true"></app-news-banner>
+      </div>
+      <button class="show-more-btn" *ngIf="articles.length > 6" type="button" (click)="toggleArticlesExpanded()">
+        {{ articlesExpanded ? 'הצג פחות' : 'הצג עוד' }}
+      </button>
+    </section>
+
   </main>
 </div>
 

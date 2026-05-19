@@ -24,6 +24,9 @@ export class BlogListComponent implements OnInit, OnDestroy {
   isMobile = false;
   private mobileMql?: MediaQueryList;
 
+  private cachedManagedRows: { slots: number[]; gridCols: string }[] | null = null;
+  private cachedStreamRows: { articles: Article[]; gridCols: string }[] | null = null;
+
 
   private readonly pageSize = 12;
 
@@ -42,7 +45,10 @@ export class BlogListComponent implements OnInit, OnDestroy {
     this.mobileMql = window.matchMedia('(max-width: 640px)');
     this.isMobile = this.mobileMql.matches;
     this.mobileMql.addEventListener('change', (e) => {
-      this.ngZone.run(() => { this.isMobile = e.matches; });
+      this.ngZone.run(() => {
+        this.isMobile = e.matches;
+        this.invalidateCache();
+      });
     });
 
     this.loadInitialArticles();
@@ -51,6 +57,19 @@ export class BlogListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.observer?.disconnect();
     this.mobileMql?.removeEventListener('change', () => {});
+  }
+
+  private invalidateCache(): void {
+    this.cachedManagedRows = null;
+    this.cachedStreamRows = null;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackById(_index: number, article: Article): number {
+    return article.id;
   }
 
   private loadInitialArticles(): void {
@@ -62,6 +81,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
           this.streamArticles = result.items.slice(5);
           this.hasMore = result.hasNextPage;
           this.isLoading = false;
+          this.invalidateCache();
 
           if (result.items.length === 0) {
             this.hasError = true;
@@ -88,6 +108,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
           this.hasMore = result.hasNextPage;
           this.currentPage++;
           this.isLoadingMore = false;
+          this.invalidateCache();
         },
         error: () => {
           this.isLoadingMore = false;
@@ -111,20 +132,26 @@ export class BlogListComponent implements OnInit, OnDestroy {
   }
 
   getManagedRows(): { slots: number[]; gridCols: string }[] {
+    if (this.cachedManagedRows) return this.cachedManagedRows;
+
     if (this.isMobile) {
-      return [
+      this.cachedManagedRows = [
         { slots: [0, 1], gridCols: '1fr 1fr' },
         { slots: [2], gridCols: '1fr' },
         { slots: [3, 4], gridCols: '1fr 1fr' }
       ];
+    } else {
+      this.cachedManagedRows = [
+        { slots: [0, 1], gridCols: '1fr 1fr' },
+        { slots: [2, 3, 4], gridCols: '1fr 1fr 1fr' }
+      ];
     }
-    return [
-      { slots: [0, 1], gridCols: '1fr 1fr' },
-      { slots: [2, 3, 4], gridCols: '1fr 1fr 1fr' }
-    ];
+    return this.cachedManagedRows;
   }
 
   getStreamRows(): { articles: Article[]; gridCols: string }[] {
+    if (this.cachedStreamRows) return this.cachedStreamRows;
+
     const rows: { articles: Article[]; gridCols: string }[] = [];
     let i = 0;
 
@@ -137,37 +164,37 @@ export class BlogListComponent implements OnInit, OnDestroy {
         i = end;
         rowType++;
       }
-      return rows;
-    }
+    } else {
+      const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
+      const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];
 
-    const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
-    const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];
+      let twoIdx = 0;
+      let threeIdx = 0;
+      let rowType = 0;
 
-    let twoIdx = 0;
-    let threeIdx = 0;
-    let rowType = 0;
+      while (i < this.streamArticles.length) {
+        const cols = rowType % 2 === 0 ? 2 : 3;
+        const end = Math.min(i + cols, this.streamArticles.length);
+        const actualCols = end - i;
 
-    while (i < this.streamArticles.length) {
-      const cols = rowType % 2 === 0 ? 2 : 3;
-      const end = Math.min(i + cols, this.streamArticles.length);
-      const actualCols = end - i;
+        let gridCols: string;
+        if (actualCols === 1) {
+          gridCols = '1fr';
+        } else if (actualCols === 2) {
+          gridCols = twoColPatterns[twoIdx % twoColPatterns.length];
+          twoIdx++;
+        } else {
+          gridCols = threeColPatterns[threeIdx % threeColPatterns.length];
+          threeIdx++;
+        }
 
-      let gridCols: string;
-      if (actualCols === 1) {
-        gridCols = '1fr';
-      } else if (actualCols === 2) {
-        gridCols = twoColPatterns[twoIdx % twoColPatterns.length];
-        twoIdx++;
-      } else {
-        gridCols = threeColPatterns[threeIdx % threeColPatterns.length];
-        threeIdx++;
+        rows.push({ articles: this.streamArticles.slice(i, end), gridCols });
+        i = end;
+        rowType++;
       }
-
-      rows.push({ articles: this.streamArticles.slice(i, end), gridCols });
-      i = end;
-      rowType++;
     }
 
+    this.cachedStreamRows = rows;
     return rows;
   }
 }

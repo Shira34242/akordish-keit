@@ -133,20 +133,25 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    const slug = this.route.snapshot.paramMap.get('slug');
-    if (id) {
-      this.loadArticleById(+id);
-      return;
-    }
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = params.get('id');
+        const slug = params.get('slug');
+        if (id) {
+          this.loadArticleById(+id);
+          return;
+        }
 
-    if (slug) {
-      this.loadArticle(slug);
-    }
+        if (slug) {
+          this.loadArticle(slug);
+        }
+      });
   }
 
   loadArticleById(id: number): void {
     this.loading = true;
+    this.safeVideoUrl = null;
     this.articleService.getArticle(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -161,6 +166,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   loadArticle(slug: string): void {
     this.loading = true;
+    this.safeVideoUrl = null;
     this.articleService.getArticleBySlug(slug, ArticleContentType.Blog)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

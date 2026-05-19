@@ -448,7 +448,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             originalKeyId: this.normalizeKeyValue(this.songToEdit.originalKeyId),
             easyKeyId: this.normalizeKeyValue(this.songToEdit.easyKeyId),
             lyricistId: this.songToEdit.lyricist?.id || null,
-            arrangerId: this.songToEdit.arranger?.id || null
+            arrangerId: this.songToEdit.arranger?.id || null,
+            isApproved: this.songToEdit.isApproved ?? false
         });
 
         // Artists

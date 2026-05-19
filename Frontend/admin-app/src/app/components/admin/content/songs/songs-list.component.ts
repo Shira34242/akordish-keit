@@ -501,8 +501,12 @@ export class SongsListComponent implements OnInit, OnDestroy {
     });
   }
 
-  viewSong(id: number): void {
-    this.router.navigate(['/song', id]);
+  viewSong(song: SongDto): void {
+    if (!song.isApproved) {
+      this.router.navigate(['/song', song.id], { queryParams: { preview: 'true' } });
+    } else {
+      this.router.navigate(['/song', song.id]);
+    }
   }
 
   formatArtists(song: SongDto): string {

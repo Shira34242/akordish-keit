@@ -2,8 +2,14 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Podcast, CreatePodcastEpisodeDto, UpdatePodcastEpisodeDto } from '../../../../models/podcast.model';
 import { PodcastService } from '../../../../services/podcast.service';
+import { UserService } from '../../../../services/user.service';
+import { UserWithProfileDto } from '../../../../models/user.model';
+import { SmartContentService } from '../../../../services/admin/smart-content.service';
+import { StoredSmartDraft } from '../../../../models/smart-content.model';
 
 @Component({
   selector: 'app-podcast-episode-form',
@@ -14,14 +20,25 @@ import { PodcastService } from '../../../../services/podcast.service';
 })
 export class PodcastEpisodeFormComponent implements OnInit {
   private readonly podcastService = inject(PodcastService);
+  private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly smartContentService = inject(SmartContentService);
 
   podcasts: Podcast[] = [];
   isEditMode = false;
   episodeId?: number;
   loading = false;
   saving = false;
+
+  // Uploader profile
+  selectedProfile: UserWithProfileDto | null = null;
+  profileSearchQuery = '';
+  profileSearchResults: UserWithProfileDto[] = [];
+  profileSearchLoading = false;
+  showProfileDropdown = false;
+  profileTypeFilter: 'all' | 'teacher' | 'serviceProvider' | 'artist' | 'user' = 'all';
+  private readonly profileSearch$ = new Subject<string>();
 
   episode: CreatePodcastEpisodeDto | UpdatePodcastEpisodeDto = {
     podcastId: 0,
@@ -40,6 +57,7 @@ export class PodcastEpisodeFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPodcasts();
+    this.initProfileSearch();
     const id = this.route.snapshot.paramMap.get('id');
     const duplicateId = this.route.snapshot.queryParamMap.get('duplicate');
 
@@ -48,7 +66,10 @@ export class PodcastEpisodeFormComponent implements OnInit {
       return;
     }
 
-    if (!id) return;
+    if (!id) {
+      this.applySmartDraftFromRoute();
+      return;
+    }
 
     this.isEditMode = true;
     this.episodeId = +id;
@@ -67,8 +88,27 @@ export class PodcastEpisodeFormComponent implements OnInit {
           platform: episode.platform,
           publishedAt: this.formatDateForInput(episode.publishedAt),
           displayOrder: episode.displayOrder,
-          isActive: episode.isActive
+          isActive: episode.isActive,
+          uploaderUserId: episode.uploaderUserId,
+          uploaderProfileType: episode.uploaderProfileType,
+          uploaderProfileId: episode.uploaderProfileId
         };
+
+        if (episode.uploaderProfile) {
+          this.selectedProfile = {
+            userId: episode.uploaderUserId,
+            displayName: episode.uploaderProfile.name,
+            imageUrl: episode.uploaderProfile.imageUrl,
+            profileType: episode.uploaderProfile.type,
+            profileId: episode.uploaderProfileId ?? episode.uploaderProfile.profileId,
+            profileUrl: episode.uploaderProfile.profileUrl,
+            isTeacher: false,
+            status: 'None',
+            categories: []
+          };
+          this.profileSearchQuery = episode.uploaderProfile.name;
+        }
+
         this.loading = false;
       },
       error: () => {
@@ -104,6 +144,21 @@ export class PodcastEpisodeFormComponent implements OnInit {
     });
   }
 
+  private applySmartDraftFromRoute(): void {
+    const draft = this.smartContentService.consumeDraft(this.route.snapshot.queryParamMap.get('smartDraft'));
+    if (!draft) return;
+
+    this.episode = {
+      ...this.episode,
+      title: draft.title || this.episode.title,
+      description: draft.description || this.episode.description,
+      sourceUrl: draft.sourceUrl || this.episode.sourceUrl,
+      thumbnailUrl: draft.imageUrl || this.episode.thumbnailUrl,
+      platform: draft.platform || this.episode.platform,
+      publishedAt: draft.publishedAt ? this.formatDateForInput(draft.publishedAt) : this.episode.publishedAt
+    };
+  }
+
   loadPodcasts(): void {
     this.podcastService.getPodcasts(1, 200).subscribe(result => {
       this.podcasts = result.items;
@@ -111,6 +166,62 @@ export class PodcastEpisodeFormComponent implements OnInit {
         this.episode.podcastId = this.podcasts[0].id;
       }
     });
+  }
+
+  initProfileSearch(): void {
+    this.profileSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => {
+        if (!q.trim()) {
+          this.profileSearchLoading = false;
+          return of([]);
+        }
+        this.profileSearchLoading = true;
+        return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter === 'all' ? undefined : this.profileTypeFilter);
+      })
+    ).subscribe({
+      next: (results) => {
+        this.profileSearchResults = results;
+        this.profileSearchLoading = false;
+        this.showProfileDropdown = true;
+      },
+      error: () => { this.profileSearchLoading = false; }
+    });
+  }
+
+  onProfileSearchInput(): void {
+    this.profileSearch$.next(this.profileSearchQuery);
+  }
+
+  onProfileFilterChange(): void {
+    this.profileSearchQuery = '';
+    this.selectedProfile = null;
+    this.episode.uploaderUserId = undefined;
+    this.episode.uploaderProfileType = undefined;
+    this.episode.uploaderProfileId = undefined;
+    this.profileSearchResults = [];
+    this.showProfileDropdown = false;
+  }
+
+  selectProfile(profile: UserWithProfileDto): void {
+    this.selectedProfile = profile;
+    this.episode.uploaderUserId = profile.userId;
+    this.episode.uploaderProfileType = profile.profileType;
+    this.episode.uploaderProfileId = profile.profileId;
+    this.profileSearchQuery = profile.displayName;
+    this.showProfileDropdown = false;
+    this.profileSearchResults = [];
+  }
+
+  clearProfile(): void {
+    this.selectedProfile = null;
+    this.episode.uploaderUserId = undefined;
+    this.episode.uploaderProfileType = undefined;
+    this.episode.uploaderProfileId = undefined;
+    this.profileSearchQuery = '';
+    this.profileSearchResults = [];
+    this.showProfileDropdown = false;
   }
 
   onSubmit(): void {

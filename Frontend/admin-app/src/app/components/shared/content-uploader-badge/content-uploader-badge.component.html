@@ -1,5 +1,5 @@
-<a [routerLink]="profile.profileUrl" class="uploader-badge">
-  <div class="uploader-avatar">
+<a [routerLink]="getProfileRouterLink()" class="uploader-badge" [class.uploader-badge--static]="!getProfileRouterLink()">
+  <div class="uploader-avatar" [class]="getAvatarClass()">
     <img
       *ngIf="profile.imageUrl; else initials"
       [src]="profile.imageUrl"
@@ -10,5 +10,8 @@
       <span class="uploader-initials">{{ profile.name.charAt(0) }}</span>
     </ng-template>
   </div>
-  <span class="uploader-name">{{ getDisplayText() }}</span>
+  <div class="uploader-text">
+    <span class="uploader-prefix">{{ getPrefixText() }}</span>
+    <span class="uploader-name">{{ profile.name }}</span>
+  </div>
 </a>

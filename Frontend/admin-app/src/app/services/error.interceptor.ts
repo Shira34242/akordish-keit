@@ -13,6 +13,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       let errorMessage = 'אירעה שגיאה';
 
       const isPublicAdRequest = req.url.includes('/api/AdCampaigns/Public/');
+      const isOptionalAuthStatusRequest =
+        req.url.includes('/api/notifications/unread-count') ||
+        req.url.includes('/api/LikedContent/check/');
 
       if (error.error instanceof ErrorEvent) {
         console.error('Client-side error:', error.error.message);
@@ -29,7 +32,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               break;
             }
 
-            if (authService.isLoggedIn) {
+            if (authService.isLoggedIn && !isOptionalAuthStatusRequest) {
               console.warn('401 Unauthorized - logging out user');
               errorMessage = 'תוקף החיבור פג. אנא התחבר שנית.';
               authService.logout();

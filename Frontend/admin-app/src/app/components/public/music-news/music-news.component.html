@@ -17,10 +17,10 @@
       <div class="managed-grid">
         <div
           class="managed-row"
-          *ngFor="let row of getManagedRows()"
+          *ngFor="let row of getManagedRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
-          <div class="managed-cell" *ngFor="let slot of row.slots">
-            <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!" routePrefix="/news"></app-news-banner>
+          <div class="managed-cell" *ngFor="let slot of row.slots; trackBy: trackByIndex">
+            <app-news-banner *ngIf="getManagedArticle(slot)" [article]="getManagedArticle(slot)!"></app-news-banner>
             <div *ngIf="!getManagedArticle(slot)" class="cell-skeleton"></div>
           </div>
         </div>
@@ -29,12 +29,12 @@
       <div class="stream-grid">
         <div
           class="stream-row"
-          *ngFor="let row of getStreamRows()"
+          *ngFor="let row of getStreamRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
           <div
             class="stream-cell"
-            *ngFor="let article of row.articles">
-            <app-news-banner [article]="article" routePrefix="/news"></app-news-banner>
+            *ngFor="let article of row.articles; trackBy: trackById">
+            <app-news-banner [article]="article"></app-news-banner>
           </div>
         </div>
       </div>

@@ -16,9 +16,29 @@ export class ContentUploaderBadgeComponent {
 
   private readonly langService = inject(LanguageService);
 
-  getDisplayText(): string {
-    if (this.profile.type === 'artist') return this.langService.translate('content_badge.artist_prefix') + this.profile.name;
-    if (this.profile.profileUrl.startsWith('/teacher/')) return this.langService.translate('content_badge.teacher_prefix') + this.profile.name;
-    return this.profile.name;
+  getPrefixText(): string {
+    return this.langService.translate('content_badge.uploaded_by_prefix');
+  }
+
+  getAvatarClass(): string {
+    if (this.profile.type === 'artist') return 'avatar--circle';
+    if (this.profile.profileUrl.startsWith('/teacher/')) return 'avatar--circle';
+    if (this.profile.profileUrl.startsWith('/service-provider/')) return 'avatar--rounded';
+    if (this.profile.profileUrl.startsWith('/professional/')) return 'avatar--rounded';
+    if (this.profile.profileUrl.startsWith('/agency/')) return 'avatar--square';
+    return 'avatar--circle';
+  }
+
+  getProfileRouterLink(): string | null {
+    const url = this.profile.profileUrl;
+    if (!url) return null;
+    if (this.profile.type === 'artist') return '/artist/' + this.profile.profileId;
+    if (url.startsWith('/teacher/')) return '/teacher/' + this.profile.profileId;
+    if (url.startsWith('/service-provider/')) return '/professional/' + this.profile.profileId;
+    if (this.profile.type === 'serviceProvider') return '/professional/' + this.profile.profileId;
+    if (url.startsWith('/professional/')) return url;
+    if (url.startsWith('/agency/')) return url;
+    if (url.startsWith('http')) return null;
+    return url;
   }
 }

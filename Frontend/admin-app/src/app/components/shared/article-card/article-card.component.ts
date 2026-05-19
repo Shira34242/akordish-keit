@@ -19,6 +19,10 @@ export class ArticleCardComponent {
     return getArticleRoute(this.article);
   }
 
+  get articleLink(): string[] {
+    return [this.articleRoute, 'id', String(this.article.id)];
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('he-IL', {
       year: 'numeric',

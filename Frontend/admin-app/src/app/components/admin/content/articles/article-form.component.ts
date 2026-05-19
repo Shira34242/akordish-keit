@@ -13,6 +13,8 @@ import { AuthService } from '../../../../services/auth.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { SmartContentService } from '../../../../services/admin/smart-content.service';
+import { StoredSmartDraft } from '../../../../models/smart-content.model';
 
 import {
   Article,
@@ -47,6 +49,7 @@ export class ArticleFormComponent implements OnInit {
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
+  private readonly smartContentService = inject(SmartContentService);
 
   // State
   categories: CategoryWithSection[] = [];
@@ -66,6 +69,7 @@ export class ArticleFormComponent implements OnInit {
   saveError = '';
   fetchingYouTube = false;
   youtubeMessage = '';
+  private pendingSmartArticleType: 'news' | 'blog' | null = null;
 
   // Uploader profile search state
   profileSearchQuery = '';
@@ -178,9 +182,18 @@ export class ArticleFormComponent implements OnInit {
 
     // Check query params for content type (when creating new)
     this.route.queryParams.subscribe(params => {
-      if (params['type'] === 'blog') {
-        this.article.contentType = ArticleContentType.Blog;
+      if (this.isEditMode) return;
+
+      const requestedType = params['type'] === 'blog' ? 'blog' : 'news';
+      this.pendingSmartArticleType = requestedType;
+      this.article.contentType = requestedType === 'blog' ? ArticleContentType.Blog : ArticleContentType.News;
+
+      const draft = this.smartContentService.consumeDraft(params['smartDraft'] ?? null);
+      if (draft) {
+        this.applySmartDraft(draft);
       }
+
+      this.selectDefaultCategoryForRequestedType();
     });
   }
 
@@ -354,6 +367,7 @@ export class ArticleFormComponent implements OnInit {
     this.systemTablesService.getItems('article-categories', 1, 100).subscribe({
       next: (result) => {
         this.categories = result.items;
+        this.selectDefaultCategoryForRequestedType();
         this.syncContentTypeFromCategories();
       },
       error: (err) => console.error('Error loading categories', err)
@@ -664,6 +678,37 @@ export class ArticleFormComponent implements OnInit {
     );
 
     this.article.contentType = hasNewsCategory ? ArticleContentType.News : ArticleContentType.Blog;
+  }
+
+  private applySmartDraft(draft: StoredSmartDraft): void {
+    const description = draft.description?.trim() || '';
+
+    this.article.title = draft.title || this.article.title;
+    this.article.subtitle = description;
+    this.article.shortDescription = description;
+    this.article.content = description
+      ? `${description}\n\nמקור: ${draft.sourceUrl}`
+      : `מקור: ${draft.sourceUrl}`;
+    this.article.featuredImageUrl = draft.imageUrl || this.article.featuredImageUrl;
+    this.article.openGraphImageUrl = draft.imageUrl || this.article.openGraphImageUrl;
+    this.article.canonicalUrl = draft.sourceUrl;
+    this.article.metaTitle = draft.title || this.article.metaTitle;
+    this.article.metaDescription = description;
+    this.article.status = ArticleStatus.Draft;
+    this.onTitleChange();
+  }
+
+  private selectDefaultCategoryForRequestedType(): void {
+    if (!this.pendingSmartArticleType || this.article.categoryIds.length > 0 || this.categories.length === 0) {
+      return;
+    }
+
+    const wantedSection = this.pendingSmartArticleType === 'news' ? 0 : 1;
+    const category = this.categories.find(item => (item.section ?? 0) === wantedSection);
+    if (category) {
+      this.article.categoryIds = [category.id];
+      this.syncContentTypeFromCategories();
+    }
   }
 
   // Artist selection methods

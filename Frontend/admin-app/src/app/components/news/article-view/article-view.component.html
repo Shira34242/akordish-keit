@@ -21,6 +21,11 @@
           <span class="material-icons" [class.active]="isFavorite" (click)="toggleFavorite()" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
           <span class="material-icons" (click)="openReportModal()" title="דווח על טעות">report</span>
       </div>
+
+      <!-- Uploader Badge -->
+      <div *ngIf="article.uploaderProfile" class="hero-uploader-badge">
+        <app-content-uploader-badge [profile]="article.uploaderProfile" />
+      </div>
     </div>
   </div>
 
@@ -134,10 +139,7 @@
              class="article-tag-chip">#{{ tag.name }}</a>
         </div>
 
-        <!-- Uploader Badge -->
-        <div *ngIf="article.uploaderProfile" class="uploader-badge-wrapper">
-          <app-content-uploader-badge [profile]="article.uploaderProfile" />
-        </div>
+
       </div>
 
       <!-- Feedback Section -->

@@ -7,11 +7,12 @@ import { Podcast, PodcastDetail, PodcastEpisode, PodcastEpisodeDetail } from '..
 import { PodcastService } from '../../../services/podcast.service';
 import { SeoService } from '../../../services/seo.service';
 import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
+import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 
 @Component({
   selector: 'app-podcasts-page',
   standalone: true,
-  imports: [CommonModule, PodcastEpisodeBannerComponent],
+  imports: [CommonModule, PodcastEpisodeBannerComponent, ContentUploaderBadgeComponent],
   templateUrl: './podcasts-page.component.html',
   styleUrls: ['./podcasts-page.component.css']
 })

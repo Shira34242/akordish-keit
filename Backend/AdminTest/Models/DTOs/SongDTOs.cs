@@ -187,6 +187,8 @@ public class UpdateSongRequestDto
     public string? UploaderProfileType { get; set; }
 
     public int? UploaderProfileId { get; set; }
+
+    public bool IsApproved { get; set; }
 }
 // ============================================
 // RESPONSE DTOs - מה שחוזר ל-Angular

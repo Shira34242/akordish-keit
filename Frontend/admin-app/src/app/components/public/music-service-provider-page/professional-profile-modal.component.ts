@@ -3,6 +3,7 @@ import {
   OnChanges, HostListener, ViewChild, ElementRef, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
@@ -20,6 +21,9 @@ import { LanguageService } from '../../../services/language.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { SeoService } from '../../../services/seo.service';
+import { SongCardComponent } from '../../shared/song-card/song-card.component';
+import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 
 type GalleryMediaItem = {
   type: 'image' | 'video';
@@ -37,7 +41,7 @@ type ProviderDisplayTestimonial = {
 @Component({
   selector: 'app-professional-profile-modal',
   standalone: true,
-  imports: [CommonModule, ImgFallbackDirective],
+  imports: [CommonModule, RouterModule, ImgFallbackDirective, SongCardComponent, NewsBannerComponent],
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })
@@ -71,6 +75,14 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   activeMedia: GalleryMediaItem | null = null;
   activeVideoUrl: SafeResourceUrl | null = null;
   branches: ServiceProviderBranchDto[] = [];
+
+  songs: any[] = [];
+  articles: Article[] = [];
+  loadingSongs = false;
+  loadingArticles = false;
+  songsExpanded = false;
+  articlesExpanded = false;
+  defaultSongsCount = 6;
 
   private fullHeroHeight = 0;
   private rafPending = false;
@@ -121,6 +133,8 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
         this.branches = professional.branches ?? [];
         this.rebuildGalleryMedia();
         this.loading = false;
+        this.loadServiceProviderSongs(professionalId);
+        this.loadServiceProviderArticles(professionalId);
         setTimeout(() => {
           this.cdr.detectChanges();
           this.initHeroHeight();
@@ -164,6 +178,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   onResize(): void {
     this.initHeroHeight();
     this.updateTestimonialsNav();
+    this.updateDefaultSongsCount();
   }
 
   scrollTestimonials(direction: 'prev' | 'next'): void {
@@ -256,6 +271,92 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
         this.analytics.trackInteraction('agency_contact_panel', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.professional.displayName}`);
       }
     }
+  }
+
+  get hasContent(): boolean {
+    return this.songs.length > 0 || this.articles.length > 0;
+  }
+
+  get visibleSongs(): any[] {
+    return this.songsExpanded ? this.songs : this.songs.slice(0, this.defaultSongsCount);
+  }
+
+  get visibleArticles(): Article[] {
+    return this.articlesExpanded ? this.articles : this.articles.slice(0, 6);
+  }
+
+  toggleSongsExpanded(): void {
+    this.songsExpanded = !this.songsExpanded;
+  }
+
+  toggleArticlesExpanded(): void {
+    this.articlesExpanded = !this.articlesExpanded;
+  }
+
+  private loadServiceProviderSongs(id: number): void {
+    this.loadingSongs = true;
+    this.songs = [];
+    this.professionalService.getServiceProviderSongs(id, 24).subscribe({
+      next: (songs) => {
+        this.songs = songs;
+        this.loadingSongs = false;
+        this.updateDefaultSongsCount();
+      },
+      error: () => { this.loadingSongs = false; }
+    });
+  }
+
+  private loadServiceProviderArticles(id: number): void {
+    this.loadingArticles = true;
+    this.articles = [];
+    this.professionalService.getServiceProviderArticles(id, 24).subscribe({
+      next: (rawArticles: any[]) => {
+        this.articles = rawArticles.map((a: any) => this.toArticleBannerInput(a));
+        this.loadingArticles = false;
+      },
+      error: () => { this.loadingArticles = false; }
+    });
+  }
+
+  private toArticleBannerInput(item: any): Article {
+    const contentType = item.contentType === 1 ? ArticleContentType.Blog : ArticleContentType.News;
+    return {
+      id: item.id,
+      title: item.title || '',
+      subtitle: item.subtitle,
+      content: '',
+      featuredImageUrl: item.featuredImageUrl || item.imageUrl || 'assets/default-article.png',
+      publishDate: '',
+      createdAt: item.createdAt || '',
+      authorName: item.authorName || '',
+      categoryIds: item.categoryIds || [],
+      categoryNames: item.categoryNames || [],
+      contentType,
+      slug: item.slug || '',
+      shortDescription: item.shortDescription,
+      isFeatured: false,
+      displayOrder: 0,
+      status: ArticleStatus.Published,
+      isPremium: false,
+      viewCount: item.viewCount || 0,
+      likeCount: item.likeCount || 0,
+      tagIds: item.tagIds || [],
+      tags: item.tags || [],
+      galleryImages: [],
+      taggedArtists: item.taggedArtists || []
+    };
+  }
+
+  private updateDefaultSongsCount(): void {
+    const vw = window.innerWidth;
+    let cols: number;
+    if (vw <= 600) {
+      cols = 1;
+    } else {
+      const containerWidth = Math.min(vw - 32, 760);
+      cols = Math.max(1, Math.floor((containerWidth + 10) / (260 + 10)));
+    }
+    this.defaultSongsCount = cols * 2;
   }
 
   closePage(): void {

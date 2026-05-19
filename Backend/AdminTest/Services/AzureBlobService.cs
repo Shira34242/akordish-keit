@@ -5,7 +5,7 @@ namespace AkordishKeit.Services
 {
     public class AzureBlobService : IAzureBlobService
     {
-        private readonly BlobContainerClient _container;
+        private readonly BlobContainerClient? _container;
         private readonly string _containerName;
         private readonly ILogger<AzureBlobService> _logger;
 
@@ -13,13 +13,33 @@ namespace AkordishKeit.Services
         {
             _logger = logger;
             _containerName = configuration["AzureBlobStorage:ContainerName"] ?? "media";
-            var connectionString = configuration["AzureBlobStorage:ConnectionString"]
-                ?? throw new InvalidOperationException("AzureBlobStorage:ConnectionString is not configured.");
-            _container = new BlobServiceClient(connectionString).GetBlobContainerClient(_containerName);
+            var connectionString = configuration["AzureBlobStorage:ConnectionString"];
+
+            if (string.IsNullOrWhiteSpace(connectionString)
+                || connectionString.StartsWith("REPLACE_WITH_", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Azure Blob storage is not configured. Media uploads will be skipped.");
+                return;
+            }
+
+            try
+            {
+                _container = new BlobServiceClient(connectionString).GetBlobContainerClient(_containerName);
+            }
+            catch (FormatException ex)
+            {
+                _logger.LogWarning(ex, "Azure Blob storage connection string is invalid. Media uploads will be skipped.");
+            }
         }
 
         public async Task<string?> UploadAsync(Stream stream, string fileName, string contentType, string? folder = null)
         {
+            if (_container == null)
+            {
+                _logger.LogWarning("Azure Blob upload skipped because storage is not configured: {FileName}", fileName);
+                return null;
+            }
+
             try
             {
                 await _container.CreateIfNotExistsAsync(PublicAccessType.Blob);
@@ -50,6 +70,12 @@ namespace AkordishKeit.Services
 
         public async Task<bool> DeleteAsync(string url)
         {
+            if (_container == null)
+            {
+                _logger.LogWarning("Azure Blob delete skipped because storage is not configured: {Url}", url);
+                return false;
+            }
+
             var blobName = ExtractBlobName(url);
             if (blobName == null) return false;
 

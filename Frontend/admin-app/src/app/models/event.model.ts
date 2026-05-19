@@ -1,3 +1,5 @@
+import { ContentUploaderProfile } from './article.model';
+
 /**
  * מודל להופעה/אירוע מוזיקלי
  */
@@ -24,6 +26,12 @@ export interface Event {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+
+  // Uploader profile
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
+  uploaderProfile?: ContentUploaderProfile;
 
   // Calculated fields
   daysUntilEvent: number;
@@ -62,6 +70,11 @@ export interface CreateEventDto {
   price?: number;
   displayOrder?: number;
   isActive?: boolean;
+
+  // Uploader profile
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
 }
 
 /**
@@ -86,6 +99,11 @@ export interface UpdateEventDto {
   price?: number;
   displayOrder?: number;
   isActive?: boolean;
+
+  // Uploader profile
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
 }
 
 /**

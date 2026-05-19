@@ -94,6 +94,11 @@ public interface ISongService
     /// </summary>
     Task<SongDto> DuplicateSongAsync(int id);
 
+    /// <summary>
+    /// Soft-delete a song (Admin only)
+    /// </summary>
+    Task<bool> DeleteSongAsync(int id);
+
     // ============================================
     // LOW PRIORITY - Reference Data
     // ============================================

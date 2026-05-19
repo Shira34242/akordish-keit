@@ -17,9 +17,9 @@
       <div class="managed-grid" *ngIf="managedArticles.length > 0">
         <div
           class="managed-row"
-          *ngFor="let row of getManagedRows()"
+          *ngFor="let row of getManagedRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
-          <div class="managed-cell" *ngFor="let slot of row.slots">
+          <div class="managed-cell" *ngFor="let slot of row.slots; trackBy: trackByIndex">
             <app-news-banner *ngIf="managedArticles[slot]" [article]="managedArticles[slot]" routePrefix="/blog"></app-news-banner>
             <div *ngIf="!managedArticles[slot]" class="cell-skeleton"></div>
           </div>
@@ -29,9 +29,9 @@
       <div class="stream-grid">
         <div
           class="stream-row"
-          *ngFor="let row of getStreamRows()"
+          *ngFor="let row of getStreamRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
-          <div class="stream-cell" *ngFor="let article of row.articles">
+          <div class="stream-cell" *ngFor="let article of row.articles; trackBy: trackById">
             <app-news-banner [article]="article" routePrefix="/blog"></app-news-banner>
           </div>
         </div>

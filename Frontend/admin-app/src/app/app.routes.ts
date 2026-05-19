@@ -49,7 +49,6 @@ export const routes: Routes = [
             {
                 path: 'articles',
                 loadComponent: () => import('./components/public/articles-list/articles-list.component').then(m => m.ArticlesListComponent),
-                canActivate: [authGuard],
                 title: 'כתבות - אקורדישקייט'
             },
             {

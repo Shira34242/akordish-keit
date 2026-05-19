@@ -21,8 +21,6 @@ export class NewsBannerComponent {
   }
 
   get articleLink(): string[] {
-    return this.article.slug
-      ? [this.articleRoute, this.article.slug]
-      : [this.articleRoute, 'id', String(this.article.id)];
+    return [this.articleRoute, 'id', String(this.article.id)];
   }
 }

@@ -326,16 +326,8 @@
 
             <div class="smart-optional-grid" *ngIf="showEventOptional">
               <div>
-                <label class="smart-label">{{ 'fab.event_name' | translate }}</label>
-                <input class="smart-input" [(ngModel)]="event.name" [placeholder]="'fab.optional_hint' | translate">
-              </div>
-              <div>
                 <label class="smart-label">{{ 'fab.event_artist_name' | translate }}</label>
                 <input class="smart-input" [(ngModel)]="event.artistName" [placeholder]="'fab.optional_hint' | translate">
-              </div>
-              <div>
-                <label class="smart-label">{{ 'fab.event_location' | translate }}</label>
-                <input class="smart-input" [(ngModel)]="event.location" [placeholder]="'fab.optional_hint' | translate">
               </div>
               <div>
                 <label class="smart-label">{{ 'fab.event_price' | translate }}</label>

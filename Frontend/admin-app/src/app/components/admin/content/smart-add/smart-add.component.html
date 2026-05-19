@@ -2,30 +2,48 @@
   <section class="smart-import-card" aria-labelledby="smart-import-title">
     <div class="card-copy">
       <span class="section-pill">ייבוא חכם</span>
-      <h2 id="smart-import-title">הוספת אקורדים מקישור</h2>
+      <h2 id="smart-import-title">הוספת תוכן חכמה מקישור</h2>
       <p>
-        מדביקים קישור, מכינים את הייבוא, ואז עוברים לעריכת שיר כדי לסדר, לתקן ולפרסם ידנית.
+        מדביקים קישור, בוחרים סוג תוכן, ואז עוברים לטופס המתאים כדי לסדר, לתקן ולפרסם ידנית.
       </p>
     </div>
 
     <div class="import-form">
+      <div class="content-type-grid" role="radiogroup" aria-label="בחירת סוג תוכן לייבוא">
+        <button
+          *ngFor="let type of contentTypes"
+          type="button"
+          class="type-chip"
+          [class.active]="selectedContentType === type.value"
+          (click)="onContentTypeChange(type.value)"
+          role="radio"
+          [attr.aria-checked]="selectedContentType === type.value"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">{{ type.icon }}</span>
+          <span>
+            <strong>{{ type.label }}</strong>
+            <small>{{ type.hint }}</small>
+          </span>
+        </button>
+      </div>
+
       <label for="chord-import-url">קישור לאתר מקור</label>
       <div class="url-row">
         <input
           id="chord-import-url"
           type="url"
           [(ngModel)]="importUrl"
-          (keyup.enter)="prepareChordImport()"
+          (keyup.enter)="prepareSmartImport()"
           placeholder="https://..."
           dir="ltr"
         />
-        <button type="button" class="primary-btn" (click)="prepareChordImport()" [disabled]="importState === 'loading'">
+        <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
           {{ importState === 'loading' ? 'שולף...' : 'שלוף תוכן' }}
         </button>
       </div>
 
       <p class="field-note" *ngIf="importState === 'idle'">
-        בשלב הזה נפתח את זרימת הייבוא. החיבור לשליפה האמיתית יתווסף בשלב הבא.
+        השליפה ממלאת טיוטה ראשונית בלבד. תמיד עוברים דרך טופס עריכה לפני פרסום.
       </p>
       <p class="field-note error" *ngIf="importState === 'invalid'">
         צריך להדביק קישור מלא שמתחיל ב-http או https.
@@ -35,16 +53,16 @@
       </p>
     </div>
 
-    <div class="import-result" *ngIf="importState === 'ready' && importResult">
+    <div class="import-result" *ngIf="importState === 'ready' && (importResult || contentImportResult)">
       <div>
-        <h3>{{ importResult.songId ? 'הטיוטה נוצרה' : 'שלפנו נתונים לעריכה' }}</h3>
-        <p>{{ importResult.message }}</p>
-        <p *ngIf="importResult.missingFields.length > 0" class="missing-fields">
-          חסר: {{ importResult.missingFields.join(', ') }}
+        <h3>{{ selectedContentType === 'song' && importResult?.songId ? 'הטיוטה נוצרה' : 'שלפנו נתונים לעריכה' }}</h3>
+        <p>{{ resultMessage }}</p>
+        <p *ngIf="missingFields.length > 0" class="missing-fields">
+          חסר: {{ missingFields.join(', ') }}
         </p>
       </div>
       <button type="button" class="secondary-btn" (click)="openDraftEditor()">
-        פתיחה לעריכה ידנית
+        פתיחת {{ selectedTypeLabel }} לעריכה
       </button>
     </div>
   </section>
@@ -67,16 +85,32 @@
       <button type="button" class="quick-action" (click)="addArticle()">
         <span class="material-symbols-outlined" aria-hidden="true">article</span>
         <span>
-          <strong>כתבה</strong>
+          <strong>כתבות</strong>
           <small>פתיחת טופס כתבה חדשה</small>
+        </span>
+      </button>
+
+      <button type="button" class="quick-action" (click)="addMusicNews()">
+        <span class="material-symbols-outlined" aria-hidden="true">newspaper</span>
+        <span>
+          <strong>חדשות מוזיקה</strong>
+          <small>פתיחת ידיעה חדשה באזור החדשות</small>
         </span>
       </button>
 
       <button type="button" class="quick-action" (click)="addEvent()">
         <span class="material-symbols-outlined" aria-hidden="true">event</span>
         <span>
-          <strong>הופעה</strong>
+          <strong>הופעות</strong>
           <small>פתיחת טופס הופעה חדשה</small>
+        </span>
+      </button>
+
+      <button type="button" class="quick-action" (click)="addPodcast()">
+        <span class="material-symbols-outlined" aria-hidden="true">podcasts</span>
+        <span>
+          <strong>פודקאסטים</strong>
+          <small>פתיחת טופס פרק פודקאסט חדש</small>
         </span>
       </button>
     </div>

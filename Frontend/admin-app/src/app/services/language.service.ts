@@ -242,6 +242,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // FAB / Quick-Add Assistant
     'fab.root_question': 'איזה תוכן תרצה להוסיף לאתר?',
+    'fab.root_greeting_prefix': 'היי',
     'fab.root_helper': 'הוספת תוכן לאתר מתוגמלת בתג מיוחד ואפשרויות בלעדיות באתר לחברים מתקדמים.',
     'fab.content_question': 'מעולה, איזה תוכן תרצה להוסיף?',
     'fab.index_question': 'הבנתי, איזה פרופיל תרצה לאינדקס?',
@@ -1254,6 +1255,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     // Content uploader badge
     'content_badge.artist_prefix': 'האמן ',
     'content_badge.teacher_prefix': 'המורה ',
+    'content_badge.uploaded_by_prefix': 'הועלה על ידי ',
 
     // News ticker
     'ticker.fallback_title': 'חדשות המוזיקה באקורדישקייט',
@@ -1581,6 +1583,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // FAB / Quick-Add Assistant
     'fab.root_question': 'What would you like to add to the site?',
+    'fab.root_greeting_prefix': 'Hi',
     'fab.root_helper': 'Adding content earns you a special badge and exclusive options for advanced members.',
     'fab.content_question': 'Great, what content would you like to add?',
     'fab.index_question': 'Got it, what profile would you like to index?',
@@ -2595,6 +2598,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     // Content uploader badge
     'content_badge.artist_prefix': 'Artist ',
     'content_badge.teacher_prefix': 'Teacher ',
+    'content_badge.uploaded_by_prefix': 'Uploaded by ',
 
     // News ticker
     'ticker.fallback_title': 'Music News at Akkordite',

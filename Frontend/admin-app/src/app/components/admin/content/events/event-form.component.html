@@ -115,6 +115,56 @@
     </div>
 
     <div class="form-section">
+      <h2 class="section-title">תיוג תוכן</h2>
+      <p class="section-description">בחר משתמש או פרופיל אליו ישוייך התוכן</p>
+
+      <div class="profile-search-wrapper">
+        <div *ngIf="selectedProfile" class="selected-profile-display">
+          <img *ngIf="selectedProfile.imageUrl" [src]="selectedProfile.imageUrl" [alt]="selectedProfile.displayName" class="profile-thumb" />
+          <span>{{ selectedProfile.displayName }}</span>
+          <button type="button" class="btn-clear-profile" (click)="clearProfile()">✕</button>
+        </div>
+
+        <div class="form-row" *ngIf="!selectedProfile">
+          <div class="form-group">
+            <select [(ngModel)]="profileTypeFilter" (change)="onProfileFilterChange()" name="profileTypeFilter" class="form-input">
+              <option value="all">כולם</option>
+              <option value="teacher">מורים</option>
+              <option value="serviceProvider">נותני שירות</option>
+              <option value="artist">אמנים</option>
+              <option value="user">חברים רגילים</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              [(ngModel)]="profileSearchQuery"
+              name="profileSearch"
+              class="form-input"
+              placeholder="חפש משתמש או פרופיל..."
+              (input)="onProfileSearchInput()"
+              (focus)="showProfileDropdown = true"
+            />
+          </div>
+        </div>
+
+        <div class="profile-dropdown" *ngIf="showProfileDropdown && profileSearchResults.length > 0">
+          <div *ngIf="profileSearchLoading" class="profile-dropdown-loading">מחפש...</div>
+          <div
+            *ngFor="let p of profileSearchResults"
+            class="profile-dropdown-item"
+            (click)="selectProfile(p)">
+            <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" />
+            <span>{{ p.displayName }}</span>
+          </div>
+        </div>
+        <div class="profile-dropdown" *ngIf="showProfileDropdown && !profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery">
+          <div class="profile-dropdown-loading">לא נמצאו תוצאות</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
       <h2 class="section-title">פרטים בסיסיים</h2>
 
       <div class="form-group">

@@ -16,6 +16,16 @@ import {
   UpdatePodcastEpisodeDto
 } from '../models/podcast.model';
 
+export interface UpdatePodcastEpisodeUploaderDto {
+    uploaderUserId?: number | null;
+    uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+    uploaderProfileId?: number;
+}
+
+export interface BulkUpdatePodcastEpisodeUploaderDto extends UpdatePodcastEpisodeUploaderDto {
+    episodeIds: number[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class PodcastService {
   private readonly http = inject(HttpClient);
@@ -120,5 +130,13 @@ export class PodcastService {
 
   deleteEpisode(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/episodes/${id}`);
+  }
+
+  updateEpisodeUploader(id: number, dto: UpdatePodcastEpisodeUploaderDto): Observable<PodcastEpisode> {
+    return this.http.patch<PodcastEpisode>(`${this.apiUrl}/episodes/${id}/uploader`, dto);
+  }
+
+  bulkUpdateEpisodeUploader(dto: BulkUpdatePodcastEpisodeUploaderDto): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/episodes/bulk/uploader`, dto);
   }
 }

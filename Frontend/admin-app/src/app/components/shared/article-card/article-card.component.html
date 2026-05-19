@@ -1,4 +1,4 @@
-<div class="article-card" [routerLink]="[articleRoute, article.slug]" [class.card-layout]="layout === 'card'">
+<div class="article-card" [routerLink]="articleLink" [class.card-layout]="layout === 'card'">
   <div class="image-container">
     <img [src]="article.featuredImageUrl || 'assets/default-article.png'" [alt]="article.title" class="article-image" loading="lazy">
     <div class="overlay-gradient" *ngIf="layout === 'overlay'"></div>

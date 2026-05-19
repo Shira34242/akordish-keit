@@ -282,9 +282,10 @@ public class SongService : ISongService
             var submission = new ContentSubmission
             {
                 SongId = song.Id,
-                Status = SubmissionStatus.Pending,
+                Status = dto.IsApproved ? SubmissionStatus.Approved : SubmissionStatus.Pending,
                 SubmittedByUserId = userId,
-                SubmittedAt = DateTime.UtcNow
+                SubmittedAt = DateTime.UtcNow,
+                ReviewedAt = dto.IsApproved ? DateTime.UtcNow : null
             };
 
             _context.ContentSubmissions.Add(submission);
@@ -397,6 +398,7 @@ public class SongService : ISongService
             song.UploaderUserId = uploader.UserId;
             song.UploaderProfileType = uploader.ProfileType;
             song.UploaderProfileId = uploader.ProfileId;
+            song.IsApproved = dto.IsApproved;
             song.UpdatedAt = DateTime.UtcNow;
 
             // 4. Update artists - remove and re-add (support both existing and new artists)
@@ -561,6 +563,17 @@ public class SongService : ISongService
             }
 
             await _chordIndexService.SyncSongChordsAsync(song.Id, song.LyricsWithChords);
+
+            var submission = await _context.ContentSubmissions
+                .Where(cs => cs.SongId == song.Id && !cs.IsDeleted)
+                .OrderByDescending(cs => cs.SubmittedAt)
+                .FirstOrDefaultAsync();
+
+            if (submission != null)
+            {
+                submission.Status = dto.IsApproved ? SubmissionStatus.Approved : SubmissionStatus.Pending;
+                submission.ReviewedAt = DateTime.UtcNow;
+            }
 
             // Save all changes within transaction
             await _context.SaveChangesAsync();
@@ -1907,6 +1920,32 @@ public class SongService : ISongService
         await _context.SaveChangesAsync();
 
         return (await GetSongByIdAsync(newSong.Id, includeUnapproved: true))!;
+    }
+
+    public async Task<bool> DeleteSongAsync(int id)
+    {
+        var song = await _context.Songs
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+
+        if (song == null)
+        {
+            throw new KeyNotFoundException("השיר לא נמצא");
+        }
+
+        song.IsDeleted = true;
+        song.UpdatedAt = DateTime.UtcNow;
+
+        var submission = await _context.ContentSubmissions
+            .Where(cs => cs.SongId == id && !cs.IsDeleted)
+            .FirstOrDefaultAsync();
+
+        if (submission != null)
+        {
+            submission.IsDeleted = true;
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     // ============================================

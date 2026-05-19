@@ -1,3 +1,5 @@
+import { ContentUploaderProfile } from '../models/article.model';
+
 export interface EventCardData {
   id: number;
   name: string;
@@ -13,6 +15,7 @@ export interface EventCardData {
   isPast?: boolean;
   isApproved?: boolean;
   description?: string;
+  uploaderProfile?: ContentUploaderProfile;
 }
 
 export interface EventCardArtist {

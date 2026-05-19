@@ -189,7 +189,8 @@ export class EventsListComponent implements OnInit {
       eventStatus: event.eventStatus,
       daysUntilEvent: event.daysUntilEvent,
       isPast: event.isPast,
-      description: event.description
+      description: event.description,
+      uploaderProfile: event.uploaderProfile
     };
   }
 

@@ -5,6 +5,16 @@ import { Observable } from 'rxjs';
 import { Event, CreateEventDto, UpdateEventDto, UpcomingEventDto } from '../../models/event.model';
 import { PagedResult } from '../../models/pagination.model';
 
+export interface UpdateEventUploaderDto {
+    uploaderUserId?: number | null;
+    uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+    uploaderProfileId?: number;
+}
+
+export interface BulkUpdateEventUploaderDto extends UpdateEventUploaderDto {
+    eventIds: number[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -104,5 +114,19 @@ export class EventService {
    */
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * עדכון פרופיל מעלה תוכן להופעה
+   */
+  updateEventUploader(id: number, dto: UpdateEventUploaderDto): Observable<Event> {
+    return this.http.patch<Event>(`${this.apiUrl}/${id}/uploader`, dto);
+  }
+
+  /**
+   * עדכון פרופיל מעלה תוכן למספר הופעות
+   */
+  bulkUpdateEventUploader(dto: BulkUpdateEventUploaderDto): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/bulk/uploader`, dto);
   }
 }

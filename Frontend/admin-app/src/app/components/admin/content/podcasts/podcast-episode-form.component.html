@@ -80,6 +80,53 @@
           מוצג באתר
         </label>
       </section>
+
+      <section class="form-section">
+        <h2>תיוג תוכן</h2>
+        <p>בחר משתמש או פרופיל אליו ישוייך הפרק</p>
+
+        <div class="profile-search-wrapper">
+          <div *ngIf="selectedProfile" class="selected-profile-display">
+            <img *ngIf="selectedProfile.imageUrl" [src]="selectedProfile.imageUrl" [alt]="selectedProfile.displayName" class="profile-thumb" />
+            <span>{{ selectedProfile.displayName }}</span>
+            <button type="button" class="btn-clear-profile" (click)="clearProfile()">✕</button>
+          </div>
+
+          <div class="form-row" *ngIf="!selectedProfile">
+            <div class="form-group">
+              <select [(ngModel)]="profileTypeFilter" (change)="onProfileFilterChange()" name="profileTypeFilter">
+                <option value="all">כולם</option>
+                <option value="teacher">מורים</option>
+                <option value="serviceProvider">נותני שירות</option>
+                <option value="artist">אמנים</option>
+                <option value="user">חברים רגילים</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                [(ngModel)]="profileSearchQuery"
+                name="profileSearch"
+                placeholder="חפש משתמש או פרופיל..."
+                (input)="onProfileSearchInput()"
+                (focus)="showProfileDropdown = true"
+              />
+            </div>
+          </div>
+
+          <div class="profile-dropdown" *ngIf="showProfileDropdown">
+            <div *ngIf="profileSearchLoading">מחפש...</div>
+            <div
+              *ngFor="let p of profileSearchResults"
+              class="profile-dropdown-item"
+              (click)="selectProfile(p)">
+              <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.displayName" />
+              <span>{{ p.displayName }}</span>
+            </div>
+            <div *ngIf="!profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery">לא נמצאו תוצאות</div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <aside class="preview-panel">

@@ -707,13 +707,13 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
   showArticleOptionalFields(): void {
     this.showArticleOptional = true;
-    this.scrollToActiveFlowStart(false);
+    this.scrollToElement('.smart-optional-grid', false);
   }
 
   toggleArticleImageLinkInput(): void {
     this.showArticleImageLinkInput = !this.showArticleImageLinkInput;
     if (this.showArticleImageLinkInput) {
-      this.scrollToActiveFlowStart(false);
+      this.scrollToElement('.smart-media-link-input', false);
     }
   }
 
@@ -747,13 +747,13 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
   showEventOptionalFields(): void {
     this.showEventOptional = true;
-    this.scrollToActiveFlowStart(false);
+    this.scrollToElement('.smart-optional-grid', false);
   }
 
   toggleEventImageLinkInput(): void {
     this.showEventImageLinkInput = !this.showEventImageLinkInput;
     if (this.showEventImageLinkInput) {
-      this.scrollToActiveFlowStart(false);
+      this.scrollToElement('.smart-media-link-input', false);
     }
   }
 
@@ -1160,16 +1160,20 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
   }
 
   private scrollToActiveFlowStart(focusFirstField: boolean): void {
+    this.scrollToElement('.embedded-flow', focusFirstField);
+  }
+
+  private scrollToElement(targetSelector: string, focusFirstField: boolean): void {
     const id = window.setTimeout(() => {
       if (this.destroyed) return;
 
       const content = document.querySelector('.modal-content') as HTMLElement | null;
-      const flow = document.querySelector('.embedded-flow') as HTMLElement | null;
-      if (!content || !flow) return;
+      const target = document.querySelector(targetSelector) as HTMLElement | null;
+      if (!content || !target) return;
 
       const contentRect = content.getBoundingClientRect();
-      const flowRect = flow.getBoundingClientRect();
-      const targetTop = content.scrollTop + flowRect.top - contentRect.top;
+      const targetRect = target.getBoundingClientRect();
+      const targetTop = content.scrollTop + targetRect.top - contentRect.top;
 
       content.scrollTo({
         top: Math.max(0, targetTop - 8),
@@ -1180,7 +1184,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
       const focusId = window.setTimeout(() => {
         if (this.destroyed) return;
-        const firstField = flow.querySelector(
+        const firstField = target.querySelector(
           'input:not([type="file"]):not([hidden]), textarea, select'
         ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
 
@@ -1268,7 +1272,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         const userName = this.authService.currentUserValue?.username;
         const rawQuestion = t('fab.root_question');
         const baseQuestion = userName
-          ? `היי ${userName}, ${rawQuestion}`
+          ? `${t('fab.root_greeting_prefix')} ${userName}, ${rawQuestion}`
           : rawQuestion;
 
         return {

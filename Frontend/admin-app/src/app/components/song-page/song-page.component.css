@@ -224,6 +224,10 @@
     color: #000;
 }
 
+.header-uploader-badge {
+    margin-top: 2px;
+}
+
 .credits-block {
     display: flex;
     flex-direction: column;
@@ -1920,6 +1924,17 @@
     font-size: var(--font-sm);
     color: rgba(0, 0, 0, 0.45);
     margin: 0;
+}
+
+.copyright-notice {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: var(--font-xs);
+    color: rgba(0, 0, 0, 0.3);
+    text-align: center;
+    margin: 0;
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 /* --- Keyframe Animations --- */

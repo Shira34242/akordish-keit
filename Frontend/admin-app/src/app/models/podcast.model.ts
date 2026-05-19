@@ -1,3 +1,5 @@
+import { ContentUploaderProfile } from './article.model';
+
 export interface AgencyPodcastBanner {
   id: number;
   name: string;
@@ -48,6 +50,12 @@ export interface PodcastEpisode {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+
+  // Uploader profile
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
+  uploaderProfile?: ContentUploaderProfile;
 }
 
 export interface PodcastEpisodeDetail extends PodcastEpisode {
@@ -80,6 +88,11 @@ export interface CreatePodcastEpisodeDto {
   publishedAt?: string;
   displayOrder?: number;
   isActive?: boolean;
+
+  // Uploader profile
+  uploaderUserId?: number | null;
+  uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
+  uploaderProfileId?: number;
 }
 
 export interface UpdatePodcastEpisodeDto extends CreatePodcastEpisodeDto {}

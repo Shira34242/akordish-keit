@@ -102,47 +102,11 @@ public class SmartSongImportService : ISmartSongImportService
             };
         }
 
-        if (userId <= 0)
-        {
-            return new ImportSongFromUrlResponseDto
-            {
-                Success = false,
-                Message = "שלפנו את התוכן ומוכן לפתיחה לעריכה ידנית.",
-                SourceUrl = sourceUrl,
-                Draft = draft
-            };
-        }
-
-        var createResult = await _songService.CreateSongAsync(new AddSongRequestDto
-        {
-            Title = draft.Title,
-            Artists = draft.Artists,
-            YoutubeUrl = draft.YoutubeUrl,
-            ImageUrl = draft.ImageUrl,
-            LyricsWithChords = draft.LyricsWithChords,
-            OriginalKeyId = draft.OriginalKeyId,
-            EasyKeyId = draft.EasyKeyId,
-            Tags = draft.Tags,
-            IsApproved = false
-        }, userId);
-
-        if (!createResult.Success)
-        {
-            return new ImportSongFromUrlResponseDto
-            {
-                Success = false,
-                Message = createResult.Message,
-                SourceUrl = sourceUrl,
-                Draft = draft
-            };
-        }
-
         return new ImportSongFromUrlResponseDto
         {
             Success = true,
-            Message = "נוצרה טיוטת אקורדים לעריכה.",
+            Message = "התוכן חולץ בהצלחה. יש ללחוץ על עריכה ולאשר פרסום.",
             SourceUrl = sourceUrl,
-            SongId = createResult.SongId,
             Draft = draft
         };
     }

@@ -2,12 +2,18 @@ import { Component, ElementRef, HostListener, OnInit, inject } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { EventService } from '../../../../services/admin/event.service';
 import { ArtistService } from '../../../../services/artist.service';
+import { UserService } from '../../../../services/user.service';
 import { CreateEventDto, UpdateEventDto, Event } from '../../../../models/event.model';
 import { ArtistListDto } from '../../../../models/artist.model';
+import { UserWithProfileDto } from '../../../../models/user.model';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 import { RequiredFieldFeedbackService } from '../../../../services/required-field-feedback.service';
+import { SmartContentService } from '../../../../services/admin/smart-content.service';
+import { StoredSmartDraft } from '../../../../models/smart-content.model';
 
 @Component({
   selector: 'app-event-form',
@@ -19,10 +25,12 @@ import { RequiredFieldFeedbackService } from '../../../../services/required-fiel
 export class EventFormComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly artistService = inject(ArtistService);
+  private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly smartContentService = inject(SmartContentService);
 
   isEditMode = false;
   eventId?: number;
@@ -43,6 +51,15 @@ export class EventFormComponent implements OnInit {
   // Dropdown state
   dropdownOpen: boolean = false;
 
+  // Uploader profile
+  selectedProfile: UserWithProfileDto | null = null;
+  profileSearchQuery = '';
+  profileSearchResults: UserWithProfileDto[] = [];
+  profileSearchLoading = false;
+  showProfileDropdown = false;
+  profileTypeFilter: 'all' | 'teacher' | 'serviceProvider' | 'artist' | 'user' = 'all';
+  private readonly profileSearch$ = new Subject<string>();
+
   event: CreateEventDto | UpdateEventDto = {
     name: '',
     description: '',
@@ -60,6 +77,7 @@ export class EventFormComponent implements OnInit {
   ngOnInit(): void {
     // טעינת רשימת אמנים זמינים
     this.loadArtists();
+    this.initProfileSearch();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -70,6 +88,8 @@ export class EventFormComponent implements OnInit {
       const duplicateId = this.route.snapshot.queryParamMap.get('duplicate');
       if (duplicateId) {
         this.loadDuplicateEvent(+duplicateId);
+      } else {
+        this.applySmartDraftFromRoute();
       }
     }
   }
@@ -108,12 +128,31 @@ export class EventFormComponent implements OnInit {
           price: event.price,
           displayOrder: event.displayOrder,
           isActive: event.isActive,
-          artistIds: taggedArtistIds
+          artistIds: taggedArtistIds,
+          uploaderUserId: event.uploaderUserId,
+          uploaderProfileType: event.uploaderProfileType,
+          uploaderProfileId: event.uploaderProfileId
         };
 
         // טעינת האמנים המתוייגים
         this.selectedArtistIds = taggedArtistIds;
         this.artistSearchTerm = taggedArtistIds.length > 0 ? '' : (event.artistName ?? '');
+
+        // טעינת פרופיל מעלה
+        if (event.uploaderProfile) {
+          this.selectedProfile = {
+            userId: event.uploaderUserId,
+            displayName: event.uploaderProfile.name,
+            imageUrl: event.uploaderProfile.imageUrl,
+            profileType: event.uploaderProfile.type,
+            profileId: event.uploaderProfileId ?? event.uploaderProfile.profileId,
+            profileUrl: event.uploaderProfile.profileUrl,
+            isTeacher: false,
+            status: 'None',
+            categories: []
+          };
+          this.profileSearchQuery = event.uploaderProfile.name;
+        }
 
         this.loading = false;
       },
@@ -156,11 +195,102 @@ export class EventFormComponent implements OnInit {
     });
   }
 
-  formatDateForInput(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+  private applySmartDraftFromRoute(): void {
+    const draft = this.smartContentService.consumeDraft(this.route.snapshot.queryParamMap.get('smartDraft'));
+    if (!draft) return;
+
+    this.event = {
+      ...this.event,
+      name: draft.title || this.event.name,
+      description: draft.description || this.event.description,
+      imageUrl: draft.imageUrl || this.event.imageUrl,
+      ticketUrl: draft.sourceUrl || this.event.ticketUrl,
+      eventDate: this.getFutureDateForInput(draft.publishedAt) || this.event.eventDate
+    };
   }
 
+  initProfileSearch(): void {
+    this.profileSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => {
+        if (!q.trim()) {
+          this.profileSearchLoading = false;
+          return of([]);
+        }
+        this.profileSearchLoading = true;
+        return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter === 'all' ? undefined : this.profileTypeFilter);
+      })
+    ).subscribe({
+      next: (results) => {
+        this.profileSearchResults = results;
+        this.profileSearchLoading = false;
+        this.showProfileDropdown = true;
+      },
+      error: () => { this.profileSearchLoading = false; }
+    });
+  }
+
+  onProfileSearchInput(): void {
+    this.profileSearch$.next(this.profileSearchQuery);
+  }
+
+  onProfileFilterChange(): void {
+    this.profileSearchQuery = '';
+    this.selectedProfile = null;
+    this.event.uploaderUserId = undefined;
+    this.event.uploaderProfileType = undefined;
+    this.event.uploaderProfileId = undefined;
+    this.profileSearchResults = [];
+    this.showProfileDropdown = false;
+  }
+
+  selectProfile(profile: UserWithProfileDto): void {
+    this.selectedProfile = profile;
+    this.event.uploaderUserId = profile.userId;
+    this.event.uploaderProfileType = profile.profileType;
+    this.event.uploaderProfileId = profile.profileId;
+    this.profileSearchQuery = profile.displayName;
+    this.showProfileDropdown = false;
+    this.profileSearchResults = [];
+  }
+
+  clearProfile(): void {
+    this.selectedProfile = null;
+    this.event.uploaderUserId = undefined;
+    this.event.uploaderProfileType = undefined;
+    this.event.uploaderProfileId = undefined;
+    this.profileSearchQuery = '';
+    this.profileSearchResults = [];
+    this.showProfileDropdown = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-dropdown')) {
+      this.closeDropdown();
+    }
+    if (!target.closest('.profile-search-wrapper')) {
+      this.showProfileDropdown = false;
+    }
+  }
+
+  formatDateForInput(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+  }
+
+  private getFutureDateForInput(dateString?: string): string {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
+      return '';
+    }
+
+    return date.toISOString().slice(0, 16);
+  }
 
   toggleArtistSelection(artistId: number): void {
     const index = this.selectedArtistIds.indexOf(artistId);
@@ -206,14 +336,6 @@ export class EventFormComponent implements OnInit {
 
   closeDropdown(): void {
     this.dropdownOpen = false;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.custom-dropdown')) {
-      this.closeDropdown();
-    }
   }
 
   onSubmit(): void {
