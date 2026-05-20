@@ -58,7 +58,7 @@
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="item.imageUrl || '/assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>

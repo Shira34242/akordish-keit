@@ -835,7 +835,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       title: item.title || '',
       subtitle: 'subtitle' in item ? item.subtitle : undefined,
       content: '',
-      featuredImageUrl: featuredImageUrl || imageUrl || 'assets/default-article.png',
+      featuredImageUrl: featuredImageUrl || imageUrl || '/assets/default-article.png',
       publishDate: '',
       createdAt: '',
       authorName: '',

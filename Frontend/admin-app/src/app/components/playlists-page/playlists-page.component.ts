@@ -370,7 +370,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
       title: item.title || '',
       subtitle: item.subtitle,
       content: '',
-      featuredImageUrl: item.imageUrl || 'assets/default-article.png',
+      featuredImageUrl: item.imageUrl || '/assets/default-article.png',
       publishDate: '',
       createdAt: '',
       authorName: '',

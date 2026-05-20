@@ -42,7 +42,7 @@ namespace AkordishKeit.Services
 
             try
             {
-                await _container.CreateIfNotExistsAsync(PublicAccessType.Blob);
+                await _container!.CreateIfNotExistsAsync(PublicAccessType.Blob);
 
                 var now = DateTime.UtcNow;
                 var blobFolder = folder ?? $"uploads/{now.Year}/{now.Month:D2}";
@@ -81,7 +81,7 @@ namespace AkordishKeit.Services
 
             try
             {
-                var blobClient = _container.GetBlobClient(blobName);
+                var blobClient = _container!.GetBlobClient(blobName);
                 var result = await blobClient.DeleteIfExistsAsync();
                 return result.Value;
             }
