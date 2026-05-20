@@ -16,7 +16,7 @@ import { PagedResult } from '../models/user.model';
   providedIn: 'root'
 })
 export class MusicServiceProviderService {
-  private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api/MusicServiceProviders`;
+  private apiUrl = `${environment.apiBaseUrl}/api/MusicServiceProviders`;
 
   constructor(private http: HttpClient) { }
 

@@ -17,7 +17,7 @@ export interface City {
   providedIn: 'root'
 })
 export class CitiesService {
-  private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api/Cities`;
+  private apiUrl = `${environment.apiBaseUrl}/api/Cities`;
   private citiesCache$?: Observable<City[]>;
 
   constructor(private http: HttpClient) {}

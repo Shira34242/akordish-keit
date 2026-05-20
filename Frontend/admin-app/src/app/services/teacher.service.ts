@@ -16,7 +16,7 @@ import { SongDto } from '../models/song.model';
   providedIn: 'root'
 })
 export class TeacherService {
-  private apiUrl = `${window.location.hostname === 'localhost' ? `${environment.apiBaseUrl}` : ''}/api/Teachers`;
+  private apiUrl = `${environment.apiBaseUrl}/api/Teachers`;
 
   constructor(private http: HttpClient) { }
 
