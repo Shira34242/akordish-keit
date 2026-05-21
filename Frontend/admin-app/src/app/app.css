@@ -21,4 +21,64 @@ html {
   min-height: 100vh;
 }
 
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.gate-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px 32px;
+  max-width: 340px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.gate-box h2 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  color: #1a1a2e;
+}
+
+.gate-box p {
+  color: #666;
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+}
+
+.gate-box input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.gate-box button {
+  width: 100%;
+  padding: 10px;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.gate-error {
+  color: #e53935;
+  font-size: 0.85rem;
+  margin: -6px 0 8px;
+}
+
 

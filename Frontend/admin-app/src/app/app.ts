@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { AddSongModalComponent } from './components/add-song-modal/add-song-modal.component';
 import { ReportModalComponent } from './components/shared/report-modal/report-modal.component';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ModalService, ReportModalState } from './services/modal.service';
 import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts.component';
 import { SiteAlertService } from './services/site-alert.service';
@@ -10,16 +11,34 @@ import { GoogleOneTapService } from './services/google-one-tap.service';
 import { RequiredFieldFeedbackService } from './services/required-field-feedback.service';
 import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AddSongModalComponent, ReportModalComponent, CommonModule, SiteAlertsComponent],
+  imports: [RouterOutlet, AddSongModalComponent, ReportModalComponent, CommonModule, FormsModule, SiteAlertsComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
 export class AppComponent implements OnInit {
   title = 'אקורדישקייט';
+
+  // סיסמה זמנית לבדיקות — להסיר לאחר השקה
+  private readonly GATE_KEY = 'akordishkayt_beta_access';
+  private readonly GATE_PASSWORD = 'test2026';
+  showGate = environment.production && localStorage.getItem(this.GATE_KEY) !== '1';
+  gateInput = '';
+  gateError = false;
+
+  submitGate() {
+    if (this.gateInput === this.GATE_PASSWORD) {
+      localStorage.setItem(this.GATE_KEY, '1');
+      this.showGate = false;
+    } else {
+      this.gateError = true;
+    }
+  }
+
   isAddSongModalOpen = false;
   editMode = false;
   songToEdit: any = null;
