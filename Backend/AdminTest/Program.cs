@@ -191,7 +191,20 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AkordishKeitDbContext>();
-    var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+    var connStr = dbContext.Database.GetConnectionString() ?? "";
+    var masked = connStr.Length > 20 ? connStr[..20] + "..." : connStr;
+    app.Logger.LogInformation("DB connection string prefix: {ConnStr}", masked);
+
+    List<string> pendingMigrations;
+    try
+    {
+        pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Cannot connect to database. App will start but DB features will fail.");
+        pendingMigrations = [];
+    }
     const string fullTextMigrationId = "20260413000001_AddFullTextIndexOnSongsTitle";
 
     if (pendingMigrations.Count > 0)
