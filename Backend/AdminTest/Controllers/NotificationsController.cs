@@ -37,7 +37,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet("admin/user/{userId:int}")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<List<NotificationDto>>> GetUserNotificationsForAdmin(
         int userId,
         [FromQuery] int pageNumber = 1,
@@ -113,7 +113,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPost("admin/send-user-message")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NotificationDto>> SendUserMessage([FromBody] SendUserNotificationDto dto)
     {
         try
@@ -148,7 +148,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPost("admin/send-broadcast")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BroadcastNotificationResultDto>> SendBroadcast([FromBody] SendBroadcastNotificationDto dto)
     {
         try
@@ -182,7 +182,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet("admin/groups")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<List<NotificationGroupDto>>> GetGroups()
     {
         var groups = await _notificationService.GetGroupsAsync();
@@ -190,7 +190,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPost("admin/groups")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NotificationGroupDto>> CreateGroup([FromBody] SaveNotificationGroupDto dto)
     {
         try
@@ -213,7 +213,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPut("admin/groups/{groupId:int}")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NotificationGroupDto>> UpdateGroup(int groupId, [FromBody] SaveNotificationGroupDto dto)
     {
         try
@@ -228,7 +228,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpDelete("admin/groups/{groupId:int}")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteGroup(int groupId)
     {
         var success = await _notificationService.DeleteGroupAsync(groupId);
@@ -236,7 +236,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPost("admin/send-status-update")]
-    [Authorize(Policy = "notifications.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NotificationDto>> SendStatusUpdate([FromBody] SendStatusNotificationDto dto)
     {
         try

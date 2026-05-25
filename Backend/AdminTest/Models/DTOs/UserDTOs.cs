@@ -27,7 +27,6 @@ public class AdminUpdateUserDto
     public string Email { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public int Role { get; set; }
-    public int? AdminRoleId { get; set; }
     public bool IsActive { get; set; }
 }
 
@@ -81,9 +80,6 @@ public class UserListDto
     public string? Phone { get; set; }
     public int Role { get; set; }
     public string RoleName { get; set; } = string.Empty;
-    public int? AdminRoleId { get; set; }
-    public string? AdminRoleName { get; set; }
-    public List<string> Permissions { get; set; } = new();
     public int Level { get; set; }
     public int Points { get; set; }
     public bool IsActive { get; set; }

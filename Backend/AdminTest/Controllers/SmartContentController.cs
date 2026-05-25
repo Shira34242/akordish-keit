@@ -21,7 +21,7 @@ public class SmartContentController : ControllerBase
     }
 
     [HttpPost("import-from-url")]
-    [Authorize(Policy = "content.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ImportContentFromUrlResponseDto>> ImportFromUrl([FromBody] ImportContentFromUrlRequestDto dto)
     {
         try

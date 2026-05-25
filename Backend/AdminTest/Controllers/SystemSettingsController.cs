@@ -7,7 +7,7 @@ namespace AkordishKeit.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "system.manage")]
+[Authorize(Roles = "Admin")]
 public class SystemSettingsController : ControllerBase
 {
     private const string TickerConfigKey = "hero_news_ticker_config";

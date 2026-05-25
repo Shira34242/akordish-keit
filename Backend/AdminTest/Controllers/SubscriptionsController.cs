@@ -29,7 +29,7 @@ public class SubscriptionsController : ControllerBase
     /// POST /api/subscriptions
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SubscriptionDto>> CreateSubscription([FromBody] CreateSubscriptionDto dto)
     {
         try
@@ -352,7 +352,7 @@ public class SubscriptionsController : ControllerBase
     /// POST /api/subscriptions/update-expired
     /// </summary>
     [HttpPost("update-expired")]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> UpdateExpiredSubscriptions()
     {
         try

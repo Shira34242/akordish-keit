@@ -63,8 +63,6 @@ namespace AkordishKeit.Controllers
 
             var user = await _context.Users
                 .AsNoTracking()
-                .Include(u => u.AdminRole)
-                    .ThenInclude(r => r!.Permissions)
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)
@@ -110,8 +108,6 @@ namespace AkordishKeit.Controllers
 
             // 2. Check if user exists (including professional profiles for onboarding check)
             var user = await _context.Users
-                .Include(u => u.AdminRole)
-                    .ThenInclude(r => r!.Permissions)
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)
@@ -233,21 +229,6 @@ namespace AkordishKeit.Controllers
                 new("id", user.Id.ToString())
             };
 
-            if (user.AdminRole != null && user.AdminRole.IsActive && !user.AdminRole.IsDeleted)
-            {
-                claims.Add(new Claim("admin_role_id", user.AdminRole.Id.ToString()));
-                claims.Add(new Claim("admin_role_name", user.AdminRole.Name));
-
-                foreach (var permission in user.AdminRole.Permissions.Select(p => p.PermissionKey).Distinct())
-                    claims.Add(new Claim("permission", permission));
-            }
-
-            if (user.Role == UserRole.Admin)
-            {
-                foreach (var permission in AdminRoleService.AllPermissionKeys)
-                    claims.Add(new Claim("permission", permission));
-            }
-
             var expireDays = int.Parse(_configuration["Jwt:ExpireDays"] ?? "30");
 
             var token = new JwtSecurityToken(
@@ -348,11 +329,6 @@ namespace AkordishKeit.Controllers
                 Email = user.Email,
                 ProfileImageUrl = user.ProfileImageUrl,
                 Role = user.Role.ToString(),
-                AdminRoleId = user.AdminRoleId,
-                AdminRoleName = user.AdminRole?.Name,
-                Permissions = user.Role == UserRole.Admin
-                    ? AdminRoleService.AllPermissionKeys
-                    : user.AdminRole?.Permissions.Select(p => p.PermissionKey).OrderBy(p => p).ToList() ?? new List<string>(),
                 Level = effectiveTag,
                 Points = effectiveCount,
                 PreferredInstrumentId = user.PreferredInstrumentId,
@@ -459,8 +435,6 @@ namespace AkordishKeit.Controllers
 
             // 1. Find user by username or email (including professional profiles for onboarding check)
             var user = await _context.Users
-                .Include(u => u.AdminRole)
-                    .ThenInclude(r => r!.Permissions)
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)

@@ -285,7 +285,7 @@ public class SongsController : ControllerBase
     // Get all songs for admin (including unapproved)
     // ============================================
     [HttpGet("admin/all")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<PagedResult<SongDto>>> GetAllSongsForAdmin(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -376,7 +376,7 @@ public class SongsController : ControllerBase
     // Get single song by ID for admin (including unapproved)
     // ============================================
     [HttpGet("{id}/admin")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SongDto>> GetSongByIdForAdmin(int id)
     {
         try
@@ -681,7 +681,7 @@ public class SongsController : ControllerBase
     // Toggle song approval status (Admin only)
     // ============================================
     [HttpPatch("{id}/approval")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ToggleSongApproval(int id, [FromBody] ToggleApprovalDto dto)
     {
         try
@@ -722,7 +722,7 @@ public class SongsController : ControllerBase
     // Update song artists (Admin only)
     // ============================================
     [HttpPatch("{id}/artists")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SongDto>> UpdateSongArtists(int id, [FromBody] UpdateSongArtistsDto dto)
     {
         try
@@ -745,7 +745,7 @@ public class SongsController : ControllerBase
     // Bulk update song artists (Admin only)
     // ============================================
     [HttpPost("bulk/artists")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkSongActionResultDto>> BulkUpdateSongArtists([FromBody] BulkUpdateSongArtistsDto dto)
     {
         try
@@ -768,7 +768,7 @@ public class SongsController : ControllerBase
     // Update song uploader profile (Admin only)
     // ============================================
     [HttpPatch("{id}/uploader")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SongDto>> UpdateSongUploader(int id, [FromBody] UpdateSongUploaderDto dto)
     {
         try
@@ -791,7 +791,7 @@ public class SongsController : ControllerBase
     // Bulk update song uploader profile (Admin only)
     // ============================================
     [HttpPost("bulk/uploader")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkSongActionResultDto>> BulkUpdateSongUploader([FromBody] BulkUpdateSongUploaderDto dto)
     {
         try
@@ -879,7 +879,7 @@ public class SongsController : ControllerBase
     // Duplicate a song (Admin only)
     // ============================================
     [HttpPost("{id}/duplicate")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SongDto>> DuplicateSong(int id)
     {
         try
@@ -905,7 +905,7 @@ public class SongsController : ControllerBase
     // Soft-delete a song (Admin only)
     // ============================================
     [HttpDelete("{id}")]
-    [Authorize(Policy = "content.songs")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteSong(int id)
     {
         try

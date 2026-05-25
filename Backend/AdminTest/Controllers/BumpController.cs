@@ -9,7 +9,7 @@ namespace AkordishKeit.Controllers;
 
 [Route("api/admin/[controller]")]
 [ApiController]
-[Authorize(Policy = "content.manage")]
+[Authorize(Roles = "Admin")]
 public class BumpController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;

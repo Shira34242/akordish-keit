@@ -160,15 +160,6 @@ namespace AkordishKeit.Models.DTOs
         [System.Text.Json.Serialization.JsonPropertyName("role")]
         public string Role { get; set; } = string.Empty;
 
-        [System.Text.Json.Serialization.JsonPropertyName("adminRoleId")]
-        public int? AdminRoleId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("adminRoleName")]
-        public string? AdminRoleName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("permissions")]
-        public List<string> Permissions { get; set; } = new();
-
         [System.Text.Json.Serialization.JsonPropertyName("level")]
         public int Level { get; set; }
 

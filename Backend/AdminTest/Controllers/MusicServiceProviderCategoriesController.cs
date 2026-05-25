@@ -91,7 +91,7 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "content.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<MusicServiceProviderCategoryDto>> PostCategory(CreateMusicServiceProviderCategoryDto dto)
     {
         var category = new MusicServiceProviderCategory
@@ -126,7 +126,7 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "content.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutCategory(int id, CreateMusicServiceProviderCategoryDto dto)
     {
         var category = await _context.ServiceProviderCategories.FindAsync(id);
@@ -165,7 +165,7 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "content.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var category = await _context.ServiceProviderCategories.FindAsync(id);
@@ -188,7 +188,7 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     }
 
     [HttpPost("bulk-delete")]
-    [Authorize(Policy = "content.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> BulkDelete([FromBody] BulkDeleteDto dto)
     {
         if (dto?.Ids == null || dto.Ids.Length == 0) return BadRequest("לא נבחרו פריטים למחיקה");

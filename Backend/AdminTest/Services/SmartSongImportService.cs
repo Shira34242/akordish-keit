@@ -786,11 +786,41 @@ public class SmartSongImportService : ISmartSongImportService
     {
         var lines = value.Replace("\r\n", "\n").Replace('\r', '\n')
             .Split('\n')
-            .Select(line => line.TrimEnd())
+            .Select(line => line.TrimEnd().TrimStart('\t'))
             .Where(line => !string.IsNullOrWhiteSpace(line))
-            .Take(260);
+            .Take(260)
+            .ToList();
 
-        return string.Join(Environment.NewLine, lines).Trim();
+        return string.Join(Environment.NewLine, RemoveCommonLeadingIndent(lines)).Trim();
+    }
+
+    private static IEnumerable<string> RemoveCommonLeadingIndent(IReadOnlyCollection<string> lines)
+    {
+        if (lines.Count == 0)
+        {
+            return lines;
+        }
+
+        var commonIndent = lines
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(LeadingWhitespaceLength)
+            .DefaultIfEmpty(0)
+            .Min();
+
+        return commonIndent <= 0
+            ? lines
+            : lines.Select(line => line.Length >= commonIndent ? line[commonIndent..] : line.TrimStart());
+    }
+
+    private static int LeadingWhitespaceLength(string value)
+    {
+        var index = 0;
+        while (index < value.Length && char.IsWhiteSpace(value[index]) && value[index] != '\r' && value[index] != '\n')
+        {
+            index++;
+        }
+
+        return index;
     }
 
     private static bool IsUsefulLyricsLine(string line)

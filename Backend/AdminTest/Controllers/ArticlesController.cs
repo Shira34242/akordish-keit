@@ -136,7 +136,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles
     [HttpPost]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> CreateArticle([FromBody] CreateArticleDto dto)
     {
         try
@@ -191,7 +191,7 @@ public class ArticlesController : ControllerBase
 
     // PUT: api/Articles/5
     [HttpPut("{id}")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateArticle(int id, [FromBody] UpdateArticleDto dto)
     {
         try
@@ -231,7 +231,7 @@ public class ArticlesController : ControllerBase
 
     // PATCH: api/Articles/5/status
     [HttpPatch("{id}/status")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> UpdateArticleStatus(int id, [FromBody] UpdateArticleStatusDto dto)
     {
         try
@@ -267,7 +267,7 @@ public class ArticlesController : ControllerBase
 
     // PATCH: api/Articles/5/categories
     [HttpPatch("{id}/categories")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> UpdateArticleCategories(int id, [FromBody] UpdateArticleCategoriesDto dto)
     {
         try
@@ -287,7 +287,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/bulk/categories
     [HttpPost("bulk/categories")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleCategories([FromBody] BulkUpdateArticleCategoriesDto dto)
     {
         try
@@ -307,7 +307,7 @@ public class ArticlesController : ControllerBase
 
     // PATCH: api/Articles/bulk/status
     [HttpPatch("bulk/status")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleStatus([FromBody] BulkUpdateArticleStatusDto dto)
     {
         try
@@ -327,7 +327,7 @@ public class ArticlesController : ControllerBase
 
     // PATCH: api/Articles/5/artists
     [HttpPatch("{id}/artists")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> UpdateArticleArtists(int id, [FromBody] UpdateArticleArtistsDto dto)
     {
         try
@@ -347,7 +347,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/bulk/artists
     [HttpPost("bulk/artists")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleArtists([FromBody] BulkUpdateArticleArtistsDto dto)
     {
         try
@@ -367,7 +367,7 @@ public class ArticlesController : ControllerBase
 
     // PATCH: api/Articles/5/uploader
     [HttpPatch("{id}/uploader")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> UpdateArticleUploader(int id, [FromBody] UpdateArticleUploaderDto dto)
     {
         try
@@ -387,7 +387,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/bulk/uploader
     [HttpPost("bulk/uploader")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkUpdateArticleUploader([FromBody] BulkUpdateArticleUploaderDto dto)
     {
         try
@@ -407,7 +407,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/5/duplicate
     [HttpPost("{id}/duplicate")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleDto>> DuplicateArticle(int id)
     {
         try
@@ -425,7 +425,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/bulk/duplicate
     [HttpPost("bulk/duplicate")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkDuplicateArticles([FromBody] BulkArticleIdsDto dto)
     {
         try
@@ -441,7 +441,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/bulk-delete
     [HttpPost("bulk-delete")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkDeleteArticles([FromBody] BulkArticleIdsDto dto)
     {
         var result = await _articleService.BulkDeleteArticlesAsync(dto);
@@ -450,7 +450,7 @@ public class ArticlesController : ControllerBase
 
     // GET: api/Articles/news-cleanup/settings
     [HttpGet("news-cleanup/settings")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleNewsCleanupSettingsDto>> GetNewsCleanupSettings()
     {
         var settings = await _articleService.GetNewsCleanupSettingsAsync();
@@ -459,7 +459,7 @@ public class ArticlesController : ControllerBase
 
     // PUT: api/Articles/news-cleanup/settings
     [HttpPut("news-cleanup/settings")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleNewsCleanupSettingsDto>> UpdateNewsCleanupSettings([FromBody] UpdateArticleNewsCleanupSettingsDto dto)
     {
         var settings = await _articleService.UpdateNewsCleanupSettingsAsync(dto);
@@ -472,7 +472,7 @@ public class ArticlesController : ControllerBase
 
     // POST: api/Articles/news-cleanup/run
     [HttpPost("news-cleanup/run")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArticleNewsCleanupResultDto>> CleanupOldNews([FromBody] CleanupOldNewsDto dto)
     {
         var result = await _articleService.CleanupOldNewsAsync(dto.OlderThanDays);
@@ -485,7 +485,7 @@ public class ArticlesController : ControllerBase
 
     // DELETE: api/Articles/5
     [HttpDelete("{id}")]
-    [Authorize(Policy = "content.articles")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteArticle(int id)
     {
         var result = await _articleService.DeleteArticleAsync(id);

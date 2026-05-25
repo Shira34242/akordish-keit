@@ -341,7 +341,7 @@ public class TeachersController : ControllerBase
 
     // POST: api/Teachers/5/approve
     [HttpPost("{id}/approve")]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> ApproveTeacher(int id)
     {
         var result = await _service.ApproveTeacherAsync(id);
@@ -357,7 +357,7 @@ public class TeachersController : ControllerBase
 
     // POST: api/Teachers/5/reject
     [HttpPost("{id}/reject")]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> RejectTeacher(int id)
     {
         var result = await _service.RejectTeacherAsync(id);

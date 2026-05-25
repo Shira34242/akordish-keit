@@ -33,7 +33,7 @@ public class UserTagController : ControllerBase
 
     // GET: api/users/{id}/tag  (Admin only)
     [HttpGet("{id}/tag")]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserTagDto>> GetUserTag(int id)
     {
         var tag = await _userTagService.GetUserTagAsync(id);
@@ -44,7 +44,7 @@ public class UserTagController : ControllerBase
 
     // POST: api/users/{id}/tag/recalculate  (Admin — force recalculate)
     [HttpPost("{id}/tag/recalculate")]
-    [Authorize(Policy = "users.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserTagDto>> RecalculateTag(int id)
     {
         await _userTagService.RecalculateTagAsync(id);

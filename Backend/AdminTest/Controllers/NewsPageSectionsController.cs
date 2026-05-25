@@ -56,7 +56,7 @@ public class NewsPageSectionsController : ControllerBase
     /// יצירת פס חדש (ממשק ניהול)
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "system.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NewsPageSectionDto>> CreateSection([FromBody] CreateNewsPageSectionDto dto)
     {
         var section = await _service.CreateSectionAsync(dto);
@@ -69,7 +69,7 @@ public class NewsPageSectionsController : ControllerBase
     /// עדכון פס קיים (ממשק ניהול)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "system.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NewsPageSectionDto>> UpdateSection(int id, [FromBody] UpdateNewsPageSectionDto dto)
     {
         var section = await _service.UpdateSectionAsync(id, dto);
@@ -83,7 +83,7 @@ public class NewsPageSectionsController : ControllerBase
     /// מחיקת פס (ממשק ניהול)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "system.manage")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteSection(int id)
     {
         var result = await _service.DeleteSectionAsync(id);

@@ -88,7 +88,7 @@
       <div class="grid-card-sub">{{ user.email }}</div>
       <div class="grid-card-sub" *ngIf="user.phone">{{ user.phone }}</div>
       <div class="grid-card-badges">
-        <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ getUserRoleLabel(user) }}</span>
+        <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ getRoleLabel(user.role) }}</span>
         <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">
           {{ user.isActive ? 'פעיל' : 'לא פעיל' }}
         </span>
@@ -125,7 +125,7 @@
           <td>{{ user.phone || '-' }}</td>
           <td>
             <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
-              {{ getUserRoleLabel(user) }}
+              {{ getRoleLabel(user.role) }}
             </span>
           </td>
           <td>
@@ -263,14 +263,9 @@
 
       <label>
         <span>תפקיד</span>
-        <select class="form-control" name="roleAssignment" [(ngModel)]="roleAssignment" (change)="onRoleAssignmentChange()">
-          <option value="0">חבר רגיל</option>
-          <option value="1">מורה</option>
-          <option value="2">אמן</option>
-          <option value="3">מנהל תוכן</option>
-          <option value="4">מנהל מערכת</option>
-          <option *ngFor="let option of adminRoles" [value]="'custom:' + option.id">
-            {{ option.name }}
+        <select class="form-control" name="role" [(ngModel)]="userEditForm.role">
+          <option *ngFor="let option of editableRoleOptions" [ngValue]="option.value">
+            {{ option.label }}
           </option>
         </select>
       </label>

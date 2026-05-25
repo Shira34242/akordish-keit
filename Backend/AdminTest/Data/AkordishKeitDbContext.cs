@@ -1,4 +1,4 @@
-﻿using AkordishKeit.Data.Configurations;
+using AkordishKeit.Data.Configurations;
 using AkordishKeit.Data.Seed;
 using AkordishKeit.Models.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +14,6 @@ public class AkordishKeitDbContext : DbContext
 
     // Core DbSets
     public DbSet<User> Users { get; set; }
-    public DbSet<AdminRole> AdminRoles { get; set; }
-    public DbSet<AdminRolePermission> AdminRolePermissions { get; set; }
     public DbSet<Song> Songs { get; set; }
     public DbSet<Artist> Artists { get; set; }
 
@@ -138,8 +136,6 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SongArtistConfiguration());
         modelBuilder.ApplyConfiguration(new ContentSubmissionConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new AdminRoleConfiguration());
-        modelBuilder.ApplyConfiguration(new AdminRolePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SongConfiguration());
         modelBuilder.ApplyConfiguration(new ArtistConfiguration());
         modelBuilder.ApplyConfiguration(new PersonConfiguration());

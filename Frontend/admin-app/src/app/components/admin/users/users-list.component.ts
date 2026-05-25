@@ -8,8 +8,6 @@ import { PagedResult } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { TeacherFormComponent } from '../teachers/teacher-form.component';
 import { ServiceProviderFormComponent } from '../service-providers/service-provider-form.component';
-import { AdminRole } from '../../../models/admin-role.model';
-import { AdminRoleService } from '../../../services/admin-role.service';
 
 
 @Component({
@@ -32,8 +30,6 @@ export class UsersListComponent implements OnInit {
   editingUser: UserListDto | null = null;
   savingUser = false;
   editUserError: string | null = null;
-  adminRoles: AdminRole[] = [];
-  roleAssignment = '0';
   userEditForm: AdminUpdateUserDto = {
     username: '',
     email: '',
@@ -79,20 +75,11 @@ export class UsersListComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private router: Router,
-    private adminRoleService: AdminRoleService
+    private router: Router
   ) { }
 
   ngOnInit(): void {
-    this.loadAdminRoles();
     this.loadUsers();
-  }
-
-  loadAdminRoles(): void {
-    this.adminRoleService.getRoles(true).subscribe({
-      next: roles => this.adminRoles = roles,
-      error: err => console.error('שגיאה בטעינת תפקידי ניהול:', err)
-    });
   }
 
   loadUsers(): void {
@@ -159,10 +146,8 @@ export class UsersListComponent implements OnInit {
       email: user.email,
       phone: user.phone || '',
       role: user.role,
-      adminRoleId: user.adminRoleId ?? null,
       isActive: user.isActive
     };
-    this.roleAssignment = user.adminRoleId ? `custom:${user.adminRoleId}` : String(user.role);
   }
 
   closeEditUserModal(): void {
@@ -200,10 +185,9 @@ export class UsersListComponent implements OnInit {
       this.userService.updateUser(user.id, {
         username: user.username,
         email: user.email,
-      phone: user.phone || '',
-      role: UserRole.Admin,
-      adminRoleId: null,
-      isActive: user.isActive
+        phone: user.phone || '',
+        role: UserRole.Admin,
+        isActive: user.isActive
       }).subscribe({
         next: (updated) => {
           this.users = this.users.map(existing => existing.id === updated.id ? updated : existing);
@@ -215,25 +199,8 @@ export class UsersListComponent implements OnInit {
       });
     }
   }
-
-  onRoleAssignmentChange(): void {
-    if (this.roleAssignment.startsWith('custom:')) {
-      const roleId = Number(this.roleAssignment.replace('custom:', ''));
-      this.userEditForm.adminRoleId = roleId;
-      this.userEditForm.role = UserRole.Manager;
-      return;
-    }
-
-    this.userEditForm.adminRoleId = null;
-    this.userEditForm.role = Number(this.roleAssignment) as UserRole;
-  }
-
   private buildUserUpdatePayload(): AdminUpdateUserDto {
-    this.onRoleAssignmentChange();
-    return {
-      ...this.userEditForm,
-      adminRoleId: this.userEditForm.adminRoleId ?? null
-    };
+    return { ...this.userEditForm };
   }
 
   async deleteUser(id: number): Promise<void> {
@@ -288,10 +255,6 @@ export class UsersListComponent implements OnInit {
       case UserRole.Regular: return 'משתמש רגיל';
       default: return 'לא ידוע';
     }
-  }
-
-  getUserRoleLabel(user: UserListDto): string {
-    return user.adminRoleName || this.getRoleLabel(user.role);
   }
 
   getContentTagLabel(tag: UserContentTag): string {

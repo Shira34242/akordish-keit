@@ -31,9 +31,6 @@ export interface UserListDto {
   phone?: string;
   role: UserRole;
   roleName: string;
-  adminRoleId?: number | null;
-  adminRoleName?: string | null;
-  permissions?: string[];
   level: number;
   points: number;
   isActive: boolean;
@@ -51,7 +48,6 @@ export interface AdminUpdateUserDto {
   email: string;
   phone?: string | null;
   role: UserRole;
-  adminRoleId?: number | null;
   isActive: boolean;
 }
 
