@@ -35,6 +35,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedPodcast: PodcastDetail | null = null;
   selectedEpisode: PodcastEpisodeDetail | null = null;
   safeEmbedUrl: SafeResourceUrl | null = null;
+  seriesDescriptionExpanded = false;
   searchQuery = '';
   searchEpisodes: PodcastEpisode[] = [];
   searchPodcasts: Podcast[] = [];
@@ -160,6 +161,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedPodcast = null;
     this.selectedEpisode = null;
     this.safeEmbedUrl = null;
+    this.seriesDescriptionExpanded = false;
     this.seriesLoading = false;
     this.episodeLoading = false;
     this.applySeoDefault();
@@ -171,6 +173,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedEpisode = null;
     this.safeEmbedUrl = null;
     this.episodeLoading = false;
+    this.seriesDescriptionExpanded = false;
     if (this.selectedPodcast) this.applySeoForSeries(this.selectedPodcast);
     if (this.selectedPodcast) {
       this.updateUrl(this.selectedPodcast.slug);
@@ -201,6 +204,14 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getEpisodeThumbnail(episode: PodcastEpisode): string | null {
     return episode.thumbnailUrl || this.buildYouTubeThumbnail(episode.sourceUrl) || this.buildYouTubeThumbnail(episode.embedUrl);
+  }
+
+  shouldShowDescriptionToggle(description: string | null | undefined): boolean {
+    return (description || '').trim().length > 260;
+  }
+
+  toggleSeriesDescription(): void {
+    this.seriesDescriptionExpanded = !this.seriesDescriptionExpanded;
   }
 
   onSearchInput(event: Event): void {
@@ -250,6 +261,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.podcastService.getPodcastBySlug(slug).subscribe({
       next: podcast => {
         this.selectedPodcast = podcast;
+        this.seriesDescriptionExpanded = false;
         this.seriesLoading = false;
         this.applySeoForSeries(podcast);
         if (updateUrl) this.updateUrl(podcast.slug);
@@ -374,6 +386,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.podcastService.getPodcastBySlug(episode.podcastSlug).subscribe({
       next: podcast => {
         this.selectedPodcast = podcast;
+        this.seriesDescriptionExpanded = false;
         this.seriesLoading = false;
       },
       error: () => {

@@ -253,6 +253,7 @@ export class AdminNotificationsComponent implements OnInit {
     this.selectedGroup = group;
     this.selectedUser = null;
     this.selectedUserId = null;
+    this.isLoadingThread = false;
     this.threadNotifications = [];
     this.successMessage = '';
     this.errorMessage = '';
@@ -463,17 +464,36 @@ export class AdminNotificationsComponent implements OnInit {
 
   loadThread(userId: number): void {
     this.isLoadingThread = true;
+    const pageSize = 100;
+    const allNotifications: NotificationDto[] = [];
 
-    this.notificationService.getUserNotificationsForAdmin(userId).subscribe({
-      next: notifications => {
-        this.threadNotifications = notifications.reverse();
-        this.isLoadingThread = false;
-      },
-      error: () => {
-        this.threadNotifications = [];
-        this.isLoadingThread = false;
-      }
-    });
+    const loadPage = (pageNumber: number): void => {
+      this.notificationService.getUserNotificationsForAdmin(userId, pageNumber, pageSize).subscribe({
+        next: notifications => {
+          if (this.selectedUserId !== userId) {
+            return;
+          }
+
+          allNotifications.push(...notifications);
+
+          if (notifications.length === pageSize) {
+            loadPage(pageNumber + 1);
+            return;
+          }
+
+          this.threadNotifications = allNotifications.reverse();
+          this.isLoadingThread = false;
+        },
+        error: () => {
+          if (this.selectedUserId === userId) {
+            this.threadNotifications = [];
+            this.isLoadingThread = false;
+          }
+        }
+      });
+    };
+
+    loadPage(1);
   }
 
   nextPage(): void {

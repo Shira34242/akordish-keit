@@ -166,7 +166,19 @@
           </button>
           <span class="media-kicker">פודקאסט</span>
           <h2>{{ selectedPodcast.name }}</h2>
-          <p *ngIf="selectedPodcast.description">{{ selectedPodcast.description }}</p>
+          <div
+            class="series-description"
+            *ngIf="selectedPodcast.description"
+            [class.series-description--expanded]="seriesDescriptionExpanded">
+            <p>{{ selectedPodcast.description }}</p>
+          </div>
+          <button
+            type="button"
+            class="description-toggle"
+            *ngIf="shouldShowDescriptionToggle(selectedPodcast.description)"
+            (click)="toggleSeriesDescription()">
+            {{ seriesDescriptionExpanded ? 'פחות' : 'עוד' }}
+          </button>
           <div class="now-playing" *ngIf="selectedEpisode">
             <span>מנגן עכשיו</span>
             <strong>{{ selectedEpisode.title }}</strong>

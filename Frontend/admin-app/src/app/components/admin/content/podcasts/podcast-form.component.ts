@@ -7,11 +7,12 @@ import { AgencyListDto } from '../../../../models/agency.model';
 import { PodcastService } from '../../../../services/podcast.service';
 import { AgencyService } from '../../../../services/agency.service';
 import { CreatePodcastDto, UpdatePodcastDto } from '../../../../models/podcast.model';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-podcast-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './podcast-form.component.html',
   styleUrls: ['./podcast-form.component.css']
 })

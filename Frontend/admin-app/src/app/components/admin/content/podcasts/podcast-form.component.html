@@ -29,7 +29,13 @@
 
       <div class="form-group">
         <label for="podcast-image-url">תמונת סדרה</label>
-        <input id="podcast-image-url" type="url" [(ngModel)]="podcast.imageUrl" name="imageUrl" placeholder="קישור לתמונה שתופיע בעמוד הסדרה ובכרטיסי סדרות" />
+        <app-file-upload-input
+          inputId="podcast-image-url"
+          [(url)]="podcast.imageUrl"
+          placeholder="קישור לתמונה או העלאת קובץ"
+          accept="image/*"
+          [showPreview]="false"
+        ></app-file-upload-input>
       </div>
 
       <div class="series-preview" *ngIf="podcast.imageUrl">

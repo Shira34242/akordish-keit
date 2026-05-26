@@ -75,7 +75,7 @@ public class NotificationService : INotificationService
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -129,25 +129,32 @@ public class NotificationService : INotificationService
     public async Task<bool> DeleteAsync(int notificationId, int userId)
     {
         var notification = await _context.Notifications
-            .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
+            .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId && !n.IsDeleted);
 
         if (notification == null)
         {
             return false;
         }
 
-        _context.Notifications.Remove(notification);
+        notification.IsDeleted = true;
+        notification.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }
 
     public async Task DeleteAllAsync(int userId)
     {
+        var now = DateTime.UtcNow;
         var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId)
+            .Where(n => n.UserId == userId && !n.IsDeleted)
             .ToListAsync();
 
-        _context.Notifications.RemoveRange(notifications);
+        foreach (var notification in notifications)
+        {
+            notification.IsDeleted = true;
+            notification.DeletedAt = now;
+        }
+
         await _context.SaveChangesAsync();
     }
 

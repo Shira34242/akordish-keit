@@ -77,9 +77,11 @@ export interface ParsedChord {
  * Handles:
  *  - Parentheses:  G7(b9) → G7b9,  C(add9) → Cadd9,  Am(maj7) → Ammaj7
  *  - Δ / Δ7        → maj7
+ *  - 7+            → maj7
  *  - ° / °7        → dim / dim7
  *  - ø / ø7        → m7b5
  *  - +             → aug
+ *  - - / -7        → m / m7
  *  - o / o7        → dim / dim7  (letter "o" at start of suffix)
  *  - min           → m           (prefix)
  *  - M7 / Maj      → maj7 / maj  (suffix casing)
@@ -108,12 +110,15 @@ export function normalizeChordInput(raw: string): string {
 
     // 4. Alias substitutions on suffix (longest patterns first)
     rest = rest
+        .replace(/^7\+$/,           'maj7')  // 7+ → maj7
         .replace(/Δ7/g,            'maj7')  // Δ7 → maj7  (Δ already implies 7)
         .replace(/Δ/g,             'maj7')  // Δ  → maj7
         .replace(/°7/g,            'dim7')  // °7 → dim7
         .replace(/°/g,             'dim')   // °  → dim
         .replace(/ø7/g,            'm7b5')  // ø7 → m7b5
         .replace(/ø/g,             'm7b5')  // ø  → m7b5
+        .replace(/^-7/,            'm7')    // -7 → m7
+        .replace(/^-(?=[^0-9]|$)/, 'm')     // -  → m
         .replace(/\+/g,            'aug')   // +  → aug
         .replace(/^o7/,            'dim7')  // o7 → dim7  (letter o, only at suffix start)
         .replace(/^o(?=[^a-z]|$)/, 'dim')   // o  → dim   (isolated, at suffix start)
@@ -592,10 +597,13 @@ const CHORD_TEST_CASES: ChordTestCase[] = [
     // Special-character aliases
     { input: 'CΔ7',        expectedNormalized: 'Cmaj7',   expectedQuality: 'major7'   },
     { input: 'CΔ',         expectedNormalized: 'Cmaj7',   expectedQuality: 'major7'   },
+    { input: 'C7+',        expectedNormalized: 'Cmaj7',   expectedQuality: 'major7'   },
     { input: 'C°',         expectedNormalized: 'Cdim',    expectedQuality: 'dim'      },
     { input: 'C°7',        expectedNormalized: 'Cdim7',   expectedQuality: 'dim7'     },
     { input: 'Cø7',        expectedNormalized: 'Cm7b5',   expectedQuality: 'halfDim'  },
     { input: 'C+',         expectedNormalized: 'Caug',    expectedQuality: 'aug'      },
+    { input: 'C-',         expectedNormalized: 'Cm',      expectedQuality: 'minor'    },
+    { input: 'C-7',        expectedNormalized: 'Cm7',     expectedQuality: 'minor7'   },
     // Half-diminished
     { input: 'Cm7b5',      expectedNormalized: 'Cm7b5',   expectedQuality: 'halfDim'  },
     { input: 'F#m7b5',     expectedNormalized: 'F#m7b5',  expectedQuality: 'halfDim'  },
@@ -694,9 +702,12 @@ const SIMPLIFY_TEST_CASES: SimplifyTestCase[] = [
     { input: 'Bm7b5/F#',  expected: 'Bm/F#'},
     // Alias inputs
     { input: 'CΔ7',       expected: 'C'    },
+    { input: 'C7+',       expected: 'C'    },
     { input: 'C°',        expected: 'Cm'   },
     { input: 'Cø7',       expected: 'Cm'   },
     { input: 'C+',        expected: 'C'    },
+    { input: 'C-',        expected: 'Cm'   },
+    { input: 'C-7',       expected: 'Cm'   },
 ];
 
 export function runSimplifyTests(): void {

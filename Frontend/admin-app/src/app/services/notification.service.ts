@@ -76,8 +76,14 @@ export class NotificationService {
     return this.http.post<BroadcastNotificationResultDto>(`${this.apiUrl}/admin/send-broadcast`, payload, { withCredentials: true });
   }
 
-  getUserNotificationsForAdmin(userId: number): Observable<NotificationDto[]> {
-    return this.http.get<NotificationDto[]>(`${this.apiUrl}/admin/user/${userId}`, { withCredentials: true });
+  getUserNotificationsForAdmin(userId: number, pageNumber = 1, pageSize = 100): Observable<NotificationDto[]> {
+    return this.http.get<NotificationDto[]>(`${this.apiUrl}/admin/user/${userId}`, {
+      params: {
+        pageNumber,
+        pageSize
+      },
+      withCredentials: true
+    });
   }
 
   getNotificationGroups(): Observable<NotificationGroupDto[]> {
