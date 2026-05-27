@@ -481,7 +481,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       const youtubeId = this.extractYouTubeId(url);
-      if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`;
+      if (youtubeId) return `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&origin=https://akordishkayt.com`;
     }
 
     return null;

@@ -1363,7 +1363,7 @@ private getKeyIndex(keyName: string): number {
         if (!this.song?.youtubeUrl) return;
         const videoId = this.extractYoutubeVideoId(this.song.youtubeUrl);
         if (videoId) {
-            const url = `https://www.youtube.com/embed/${videoId}?rel=0`;
+            const url = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&origin=https://akordishkayt.com`;
             this.youtubeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
             this.showYoutubeModal = true;
         } else {
