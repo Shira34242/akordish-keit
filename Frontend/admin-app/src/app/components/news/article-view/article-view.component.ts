@@ -289,7 +289,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
     // If we found a video ID, return embed URL
     if (videoId) {
-      return `https://www.youtube-nocookie.com/embed/${videoId}?origin=https://akordishkayt.com`;
+      return `https://www.youtube.com/embed/${videoId}`;
     }
 
     // Return original URL if we couldn't parse it
