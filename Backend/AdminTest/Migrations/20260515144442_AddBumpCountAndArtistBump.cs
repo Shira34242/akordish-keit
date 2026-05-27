@@ -11,46 +11,12 @@ namespace AkordishKeit.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "BumpCount",
-                table: "Songs",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "BumpCount",
-                table: "Playlists",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "BumpCount",
-                table: "MusicServiceProviders",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "BumpCount",
-                table: "Artists",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "BumpedAt",
-                table: "Artists",
-                type: "datetime2",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "BumpCount",
-                table: "Articles",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.Sql("IF COL_LENGTH('Songs', 'BumpCount') IS NULL ALTER TABLE [Songs] ADD [BumpCount] int NOT NULL DEFAULT 0;");
+            migrationBuilder.Sql("IF COL_LENGTH('Playlists', 'BumpCount') IS NULL ALTER TABLE [Playlists] ADD [BumpCount] int NOT NULL DEFAULT 0;");
+            migrationBuilder.Sql("IF COL_LENGTH('MusicServiceProviders', 'BumpCount') IS NULL ALTER TABLE [MusicServiceProviders] ADD [BumpCount] int NOT NULL DEFAULT 0;");
+            migrationBuilder.Sql("IF COL_LENGTH('Artists', 'BumpCount') IS NULL ALTER TABLE [Artists] ADD [BumpCount] int NOT NULL DEFAULT 0;");
+            migrationBuilder.Sql("IF COL_LENGTH('Artists', 'BumpedAt') IS NULL ALTER TABLE [Artists] ADD [BumpedAt] datetime2 NULL;");
+            migrationBuilder.Sql("IF COL_LENGTH('Articles', 'BumpCount') IS NULL ALTER TABLE [Articles] ADD [BumpCount] int NOT NULL DEFAULT 0;");
         }
 
         /// <inheritdoc />

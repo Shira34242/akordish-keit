@@ -33,12 +33,7 @@ namespace AkordishKeit.Migrations
                 table: "Tags",
                 columns: new[] { "ShowInChordQuickSearch", "ChordQuickSearchOrder" });
 
-            migrationBuilder.UpdateData(
-                table: "Tags",
-                keyColumn: "Id",
-                keyValue: 1,
-                columns: new[] { "ShowInChordQuickSearch", "ChordQuickSearchOrder" },
-                values: new object[] { true, 1 });
+            migrationBuilder.Sql("UPDATE [Tags] SET [ShowInChordQuickSearch] = 1, [ChordQuickSearchOrder] = 1 WHERE [Id] = 1");
         }
 
         /// <inheritdoc />
