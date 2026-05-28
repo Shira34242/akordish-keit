@@ -1,7 +1,4 @@
 import { Routes } from '@angular/router';
-import { HomePageComponent } from './components/home-page/home-page.component';
-import { SongPageComponent } from './components/song-page/song-page.component';
-import { ChordsPageComponent } from './components/chords-page/chords-page.component';
 import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
 
@@ -12,22 +9,22 @@ export const routes: Routes = [
         children: [
             {
                 path: '',
-                component: HomePageComponent,
+                loadComponent: () => import('./components/home-page/home-page.component').then(m => m.HomePageComponent),
                 title: 'אקורדישקייט - המאגר הגדול לאקורדים'
             },
             {
                 path: 'song/:id/:slug',
-                component: SongPageComponent,
+                loadComponent: () => import('./components/song-page/song-page.component').then(m => m.SongPageComponent),
                 title: 'אקורדישקייט'
             },
             {
                 path: 'song/:id',
-                component: SongPageComponent,
+                loadComponent: () => import('./components/song-page/song-page.component').then(m => m.SongPageComponent),
                 title: 'אקורדישקייט'
             },
             {
                 path: 'chords',
-                component: ChordsPageComponent,
+                loadComponent: () => import('./components/chords-page/chords-page.component').then(m => m.ChordsPageComponent),
                 title: 'מאגר האקורדים - אקורדישקייט'
             },
             {

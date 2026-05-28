@@ -250,7 +250,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadNonCriticalContent(): void {
-    this.pendingContentLoads += 8;
+    this.pendingContentLoads += 9;
 
     const onDone = () => {
       this.pendingContentLoads--;
@@ -664,7 +664,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       this.spawnHeroParticles(x, y, e.movementX * scaleX, e.movementY * scaleY);
     };
     window.addEventListener('mousemove', this.heroMouseHandler);
-    this.animateHeroParticles();
   }
 
   private spawnHeroParticles(x: number, y: number, dx: number, dy: number): void {
@@ -687,6 +686,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
     if (this.heroParticles.length > 400) this.heroParticles.splice(0, this.heroParticles.length - 400);
+
+    if (!this.particleAnimId) {
+      this.animateHeroParticles();
+    }
   }
 
   private animateHeroParticles(): void {
@@ -695,7 +698,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const heroBg = this.heroBg?.nativeElement;
     if (!ctx || !canvas) return;
 
-    // Sync canvas pixel size to current hero-bg size
     if (heroBg) {
       const w = heroBg.clientWidth;
       const h = heroBg.clientHeight;
@@ -731,6 +733,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       return true;
     });
 
-    this.particleAnimId = requestAnimationFrame(() => this.animateHeroParticles());
+    if (this.heroParticles.length > 0) {
+      this.particleAnimId = requestAnimationFrame(() => this.animateHeroParticles());
+    } else {
+      this.particleAnimId = undefined;
+    }
   }
 }
