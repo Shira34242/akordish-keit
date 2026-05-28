@@ -150,6 +150,26 @@
   margin: -0.15em 0 var(--space-lg);
   line-height: 0.85;
   letter-spacing: -2px;
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-sm);
+  direction: rtl;
+  max-width: 100%;
+}
+
+.hero-title-badge {
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: var(--space-xs) var(--space-md);
+  margin-top: 0.45em;
+  white-space: nowrap;
 }
 
 /* ============================================

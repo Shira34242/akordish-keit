@@ -7,10 +7,20 @@ namespace AkordishKeit.Services
     {
         private readonly BlobContainerClient? _container;
         private readonly string _containerName;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<AzureBlobService> _logger;
 
-        public AzureBlobService(IConfiguration configuration, ILogger<AzureBlobService> logger)
+        public AzureBlobService(
+            IConfiguration configuration,
+            IWebHostEnvironment environment,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<AzureBlobService> logger)
         {
+            _configuration = configuration;
+            _environment = environment;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _containerName = configuration["AzureBlobStorage:ContainerName"] ?? "media";
             var connectionString = configuration["BlobConnectionString"]
@@ -40,8 +50,8 @@ namespace AkordishKeit.Services
         {
             if (_container == null)
             {
-                _logger.LogWarning("Azure Blob upload skipped because storage is not configured: {FileName}", fileName);
-                return null;
+                _logger.LogWarning("Azure Blob upload skipped because storage is not configured. Falling back to local upload: {FileName}", fileName);
+                return await UploadLocalAsync(stream, fileName, folder);
             }
 
             try
@@ -69,8 +79,11 @@ namespace AkordishKeit.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Azure Blob upload failed: {FileName}", fileName);
-                return null;
+                _logger.LogError(ex, "Azure Blob upload failed. Falling back to local upload: {FileName}", fileName);
+                if (stream.CanSeek)
+                    stream.Position = 0;
+
+                return await UploadLocalAsync(stream, fileName, folder);
             }
         }
 
@@ -83,7 +96,8 @@ namespace AkordishKeit.Services
             }
 
             var blobName = ExtractBlobName(url);
-            if (blobName == null) return false;
+            if (blobName == null)
+                return DeleteLocal(url);
 
             try
             {
@@ -106,6 +120,108 @@ namespace AkordishKeit.Services
             var idx = uri.AbsolutePath.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) return null;
             return uri.AbsolutePath[(idx + prefix.Length)..];
+        }
+
+        private async Task<string?> UploadLocalAsync(Stream stream, string fileName, string? folder)
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var relativeFolder = NormalizeFolder(folder ?? $"uploads/{now.Year}/{now.Month:D2}");
+                var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                var originalName = SanitizeFileName(Path.GetFileNameWithoutExtension(fileName));
+                var originalSuffix = string.IsNullOrWhiteSpace(originalName) ? string.Empty : $"_{originalName}";
+                var storedFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}{originalSuffix}{ext}";
+
+                var webRoot = _environment.WebRootPath
+                    ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+                var targetDirectory = Path.Combine(webRoot, Path.Combine(relativeFolder.Split('/')));
+
+                Directory.CreateDirectory(targetDirectory);
+
+                var targetPath = Path.Combine(targetDirectory, storedFileName);
+                await using (var fileStream = File.Create(targetPath))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+
+                var relativeUrl = $"/{relativeFolder}/{storedFileName}".Replace("\\", "/");
+                var baseUrl = GetCurrentBaseUrl();
+                var url = string.IsNullOrWhiteSpace(baseUrl) ? relativeUrl : $"{baseUrl.TrimEnd('/')}{relativeUrl}";
+
+                _logger.LogInformation("File uploaded locally: {FileName} -> {Url}", fileName, url);
+                return url;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Local upload failed: {FileName}", fileName);
+                return null;
+            }
+        }
+
+        private bool DeleteLocal(string url)
+        {
+            if (!TryGetLocalRelativePath(url, out var relativePath))
+                return false;
+
+            try
+            {
+                var webRoot = _environment.WebRootPath
+                    ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+                var fullPath = Path.GetFullPath(Path.Combine(webRoot, relativePath));
+                var rootPath = Path.GetFullPath(webRoot);
+
+                if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!File.Exists(fullPath))
+                    return false;
+
+                File.Delete(fullPath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Local delete failed: {Url}", url);
+                return false;
+            }
+        }
+
+        private bool TryGetLocalRelativePath(string url, out string relativePath)
+        {
+            relativePath = string.Empty;
+
+            if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out var uri))
+                return false;
+
+            var path = uri.IsAbsoluteUri ? uri.AbsolutePath : url;
+            path = Uri.UnescapeDataString(path).TrimStart('/').Replace('\\', '/');
+
+            if (string.IsNullOrWhiteSpace(path) || path.Contains(".."))
+                return false;
+
+            relativePath = Path.Combine(path.Split('/'));
+            return true;
+        }
+
+        private string GetCurrentBaseUrl()
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request != null)
+                return $"{request.Scheme}://{request.Host}";
+
+            return _configuration["Backend:BaseUrl"] ?? string.Empty;
+        }
+
+        private static string NormalizeFolder(string folder)
+        {
+            var parts = folder
+                .Replace('\\', '/')
+                .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                .Select(SanitizeFileName)
+                .Where(part => !string.IsNullOrWhiteSpace(part));
+
+            return string.Join("/", parts);
         }
 
         private static string SanitizeFileName(string fileName)
