@@ -70,6 +70,7 @@ export class ArticleFormComponent implements OnInit {
   fetchingYouTube = false;
   youtubeMessage = '';
   private pendingSmartArticleType: 'news' | 'blog' | null = null;
+  private pendingCategoryId: number | null = null;
 
   // Uploader profile search state
   profileSearchQuery = '';
@@ -186,6 +187,10 @@ export class ArticleFormComponent implements OnInit {
 
       const requestedType = params['type'] === 'blog' ? 'blog' : 'news';
       this.pendingSmartArticleType = requestedType;
+      const requestedCategoryId = Number(params['categoryId']);
+      this.pendingCategoryId = Number.isFinite(requestedCategoryId) && requestedCategoryId > 0
+        ? requestedCategoryId
+        : null;
       this.article.contentType = requestedType === 'blog' ? ArticleContentType.Blog : ArticleContentType.News;
 
       const draft = this.smartContentService.consumeDraft(params['smartDraft'] ?? null);
@@ -699,7 +704,17 @@ export class ArticleFormComponent implements OnInit {
   }
 
   private selectDefaultCategoryForRequestedType(): void {
-    if (!this.pendingSmartArticleType || this.article.categoryIds.length > 0 || this.categories.length === 0) {
+    if (this.article.categoryIds.length > 0 || this.categories.length === 0) {
+      return;
+    }
+
+    if (this.pendingCategoryId && this.categories.some(item => item.id === this.pendingCategoryId)) {
+      this.article.categoryIds = [this.pendingCategoryId];
+      this.syncContentTypeFromCategories();
+      return;
+    }
+
+    if (!this.pendingSmartArticleType) {
       return;
     }
 

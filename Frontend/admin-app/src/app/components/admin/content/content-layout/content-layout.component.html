@@ -1,5 +1,5 @@
 <div class="management-layout">
-    <div class="section-switcher">
+    <div class="section-switcher" *ngIf="!state.hideSwitcher">
         <div class="section-copy">
             <h1>{{ state.title }}</h1>
             <p class="subtitle">{{ state.subtitle }}</p>

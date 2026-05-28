@@ -8,6 +8,7 @@ interface LayoutState {
     title: string;
     subtitle: string;
     actionLabel?: string;
+    hideSwitcher?: boolean;
 }
 
 @Component({
@@ -67,7 +68,8 @@ export class AdminContentLayoutComponent {
             return {
                 title: 'חדשות ובלוג',
                 subtitle: 'כתבות, חדשות ופוסטים שמופיעים באזורי התוכן של האתר.',
-                actionLabel: 'כתבה חדשה'
+                actionLabel: 'כתבה חדשה',
+                hideSwitcher: true
             };
         }
 

@@ -61,8 +61,8 @@ export class ArticlesListComponent implements OnInit {
   uploaderProfileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
   selectedUploaderProfile: UserWithProfileDto | null = null;
   bulkActionLoading = false;
-  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view') as 'list' | 'grid') || 'list';
-  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view', mode); }
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view-v2') as 'list' | 'grid') || 'grid';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view-v2', mode); }
   activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup' = 'all';
   cleanupSettings: ArticleNewsCleanupSettingsDto = {
     autoDeleteEnabled: false,
@@ -199,7 +199,6 @@ export class ArticlesListComponent implements OnInit {
 
   resetFilters(): void {
     this.searchTerm = '';
-    this.selectedCategory = undefined;
     this.selectedStatus = undefined;
     this.selectedArtistId = undefined;
     this.uploaderSearch = '';
@@ -653,9 +652,17 @@ export class ArticlesListComponent implements OnInit {
   }
 
   createNew(): void {
-    const contentType = this.activeTab === 'blog' ? 'blog' : 'news';
+    const selectedCategory = this.categories.find(category => category.id === this.selectedCategory);
+    const contentType = selectedCategory
+      ? (Number(selectedCategory['section']) === 1 ? 'blog' : 'news')
+      : this.activeTab === 'blog' ? 'blog' : 'news';
+    const queryParams: Record<string, string | number> = { type: contentType };
+    if (this.selectedCategory !== undefined) {
+      queryParams['categoryId'] = this.selectedCategory;
+    }
+
     this.router.navigate(['/admin/content/articles/new'], {
-      queryParams: { type: contentType }
+      queryParams
     });
   }
 
