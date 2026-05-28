@@ -1,5 +1,5 @@
 <div class="profile-page">
-  <div class="profile-hero" [class.profile-hero--collapsed]="heroCollapsed">
+  <div class="profile-hero">
     <h1 class="profile-title">{{ 'profile.title' | translate }}</h1>
     <p class="profile-subtitle">{{ 'profile.subtitle' | translate }}</p>
 
@@ -118,7 +118,7 @@
       </div>
     }
 
-    <div class="manage-card manage-card--subscription">
+    <div class="manage-card manage-card--subscription" style="display: none">
       <div class="manage-card-col">
         <div>
           <h3 class="manage-card-title">{{ 'profile.subscriptions_title' | translate }}</h3>
@@ -164,11 +164,12 @@
       <div class="manage-card-col manage-card-col--info">
         <div class="manage-info-list">
           <div class="manage-info-item">
-            <span class="manage-info-label">סטטוס</span>
             <span class="status-value">
               <span class="status-dot" [ngClass]="user?.marketingConsent ? 'status-dot--active' : 'status-dot--inactive'"></span>
               {{ user?.marketingConsent ? 'פעיל' : 'לא פעיל' }}
             </span>
+       <span class="manage-info-label" style="font-weight: bold;">סטטוס </span>
+
           </div>
         </div>
       </div>

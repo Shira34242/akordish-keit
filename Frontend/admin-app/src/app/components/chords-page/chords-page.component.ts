@@ -96,6 +96,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }>();
     private songLoadSubscription?: Subscription;
     private sectionsLoaded = false;
+    // Incremented on every filter change — loadMore() discards stale responses
+    private filterEpoch = 0;
 
     get isFiltered(): boolean {
         return !!(this.search || this.selectedArtistId || this.selectedGenreId || this.selectedKeyId || this.selectedTagId || this.knownChordsMode);
@@ -113,6 +115,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             distinctUntilChanged()
         ).subscribe(query => {
             this.knownChordsMode = false;
+            this.filterEpoch++;
             this.search = query;
             this.currentPage = 1;
             this.hasMoreSongs = true;
@@ -276,6 +279,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     selectFilterArtist(artist: any): void {
         this.knownChordsMode = false;
+        this.filterEpoch++;
         if (this.selectedFilterArtistId === artist.id) {
             this.selectedFilterArtistId = null;
             this.selectedArtistId = null;
@@ -317,6 +321,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.currentPage >= this.totalPages) return;
         this.isLoadingMore = true;
         this.currentPage++;
+        const epochAtStart = this.filterEpoch;
         this.songService.getSongs(
             this.search || undefined,
             this.currentPage,
@@ -328,6 +333,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.selectedTagId || undefined
         ).subscribe({
             next: (res) => {
+                // Discard if a filter change happened while this request was in flight
+                if (this.filterEpoch !== epochAtStart) { this.isLoadingMore = false; return; }
                 this.songs = [...this.songs, ...(res.songs || [])];
                 this.totalCount = res.totalCount;
                 this.totalPages = res.totalPages;
@@ -493,6 +500,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     onFilterChange(): void {
         this.knownChordsMode = false;
+        this.filterEpoch++;
         this.currentPage = 1;
         this.hasMoreSongs = true;
         this.songs = [];

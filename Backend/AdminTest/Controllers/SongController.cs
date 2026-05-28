@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Exceptions;
 using AkordishKeit.Services;
@@ -17,20 +18,26 @@ public class SongsController : ControllerBase
     private readonly IUserTagService _userTagService;
     private readonly ISmartSongImportService _smartSongImportService;
     private readonly ILogger<SongsController> _logger;
+    private readonly IMemoryCache _cache;
 
     public SongsController(
         ISongService songService,
         IYouTubeService youTubeService,
         IUserTagService userTagService,
         ISmartSongImportService smartSongImportService,
-        ILogger<SongsController> logger)
+        ILogger<SongsController> logger,
+        IMemoryCache cache)
     {
         _songService = songService;
         _youTubeService = youTubeService;
         _userTagService = userTagService;
         _smartSongImportService = smartSongImportService;
         _logger = logger;
+        _cache = cache;
     }
+
+    private static string BuildSongCacheKey(bool isAuth, int page, int pageSize, string? search, int? artistId, int? genreId, int? keyId, int? tagId, string? sortBy)
+        => $"songs|{(isAuth ? 1 : 0)}|{page}|{pageSize}|{search?.Trim().ToLowerInvariant() ?? ""}|{artistId}|{genreId}|{keyId}|{tagId}|{sortBy}";
 
     // ============================================
     // POST: api/Songs
@@ -237,6 +244,7 @@ public class SongsController : ControllerBase
     // Get approved songs with filtering and paging
     // ============================================
     [HttpGet]
+    [EnableRateLimiting("songs")]
     public async Task<ActionResult<PagedResult<SongDto>>> GetApprovedSongs(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -252,11 +260,19 @@ public class SongsController : ControllerBase
     {
         try
         {
+            bool isAuth = GetCurrentUserId().HasValue;
+            // Cache only standard public queries (admin-only params skip the cache)
+            bool canCache = uploaderSearch == null && dateFrom == null && dateTo == null;
+            string? cacheKey = canCache ? BuildSongCacheKey(isAuth, page, pageSize, search, artistId, genreId, keyId, tagId, sortBy) : null;
+
+            if (cacheKey != null && _cache.TryGetValue(cacheKey, out object? cachedResponse))
+                return Ok(cachedResponse);
+
             var result = await _songService.GetSongsAsync(
                 page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: false,
                 uploaderSearch: uploaderSearch, dateFrom: dateFrom, dateTo: dateTo);
 
-            if (!GetCurrentUserId().HasValue)
+            if (!isAuth)
             {
                 foreach (var song in result.Items)
                 {
@@ -264,14 +280,23 @@ public class SongsController : ControllerBase
                 }
             }
 
-            return Ok(new
+            var response = new
             {
                 songs = result.Items,
                 totalCount = result.TotalCount,
                 page = result.PageNumber,
                 pageSize = result.PageSize,
                 totalPages = (int)Math.Ceiling(result.TotalCount / (double)result.PageSize)
-            });
+            };
+
+            if (cacheKey != null)
+            {
+                // Search results expire faster since they're more query-specific
+                var ttl = string.IsNullOrWhiteSpace(search) ? TimeSpan.FromSeconds(90) : TimeSpan.FromSeconds(30);
+                _cache.Set(cacheKey, response, ttl);
+            }
+
+            return Ok(response);
         }
         catch (Exception ex)
         {

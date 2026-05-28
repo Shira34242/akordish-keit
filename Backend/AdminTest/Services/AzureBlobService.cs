@@ -13,7 +13,10 @@ namespace AkordishKeit.Services
         {
             _logger = logger;
             _containerName = configuration["AzureBlobStorage:ContainerName"] ?? "media";
-            var connectionString = configuration.GetConnectionString("AzureBlobStorage__ConnectionString")
+            var connectionString = configuration["BlobConnectionString"]
+                ?? configuration.GetConnectionString("BlobConnectionString")
+                ?? configuration.GetConnectionString("AzureBlobStorage:ConnectionString")
+                ?? configuration.GetConnectionString("AzureBlobStorage__ConnectionString")
                 ?? configuration["AzureBlobStorage:ConnectionString"];
 
             if (string.IsNullOrWhiteSpace(connectionString)

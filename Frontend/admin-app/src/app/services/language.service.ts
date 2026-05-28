@@ -167,7 +167,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'profile.level': 'דרגה',
     'profile.completion_title': 'עוד כמה פרטים קטנים להשלמת הפרופיל',
     'profile.completion_sub': 'כדי שנוכל להציג לכם תוצאות מדויקות יותר',
-    'profile.completion_cta': 'להשלמת הפרטים <',
+    'profile.completion_cta': 'להשלמת הפרטים',
     'profile.no_page': 'עדיין אין לך דף באתר',
     'profile.add_page': 'הוסף דף +',
     'profile.manage_page_title': 'ניהול הדף שלך באתר',

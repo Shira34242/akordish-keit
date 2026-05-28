@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -113,7 +113,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   subscription: SubscriptionDto | null = null;
   pageLoadError = false;
-  heroCollapsed = false;
   togglingPageId: number | null = null;
   songsPage = 1;
   articlesPage = 1;
@@ -173,21 +172,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.loadMyPageInfo();
     this.loadMyAllPages();
     this.loadSubscription();
-    this.updateHeroState();
-  }
-
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.updateHeroState();
-  }
-
-  private updateHeroState(): void {
-    const scrollY = window.scrollY;
-    if (!this.heroCollapsed && scrollY > 96) {
-      this.heroCollapsed = true;
-    } else if (this.heroCollapsed && scrollY < 40) {
-      this.heroCollapsed = false;
-    }
   }
 
   get profileIncomplete(): boolean {

@@ -55,12 +55,19 @@ builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 // Add Memory Cache (לשימוש ב-SystemSettingsService)
 builder.Services.AddMemoryCache();
 
-// Rate limiting — מגביל autocomplete ל-40 בקשות לדקה מכל IP
+// Rate limiting — autocomplete: 40/min, songs endpoint: 60/min per IP
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("autocomplete", limiterOptions =>
     {
         limiterOptions.PermitLimit = 40;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.AddFixedWindowLimiter("songs", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 60;
         limiterOptions.Window = TimeSpan.FromMinutes(1);
         limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0;
