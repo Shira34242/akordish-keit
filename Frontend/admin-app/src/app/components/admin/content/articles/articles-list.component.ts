@@ -210,6 +210,18 @@ export class ArticlesListComponent implements OnInit {
     this.loadArticles();
   }
 
+  get hasActiveFilters(): boolean {
+    return !!(
+      this.searchTerm ||
+      this.selectedStatus !== undefined ||
+      this.selectedArtistId !== undefined ||
+      this.dateFrom ||
+      this.dateTo ||
+      this.sortBy !== 'date' ||
+      this.showFeaturedOnly
+    );
+  }
+
   loadCleanupSettings(): void {
     this.cleanupSettingsLoading = true;
     this.articleService.getNewsCleanupSettings().subscribe({
@@ -672,6 +684,26 @@ export class ArticlesListComponent implements OnInit {
 
   viewArticle(article: Article): void {
     this.router.navigate([getArticleRoute(article), article.slug]);
+  }
+
+  changeArticleStatus(article: Article, statusValue: string | number): void {
+    const status = Number(statusValue) as ArticleStatus;
+    if (article.status === status || this.publishingArticleIds.has(article.id)) {
+      return;
+    }
+
+    this.publishingArticleIds.add(article.id);
+    this.articleService.updateArticleStatus(article.id, status).subscribe({
+      next: (updated) => {
+        article.status = updated.status;
+        this.publishingArticleIds.delete(article.id);
+      },
+      error: (error) => {
+        console.error('Error updating article status:', error);
+        alert(error?.error?.message || 'שגיאה בעדכון הסטטוס');
+        this.publishingArticleIds.delete(article.id);
+      }
+    });
   }
 
   async publishArticle(article: Article): Promise<void> {

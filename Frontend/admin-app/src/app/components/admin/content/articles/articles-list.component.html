@@ -122,31 +122,29 @@
         <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
       </select>
 
-      <input
-        type="text"
-        placeholder="מי העלה"
-        [(ngModel)]="uploaderSearch"
-        (input)="onFilterChange()"
-        class="filter-input">
-
-      <label class="icon-date-control" title="מתאריך העלאה">
-        <span class="material-icons">event</span>
-        <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input">
-      </label>
-
-      <label class="icon-date-control" title="עד תאריך העלאה">
-        <span class="material-icons">event_available</span>
-        <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input">
-      </label>
+      <div class="date-range-control" title="טווח תאריכים">
+        <button class="icon-control-button" type="button">
+          <span class="material-icons">date_range</span>
+        </button>
+        <div class="date-range-popover">
+          <label>
+            <span>מ</span>
+            <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input">
+          </label>
+          <label>
+            <span>עד</span>
+            <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input">
+          </label>
+        </div>
+      </div>
 
       <label class="icon-select-control" title="מיון">
-        <span class="material-icons">calendar_month</span>
+        <span class="material-icons">sort</span>
       <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-select sort-select">
         <option value="date">תאריך העלאה</option>
         <option value="date_asc">תאריך העלאה ישן קודם</option>
         <option value="publish">תאריך פרסום</option>
         <option value="artist">אמן</option>
-        <option value="uploader">מי העלה</option>
         <option value="views">צפיות</option>
         <option value="title">כותרת</option>
       </select>
@@ -156,8 +154,8 @@
         <span class="material-icons">star</span> מומלצים בלבד
       </button>
 
-      <button class="filter-btn btn-reset" (click)="resetFilters()">
-        <span class="material-icons">restart_alt</span> איפוס סינון
+      <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" (click)="resetFilters()" title="איפוס סינון">
+        <span class="material-icons">restart_alt</span>
       </button>
     </div>
 
@@ -222,13 +220,25 @@
       <label class="grid-card-select" title="בחירת כתבה">
         <input type="checkbox" [checked]="isSelected(article.id)" (change)="toggleArticleSelection(article.id, $event)">
       </label>
-      <div class="grid-card-media">
+      <button class="grid-card-media" type="button" (click)="viewArticle(article)" title="פתיחת הכתבה">
         <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" [alt]="article.title">
         <span *ngIf="!article.featuredImageUrl" class="material-icons">article</span>
-      </div>
+      </button>
       <div class="grid-card-body">
         <div class="grid-card-topline">
-          <span class="status-badge" [ngClass]="getStatusClass(article.status)">{{ getStatusName(article.status) }}</span>
+          <label class="status-menu" [ngClass]="getStatusClass(article.status)">
+            <span>{{ getStatusName(article.status) }}</span>
+            <span class="material-icons">expand_more</span>
+            <select
+              [ngModel]="article.status"
+              (ngModelChange)="changeArticleStatus(article, $event)"
+              [disabled]="publishingArticleIds.has(article.id)">
+              <option [ngValue]="ArticleStatus.Draft">טיוטה</option>
+              <option [ngValue]="ArticleStatus.Published">מפורסם</option>
+              <option [ngValue]="ArticleStatus.Scheduled">מתוזמן</option>
+              <option [ngValue]="ArticleStatus.Archived">ארכיון</option>
+            </select>
+          </label>
           <span class="grid-card-date">{{ formatDate(article.publishDate) }}</span>
         </div>
       <div class="grid-card-name">
@@ -242,12 +252,7 @@
       </div>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="viewArticle(article)" title="צפייה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" (click)="openCategoryModal(article)" title="שיוך קטגוריות"><span class="material-icons">sell</span></button>
-        <button class="btn-action" (click)="openArtistModal(article)" title="תיוג אומנים"><span class="material-icons">groups</span></button>
-        <button class="btn-action" (click)="openUploaderModal(article)" title="שיוך משתמש"><span class="material-icons">person_add</span></button>
         <button class="btn-action primary-grid-action" (click)="editArticle(article.id)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action" (click)="duplicateArticle(article)" title="שכפל"><span class="material-icons">content_copy</span></button>
         <button class="btn-action btn-delete" (click)="deleteArticle(article)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
     </div>

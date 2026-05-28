@@ -1,22 +1,17 @@
 <div class="events-container" dir="rtl">
-  <div class="page-header">
-    <h1>ניהול הופעות</h1>
-    <p class="subtitle">ניהול הופעות, סטטוס פרסום, תאריכים וכרטיסים</p>
-  </div>
-
   <div class="actions-bar">
-    <div class="search-filters">
-      <div class="search-box">
-        <span class="material-icons">search</span>
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          (keyup.enter)="onSearch()"
-          placeholder="חיפוש לפי כותרת, אמן או מיקום..."
-          class="search-input"
-        />
-      </div>
+    <div class="search-box actions-search">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        placeholder="חיפוש לפי כותרת, אמן או מיקום..."
+        class="search-input"
+      />
+    </div>
 
+    <div class="filters">
       <select class="filter-select" [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
         <option value="all">כל הסטטוסים</option>
         <option value="active">מאושרות</option>
@@ -28,24 +23,49 @@
         <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
       </select>
 
-      <input type="text" [(ngModel)]="uploaderSearch" (input)="onFilterChange()" placeholder="מי העלה" class="filter-input">
-      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input" title="מתאריך העלאה">
-      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input" title="עד תאריך העלאה">
+      <div class="date-range-control" title="טווח תאריכים">
+        <button class="icon-control-button" type="button">
+          <span class="material-icons">date_range</span>
+        </button>
+        <div class="date-range-popover">
+          <label>
+            <span>מ</span>
+            <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input">
+          </label>
+          <label>
+            <span>עד</span>
+            <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input">
+          </label>
+        </div>
+      </div>
 
-      <select class="filter-select" [(ngModel)]="sortBy" (change)="onFilterChange()">
-        <option value="eventDate">תאריך הופעה</option>
-        <option value="created">תאריך העלאה</option>
-        <option value="created_asc">תאריך העלאה ישן קודם</option>
-        <option value="artist">אמן</option>
-        <option value="uploader">מי העלה</option>
-        <option value="name">שם</option>
-      </select>
+      <label class="icon-select-control" title="מיון">
+        <span class="material-icons">sort</span>
+        <select class="filter-select sort-select" [(ngModel)]="sortBy" (change)="onFilterChange()">
+          <option value="eventDate">תאריך הופעה</option>
+          <option value="created">תאריך העלאה</option>
+          <option value="created_asc">תאריך העלאה ישן קודם</option>
+          <option value="artist">אמן</option>
+          <option value="name">שם</option>
+        </select>
+      </label>
+
+      <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" type="button" (click)="resetFilters()" title="איפוס סינון">
+        <span class="material-icons">restart_alt</span>
+      </button>
     </div>
 
-    <button class="btn-new" type="button" (click)="createNewEvent()">
-      <span class="material-icons">add</span>
-      הופעה חדשה
-    </button>
+    <div class="actions-view" *ngIf="!loading">
+      <span class="results-info">{{ totalItems }} הופעות</span>
+      <div class="view-controls">
+        <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+          <span class="material-icons">grid_view</span>
+        </button>
+        <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+          <span class="material-icons">view_list</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
@@ -55,26 +75,14 @@
     </div>
 
     <div class="bulk-buttons">
-      <button class="btn btn-light bulk-btn" type="button" (click)="bulkSetStatus(true)" [disabled]="bulkActionLoading">
+      <button class="filter-btn bulk-btn" type="button" (click)="bulkSetStatus(true)" [disabled]="bulkActionLoading">
         <span class="material-icons">check_circle</span> אישור
       </button>
-      <button class="btn btn-light bulk-btn" type="button" (click)="bulkSetStatus(false)" [disabled]="bulkActionLoading">
+      <button class="filter-btn bulk-btn" type="button" (click)="bulkSetStatus(false)" [disabled]="bulkActionLoading">
         <span class="material-icons">drafts</span> טיוטה
       </button>
-      <button class="btn btn-light bulk-btn btn-danger" type="button" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+      <button class="filter-btn bulk-btn btn-danger" type="button" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
-      </button>
-    </div>
-  </div>
-
-  <div class="list-controls" *ngIf="!loading">
-    <span class="results-info">{{ totalItems }} הופעות</span>
-    <div class="view-controls">
-      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
-        <span class="material-icons">view_list</span>
-      </button>
-      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
-        <span class="material-icons">grid_view</span>
       </button>
     </div>
   </div>
@@ -84,32 +92,50 @@
     <p>טוען הופעות...</p>
   </div>
 
-  <div class="data-grid" *ngIf="!loading && events.length > 0 && viewMode === 'grid'">
+  <div class="data-grid" *ngIf="!loading && viewMode === 'grid'">
+    <button class="grid-card grid-add-card" type="button" (click)="createNewEvent()">
+      <span class="material-icons">add</span>
+      <strong>הופעה חדשה</strong>
+      <small>הוספה מהירה לרשימת ההופעות</small>
+    </button>
+
     <div class="grid-card" *ngFor="let event of events" [class.selected]="isSelected(event.id)">
       <label class="grid-card-select" title="בחירת הופעה">
         <input type="checkbox" [checked]="isSelected(event.id)" (change)="toggleEventSelection(event.id, $event)">
       </label>
-      <button class="grid-card-preview" type="button" (click)="previewEvent(event)" title="תצוגת הופעה">
-        <div class="grid-card-avatar" [style.background-image]="event.imageUrl ? 'url(' + event.imageUrl + ')' : ''">
-          <span *ngIf="!event.imageUrl" class="material-icons">event</span>
-        </div>
+
+      <button class="grid-card-media" type="button" (click)="previewEvent(event)" title="תצוגת הופעה">
+        <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name">
+        <span *ngIf="!event.imageUrl" class="material-icons">event</span>
       </button>
-      <div class="grid-card-name">{{ event.name }}</div>
-      <div class="grid-card-sub">{{ event.artistName || event.location || '-' }}</div>
-      <div class="grid-card-badges">
-        <span class="badge" [ngClass]="getEventStatusClass(event)">{{ getAdminStatusLabel(event) }}</span>
+
+      <div class="grid-card-body">
+        <div class="grid-card-topline">
+          <label class="status-menu" [ngClass]="getEventStatusClass(event)">
+            <span>{{ getAdminStatusLabel(event) }}</span>
+            <span class="material-icons">expand_more</span>
+            <select
+              [ngModel]="event.isActive ? 'active' : 'draft'"
+              (ngModelChange)="setEventStatus(event, $event === 'active')"
+              [disabled]="savingStatusId === event.id">
+              <option value="active">מאושר</option>
+              <option value="draft">טיוטה / לא מאושר</option>
+            </select>
+          </label>
+          <span class="grid-card-date">{{ formatDate(event.eventDate) }}</span>
+        </div>
+
+        <div class="grid-card-name">{{ event.name }}</div>
+        <div class="grid-card-sub">{{ event.artistName || event.taggedArtists[0]?.artistName || event.location || '-' }}</div>
+        <div class="grid-card-meta">
+          <span *ngIf="event.location">{{ event.location }}</span>
+          <span *ngIf="event.ticketUrl">כרטיסים</span>
+        </div>
       </div>
-      <select
-        class="status-select"
-        [ngModel]="event.isActive ? 'active' : 'draft'"
-        (ngModelChange)="setEventStatus(event, $event === 'active')"
-        [disabled]="savingStatusId === event.id">
-        <option value="active">מאושר</option>
-        <option value="draft">טיוטה / לא מאושר</option>
-      </select>
+
       <div class="grid-card-actions">
-        <button class="btn-action" type="button" (click)="previewEvent(event)" title="תצוגה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" type="button" (click)="editEvent(event)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action primary-grid-action" type="button" (click)="editEvent(event)" title="עריכה"><span class="material-icons">edit</span></button>
+        <button class="btn-action" type="button" (click)="duplicateEvent(event)" title="שכפול"><span class="material-icons">content_copy</span></button>
         <button class="btn-action btn-delete" type="button" (click)="deleteEvent(event)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
     </div>
@@ -132,6 +158,26 @@
         </tr>
       </thead>
       <tbody>
+        <tr class="add-event-row" (click)="createNewEvent()">
+          <td class="selection-cell">
+            <span class="material-icons add-row-icon">add</span>
+          </td>
+          <td>
+            <span class="event-thumbnail add-image-placeholder">
+              <span class="material-icons">event</span>
+            </span>
+          </td>
+          <td colspan="5">
+            <div class="event-name">הופעה חדשה</div>
+            <div class="event-location">הוספה מהירה לרשימת ההופעות</div>
+          </td>
+          <td>
+            <button class="btn-action primary-grid-action" type="button" title="הוספה">
+              <span class="material-icons">add</span>
+            </button>
+          </td>
+        </tr>
+
         <tr *ngFor="let event of events" [class.inactive]="!event.isActive" [class.selected]="isSelected(event.id)">
           <td class="selection-cell">
             <input type="checkbox" [checked]="isSelected(event.id)" (change)="toggleEventSelection(event.id, $event)" title="בחירת הופעה">
@@ -162,17 +208,17 @@
           </td>
 
           <td>
-            <div class="status-cell">
-              <span class="badge" [ngClass]="getEventStatusClass(event)">{{ getAdminStatusLabel(event) }}</span>
+            <label class="status-menu" [ngClass]="getEventStatusClass(event)">
+              <span>{{ getAdminStatusLabel(event) }}</span>
+              <span class="material-icons">expand_more</span>
               <select
-                class="status-select"
                 [ngModel]="event.isActive ? 'active' : 'draft'"
                 (ngModelChange)="setEventStatus(event, $event === 'active')"
                 [disabled]="savingStatusId === event.id">
                 <option value="active">מאושר</option>
                 <option value="draft">טיוטה / לא מאושר</option>
               </select>
-            </div>
+            </label>
           </td>
 
           <td>
@@ -186,7 +232,7 @@
         </tr>
 
         <tr *ngIf="events.length === 0">
-          <td colspan="7" class="no-results">
+          <td colspan="8" class="no-results">
             <span class="material-icons">event_busy</span>
             <p>לא נמצאו הופעות</p>
           </td>
@@ -194,8 +240,6 @@
       </tbody>
     </table>
   </div>
-
-  <div *ngIf="!loading && events.length === 0" class="no-data">לא נמצאו הופעות</div>
 
   <div *ngIf="!loading && totalPages > 1" class="pagination-container">
     <button class="btn-pagination" type="button" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">

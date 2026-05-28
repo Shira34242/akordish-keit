@@ -34,8 +34,8 @@ export class EventsListComponent implements OnInit {
   selectedEventIds = new Set<number>();
   savingStatusId: number | null = null;
   selectedEventPreview: EventCardData | null = null;
-  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view') as 'list' | 'grid') || 'list';
-  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view', mode); }
+  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view-v2') as 'list' | 'grid') || 'grid';
+  setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view-v2', mode); }
 
   // Pagination
   currentPage = 1;
@@ -109,6 +109,17 @@ export class EventsListComponent implements OnInit {
     this.loadEvents();
   }
 
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.statusFilter = 'all';
+    this.selectedArtistId = undefined;
+    this.uploaderSearch = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.sortBy = 'eventDate';
+    this.onFilterChange();
+  }
+
   private getActiveFilter(): boolean | undefined {
     if (this.statusFilter === 'active') return true;
     if (this.statusFilter === 'draft') return false;
@@ -125,6 +136,17 @@ export class EventsListComponent implements OnInit {
 
   get hasSelection(): boolean {
     return this.selectedEventIds.size > 0;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(
+      this.searchTerm ||
+      this.statusFilter !== 'all' ||
+      this.selectedArtistId ||
+      this.dateFrom ||
+      this.dateTo ||
+      this.sortBy !== 'eventDate'
+    );
   }
 
   get allCurrentPageSelected(): boolean {
