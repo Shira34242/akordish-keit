@@ -627,9 +627,13 @@
   padding: var(--space-sm) var(--space-base);
   border-radius: 999px;
   background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .upload-progress div {
+  flex: 1;
   height: 8px;
   border-radius: 999px;
   background: #F2F2F2;
@@ -646,6 +650,21 @@
 .upload-progress strong {
   font-size: var(--font-sm);
   font-weight: 800;
+}
+
+.upload-progress button {
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  padding: var(--space-xs) var(--space-md);
+}
+
+.upload-progress button:hover {
+  background: #ddff53;
 }
 
 .gallery-grid {

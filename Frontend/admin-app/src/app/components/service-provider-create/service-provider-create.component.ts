@@ -1,9 +1,10 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LanguageService } from '../../services/language.service';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -44,7 +45,7 @@ interface PlatformLinkOption {
   templateUrl: './service-provider-create.component.html',
   styleUrls: ['./service-provider-create.component.css']
 })
-export class ServiceProviderCreateComponent implements OnInit {
+export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
 
   @Input() embedded = false;
@@ -80,6 +81,7 @@ export class ServiceProviderCreateComponent implements OnInit {
   branches: CreateServiceProviderBranchDto[] = [];
   newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
   branchImageUploading = false;
+  branchImageUploadProgress = 0;
   selectedCategoryId: number | undefined = undefined;
   galleryImages: CreateGalleryImageDto[] = [];
   newGalleryImage = { imageUrl: '', caption: '' };
@@ -90,6 +92,7 @@ export class ServiceProviderCreateComponent implements OnInit {
   profileImageUploading = false;
   galleryUploadingCount = 0;
   galleryUploadProgress = 0;
+  profileImageUploadProgress = 0;
   showVideoLinkInput = false;
   showTestimonialDraft = false;
   newVideoUrl = '';
@@ -109,6 +112,9 @@ export class ServiceProviderCreateComponent implements OnInit {
   filteredCategories: Category[] = [];
   private initialCategoryId?: number;
   private initialAllowUncategorized = false;
+  private profileImageUploadSub?: Subscription;
+  private branchImageUploadSub?: Subscription;
+  private galleryUploadSubs: Subscription[] = [];
   get socialPlatformOptions(): PlatformLinkOption[] {
     return [
       { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: this.langService.translate('create.link_instagram') },
@@ -139,6 +145,12 @@ export class ServiceProviderCreateComponent implements OnInit {
     this.loadCities();
     this.prefillUserData();
     setTimeout(() => this.scrollToTop(false));
+  }
+
+  ngOnDestroy(): void {
+    this.cancelProfileImageUpload();
+    this.cancelBranchImageUpload();
+    this.cancelGalleryUpload();
   }
 
   nextStep(): void {
@@ -327,9 +339,19 @@ export class ServiceProviderCreateComponent implements OnInit {
     if (!file) return;
 
     this.profileImageUploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (result) => {
-        this.profileImageUrl = result.url;
+    this.profileImageUploadProgress = 0;
+    this.profileImageUploadSub?.unsubscribe();
+    this.profileImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.profileImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.profileImageUrl = event.body.url;
+        this.profileImageUploadProgress = 100;
         this.profileImageUploading = false;
         input.value = '';
       },
@@ -337,6 +359,7 @@ export class ServiceProviderCreateComponent implements OnInit {
         console.error('Error uploading profile image:', error);
         this.error = this.langService.translate('common.error_profile_image');
         this.profileImageUploading = false;
+        this.profileImageUploadProgress = 0;
         input.value = '';
       }
     });
@@ -356,7 +379,7 @@ export class ServiceProviderCreateComponent implements OnInit {
       const fileKey = `${file.name}-${file.size}-${index}`;
       progressByFile.set(fileKey, 0);
 
-      this.mediaService.uploadMediaWithProgress(file).subscribe({
+      const sub = this.mediaService.uploadMediaWithProgress(file).subscribe({
         next: (event) => {
           if (event.type === HttpEventType.UploadProgress && event.total) {
             progressByFile.set(fileKey, Math.round((event.loaded / event.total) * 100));
@@ -388,6 +411,7 @@ export class ServiceProviderCreateComponent implements OnInit {
           input.value = '';
         }
       });
+      this.galleryUploadSubs.push(sub);
     });
   }
 
@@ -397,9 +421,19 @@ export class ServiceProviderCreateComponent implements OnInit {
     if (!file || this.branchImageUploading) return;
 
     this.branchImageUploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (result) => {
-        this.newBranch.imageUrl = result.url;
+    this.branchImageUploadProgress = 0;
+    this.branchImageUploadSub?.unsubscribe();
+    this.branchImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.branchImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.newBranch.imageUrl = event.body.url;
+        this.branchImageUploadProgress = 100;
         this.branchImageUploading = false;
         input.value = '';
       },
@@ -407,9 +441,29 @@ export class ServiceProviderCreateComponent implements OnInit {
         console.error('Error uploading branch image:', error);
         this.error = this.langService.translate('service_create.error_branch_image');
         this.branchImageUploading = false;
+        this.branchImageUploadProgress = 0;
         input.value = '';
       }
     });
+  }
+
+  cancelProfileImageUpload(): void {
+    this.profileImageUploadSub?.unsubscribe();
+    this.profileImageUploading = false;
+    this.profileImageUploadProgress = 0;
+  }
+
+  cancelBranchImageUpload(): void {
+    this.branchImageUploadSub?.unsubscribe();
+    this.branchImageUploading = false;
+    this.branchImageUploadProgress = 0;
+  }
+
+  cancelGalleryUpload(): void {
+    this.galleryUploadSubs.forEach(sub => sub.unsubscribe());
+    this.galleryUploadSubs = [];
+    this.galleryUploadingCount = 0;
+    this.galleryUploadProgress = 0;
   }
 
   addBranch(): void {

@@ -29,9 +29,15 @@
     />
   </div>
 
-  <div *ngIf="uploading" class="fui-uploading">
-    <span class="material-icons fui-spin">hourglass_empty</span>
-    מעלה קובץ...
+  <div *ngIf="uploading" class="fui-uploading" role="status" aria-live="polite">
+    <div class="fui-progress-head">
+      <span>מעלה קובץ</span>
+      <strong>{{ uploadProgress }}%</strong>
+      <button type="button" class="fui-cancel-btn" (click)="cancelUpload()">ביטול</button>
+    </div>
+    <div class="fui-progress-track" aria-hidden="true">
+      <span [style.width.%]="uploadProgress"></span>
+    </div>
   </div>
 
   <div *ngIf="fileOnly && url && !uploading" class="fui-file-attached">

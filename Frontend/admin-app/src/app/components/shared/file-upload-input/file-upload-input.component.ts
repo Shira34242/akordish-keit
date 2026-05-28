@@ -1,5 +1,7 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
 
@@ -10,7 +12,7 @@ import { LanguageService } from '../../../services/language.service';
   templateUrl: './file-upload-input.component.html',
   styleUrls: ['./file-upload-input.component.scss']
 })
-export class FileUploadInputComponent {
+export class FileUploadInputComponent implements OnDestroy {
   @Input() url: string | undefined = '';
   @Output() urlChange = new EventEmitter<string>();
   @Input() accept: string = 'image/*';
@@ -22,9 +24,15 @@ export class FileUploadInputComponent {
   @Input() uploadIcon: string = 'attach_file';
 
   uploading = false;
+  uploadProgress = 0;
+  private uploadSub?: Subscription;
   private readonly langService = inject(LanguageService);
 
   constructor(private mediaService: MediaService) {}
+
+  ngOnDestroy(): void {
+    this.uploadSub?.unsubscribe();
+  }
 
   onUrlInput(event: Event): void {
     this.urlChange.emit((event.target as HTMLInputElement).value);
@@ -36,16 +44,33 @@ export class FileUploadInputComponent {
     if (!file) return;
     input.value = '';
     this.uploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (response) => {
-        this.urlChange.emit(response.url);
+    this.uploadProgress = 0;
+    this.uploadSub?.unsubscribe();
+    this.uploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.uploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.urlChange.emit(event.body.url);
+        this.uploadProgress = 100;
         this.uploading = false;
       },
       error: () => {
         alert(this.langService.translate('shared.file_upload_error'));
         this.uploading = false;
+        this.uploadProgress = 0;
       }
     });
+  }
+
+  cancelUpload(): void {
+    this.uploadSub?.unsubscribe();
+    this.uploading = false;
+    this.uploadProgress = 0;
   }
 
   isImage(url: string): boolean {

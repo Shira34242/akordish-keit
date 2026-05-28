@@ -51,7 +51,9 @@ namespace AkordishKeit.Services
                 var now = DateTime.UtcNow;
                 var blobFolder = folder ?? $"uploads/{now.Year}/{now.Month:D2}";
                 var ext = Path.GetExtension(fileName).ToLowerInvariant();
-                var blobName = $"{blobFolder}/{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}{ext}";
+                var originalName = SanitizeFileName(Path.GetFileNameWithoutExtension(fileName));
+                var originalSuffix = string.IsNullOrWhiteSpace(originalName) ? string.Empty : $"_{originalName}";
+                var blobName = $"{blobFolder}/{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}{originalSuffix}{ext}";
 
                 var blobClient = _container.GetBlobClient(blobName);
                 await blobClient.UploadAsync(stream, new BlobUploadOptions
@@ -104,6 +106,18 @@ namespace AkordishKeit.Services
             var idx = uri.AbsolutePath.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) return null;
             return uri.AbsolutePath[(idx + prefix.Length)..];
+        }
+
+        private static string SanitizeFileName(string fileName)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var sanitized = new string(fileName
+                .Trim()
+                .Select(ch => invalidChars.Contains(ch) || ch == '/' || ch == '\\' ? '_' : ch)
+                .ToArray());
+
+            sanitized = string.Join("_", sanitized.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            return sanitized.Length <= 80 ? sanitized : sanitized[..80];
         }
     }
 }

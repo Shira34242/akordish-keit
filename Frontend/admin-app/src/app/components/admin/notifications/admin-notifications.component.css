@@ -993,6 +993,50 @@ button:disabled {
   font-size: 20px;
 }
 
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: var(--space-sm) var(--space-base);
+}
+
+.upload-progress div {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #F2F2F2;
+  overflow: hidden;
+}
+
+.upload-progress div span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ddff53;
+  transition: width 0.15s ease;
+}
+
+.upload-progress strong,
+.upload-progress button {
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.upload-progress button {
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-md);
+}
+
+.upload-progress button:hover {
+  background: #ddff53;
+}
+
 .form-message {
   border-radius: 18px;
   padding: var(--space-md);

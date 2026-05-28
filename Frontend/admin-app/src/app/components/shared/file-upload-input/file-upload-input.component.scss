@@ -91,15 +91,56 @@
 }
 
 .fui-uploading {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  gap: var(--space-xs, 4px);
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
-  font-size: 12px;
+  font-size: var(--font-xs, 12px);
   color: #404040;
-  margin-top: 6px;
+  margin-top: var(--space-sm, 6px);
   direction: rtl;
+}
+
+.fui-progress-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 6px);
+}
+
+.fui-progress-head strong {
+  color: #000000;
+  font-weight: 800;
+}
+
+.fui-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #F2F2F2;
+  overflow: hidden;
+}
+
+.fui-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ddff53;
+  transition: width 0.15s ease;
+}
+
+.fui-cancel-btn {
+  margin-inline-start: auto;
+  border: none;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: var(--space-xs, 4px) var(--space-md, 10px);
+}
+
+.fui-cancel-btn:hover {
+  background: #ddff53;
 }
 
 .fui-file-attached {

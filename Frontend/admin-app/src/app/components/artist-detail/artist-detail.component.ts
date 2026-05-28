@@ -592,15 +592,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateDefaultSongsCount(): void {
+    const gridWidth = this.songsGridEl?.nativeElement.clientWidth;
     const vw = window.innerWidth;
-    let cols: number;
-    if (vw <= 600) {
-      cols = 1; // media query: grid-template-columns: 1fr
-    } else {
-      const hPad = vw <= 900 ? 24 : 32;
-      const containerWidth = Math.min(vw - hPad, 1200);
-      cols = Math.max(1, Math.floor((containerWidth + 10) / (260 + 10)));
-    }
+    const contentWidth = gridWidth || (vw <= 600 ? vw - 20 : Math.min(vw - (vw <= 900 ? 20 : 40), 900));
+    const cols = vw <= 600 ? 1 : Math.max(1, Math.floor((contentWidth + 10) / (260 + 10)));
     const newCount = cols * 2;
     if (newCount !== this.defaultSongsCount) {
       this.defaultSongsCount = newCount;
