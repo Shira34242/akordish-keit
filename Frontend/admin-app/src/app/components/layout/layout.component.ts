@@ -83,6 +83,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   softReminderUser: User | null = null;
   showForgotPasswordModal = false;
   showReportModal = false;
+  sessionExpiredToast = false;
   showTeacherCreateModal = false;
   showServiceProviderCreateModal = false;
   showArtistCreateModal = false;
@@ -170,6 +171,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     });
 
     this.sessionTimeoutService.startWatching();
+
+    if (sessionStorage.getItem('session_expired') === '1') {
+      sessionStorage.removeItem('session_expired');
+      this.sessionExpiredToast = true;
+      setTimeout(() => { this.sessionExpiredToast = false; }, 6000);
+    }
 
     this.quickAddAssistantService.openRequests$.subscribe(entryPoint => {
       this.openQuickAddAssistant(entryPoint);

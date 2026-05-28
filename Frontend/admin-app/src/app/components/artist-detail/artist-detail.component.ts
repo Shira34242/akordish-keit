@@ -743,7 +743,15 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private resolvePlatform(platform: SocialPlatform): number {
+    if (typeof platform === 'string') {
+      return SocialPlatform[platform as keyof typeof SocialPlatform] ?? SocialPlatform.Website;
+    }
+    return platform;
+  }
+
   getSocialPlatformName(platform: SocialPlatform): string {
+    const resolved = this.resolvePlatform(platform);
     const names: { [key: number]: string } = {
       [SocialPlatform.Facebook]: 'Facebook',
       [SocialPlatform.Instagram]: 'Instagram',
@@ -757,10 +765,11 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       [SocialPlatform.TwentyFourSix]: '24Six',
       [SocialPlatform.AppleMusic]: 'Apple Music'
     };
-    return names[platform] || this.langService.translate('teacher.social_link');
+    return names[resolved] || this.langService.translate('teacher.social_link');
   }
 
   getSocialIconSvg(platform: SocialPlatform): SafeHtml {
+    const resolved = this.resolvePlatform(platform);
     const icons: { [key: number]: string } = {
       [SocialPlatform.Facebook]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
       [SocialPlatform.Instagram]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-width="3"/></svg>`,
@@ -774,7 +783,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       [SocialPlatform.Jewzik]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
       [SocialPlatform.TwentyFourSix]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 18V6h2v5.59L9.59 7H12L7 12l5 5H9.59L5 12.41V17H3v1zm9-1l3-9h2l-3 9h-2zm5 1V6h4l-2 4 2 7h-2l-2-7v7h-0z"/></svg>`
     };
-    const svg = icons[platform] ?? icons[SocialPlatform.Website];
+    const svg = icons[resolved] ?? icons[SocialPlatform.Website];
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 

@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { fromEvent, merge, Subject, timer } from 'rxjs';
+import { fromEvent, merge, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 /**
@@ -21,12 +21,9 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class SessionTimeoutService {
-  // ⏱️ הגדרות זמן
-  private readonly IDLE_TIME = 30 * 60 * 1000; // 30 דקות במילישניות
-  private readonly WARNING_TIME = 2 * 60 * 1000; // 2 דקות אזהרה לפני ניתוק
+  private readonly IDLE_TIME = 30 * 60 * 1000;
 
   private idleTimer: any;
-  private warningTimer: any;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -71,17 +68,7 @@ export class SessionTimeoutService {
   private resetIdleTimer() {
     this.clearTimers();
 
-    // NgZone.runOutsideAngular - מריץ את הטיימרים מחוץ לזיהוי השינויים של Angular
-    // כדי לחסוך בביצועים
     this.ngZone.runOutsideAngular(() => {
-      // טיימר אזהרה - 28 דקות (30 דקות פחות 2 דקות אזהרה)
-      this.warningTimer = setTimeout(() => {
-        this.ngZone.run(() => {
-          this.showWarning();
-        });
-      }, this.IDLE_TIME - this.WARNING_TIME);
-
-      // טיימר ניתוק - 30 דקות
       this.idleTimer = setTimeout(() => {
         this.ngZone.run(() => {
           this.logout();
@@ -96,9 +83,6 @@ export class SessionTimeoutService {
   private clearTimers() {
     if (this.idleTimer) {
       clearTimeout(this.idleTimer);
-    }
-    if (this.warningTimer) {
-      clearTimeout(this.warningTimer);
     }
   }
 
@@ -128,41 +112,10 @@ export class SessionTimeoutService {
       });
   }
 
-  /**
-   * מציג אזהרה למשתמש 2 דקות לפני ניתוק
-   */
-  private showWarning() {
-    const continueSession = confirm(
-      '⚠️ אזהרה!\n\n' +
-      'בעוד 2 דקות תתנתק אוטומטית בגלל חוסר פעילות.\n\n' +
-      'לחץ "אישור" להמשיך להיות מחובר.\n' +
-      'לחץ "ביטול" להתנתק עכשיו.'
-    );
-
-    if (continueSession) {
-      // המשתמש רוצה להישאר - מאפסים את הטיימר
-      this.resetIdleTimer();
-    } else {
-      // המשתמש בחר להתנתק
-      this.logout();
-    }
-  }
-
-  /**
-   * מנתק את המשתמש אוטומטית
-   */
   private logout() {
-
-    // הצגת הודעה
-    alert('התנתקת אוטומטית בגלל חוסר פעילות.');
-
-    // ניתוק המשתמש
+    sessionStorage.setItem('session_expired', '1');
     this.authService.logout();
-
-    // ניתוב לדף הבית
     this.router.navigate(['/']);
-
-    // עצירת המעקב
     this.stopWatching();
   }
 

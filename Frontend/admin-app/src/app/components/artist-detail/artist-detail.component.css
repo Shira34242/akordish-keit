@@ -823,6 +823,8 @@
   cursor: pointer;
   transition: background 0.15s;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 
 .song-card:hover {

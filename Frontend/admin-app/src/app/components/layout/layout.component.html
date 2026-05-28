@@ -303,6 +303,11 @@
     </aside>
 </section>
 
+<div class="session-expired-toast" *ngIf="sessionExpiredToast">
+  התנתקת אוטומטית בגלל חוסר פעילות
+  <button class="session-expired-dismiss" (click)="sessionExpiredToast = false">✕</button>
+</div>
+
 <main class="main-content" [class.main-content--podcast-viewer]="isPodcastViewerPage">
     <router-outlet></router-outlet>
 </main>
