@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
-import { SongDto } from '../../../../models/song.model';
+import { ArtistBasicDto, SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { SiteAlertService } from '../../../../services/site-alert.service';
@@ -50,6 +50,8 @@ export class SongsListComponent implements OnInit, OnDestroy {
   uploaderProfileSearchLoading = false;
   uploaderProfileTypeFilter: 'all' | 'artist' | 'teacher' | 'serviceProvider' | 'user' = 'all';
   selectedUploaderProfile: UserWithProfileDto | null = null;
+  artistKeepModalOpen = false;
+  artistKeepChoices: { song: SongDto; artists: ArtistBasicDto[]; selectedArtistId: number }[] = [];
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
@@ -214,6 +216,8 @@ export class SongsListComponent implements OnInit, OnDestroy {
     this.artistModalArtistIds = [];
     this.artistModalMode = 'add';
     this.artistsExpanded = false;
+    this.artistKeepModalOpen = false;
+    this.artistKeepChoices = [];
   }
 
   isModalArtistSelected(artistId: number): boolean {
@@ -244,6 +248,25 @@ export class SongsListComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const songsToUpdate = this.getArtistTargetSongs();
+
+    if (this.artistModalMode === 'add' && this.artistKeepChoices.length === 0) {
+      const songsWithMultipleArtists = songsToUpdate.filter(song => this.getExistingSongArtists(song).length > 1);
+
+      if (songsWithMultipleArtists.length > 0) {
+        this.artistKeepChoices = songsWithMultipleArtists.map(song => {
+          const artists = this.getExistingSongArtists(song);
+          return {
+            song,
+            artists,
+            selectedArtistId: artists[0].id
+          };
+        });
+        this.artistKeepModalOpen = true;
+        return;
+      }
+    }
+
     this.bulkActionLoading = true;
     const payload: UpdateSongArtistsDto = {
       artistIds: this.artistModalArtistIds,
@@ -253,6 +276,8 @@ export class SongsListComponent implements OnInit, OnDestroy {
     const onSuccess = () => {
       alert('האמנים עודכנו בהצלחה');
       this.bulkActionLoading = false;
+      this.artistKeepModalOpen = false;
+      this.artistKeepChoices = [];
       this.closeArtistModal();
       this.loadSongs();
     };
@@ -261,6 +286,17 @@ export class SongsListComponent implements OnInit, OnDestroy {
       alert(error?.error?.message || 'שגיאה בעדכון האמנים');
       this.bulkActionLoading = false;
     };
+
+    if (this.artistModalMode === 'add') {
+      forkJoin(songsToUpdate.map(song => this.songService.updateSongArtists(song.id, {
+        artistIds: this.getReplacementArtistIds(song),
+        mode: 'replace'
+      }))).subscribe({
+        next: onSuccess,
+        error: onError
+      });
+      return;
+    }
 
     if (this.artistModalSong) {
       this.songService.updateSongArtists(this.artistModalSong.id, payload).subscribe({
@@ -297,6 +333,8 @@ export class SongsListComponent implements OnInit, OnDestroy {
     this.uploaderProfileSearchQuery = '';
     this.uploaderProfileSearchResults = [];
     this.uploaderProfileSearchLoading = false;
+    this.artistKeepModalOpen = false;
+    this.artistKeepChoices = [];
   }
 
   loadUploaderProfileResults(): void {
@@ -369,6 +407,49 @@ export class SongsListComponent implements OnInit, OnDestroy {
       next: onSuccess,
       error: onError
     });
+  }
+
+  closeArtistKeepModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.artistKeepModalOpen = false;
+    this.artistKeepChoices = [];
+  }
+
+  setArtistToKeep(songId: number, artistId: number): void {
+    this.artistKeepChoices = this.artistKeepChoices.map(choice =>
+      choice.song.id === songId ? { ...choice, selectedArtistId: artistId } : choice
+    );
+  }
+
+  confirmArtistKeepChoices(): void {
+    this.artistKeepModalOpen = false;
+    this.applyArtistModal();
+  }
+
+  private getArtistTargetSongs(): SongDto[] {
+    if (this.artistModalSong) {
+      return [this.artistModalSong];
+    }
+
+    return this.songs.filter(song => this.selectedSongIds.has(song.id));
+  }
+
+  private getExistingSongArtists(song: SongDto): ArtistBasicDto[] {
+    return song.artists?.filter(artist => artist.id > 0) ?? [];
+  }
+
+  private getReplacementArtistIds(song: SongDto): number[] {
+    const ids = [...this.artistModalArtistIds];
+    const keepChoice = this.artistKeepChoices.find(choice => choice.song.id === song.id);
+
+    if (keepChoice && !ids.includes(keepChoice.selectedArtistId)) {
+      ids.unshift(keepChoice.selectedArtistId);
+    }
+
+    return Array.from(new Set(ids));
   }
 
   getProfileTypeLabel(profile: UserWithProfileDto): string {

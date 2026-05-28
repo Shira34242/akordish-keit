@@ -167,7 +167,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     get isAdminLongForm(): boolean {
-        return this.flowMode === 'legacy' && !this.editMode;
+        return this.flowMode === 'legacy';
     }
 
     get totalSteps(): number {

@@ -103,8 +103,7 @@ export class AdminContentLayoutComponent {
         if (url.includes('/content/podcasts')) {
             return {
                 title: 'פודקאסטים',
-                subtitle: 'ניהול סדרות ופרקים שמוטמעים באתר מקישורים חיצוניים.',
-                actionLabel: 'פרק חדש'
+                subtitle: 'ניהול סדרות ופרקים שמוטמעים באתר מקישורים חיצוניים.'
             };
         }
 

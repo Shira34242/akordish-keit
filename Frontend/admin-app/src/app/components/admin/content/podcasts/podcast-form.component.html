@@ -1,77 +1,90 @@
-<div class="form-page" dir="rtl">
-  <div class="form-header">
+<div class="form-page podcast-series-page" dir="rtl">
+  <div class="form-header series-form-header">
     <button type="button" class="back-btn" (click)="goBack()">
       <span class="material-icons">arrow_forward</span>
       חזרה
     </button>
-    <h1>{{ isEditMode ? 'עריכת פודקאסט' : 'פודקאסט חדש' }}</h1>
+    <div>
+      <span class="modal-kicker">סדרת פודקאסט</span>
+      <h1>{{ isEditMode ? 'עריכת סדרה' : 'סדרה חדשה' }}</h1>
+    </div>
   </div>
 
   <div *ngIf="loading" class="state-box">טוען פודקאסט...</div>
 
-  <form *ngIf="!loading" class="content-form" (ngSubmit)="onSubmit()">
-    <section class="form-section">
-      <h2>פרטי סדרה</h2>
-      <div class="form-group">
-        <label for="podcast-name">שם הפודקאסט</label>
-        <input id="podcast-name" type="text" [(ngModel)]="podcast.name" name="name" required />
-      </div>
+  <form *ngIf="!loading" class="content-form series-form" (ngSubmit)="onSubmit()">
+    <section class="series-main-card">
+      <section class="image-card" [class.has-image]="podcast.imageUrl">
+        <div
+          class="image-preview"
+          *ngIf="podcast.imageUrl"
+          [style.background-image]="'url(' + podcast.imageUrl + ')'">
+          <button type="button" class="image-clear" (click)="clearImage()" aria-label="מחיקת תמונה" title="מחיקת תמונה">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
 
-      <div class="form-group">
-        <label for="podcast-slug">כתובת ידידותית</label>
-        <input id="podcast-slug" type="text" [(ngModel)]="podcast.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
-      </div>
+        <div class="image-empty" *ngIf="!podcast.imageUrl">
+          <span class="material-icons" aria-hidden="true">add_photo_alternate</span>
+          <strong>תמונת הסדרה</strong>
+          <small>אפשר להדביק קישור או להעלות קובץ</small>
+        </div>
 
-      <div class="form-group">
-        <label for="podcast-description">תיאור קצר</label>
-        <textarea id="podcast-description" [(ngModel)]="podcast.description" name="description" rows="4"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="podcast-image-url">תמונת סדרה</label>
         <app-file-upload-input
           inputId="podcast-image-url"
           [(url)]="podcast.imageUrl"
-          placeholder="קישור לתמונה או העלאת קובץ"
+          placeholder="קישור לתמונה"
           accept="image/*"
           [showPreview]="false"
         ></app-file-upload-input>
-      </div>
+      </section>
 
-      <div class="series-preview" *ngIf="podcast.imageUrl">
-        <span [style.background-image]="'url(' + podcast.imageUrl + ')'"></span>
-        <p>כך התמונה תופיע בראש עמוד הסדרה ובכרטיסי הסדרות.</p>
-      </div>
-    </section>
-
-    <section class="form-section">
-      <h2>שיוך סוכנות</h2>
-      <div class="form-group">
-        <label for="podcast-agency">סוכנות משויכת</label>
-        <select id="podcast-agency" [(ngModel)]="selectedAgencyId" name="agencyId">
-          <option [ngValue]="null">ללא סוכנות</option>
-          <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
-        </select>
-      </div>
-      <p class="form-help">הסדרה תופיע בדף הסוכנות, ובדף הסדרה יוצג באנר של הסוכנות.</p>
-    </section>
-
-    <section class="form-section">
-      <h2>תצוגה</h2>
-      <div class="form-row">
+      <div class="series-details">
         <div class="form-group">
-          <label>סדר הצגה</label>
-          <input type="number" [(ngModel)]="podcast.displayOrder" name="displayOrder" min="0" />
+          <label for="podcast-name">שם הסדרה</label>
+          <input id="podcast-name" type="text" [(ngModel)]="podcast.name" name="name" required />
         </div>
-        <label class="checkbox-label">
+
+        <div class="form-group">
+        <label for="podcast-description">תיאור</label>
+          <textarea id="podcast-description" [(ngModel)]="podcast.description" name="description" rows="5"></textarea>
+        </div>
+
+        <label class="checkbox-label primary-status">
           <input type="checkbox" [(ngModel)]="podcast.isActive" name="isActive" />
           מוצג באתר
         </label>
       </div>
     </section>
 
+    <button type="button" class="advanced-toggle" (click)="toggleAdvanced()">
+      <span>{{ advancedOpen ? 'הסתרת הגדרות נוספות' : 'הגדרות נוספות שלא חובה' }}</span>
+      <span class="material-icons" aria-hidden="true">{{ advancedOpen ? 'expand_less' : 'expand_more' }}</span>
+    </button>
+
+    <section class="advanced-section" *ngIf="advancedOpen">
+      <div class="form-group">
+        <label for="podcast-slug">כתובת ידידותית</label>
+        <input id="podcast-slug" type="text" [(ngModel)]="podcast.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
+      </div>
+
+      <div class="form-group">
+        <label for="podcast-agency">סוכנות משויכת</label>
+        <select id="podcast-agency" [(ngModel)]="selectedAgencyId" name="agencyId">
+          <option [ngValue]="null">ללא סוכנות</option>
+          <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
+        </select>
+        <p class="form-help">הסדרה תופיע בדף הסוכנות, ובדף הסדרה יוצג באנר של הסוכנות.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="podcast-order">סדר הצגה</label>
+        <input id="podcast-order" type="number" [(ngModel)]="podcast.displayOrder" name="displayOrder" min="0" />
+      </div>
+    </section>
+
     <div class="form-actions">
-      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">ביטול</button>
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">חזרה</button>
       <button type="submit" class="btn-submit" [disabled]="saving">{{ saving ? 'שומר...' : 'שמירה' }}</button>
     </div>
   </form>

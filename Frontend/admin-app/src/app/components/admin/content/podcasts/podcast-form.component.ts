@@ -28,6 +28,7 @@ export class PodcastFormComponent implements OnInit {
   saving = false;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
+  advancedOpen = false;
   private originalAgencyId: number | null = null;
 
   podcast: CreatePodcastDto | UpdatePodcastDto = {
@@ -152,5 +153,13 @@ export class PodcastFormComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/admin/content/podcasts']);
+  }
+
+  clearImage(): void {
+    this.podcast.imageUrl = '';
+  }
+
+  toggleAdvanced(): void {
+    this.advancedOpen = !this.advancedOpen;
   }
 }

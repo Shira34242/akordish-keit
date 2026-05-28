@@ -1,95 +1,141 @@
-<div class="form-page" dir="rtl">
-  <div class="form-header">
+<div class="form-page podcast-episode-page" dir="rtl">
+  <div class="form-header series-form-header">
     <button type="button" class="back-btn" (click)="goBack()">
       <span class="material-icons">arrow_forward</span>
       חזרה
     </button>
-    <h1>{{ isEditMode ? 'עריכת פרק' : 'פרק חדש' }}</h1>
+    <div>
+      <span class="modal-kicker">{{ selectedPodcastName }}</span>
+      <h1>{{ isEditMode ? 'עריכת פרק' : 'פרק חדש' }}</h1>
+    </div>
   </div>
 
   <div *ngIf="loading" class="state-box">טוען פרק...</div>
 
-  <form *ngIf="!loading" class="content-form content-form--with-preview" (ngSubmit)="onSubmit()">
-    <div class="form-stack">
-      <section class="form-section">
-        <h2>פרטי פרק</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="episode-podcast">סדרה</label>
-            <select id="episode-podcast" [(ngModel)]="episode.podcastId" name="podcastId" required>
-              <option *ngFor="let podcast of podcasts" [ngValue]="podcast.id">{{ podcast.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="episode-number">מספר פרק</label>
-            <input id="episode-number" type="number" [(ngModel)]="episode.episodeNumber" name="episodeNumber" min="0" />
-          </div>
+  <form *ngIf="!loading" class="content-form episode-form" (ngSubmit)="onSubmit()">
+    <section class="episode-link-section">
+      <div class="form-group">
+        <label for="episode-source-url">קישור לפרק</label>
+        <input
+          id="episode-source-url"
+          type="url"
+          [(ngModel)]="episode.sourceUrl"
+          name="sourceUrl"
+          placeholder="https://youtube.com/..."
+          required
+          (input)="onSourceUrlInput()" />
+      </div>
+      <span class="preview-label">{{ sourceTitleLoading ? 'שולף פרטים...' : detectedPlatform }}</span>
+    </section>
+
+    <section class="series-main-card episode-main-card">
+      <section class="image-card" [class.has-image]="previewThumbnailUrl">
+        <div
+          class="image-preview"
+          *ngIf="previewThumbnailUrl"
+          [style.background-image]="'url(' + previewThumbnailUrl + ')'">
+          <button type="button" class="image-clear" (click)="clearThumbnail()" aria-label="מחיקת תמונה" title="מחיקת תמונה">
+            <span class="material-icons">close</span>
+          </button>
         </div>
 
+        <div class="image-empty" *ngIf="!previewThumbnailUrl">
+          <span class="material-icons" aria-hidden="true">add_photo_alternate</span>
+          <strong>תמונת הפרק</strong>
+          <small>תישלף מיוטיוב, או שאפשר להדביק קישור / להעלות</small>
+        </div>
+
+        <app-file-upload-input
+          inputId="episode-thumbnail-url"
+          [(url)]="episode.thumbnailUrl"
+          placeholder="קישור לתמונה"
+          accept="image/*"
+          [showPreview]="false"
+        ></app-file-upload-input>
+      </section>
+
+      <div class="series-details episode-details">
         <div class="form-group">
           <label for="episode-title">שם הפרק</label>
-          <input id="episode-title" type="text" [(ngModel)]="episode.title" name="title" required />
+          <input
+            id="episode-title"
+            type="text"
+            [(ngModel)]="episode.title"
+            name="title"
+            required
+            (input)="onTitleInput()" />
         </div>
 
         <div class="form-group">
-          <label>כתובת ידידותית</label>
-          <input type="text" [(ngModel)]="episode.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
+          <label for="episode-podcast">סדרה</label>
+          <select id="episode-podcast" [(ngModel)]="episode.podcastId" name="podcastId" required (change)="onPodcastChange()">
+            <option *ngFor="let podcast of podcasts" [ngValue]="podcast.id">{{ podcast.name }}</option>
+          </select>
         </div>
 
-        <div class="form-group">
-          <label>תיאור קצר</label>
-          <textarea [(ngModel)]="episode.description" name="description" rows="3"></textarea>
+        <div class="form-group compact-number">
+          <label for="episode-number">מספר פרק</label>
+          <input
+            id="episode-number"
+            type="number"
+            [(ngModel)]="episode.episodeNumber"
+            name="episodeNumber"
+            min="0"
+            (input)="onEpisodeNumberInput()" />
         </div>
-      </section>
 
-      <section class="form-section">
-        <h2>קישור ונגן</h2>
-        <div class="form-group">
-          <label for="episode-source-url">קישור לפרק</label>
-          <input id="episode-source-url" type="url" [(ngModel)]="episode.sourceUrl" name="sourceUrl" placeholder="https://youtube.com/..." required />
-        </div>
-        <div class="form-help">
-          המערכת תזהה לבד YouTube / Spotify ותבנה נגן ותמונה כשאפשר.
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>קישור הטמעה ידני</label>
-            <input type="url" [(ngModel)]="episode.embedUrl" name="embedUrl" placeholder="לא חובה" />
-          </div>
-          <div class="form-group">
-            <label>תמונה ידנית</label>
-            <input type="url" [(ngModel)]="episode.thumbnailUrl" name="thumbnailUrl" placeholder="לא חובה" />
-          </div>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h2>תצוגה</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label>תאריך פרסום</label>
-            <input type="datetime-local" [(ngModel)]="episode.publishedAt" name="publishedAt" />
-          </div>
-          <div class="form-group">
-            <label>סדר הצגה</label>
-            <input type="number" [(ngModel)]="episode.displayOrder" name="displayOrder" min="0" />
-          </div>
-        </div>
-        <label class="checkbox-label">
+        <label class="checkbox-label primary-status">
           <input type="checkbox" [(ngModel)]="episode.isActive" name="isActive" />
           מוצג באתר
         </label>
-      </section>
+      </div>
+    </section>
 
-      <section class="form-section">
-        <h2>תיוג תוכן</h2>
-        <p>בחר משתמש או פרופיל אליו ישוייך הפרק</p>
+    <button type="button" class="advanced-toggle" (click)="toggleAdvanced()">
+      <span>{{ advancedOpen ? 'הסתרת הגדרות נוספות' : 'הגדרות נוספות שלא חובה' }}</span>
+      <span class="material-icons" aria-hidden="true">{{ advancedOpen ? 'expand_less' : 'expand_more' }}</span>
+    </button>
 
+    <section class="advanced-section episode-advanced-section" *ngIf="advancedOpen">
+      <div class="form-group">
+        <label for="episode-slug">כתובת ידידותית</label>
+        <input id="episode-slug" type="text" [(ngModel)]="episode.slug" name="slug" placeholder="נוצר אוטומטית אם משאירים ריק" />
+      </div>
+
+      <div class="form-group">
+        <label for="episode-description">תיאור</label>
+        <textarea id="episode-description" [(ngModel)]="episode.description" name="description" rows="4"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="episode-embed-url">קישור הטמעה ידני</label>
+          <input id="episode-embed-url" type="url" [(ngModel)]="episode.embedUrl" name="embedUrl" placeholder="לא חובה" />
+        </div>
+        <div class="form-group">
+          <label for="episode-platform">פלטפורמה</label>
+          <input id="episode-platform" type="text" [(ngModel)]="episode.platform" name="platform" placeholder="נשאר ריק לזיהוי אוטומטי" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="episode-published-at">תאריך פרסום</label>
+          <input id="episode-published-at" type="datetime-local" [(ngModel)]="episode.publishedAt" name="publishedAt" />
+        </div>
+        <div class="form-group">
+          <label for="episode-display-order">סדר הצגה</label>
+          <input id="episode-display-order" type="number" [(ngModel)]="episode.displayOrder" name="displayOrder" min="0" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>תיוג תוכן</label>
         <div class="profile-search-wrapper">
           <div *ngIf="selectedProfile" class="selected-profile-display">
             <img *ngIf="selectedProfile.imageUrl" [src]="selectedProfile.imageUrl" [alt]="selectedProfile.displayName" class="profile-thumb" />
             <span>{{ selectedProfile.displayName }}</span>
-            <button type="button" class="btn-clear-profile" (click)="clearProfile()">✕</button>
+            <button type="button" class="btn-clear-profile" (click)="clearProfile()">×</button>
           </div>
 
           <div class="form-row" *ngIf="!selectedProfile">
@@ -109,8 +155,7 @@
                 name="profileSearch"
                 placeholder="חפש משתמש או פרופיל..."
                 (input)="onProfileSearchInput()"
-                (focus)="showProfileDropdown = true"
-              />
+                (focus)="showProfileDropdown = true" />
             </div>
           </div>
 
@@ -126,21 +171,11 @@
             <div *ngIf="!profileSearchLoading && profileSearchResults.length === 0 && profileSearchQuery">לא נמצאו תוצאות</div>
           </div>
         </div>
-      </section>
-    </div>
-
-    <aside class="preview-panel">
-      <span class="preview-label">{{ detectedPlatform }}</span>
-      <div class="preview-media" [style.background-image]="previewThumbnailUrl ? 'url(' + previewThumbnailUrl + ')' : ''">
-        <span *ngIf="!previewThumbnailUrl" class="material-icons">play_circle</span>
       </div>
-      <h2>{{ episode.title || 'שם הפרק יוצג כאן' }}</h2>
-      <p>{{ episode.description || 'כאן תוצג התצוגה המקדימה של הפרק כפי שהוא ירגיש בכרטיס באתר.' }}</p>
-      <a *ngIf="episode.sourceUrl" [href]="episode.sourceUrl" target="_blank" rel="noopener">בדיקת קישור</a>
-    </aside>
+    </section>
 
     <div class="form-actions">
-      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">ביטול</button>
+      <button type="button" class="btn-cancel" (click)="goBack()" [disabled]="saving">חזרה</button>
       <button type="submit" class="btn-submit" [disabled]="saving">{{ saving ? 'שומר...' : 'שמירה' }}</button>
     </div>
   </form>

@@ -22,12 +22,15 @@ export class PodcastsListComponent implements OnInit {
 
   podcasts: Podcast[] = [];
   episodes: PodcastEpisode[] = [];
+  selectedSeriesEpisodes: PodcastEpisode[] = [];
   loading = true;
+  seriesEpisodesLoading = false;
   bulkActionLoading = false;
   savingEpisodeId: number | null = null;
   savingPodcastId: number | null = null;
   selectedEpisodeIds = new Set<number>();
   selectedPodcastIds = new Set<number>();
+  selectedSeriesPodcast: Podcast | null = null;
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
@@ -36,6 +39,8 @@ export class PodcastsListComponent implements OnInit {
   sortBy = 'date';
   activeTab: 'podcasts' | 'episodes' = 'episodes';
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-podcasts-view') as 'list' | 'grid') || 'list';
+  seriesEpisodeViewMode: 'grid' | 'list' =
+    (localStorage.getItem('admin-podcast-series-episodes-view') as 'grid' | 'list') || 'grid';
 
   currentPage = 1;
   pageSize = 25;
@@ -52,6 +57,9 @@ export class PodcastsListComponent implements OnInit {
       next: result => {
         this.podcasts = result.items;
         this.selectedPodcastIds.clear();
+        if (!this.selectedSeriesPodcast && this.podcasts.length > 0) {
+          this.selectSeries(this.podcasts[0]);
+        }
       }
     });
   }
@@ -94,6 +102,11 @@ export class PodcastsListComponent implements OnInit {
   setView(mode: 'list' | 'grid'): void {
     this.viewMode = mode;
     localStorage.setItem('admin-podcasts-view', mode);
+  }
+
+  setSeriesEpisodeView(mode: 'grid' | 'list'): void {
+    this.seriesEpisodeViewMode = mode;
+    localStorage.setItem('admin-podcast-series-episodes-view', mode);
   }
 
   get selectedCount(): number {
@@ -176,6 +189,40 @@ export class PodcastsListComponent implements OnInit {
     this.router.navigate(['/admin/content/podcasts/episodes/new']);
   }
 
+  createEpisodeForSeries(podcast: Podcast): void {
+    this.router.navigate(['/admin/content/podcasts/episodes/new'], { queryParams: { podcastId: podcast.id } });
+  }
+
+  selectSeries(podcast: Podcast): void {
+    this.selectedSeriesPodcast = podcast;
+    this.selectedPodcastId = podcast.id;
+    this.currentPage = 1;
+    this.loadSelectedSeriesEpisodes();
+  }
+
+  isSeriesSelected(podcast: Podcast): boolean {
+    return this.selectedSeriesPodcast?.id === podcast.id;
+  }
+
+  loadSelectedSeriesEpisodes(): void {
+    if (!this.selectedSeriesPodcast) {
+      this.selectedSeriesEpisodes = [];
+      return;
+    }
+
+    this.seriesEpisodesLoading = true;
+    this.podcastService.getEpisodes(1, 200, this.selectedSeriesPodcast.id, undefined, undefined, undefined, undefined, 'date').subscribe({
+      next: result => {
+        this.selectedSeriesEpisodes = result.items;
+        this.seriesEpisodesLoading = false;
+      },
+      error: () => {
+        this.selectedSeriesEpisodes = [];
+        this.seriesEpisodesLoading = false;
+      }
+    });
+  }
+
   editPodcast(podcast: Podcast): void {
     this.router.navigate(['/admin/content/podcasts/edit', podcast.id]);
   }
@@ -243,6 +290,10 @@ export class PodcastsListComponent implements OnInit {
   async deletePodcast(podcast: Podcast): Promise<void> {
     if (!await this.siteAlerts.confirm(`למחוק את הפודקאסט "${podcast.name}" ואת כל הפרקים שלו?`)) return;
     this.podcastService.deletePodcast(podcast.id).subscribe(() => {
+      if (this.selectedSeriesPodcast?.id === podcast.id) {
+        this.selectedSeriesPodcast = null;
+        this.selectedSeriesEpisodes = [];
+      }
       this.loadPodcasts();
       this.loadEpisodes();
     });
@@ -250,7 +301,12 @@ export class PodcastsListComponent implements OnInit {
 
   async deleteEpisode(episode: PodcastEpisode): Promise<void> {
     if (!await this.siteAlerts.confirm(`למחוק את הפרק "${episode.title}"?`)) return;
-    this.podcastService.deleteEpisode(episode.id).subscribe(() => this.loadEpisodes());
+    this.podcastService.deleteEpisode(episode.id).subscribe(() => {
+      this.loadEpisodes();
+      if (this.selectedSeriesPodcast?.id === episode.podcastId) {
+        this.loadSelectedSeriesEpisodes();
+      }
+    });
   }
 
   async bulkDeleteEpisodes(): Promise<void> {

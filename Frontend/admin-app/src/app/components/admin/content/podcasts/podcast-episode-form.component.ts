@@ -1,26 +1,28 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { Podcast, CreatePodcastEpisodeDto, UpdatePodcastEpisodeDto } from '../../../../models/podcast.model';
 import { PodcastService } from '../../../../services/podcast.service';
 import { UserService } from '../../../../services/user.service';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { SmartContentService } from '../../../../services/admin/smart-content.service';
-import { StoredSmartDraft } from '../../../../models/smart-content.model';
+import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
 
 @Component({
   selector: 'app-podcast-episode-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent],
   templateUrl: './podcast-episode-form.component.html',
   styleUrls: ['./podcast-form.component.css']
 })
 export class PodcastEpisodeFormComponent implements OnInit {
   private readonly podcastService = inject(PodcastService);
   private readonly userService = inject(UserService);
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly smartContentService = inject(SmartContentService);
@@ -30,6 +32,12 @@ export class PodcastEpisodeFormComponent implements OnInit {
   episodeId?: number;
   loading = false;
   saving = false;
+  advancedOpen = false;
+  sourceTitleLoading = false;
+  private titleEditedManually = false;
+  private episodeNumberEditedManually = false;
+  private thumbnailClearedManually = false;
+  private readonly sourceUrlLookup$ = new Subject<string>();
 
   // Uploader profile
   selectedProfile: UserWithProfileDto | null = null;
@@ -58,6 +66,7 @@ export class PodcastEpisodeFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadPodcasts();
     this.initProfileSearch();
+    this.initSourceUrlLookup();
     const id = this.route.snapshot.paramMap.get('id');
     const duplicateId = this.route.snapshot.queryParamMap.get('duplicate');
 
@@ -93,6 +102,8 @@ export class PodcastEpisodeFormComponent implements OnInit {
           uploaderProfileType: episode.uploaderProfileType,
           uploaderProfileId: episode.uploaderProfileId
         };
+        this.titleEditedManually = true;
+        this.episodeNumberEditedManually = true;
 
         if (episode.uploaderProfile) {
           this.selectedProfile = {
@@ -136,6 +147,8 @@ export class PodcastEpisodeFormComponent implements OnInit {
           displayOrder: episode.displayOrder,
           isActive: false
         };
+        this.titleEditedManually = true;
+        this.episodeNumberEditedManually = true;
         this.loading = false;
       },
       error: () => {
@@ -157,14 +170,36 @@ export class PodcastEpisodeFormComponent implements OnInit {
       platform: draft.platform || this.episode.platform,
       publishedAt: draft.publishedAt ? this.formatDateForInput(draft.publishedAt) : this.episode.publishedAt
     };
+    this.queueSourceUrlLookup(this.episode.sourceUrl || '');
   }
 
   loadPodcasts(): void {
     this.podcastService.getPodcasts(1, 200).subscribe(result => {
       this.podcasts = result.items;
+      const routePodcastId = Number(this.route.snapshot.queryParamMap.get('podcastId'));
+      if (!this.isEditMode && routePodcastId && this.podcasts.some(podcast => podcast.id === routePodcastId)) {
+        this.episode.podcastId = routePodcastId;
+        this.setSuggestedEpisodeNumber(routePodcastId);
+        return;
+      }
+
       if (!this.episode.podcastId && this.podcasts.length > 0) {
         this.episode.podcastId = this.podcasts[0].id;
+        if (!this.isEditMode) this.setSuggestedEpisodeNumber(this.episode.podcastId);
       }
+    });
+  }
+
+  private setSuggestedEpisodeNumber(podcastId: number): void {
+    if (!podcastId || this.isEditMode || this.episodeNumberEditedManually) return;
+
+    this.podcastService.getEpisodes(1, 200, podcastId).pipe(
+      map(result => result.items || []),
+      catchError(() => of([]))
+    ).subscribe(episodes => {
+      if (this.episodeNumberEditedManually) return;
+      const maxEpisodeNumber = episodes.reduce((max, episode) => Math.max(max, episode.episodeNumber || 0), 0);
+      this.episode.episodeNumber = maxEpisodeNumber + 1;
     });
   }
 
@@ -192,6 +227,26 @@ export class PodcastEpisodeFormComponent implements OnInit {
 
   onProfileSearchInput(): void {
     this.profileSearch$.next(this.profileSearchQuery);
+  }
+
+  onSourceUrlInput(): void {
+    this.thumbnailClearedManually = false;
+    this.queueSourceUrlLookup(this.episode.sourceUrl || '');
+  }
+
+  onTitleInput(): void {
+    this.titleEditedManually = true;
+  }
+
+  onEpisodeNumberInput(): void {
+    this.episodeNumberEditedManually = true;
+  }
+
+  onPodcastChange(): void {
+    if (this.episode.podcastId) {
+      this.episodeNumberEditedManually = false;
+      this.setSuggestedEpisodeNumber(this.episode.podcastId);
+    }
   }
 
   onProfileFilterChange(): void {
@@ -246,7 +301,7 @@ export class PodcastEpisodeFormComponent implements OnInit {
       description: this.episode.description?.trim() || undefined,
       sourceUrl: this.episode.sourceUrl.trim(),
       embedUrl: this.episode.embedUrl?.trim() || undefined,
-      thumbnailUrl: this.episode.thumbnailUrl?.trim() || undefined,
+      thumbnailUrl: this.episode.thumbnailUrl?.trim() || (!this.thumbnailClearedManually ? this.getYouTubeThumbnailUrl(this.episode.sourceUrl) : undefined),
       platform: this.episode.platform?.trim() || undefined
     };
 
@@ -280,7 +335,64 @@ export class PodcastEpisodeFormComponent implements OnInit {
 
   get previewThumbnailUrl(): string | undefined {
     if (this.episode.thumbnailUrl?.trim()) return this.episode.thumbnailUrl.trim();
-    const youtubeId = this.extractYouTubeId(this.episode.sourceUrl || '');
+    if (this.thumbnailClearedManually) return undefined;
+    return this.getYouTubeThumbnailUrl(this.episode.sourceUrl || '');
+  }
+
+  get selectedPodcastName(): string {
+    return this.podcasts.find(podcast => podcast.id === this.episode.podcastId)?.name || 'הסדרה שנבחרה';
+  }
+
+  clearThumbnail(): void {
+    this.thumbnailClearedManually = true;
+    this.episode.thumbnailUrl = '';
+  }
+
+  toggleAdvanced(): void {
+    this.advancedOpen = !this.advancedOpen;
+  }
+
+  private initSourceUrlLookup(): void {
+    this.sourceUrlLookup$.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(url => {
+        const youtubeId = this.extractYouTubeId(url);
+        if (!youtubeId) {
+          this.sourceTitleLoading = false;
+          return of(null);
+        }
+
+        this.sourceTitleLoading = true;
+        const metadataUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+        return this.http.get<{ title?: string; thumbnail_url?: string }>(metadataUrl).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe(metadata => {
+      this.sourceTitleLoading = false;
+      if (!metadata) return;
+
+      if (metadata.title && (!this.titleEditedManually || !this.episode.title.trim())) {
+        this.episode.title = metadata.title;
+      }
+
+      if (metadata.thumbnail_url && !this.thumbnailClearedManually && !this.episode.thumbnailUrl?.trim()) {
+        this.episode.thumbnailUrl = metadata.thumbnail_url;
+      }
+    });
+  }
+
+  private queueSourceUrlLookup(url: string): void {
+    const normalizedUrl = url.trim();
+    if (!this.thumbnailClearedManually && !this.episode.thumbnailUrl?.trim()) {
+      this.episode.thumbnailUrl = this.getYouTubeThumbnailUrl(normalizedUrl) || '';
+    }
+    this.sourceUrlLookup$.next(normalizedUrl);
+  }
+
+  private getYouTubeThumbnailUrl(url: string): string | undefined {
+    const youtubeId = this.extractYouTubeId(url || '');
     return youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : undefined;
   }
 

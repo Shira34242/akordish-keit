@@ -393,6 +393,49 @@
       </div>
     </div>
   </div>
+
+  <!-- Keep Artist Modal -->
+  <div class="category-modal-backdrop artist-keep-backdrop" *ngIf="artistKeepModalOpen" (click)="closeArtistKeepModal()">
+    <div class="category-modal artist-keep-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>איזה אמן להשאיר?</h2>
+          <p>האמן החדש יתווסף, וכל שאר האמנים יוחלפו.</p>
+        </div>
+        <button class="btn-action" (click)="closeArtistKeepModal()" [disabled]="bulkActionLoading" title="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="artist-keep-list">
+        <div class="artist-keep-row" *ngFor="let choice of artistKeepChoices">
+          <div class="artist-keep-title">
+            <strong>{{ choice.song.title }}</strong>
+            <span>בחר אמן אחד שיישאר באקורד</span>
+          </div>
+
+          <div class="category-options artist-keep-options">
+            <button
+              *ngFor="let artist of choice.artists"
+              class="category-option"
+              [class.selected]="choice.selectedArtistId === artist.id"
+              (click)="setArtistToKeep(choice.song.id, artist.id)">
+              <span class="material-icons">{{ choice.selectedArtistId === artist.id ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              {{ artist.name }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="filter-btn" (click)="closeArtistKeepModal()" [disabled]="bulkActionLoading">ביטול</button>
+        <button class="btn-new" (click)="confirmArtistKeepChoices()" [disabled]="bulkActionLoading">
+          <span class="material-icons">check</span>
+          המשך שמירה
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <app-bump-modal
