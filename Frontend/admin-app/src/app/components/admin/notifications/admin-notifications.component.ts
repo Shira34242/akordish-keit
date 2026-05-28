@@ -476,8 +476,9 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
         this.groupImageUploadProgress = 100;
         this.isUploadingGroupImage = false;
       },
-      error: () => {
-        this.errorMessage = 'העלאת תמונת הקבוצה נכשלה. בדוק שהשרת רץ ונסה שוב.';
+      error: (err: any) => {
+        console.error('Group image upload error:', err);
+        this.errorMessage = err?.message || 'העלאת תמונת הקבוצה נכשלה. בדוק שהשרת רץ ונסה שוב.';
         this.isUploadingGroupImage = false;
         this.groupImageUploadProgress = 0;
       }
@@ -633,8 +634,9 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
         this.isUploadingAttachment = false;
         this.saveCurrentDraft();
       },
-      error: () => {
-        this.errorMessage = 'העלאת הקובץ נכשלה. בדוק שהשרת רץ ונסה שוב.';
+      error: (err: any) => {
+        console.error('Attachment upload error:', err);
+        this.errorMessage = err?.message || 'העלאת הקובץ נכשלה. בדוק שהשרת רץ ונסה שוב.';
         this.isUploadingAttachment = false;
         this.attachmentUploadProgress = 0;
       }

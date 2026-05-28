@@ -59,8 +59,10 @@ export class FileUploadInputComponent implements OnDestroy {
         this.uploadProgress = 100;
         this.uploading = false;
       },
-      error: () => {
-        alert(this.langService.translate('shared.file_upload_error'));
+      error: (err: any) => {
+        console.error('File upload error:', err);
+        const message = err?.message || this.langService.translate('shared.file_upload_error');
+        alert(message);
         this.uploading = false;
         this.uploadProgress = 0;
       }
