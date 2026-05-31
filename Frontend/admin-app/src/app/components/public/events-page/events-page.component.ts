@@ -7,7 +7,6 @@ import { Event } from '../../../models/event.model';
 import { EventCardData, getDisplayArtist } from '../../../utils/event.utils';
 import { EventModalComponent } from '../../shared/event-modal/event-modal.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 type FilterMode = 'upcoming' | 'all' | 'past';
@@ -21,7 +20,7 @@ interface CarouselRenderItem {
 @Component({
   selector: 'app-events-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, EventModalComponent, TranslatePipe, CloudflareImagePipe, ImgFallbackDirective],
+  imports: [CommonModule, RouterModule, EventModalComponent, TranslatePipe, ImgFallbackDirective],
   templateUrl: './events-page.component.html',
   styleUrls: ['./events-page.component.css']
 })
