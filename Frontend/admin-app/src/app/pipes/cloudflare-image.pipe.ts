@@ -38,7 +38,11 @@ export function cloudflareImageUrl(
   const original = (imageUrl || '').trim();
   if (!original) return original;
 
-  if (!environment.imageTransformationsEnabled || isUntouchedUrl(original) || original.includes('/cdn-cgi/image/')) {
+  if (!environment.imageTransformationsEnabled) {
+    return unwrapCloudflareImageUrl(original);
+  }
+
+  if (isUntouchedUrl(original) || original.includes('/cdn-cgi/image/')) {
     return original;
   }
 
@@ -90,6 +94,17 @@ function getCloudflareZone(): string {
   }
 
   return environment.apiBaseUrl.replace(/\/$/, '');
+}
+
+function unwrapCloudflareImageUrl(url: string): string {
+  const marker = '/cdn-cgi/image/';
+  const markerIndex = url.indexOf(marker);
+  if (markerIndex < 0) return url;
+
+  const sourceStart = url.indexOf('/http', markerIndex + marker.length);
+  if (sourceStart < 0) return url;
+
+  return url.slice(sourceStart + 1);
 }
 
 @Pipe({
