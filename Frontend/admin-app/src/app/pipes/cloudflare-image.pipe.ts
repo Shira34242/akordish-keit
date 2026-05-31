@@ -38,7 +38,7 @@ export function cloudflareImageUrl(
   const original = (imageUrl || '').trim();
   if (!original) return original;
 
-  if (!environment.production || isUntouchedUrl(original) || original.includes('/cdn-cgi/image/')) {
+  if (!environment.imageTransformationsEnabled || isUntouchedUrl(original) || original.includes('/cdn-cgi/image/')) {
     return original;
   }
 
