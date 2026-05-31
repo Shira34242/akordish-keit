@@ -1,6 +1,9 @@
+using AkordishKeit.Data;
+using AkordishKeit.Models.Entities;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Controllers
 {
@@ -12,6 +15,8 @@ namespace AkordishKeit.Controllers
         private readonly HttpClient _httpClient;
         private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly AkordishKeitDbContext _context;
+        private readonly IYouTubeService _youTubeService;
         private readonly ILogger<MediaController> _logger;
 
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
@@ -25,12 +30,16 @@ namespace AkordishKeit.Controllers
             IHttpClientFactory httpClientFactory,
             IWebHostEnvironment environment,
             IConfiguration configuration,
+            AkordishKeitDbContext context,
+            IYouTubeService youTubeService,
             ILogger<MediaController> logger)
         {
             _blobService = blobService;
             _httpClient = httpClientFactory.CreateClient();
             _environment = environment;
             _configuration = configuration;
+            _context = context;
+            _youTubeService = youTubeService;
             _logger = logger;
         }
 
@@ -172,6 +181,126 @@ namespace AkordishKeit.Controllers
                 url, deleted, HttpContext.Connection.RemoteIpAddress);
 
             return Ok(new { message = deleted ? "File deleted successfully" : "File not found or already deleted" });
+        }
+
+        [HttpPost("maintenance/convert-youtube-thumbnails")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> ConvertYouTubeThumbnails([FromQuery] int limit = 100, [FromQuery] bool dryRun = false)
+        {
+            limit = Math.Clamp(limit, 1, 500);
+            var checkedCount = 0;
+            var convertedCount = 0;
+            var failedCount = 0;
+            var skippedCount = 0;
+            var remaining = limit;
+            var failures = new List<object>();
+
+            async Task<string?> ConvertUrlAsync(string? url, string entity, int id, string field)
+            {
+                if (!IsYouTubeThumbnailUrl(url))
+                {
+                    skippedCount++;
+                    return url;
+                }
+
+                checkedCount++;
+                remaining--;
+                if (dryRun)
+                    return url;
+
+                var storedUrl = await _youTubeService.StoreYouTubeThumbnailAsync(url!);
+                if (string.IsNullOrWhiteSpace(storedUrl) || IsYouTubeThumbnailUrl(storedUrl))
+                {
+                    failedCount++;
+                    failures.Add(new { entity, id, field, url });
+                    return url;
+                }
+
+                convertedCount++;
+                return storedUrl;
+            }
+
+            var songs = await _context.Songs
+                .Where(s => !s.IsDeleted && s.ImageUrl != null &&
+                    (s.ImageUrl.Contains("i.ytimg.com") || s.ImageUrl.Contains("img.youtube.com")))
+                .OrderBy(s => s.Id)
+                .Take(remaining)
+                .ToListAsync();
+
+            foreach (var song in songs)
+            {
+                song.ImageUrl = (await ConvertUrlAsync(song.ImageUrl, nameof(Song), song.Id, nameof(Song.ImageUrl))) ?? song.ImageUrl;
+                if (remaining <= 0) break;
+            }
+
+            if (remaining > 0)
+            {
+                var articles = await _context.Articles
+                    .Where(a => !a.IsDeleted &&
+                        ((a.FeaturedImageUrl != null && (a.FeaturedImageUrl.Contains("i.ytimg.com") || a.FeaturedImageUrl.Contains("img.youtube.com"))) ||
+                         (a.OpenGraphImageUrl != null && (a.OpenGraphImageUrl.Contains("i.ytimg.com") || a.OpenGraphImageUrl.Contains("img.youtube.com")))))
+                    .OrderBy(a => a.Id)
+                    .Take(remaining)
+                    .ToListAsync();
+
+                foreach (var article in articles)
+                {
+                    article.FeaturedImageUrl = await ConvertUrlAsync(article.FeaturedImageUrl, nameof(Article), article.Id, nameof(Article.FeaturedImageUrl));
+                    if (remaining <= 0) break;
+                    article.OpenGraphImageUrl = await ConvertUrlAsync(article.OpenGraphImageUrl, nameof(Article), article.Id, nameof(Article.OpenGraphImageUrl));
+                    if (remaining <= 0) break;
+                }
+            }
+
+            if (remaining > 0)
+            {
+                var episodes = await _context.PodcastEpisodes
+                    .Where(e => !e.IsDeleted && e.ThumbnailUrl != null &&
+                        (e.ThumbnailUrl.Contains("i.ytimg.com") || e.ThumbnailUrl.Contains("img.youtube.com")))
+                    .OrderBy(e => e.Id)
+                    .Take(remaining)
+                    .ToListAsync();
+
+                foreach (var episode in episodes)
+                {
+                    episode.ThumbnailUrl = await ConvertUrlAsync(episode.ThumbnailUrl, nameof(PodcastEpisode), episode.Id, nameof(PodcastEpisode.ThumbnailUrl));
+                    if (remaining <= 0) break;
+                }
+            }
+
+            if (remaining > 0)
+            {
+                var artistHits = await _context.ArtistHits
+                    .Where(h => h.ImageUrl != null &&
+                        (h.ImageUrl.Contains("i.ytimg.com") || h.ImageUrl.Contains("img.youtube.com")))
+                    .OrderBy(h => h.Id)
+                    .Take(remaining)
+                    .ToListAsync();
+
+                foreach (var hit in artistHits)
+                {
+                    hit.ImageUrl = await ConvertUrlAsync(hit.ImageUrl, nameof(ArtistHit), hit.Id, nameof(ArtistHit.ImageUrl));
+                    if (remaining <= 0) break;
+                }
+            }
+
+            if (!dryRun && convertedCount > 0)
+                await _context.SaveChangesAsync();
+
+            _logger.LogInformation("YouTube thumbnail conversion completed. dryRun={DryRun} checked={Checked} converted={Converted} failed={Failed} skipped={Skipped}",
+                dryRun, checkedCount, convertedCount, failedCount, skippedCount);
+
+            return Ok(new
+            {
+                dryRun,
+                limit,
+                checkedCount,
+                convertedCount,
+                failedCount,
+                skippedCount,
+                hasMore = remaining <= 0,
+                failures = failures.Take(20)
+            });
         }
 
         private static string GetContentType(string extension) => extension switch
@@ -358,5 +487,12 @@ namespace AkordishKeit.Controllers
 
         private static bool IsPdfContent(byte[] bytes) =>
             bytes.Length >= 4 && bytes[0] == '%' && bytes[1] == 'P' && bytes[2] == 'D' && bytes[3] == 'F';
+
+        private static bool IsYouTubeThumbnailUrl(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
+        }
     }
 }
