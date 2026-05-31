@@ -2,9 +2,12 @@
 
   <img
     class="banner-bg"
-    [src]="episode.thumbnailUrl || '/assets/default-article.png'"
+    [src]="(episode.thumbnailUrl | cfImage:360:82) || '/assets/default-article.png'"
     [alt]="episode.title"
-    loading="lazy">
+    loading="lazy"
+    decoding="async"
+    [imgFallbackOriginal]="episode.thumbnailUrl"
+    imgFallback="/assets/default-article.png">
 
   <div class="banner-overlay"></div>
 

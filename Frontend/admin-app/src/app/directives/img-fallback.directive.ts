@@ -12,12 +12,26 @@ import { Directive, HostListener, Input } from '@angular/core';
 })
 export class ImgFallbackDirective {
   @Input() imgFallback = '/default-user.svg';
+  @Input() imgFallbackOriginal: string | null | undefined;
+
+  private triedOriginal = false;
 
   @HostListener('error', ['$event'])
   onError(event: Event): void {
     const img = event.target as HTMLImageElement | null;
     if (!img) return;
-    img.onerror = null;
+
+    const original = (this.imgFallbackOriginal || '').trim();
+    if (!this.triedOriginal && original && img.src !== original) {
+      this.triedOriginal = true;
+      img.removeAttribute('srcset');
+      img.removeAttribute('sizes');
+      img.src = original;
+      return;
+    }
+
+    img.removeAttribute('srcset');
+    img.removeAttribute('sizes');
     img.src = this.imgFallback;
   }
 }

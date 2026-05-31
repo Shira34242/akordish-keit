@@ -2,9 +2,14 @@
 
   <img
     class="banner-bg"
-    [src]="article.featuredImageUrl || '/assets/default-article.png'"
+    [src]="(article.featuredImageUrl | cfImage:imagePreset) || '/assets/default-article.png'"
+    [attr.srcset]="imageWidths.length ? (article.featuredImageUrl | cfSrcset:imageWidths:82) : null"
+    [attr.sizes]="imageWidths.length ? imageSizes : null"
     [alt]="article.title"
-    loading="lazy">
+    loading="lazy"
+    decoding="async"
+    [imgFallbackOriginal]="article.featuredImageUrl"
+    imgFallback="/assets/default-article.png">
 
   <div class="banner-overlay"></div>
 

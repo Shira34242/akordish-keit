@@ -12,7 +12,9 @@
       [src]="event.imageUrl"
       [alt]="event.name"
       class="event-card__poster-img"
-      loading="lazy">
+      loading="lazy"
+      decoding="async"
+      imgFallback="/logo.png">
     <div *ngIf="!event.imageUrl" class="event-card__poster-placeholder">
       <span class="material-icons">music_note</span>
     </div>

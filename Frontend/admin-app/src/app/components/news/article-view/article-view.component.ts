@@ -15,11 +15,13 @@ import { ArticleFeedbackService } from '../../../services/article-feedback.servi
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { SeoService } from '../../../services/seo.service';
 import { LanguageService } from '../../../services/language.service';
+import { environment } from '../../../../environments/environment';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-article-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe],
   templateUrl: './article-view.component.html',
   styleUrls: ['./article-view.component.css']
 })
@@ -300,11 +302,26 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     return !!url && /\.(mp3|wav|m4a|aac|ogg)(\?.*)?$/i.test(url);
   }
 
-  getAudioDownloadUrl(url: string | undefined): string {
+  getAudioStreamUrl(url: string | undefined): string {
     if (!url) return '';
-    if (!url.includes('/upload/')) return url;
-    if (!url.includes('res.cloudinary.com')) return url;
-    return url.replace('/upload/', '/upload/fl_attachment/');
+    return `${environment.apiBaseUrl}/api/Media/audio?url=${encodeURIComponent(url)}`;
+  }
+
+  getAudioDownloadUrl(url: string | undefined, title: string | undefined): string {
+    if (!url) return '';
+    const fileName = this.getAudioFileName(url, title);
+    return `${environment.apiBaseUrl}/api/Media/download?url=${encodeURIComponent(url)}&fileName=${encodeURIComponent(fileName)}`;
+  }
+
+  getAudioFileName(url: string | undefined, title: string | undefined): string {
+    const extension = this.getAudioExtension(url);
+    return `${(title || 'akordishkeit-audio').trim()}${extension}`;
+  }
+
+  private getAudioExtension(url: string | undefined): string {
+    if (!url) return '.mp3';
+    const match = url.match(/\.(mp3|wav|m4a|aac|ogg)(?:\?.*)?$/i);
+    return match ? `.${match[1].toLowerCase()}` : '.mp3';
   }
 
   formatDate(dateString: string): string {

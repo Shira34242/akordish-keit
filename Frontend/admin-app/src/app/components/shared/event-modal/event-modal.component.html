@@ -3,7 +3,7 @@
 
     <img
       *ngIf="event.imageUrl"
-      [src]="event.imageUrl"
+      [src]="event.imageUrl | cfImage:'hero'"
       [alt]="event.name"
       class="modal-img">
     <div *ngIf="!event.imageUrl" class="modal-placeholder">

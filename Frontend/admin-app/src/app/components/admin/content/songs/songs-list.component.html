@@ -1,8 +1,8 @@
 <div class="songs-container">
   <!-- Actions Bar -->
   <div class="actions-bar">
-    <!-- Search -->
-    <div class="search-box">
+    <div class="search-box actions-search">
+      <span class="material-icons search-icon">search</span>
       <input
         type="text"
         placeholder="חיפוש לפי שם שיר או אמן..."
@@ -18,12 +18,47 @@
         <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
       </select>
 
+      <div class="date-range-control" title="טווח תאריכים">
+        <button class="icon-control-button" type="button">
+          <span class="material-icons">date_range</span>
+        </button>
+        <div class="date-range-popover">
+          <label>
+            <span>מ</span>
+            <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input">
+          </label>
+          <label>
+            <span>עד</span>
+            <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input">
+          </label>
+        </div>
+      </div>
+
+      <label class="icon-select-control" title="מיון">
+        <span class="material-icons">sort</span>
+        <select
+          [(ngModel)]="sortBy"
+          (change)="onSortChange()"
+          class="filter-select sort-select">
+          <option value="date">תאריך העלאה</option>
+          <option value="views">צפיות</option>
+          <option value="date_asc">תאריך העלאה ישן קודם</option>
+          <option value="artist">אמן</option>
+          <option value="name">שם השיר (א-ב)</option>
+        </select>
+      </label>
+
+      <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" type="button" (click)="resetFilters()" title="איפוס סינון">
+        <span class="material-icons">restart_alt</span>
+      </button>
+
       <input
         type="text"
         placeholder="מי העלה"
         [(ngModel)]="uploaderSearch"
         (input)="onFilterChange()"
-        class="filter-input">
+        class="filter-input"
+        hidden>
 
       <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input" title="מתאריך העלאה">
       <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input" title="עד תאריך העלאה">
@@ -45,6 +80,17 @@
       <span class="material-icons">add</span>
       שיר חדש
     </button>
+    <div class="actions-view" *ngIf="!loading">
+      <span class="results-info">{{ totalItems }} שירים</span>
+      <div class="view-controls">
+        <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+          <span class="material-icons">grid_view</span>
+        </button>
+        <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+          <span class="material-icons">view_list</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="permission-alert" *ngIf="!loading && loadError" role="alert">

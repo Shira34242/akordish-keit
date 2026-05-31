@@ -61,6 +61,7 @@ export class ArticleFormComponent implements OnInit {
   tagSearchQuery = '';
   tagSearchResults: SelectedTag[] = [];
   showTagDropdown = false;
+  showNewTagInput = false;
   private tagSearch$ = new Subject<string>();
   isEditMode = false;
   articleId?: number;
@@ -69,6 +70,7 @@ export class ArticleFormComponent implements OnInit {
   saveError = '';
   fetchingYouTube = false;
   youtubeMessage = '';
+  advancedOpen = false;
   private pendingSmartArticleType: 'news' | 'blog' | null = null;
   private pendingCategoryId: number | null = null;
 
@@ -142,7 +144,7 @@ export class ArticleFormComponent implements OnInit {
     shortDescription: '',
     isFeatured: false,
     displayOrder: 0,
-    status: ArticleStatus.Draft,
+    status: ArticleStatus.Published,
     scheduledDate: undefined,
     isPremium: false,
     metaTitle: '',
@@ -175,7 +177,9 @@ export class ArticleFormComponent implements OnInit {
         this.profileSearchQuery = '';
         this.selectedTags = [];
         this.tagSearchQuery = '';
+        this.showNewTagInput = false;
         this.artistsExpanded = false;
+        this.advancedOpen = false;
         this.newGalleryImage = { imageUrl: '', caption: '' };
         this.initializeUploaderSelector();
       }
@@ -219,7 +223,7 @@ export class ArticleFormComponent implements OnInit {
       shortDescription: '',
       isFeatured: false,
       displayOrder: 0,
-      status: ArticleStatus.Draft,
+      status: ArticleStatus.Published,
       scheduledDate: undefined,
       isPremium: false,
       metaTitle: '',
@@ -389,8 +393,8 @@ export class ArticleFormComponent implements OnInit {
   }
 
   loadPopularTags(): void {
-    this.systemTablesService.getPopularTags(20).subscribe({
-      next: (tags) => { this.popularTags = tags.map(t => ({ id: t.id, name: t.name })); },
+    this.systemTablesService.getItems('tags', 1, 200).subscribe({
+      next: (result) => { this.popularTags = result.items.map(t => ({ id: t.id, name: t.name })); },
       error: (err) => console.error('Error loading popular tags', err)
     });
   }
@@ -444,9 +448,16 @@ export class ArticleFormComponent implements OnInit {
         if (!this.popularTags.some(p => p.id === tag.id)) {
           this.popularTags = [{ id: tag.id, name: tag.name }, ...this.popularTags];
         }
+        this.showNewTagInput = false;
       },
       error: (err) => console.error('Error creating tag', err)
     });
+  }
+
+  openNewTagInput(): void {
+    this.showNewTagInput = true;
+    this.tagSearchQuery = '';
+    this.showTagDropdown = false;
   }
 
   // אזור באתר נגזר מהקטגוריות שנבחרו: אם יש קטגוריה אחת לפחות "חדשות מוזיקה" → news, אחרת → blog
@@ -699,8 +710,12 @@ export class ArticleFormComponent implements OnInit {
     this.article.canonicalUrl = draft.sourceUrl;
     this.article.metaTitle = draft.title || this.article.metaTitle;
     this.article.metaDescription = description;
-    this.article.status = ArticleStatus.Draft;
+    this.article.status = ArticleStatus.Published;
     this.onTitleChange();
+  }
+
+  toggleAdvanced(): void {
+    this.advancedOpen = !this.advancedOpen;
   }
 
   private selectDefaultCategoryForRequestedType(): void {
@@ -805,6 +820,23 @@ export class ArticleFormComponent implements OnInit {
   }
 
   // Gallery methods
+  onGalleryImagesUploaded(urls: string[]): void {
+    if (!this.article.galleryImages) {
+      this.article.galleryImages = [];
+    }
+
+    urls
+      .map(url => url.trim())
+      .filter(url => !!url)
+      .forEach(url => {
+        this.article.galleryImages!.push({
+          imageUrl: url,
+          caption: this.newGalleryImage.caption || '',
+          displayOrder: this.article.galleryImages!.length
+        });
+      });
+  }
+
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
       alert('נא להזין URL לתמונה');

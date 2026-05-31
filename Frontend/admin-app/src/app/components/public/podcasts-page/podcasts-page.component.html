@@ -136,7 +136,7 @@
             </iframe>
 
             <div *ngIf="!safeEmbedUrl" class="media-fallback">
-              <img *ngIf="getEpisodeThumbnail(selectedEpisode) as thumbnail" [src]="thumbnail" [alt]="selectedEpisode.title">
+              <img *ngIf="getEpisodeThumbnail(selectedEpisode) as thumbnail" [src]="thumbnail" [alt]="selectedEpisode.title" decoding="async" imgFallback="/assets/default-article.png">
               <strong>הפרק לא זמין לניגון מוטמע</strong>
             </div>
           </ng-container>
@@ -156,7 +156,7 @@
             [ngStyle]="agencyBannerVars"
             (click)="goToAgency()">
             <span class="agency-series-banner__logo">
-              <img *ngIf="banner.logoUrl" [src]="banner.logoUrl" [alt]="banner.name" loading="lazy">
+              <img *ngIf="banner.logoUrl" [src]="banner.logoUrl" [alt]="banner.name" loading="lazy" decoding="async" imgFallback="/logo.png">
               <span *ngIf="!banner.logoUrl">{{ banner.name.charAt(0) }}</span>
             </span>
             <span class="agency-series-banner__copy">
@@ -204,7 +204,7 @@
           [class.active]="selectedEpisode?.id === episode.id"
           (click)="openEpisode(episode)">
           <span class="series-episode__thumb">
-            <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy">
+            <img *ngIf="getEpisodeThumbnail(episode) as thumbnail" [src]="thumbnail" [alt]="episode.title" loading="lazy" decoding="async" imgFallback="/assets/default-article.png">
             <span *ngIf="!getEpisodeThumbnail(episode)" class="material-icons">play_circle</span>
           </span>
           <span class="series-episode__copy">

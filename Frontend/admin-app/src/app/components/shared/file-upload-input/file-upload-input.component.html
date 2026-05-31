@@ -1,6 +1,7 @@
 <div class="fui-wrapper">
   <div class="fui-row">
     <input
+      *ngIf="!fileOnly"
       [id]="inputId"
       type="text"
       class="fui-url-input form-input"
@@ -11,24 +12,42 @@
     <button
       type="button"
       class="fui-pin-btn"
+      [class.fui-pin-btn--text]="uploadButtonText"
       (click)="fileInput.click()"
       [disabled]="uploading"
       title="צרף קובץ"
     >
-      <span class="material-icons">{{ uploading ? 'hourglass_empty' : 'attach_file' }}</span>
+      <span class="material-icons">{{ uploading ? 'hourglass_empty' : uploadIcon }}</span>
+      <span *ngIf="uploadButtonText" class="fui-pin-text">{{ uploading ? 'מעלה...' : uploadButtonText }}</span>
     </button>
     <input
       #fileInput
       type="file"
       [accept]="accept"
+      [multiple]="multiple"
       (change)="onFileSelected($event)"
       style="display: none"
     />
   </div>
 
-  <div *ngIf="uploading" class="fui-uploading">
-    <span class="material-icons fui-spin">hourglass_empty</span>
-    מעלה קובץ...
+  <div *ngIf="uploading" class="fui-uploading" role="status" aria-live="polite">
+    <div class="fui-progress-head">
+      <span *ngIf="uploadTotalFiles > 1">{{ uploadCompletedFiles }} / {{ uploadTotalFiles }}</span>
+      <span>מעלה קובץ</span>
+      <strong>{{ uploadProgress }}%</strong>
+      <button type="button" class="fui-cancel-btn" (click)="cancelUpload()">ביטול</button>
+    </div>
+    <div class="fui-progress-track" aria-hidden="true">
+      <span [style.width.%]="uploadProgress"></span>
+    </div>
+  </div>
+
+  <div *ngIf="fileOnly && url && !uploading" class="fui-file-attached">
+    <span class="material-icons">check_circle</span>
+    <span>קובץ צורף</span>
+    <button type="button" class="fui-clear-inline" (click)="clear()" title="הסר">
+      <span class="material-icons">close</span>
+    </button>
   </div>
 
   <div *ngIf="url && isImage(url) && showPreview && !uploading" class="fui-preview">

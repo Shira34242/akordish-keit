@@ -8,11 +8,12 @@ import { PodcastService } from '../../../services/podcast.service';
 import { SeoService } from '../../../services/seo.service';
 import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-podcasts-page',
   standalone: true,
-  imports: [CommonModule, PodcastEpisodeBannerComponent, ContentUploaderBadgeComponent],
+  imports: [CommonModule, PodcastEpisodeBannerComponent, ContentUploaderBadgeComponent, ImgFallbackDirective],
   templateUrl: './podcasts-page.component.html',
   styleUrls: ['./podcasts-page.component.css']
 })

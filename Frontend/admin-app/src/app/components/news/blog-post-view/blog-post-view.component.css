@@ -278,6 +278,8 @@
   color: #000000;
   direction: rtl;
   text-align: right;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* תמונות בתוכן דינמי — לא יוצאות מה-container */

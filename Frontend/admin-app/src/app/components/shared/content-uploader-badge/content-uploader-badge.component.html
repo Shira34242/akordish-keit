@@ -2,9 +2,11 @@
   <div class="uploader-avatar" [class]="getAvatarClass()">
     <img
       *ngIf="profile.imageUrl; else initials"
-      [src]="profile.imageUrl"
+      [src]="profile.imageUrl | cfImage:'profile'"
       [alt]="profile.name"
       class="uploader-img"
+      loading="lazy"
+      decoding="async"
     />
     <ng-template #initials>
       <span class="uploader-initials">{{ profile.name.charAt(0) }}</span>

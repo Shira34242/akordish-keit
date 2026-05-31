@@ -34,6 +34,7 @@ import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { songSlug } from '../../utils/slug';
 import { getArticleRoute } from '../../utils/article-route.utils';
+import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
 
 interface HeroParticle {
   x: number; y: number;
@@ -59,6 +60,7 @@ interface HeroParticle {
     TranslatePipe,
     AutoScrollDirective,
     ImgFallbackDirective,
+    CloudflareImagePipe,
     AdDisplayComponent
   ],
   templateUrl: './home-page.component.html',

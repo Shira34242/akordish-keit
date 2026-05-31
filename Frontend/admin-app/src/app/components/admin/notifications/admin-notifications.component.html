@@ -206,6 +206,11 @@
 
             <input type="text" [(ngModel)]="attachmentLabel" name="attachmentLabel" (ngModelChange)="onDraftChanged()" placeholder="שם קצר לצירוף">
             <input *ngIf="attachmentType === 'image'" type="text" [(ngModel)]="attachmentClickUrl" name="attachmentClickUrl" (ngModelChange)="onDraftChanged()" placeholder="קישור בלחיצה על התמונה">
+            <div class="upload-progress" *ngIf="isUploadingAttachment">
+              <div><span [style.width.%]="attachmentUploadProgress"></span></div>
+              <strong>{{ attachmentUploadProgress }}%</strong>
+              <button type="button" (click)="cancelAttachmentUpload()">ביטול</button>
+            </div>
             <div class="image-size-control" *ngIf="attachmentType === 'image' || mediaType === 'image'">
               <span>גודל תמונה</span>
               <button type="button" [class.active]="mediaDisplaySize === 'small'" (click)="setMediaDisplaySize('small')">קטן</button>
@@ -302,6 +307,11 @@
             <span class="material-icons">upload</span>
             <span>{{ isUploadingGroupImage ? 'מעלה...' : 'העלאת קובץ' }}</span>
           </label>
+          <div class="upload-progress" *ngIf="isUploadingGroupImage">
+            <div><span [style.width.%]="groupImageUploadProgress"></span></div>
+            <strong>{{ groupImageUploadProgress }}%</strong>
+            <button type="button" (click)="cancelGroupImageUpload()">ביטול</button>
+          </div>
           <div class="group-image-url-row">
             <input type="text" [(ngModel)]="groupImageUrlDraft" name="groupImageUrlDraft" placeholder="קישור לתמונה">
             <button type="button" (click)="applyGroupImageUrl()">אישור</button>

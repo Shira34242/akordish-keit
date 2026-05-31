@@ -42,6 +42,11 @@
               <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
             </button>
             <input #profileImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
+            <div class="upload-progress" *ngIf="profileImageUploading">
+              <div><span [style.width.%]="profileImageUploadProgress"></span></div>
+              <strong>{{ profileImageUploadProgress }}%</strong>
+              <button type="button" (click)="cancelProfileImageUpload()">ביטול</button>
+            </div>
 
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם העסק או נותן השירות *" />
 
@@ -128,6 +133,11 @@
                 <input type="text" [(ngModel)]="newBranch.openingHours" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="שעות פתיחה" />
                 <button type="button" class="primary-action" (click)="addBranch()">הוספת סניף</button>
               </div>
+              <div class="upload-progress" *ngIf="branchImageUploading">
+                <div><span [style.width.%]="branchImageUploadProgress"></span></div>
+                <strong>{{ branchImageUploadProgress }}%</strong>
+                <button type="button" (click)="cancelBranchImageUpload()">ביטול</button>
+              </div>
               <div class="branch-list" *ngIf="branches.length">
                 <article class="mini-card branch-summary" *ngFor="let branch of branches; let i = index">
                   <button type="button" class="remove-button" (click)="removeBranch(i)" aria-label="מחיקת סניף">
@@ -186,6 +196,7 @@
             <div class="upload-progress" *ngIf="galleryUploadingCount">
               <div><span [style.width.%]="galleryUploadProgress"></span></div>
               <strong>{{ galleryUploadProgress }}%</strong>
+              <button type="button" (click)="cancelGalleryUpload()">ביטול</button>
             </div>
 
             <div class="video-row" *ngIf="showVideoLinkInput || videoLinks.length">

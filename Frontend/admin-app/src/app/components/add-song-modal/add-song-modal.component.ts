@@ -1214,12 +1214,14 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private applySelectedVideo(result: Partial<YouTubeSearchResult>) {
-        const smartTitle = this.pickSmartSongTitle(this.songForm.get('title')?.value || '', result.title, result.channelTitle);
+        const enteredTitle = (this.songForm.get('title')?.value || '').trim();
+        const smartTitle = this.pickSmartSongTitle(enteredTitle, result.title, result.channelTitle);
+        const titleToKeep = enteredTitle || smartTitle;
 
         this.selectedYouTubeResult = {
             videoId: result.videoId ?? '',
             youtubeUrl: result.youtubeUrl ?? '',
-            title: smartTitle,
+            title: titleToKeep,
             channelTitle: result.channelTitle,
             thumbnailUrl: result.thumbnailUrl,
             durationSeconds: result.durationSeconds,
@@ -1230,14 +1232,14 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.youtubeSearchResults = [];
 
         this.songForm.patchValue({
-            title: smartTitle,
+            title: titleToKeep,
             youtubeUrl: result.youtubeUrl ?? this.songForm.get('youtubeUrl')?.value ?? '',
             imageUrl: result.thumbnailUrl || this.songForm.get('imageUrl')?.value || ''
         });
 
         this.youtubeMetadata = {
             success: true,
-            title: smartTitle,
+            title: titleToKeep,
             channelTitle: result.channelTitle,
             thumbnailUrl: result.thumbnailUrl,
             durationSeconds: result.durationSeconds,

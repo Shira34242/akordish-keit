@@ -45,6 +45,11 @@
               <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
             </button>
             <input #profileImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
+            <div class="upload-progress" *ngIf="profileImageUploading">
+              <div><span [style.width.%]="profileImageUploadProgress"></span></div>
+              <strong>{{ profileImageUploadProgress }}%</strong>
+              <button type="button" (click)="cancelProfileImageUpload()">ביטול</button>
+            </div>
 
             <button type="button" class="banner-upload" [class.has-image]="bannerImageUrl" (click)="bannerImageInput.click()" aria-label="העלאת תמונת באנר">
               <img *ngIf="bannerImageUrl" [src]="bannerImageUrl" alt="תמונת באנר" />
@@ -52,6 +57,11 @@
               <strong>{{ bannerImageUploading ? 'מעלה באנר...' : 'תמונת באנר (רשות)' }}</strong>
             </button>
             <input #bannerImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
+            <div class="upload-progress" *ngIf="bannerImageUploading">
+              <div><span [style.width.%]="bannerImageUploadProgress"></span></div>
+              <strong>{{ bannerImageUploadProgress }}%</strong>
+              <button type="button" (click)="cancelBannerImageUpload()">ביטול</button>
+            </div>
 
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם מלא *" />
             <p class="field-note center">השם שיוצג בדף הציבורי שלך</p>
@@ -230,6 +240,7 @@
             <div class="upload-progress" *ngIf="galleryUploadingCount">
               <div><span [style.width.%]="galleryUploadProgress"></span></div>
               <strong>{{ galleryUploadProgress }}%</strong>
+              <button type="button" (click)="cancelGalleryUpload()">ביטול</button>
             </div>
 
             <div class="video-row" *ngIf="showVideoLinkInput || videoLinks.length">

@@ -1,10 +1,11 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LanguageService } from '../../services/language.service';
 import { HttpEventType } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { TeacherService } from '../../services/teacher.service';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -49,7 +50,7 @@ interface PlatformLinkOption {
   templateUrl: './teacher-create.component.html',
   styleUrls: ['./teacher-create.component.css']
 })
-export class TeacherCreateComponent implements OnInit {
+export class TeacherCreateComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
 
   @Input() embedded = false;
@@ -97,6 +98,8 @@ export class TeacherCreateComponent implements OnInit {
   bannerImageUploading = false;
   galleryUploadingCount = 0;
   galleryUploadProgress = 0;
+  profileImageUploadProgress = 0;
+  bannerImageUploadProgress = 0;
   showVideoLinkInput = false;
   showTestimonialDraft = false;
   newVideoUrl = '';
@@ -131,6 +134,9 @@ export class TeacherCreateComponent implements OnInit {
   instrumentSearchText = '';
   filteredCities: City[] = [];
   filteredInstruments: SystemItem[] = [];
+  private profileImageUploadSub?: Subscription;
+  private bannerImageUploadSub?: Subscription;
+  private galleryUploadSubs: Subscription[] = [];
 
   constructor(
     private teacherService: TeacherService,
@@ -151,6 +157,12 @@ export class TeacherCreateComponent implements OnInit {
     this.loadCities();
     this.prefillUserData();
     setTimeout(() => this.scrollToTop(false));
+  }
+
+  ngOnDestroy(): void {
+    this.cancelProfileImageUpload();
+    this.cancelBannerImageUpload();
+    this.cancelGalleryUpload();
   }
 
   nextStep(): void {
@@ -408,9 +420,19 @@ export class TeacherCreateComponent implements OnInit {
     if (!file) return;
 
     this.profileImageUploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (result) => {
-        this.profileImageUrl = result.url;
+    this.profileImageUploadProgress = 0;
+    this.profileImageUploadSub?.unsubscribe();
+    this.profileImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.profileImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.profileImageUrl = event.body.url;
+        this.profileImageUploadProgress = 100;
         this.profileImageUploading = false;
         input.value = '';
       },
@@ -418,6 +440,7 @@ export class TeacherCreateComponent implements OnInit {
         console.error('Error uploading profile image:', error);
         this.error = this.langService.translate('common.error_profile_image');
         this.profileImageUploading = false;
+        this.profileImageUploadProgress = 0;
         input.value = '';
       }
     });
@@ -429,15 +452,26 @@ export class TeacherCreateComponent implements OnInit {
     if (!file) return;
 
     this.bannerImageUploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (result) => {
-        this.bannerImageUrl = result.url;
+    this.bannerImageUploadProgress = 0;
+    this.bannerImageUploadSub?.unsubscribe();
+    this.bannerImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.bannerImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.bannerImageUrl = event.body.url;
+        this.bannerImageUploadProgress = 100;
         this.bannerImageUploading = false;
         input.value = '';
       },
       error: (error) => {
         console.error('Error uploading banner image:', error);
         this.bannerImageUploading = false;
+        this.bannerImageUploadProgress = 0;
         input.value = '';
       }
     });
@@ -457,7 +491,7 @@ export class TeacherCreateComponent implements OnInit {
       const fileKey = `${file.name}-${file.size}-${index}`;
       progressByFile.set(fileKey, 0);
 
-      this.mediaService.uploadMediaWithProgress(file).subscribe({
+      const sub = this.mediaService.uploadMediaWithProgress(file).subscribe({
         next: (event) => {
           if (event.type === HttpEventType.UploadProgress && event.total) {
             progressByFile.set(fileKey, Math.round((event.loaded / event.total) * 100));
@@ -489,7 +523,27 @@ export class TeacherCreateComponent implements OnInit {
           input.value = '';
         }
       });
+      this.galleryUploadSubs.push(sub);
     });
+  }
+
+  cancelProfileImageUpload(): void {
+    this.profileImageUploadSub?.unsubscribe();
+    this.profileImageUploading = false;
+    this.profileImageUploadProgress = 0;
+  }
+
+  cancelBannerImageUpload(): void {
+    this.bannerImageUploadSub?.unsubscribe();
+    this.bannerImageUploading = false;
+    this.bannerImageUploadProgress = 0;
+  }
+
+  cancelGalleryUpload(): void {
+    this.galleryUploadSubs.forEach(sub => sub.unsubscribe());
+    this.galleryUploadSubs = [];
+    this.galleryUploadingCount = 0;
+    this.galleryUploadProgress = 0;
   }
 
   addVideoLink(): void {

@@ -13,7 +13,7 @@
   <section class="professional-hero-bg"
            #professionalHeroBg>
     <div class="hero-bg-photo" *ngIf="heroBackgroundSrc">
-      <img [src]="heroBackgroundSrc"
+      <img [src]="heroBackgroundSrc | cfImage:'hero'"
            alt=""
            class="hero-bg-img"
            [class.hero-banner-img]="!!heroBannerSrc"
@@ -24,7 +24,7 @@
 
     <div class="hero-content">
       <div class="hero-profile-side">
-        <img [src]="profileImageSrc"
+        <img [src]="profileImageSrc | cfImage:'profile'"
              [alt]="professional.displayName"
              class="hero-profile-photo"
              imgFallback />
@@ -68,7 +68,7 @@
           </button>
 
           <div class="contact-panel" [class.open]="contactOpen">
-            <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl" alt="" class="contact-panel-logo" />
+            <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl | cfImage:'profile'" alt="" class="contact-panel-logo" loading="lazy" decoding="async" />
             <p *ngIf="showAgencyContact" class="contact-panel-invite">צור קשר עם {{ agencyBadge?.agencyName }}</p>
             <div *ngIf="showAgencyContact" class="contact-group-label">דרך הסוכנות</div>
             <a *ngIf="showAgencyContact && agencyBadge?.phoneNumber" [href]="'tel:' + agencyBadge?.phoneNumber" class="contact-item" (click)="trackAgencyContact('phone')">
@@ -178,7 +178,7 @@
       </div>
       <div class="branches-grid">
         <article class="branch-card" *ngFor="let branch of branches">
-          <img *ngIf="branch.imageUrl" [src]="branch.imageUrl" [alt]="branch.name" class="branch-image">
+          <img *ngIf="branch.imageUrl" [src]="branch.imageUrl | cfImage:'card'" [alt]="branch.name" class="branch-image" loading="lazy" decoding="async">
           <div class="branch-card-top">
             <span class="branch-icon material-icons">store</span>
             <strong class="branch-name">{{ branch.name }}</strong>
@@ -221,7 +221,7 @@
              *ngFor="let item of galleryMediaItems; let i = index"
              [class.video-gallery-item]="item.type === 'video'"
              (click)="openMediaLightbox(i)">
-          <img [src]="item.imageUrl || '/logo.png'" [alt]="item.caption || professional.displayName" class="gallery-img">
+          <img [src]="(item.imageUrl | cfImage:'card') || '/logo.png'" [alt]="item.caption || professional.displayName" class="gallery-img" loading="lazy" decoding="async">
           <span class="material-icons gallery-play-icon" *ngIf="item.type === 'video'">play_arrow</span>
           <p class="gallery-caption" *ngIf="item.caption">{{ item.caption }}</p>
         </div>
@@ -315,7 +315,7 @@
 
   <div class="lightbox-content" (click)="$event.stopPropagation()">
     <img *ngIf="activeMedia?.type === 'image'"
-         [src]="activeMedia?.imageUrl"
+         [src]="activeMedia?.imageUrl | cfImage:'lightbox'"
          [alt]="activeMedia?.caption || ''"
          class="lightbox-img" />
     <iframe *ngIf="activeMedia?.type === 'video' && activeVideoUrl"

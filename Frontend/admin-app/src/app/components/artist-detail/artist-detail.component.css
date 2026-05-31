@@ -752,24 +752,17 @@
 .see-all-link:hover { opacity: 1; }
 
 /* ========================================
-   Songs Grid — גלילה אופקית (כמו דף הבית)
+   Songs Grid
 ======================================== */
 .songs-grid {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--space-md);
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-
-.songs-grid::-webkit-scrollbar {
-  display: none;
 }
 
 .songs-grid .song-card {
-  flex: 0 0 280px;
   aspect-ratio: 12 / 5;
+  min-width: 0;
 }
 
 .songs-grid .song-card-title {
@@ -1188,7 +1181,7 @@
     margin-top: var(--space-lg);
   }
 
-  .songs-grid .song-card { flex: 0 0 calc(100vw - var(--space-lg) * 2); }
+  .songs-grid { grid-template-columns: 1fr; }
   .articles-banners-grid { grid-template-columns: 1fr; }
 
   :host ::ng-deep .g3d-card {

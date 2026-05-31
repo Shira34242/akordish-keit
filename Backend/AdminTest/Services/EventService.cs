@@ -10,11 +10,16 @@ namespace AkordishKeit.Services
     {
         private readonly AkordishKeitDbContext _context;
         private readonly INotificationService _notificationService;
+        private readonly IExternalImageStorageService _externalImageStorage;
 
-        public EventService(AkordishKeitDbContext context, INotificationService notificationService)
+        public EventService(
+            AkordishKeitDbContext context,
+            INotificationService notificationService,
+            IExternalImageStorageService externalImageStorage)
         {
             _context = context;
             _notificationService = notificationService;
+            _externalImageStorage = externalImageStorage;
         }
 
         public async Task<PagedResult<EventDto>> GetEventsAsync(
@@ -228,8 +233,14 @@ namespace AkordishKeit.Services
                 ? (string.IsNullOrWhiteSpace(dto.ArtistName) ? "הופעה חדשה" : dto.ArtistName.Trim())
                 : dto.Name.Trim();
             eventEntity.Description = dto.Description;
-            eventEntity.ImageUrl = dto.ImageUrl;
-            eventEntity.BannerImageUrl = string.IsNullOrWhiteSpace(dto.BannerImageUrl) ? null : dto.BannerImageUrl.Trim();
+            eventEntity.ImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.ImageUrl,
+                "uploads/events",
+                $"event-{id}") ?? string.Empty;
+            eventEntity.BannerImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.BannerImageUrl,
+                "uploads/events",
+                $"event-banner-{id}");
             eventEntity.TicketUrl = dto.TicketUrl;
             eventEntity.EventDate = dto.EventDate;
             eventEntity.Location = dto.Location;

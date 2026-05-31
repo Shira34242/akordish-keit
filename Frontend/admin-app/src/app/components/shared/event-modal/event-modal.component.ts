@@ -4,11 +4,12 @@ import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/eve
 import { AnalyticsService } from '../../../services/analytics.service';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ContentUploaderBadgeComponent } from '../content-uploader-badge/content-uploader-badge.component';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-event-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ContentUploaderBadgeComponent],
+  imports: [CommonModule, TranslatePipe, ContentUploaderBadgeComponent, CloudflareImagePipe],
   templateUrl: './event-modal.component.html',
   styleUrls: ['./event-modal.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

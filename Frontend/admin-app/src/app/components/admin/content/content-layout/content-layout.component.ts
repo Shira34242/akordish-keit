@@ -98,7 +98,8 @@ export class AdminContentLayoutComponent {
             return {
                 title: 'הופעות',
                 subtitle: 'ניהול הופעות קרובות, תאריכים, מיקומים וכרטיסים.',
-                actionLabel: 'הופעה חדשה'
+                actionLabel: 'הופעה חדשה',
+                hideSwitcher: true
             };
         }
 

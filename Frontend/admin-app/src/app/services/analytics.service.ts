@@ -24,6 +24,13 @@ export interface AnalyticsDashboard {
     totalViews: number;
     viewsLast30Days: number;
   };
+  adBlock: {
+    totalChecks: number;
+    detectedCount: number;
+    detectionRate: number;
+    daily: { date: string; checks: number; detected: number; rate: number }[];
+    topPages: { pagePath: string; checks: number; detected: number; rate: number }[];
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,6 +52,12 @@ export class AnalyticsService {
 
   trackInteraction(buttonType: string, itemId?: number, itemLabel?: string): void {
     this.http.post(`${this.base}/button-click`, { buttonType, itemId: itemId ?? null, itemLabel: itemLabel ?? null })
+      .pipe(catchError(() => of(null)))
+      .subscribe();
+  }
+
+  trackAdBlockCheck(detected: boolean, pagePath: string, deviceType: string): void {
+    this.http.post(`${this.base}/browser-check`, { detected, pagePath, deviceType })
       .pipe(catchError(() => of(null)))
       .subscribe();
   }

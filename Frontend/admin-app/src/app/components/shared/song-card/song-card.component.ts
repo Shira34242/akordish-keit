@@ -4,11 +4,13 @@ import { RouterModule } from '@angular/router';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { songSlug } from '../../../utils/slug';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
     selector: 'app-song-card',
     standalone: true,
-    imports: [CommonModule, RouterModule, TranslatePipe],
+    imports: [CommonModule, RouterModule, TranslatePipe, CloudflareImagePipe, ImgFallbackDirective],
     templateUrl: './song-card.component.html',
     styleUrls: ['./song-card.component.css']
 })

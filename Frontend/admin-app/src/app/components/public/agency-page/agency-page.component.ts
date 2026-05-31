@@ -18,11 +18,12 @@ import { SocialIconsService } from '../../../services/social-icons.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { SocialPlatform } from '../../../models/artist.model';
 import { SeoService } from '../../../services/seo.service';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-agency-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective, CloudflareImagePipe],
   templateUrl: './agency-page.component.html',
   styleUrls: ['./agency-page.component.css']
 })

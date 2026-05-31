@@ -51,6 +51,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
+builder.Services.AddHttpClient<IExternalImageStorageService, ExternalImageStorageService>();
+builder.Services.AddHttpContextAccessor();
 
 // Add Memory Cache (לשימוש ב-SystemSettingsService)
 builder.Services.AddMemoryCache();

@@ -167,6 +167,26 @@ export class SongsListComponent implements OnInit, OnDestroy {
     return this.selectedSongIds.size > 0;
   }
 
+  get hasActiveFilters(): boolean {
+    return !!(
+      this.searchTerm ||
+      this.selectedArtistId ||
+      this.dateFrom ||
+      this.dateTo ||
+      this.sortBy !== 'date'
+    );
+  }
+
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.selectedArtistId = undefined;
+    this.uploaderSearch = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.sortBy = 'date';
+    this.onFilterChange();
+  }
+
   get allCurrentPageSelected(): boolean {
     return this.songs.length > 0 && this.songs.every(song => this.selectedSongIds.has(song.id));
   }

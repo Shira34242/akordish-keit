@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Article } from '../../../models/article.model';
 import { getArticleRoute } from '../../../utils/article-route.utils';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-article-card',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CloudflareImagePipe, ImgFallbackDirective],
   templateUrl: './article-card.component.html',
   styleUrls: ['./article-card.component.css']
 })

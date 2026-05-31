@@ -1,6 +1,6 @@
 <div class="article-card" [routerLink]="articleLink" [class.card-layout]="layout === 'card'">
   <div class="image-container">
-    <img [src]="article.featuredImageUrl || 'assets/default-article.png'" [alt]="article.title" class="article-image" loading="lazy">
+    <img [src]="(article.featuredImageUrl | cfImage:360:82) || 'assets/default-article.png'" [alt]="article.title" class="article-image" loading="lazy" decoding="async" [imgFallbackOriginal]="article.featuredImageUrl" imgFallback="assets/default-article.png">
     <div class="overlay-gradient" *ngIf="layout === 'overlay'"></div>
 
     <!-- Info for Overlay Layout -->

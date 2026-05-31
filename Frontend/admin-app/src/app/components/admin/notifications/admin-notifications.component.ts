@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpEventType } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { NotificationAttachmentDto, NotificationDto, NotificationGroupDto, SaveNotificationGroupDto } from '../../../models/notification.model';
 import { UserListDto } from '../../../models/user.model';
 import { MediaService } from '../../../services/admin/media.service';
@@ -32,7 +34,7 @@ interface MessageDraft {
   templateUrl: './admin-notifications.component.html',
   styleUrls: ['./admin-notifications.component.css']
 })
-export class AdminNotificationsComponent implements OnInit {
+export class AdminNotificationsComponent implements OnInit, OnDestroy {
   users: UserListDto[] = [];
   groups: NotificationGroupDto[] = [];
   selectedUser: UserListDto | null = null;
@@ -68,6 +70,8 @@ export class AdminNotificationsComponent implements OnInit {
   isSending = false;
   isUploadingAttachment = false;
   isUploadingGroupImage = false;
+  attachmentUploadProgress = 0;
+  groupImageUploadProgress = 0;
   isSavingGroup = false;
   showAttachMenu = false;
   showAttachPanel = false;
@@ -75,6 +79,8 @@ export class AdminNotificationsComponent implements OnInit {
   attachmentInputMode: AttachmentInputMode = 'url';
   selectedFileName = '';
   selectedGroupImageFileName = '';
+  private attachmentUploadSub?: Subscription;
+  private groupImageUploadSub?: Subscription;
   showGroupImageOptions = false;
   groupImageUrlDraft = '';
   showGroupForm = false;
@@ -95,6 +101,11 @@ export class AdminNotificationsComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadGroups();
+  }
+
+  ngOnDestroy(): void {
+    this.cancelAttachmentUpload();
+    this.cancelGroupImageUpload();
   }
 
   get hasSelectedTarget(): boolean {
@@ -448,18 +459,36 @@ export class AdminNotificationsComponent implements OnInit {
     this.showGroupImageOptions = false;
     this.groupImageUrlDraft = '';
     this.isUploadingGroupImage = true;
+    this.groupImageUploadProgress = 0;
     this.errorMessage = '';
+    this.groupImageUploadSub?.unsubscribe();
 
-    this.mediaService.uploadMedia(file).subscribe({
-      next: response => {
-        this.groupForm.imageUrl = response.url;
+    this.groupImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: event => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.groupImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.groupForm.imageUrl = event.body.url;
+        this.groupImageUploadProgress = 100;
         this.isUploadingGroupImage = false;
       },
-      error: () => {
-        this.errorMessage = 'העלאת תמונת הקבוצה נכשלה. בדוק שהשרת רץ ונסה שוב.';
+      error: (err: any) => {
+        console.error('Group image upload error:', err);
+        this.errorMessage = err?.message || 'העלאת תמונת הקבוצה נכשלה. בדוק שהשרת רץ ונסה שוב.';
         this.isUploadingGroupImage = false;
+        this.groupImageUploadProgress = 0;
       }
     });
+  }
+
+  cancelGroupImageUpload(): void {
+    this.groupImageUploadSub?.unsubscribe();
+    this.isUploadingGroupImage = false;
+    this.groupImageUploadProgress = 0;
   }
 
   loadThread(userId: number): void {
@@ -588,18 +617,36 @@ export class AdminNotificationsComponent implements OnInit {
     this.selectedFileName = file.name;
     this.mediaType = this.attachmentType;
     this.isUploadingAttachment = true;
+    this.attachmentUploadProgress = 0;
+    this.attachmentUploadSub?.unsubscribe();
 
-    this.mediaService.uploadMedia(file).subscribe({
-      next: response => {
-        this.mediaUrl = response.url;
+    this.attachmentUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: event => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.attachmentUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.mediaUrl = event.body.url;
+        this.attachmentUploadProgress = 100;
         this.isUploadingAttachment = false;
         this.saveCurrentDraft();
       },
-      error: () => {
-        this.errorMessage = 'העלאת הקובץ נכשלה. בדוק שהשרת רץ ונסה שוב.';
+      error: (err: any) => {
+        console.error('Attachment upload error:', err);
+        this.errorMessage = err?.message || 'העלאת הקובץ נכשלה. בדוק שהשרת רץ ונסה שוב.';
         this.isUploadingAttachment = false;
+        this.attachmentUploadProgress = 0;
       }
     });
+  }
+
+  cancelAttachmentUpload(): void {
+    this.attachmentUploadSub?.unsubscribe();
+    this.isUploadingAttachment = false;
+    this.attachmentUploadProgress = 0;
   }
 
   clearAttachment(): void {

@@ -12,6 +12,7 @@ import { RequiredFieldFeedbackService } from './services/required-field-feedback
 import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
 import { environment } from '../environments/environment';
+import { AdBlockDetectionService } from './services/adblock-detection.service';
 
 @Component({
   selector: 'app-root',
@@ -57,11 +58,13 @@ export class AppComponent implements OnInit {
     private googleOneTapService: GoogleOneTapService,
     private requiredFieldFeedback: RequiredFieldFeedbackService,
     private authService: AuthService,
-    private seoRouteService: SeoRouteService
+    private seoRouteService: SeoRouteService,
+    private adBlockDetectionService: AdBlockDetectionService
   ) { }
 
   ngOnInit() {
     this.seoRouteService.start();
+    this.adBlockDetectionService.start();
     this.siteAlertService.patchBrowserAlerts();
     this.requiredFieldFeedback.initGlobalValidation();
     this.googleOneTapService.init();
