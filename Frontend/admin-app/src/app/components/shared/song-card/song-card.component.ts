@@ -4,12 +4,12 @@ import { RouterModule } from '@angular/router';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { songSlug } from '../../../utils/slug';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
     selector: 'app-song-card',
     standalone: true,
-    imports: [CommonModule, RouterModule, TranslatePipe, CloudflareImagePipe],
+    imports: [CommonModule, RouterModule, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe],
     templateUrl: './song-card.component.html',
     styleUrls: ['./song-card.component.css']
 })

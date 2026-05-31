@@ -30,6 +30,8 @@
     <div class="hero-info-side">
       <div class="hero-avatar-wrap">
         <img [src]="(artist.imageUrl | cfImage:'profile') || 'assets/default-artist.png'"
+             [attr.srcset]="artist.imageUrl | cfSrcset:[180,240,320,480]:82"
+             sizes="(max-width: 700px) 112px, 160px"
              [alt]="artist.name"
              class="hero-avatar">
       </div>
@@ -50,7 +52,7 @@
               {{ contactOpen ? 'סגור' : 'יצירת קשר' }}
             </button>
             <div class="contact-panel" *ngIf="contactOpen">
-              <img *ngIf="agencyBadge!.logoUrl" [src]="agencyBadge!.logoUrl | cfImage:'profile'" alt="" class="contact-panel-logo" loading="lazy" decoding="async" />
+              <img *ngIf="agencyBadge!.logoUrl" [src]="agencyBadge!.logoUrl | cfImage:'profile'" [attr.srcset]="agencyBadge!.logoUrl | cfSrcset:[120,180,240,320]:82" sizes="48px" alt="" class="contact-panel-logo" loading="lazy" decoding="async" />
               <p class="contact-panel-invite">צור קשר עם {{ agencyBadge!.agencyName }}</p>
               <a *ngFor="let item of agencyContactItems"
                 class="contact-item"
@@ -117,7 +119,7 @@
        [target]="performanceBannerLink !== '#' ? '_blank' : '_self'"
        class="performance-banner"
        rel="noopener">
-      <img [src]="bannerImg | cfImage:'hero'" alt="הופעה קרובה" class="performance-banner-img" loading="lazy" decoding="async" />
+      <img [src]="bannerImg | cfImage:'hero'" [attr.srcset]="bannerImg | cfSrcset:[600,900,1200,1600]:85" sizes="(max-width: 900px) 92vw, 1100px" alt="הופעה קרובה" class="performance-banner-img" loading="lazy" decoding="async" />
       <div *ngIf="performanceBannerLink !== '#'" class="performance-ticket-btn">לרכישת כרטיסים ←</div>
     </a>
 
@@ -151,7 +153,7 @@
           target="_blank"
           rel="noopener">
           <div class="artist-hit-image">
-            <img *ngIf="hit.imageUrl" [src]="hit.imageUrl | cfImage:'card'" [alt]="hit.title || 'להיט גדול'" loading="lazy" decoding="async">
+            <img *ngIf="hit.imageUrl" [src]="hit.imageUrl | cfImage:'card'" [attr.srcset]="hit.imageUrl | cfSrcset:[240,360,600]:82" sizes="180px" [alt]="hit.title || 'להיט גדול'" loading="lazy" decoding="async">
             <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
           </div>
           <span class="artist-hit-title">{{ hit.title || 'להיט גדול' }}</span>
@@ -172,7 +174,7 @@
           [attr.target]="album.externalUrl ? '_blank' : null"
           rel="noopener">
           <div class="artist-album-cover">
-            <img [src]="album.coverImageUrl | cfImage:'card'" [alt]="album.title || 'אלבום'" loading="lazy" decoding="async">
+            <img [src]="album.coverImageUrl | cfImage:'card'" [attr.srcset]="album.coverImageUrl | cfSrcset:[240,360,600]:82" sizes="180px" [alt]="album.title || 'אלבום'" loading="lazy" decoding="async">
           </div>
           <div class="artist-album-info">
             <span class="artist-album-title">{{ album.title || 'אלבום' }}</span>
@@ -191,7 +193,7 @@
       <div class="songs-grid" #songsGridEl *ngIf="!loadingSongs && songs.length > 0">
         <a *ngFor="let song of visibleSongs" class="song-card" [routerLink]="getSongLink(song)">
           <div class="song-card-image">
-            <img *ngIf="song.imageUrl" [src]="song.imageUrl | cfImage:'thumb'" [alt]="song.title" class="song-card-img" loading="lazy" decoding="async">
+            <img *ngIf="song.imageUrl" [src]="song.imageUrl | cfImage:'thumb'" [attr.srcset]="song.imageUrl | cfSrcset:[180,240,360,480]:80" sizes="180px" [alt]="song.title" class="song-card-img" loading="lazy" decoding="async">
             <span *ngIf="!song.imageUrl" class="song-cover-initial">{{ song.title.charAt(0) }}</span>
           </div>
           <div class="song-card-info">

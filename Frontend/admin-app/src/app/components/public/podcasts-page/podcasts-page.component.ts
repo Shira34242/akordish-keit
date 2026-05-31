@@ -8,12 +8,12 @@ import { PodcastService } from '../../../services/podcast.service';
 import { SeoService } from '../../../services/seo.service';
 import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-podcasts-page',
   standalone: true,
-  imports: [CommonModule, PodcastEpisodeBannerComponent, ContentUploaderBadgeComponent, CloudflareImagePipe],
+  imports: [CommonModule, PodcastEpisodeBannerComponent, ContentUploaderBadgeComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe],
   templateUrl: './podcasts-page.component.html',
   styleUrls: ['./podcasts-page.component.css']
 })

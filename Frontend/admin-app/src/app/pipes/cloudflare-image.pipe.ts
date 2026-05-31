@@ -67,6 +67,25 @@ export function cloudflareBackgroundImage(
   return optimizedUrl ? `url("${optimizedUrl.replace(/"/g, '\\"')}")` : null;
 }
 
+export function cloudflareImageSrcset(
+  imageUrl: string | null | undefined,
+  widths: number[] = [360, 600, 1000, 1600],
+  quality = 82
+): string {
+  const original = (imageUrl || '').trim();
+  if (!original) return '';
+
+  const uniqueWidths = Array.from(new Set(widths))
+    .filter(width => Number.isFinite(width) && width > 0)
+    .sort((a, b) => a - b);
+
+  if (uniqueWidths.length === 0) return '';
+
+  return uniqueWidths
+    .map(width => `${cloudflareImageUrl(original, width, quality)} ${width}w`)
+    .join(', ');
+}
+
 function normalizeSourceUrl(url: string): string | null {
   if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith('/uploads/')) return url;
@@ -118,5 +137,19 @@ export class CloudflareImagePipe implements PipeTransform {
     quality?: number
   ): string {
     return cloudflareImageUrl(imageUrl, preset, quality);
+  }
+}
+
+@Pipe({
+  name: 'cfSrcset',
+  standalone: true
+})
+export class CloudflareImageSrcsetPipe implements PipeTransform {
+  transform(
+    imageUrl: string | null | undefined,
+    widths: number[] = [360, 600, 1000, 1600],
+    quality = 82
+  ): string {
+    return cloudflareImageSrcset(imageUrl, widths, quality);
   }
 }

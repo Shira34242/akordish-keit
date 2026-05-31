@@ -22,7 +22,7 @@ import { SearchService, SearchItem } from '../../../services/search.service';
 import { AgencyListDto, AgencyDto, AgencyProfileDto } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
-import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 
 interface Category {
   id: number;
@@ -48,7 +48,7 @@ interface AgencyWithProfiles extends AgencyListDto {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent, CloudflareImagePipe],
+  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })

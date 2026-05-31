@@ -3,6 +3,8 @@
   <img
     class="banner-bg"
     [src]="(episode.thumbnailUrl | cfImage:'card') || '/assets/default-article.png'"
+    [attr.srcset]="episode.thumbnailUrl | cfSrcset:[360,600,900,1200]:82"
+    sizes="(max-width: 600px) 92vw, (max-width: 1024px) 46vw, 360px"
     [alt]="episode.title"
     loading="lazy"
     decoding="async">

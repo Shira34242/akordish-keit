@@ -10,6 +10,8 @@
     <img
       *ngIf="event.imageUrl"
       [src]="event.imageUrl | cfImage:'card'"
+      [attr.srcset]="event.imageUrl | cfSrcset:[360,600,900]:82"
+      sizes="(max-width: 600px) 92vw, (max-width: 1024px) 45vw, 320px"
       [alt]="event.name"
       class="event-card__poster-img"
       loading="lazy"

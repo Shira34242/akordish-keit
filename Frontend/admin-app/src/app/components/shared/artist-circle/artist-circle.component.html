@@ -1,6 +1,6 @@
 <div class="artist-circle" [routerLink]="['/artist', artist.id]">
     <div class="image-wrapper">
-        <img [src]="(artist.imageUrl | cfImage:'profile') || 'assets/default-artist.png'" [alt]="artist.name" class="artist-image" loading="lazy" decoding="async">
+        <img [src]="(artist.imageUrl | cfImage:'profile') || 'assets/default-artist.png'" [attr.srcset]="artist.imageUrl | cfSrcset:[160,240,320,480]:82" sizes="(max-width: 600px) 28vw, 140px" [alt]="artist.name" class="artist-image" loading="lazy" decoding="async">
     </div>
     <h3 class="artist-name">{{ artist.name }}</h3>
     <p class="song-count">{{ artist.songCount || 0 }} שירים באתר</p>

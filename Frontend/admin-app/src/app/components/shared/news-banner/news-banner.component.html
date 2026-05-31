@@ -2,7 +2,9 @@
 
   <img
     class="banner-bg"
-    [src]="(article.featuredImageUrl | cfImage:'hero') || '/assets/default-article.png'"
+    [src]="(article.featuredImageUrl | cfImage:'card') || '/assets/default-article.png'"
+    [attr.srcset]="article.featuredImageUrl | cfSrcset:imageWidths:82"
+    [attr.sizes]="imageSizes"
     [alt]="article.title"
     loading="lazy"
     decoding="async">
