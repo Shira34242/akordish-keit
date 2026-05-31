@@ -311,11 +311,16 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">קישור לתמונה</label>
+            <label class="form-label">העלאת תמונות לגלריה</label>
             <app-file-upload-input
               [(url)]="newGalleryImage.imageUrl"
               placeholder="https://..."
+              [fileOnly]="true"
+              [multiple]="true"
+              uploadButtonText="בחירת תמונות"
+              uploadIcon="add_photo_alternate"
               [showPreview]="false"
+              (uploadedUrls)="onGalleryImagesUploaded($event)"
             />
           </div>
 
@@ -328,13 +333,6 @@
               name="newGalleryCaption"
               placeholder="כיתוב לתמונה">
           </div>
-        </div>
-
-        <div class="form-row">
-          <button type="button" class="btn-add-gallery" (click)="addGalleryImage()">
-            <span class="material-icons">add_photo_alternate</span>
-            הוסף לגלריה
-          </button>
         </div>
 
         <div *ngIf="article.galleryImages && article.galleryImages.length > 0" class="gallery-list">

@@ -24,6 +24,7 @@
       #fileInput
       type="file"
       [accept]="accept"
+      [multiple]="multiple"
       (change)="onFileSelected($event)"
       style="display: none"
     />
@@ -31,6 +32,7 @@
 
   <div *ngIf="uploading" class="fui-uploading" role="status" aria-live="polite">
     <div class="fui-progress-head">
+      <span *ngIf="uploadTotalFiles > 1">{{ uploadCompletedFiles }} / {{ uploadTotalFiles }}</span>
       <span>מעלה קובץ</span>
       <strong>{{ uploadProgress }}%</strong>
       <button type="button" class="fui-cancel-btn" (click)="cancelUpload()">ביטול</button>

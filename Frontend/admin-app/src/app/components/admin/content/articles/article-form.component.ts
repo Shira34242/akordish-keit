@@ -820,6 +820,23 @@ export class ArticleFormComponent implements OnInit {
   }
 
   // Gallery methods
+  onGalleryImagesUploaded(urls: string[]): void {
+    if (!this.article.galleryImages) {
+      this.article.galleryImages = [];
+    }
+
+    urls
+      .map(url => url.trim())
+      .filter(url => !!url)
+      .forEach(url => {
+        this.article.galleryImages!.push({
+          imageUrl: url,
+          caption: this.newGalleryImage.caption || '',
+          displayOrder: this.article.galleryImages!.length
+        });
+      });
+  }
+
   addGalleryImage(): void {
     if (!this.newGalleryImage.imageUrl.trim()) {
       alert('נא להזין URL לתמונה');
