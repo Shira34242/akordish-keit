@@ -30,6 +30,21 @@ public class SongService : ISongService
         _cache = cache;
     }
 
+    private async Task<string?> StoreYouTubeThumbnailIfNeededAsync(string? imageUrl)
+    {
+        if (!IsYouTubeThumbnailUrl(imageUrl))
+            return imageUrl;
+
+        return await _youTubeService.StoreYouTubeThumbnailAsync(imageUrl!) ?? imageUrl;
+    }
+
+    private static bool IsYouTubeThumbnailUrl(string? url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
+    }
+
     // ============================================
     // HIGH PRIORITY - Core CRUD Operations
     // ============================================
@@ -49,6 +64,8 @@ public class SongService : ISongService
             }
             durationSeconds = youtubeMetadata.DurationSeconds;
         }
+
+        imageUrl = await StoreYouTubeThumbnailIfNeededAsync(imageUrl);
 
         // Use transaction to ensure atomicity
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -390,7 +407,7 @@ public class SongService : ISongService
             song.EasyKeyId = dto.EasyKeyId;
             song.YouTubeUrl = dto.YoutubeUrl.Trim();
             song.SpotifyUrl = dto.SpotifyUrl?.Trim();
-            song.ImageUrl = dto.ImageUrl ?? song.ImageUrl;
+            song.ImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.ImageUrl) ?? song.ImageUrl;
             song.SheetMusicUrl = string.IsNullOrWhiteSpace(dto.SheetMusicUrl) ? null : dto.SheetMusicUrl.Trim();
             song.ComposerId = await GetOrCreatePersonAsync(dto.Composer, userId);
             song.LyricistId = await GetOrCreatePersonAsync(dto.Lyricist, userId);

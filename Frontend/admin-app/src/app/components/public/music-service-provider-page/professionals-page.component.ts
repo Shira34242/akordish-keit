@@ -22,6 +22,7 @@ import { SearchService, SearchItem } from '../../../services/search.service';
 import { AgencyListDto, AgencyDto, AgencyProfileDto } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
+import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 
 interface Category {
   id: number;
@@ -47,7 +48,7 @@ interface AgencyWithProfiles extends AgencyListDto {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent],
+  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent, CloudflareImagePipe],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })
@@ -643,8 +644,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   }
 
   getQuickCategoryBackground(category: Category): string | null {
-    const imageUrl = category.quickCategoryImageUrl?.trim();
-    return imageUrl ? `url("${imageUrl.replace(/"/g, '\\"')}")` : null;
+    return cloudflareBackgroundImage(category.quickCategoryImageUrl, 'card');
   }
 
   // ג”€ג”€ג”€ View More ג€” Professionals ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€

@@ -22,11 +22,12 @@ import { LanguageService } from '../../../services/language.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { SeoService } from '../../../services/seo.service';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-teacher-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective, TranslatePipe],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective, TranslatePipe, CloudflareImagePipe],
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })

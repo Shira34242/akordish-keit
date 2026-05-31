@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AkordishKeit.Models.DTOs;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AkordishKeit.Services;
 
@@ -13,17 +14,26 @@ public interface IYouTubeService
 {
     Task<YouTubeMetadataDto> GetVideoMetadataAsync(string youtubeUrl);
     Task<List<YouTubeSearchResultDto>> SearchVideosAsync(string query, int maxResults = 5);
+    Task<string?> StoreYouTubeThumbnailAsync(string youtubeUrlOrThumbnailUrl);
     string? ExtractVideoId(string youtubeUrl);
 }
 
 public class YouTubeService : IYouTubeService
 {
     private readonly HttpClient _httpClient;
+    private readonly IAzureBlobService _blobService;
+    private readonly ILogger<YouTubeService> _logger;
     private readonly string? _apiKey;
 
-    public YouTubeService(HttpClient httpClient, IConfiguration configuration)
+    public YouTubeService(
+        HttpClient httpClient,
+        IConfiguration configuration,
+        IAzureBlobService blobService,
+        ILogger<YouTubeService> logger)
     {
         _httpClient = httpClient;
+        _blobService = blobService;
+        _logger = logger;
         _apiKey = configuration["YouTube:ApiKey"];
     }
 
@@ -48,11 +58,15 @@ public class YouTubeService : IYouTubeService
             // 2. בדיקה אם יש API Key
             if (string.IsNullOrEmpty(_apiKey))
             {
+                var thumbnailUrl = await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg")
+                    ?? await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/hqdefault.jpg")
+                    ?? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg";
+
                 // אם אין API Key, נחזיר מידע בסיסי בלבד
                 return new YouTubeMetadataDto
                 {
                     Success = true,
-                    ThumbnailUrl = $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg",
+                    ThumbnailUrl = thumbnailUrl,
                     ErrorMessage = "API Key לא מוגדר - רק תמונה זמינה"
                 };
             }
@@ -64,10 +78,14 @@ public class YouTubeService : IYouTubeService
 
             if (!response.IsSuccessStatusCode)
             {
+                var thumbnailUrl = await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg")
+                    ?? await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/hqdefault.jpg")
+                    ?? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg";
+
                 return new YouTubeMetadataDto
                 {
                     Success = false,
-                    ThumbnailUrl = $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg",
+                    ThumbnailUrl = thumbnailUrl,
                     ErrorMessage = "שגיאה בקריאה ל-YouTube API"
                 };
             }
@@ -93,15 +111,19 @@ public class YouTubeService : IYouTubeService
 
             // 4. המרת Duration מפורמט ISO 8601
             var durationSeconds = ParseIsoDuration(contentDetails?.Duration);
+            var rawThumbnailUrl = snippet?.Thumbnails?.Maxres?.Url
+                ?? snippet?.Thumbnails?.High?.Url
+                ?? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg";
+            var storedThumbnailUrl = await StoreYouTubeThumbnailAsync(rawThumbnailUrl)
+                ?? await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/hqdefault.jpg")
+                ?? rawThumbnailUrl;
 
             return new YouTubeMetadataDto
             {
                 Success = true,
                 Title = snippet?.Title,
                 ChannelTitle = snippet?.ChannelTitle,
-                ThumbnailUrl = snippet?.Thumbnails?.Maxres?.Url
-                    ?? snippet?.Thumbnails?.High?.Url
-                    ?? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg",
+                ThumbnailUrl = storedThumbnailUrl,
                 DurationSeconds = durationSeconds,
                 Description = snippet?.Description,
                 PublishedAt = snippet?.PublishedAt
@@ -113,14 +135,65 @@ public class YouTubeService : IYouTubeService
 
             // במקרה של שגיאה, לפחות נחזיר תמונה
             var videoId = ExtractVideoId(youtubeUrl);
+            var thumbnailUrl = !string.IsNullOrEmpty(videoId)
+                ? await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg")
+                    ?? await StoreYouTubeThumbnailAsync($"https://img.youtube.com/vi/{videoId}/hqdefault.jpg")
+                    ?? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg"
+                : null;
+
             return new YouTubeMetadataDto
             {
                 Success = false,
-                ThumbnailUrl = !string.IsNullOrEmpty(videoId)
-                    ? $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg"
-                    : null,
+                ThumbnailUrl = thumbnailUrl,
                 ErrorMessage = $"שגיאה: {ex.Message}"
             };
+        }
+    }
+
+    public async Task<string?> StoreYouTubeThumbnailAsync(string youtubeUrlOrThumbnailUrl)
+    {
+        var thumbnailUrl = BuildThumbnailUrl(youtubeUrlOrThumbnailUrl);
+        if (string.IsNullOrWhiteSpace(thumbnailUrl))
+            return null;
+
+        if (!IsYouTubeThumbnailHost(thumbnailUrl))
+            return thumbnailUrl;
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, thumbnailUrl);
+            request.Headers.UserAgent.ParseAdd("AkordishKeit/1.0");
+            request.Headers.Accept.ParseAdd("image/avif,image/webp,image/*,*/*;q=0.8");
+
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var mediaType = response.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(mediaType) || !mediaType.StartsWith("image/"))
+                return null;
+
+            var contentLength = response.Content.Headers.ContentLength;
+            if (contentLength.HasValue && contentLength.Value > 10 * 1024 * 1024)
+                return null;
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            var videoId = ExtractVideoId(thumbnailUrl) ?? "youtube";
+            var extension = mediaType switch
+            {
+                "image/png" => ".png",
+                "image/webp" => ".webp",
+                "image/gif" => ".gif",
+                _ => ".jpg"
+            };
+
+            var fileName = $"youtube_{videoId}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return await _blobService.UploadAsync(stream, fileName, mediaType, "uploads/youtube-thumbnails");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not store YouTube thumbnail locally: {ThumbnailUrl}", thumbnailUrl);
+            return null;
         }
     }
 
@@ -238,7 +311,8 @@ public class YouTubeService : IYouTubeService
         var patterns = new[]
         {
             @"(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})",
-            @"youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})"
+            @"youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})",
+            @"(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([a-zA-Z0-9_-]{11})\/"
         };
 
         foreach (var pattern in patterns)
@@ -251,6 +325,27 @@ public class YouTubeService : IYouTubeService
         }
 
         return null;
+    }
+
+    private string? BuildThumbnailUrl(string youtubeUrlOrThumbnailUrl)
+    {
+        if (string.IsNullOrWhiteSpace(youtubeUrlOrThumbnailUrl))
+            return null;
+
+        if (IsYouTubeThumbnailHost(youtubeUrlOrThumbnailUrl))
+            return youtubeUrlOrThumbnailUrl;
+
+        var videoId = ExtractVideoId(youtubeUrlOrThumbnailUrl);
+        return string.IsNullOrWhiteSpace(videoId)
+            ? null
+            : $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg";
+    }
+
+    private static bool IsYouTubeThumbnailHost(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>

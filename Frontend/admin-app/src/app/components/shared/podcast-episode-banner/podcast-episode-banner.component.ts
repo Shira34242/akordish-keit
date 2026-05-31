@@ -2,11 +2,12 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PodcastEpisode } from '../../../models/podcast.model';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-podcast-episode-banner',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CloudflareImagePipe],
   templateUrl: './podcast-episode-banner.component.html',
   styleUrls: ['./podcast-episode-banner.component.css']
 })

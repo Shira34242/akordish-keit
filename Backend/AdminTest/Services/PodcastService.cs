@@ -11,10 +11,12 @@ namespace AkordishKeit.Services
     public class PodcastService : IPodcastService
     {
         private readonly AkordishKeitDbContext _context;
+        private readonly IYouTubeService _youTubeService;
 
-        public PodcastService(AkordishKeitDbContext context)
+        public PodcastService(AkordishKeitDbContext context, IYouTubeService youTubeService)
         {
             _context = context;
+            _youTubeService = youTubeService;
         }
 
         public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
@@ -395,6 +397,7 @@ namespace AkordishKeit.Services
                 throw new InvalidOperationException("הפודקאסט לא נמצא");
             }
             var sourceUrl = dto.SourceUrl.Trim();
+            var thumbnailUrl = await ResolveEpisodeThumbnailAsync(sourceUrl, dto.ThumbnailUrl);
             var episode = new PodcastEpisode
             {
                 PodcastId = dto.PodcastId,
@@ -404,7 +407,7 @@ namespace AkordishKeit.Services
                 EpisodeNumber = dto.EpisodeNumber,
                 SourceUrl = sourceUrl,
                 EmbedUrl = string.IsNullOrWhiteSpace(dto.EmbedUrl) ? BuildEmbedUrl(sourceUrl) : dto.EmbedUrl.Trim(),
-                ThumbnailUrl = string.IsNullOrWhiteSpace(dto.ThumbnailUrl) ? BuildThumbnailUrl(sourceUrl) : dto.ThumbnailUrl.Trim(),
+                ThumbnailUrl = thumbnailUrl,
                 Platform = string.IsNullOrWhiteSpace(dto.Platform) ? DetectPlatform(sourceUrl) : dto.Platform.Trim(),
                 PublishedAt = dto.PublishedAt ?? DateTime.UtcNow,
                 DisplayOrder = dto.DisplayOrder,
@@ -433,6 +436,7 @@ namespace AkordishKeit.Services
             }
 
             var sourceUrl = dto.SourceUrl.Trim();
+            var thumbnailUrl = await ResolveEpisodeThumbnailAsync(sourceUrl, dto.ThumbnailUrl);
             episode.PodcastId = dto.PodcastId;
             episode.Title = dto.Title.Trim();
             episode.Slug = await EnsureUniqueEpisodeSlugAsync(dto.PodcastId, dto.Slug, dto.Title, id);
@@ -440,7 +444,7 @@ namespace AkordishKeit.Services
             episode.EpisodeNumber = dto.EpisodeNumber;
             episode.SourceUrl = sourceUrl;
             episode.EmbedUrl = string.IsNullOrWhiteSpace(dto.EmbedUrl) ? BuildEmbedUrl(sourceUrl) : dto.EmbedUrl.Trim();
-            episode.ThumbnailUrl = string.IsNullOrWhiteSpace(dto.ThumbnailUrl) ? BuildThumbnailUrl(sourceUrl) : dto.ThumbnailUrl.Trim();
+            episode.ThumbnailUrl = thumbnailUrl;
             episode.Platform = string.IsNullOrWhiteSpace(dto.Platform) ? DetectPlatform(sourceUrl) : dto.Platform.Trim();
             episode.PublishedAt = dto.PublishedAt ?? episode.PublishedAt;
             episode.DisplayOrder = dto.DisplayOrder;
@@ -594,6 +598,29 @@ namespace AkordishKeit.Services
         {
             var youtubeId = ExtractYouTubeId(url);
             return string.IsNullOrWhiteSpace(youtubeId) ? null : $"https://img.youtube.com/vi/{youtubeId}/hqdefault.jpg";
+        }
+
+        private async Task<string?> ResolveEpisodeThumbnailAsync(string sourceUrl, string? requestedThumbnailUrl)
+        {
+            var cleanThumbnailUrl = string.IsNullOrWhiteSpace(requestedThumbnailUrl) ? null : requestedThumbnailUrl.Trim();
+            if (!IsYouTubeUrl(sourceUrl) && !IsYouTubeThumbnailUrl(cleanThumbnailUrl))
+                return cleanThumbnailUrl;
+
+            if (string.IsNullOrWhiteSpace(cleanThumbnailUrl) || IsYouTubeThumbnailUrl(cleanThumbnailUrl))
+            {
+                var storedThumbnailUrl = await _youTubeService.StoreYouTubeThumbnailAsync(cleanThumbnailUrl ?? sourceUrl);
+                if (!string.IsNullOrWhiteSpace(storedThumbnailUrl) && !IsYouTubeThumbnailUrl(storedThumbnailUrl))
+                    return storedThumbnailUrl;
+            }
+
+            return cleanThumbnailUrl ?? BuildThumbnailUrl(sourceUrl);
+        }
+
+        private static bool IsYouTubeThumbnailUrl(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool IsYouTubeUrl(string url) =>

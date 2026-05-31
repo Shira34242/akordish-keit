@@ -6,7 +6,7 @@ import { ArticleFeedbackService, ArticleRank } from '../../../../services/articl
 import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
 import { AgencyService, AgencyAnalyticsSummary } from '../../../../services/agency.service';
 
-type Tab = 'articles' | 'events' | 'buttons' | 'ads' | 'agencies';
+type Tab = 'articles' | 'events' | 'buttons' | 'ads' | 'adblock' | 'agencies';
 type Preset = '7' | '30' | '90' | '365';
 
 @Component({
@@ -45,7 +45,7 @@ export class ContentStatsComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'] as Tab;
-      if (tab && ['articles', 'events', 'buttons', 'ads', 'agencies'].includes(tab)) {
+      if (tab && ['articles', 'events', 'buttons', 'ads', 'adblock', 'agencies'].includes(tab)) {
         this.activeTab = tab;
       }
     });
@@ -158,6 +158,19 @@ export class ContentStatsComponent implements OnInit {
     if (!this.dashboard) return 0;
     const { totalViews, totalClicks } = this.dashboard.ads;
     return totalViews > 0 ? Math.round(totalClicks / totalViews * 1000) / 10 : 0;
+  }
+
+  get adBlockRate(): number {
+    return this.dashboard?.adBlock.detectionRate ?? 0;
+  }
+
+  getAdBlockDailyWidth(value: number): number {
+    const max = Math.max(...(this.dashboard?.adBlock.daily.map(day => day.checks) ?? [0]));
+    return max > 0 ? Math.max(8, Math.round(value / max * 100)) : 8;
+  }
+
+  formatShortDate(value: string): string {
+    return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit' }).format(new Date(value));
   }
 
   get periodLabel(): string {

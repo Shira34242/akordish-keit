@@ -29,7 +29,7 @@
       (click)="onItemClick(item.position, item.event)">
 
       <div class="carousel-box">
-        <img *ngIf="item.event.imageUrl" [src]="item.event.imageUrl" [alt]="item.event.name" class="slide-img" draggable="false" loading="lazy">
+        <img *ngIf="item.event.imageUrl" [src]="item.event.imageUrl | cfImage:'hero'" [alt]="item.event.name" class="slide-img" draggable="false" loading="lazy" decoding="async">
         <div *ngIf="!item.event.imageUrl" class="slide-placeholder">
           <span class="material-icons">music_note</span>
         </div>

@@ -20,11 +20,12 @@ import { AgencyBadgeDto, AgencyContactMode } from '../../models/agency.model';
 import { AgencyService } from '../../services/agency.service';
 import { songSlug } from '../../utils/slug';
 import { AnalyticsService } from '../../services/analytics.service';
+import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-artist-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, NewsBannerComponent, ArtistEditModalComponent, EventCardComponent, EventModalComponent],
+  imports: [CommonModule, RouterModule, NewsBannerComponent, ArtistEditModalComponent, EventCardComponent, EventModalComponent, CloudflareImagePipe],
   templateUrl: './artist-detail.component.html',
   styleUrls: ['./artist-detail.component.css']
 })

@@ -169,7 +169,7 @@
 
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-md);
   padding-block: 0 var(--space-md);
 }
@@ -391,6 +391,14 @@
 
 .agency-details-panel {
   margin-bottom: var(--space-lg);
+}
+
+.adblock-days-panel {
+  margin-bottom: var(--space-lg);
+}
+
+.compact-empty {
+  padding: var(--space-lg);
 }
 
 .agency-details-list {

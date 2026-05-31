@@ -2,9 +2,10 @@
 
   <img
     class="banner-bg"
-    [src]="episode.thumbnailUrl || '/assets/default-article.png'"
+    [src]="(episode.thumbnailUrl | cfImage:'card') || '/assets/default-article.png'"
     [alt]="episode.title"
-    loading="lazy">
+    loading="lazy"
+    decoding="async">
 
   <div class="banner-overlay"></div>
 

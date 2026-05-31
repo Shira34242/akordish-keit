@@ -40,7 +40,7 @@
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_songs' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.songs; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -51,7 +51,7 @@
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_artists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.artists; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'profile') || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
               </div>
@@ -61,7 +61,7 @@
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || '/assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'thumb') || '/assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -72,7 +72,7 @@
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || '/default-user.svg'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'profile') || '/default-user.svg'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -83,7 +83,7 @@
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || '/default-user.svg'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'profile') || '/default-user.svg'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -94,7 +94,7 @@
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_playlists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.playlists; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -108,7 +108,7 @@
               <span class="search-lyrics-badge">{{ 'home.search_deep_label' | translate }}</span>
             </span>
             <div class="search-result-item" *ngFor="let item of lyricsMatches; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="item.imageUrl || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy">
+              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -266,7 +266,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img [src]="teacher.profileImageUrl || '/default-user.svg'" [alt]="teacher.displayName" imgFallback="/default-user.svg">
+                  <img [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [alt]="teacher.displayName" imgFallback="/default-user.svg" loading="lazy" decoding="async">
                 </div>
                 <p class="person-name">{{ teacher.displayName }}</p>
                 <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
@@ -279,7 +279,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img [src]="pro.profileImageUrl || '/default-user.svg'" [alt]="pro.displayName" imgFallback="/default-user.svg">
+                  <img [src]="(pro.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [alt]="pro.displayName" imgFallback="/default-user.svg" loading="lazy" decoding="async">
                 </div>
                 <p class="person-name">{{ pro.displayName }}</p>
                 <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
@@ -324,7 +324,7 @@
               [queryParams]="{ series: podcast.slug }"
               [attr.aria-label]="podcast.name"
               [attr.aria-hidden]="copy > 0 ? true : null">
-              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + (podcast.imageUrl | cfImage:'card') + ')' : ''">
                 <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
               </span>
             </a>

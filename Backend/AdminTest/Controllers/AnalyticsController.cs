@@ -82,6 +82,37 @@ namespace AkordishKeit.Controllers
             return Ok(new { tracked = true });
         }
 
+        // POST: api/analytics/browser-check
+        [HttpPost("browser-check")]
+        public async Task<IActionResult> TrackAdBlockCheck([FromBody] TrackAdBlockCheckDto dto)
+        {
+            var pagePath = string.IsNullOrWhiteSpace(dto.PagePath) ? "/" : dto.PagePath.Trim();
+            if (pagePath.Length > 300)
+            {
+                pagePath = pagePath[..300];
+            }
+
+            var deviceType = string.IsNullOrWhiteSpace(dto.DeviceType) ? null : dto.DeviceType.Trim();
+            if (deviceType?.Length > 30)
+            {
+                deviceType = deviceType[..30];
+            }
+
+            _context.AdBlockChecks.Add(new AdBlockCheck
+            {
+                Detected = dto.Detected,
+                PagePath = pagePath,
+                DeviceType = deviceType,
+                UserId = GetUserId(),
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers["User-Agent"].ToString(),
+                CheckedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            return Ok(new { tracked = true });
+        }
+
         // GET: api/analytics/dashboard?dateFrom=2025-01-01&dateTo=2025-12-31
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
@@ -191,6 +222,38 @@ namespace AkordishKeit.Controllers
             var articlesViewsLast30 = await _context.ArticleViews
                 .CountAsync(v => v.ViewedAt >= last30Days);
 
+            // AdBlock silent checks
+            var adBlockChecksQuery = _context.AdBlockChecks
+                .AsNoTracking()
+                .Where(x => x.CheckedAt >= last30Days && x.CheckedAt < periodEnd);
+
+            var adBlockChecksTotal = await adBlockChecksQuery.CountAsync();
+            var adBlockDetectedTotal = await adBlockChecksQuery.CountAsync(x => x.Detected);
+
+            var adBlockDaily = await adBlockChecksQuery
+                .GroupBy(x => x.CheckedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Checks = g.Count(),
+                    Detected = g.Count(x => x.Detected)
+                })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+
+            var adBlockTopPages = await adBlockChecksQuery
+                .GroupBy(x => x.PagePath ?? "/")
+                .Select(g => new
+                {
+                    PagePath = g.Key,
+                    Checks = g.Count(),
+                    Detected = g.Count(x => x.Detected)
+                })
+                .OrderByDescending(x => x.Detected)
+                .ThenByDescending(x => x.Checks)
+                .Take(10)
+                .ToListAsync();
+
             return Ok(new
             {
                 events = new
@@ -221,6 +284,26 @@ namespace AkordishKeit.Controllers
                 {
                     totalViews = articlesViewsTotal,
                     viewsLast30Days = articlesViewsLast30
+                },
+                adBlock = new
+                {
+                    totalChecks = adBlockChecksTotal,
+                    detectedCount = adBlockDetectedTotal,
+                    detectionRate = adBlockChecksTotal > 0 ? Math.Round((double)adBlockDetectedTotal / adBlockChecksTotal * 100, 1) : 0,
+                    daily = adBlockDaily.Select(x => new
+                    {
+                        date = x.Date,
+                        x.Checks,
+                        x.Detected,
+                        rate = x.Checks > 0 ? Math.Round((double)x.Detected / x.Checks * 100, 1) : 0
+                    }),
+                    topPages = adBlockTopPages.Select(x => new
+                    {
+                        x.PagePath,
+                        x.Checks,
+                        x.Detected,
+                        rate = x.Checks > 0 ? Math.Round((double)x.Detected / x.Checks * 100, 1) : 0
+                    })
                 }
             });
         }
@@ -334,5 +417,12 @@ namespace AkordishKeit.Controllers
         public string ButtonType { get; set; } = string.Empty;
         public int? ItemId { get; set; }
         public string? ItemLabel { get; set; }
+    }
+
+    public class TrackAdBlockCheckDto
+    {
+        public bool Detected { get; set; }
+        public string? PagePath { get; set; }
+        public string? DeviceType { get; set; }
     }
 }

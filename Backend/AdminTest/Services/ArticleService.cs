@@ -19,15 +19,33 @@ public class ArticleService : IArticleService
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly ISystemSettingsService _systemSettings;
+    private readonly IYouTubeService _youTubeService;
 
     public ArticleService(
         AkordishKeitDbContext context,
         INotificationService notificationService,
-        ISystemSettingsService systemSettings)
+        ISystemSettingsService systemSettings,
+        IYouTubeService youTubeService)
     {
         _context = context;
         _notificationService = notificationService;
         _systemSettings = systemSettings;
+        _youTubeService = youTubeService;
+    }
+
+    private async Task<string?> StoreYouTubeThumbnailIfNeededAsync(string? imageUrl)
+    {
+        if (!IsYouTubeThumbnailUrl(imageUrl))
+            return imageUrl;
+
+        return await _youTubeService.StoreYouTubeThumbnailAsync(imageUrl!) ?? imageUrl;
+    }
+
+    private static bool IsYouTubeThumbnailUrl(string? url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
@@ -201,13 +219,15 @@ public class ArticleService : IArticleService
             dto.UploaderUserId,
             dto.UploaderProfileType,
             dto.UploaderProfileId);
+        var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
+        var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
 
         var article = new Article
         {
             Title = dto.Title,
             Subtitle = dto.Subtitle,
             Content = dto.Content,
-            FeaturedImageUrl = dto.FeaturedImageUrl,
+            FeaturedImageUrl = featuredImageUrl,
             PublishDate = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             AuthorName = dto.AuthorName,
@@ -225,7 +245,7 @@ public class ArticleService : IArticleService
             IsPremium = dto.IsPremium,
             MetaTitle = dto.MetaTitle,
             MetaDescription = dto.MetaDescription,
-            OpenGraphImageUrl = dto.OpenGraphImageUrl,
+            OpenGraphImageUrl = openGraphImageUrl,
             ReadTimeMinutes = dto.ReadTimeMinutes,
             UploaderUserId = uploader.UserId,
             UploaderProfileType = uploader.ProfileType,
@@ -292,12 +312,14 @@ public class ArticleService : IArticleService
             dto.UploaderUserId,
             dto.UploaderProfileType,
             dto.UploaderProfileId);
+        var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
+        var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
 
         // Update article properties
         article.Title = dto.Title;
         article.Subtitle = dto.Subtitle;
         article.Content = dto.Content;
-        article.FeaturedImageUrl = dto.FeaturedImageUrl;
+        article.FeaturedImageUrl = featuredImageUrl;
         article.UpdatedAt = DateTime.UtcNow;
         article.AuthorName = dto.AuthorName;
         article.Slug = dto.Slug;
@@ -313,7 +335,7 @@ public class ArticleService : IArticleService
         article.IsPremium = dto.IsPremium;
         article.MetaTitle = dto.MetaTitle;
         article.MetaDescription = dto.MetaDescription;
-        article.OpenGraphImageUrl = dto.OpenGraphImageUrl;
+        article.OpenGraphImageUrl = openGraphImageUrl;
         article.ReadTimeMinutes = dto.ReadTimeMinutes;
         article.UploaderUserId = uploader.UserId;
         article.UploaderProfileType = uploader.ProfileType;

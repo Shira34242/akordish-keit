@@ -1,0 +1,107 @@
+import { Pipe, PipeTransform } from '@angular/core';
+import { environment } from '../../environments/environment';
+
+export type CloudflareImagePreset =
+  | 'thumb'
+  | 'card'
+  | 'profile'
+  | 'content'
+  | 'hero'
+  | 'lightbox';
+
+const PRESET_WIDTHS: Record<CloudflareImagePreset, number> = {
+  thumb: 360,
+  card: 600,
+  profile: 320,
+  content: 1000,
+  hero: 1600,
+  lightbox: 2000
+};
+
+const PRESET_QUALITY: Record<CloudflareImagePreset, number> = {
+  thumb: 80,
+  card: 82,
+  profile: 82,
+  content: 85,
+  hero: 85,
+  lightbox: 88
+};
+
+const TRANSFORMABLE_EXTENSIONS = /\.(jpe?g|png|gif|webp)(\?.*)?$/i;
+const UNTOUCHED_PREFIXES = ['data:', 'blob:', 'mailto:', 'tel:'];
+
+export function cloudflareImageUrl(
+  imageUrl: string | null | undefined,
+  preset: CloudflareImagePreset | number = 'card',
+  quality?: number
+): string {
+  const original = (imageUrl || '').trim();
+  if (!original) return original;
+
+  if (!environment.production || isUntouchedUrl(original) || original.includes('/cdn-cgi/image/')) {
+    return original;
+  }
+
+  const source = normalizeSourceUrl(original);
+  if (!source || !isTransformableImage(source)) {
+    return original;
+  }
+
+  const width = typeof preset === 'number' ? preset : PRESET_WIDTHS[preset];
+  const imageQuality = quality ?? (typeof preset === 'number' ? 82 : PRESET_QUALITY[preset]);
+  const zone = getCloudflareZone();
+
+  return `${zone}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${source}`;
+}
+
+export function cloudflareBackgroundImage(
+  imageUrl: string | null | undefined,
+  preset: CloudflareImagePreset | number = 'card',
+  quality?: number
+): string | null {
+  const optimizedUrl = cloudflareImageUrl(imageUrl, preset, quality);
+  return optimizedUrl ? `url("${optimizedUrl.replace(/"/g, '\\"')}")` : null;
+}
+
+function normalizeSourceUrl(url: string): string | null {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/uploads/')) return url;
+  if (url.startsWith('uploads/')) return `/${url}`;
+  return null;
+}
+
+function isTransformableImage(url: string): boolean {
+  try {
+    const path = /^https?:\/\//i.test(url) ? new URL(url).pathname : url;
+    return TRANSFORMABLE_EXTENSIONS.test(path);
+  } catch {
+    return TRANSFORMABLE_EXTENSIONS.test(url);
+  }
+}
+
+function isUntouchedUrl(url: string): boolean {
+  const lowerUrl = url.toLowerCase();
+  return UNTOUCHED_PREFIXES.some(prefix => lowerUrl.startsWith(prefix));
+}
+
+function getCloudflareZone(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  return environment.apiBaseUrl.replace(/\/$/, '');
+}
+
+@Pipe({
+  name: 'cfImage',
+  standalone: true
+})
+export class CloudflareImagePipe implements PipeTransform {
+  transform(
+    imageUrl: string | null | undefined,
+    preset: CloudflareImagePreset | number = 'card',
+    quality?: number
+  ): string {
+    return cloudflareImageUrl(imageUrl, preset, quality);
+  }
+}

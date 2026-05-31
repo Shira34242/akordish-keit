@@ -9,10 +9,11 @@
   <div class="event-card__poster">
     <img
       *ngIf="event.imageUrl"
-      [src]="event.imageUrl"
+      [src]="event.imageUrl | cfImage:'card'"
       [alt]="event.name"
       class="event-card__poster-img"
-      loading="lazy">
+      loading="lazy"
+      decoding="async">
     <div *ngIf="!event.imageUrl" class="event-card__poster-placeholder">
       <span class="material-icons">music_note</span>
     </div>

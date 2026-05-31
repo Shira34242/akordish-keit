@@ -4,6 +4,7 @@ import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 interface AdCampaign {
   id: number;
@@ -28,20 +29,21 @@ interface AdSpotResponse {
 @Component({
   selector: 'app-ad-display',
   standalone: true,
+  imports: [CloudflareImagePipe],
   template: `
     @if (currentAd) {
       <div class="ad-container" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
         <a [href]="currentAd.knownUrl" target="_blank" (click)="trackClick()" class="ad-link">
           @if (!isMobile) {
             @if (getMediaType(currentAd.mediaUrl) === 'image') {
-              <img [src]="currentAd.mediaUrl" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
+              <img [src]="currentAd.mediaUrl | cfImage:'hero'" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
             } @else if (getMediaType(currentAd.mediaUrl) === 'video') {
               <video [src]="currentAd.mediaUrl" class="ad-media"
                 autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
             }
           } @else if (currentAd.mobileMediaUrl) {
             @if (getMediaType(currentAd.mobileMediaUrl) === 'image') {
-              <img [src]="currentAd.mobileMediaUrl" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
+              <img [src]="currentAd.mobileMediaUrl | cfImage:'card'" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
             } @else if (getMediaType(currentAd.mobileMediaUrl) === 'video') {
               <video [src]="currentAd.mobileMediaUrl" class="ad-media"
                 autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>

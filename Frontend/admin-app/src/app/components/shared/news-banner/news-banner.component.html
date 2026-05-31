@@ -2,9 +2,10 @@
 
   <img
     class="banner-bg"
-    [src]="article.featuredImageUrl || '/assets/default-article.png'"
+    [src]="(article.featuredImageUrl | cfImage:'hero') || '/assets/default-article.png'"
     [alt]="article.title"
-    loading="lazy">
+    loading="lazy"
+    decoding="async">
 
   <div class="banner-overlay"></div>
 

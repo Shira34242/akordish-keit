@@ -16,6 +16,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 interface Instrument {
   id: number;
@@ -25,7 +26,7 @@ interface Instrument {
 @Component({
   selector: 'app-teachers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective, TranslatePipe],
+  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective, TranslatePipe, CloudflareImagePipe],
   templateUrl: './teachers-page.component.html',
   styleUrls: ['./teachers-page.component.css']
 })

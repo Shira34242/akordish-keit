@@ -24,6 +24,7 @@ import { SeoService } from '../../../services/seo.service';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 type GalleryMediaItem = {
   type: 'image' | 'video';
@@ -41,7 +42,7 @@ type ProviderDisplayTestimonial = {
 @Component({
   selector: 'app-professional-profile-modal',
   standalone: true,
-  imports: [CommonModule, RouterModule, ImgFallbackDirective, SongCardComponent, NewsBannerComponent],
+  imports: [CommonModule, RouterModule, ImgFallbackDirective, SongCardComponent, NewsBannerComponent, CloudflareImagePipe],
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })

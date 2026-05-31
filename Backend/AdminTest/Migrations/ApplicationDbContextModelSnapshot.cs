@@ -1367,6 +1367,64 @@ namespace AkordishKeit.Migrations
                     b.ToTable("BumpSchedules", (string)null);
                 });
 
+            modelBuilder.Entity("AkordishKeit.Models.Entities.AdBlockCheck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CheckedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("DeviceType")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("Detected")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("PagePath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CheckedAt", "Detected")
+                        .HasDatabaseName("IX_AdBlockChecks_CheckedAt_Detected");
+
+                    b.HasIndex("PagePath", "CheckedAt")
+                        .HasDatabaseName("IX_AdBlockChecks_PagePath_CheckedAt");
+
+                    b.ToTable("AdBlockChecks", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.AdBlockCheck", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AkordishKeit.Models.Entities.ButtonClick", b =>
                 {
                     b.Property<int>("Id")

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink } from '@angular/router';
 import { Article } from '../../../models/article.model';
 import { getArticleRoute } from '../../../utils/article-route.utils';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-news-banner',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink],
+  imports: [CommonModule, RouterModule, RouterLink, CloudflareImagePipe],
   templateUrl: './news-banner.component.html',
   styleUrls: ['./news-banner.component.css']
 })

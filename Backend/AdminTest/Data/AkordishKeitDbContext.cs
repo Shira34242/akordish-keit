@@ -86,6 +86,7 @@ public class AkordishKeitDbContext : DbContext
 
     // Button Click Tracking
     public DbSet<ButtonClick> ButtonClicks { get; set; }
+    public DbSet<AdBlockCheck> AdBlockChecks { get; set; }
 
     // Playlists
     public DbSet<Playlist> Playlists { get; set; }
@@ -184,6 +185,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SongViewConfiguration());
         modelBuilder.ApplyConfiguration(new EventViewConfiguration());
         modelBuilder.ApplyConfiguration(new ButtonClickConfiguration());
+        modelBuilder.ApplyConfiguration(new AdBlockCheckConfiguration());
 
         // Playlist Configurations
         modelBuilder.ApplyConfiguration(new PlaylistConfiguration());

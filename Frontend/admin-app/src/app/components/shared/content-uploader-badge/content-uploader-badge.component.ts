@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ContentUploaderProfile } from '../../../models/article.model';
 import { LanguageService } from '../../../services/language.service';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-content-uploader-badge',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CloudflareImagePipe],
   templateUrl: './content-uploader-badge.component.html',
   styleUrls: ['./content-uploader-badge.component.css']
 })

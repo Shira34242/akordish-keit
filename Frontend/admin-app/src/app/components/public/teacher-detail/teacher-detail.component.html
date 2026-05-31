@@ -11,16 +11,16 @@
 
   <section class="teacher-hero-bg"
            #teacherHeroBg
-           [style.backgroundImage]="heroBannerSrc ? 'url(' + heroBannerSrc + ')' : null">
+           [style.backgroundImage]="heroBannerSrc ? 'url(' + (heroBannerSrc | cfImage:'hero') + ')' : null">
     <div class="hero-bg-photo" *ngIf="teacher.profileImageUrl && !heroBannerSrc">
-      <img [src]="teacher.profileImageUrl" alt="" class="hero-bg-img" aria-hidden="true" />
+      <img [src]="teacher.profileImageUrl | cfImage:'hero'" alt="" class="hero-bg-img" aria-hidden="true" />
     </div>
     <div class="hero-dark-overlay"></div>
     <div class="hero-collapse-overlay"></div>
 
     <div class="hero-content">
       <div class="hero-profile-side">
-        <img [src]="teacher.profileImageUrl || '/default-user.svg'"
+        <img [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
              [alt]="teacher.displayName"
              class="hero-profile-photo"
              imgFallback />
@@ -62,7 +62,7 @@
           </button>
 
           <div class="contact-panel" [class.open]="contactOpen">
-            <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl" alt="" class="contact-panel-logo" />
+            <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl | cfImage:'profile'" alt="" class="contact-panel-logo" loading="lazy" decoding="async" />
             <p *ngIf="showAgencyContact" class="contact-panel-invite">צור קשר עם {{ agencyBadge?.agencyName }}</p>
             <div *ngIf="showAgencyContact" class="contact-group-label">דרך הסוכנות</div>
             <a *ngIf="showAgencyContact && agencyBadge?.phoneNumber" [href]="'tel:' + agencyBadge?.phoneNumber" class="contact-item" (click)="trackAgencyContact('phone')">
@@ -154,7 +154,7 @@
              *ngFor="let item of galleryMediaItems; let i = index"
              [class.video-gallery-item]="item.type === 'video'"
              (click)="openMediaLightbox(i)">
-          <img [src]="item.imageUrl || '/logo.png'" [alt]="item.caption || teacher.displayName" class="gallery-img">
+          <img [src]="(item.imageUrl | cfImage:'card') || '/logo.png'" [alt]="item.caption || teacher.displayName" class="gallery-img" loading="lazy" decoding="async">
           <span class="material-icons gallery-play-icon" *ngIf="item.type === 'video'">play_arrow</span>
           <p class="gallery-caption" *ngIf="item.caption">{{ item.caption }}</p>
         </div>
@@ -248,7 +248,7 @@
 
   <div class="lightbox-content" (click)="$event.stopPropagation()">
     <img *ngIf="activeMedia?.type === 'image'"
-         [src]="activeMedia?.imageUrl"
+         [src]="activeMedia?.imageUrl | cfImage:'lightbox'"
          [alt]="activeMedia?.caption || ''"
          class="lightbox-img" />
     <iframe *ngIf="activeMedia?.type === 'video' && activeVideoUrl"

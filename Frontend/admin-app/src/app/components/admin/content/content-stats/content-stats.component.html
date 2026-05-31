@@ -64,6 +64,15 @@
       <strong>{{ adsCtr }}%</strong>
       <small>{{ dashboard.ads.totalClicks | number }} קליקים מתוך {{ dashboard.ads.totalViews | number }} חשיפות</small>
     </section>
+
+    <section class="metric-card">
+      <div class="metric-head">
+        <span>AdBlock</span>
+        <span class="material-icons">block</span>
+      </div>
+      <strong>{{ adBlockRate }}%</strong>
+      <small>{{ dashboard.adBlock.detectedCount | number }} זיהויים מתוך {{ dashboard.adBlock.totalChecks | number }} בדיקות</small>
+    </section>
   </div>
 
   <div *ngIf="dashboard && !dashboardLoading" class="intelligence-grid">
@@ -97,6 +106,13 @@
             <span class="channel-sub">{{ dashboard.ads.totalViews | number }} חשיפות</span>
           </div>
           <div class="channel-bar"><span [style.width.%]="dashboard.articles.viewsLast30Days > 0 ? (dashboard.ads.totalViews / dashboard.articles.viewsLast30Days * 100) : 8"></span></div>
+        </div>
+        <div class="channel-row">
+          <div class="channel-meta">
+            <span class="channel-title">בדיקות AdBlock</span>
+            <span class="channel-sub">{{ dashboard.adBlock.totalChecks | number }} בדיקות</span>
+          </div>
+          <div class="channel-bar"><span [style.width.%]="dashboard.articles.viewsLast30Days > 0 ? (dashboard.adBlock.totalChecks / dashboard.articles.viewsLast30Days * 100) : 8"></span></div>
         </div>
       </div>
     </section>
@@ -135,6 +151,7 @@
     <button class="detail-btn" (click)="setTab('buttons')">פירוט לפי לחצן</button>
     <button class="detail-btn" (click)="setTab('events')">פירוט לפי הופעה</button>
     <button class="detail-btn" (click)="setTab('ads')">פירוט פרסומות</button>
+    <button class="detail-btn" (click)="setTab('adblock')">AdBlock</button>
   </div>
 
   <div *ngIf="(activeTab === 'articles' && articlesLoading) || (activeTab !== 'articles' && dashboardLoading)" class="loading-state">
@@ -363,6 +380,82 @@
           </tr>
           <tr *ngIf="dashboard.ads.topCampaigns.length === 0">
             <td colspan="6" class="empty-cell">אין נתונים עדיין</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'adblock' && !dashboardLoading && dashboard" class="tab-content">
+    <div class="section-header">
+      <div>
+        <span class="section-pill">מדידה שקטה</span>
+        <h2>בדיקות AdBlock</h2>
+      </div>
+      <span class="period-badge">{{ periodLabel }}</span>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card kpi-accent">
+        <span class="kpi-label">בדיקות שבוצעו</span>
+        <span class="kpi-value">{{ dashboard.adBlock.totalChecks | number }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">זוהו עם חוסם</span>
+        <span class="kpi-value">{{ dashboard.adBlock.detectedCount | number }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">אחוז חוסמים</span>
+        <span class="kpi-value">{{ dashboard.adBlock.detectionRate }}%</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">עמודים במדידה</span>
+        <span class="kpi-value">{{ dashboard.adBlock.topPages.length | number }}</span>
+      </div>
+    </div>
+
+    <section class="panel-card adblock-days-panel">
+      <div class="panel-header compact">
+        <div>
+          <span class="section-pill">לפי ימים</span>
+          <h2>פילוח יומי</h2>
+        </div>
+      </div>
+      <div class="channel-list" *ngIf="dashboard.adBlock.daily.length > 0; else noAdBlockDaily">
+        <div class="channel-row" *ngFor="let day of dashboard.adBlock.daily">
+          <div class="channel-meta">
+            <span class="channel-title">{{ formatShortDate(day.date) }}</span>
+            <span class="channel-sub">{{ day.detected | number }} זיהויים מתוך {{ day.checks | number }} בדיקות · {{ day.rate }}%</span>
+          </div>
+          <div class="channel-bar"><span [style.width.%]="getAdBlockDailyWidth(day.checks)"></span></div>
+        </div>
+      </div>
+      <ng-template #noAdBlockDaily>
+        <div class="empty-state compact-empty">אין נתונים עדיין</div>
+      </ng-template>
+    </section>
+
+    <div class="table-wrap">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-title">עמוד</th>
+            <th class="col-stat">בדיקות</th>
+            <th class="col-stat">זיהויים</th>
+            <th class="col-pct">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let page of dashboard.adBlock.topPages; let i = index" class="data-row-static">
+            <td class="col-rank"><span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span></td>
+            <td class="col-title"><span class="title-text">{{ page.pagePath }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ page.checks | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ page.detected | number }}</span></td>
+            <td class="col-pct"><span class="pct-badge" [class.pct-high]="page.rate >= 20">{{ page.rate }}%</span></td>
+          </tr>
+          <tr *ngIf="dashboard.adBlock.topPages.length === 0">
+            <td colspan="5" class="empty-cell">אין נתונים עדיין</td>
           </tr>
         </tbody>
       </table>
