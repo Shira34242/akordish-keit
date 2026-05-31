@@ -55,7 +55,7 @@ export function cloudflareImageUrl(
   const imageQuality = quality ?? (typeof preset === 'number' ? 82 : PRESET_QUALITY[preset]);
   const zone = getCloudflareZone();
 
-  return `${zone}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${encodeURI(source)}`;
+  return `${zone}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${encodeCloudflareSource(source)}`;
 }
 
 export function cloudflareBackgroundImage(
@@ -91,6 +91,10 @@ function normalizeSourceUrl(url: string): string | null {
   if (url.startsWith('/uploads/')) return url;
   if (url.startsWith('uploads/')) return `/${url}`;
   return null;
+}
+
+function encodeCloudflareSource(url: string): string {
+  return /^https?:\/\//i.test(url) ? encodeURIComponent(url) : encodeURI(url);
 }
 
 function isTransformableImage(url: string): boolean {
