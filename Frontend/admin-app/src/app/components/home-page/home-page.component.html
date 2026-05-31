@@ -327,8 +327,8 @@
               [queryParams]="{ series: podcast.slug }"
               [attr.aria-label]="podcast.name"
               [attr.aria-hidden]="copy > 0 ? true : null">
-              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
-                <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+              <span class="home-series-image-card__image" [style.background-image]="podcastCoverUrl(podcast) ? 'url(' + podcastCoverUrl(podcast) + ')' : ''">
+                <span *ngIf="!podcastCoverUrl(podcast)" class="material-icons">podcasts</span>
               </span>
             </a>
           </ng-container>

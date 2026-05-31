@@ -19,6 +19,7 @@ import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-brows
 import { SocialPlatform } from '../../../models/artist.model';
 import { SeoService } from '../../../services/seo.service';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { getPodcastCoverUrl } from '../../../utils/podcast-cover.utils';
 
 @Component({
   selector: 'app-agency-page',
@@ -58,6 +59,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   private scrollListener: (() => void) | null = null;
 
   readonly GALLERY_MIN_ITEMS = 5;
+  podcastCoverUrl = getPodcastCoverUrl;
 
   private g3dItems: { el: HTMLElement }[] = [];
   private g3dScrollX = 0;

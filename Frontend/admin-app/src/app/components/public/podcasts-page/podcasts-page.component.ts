@@ -9,6 +9,7 @@ import { SeoService } from '../../../services/seo.service';
 import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { getPodcastCoverUrl } from '../../../utils/podcast-cover.utils';
 
 @Component({
   selector: 'app-podcasts-page',
@@ -51,6 +52,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   private skipNextQuerySync = false;
+  podcastCoverUrl = getPodcastCoverUrl;
 
   ngOnInit(): void {
     this.loadPageData();

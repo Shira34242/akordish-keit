@@ -12,11 +12,16 @@ namespace AkordishKeit.Services
     {
         private readonly AkordishKeitDbContext _context;
         private readonly IYouTubeService _youTubeService;
+        private readonly IExternalImageStorageService _externalImageStorage;
 
-        public PodcastService(AkordishKeitDbContext context, IYouTubeService youTubeService)
+        public PodcastService(
+            AkordishKeitDbContext context,
+            IYouTubeService youTubeService,
+            IExternalImageStorageService externalImageStorage)
         {
             _context = context;
             _youTubeService = youTubeService;
+            _externalImageStorage = externalImageStorage;
         }
 
         public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
@@ -189,7 +194,10 @@ namespace AkordishKeit.Services
             podcast.Name = dto.Name.Trim();
             podcast.Slug = await EnsureUniquePodcastSlugAsync(dto.Slug, dto.Name, id);
             podcast.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
-            podcast.ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim();
+            podcast.ImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.ImageUrl,
+                "uploads/podcasts",
+                $"podcast-{id}");
             podcast.DisplayOrder = dto.DisplayOrder;
             podcast.IsActive = dto.IsActive;
             podcast.UpdatedAt = DateTime.UtcNow;

@@ -17,6 +17,7 @@ public class ArtistsController : ControllerBase
     private readonly INotificationService _notificationService;
     private readonly ISongService _songService;
     private readonly IArticleService _articleService;
+    private readonly IExternalImageStorageService _externalImageStorage;
     private readonly ILogger<ArtistsController> _logger;
 
     public ArtistsController(
@@ -24,12 +25,14 @@ public class ArtistsController : ControllerBase
         INotificationService notificationService,
         ISongService songService,
         IArticleService articleService,
+        IExternalImageStorageService externalImageStorage,
         ILogger<ArtistsController> logger)
     {
         _context = context;
         _notificationService = notificationService;
         _songService = songService;
         _articleService = articleService;
+        _externalImageStorage = externalImageStorage;
         _logger = logger;
     }
 
@@ -517,8 +520,14 @@ public class ArtistsController : ControllerBase
 
             artist.ShortBio = dto.ShortBio;
             artist.Biography = dto.Biography;
-            artist.ImageUrl = dto.ImageUrl;
-            artist.BannerImageUrl = dto.BannerImageUrl;
+            artist.ImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.ImageUrl,
+                "uploads/artists",
+                $"artist-{id}");
+            artist.BannerImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.BannerImageUrl,
+                "uploads/artists",
+                $"artist-banner-{id}");
             artist.BannerGifUrl = dto.BannerGifUrl;  // Admin יכול לעדכן לכולם
             artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
             if (dto.BannerBlur.HasValue)
@@ -526,7 +535,10 @@ public class ArtistsController : ControllerBase
             artist.WebsiteUrl = dto.WebsiteUrl;
 
             // עדכון באנר הופעה (legacy)
-            artist.PerformanceImageUrl = dto.PerformanceImageUrl;
+            artist.PerformanceImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.PerformanceImageUrl,
+                "uploads/artists",
+                $"artist-performance-{id}");
             artist.PerformanceTicketUrl = dto.PerformanceTicketUrl;
             if (dto.PerformanceIsActive.HasValue)
                 artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
@@ -576,10 +588,15 @@ public class ArtistsController : ControllerBase
 
                 foreach (var img in dto.GalleryImages)
                 {
+                    var imageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                        img.ImageUrl,
+                        "uploads/artists/gallery",
+                        $"artist-gallery-{id}");
+
                     _context.ArtistGalleryImages.Add(new ArtistGalleryImage
                     {
                         ArtistId = id,
-                        ImageUrl = img.ImageUrl,
+                        ImageUrl = imageUrl ?? img.ImageUrl,
                         Caption = img.Caption,
                         DisplayOrder = img.DisplayOrder
                     });
@@ -1585,11 +1602,16 @@ public class ArtistsController : ControllerBase
 
         foreach (var hit in hits.Where(h => !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
         {
+            var imageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                hit.ImageUrl,
+                "uploads/artists/hits",
+                $"artist-hit-{artistId}");
+
             _context.ArtistHits.Add(new ArtistHit
             {
                 ArtistId = artistId,
                 Title = string.IsNullOrWhiteSpace(hit.Title) ? "להיט גדול" : hit.Title.Trim(),
-                ImageUrl = string.IsNullOrWhiteSpace(hit.ImageUrl) ? null : hit.ImageUrl.Trim(),
+                ImageUrl = imageUrl,
                 YouTubeUrl = hit.YouTubeUrl.Trim(),
                 DisplayOrder = hit.DisplayOrder,
                 IsActive = hit.IsActive,
@@ -1609,11 +1631,16 @@ public class ArtistsController : ControllerBase
 
         foreach (var album in albums.Where(a => !string.IsNullOrWhiteSpace(a.CoverImageUrl)))
         {
+            var coverImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                album.CoverImageUrl,
+                "uploads/artists/albums",
+                $"artist-album-{artistId}");
+
             _context.ArtistAlbums.Add(new ArtistAlbum
             {
                 ArtistId = artistId,
                 Title = string.IsNullOrWhiteSpace(album.Title) ? "אלבום" : album.Title.Trim(),
-                CoverImageUrl = album.CoverImageUrl.Trim(),
+                CoverImageUrl = coverImageUrl ?? album.CoverImageUrl.Trim(),
                 ReleaseYear = album.ReleaseYear,
                 ExternalUrl = string.IsNullOrWhiteSpace(album.ExternalUrl) ? string.Empty : album.ExternalUrl.Trim(),
                 DisplayOrder = album.DisplayOrder,
@@ -1640,8 +1667,14 @@ public class ArtistsController : ControllerBase
             return;
         }
 
-        var imageUrl = FirstText(input.ImageUrl, input.BannerImageUrl, artist.PerformanceImageUrl) ?? string.Empty;
-        var bannerImageUrl = FirstText(input.BannerImageUrl, input.ImageUrl, artist.PerformanceImageUrl);
+        var imageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+            FirstText(input.ImageUrl, input.BannerImageUrl, artist.PerformanceImageUrl),
+            "uploads/events",
+            $"artist-performance-event-{artist.Id}") ?? string.Empty;
+        var bannerImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+            FirstText(input.BannerImageUrl, input.ImageUrl, artist.PerformanceImageUrl),
+            "uploads/events",
+            $"artist-performance-banner-{artist.Id}");
         var ticketUrl = FirstText(input.TicketUrl, artist.PerformanceTicketUrl) ?? string.Empty;
         var eventDate = input.EventDate == default ? DateTime.UtcNow : input.EventDate;
         Event? eventEntity = null;
