@@ -55,7 +55,7 @@ export function cloudflareImageUrl(
   const imageQuality = quality ?? (typeof preset === 'number' ? 82 : PRESET_QUALITY[preset]);
   const zone = getCloudflareZone();
 
-  return `${zone}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${source}`;
+  return `${zone}/cdn-cgi/image/width=${width},quality=${imageQuality},format=auto/${encodeURI(source)}`;
 }
 
 export function cloudflareBackgroundImage(

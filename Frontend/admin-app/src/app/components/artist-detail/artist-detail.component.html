@@ -33,7 +33,9 @@
              [attr.srcset]="artist.imageUrl | cfSrcset:[180,240,320,480]:82"
              sizes="(max-width: 700px) 112px, 160px"
              [alt]="artist.name"
-             class="hero-avatar">
+             class="hero-avatar"
+             [imgFallbackOriginal]="artist.imageUrl"
+             imgFallback="assets/default-artist.png">
       </div>
       <div class="hero-text">
         <div class="hero-badges">
@@ -119,7 +121,7 @@
        [target]="performanceBannerLink !== '#' ? '_blank' : '_self'"
        class="performance-banner"
        rel="noopener">
-      <img [src]="bannerImg | cfImage:'hero'" [attr.srcset]="bannerImg | cfSrcset:[600,900,1200,1600]:85" sizes="(max-width: 900px) 92vw, 1100px" alt="הופעה קרובה" class="performance-banner-img" loading="lazy" decoding="async" />
+      <img [src]="bannerImg | cfImage:'hero'" [attr.srcset]="bannerImg | cfSrcset:[600,900,1200,1600]:85" sizes="(max-width: 900px) 92vw, 1100px" alt="הופעה קרובה" class="performance-banner-img" loading="lazy" decoding="async" [imgFallbackOriginal]="bannerImg" imgFallback="/logo.png" />
       <div *ngIf="performanceBannerLink !== '#'" class="performance-ticket-btn">לרכישת כרטיסים ←</div>
     </a>
 
