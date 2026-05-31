@@ -3,7 +3,7 @@
   <div class="top-scroll-mask"></div>
 
   <!-- Hero Section with Background Image -->
-  <div class="article-hero" #articleHero [style.backgroundImage]="'url(' + (article.featuredImageUrl | cfImage:'hero') + ')'">
+  <div class="article-hero" #articleHero [style.backgroundImage]="article.featuredImageUrl ? 'url(' + article.featuredImageUrl + ')' : null">
     <div class="hero-collapse-overlay"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -52,7 +52,7 @@
 
         <!-- Featured Image Section (when no video) -->
         <div class="featured-image-section" *ngIf="!safeVideoUrl && article.featuredImageUrl">
-          <img [src]="article.featuredImageUrl | cfImage:'content'" [attr.srcset]="article.featuredImageUrl | cfSrcset:[600,900,1200,1600]:85" sizes="(max-width: 900px) 92vw, 900px" [alt]="article.title" class="featured-image-inline" decoding="async">
+          <img [src]="article.featuredImageUrl" [alt]="article.title" class="featured-image-inline" decoding="async">
         </div>
 
         <!-- Audio Section -->
@@ -91,7 +91,7 @@
         <div class="gallery-section" *ngIf="article.galleryImages && article.galleryImages.length > 0">
           <div class="gallery-grid">
             <div class="gallery-item" *ngFor="let img of article.galleryImages; let i = index" (click)="openLightbox(i)">
-              <img [src]="img.imageUrl | cfImage:'card'" [attr.srcset]="img.imageUrl | cfSrcset:[360,600,900]:82" sizes="(max-width: 700px) 46vw, 260px" [alt]="img.caption || article.title" class="gallery-img" loading="lazy" decoding="async">
+              <img [src]="img.imageUrl" [alt]="img.caption || article.title" class="gallery-img" loading="lazy" decoding="async">
               <p class="gallery-caption" *ngIf="img.caption">{{ img.caption }}</p>
             </div>
           </div>
@@ -112,7 +112,7 @@
             <span class="material-icons">chevron_left</span>
           </button>
           <div class="lightbox-content" (click)="$event.stopPropagation()">
-            <img [src]="article.galleryImages[lightboxIndex!].imageUrl | cfImage:'lightbox'" [attr.srcset]="article.galleryImages[lightboxIndex!].imageUrl | cfSrcset:[800,1200,1600,2000]:88" sizes="96vw" [alt]="article.galleryImages[lightboxIndex!].caption || article.title" class="lightbox-img">
+            <img [src]="article.galleryImages[lightboxIndex!].imageUrl" [alt]="article.galleryImages[lightboxIndex!].caption || article.title" class="lightbox-img">
             <p class="lightbox-caption" *ngIf="article.galleryImages[lightboxIndex!].caption">{{ article.galleryImages[lightboxIndex!].caption }}</p>
             <span class="lightbox-counter">{{ lightboxIndex! + 1 }} / {{ article.galleryImages.length }}</span>
           </div>
