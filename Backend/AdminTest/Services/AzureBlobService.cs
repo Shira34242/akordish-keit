@@ -91,8 +91,8 @@ namespace AkordishKeit.Services
         {
             if (_container == null)
             {
-                _logger.LogWarning("Azure Blob delete skipped because storage is not configured: {Url}", url);
-                return false;
+                _logger.LogWarning("Azure Blob delete skipped because storage is not configured. Trying local delete: {Url}", url);
+                return DeleteLocal(url);
             }
 
             var blobName = ExtractBlobName(url);

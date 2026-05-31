@@ -10,6 +10,8 @@ namespace AkordishKeit.Controllers
     {
         private readonly IAzureBlobService _blobService;
         private readonly HttpClient _httpClient;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<MediaController> _logger;
 
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
@@ -18,10 +20,17 @@ namespace AkordishKeit.Controllers
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
         private const long MaxFileSizeBytes = 30 * 1024 * 1024; // 30MB
 
-        public MediaController(IAzureBlobService blobService, IHttpClientFactory httpClientFactory, ILogger<MediaController> logger)
+        public MediaController(
+            IAzureBlobService blobService,
+            IHttpClientFactory httpClientFactory,
+            IWebHostEnvironment environment,
+            IConfiguration configuration,
+            ILogger<MediaController> logger)
         {
             _blobService = blobService;
             _httpClient = httpClientFactory.CreateClient();
+            _environment = environment;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -65,6 +74,14 @@ namespace AkordishKeit.Controllers
         [HttpGet("pdf-view")]
         public async Task<IActionResult> ViewPdf([FromQuery] string url)
         {
+            if (TryGetLocalMediaPath(url, out var localPath, out var localExtension))
+            {
+                if (localExtension != ".pdf")
+                    return BadRequest(new { message = "File is not a PDF" });
+
+                return PhysicalFile(localPath, GetContentType(localExtension), enableRangeProcessing: true);
+            }
+
             if (!IsSafePdfUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid PDF URL" });
 
@@ -94,6 +111,15 @@ namespace AkordishKeit.Controllers
         [HttpGet("audio")]
         public async Task<IActionResult> StreamAudio([FromQuery] string url)
         {
+            if (TryGetLocalMediaPath(url, out var localPath, out var localExtension))
+            {
+                if (!AudioExtensions.Contains(localExtension))
+                    return BadRequest(new { message = "Invalid audio URL" });
+
+                Response.Headers.CacheControl = "public, max-age=3600";
+                return PhysicalFile(localPath, GetContentType(localExtension), enableRangeProcessing: true);
+            }
+
             if (!IsSafeAudioUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid audio URL" });
 
@@ -111,6 +137,13 @@ namespace AkordishKeit.Controllers
         [HttpGet("download")]
         public async Task<IActionResult> DownloadMedia([FromQuery] string url, [FromQuery] string? fileName = null)
         {
+            if (TryGetLocalMediaPath(url, out var localPath, out var localExtension))
+            {
+                var localDownloadName = BuildDownloadFileNameFromPath(localPath, fileName, localExtension);
+                Response.Headers.CacheControl = "private, max-age=300";
+                return PhysicalFile(localPath, GetContentType(localExtension), localDownloadName, enableRangeProcessing: true);
+            }
+
             if (!IsSafeDownloadUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid media URL" });
 
@@ -224,6 +257,20 @@ namespace AkordishKeit.Controllers
             return $"{baseName}{extension}";
         }
 
+        private static string BuildDownloadFileNameFromPath(string path, string? requestedFileName, string extension)
+        {
+            var originalName = ExtractOriginalFileNameFromPath(path);
+            var baseName = !string.IsNullOrWhiteSpace(originalName) && !IsGeneratedBlobName(originalName)
+                ? originalName
+                : Path.GetFileNameWithoutExtension(requestedFileName ?? string.Empty);
+
+            baseName = SanitizeFileName(baseName);
+            if (string.IsNullOrWhiteSpace(baseName))
+                baseName = "akordishkeit-media";
+
+            return $"{baseName}{extension}";
+        }
+
         private static string ExtractOriginalFileName(Uri uri, string extension)
         {
             var segment = Uri.UnescapeDataString(Path.GetFileNameWithoutExtension(uri.AbsolutePath));
@@ -231,6 +278,58 @@ namespace AkordishKeit.Controllers
             return parts.Length == 4 && IsTimestampPrefix(parts[0], parts[1]) && Guid.TryParse(parts[2], out _)
                 ? parts[3]
                 : segment;
+        }
+
+        private static string ExtractOriginalFileNameFromPath(string path)
+        {
+            var segment = Path.GetFileNameWithoutExtension(path);
+            var parts = segment.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length == 4 && IsTimestampPrefix(parts[0], parts[1]) && Guid.TryParse(parts[2], out _)
+                ? parts[3]
+                : segment;
+        }
+
+        private bool TryGetLocalMediaPath(string url, out string localPath, out string extension)
+        {
+            localPath = string.Empty;
+            extension = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out var uri))
+                return false;
+
+            var path = uri.IsAbsoluteUri ? uri.AbsolutePath : url;
+            if (uri.IsAbsoluteUri && !IsCurrentHost(uri))
+                return false;
+
+            path = Uri.UnescapeDataString(path).TrimStart('/').Replace('\\', '/');
+            if (string.IsNullOrWhiteSpace(path) || path.Contains("..") || !path.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            extension = Path.GetExtension(path).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(extension))
+                return false;
+
+            var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+            var rootPath = Path.GetFullPath(webRoot);
+            var candidatePath = Path.GetFullPath(Path.Combine(webRoot, Path.Combine(path.Split('/'))));
+
+            if (!candidatePath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(candidatePath))
+                return false;
+
+            localPath = candidatePath;
+            return true;
+        }
+
+        private bool IsCurrentHost(Uri uri)
+        {
+            var requestHost = Request.Host.Host;
+            if (uri.Host.Equals(requestHost, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (Uri.TryCreate(_configuration["Backend:BaseUrl"], UriKind.Absolute, out var backendBaseUrl))
+                return uri.Host.Equals(backendBaseUrl.Host, StringComparison.OrdinalIgnoreCase);
+
+            return false;
         }
 
         private static bool IsGeneratedBlobName(string fileName)
