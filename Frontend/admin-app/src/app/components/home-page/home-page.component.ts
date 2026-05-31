@@ -18,7 +18,6 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { PodcastEpisodeBannerComponent } from '../shared/podcast-episode-banner/podcast-episode-banner.component';
-import { NewsTickerComponent } from '../shared/news-ticker/news-ticker.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
@@ -54,7 +53,6 @@ interface HeroParticle {
     ArtistCircleComponent,
     NewsBannerComponent,
     PodcastEpisodeBannerComponent,
-    NewsTickerComponent,
     EventCardComponent,
     EventModalComponent,
     TranslatePipe,

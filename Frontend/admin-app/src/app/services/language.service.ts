@@ -81,8 +81,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.rating_good': 'טוב',
     'song.rating_excellent': 'מצוין!',
     'song.login_to_rate': 'התחבר כדי לדרג',
-    'song.has_sheet_music': 'לשיר זה יש תווים',
-    'song.go_to_sheet_music': 'למעבר לתווים',
     'song.need_help_teacher': 'צריכים עזרה עם הנגינה? המורים שלנו ישמחו לעזור לכם',
     'song.find_teacher': 'מצא מורה',
     'song.more_by_artist': 'עוד אקורדים לשירים של',
@@ -128,7 +126,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.day_mode': 'מצב יום',
     'song.night_mode': 'מצב לילה',
     'song.show_diagrams': 'הצג תרשימי אקורדים',
-    'song.sheet_music_alt': 'תווים לשיר',
     'song.known_chords_info': 'המידע מחושב לפי האקורדים שסימנת שאתה יודע לנגן. לפי זה מוצג כמה אקורדים חסרים לך כדי לנגן את השיר.',
 
     // Chords page
@@ -908,8 +905,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song_modal.add_lyrics_prompt': 'מעולה. עכשיו נשאר רק להוסיף מילים ואקורדים.',
     'song_modal.paste_lyrics': 'הדבק כאן את המילים והאקורדים של השיר...',
     'song_modal.lyrics_error': 'צריך להוסיף מילים ואקורדים כדי להמשיך',
-    'song_modal.sheet_music_label': 'קובץ תווים (אופציונלי)',
-    'song_modal.sheet_music_placeholder': 'קישור לקובץ תווים או העלאה',
     'song_modal.almost_done': 'הכול מוכן כמעט.',
     'song_modal.before_send': 'לפני שליחה',
     'song_modal.review_note': 'בדיקה קצרה, ואם צריך אפשר לעדכן.',
@@ -1425,8 +1420,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.rating_good': 'Good',
     'song.rating_excellent': 'Excellent!',
     'song.login_to_rate': 'Log in to rate',
-    'song.has_sheet_music': 'This song has sheet music',
-    'song.go_to_sheet_music': 'View Sheet Music',
     'song.need_help_teacher': 'Need help playing? Our teachers are here for you',
     'song.find_teacher': 'Find a Teacher',
     'song.more_by_artist': 'More chords by',
@@ -1472,7 +1465,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.day_mode': 'Day mode',
     'song.night_mode': 'Night mode',
     'song.show_diagrams': 'Show chord diagrams',
-    'song.sheet_music_alt': 'Sheet music for song',
     'song.known_chords_info': 'This info is calculated based on the chords you marked as known. It shows how many chords you are missing to play the song.',
 
     // Chords page
@@ -2254,8 +2246,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song_modal.add_lyrics_prompt': 'Great. Now just add the lyrics and chords.',
     'song_modal.paste_lyrics': 'Paste the song\'s lyrics and chords here...',
     'song_modal.lyrics_error': 'Please add lyrics and chords to continue',
-    'song_modal.sheet_music_label': 'Sheet Music (optional)',
-    'song_modal.sheet_music_placeholder': 'Link to sheet music or upload',
     'song_modal.almost_done': 'Almost ready.',
     'song_modal.before_send': 'Before Submitting',
     'song_modal.review_note': 'Quick review — you can update anything.',

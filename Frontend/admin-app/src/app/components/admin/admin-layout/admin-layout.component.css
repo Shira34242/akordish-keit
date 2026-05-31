@@ -606,8 +606,7 @@
 /* Stats and content containers: remove self-contained white wrappers */
 :host ::ng-deep .stats-container,
 :host ::ng-deep .featured-container,
-:host ::ng-deep .news-container,
-:host ::ng-deep .ticker-container {
+:host ::ng-deep .news-container {
     background: transparent !important;
     border-radius: 0 !important;
 }

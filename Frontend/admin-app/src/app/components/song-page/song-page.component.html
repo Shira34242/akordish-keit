@@ -108,7 +108,7 @@
 <div class="content-wrapper">
 
     <!-- 2. Sticky Toolbar -->
-    <div class="sticky-toolbar" *ngIf="!isSheetMusicMode" [class.sticky]="isToolbarSticky">
+    <div class="sticky-toolbar" [class.sticky]="isToolbarSticky">
         <div class="toolbar-content">
 
             <!-- Instruments & Chords -->
@@ -308,7 +308,7 @@
     <div class="main-layout">
 
         <div class="song-main-column" #mainColumn>
-            <div class="chord-diagrams-panel" *ngIf="!isSheetMusicMode && hasFullSongContent && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
+            <div class="chord-diagrams-panel" *ngIf="hasFullSongContent && showInlineChordDiagrams && selectedInstrument !== 'lyrics'">
                 <div class="chord-diagrams-head">
                     <h3>{{ 'song.chord_diagrams_title' | translate }}</h3>
                     <p>{{ 'song.chord_diagrams_sub' | translate }}</p>
@@ -325,7 +325,7 @@
             </div>
 
         <!-- Right Column: Lyrics -->
-        <div class="lyrics-column" *ngIf="!isSheetMusicMode" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
+        <div class="lyrics-column" [class.dark-mode]="isDarkMode" [style.fontSize.px]="fontSize"
             [style.--lyrics-font-size.px]="fontSize">
 
             <!-- Capo Hint -->
@@ -370,21 +370,6 @@
                 (playBtnHoverChange)="handlePlayBtnHover($event)"
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
-        </div>
-
-        <div class="sheet-music-page-panel" *ngIf="sheetMusicEnabled && isSheetMusicMode">
-            <div class="sheet-music-viewer sheet-music-page-viewer">
-                <img *ngIf="isSheetMusicImage && sheetMusicDirectUrl" class="sheet-music-image" [src]="sheetMusicDirectUrl" alt="תווים לשיר">
-                <ng-container *ngIf="!isSheetMusicImage && sheetMusicViewerUrl">
-                    <iframe class="sheet-music-frame"
-                            [src]="sheetMusicViewerUrl"
-                            title="תווים לשיר">
-                    </iframe>
-                    <a *ngIf="sheetMusicDirectUrl" class="sheet-music-inline-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
-                        {{ 'song.open_pdf' | translate }}
-                    </a>
-                </ng-container>
-            </div>
         </div>
 
         <!-- Rating Section -->
@@ -536,17 +521,7 @@
         <!-- Left Column: Sidebar -->
         <div class="sidebar-column">
 
-            <button type="button" class="sidebar-card sheet-music-card" *ngIf="sheetMusicEnabled && song.sheetMusicUrl" (click)="openSheetMusic()">
-                <span class="sheet-music-title">{{ 'song.has_sheet_music' | translate }}</span>
-                <span class="sheet-music-action">
-                    {{ 'song.go_to_sheet_music' | translate }}
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6"/>
-                    </svg>
-                </span>
-            </button>
-
-            <ng-container *ngIf="!isSheetMusicMode">
+            <ng-container>
             <div class="sidebar-card known-sidebar-card" *ngIf="knownChordSummary as summary">
                 <ng-container *ngIf="summary.totalChords > 0">
                     <div class="known-summary-head">
@@ -755,32 +730,6 @@
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
             {{ 'song.open_youtube' | translate }}
-        </a>
-    </div>
-</div>
-
-<!-- Sheet Music Modal -->
-<div class="youtube-modal-backdrop" *ngIf="sheetMusicEnabled && isSheetMusicMode" (click)="closeSheetMusic()">
-    <div class="youtube-modal-card sheet-music-modal-card" (click)="$event.stopPropagation()">
-        <button class="youtube-modal-close" (click)="closeSheetMusic()" [title]="'song.close' | translate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6 6 18M6 6l12 12"/>
-            </svg>
-        </button>
-        <div class="sheet-music-viewer">
-            <img *ngIf="isSheetMusicImage && sheetMusicDirectUrl" class="sheet-music-image" [src]="sheetMusicDirectUrl" [attr.alt]="'song.sheet_music_alt' | translate">
-            <object *ngIf="!isSheetMusicImage && sheetMusicViewerUrl"
-                    class="sheet-music-frame"
-                    [data]="sheetMusicViewerUrl"
-                    type="application/pdf">
-                <a *ngIf="sheetMusicDirectUrl" class="sheet-music-inline-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
-                    {{ 'song.open_pdf' | translate }}
-                </a>
-            </object>
-        </div>
-        <a *ngIf="sheetMusicDirectUrl" class="sheet-music-open-link" [href]="sheetMusicDirectUrl" target="_blank" rel="noopener">
-            {{ 'song.open_full' | translate }}
         </a>
     </div>
 </div>

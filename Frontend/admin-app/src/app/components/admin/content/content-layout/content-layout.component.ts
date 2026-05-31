@@ -87,13 +87,6 @@ export class AdminContentLayoutComponent {
             };
         }
 
-        if (url.includes('/content/ticker')) {
-            return {
-                title: 'פס חדשות הירו',
-                subtitle: 'ניהול הפס הקצר שמופיע בחלק העליון של האתר.'
-            };
-        }
-
         if (url.includes('/content/events')) {
             return {
                 title: 'הופעות',

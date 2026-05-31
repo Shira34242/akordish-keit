@@ -38,17 +38,6 @@
   clip-path: path('M 36 0 L 36 36 L 28 36 A 28 28 0 0 0 0 8 L 0 0 Z');
 }
 
-.hero-ticker-layer {
-  position: absolute;
-  top: 8px;
-  left: 0;
-  right: 0;
-  height: calc(100vh - 16px);
-  z-index: 1000;
-  pointer-events: none;
-  overflow: visible;
-}
-
 /* ============================================
    HERO BACKGROUND — fixed, מתכווץ בגלילה
 ============================================ */
@@ -140,6 +129,12 @@
   color: #000000;
   margin: 0;
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  direction: rtl;
 }
 
 .hero-title {
@@ -150,15 +145,9 @@
   margin: -0.15em 0 var(--space-lg);
   line-height: 0.85;
   letter-spacing: -2px;
-  display: inline-flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: var(--space-sm);
-  direction: rtl;
-  max-width: 100%;
 }
 
-.hero-title-badge {
+.hero-subtitle-badge {
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
   font-weight: 300;
@@ -168,7 +157,6 @@
   background: rgba(255, 255, 255, 0.45);
   border-radius: 999px;
   padding: var(--space-xs) var(--space-md);
-  margin-top: 0.45em;
   white-space: nowrap;
 }
 

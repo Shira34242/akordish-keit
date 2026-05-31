@@ -209,17 +209,6 @@
                             </div>
                         </div>
 
-                        <div class="form-group" *ngIf="sheetMusicEnabled">
-                            <label>{{ 'song_modal.sheet_music_label' | translate }}</label>
-                            <app-file-upload-input
-                                [url]="songForm.get('sheetMusicUrl')?.value"
-                                (urlChange)="songForm.get('sheetMusicUrl')?.setValue($event)"
-                                accept=".pdf,image/*"
-                                [placeholder]="'song_modal.sheet_music_placeholder' | translate"
-                                [showPreview]="false">
-                            </app-file-upload-input>
-                        </div>
-
                         <div class="smart-detect-note">
                             <span>{{ lyricsHelperText }}</span>
                         </div>
@@ -638,17 +627,6 @@
                         *ngIf="songForm.get('lyricsWithChords')?.invalid && songForm.get('lyricsWithChords')?.touched">
                         {{ 'song_modal.lyrics_error_legacy' | translate }}
                     </div>
-                </div>
-
-                <div class="form-group" *ngIf="sheetMusicEnabled">
-                    <label>{{ 'song_modal.sheet_music_label' | translate }}</label>
-                    <app-file-upload-input
-                        [url]="songForm.get('sheetMusicUrl')?.value"
-                        (urlChange)="songForm.get('sheetMusicUrl')?.setValue($event)"
-                        accept=".pdf,image/*"
-                        [placeholder]="'song_modal.sheet_music_placeholder' | translate"
-                        [showPreview]="false">
-                    </app-file-upload-input>
                 </div>
 
                 <!-- Keys row -->
