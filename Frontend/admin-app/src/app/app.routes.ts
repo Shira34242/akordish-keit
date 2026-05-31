@@ -372,11 +372,6 @@ export const routes: Routes = [
                         pathMatch: 'full'
                     },
                     {
-                        path: 'ticker',
-                        redirectTo: '/admin/system/ticker',
-                        pathMatch: 'full'
-                    },
-                    {
                         path: 'events',
                         loadComponent: () => import('./components/admin/content/events/events-list.component').then(m => m.EventsListComponent),
                         title: 'ניהול הופעות - אקורדישקייט'
@@ -497,11 +492,6 @@ export const routes: Routes = [
                         loadComponent: () => import('./components/admin/system/news-cleanup/news-cleanup.component').then(m => m.NewsCleanupComponent),
                         title: 'ניקוי חדשות - אקורדישקייט'
                     },
-                    {
-                        path: 'ticker',
-                        loadComponent: () => import('./components/admin/content/ticker-settings/ticker-settings.component').then(m => m.TickerSettingsComponent),
-                        title: 'פס הירו - אקורדישקייט'
-                    }
                 ]
             }
         ]

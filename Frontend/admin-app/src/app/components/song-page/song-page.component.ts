@@ -6,7 +6,6 @@ import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-brows
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 import {
@@ -109,11 +108,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
-    sheetMusicEnabled = environment.sheetMusicEnabled;
-    isSheetMusicMode: boolean = false;
-    sheetMusicViewerUrl: SafeResourceUrl | null = null;
-    sheetMusicDirectUrl: string | null = null;
-    isSheetMusicImage: boolean = false;
 
     // Bookmark State
     isSongSaved: boolean = false;
@@ -308,7 +302,6 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         this.canEdit = false; 
         this.isEasyMode = false;
         this.showKnownChordSummary = true;
-        this.closeSheetMusic();
 
         if (currentSlug === undefined) {
             const snapshotSlug = this.route.snapshot.paramMap.get('slug');
@@ -1376,34 +1369,6 @@ private getKeyIndex(keyName: string): number {
     closeYoutubeVideo(): void {
         this.showYoutubeModal = false;
         this.youtubeEmbedUrl = null;
-    }
-
-    openSheetMusic(): void {
-        if (!this.song?.sheetMusicUrl) return;
-        this.stopAutoScroll();
-        this.isAutoScroll = false;
-        const directUrl = this.song.sheetMusicUrl;
-        this.sheetMusicDirectUrl = directUrl;
-        this.isSheetMusicImage = this.isImageFileUrl(directUrl);
-        const viewerUrl = this.isSheetMusicImage ? directUrl : this.buildSheetMusicPdfViewerUrl(directUrl);
-        this.sheetMusicViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(viewerUrl);
-        this.isSheetMusicMode = true;
-    }
-
-    closeSheetMusic(): void {
-        this.isSheetMusicMode = false;
-        this.sheetMusicViewerUrl = null;
-        this.sheetMusicDirectUrl = null;
-        this.isSheetMusicImage = false;
-    }
-
-    private isImageFileUrl(url: string): boolean {
-        if (/\.pdf(\?.*)?$/i.test(url)) return false;
-        return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url) || /\/image\/upload\//i.test(url);
-    }
-
-    private buildSheetMusicPdfViewerUrl(url: string): string {
-        return `${environment.apiBaseUrl}/api/Media/pdf-view?url=${encodeURIComponent(url)}`;
     }
 
     private extractYoutubeVideoId(url: string): string | null {

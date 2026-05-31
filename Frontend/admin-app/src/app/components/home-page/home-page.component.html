@@ -4,10 +4,6 @@
   <div class="corner-mask-tl"></div>
   <div class="corner-mask-tr"></div>
 
-  <div class="hero-ticker-layer">
-    <app-news-ticker></app-news-ticker>
-  </div>
-
   <div class="hero-bg" #heroBg>
     <canvas #heroCanvas class="hero-canvas"></canvas>
     <div class="hero-overlay"></div>
@@ -17,11 +13,11 @@
   <div class="hero-content-area">
     <div class="hero-content">
 
-      <p class="hero-subtitle">{{ 'home.subtitle' | translate }}</p>
-      <h1 class="hero-title">
-        <span>אקורדישקייט</span>
-        <span class="hero-title-badge">בהרצה</span>
-      </h1>
+      <p class="hero-subtitle">
+        <span>{{ 'home.subtitle' | translate }}</span>
+        <span class="hero-subtitle-badge">בהרצה</span>
+      </p>
+      <h1 class="hero-title">אקורדישקייט</h1>
 
       <div class="search-container">
         <div class="search-input-wrapper">

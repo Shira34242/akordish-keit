@@ -12,10 +12,8 @@ import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { extractChords, parseChord } from '../../utils/music-utils';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
-import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
-import { environment } from '../../../environments/environment';
 
 export interface InitialSongRequest {
     songName: string;
@@ -25,7 +23,7 @@ export interface InitialSongRequest {
 @Component({
     selector: 'app-add-song-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, FileUploadInputComponent, TranslatePipe],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule, TranslatePipe],
     templateUrl: './add-song-modal.component.html',
     styleUrls: ['./add-song-modal.component.css']
 })
@@ -86,7 +84,6 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @Output() close = new EventEmitter<void>();
     @Output() songAdded = new EventEmitter<void>();
-    sheetMusicEnabled = environment.sheetMusicEnabled;
 
     @Input() editMode: boolean = false;
     @Input() songToEdit: any = null;
@@ -321,7 +318,6 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             youtubeUrl: ['', [Validators.required, Validators.pattern(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)]],
             spotifyUrl: ['', [Validators.pattern(/^(https?:\/\/)?(open\.spotify\.com)\/.+$/)]],
             imageUrl: [''],
-            sheetMusicUrl: [''],
 
             // Step 1 (Moved from Step 2): Tags & Genres
             tags: this.fb.array([]),
@@ -443,7 +439,6 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             youtubeUrl: this.songToEdit.youtubeUrl,
             spotifyUrl: this.songToEdit.spotifyUrl || '',
             imageUrl: this.songToEdit.imageUrl || '',
-            sheetMusicUrl: this.songToEdit.sheetMusicUrl || '',
             lyricsWithChords: this.songToEdit.lyricsWithChords,
             originalKeyId: this.normalizeKeyValue(this.songToEdit.originalKeyId),
             easyKeyId: this.normalizeKeyValue(this.songToEdit.easyKeyId),
@@ -1853,7 +1848,6 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                 youtubeUrl: formValue.youtubeUrl,
                 spotifyUrl: formValue.spotifyUrl?.trim() || undefined,
                 imageUrl: formValue.imageUrl,
-                sheetMusicUrl: formValue.sheetMusicUrl?.trim() || undefined,
                 tags: formValue.tags.map((t: any) => ({
                     id: t.id || undefined,
                     name: t.name
