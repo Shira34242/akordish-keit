@@ -12,7 +12,7 @@ interface StaticSeo {
 export class SeoRouteService {
   private readonly staticSeo: Record<string, StaticSeo> = {
     '/': {
-      title: 'אקורדישקייט - המאגר הגדול לאקורדים',
+      title: 'אקורדישקייט',
       description: 'מאגר אקורדים, שירים, אמנים, חדשות מוזיקה, הופעות ואינדקס בעלי מקצוע במוזיקה היהודית.'
     },
     '/chords': {

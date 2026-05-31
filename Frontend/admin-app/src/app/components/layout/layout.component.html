@@ -102,7 +102,7 @@
             <ng-template #loginBtnMobile>
                 <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-template>
-            <button class="btn-lang-toggle" (click)="langService.toggle()">
+            <button class="btn-lang-toggle" (click)="langService.toggle()" *ngIf="false">
                 <span [class.lang-active]="currentLang === 'he'">עב</span>
                 <span class="lang-sep">|</span>
                 <span [class.lang-active]="currentLang === 'en'">EN</span>
@@ -172,7 +172,7 @@
             <ng-container *ngIf="!loggedIn || !user">
                 <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-container>
-            <button class="btn-lang-toggle" (click)="langService.toggle()">
+            <button class="btn-lang-toggle" (click)="langService.toggle()" *ngIf="false">
                 <span [class.lang-active]="currentLang === 'he'">עב</span>
                 <span class="lang-sep">|</span>
                 <span [class.lang-active]="currentLang === 'en'">EN</span>

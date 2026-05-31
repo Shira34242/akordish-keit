@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -16,7 +16,7 @@ export enum RecoveryMethod {
   templateUrl: './forgot-password-modal.component.html',
   styleUrls: ['./forgot-password-modal.component.css']
 })
-export class ForgotPasswordModalComponent {
+export class ForgotPasswordModalComponent implements OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
 
@@ -40,11 +40,56 @@ export class ForgotPasswordModalComponent {
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
   passwordErrors: string[] = [];
 
+  // Resend countdown
+  resendCountdown = 0;
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
+
   // Recovery method enum
   RecoveryMethod = RecoveryMethod;
   private readonly langService = inject(LanguageService);
 
   constructor(private authService: AuthService) {}
+
+  ngOnDestroy() {
+    this.clearCountdown();
+  }
+
+  private startResendCountdown(seconds = 60) {
+    this.clearCountdown();
+    this.resendCountdown = seconds;
+    this.countdownInterval = setInterval(() => {
+      this.resendCountdown--;
+      if (this.resendCountdown <= 0) {
+        this.clearCountdown();
+      }
+    }, 1000);
+  }
+
+  private clearCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+    this.resendCountdown = 0;
+  }
+
+  onResendCode() {
+    if (this.resendCountdown > 0 || this.loading) return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.loading = true;
+    this.authService.requestPasswordReset(this.usernameOrEmail, this.recoveryMethod).subscribe({
+      next: () => {
+        this.loading = false;
+        this.successMessage = this.langService.translate('auth.code_sent_email');
+        this.startResendCountdown();
+      },
+      error: (error) => {
+        this.loading = false;
+        this.errorMessage = error.error?.message || this.langService.translate('auth.error_send_code');
+      }
+    });
+  }
 
   onRequestReset() {
     this.errorMessage = '';
@@ -62,6 +107,7 @@ export class ForgotPasswordModalComponent {
         this.loading = false;
         this.step = 'verify';
         this.successMessage = this.langService.translate('auth.code_sent_email');
+        this.startResendCountdown();
       },
       error: (error) => {
         this.loading = false;
@@ -188,6 +234,7 @@ export class ForgotPasswordModalComponent {
       this.step = 'request';
       this.errorMessage = '';
       this.successMessage = '';
+      this.clearCountdown();
     } else {
       this.onClose();
     }

@@ -441,6 +441,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'forgot.strength_strong': 'חזקה',
     'forgot.confirm_password': 'אימות סיסמא',
     'forgot.reset': 'אפס סיסמא',
+    'forgot.resend_code': 'שלח קוד מחדש',
+    'forgot.resend_in': 'שלח מחדש בעוד',
+    'forgot.seconds': 'שניות',
 
     // Additional details modal
     'details.step1_title': 'כמה פרטים קטנים להשלמת החוויה',
@@ -1782,6 +1785,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'forgot.strength_strong': 'Strong',
     'forgot.confirm_password': 'Confirm Password',
     'forgot.reset': 'Reset Password',
+    'forgot.resend_code': 'Resend Code',
+    'forgot.resend_in': 'Resend in',
+    'forgot.seconds': 'seconds',
 
     // Additional details modal
     'details.step1_title': 'A few details to complete your experience',

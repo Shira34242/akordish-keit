@@ -10,7 +10,7 @@ export const routes: Routes = [
             {
                 path: '',
                 loadComponent: () => import('./components/home-page/home-page.component').then(m => m.HomePageComponent),
-                title: 'אקורדישקייט - המאגר הגדול לאקורדים'
+                title: 'אקורדישקייט'
             },
             {
                 path: 'song/:id/:slug',
