@@ -187,6 +187,62 @@ namespace AkordishKeit.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> ConvertYouTubeThumbnails([FromQuery] int limit = 100, [FromQuery] bool dryRun = false)
         {
+            var result = await ConvertYouTubeThumbnailsBatchAsync(limit, dryRun);
+            return Ok(result);
+        }
+
+        [HttpPost("maintenance/convert-all-youtube-thumbnails")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> ConvertAllYouTubeThumbnails([FromQuery] int batchSize = 100, [FromQuery] int maxBatches = 50)
+        {
+            batchSize = Math.Clamp(batchSize, 1, 500);
+            maxBatches = Math.Clamp(maxBatches, 1, 500);
+
+            var totalChecked = 0;
+            var totalConverted = 0;
+            var totalFailed = 0;
+            var totalSkipped = 0;
+            var batchesRun = 0;
+            var stoppedBecauseNoProgress = false;
+            var failures = new List<object>();
+
+            for (var batch = 0; batch < maxBatches; batch++)
+            {
+                var result = await ConvertYouTubeThumbnailsBatchAsync(batchSize, dryRun: false);
+                batchesRun++;
+                totalChecked += result.CheckedCount;
+                totalConverted += result.ConvertedCount;
+                totalFailed += result.FailedCount;
+                totalSkipped += result.SkippedCount;
+                failures.AddRange(result.Failures);
+
+                if (!result.HasMore)
+                    break;
+
+                if (result.ConvertedCount == 0)
+                {
+                    stoppedBecauseNoProgress = true;
+                    break;
+                }
+            }
+
+            return Ok(new
+            {
+                batchSize,
+                maxBatches,
+                batchesRun,
+                checkedCount = totalChecked,
+                convertedCount = totalConverted,
+                failedCount = totalFailed,
+                skippedCount = totalSkipped,
+                stoppedBecauseNoProgress,
+                reachedMaxBatches = batchesRun >= maxBatches,
+                failures = failures.Take(50)
+            });
+        }
+
+        private async Task<YouTubeThumbnailConversionResult> ConvertYouTubeThumbnailsBatchAsync(int limit, bool dryRun)
+        {
             limit = Math.Clamp(limit, 1, 500);
             var checkedCount = 0;
             var convertedCount = 0;
@@ -290,17 +346,17 @@ namespace AkordishKeit.Controllers
             _logger.LogInformation("YouTube thumbnail conversion completed. dryRun={DryRun} checked={Checked} converted={Converted} failed={Failed} skipped={Skipped}",
                 dryRun, checkedCount, convertedCount, failedCount, skippedCount);
 
-            return Ok(new
+            return new YouTubeThumbnailConversionResult
             {
-                dryRun,
-                limit,
-                checkedCount,
-                convertedCount,
-                failedCount,
-                skippedCount,
-                hasMore = remaining <= 0,
-                failures = failures.Take(20)
-            });
+                DryRun = dryRun,
+                Limit = limit,
+                CheckedCount = checkedCount,
+                ConvertedCount = convertedCount,
+                FailedCount = failedCount,
+                SkippedCount = skippedCount,
+                HasMore = remaining <= 0,
+                Failures = failures.Take(20).ToList()
+            };
         }
 
         private static string GetContentType(string extension) => extension switch
@@ -487,6 +543,18 @@ namespace AkordishKeit.Controllers
 
         private static bool IsPdfContent(byte[] bytes) =>
             bytes.Length >= 4 && bytes[0] == '%' && bytes[1] == 'P' && bytes[2] == 'D' && bytes[3] == 'F';
+
+        private sealed class YouTubeThumbnailConversionResult
+        {
+            public bool DryRun { get; set; }
+            public int Limit { get; set; }
+            public int CheckedCount { get; set; }
+            public int ConvertedCount { get; set; }
+            public int FailedCount { get; set; }
+            public int SkippedCount { get; set; }
+            public bool HasMore { get; set; }
+            public List<object> Failures { get; set; } = [];
+        }
 
         private static bool IsYouTubeThumbnailUrl(string? url)
         {
