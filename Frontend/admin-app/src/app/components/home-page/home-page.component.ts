@@ -35,7 +35,6 @@ import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { songSlug } from '../../utils/slug';
 import { getArticleRoute } from '../../utils/article-route.utils';
 import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
-import { getPodcastCoverUrl } from '../../utils/podcast-cover.utils';
 
 interface HeroParticle {
   x: number; y: number;
@@ -100,7 +99,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   homePodcasts: Podcast[] = [];
   latestPodcastEpisodes: PodcastEpisode[] = [];
   popularPodcastEpisodes: PodcastEpisode[] = [];
-  podcastCoverUrl = getPodcastCoverUrl;
 
 
   isMobile = window.innerWidth <= 768;

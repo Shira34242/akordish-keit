@@ -70,8 +70,8 @@
               *ngFor="let podcast of podcasts; trackBy: trackById"
               (click)="selectPodcast(podcast)"
               [attr.aria-label]="podcast.name">
-              <span class="home-series-image-card__image" [style.background-image]="podcastCoverUrl(podcast) ? 'url(' + podcastCoverUrl(podcast) + ')' : ''">
-                <span *ngIf="!podcastCoverUrl(podcast)" class="material-icons">podcasts</span>
+              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
+                <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
               </span>
             </a>
           </div>
@@ -142,8 +142,8 @@
           </ng-container>
 
           <ng-template #podcastCover>
-            <span class="podcast-cover" [style.background-image]="podcastCoverUrl(selectedPodcast) ? 'url(' + podcastCoverUrl(selectedPodcast) + ')' : ''">
-              <span *ngIf="!podcastCoverUrl(selectedPodcast)" class="material-icons">podcasts</span>
+            <span class="podcast-cover" [style.background-image]="selectedPodcast.imageUrl ? 'url(' + selectedPodcast.imageUrl + ')' : ''">
+              <span *ngIf="!selectedPodcast.imageUrl" class="material-icons">podcasts</span>
             </span>
           </ng-template>
         </div>

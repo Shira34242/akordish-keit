@@ -152,8 +152,8 @@
             class="podcast-card"
             *ngFor="let podcast of directPodcasts"
             (click)="goToPodcast(podcast)">
-            <span class="podcast-card__image" [style.background-image]="podcastCoverUrl(podcast) ? 'url(' + podcastCoverUrl(podcast) + ')' : ''">
-              <span *ngIf="!podcastCoverUrl(podcast)" class="material-icons">podcasts</span>
+            <span class="podcast-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + (podcast.imageUrl | cfImage:'card') + ')' : ''">
+              <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
             </span>
             <span class="podcast-card__copy">
               <strong>{{ podcast.name }}</strong>
