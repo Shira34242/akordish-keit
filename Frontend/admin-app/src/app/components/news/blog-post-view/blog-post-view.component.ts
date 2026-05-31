@@ -16,7 +16,7 @@ import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-bad
 import { SeoService } from '../../../services/seo.service';
 import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
-import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-blog-post-view',
@@ -40,6 +40,10 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
+  }
+
+  heroBg(url: string | null | undefined): string | null {
+    return cloudflareBackgroundImage(url, 'hero');
   }
 
   private _heroEl: ElementRef<HTMLElement> | undefined;
