@@ -109,6 +109,10 @@ function isUntouchedUrl(url: string): boolean {
 
 function getCloudflareZone(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(window.location.origin)) {
+      return 'https://akordishkayt.com';
+    }
+
     return window.location.origin;
   }
 
