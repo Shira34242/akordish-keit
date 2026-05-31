@@ -24,10 +24,14 @@ export class ImgFallbackDirective {
     const original = (this.imgFallbackOriginal || '').trim();
     if (!this.triedOriginal && original && img.src !== original) {
       this.triedOriginal = true;
+      img.removeAttribute('srcset');
+      img.removeAttribute('sizes');
       img.src = original;
       return;
     }
 
+    img.removeAttribute('srcset');
+    img.removeAttribute('sizes');
     img.src = this.imgFallback;
   }
 }

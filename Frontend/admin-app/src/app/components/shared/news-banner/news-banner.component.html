@@ -2,12 +2,14 @@
 
   <img
     class="banner-bg"
-    [src]="(article.featuredImageUrl | cfImage:'card') || '/assets/default-article.png'"
-    [attr.srcset]="article.featuredImageUrl | cfSrcset:imageWidths:82"
-    [attr.sizes]="imageSizes"
+    [src]="(article.featuredImageUrl | cfImage:imagePreset) || '/assets/default-article.png'"
+    [attr.srcset]="imageWidths.length ? (article.featuredImageUrl | cfSrcset:imageWidths:82) : null"
+    [attr.sizes]="imageWidths.length ? imageSizes : null"
     [alt]="article.title"
     loading="lazy"
-    decoding="async">
+    decoding="async"
+    [imgFallbackOriginal]="article.featuredImageUrl"
+    imgFallback="/assets/default-article.png">
 
   <div class="banner-overlay"></div>
 

@@ -40,7 +40,7 @@
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_songs' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.songs; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-song.png'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:80" sizes="48px" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-song.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -51,7 +51,7 @@
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_artists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.artists; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'profile') || 'assets/default-artist.png'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:82" sizes="48px" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:82) || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-artist.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
               </div>
@@ -61,7 +61,7 @@
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'thumb') || '/assets/default-article.png'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:80" sizes="48px" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -72,7 +72,7 @@
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:82" sizes="48px" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -83,7 +83,7 @@
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:82" sizes="48px" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -94,7 +94,7 @@
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_playlists' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.playlists; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-playlist.png'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:80" sizes="48px" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-playlist.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -108,7 +108,7 @@
               <span class="search-lyrics-badge">{{ 'home.search_deep_label' | translate }}</span>
             </span>
             <div class="search-result-item" *ngFor="let item of lyricsMatches; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:'thumb') || 'assets/default-song.png'" [attr.srcset]="item.imageUrl | cfSrcset:[120,180,240]:80" sizes="48px" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async">
+              <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-song.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -158,8 +158,7 @@
           *ngFor="let article of newsArticles; trackBy: trackById"
           class="news-banner-card"
           [article]="article"
-          [imageSizes]="'(max-width: 480px) 92vw, 92vw'"
-          [imageWidths]="[360,600,900,1200,1600]"
+          [imagePreset]="900"
           [showDescription]="false">
         </app-news-banner>
       </div>
@@ -172,8 +171,7 @@
                 *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
                 [article]="article"
-                [imageSizes]="'(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem'"
-                [imageWidths]="[240,360,480,600]"
+                [imagePreset]="360"
                 [showDescription]="false"
                 [attr.aria-hidden]="copy > 0 ? true : null">
               </app-news-banner>
@@ -187,8 +185,7 @@
                 *ngFor="let article of newsArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"
                 [article]="article"
-                [imageSizes]="'(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem'"
-                [imageWidths]="[240,360,480,600]"
+                [imagePreset]="360"
                 [showDescription]="false"
                 [attr.aria-hidden]="copy > 0 ? true : null">
               </app-news-banner>
@@ -272,7 +269,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="teacher.profileImageUrl | cfSrcset:[160,240,320,480]:82" sizes="96px" [alt]="teacher.displayName" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+                  <img [src]="(teacher.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="teacher.displayName" [imgFallbackOriginal]="teacher.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
                 </div>
                 <p class="person-name">{{ teacher.displayName }}</p>
                 <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
@@ -285,7 +282,7 @@
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
-                  <img [src]="(pro.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="pro.profileImageUrl | cfSrcset:[160,240,320,480]:82" sizes="96px" [alt]="pro.displayName" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+                  <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
                 </div>
                 <p class="person-name">{{ pro.displayName }}</p>
                 <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
@@ -355,8 +352,7 @@
           *ngFor="let article of blogArticles; trackBy: trackById"
           class="news-banner-card"
           [article]="article"
-          [imageSizes]="'(max-width: 480px) 92vw, 92vw'"
-          [imageWidths]="[360,600,900,1200,1600]"
+          [imagePreset]="900"
           [showDescription]="false">
         </app-news-banner>
       </div>
@@ -369,8 +365,7 @@
                 *ngFor="let article of blogArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
                 [article]="article"
-                [imageSizes]="'(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem'"
-                [imageWidths]="[240,360,480,600]"
+                [imagePreset]="360"
                 [showDescription]="false"
                 [attr.aria-hidden]="copy > 0 ? true : null">
               </app-news-banner>
@@ -384,8 +379,7 @@
                 *ngFor="let article of blogArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"
                 [article]="article"
-                [imageSizes]="'(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem'"
-                [imageWidths]="[240,360,480,600]"
+                [imagePreset]="360"
                 [showDescription]="false"
                 [attr.aria-hidden]="copy > 0 ? true : null">
               </app-news-banner>
@@ -433,8 +427,7 @@
           *ngFor="let article of visibleViralArticles; trackBy: trackById"
           class="news-banner-card"
           [article]="article"
-          [imageSizes]="'(max-width: 480px) 92vw, (max-width: 768px) 46vw, 24vw'"
-          [imageWidths]="[240,360,480,600]"
+          [imagePreset]="360"
           [showDescription]="false">
         </app-news-banner>
       </div>

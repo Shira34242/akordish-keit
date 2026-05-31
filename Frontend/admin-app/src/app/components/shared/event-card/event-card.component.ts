@@ -2,13 +2,13 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/event.utils';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
-import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-event-card',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe, ImgFallbackDirective],
+  imports: [CommonModule, TranslatePipe, CloudflareImagePipe, ImgFallbackDirective],
   templateUrl: './event-card.component.html',
   styleUrls: ['./event-card.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
