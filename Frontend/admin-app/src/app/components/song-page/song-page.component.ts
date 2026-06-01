@@ -38,11 +38,12 @@ import { ArticleService } from '../../services/admin/article.service';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { artistRoute, songSlug } from '../../utils/slug';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
+import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, NewsBannerComponent, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, NewsBannerComponent, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe, AdDisplayComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })

@@ -505,3 +505,33 @@
     width: min(128px, 100%);
   }
 }
+
+/* ============================================
+   AD SLOTS
+============================================ */
+.artists-ad-slot {
+  width: 100%;
+}
+
+.artists-ad-slot:has(.ad-container) {
+  margin: var(--space-xl) 0;
+  border-radius: var(--radius-md, 16px);
+  background: #F2F2F2;
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.artists-ad-slot .ad-slot__label {
+  display: none;
+}
+
+.artists-ad-slot:has(.ad-container) .ad-slot__label {
+  display: block;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 6px;
+  align-self: flex-start;
+}

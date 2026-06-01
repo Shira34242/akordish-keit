@@ -11,11 +11,12 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { artistRoute } from '../../utils/slug';
+import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 
 @Component({
   selector: 'app-artists-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, ArtistCircleComponent, AutoScrollDirective],
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe, ArtistCircleComponent, AutoScrollDirective, AdDisplayComponent],
   templateUrl: './artists-list.component.html',
   styleUrls: ['./artists-list.component.css']
 })

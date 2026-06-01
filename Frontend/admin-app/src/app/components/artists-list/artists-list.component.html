@@ -70,6 +70,12 @@
 
   </div>
 
+  <!-- פרסומת ראשונה — בין שורות האמנים לרשת הכללית -->
+  <div class="ad-slot artists-ad-slot">
+    <span class="ad-slot__label">פרסומת</span>
+    <app-ad-display spotTechnicalId="artists-list-top-banner"></app-ad-display>
+  </div>
+
   <main class="artists-content">
 
     <section class="catalog-section">
@@ -93,6 +99,12 @@
       <span class="material-icons">person_search</span>
       <p>{{ 'artists.empty' | translate }}</p>
       <span *ngIf="searchTerm">{{ 'artists.empty_search' | translate }}</span>
+    </div>
+
+    <!-- פרסומת שנייה — לפני ה-pagination -->
+    <div class="ad-slot artists-ad-slot" *ngIf="!loadingAll && allArtists.length > 0">
+      <span class="ad-slot__label">פרסומת</span>
+      <app-ad-display spotTechnicalId="artists-list-bottom-banner"></app-ad-display>
     </div>
 
     <div class="pagination" *ngIf="totalPages > 1 && !loadingAll && !searchTerm">

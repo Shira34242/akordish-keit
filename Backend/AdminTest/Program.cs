@@ -441,6 +441,9 @@ using (var scope = app.Services.CreateScope())
         new { Name = "באנר אמצע — אינדקס מוזיקה",   TechnicalId = "professionals-sections-mid", Dimensions = "970x200", Description = "בין מומלצים לסוכנויות בטאב בעלי מקצוע" },
         new { Name = "באנר לפני קטלוג — אינדקס מוזיקה", TechnicalId = "professionals-pre-catalog", Dimensions = "970x200", Description = "לפני גריד כל בעלי המוזיקה" },
         new { Name = "באנר מורים — אינדקס מוזיקה",  TechnicalId = "professionals-teachers-mid", Dimensions = "970x200", Description = "בטאב מורים, אחרי מורים מומלצים" },
+        new { Name = "באנר נעילה — דף שיר",          TechnicalId = "song-page-locked-banner",    Dimensions = "728x250", Description = "מוצג מתחת לכפתור ההתחברות כשתוכן השיר חסום" },
+        new { Name = "באנר עליון — דף אמנים",        TechnicalId = "artists-list-top-banner",    Dimensions = "970x250", Description = "בין שורות האמנים המומלצים לרשת הכללית" },
+        new { Name = "באנר תחתון — דף אמנים",        TechnicalId = "artists-list-bottom-banner", Dimensions = "970x90",  Description = "לפני pagination ברשת האמנים הכללית" },
     };
 
     foreach (var seed in adSpotSeeds)
