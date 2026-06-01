@@ -29,6 +29,8 @@ import { Article, ArticleContentType, ArticleStatus } from '../../models/article
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ProfileReminderService } from '../../services/profile-reminder.service';
+import { getArticleLink } from '../../utils/article-route.utils';
+import { artistPath } from '../../utils/slug';
 
 interface ProfileSongCard {
   id: number;
@@ -705,7 +707,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     }
 
     if (profilePage.profileType === 'artist') {
-      return `/artist/${profilePage.profileId}`;
+      return artistPath({ id: profilePage.profileId, name: profilePage.displayName });
     }
 
     if (profilePage.isTeacher) {
@@ -787,11 +789,17 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   getArticleRoute(item: ProfileArticleCard | LikedContent): string[] {
-    if (!item.slug) {
+    const id = 'contentId' in item ? item.contentId : item.id;
+    if (!id) {
       return ['/my-playlists'];
     }
 
-    return this.isBlogContent(item.contentType) ? ['/blog', item.slug] : ['/news', item.slug];
+    return getArticleLink({
+      id,
+      title: item.title || item.slug || '',
+      slug: item.slug || '',
+      contentType: this.isBlogContent(item.contentType) ? ArticleContentType.Blog : ArticleContentType.News
+    } as Article);
   }
 
   getArticleTypeLabel(contentType?: number | string): string {

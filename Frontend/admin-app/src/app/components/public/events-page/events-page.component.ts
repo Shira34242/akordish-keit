@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { EventService } from '../../../services/admin/event.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
-import { EventCardData, getDisplayArtist } from '../../../utils/event.utils';
+import { EventCardData, getDisplayArtist, hasDisplayEventTitle } from '../../../utils/event.utils';
 import { EventModalComponent } from '../../shared/event-modal/event-modal.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
@@ -288,6 +288,10 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
 
   getArtist(event: EventCardData): string | null {
     return getDisplayArtist(event);
+  }
+
+  hasEventTitle(event: EventCardData): boolean {
+    return hasDisplayEventTitle(event);
   }
 
   formatDate(dateString: string): string {

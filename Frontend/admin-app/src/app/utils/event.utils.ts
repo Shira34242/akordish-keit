@@ -38,6 +38,27 @@ export function getDisplayArtist(event: {
   return null;
 }
 
+export function hasDisplayEventTitle(event: {
+  name?: string;
+  artistName?: string;
+  taggedArtistNames?: string[];
+  location?: string;
+}): boolean {
+  const title = event.name?.trim();
+  if (!title) return false;
+
+  const displayArtist = getDisplayArtist(event)?.trim();
+  const fallbackTitles = [
+    displayArtist,
+    event.artistName?.trim(),
+    event.location?.trim(),
+    'הופעה חדשה',
+    'אירוע חדש'
+  ].filter(Boolean);
+
+  return !fallbackTitles.some(fallback => fallback === title);
+}
+
 export function isEventPast(event: { eventDate: string; isPast?: boolean }): boolean {
   if (event.isPast !== undefined) return event.isPast;
   return new Date(event.eventDate) < new Date();

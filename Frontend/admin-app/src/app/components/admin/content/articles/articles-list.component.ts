@@ -19,7 +19,7 @@ import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-p
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
-import { getArticleRoute } from '../../../../utils/article-route.utils';
+import { getArticleLink } from '../../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-articles-list',
@@ -683,7 +683,7 @@ export class ArticlesListComponent implements OnInit {
   }
 
   viewArticle(article: Article): void {
-    this.router.navigate([getArticleRoute(article), article.slug]);
+    this.router.navigate(getArticleLink(article));
   }
 
   changeArticleStatus(article: Article, statusValue: string | number): void {

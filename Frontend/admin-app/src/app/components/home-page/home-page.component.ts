@@ -31,8 +31,8 @@ import { Podcast, PodcastEpisode } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
-import { songSlug } from '../../utils/slug';
-import { getArticleRoute } from '../../utils/article-route.utils';
+import { artistRoute, songSlug } from '../../utils/slug';
+import { getArticleLink } from '../../utils/article-route.utils';
 import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
 
 interface HeroParticle {
@@ -344,7 +344,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (item.type === 'article') {
       this.articleService.getArticle(item.id).pipe(take(1)).subscribe({
         next: article => {
-          this.router.navigate([getArticleRoute(article), article.slug]);
+          this.router.navigate(getArticleLink(article));
         },
         error: () => {
           alert(this.langService.translate('common.article_open_error'));
@@ -365,6 +365,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (item.type === 'song' && item.title) {
         const slug = songSlug({ title: item.title, artistName: item.subtitle || '' });
         this.router.navigate(slug ? ['/song', item.id, slug] : ['/song', item.id]);
+      } else if (item.type === 'artist') {
+        this.router.navigate(artistRoute({ id: item.id, name: item.title }));
       } else {
         this.router.navigate([base, item.id]);
       }

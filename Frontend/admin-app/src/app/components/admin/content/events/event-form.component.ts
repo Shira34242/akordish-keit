@@ -278,7 +278,7 @@ export class EventFormComponent implements OnInit {
 
   formatDateForInput(dateString: string): string {
     const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
+    return date.toISOString().slice(0, 10);
   }
 
   private getFutureDateForInput(dateString?: string): string {
@@ -289,7 +289,7 @@ export class EventFormComponent implements OnInit {
       return '';
     }
 
-    return date.toISOString().slice(0, 16);
+    return date.toISOString().slice(0, 10);
   }
 
   toggleArtistSelection(artistId: number): void {

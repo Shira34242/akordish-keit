@@ -53,6 +53,11 @@ export const routes: Routes = [
                 title: 'אקורדישקייט - חדשות המוזיקה'
             },
             {
+                path: 'news/:id/:slug',
+                loadComponent: () => import('./components/news/article-view/article-view.component').then(m => m.ArticleViewComponent),
+                title: 'אקורדישקייט - חדשות המוזיקה'
+            },
+            {
                 path: 'news/:slug',
                 loadComponent: () => import('./components/news/article-view/article-view.component').then(m => m.ArticleViewComponent),
                 title: 'אקורדישקייט - חדשות המוזיקה'
@@ -64,6 +69,11 @@ export const routes: Routes = [
             },
             {
                 path: 'blog/id/:id',
+                loadComponent: () => import('./components/news/blog-post-view/blog-post-view.component').then(m => m.BlogPostViewComponent),
+                title: 'אקורדישקייט - כתבות'
+            },
+            {
+                path: 'blog/:id/:slug',
                 loadComponent: () => import('./components/news/blog-post-view/blog-post-view.component').then(m => m.BlogPostViewComponent),
                 title: 'אקורדישקייט - כתבות'
             },
@@ -134,6 +144,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./components/service-provider-create/service-provider-create.component').then(m => m.ServiceProviderCreateComponent),
                 canActivate: [authGuard],
                 title: 'צור פרופיל בעל מקצוע - אקורדישקייט'
+            },
+            {
+                path: 'artist/:id/:slug',
+                loadComponent: () => import('./components/artist-detail/artist-detail.component').then(m => m.ArtistDetailComponent),
+                canActivate: [authGuard],
+                title: 'אקורדישקייט'
             },
             {
                 path: 'artist/:id',

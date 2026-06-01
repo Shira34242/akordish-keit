@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { artistRoute } from '../../../utils/slug';
 
 @Component({
     selector: 'app-artist-circle',
@@ -13,4 +14,9 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
 })
 export class ArtistCircleComponent {
     @Input() artist: any;
+
+    get artistLink(): (string | number)[] {
+        if (!this.artist?.id) return ['/artists'];
+        return artistRoute(this.artist);
+    }
 }

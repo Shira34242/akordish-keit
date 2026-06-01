@@ -50,7 +50,7 @@
                 <h1 class="main-title">{{ song.title }}</h1>
                 <div class="artist-names">
                     <ng-container *ngFor="let artist of song.artists; let last = last">
-                        <span class="artist-name-link" (click)="navigateToArtist(artist.id)">{{ artist.name }}</span><span *ngIf="!last" class="artist-separator">,&nbsp;</span>
+                        <span class="artist-name-link" (click)="navigateToArtist(artist)">{{ artist.name }}</span><span *ngIf="!last" class="artist-separator">,&nbsp;</span>
                     </ng-container>
                 </div>
 

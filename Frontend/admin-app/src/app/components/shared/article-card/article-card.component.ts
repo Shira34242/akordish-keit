@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Article } from '../../../models/article.model';
-import { getArticleRoute } from '../../../utils/article-route.utils';
+import { getArticleLink, getArticleRoute } from '../../../utils/article-route.utils';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
@@ -22,7 +22,7 @@ export class ArticleCardComponent {
   }
 
   get articleLink(): string[] {
-    return [this.articleRoute, 'id', String(this.article.id)];
+    return getArticleLink(this.article);
   }
 
   formatDate(dateString: string): string {

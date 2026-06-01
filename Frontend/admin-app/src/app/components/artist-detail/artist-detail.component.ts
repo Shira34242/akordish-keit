@@ -18,9 +18,10 @@ import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../models/agency.model';
 import { AgencyService } from '../../services/agency.service';
-import { songSlug } from '../../utils/slug';
+import { artistPath, songSlug, titleSlug } from '../../utils/slug';
 import { AnalyticsService } from '../../services/analytics.service';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
+import { getArticleLink } from '../../utils/article-route.utils';
 
 @Component({
   selector: 'app-artist-detail',
@@ -175,6 +176,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.artist = artist;
         this.loadAgencyBadge(id);
         this.loading = false;
+        if (this.redirectToCanonicalArtist(artist)) return;
         this.applySeo(artist);
         this.artistPageService.setOwnerId(artist.userId ?? null);
         this.loadSongs(id);
@@ -269,7 +271,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private applySeo(artist: Artist): void {
-    const path = `/artist/${artist.id}`;
+    const path = artistPath(artist);
     const descFallback = `${this.langService.translate('artist.seo_desc_pre')}${artist.name}${this.langService.translate('artist.seo_desc_suf')}`;
     const rawDescription = artist.shortBio || artist.biography || descFallback;
     const description = rawDescription.replace(/\s+/g, ' ').trim().slice(0, 160);
@@ -299,6 +301,21 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       ]
     });
+  }
+
+  private redirectToCanonicalArtist(artist: Artist): boolean {
+    const currentSlug = this.route.snapshot.paramMap.get('slug');
+    const expectedSlug = titleSlug(artist);
+
+    if (!expectedSlug || currentSlug === expectedSlug) {
+      return false;
+    }
+
+    this.router.navigate(['/artist', artist.id, expectedSlug], {
+      replaceUrl: true,
+      queryParams: this.route.snapshot.queryParams
+    });
+    return true;
   }
 
   // ============================================================
@@ -789,7 +806,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(slug ? ['/song', songId, slug] : ['/song', songId]);
   }
 
-  navigateToArticle(slug: string): void {
-    this.router.navigate(['/news', slug]);
+  navigateToArticle(article: Article): void {
+    this.router.navigate(getArticleLink(article));
   }
 }

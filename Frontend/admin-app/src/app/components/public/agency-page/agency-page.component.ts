@@ -19,6 +19,8 @@ import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-brows
 import { SocialPlatform } from '../../../models/artist.model';
 import { SeoService } from '../../../services/seo.service';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { getArticleLink } from '../../../utils/article-route.utils';
+import { artistRoute } from '../../../utils/slug';
 
 @Component({
   selector: 'app-agency-page',
@@ -207,10 +209,17 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   }
 
   goToProfile(profile: AgencyProfileCardDto): void {
-    if (!profile.profileUrl) return;
     if (this.agency) {
       this.analytics.trackInteraction('agency_profile_click', this.agency.id, `${this.agency.name} | ${profile.profileType} | ${profile.name}`);
     }
+    if (profile.profileType === 'artist') {
+      const artistId = Number(profile.profileUrl?.match(/^\/artist\/(\d+)/)?.[1]);
+      if (artistId) {
+        this.router.navigate(artistRoute({ id: artistId, name: profile.name }));
+        return;
+      }
+    }
+    if (!profile.profileUrl) return;
     this.router.navigateByUrl(profile.profileUrl);
   }
 
@@ -218,7 +227,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
     if (this.agency) {
       this.analytics.trackInteraction('agency_content_click', this.agency.id, `${this.agency.name} | article | ${article.title}`);
     }
-    this.router.navigate(['/news', article.slug]);
+    this.router.navigate(getArticleLink(article));
   }
 
   goToSong(song: SongDto): void {

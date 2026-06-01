@@ -434,11 +434,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
       return;
     }
 
-    if (!this.event.name.trim()) {
-      this.pushError(this.langService.translate('quick_add.enter_event_name'));
-      return;
-    }
-
     if (!this.event.eventDate) {
       this.pushError(this.langService.translate('quick_add.enter_event_date'));
       return;

@@ -36,7 +36,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
-import { songSlug } from '../../utils/slug';
+import { artistRoute, songSlug } from '../../utils/slug';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
 
 @Component({
@@ -1318,9 +1318,9 @@ private getKeyIndex(keyName: string): number {
         this.router.navigate(['/song', id]);
     }
 
-    navigateToArtist(id: number | undefined): void {
-        if (id) {
-            this.router.navigate(['/artist', id]);
+    navigateToArtist(artist: { id?: number; name?: string } | undefined): void {
+        if (artist?.id) {
+            this.router.navigate(artistRoute({ id: artist.id, name: artist.name }));
         }
     }
 
