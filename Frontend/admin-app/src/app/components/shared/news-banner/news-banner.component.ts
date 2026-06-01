@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink } from '@angular/router';
 import { Article } from '../../../models/article.model';
-import { getArticleRoute } from '../../../utils/article-route.utils';
+import { getArticleLink, getArticleRoute, getArticleSlug } from '../../../utils/article-route.utils';
 import { CloudflareImagePipe, CloudflareImagePreset, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
@@ -26,6 +26,7 @@ export class NewsBannerComponent {
   }
 
   get articleLink(): string[] {
-    return [this.articleRoute, 'id', String(this.article.id)];
+    const slug = getArticleSlug(this.article);
+    return slug ? [this.articleRoute, String(this.article.id), slug] : getArticleLink(this.article);
   }
 }

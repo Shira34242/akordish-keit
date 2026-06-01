@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/event.utils';
+import { EventCardData, getDisplayArtist, hasDisplayEventTitle, isEventPast } from '../../../utils/event.utils';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
@@ -14,10 +14,15 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
 })
 export class EventCardComponent {
   @Input({ required: true }) event!: EventCardData;
+  @Input() showInfo = true;
   @Output() cardClick = new EventEmitter<EventCardData>();
 
   get displayArtist(): string | null {
     return getDisplayArtist(this.event);
+  }
+
+  get hasTitle(): boolean {
+    return hasDisplayEventTitle(this.event);
   }
 
   get isPast(): boolean {

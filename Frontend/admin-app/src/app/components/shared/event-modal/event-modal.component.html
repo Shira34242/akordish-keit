@@ -21,7 +21,7 @@
 
     <div class="modal-bottom-bar">
       <div class="modal-info">
-        <h2 class="modal-name">{{ event.name }}</h2>
+        <h2 class="modal-name" *ngIf="hasTitle">{{ event.name }}</h2>
         <p class="modal-meta" *ngIf="displayArtist || event.location">
           <span *ngIf="displayArtist">{{ displayArtist }}</span>
           <span *ngIf="displayArtist && event.location"> · </span>

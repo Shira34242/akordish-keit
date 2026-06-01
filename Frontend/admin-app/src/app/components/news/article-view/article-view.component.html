@@ -124,7 +124,7 @@
         <!-- Tagged Artists -->
         <div class="tagged-artists-section" *ngIf="article.taggedArtists && article.taggedArtists.length > 0">
           <a *ngFor="let artist of article.taggedArtists"
-             [routerLink]="['/artist', artist.artistId]"
+             [routerLink]="getArtistLink(artist)"
              class="artist-link">{{ artist.artistName }}</a>
         </div>
 

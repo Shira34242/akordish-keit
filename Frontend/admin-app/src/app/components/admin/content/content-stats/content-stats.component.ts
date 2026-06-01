@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
 import { AgencyService, AgencyAnalyticsSummary } from '../../../../services/agency.service';
+import { getArticleLink } from '../../../../utils/article-route.utils';
 
 type Tab = 'articles' | 'events' | 'buttons' | 'ads' | 'adblock' | 'agencies';
 type Preset = '7' | '30' | '90' | '365';
@@ -149,9 +150,8 @@ export class ContentStatsComponent implements OnInit {
     return type === 1 ? 'חדשות' : 'בלוג';
   }
 
-  navigateToArticle(slug?: string): void {
-    if (!slug) return;
-    this.router.navigate(['/news', slug]);
+  navigateToArticle(article: ArticleRank): void {
+    this.router.navigate(getArticleLink(article as any));
   }
 
   get adsCtr(): number {

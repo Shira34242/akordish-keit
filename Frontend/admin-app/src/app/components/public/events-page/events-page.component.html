@@ -39,7 +39,7 @@
         </span>
 
         <div class="slide-info">
-          <h3 class="slide-name">{{ item.event.name }}</h3>
+          <h3 class="slide-name" *ngIf="hasEventTitle(item.event)">{{ item.event.name }}</h3>
           <p class="slide-meta" *ngIf="getArtist(item.event) || item.event.location">
             <span *ngIf="getArtist(item.event)">{{ getArtist(item.event) }}</span>
             <span *ngIf="getArtist(item.event) && item.event.location"> · </span>

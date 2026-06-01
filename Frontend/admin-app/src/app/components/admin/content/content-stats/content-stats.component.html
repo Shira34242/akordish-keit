@@ -186,7 +186,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let article of articles; let i = index" (click)="navigateToArticle(article.slug)" class="data-row">
+          <tr *ngFor="let article of articles; let i = index" (click)="navigateToArticle(article)" class="data-row">
             <td class="col-rank"><span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span></td>
             <td class="col-title">
               <div class="title-cell">

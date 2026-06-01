@@ -83,7 +83,7 @@
         <span *ngIf="artist.isPremium" class="badge badge-premium">Premium</span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="viewArtist(artist.id)" title="צפייה"><span class="material-icons">visibility</span></button>
+        <button class="btn-action" (click)="viewArtist(artist)" title="צפייה"><span class="material-icons">visibility</span></button>
         <button class="btn-action" (click)="editArtist(artist.id)" title="עריכה"><span class="material-icons">edit</span></button>
         <button class="btn-action btn-delete" (click)="deleteArtist(artist.id)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
@@ -146,7 +146,7 @@
             <div class="action-buttons">
               <button
                 class="btn-action btn-view"
-                (click)="viewArtist(artist.id)"
+                (click)="viewArtist(artist)"
                 title="צפה בדף אומן"
               >
                 <span class="material-icons">visibility</span>

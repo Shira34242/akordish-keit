@@ -17,6 +17,8 @@ import { SeoService } from '../../../services/seo.service';
 import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
+import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
+import { artistRoute } from '../../../utils/slug';
 
 @Component({
   selector: 'app-article-view',
@@ -93,6 +95,10 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     if (!this.article?.tagIds?.length) return [];
     const names = this.article.tags || [];
     return this.article.tagIds.map((id, i) => ({ id, name: names[i] ?? `#${id}` }));
+  }
+
+  getArtistLink(artist: { artistId: number; artistName: string }): (string | number)[] {
+    return artistRoute({ id: artist.artistId, name: artist.artistName });
   }
 
   get hasMoreRelatedArticles(): boolean {
@@ -190,6 +196,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private handleLoadedArticle(article: Article): void {
     this.article = article;
     this.contentPageService.setCurrentArticle(article.id);
+    if (this.redirectToCanonicalArticle(article)) return;
     this.applySeo(article);
 
     this.articleService.incrementView(article.id)
@@ -232,7 +239,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   private applySeo(article: Article): void {
-    const path = article.canonicalUrl || `/news/${article.slug}`;
+    const path = article.canonicalUrl || getArticlePath(article);
     const description = article.metaDescription || article.subtitle || this.stripHtml(article.content).slice(0, 155);
     this.seo.set({
       title: article.metaTitle || article.title,
@@ -259,6 +266,22 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         }
       ]
     });
+  }
+
+  private redirectToCanonicalArticle(article: Article): boolean {
+    const currentId = this.route.snapshot.paramMap.get('id');
+    const currentSlug = this.route.snapshot.paramMap.get('slug');
+    const expectedSlug = getArticleSlug(article);
+
+    if (!expectedSlug || (currentId === String(article.id) && currentSlug === expectedSlug)) {
+      return false;
+    }
+
+    this.router.navigate(['/news', article.id, expectedSlug], {
+      replaceUrl: true,
+      queryParams: this.route.snapshot.queryParams
+    });
+    return true;
   }
 
   private stripHtml(value: string | undefined): string {

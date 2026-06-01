@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EventCardData, getDisplayArtist, isEventPast } from '../../../utils/event.utils';
+import { EventCardData, getDisplayArtist, hasDisplayEventTitle, isEventPast } from '../../../utils/event.utils';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ContentUploaderBadgeComponent } from '../content-uploader-badge/content-uploader-badge.component';
@@ -40,6 +40,10 @@ export class EventModalComponent implements OnChanges {
 
   get displayArtist(): string | null {
     return this.event ? getDisplayArtist(this.event) : null;
+  }
+
+  get hasTitle(): boolean {
+    return this.event ? hasDisplayEventTitle(this.event) : false;
   }
 
   get isPast(): boolean {

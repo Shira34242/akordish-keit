@@ -23,6 +23,7 @@ import { AgencyListDto, AgencyDto, AgencyProfileDto } from '../../../models/agen
 import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
+import { artistRoute } from '../../../utils/slug';
 
 interface Category {
   id: number;
@@ -1023,16 +1024,16 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   }
 
   goToAgencyProfile(profile: AgencyProfileDto): void {
+    if (profile.profileType === 'artist') {
+      this.router.navigate(artistRoute({ id: profile.profileId, name: profile.profileName }));
+      return;
+    }
     if (profile.profileUrl) {
       this.router.navigateByUrl(profile.profileUrl);
       return;
     }
     if (profile.isTeacher) {
       this.router.navigate(['/teacher', profile.profileId]);
-      return;
-    }
-    if (profile.profileType === 'artist') {
-      this.router.navigate(['/artist', profile.profileId]);
       return;
     }
     if (profile.profileType === 'serviceProvider') {

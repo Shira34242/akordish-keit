@@ -29,3 +29,17 @@ export function songRoute(id: number, song?: {
   const slug = song ? songSlug(song) : '';
   return slug ? ['/song', id, slug] : ['/song', id];
 }
+
+export function titleSlug(item: { title?: string; name?: string; slug?: string }): string {
+  return toSlug(item.title || item.name || item.slug || '');
+}
+
+export function artistRoute(artist: { id: number; name?: string }): (string | number)[] {
+  const slug = titleSlug(artist);
+  return slug ? ['/artist', artist.id, slug] : ['/artist', artist.id];
+}
+
+export function artistPath(artist: { id: number; name?: string }): string {
+  const slug = titleSlug(artist);
+  return slug ? `/artist/${artist.id}/${slug}` : `/artist/${artist.id}`;
+}

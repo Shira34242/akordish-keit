@@ -28,7 +28,7 @@ interface ArtistFormData {
     enabled: boolean;
     name: string;
     description: string;
-    eventDate: string;        // datetime-local
+    eventDate: string;
     location: string;
     price: number | null;
     ticketUrl: string;

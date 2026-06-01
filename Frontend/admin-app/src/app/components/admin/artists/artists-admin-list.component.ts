@@ -15,6 +15,7 @@ import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layo
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
 import { environment } from '../../../../environments/environment';
+import { artistRoute } from '../../../utils/slug';
 
 @Component({
   selector: 'app-artists-admin-list',
@@ -152,8 +153,8 @@ export class ArtistsAdminListComponent implements OnInit {
     this.loadArtists(); // Reload the list after saving
   }
 
-  viewArtist(id: number): void {
-    this.router.navigate(['/artist', id]);
+  viewArtist(artist: ArtistListDto): void {
+    this.router.navigate(artistRoute(artist));
   }
 
   async approveArtist(id: number): Promise<void> {

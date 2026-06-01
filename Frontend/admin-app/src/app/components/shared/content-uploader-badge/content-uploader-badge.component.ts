@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { ContentUploaderProfile } from '../../../models/article.model';
 import { LanguageService } from '../../../services/language.service';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { artistPath } from '../../../utils/slug';
 
 @Component({
   selector: 'app-content-uploader-badge',
@@ -33,7 +34,7 @@ export class ContentUploaderBadgeComponent {
   getProfileRouterLink(): string | null {
     const url = this.profile.profileUrl;
     if (!url) return null;
-    if (this.profile.type === 'artist') return '/artist/' + this.profile.profileId;
+    if (this.profile.type === 'artist') return artistPath({ id: this.profile.profileId, name: this.profile.name });
     if (url.startsWith('/teacher/')) return '/teacher/' + this.profile.profileId;
     if (url.startsWith('/service-provider/')) return '/professional/' + this.profile.profileId;
     if (this.profile.type === 'serviceProvider') return '/professional/' + this.profile.profileId;

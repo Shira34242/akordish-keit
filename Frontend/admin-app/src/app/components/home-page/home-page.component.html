@@ -300,6 +300,7 @@
             <app-event-card
               *ngFor="let event of upcomingEvents; trackBy: trackById"
               [event]="event"
+              [showInfo]="false"
               (cardClick)="openEventModal($event)"
               [attr.aria-hidden]="copy > 0 ? true : null">
             </app-event-card>

@@ -10,6 +10,7 @@ import { ArtistListDto, ArtistStatus } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
+import { artistRoute } from '../../utils/slug';
 
 @Component({
   selector: 'app-artists-list',
@@ -203,8 +204,8 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.langService.translate(keys[this.sortBy] || 'artists.sort_az');
   }
 
-  navigateToArtist(artistId: number): void {
-    this.router.navigate(['/artist', artistId]);
+  navigateToArtist(artist: ArtistListDto): void {
+    this.router.navigate(artistRoute(artist));
   }
 
   get totalPages(): number {
