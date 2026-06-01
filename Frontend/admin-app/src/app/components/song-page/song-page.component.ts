@@ -623,7 +623,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         if (updateUrl) {
             this.router.navigate([], {
                 relativeTo: this.route,
-                queryParams: { view: instrument === 'guitar' ? null : instrument },
+                queryParams: { view: instrument },
                 queryParamsHandling: 'merge',
                 replaceUrl: true
             });
