@@ -83,6 +83,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
 
   private resetCarouselPosition(): void {
     this.activePosition = 0;
+    this.loopOffset = 0;
     this.updateVisibleCarouselItems();
   }
 
@@ -148,7 +149,21 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   }
 
   private recenterLoopIfNeeded(shouldAnimate = true): void {
-    return;
+    const total = this.filteredEvents.length;
+    if (total <= 1) return;
+
+    const cycle = total * 12;
+    if (Math.abs(this.activePosition) < cycle) return;
+
+    const shift = Math.trunc(this.activePosition / total) * total;
+    this.activePosition -= shift;
+    this.loopOffset += shift;
+
+    if (!shouldAnimate) return;
+    this.isRepositioning = true;
+    requestAnimationFrame(() => {
+      this.isRepositioning = false;
+    });
   }
 
   private updateVisibleCarouselItems(): void {
@@ -158,7 +173,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (total <= this.visibleRadius * 2 + 1) {
+    if (total === 1) {
       this.visibleCarouselItems = this.filteredEvents.map((event, position) => ({
         event,
         position,

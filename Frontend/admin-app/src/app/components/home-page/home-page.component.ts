@@ -114,8 +114,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroMouseHandler?: (e: MouseEvent) => void;
   private heroScrollHandler?: () => void;
   private heroResizeHandler?: () => void;
+  private heroSurfaceEl?: HTMLElement | null;
   private heroOverlayEl?: HTMLElement | null;
-  private heroCollapseOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
@@ -250,8 +250,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+    this.heroSurfaceEl = bg.querySelector('.hero-surface') as HTMLElement | null;
     this.heroOverlayEl = bg.querySelector('.hero-overlay') as HTMLElement | null;
-    this.heroCollapseOverlayEl = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     this.lastHeroVisibleHeight = -1;
     this.lastViewportWidth = window.innerWidth;
     this.lastViewportHeight = window.innerHeight;
@@ -277,13 +277,21 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const progress = Math.min(1, scrollY / 160);
     if (this.heroOverlayEl) this.heroOverlayEl.style.opacity = String(Math.max(0, 1 - progress));
 
-    if (this.heroCollapseOverlayEl) {
-      const collapseRange = this.fullHeroHeight - minHeight;
-      const collapseProgress = collapseRange > 0
-        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
-        : 0;
-      this.heroCollapseOverlayEl.style.opacity = String(collapseProgress);
-    }
+    const collapseRange = this.fullHeroHeight - minHeight;
+    const collapseProgress = collapseRange > 0
+      ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+      : 0;
+    this.setHeroSurfaceColor(collapseProgress);
+  }
+
+  private setHeroSurfaceColor(progress: number): void {
+    if (!this.heroSurfaceEl) return;
+    const from = [221, 255, 83];
+    const to = [242, 242, 242];
+    const rgb = from.map((channel, index) =>
+      Math.round(channel + (to[index] - channel) * progress)
+    );
+    this.heroSurfaceEl.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
   }
 
   private resizeHeroCanvas(): void {
