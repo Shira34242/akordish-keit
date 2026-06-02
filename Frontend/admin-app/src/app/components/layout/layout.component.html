@@ -6,10 +6,6 @@
             <button class="mobile-menu-btn" (click)="toggleMobileMenu($event)">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
-            <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
-                <span class="material-icons">notifications</span>
-                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
-            </button>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
                     <img [src]="user.profileImageUrl || '/default-avatar.svg'" alt="Profile" class="user-avatar-img"
@@ -47,6 +43,10 @@
                     </div>
                 </div>
             </ng-container>
+            <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
+                <span class="material-icons">notifications</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
+            </button>
             <ng-template #loginBtn>
                 <button class="btn-login header-desktop-only" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-template>

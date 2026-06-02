@@ -16,14 +16,14 @@ import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-bad
 import { SeoService } from '../../../services/seo.service';
 import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
-import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
 import { artistRoute } from '../../../utils/slug';
 
 @Component({
   selector: 'app-blog-post-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent, CloudflareImagePipe],
   templateUrl: './blog-post-view.component.html',
   styleUrls: ['./blog-post-view.component.css']
 })
