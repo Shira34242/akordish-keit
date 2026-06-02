@@ -1,6 +1,5 @@
 <section class="dashboard" dir="rtl">
 
-  <!-- Loading -->
   @if (loading) {
     <div class="dash-loading">
       <div class="loading-spinner"></div>
@@ -10,7 +9,6 @@
 
   @if (!loading) {
 
-    <!-- Header -->
     <div class="dash-header">
       <div class="dash-header-text">
         <h1 class="dash-title">מרכז בקרה</h1>
@@ -22,328 +20,142 @@
       </button>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="kpi-row">
-      <div class="kpi-card">
-        <span class="kpi-icon material-symbols-outlined">group</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ userStats?.totalUsers ?? '—' }}</span>
-          <span class="kpi-label">משתמשים רשומים</span>
+    <!-- Approval Queue Summary -->
+    <div class="queue-row">
+      <a routerLink="/admin/notifications/reports" class="queue-card queue-alert">
+        <div class="queue-card-content">
+          <span class="queue-icon material-symbols-outlined">flag</span>
+          <div class="queue-info">
+            <span class="queue-value">{{ pendingReportsCount }}</span>
+            <span class="queue-label">דיווחים ממתינים</span>
+          </div>
         </div>
-        <a routerLink="/admin/users/clients" class="kpi-link">ניהול ←</a>
-      </div>
+        <span class="queue-arrow material-symbols-outlined">arrow_forward</span>
+      </a>
 
-      <div class="kpi-card">
-        <span class="kpi-icon material-symbols-outlined">school</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ userStats?.totalTeachers ?? '—' }}</span>
-          <span class="kpi-label">מורים</span>
+      <a routerLink="/admin/notifications/reports" [queryParams]="{status:'Pending'}" class="queue-card queue-approval">
+        <div class="queue-card-content">
+          <span class="queue-icon material-symbols-outlined">pending</span>
+          <div class="queue-info">
+            <span class="queue-value">{{ totalPendingApprovals }}</span>
+            <span class="queue-label">תוכן ממתין לאישור</span>
+          </div>
         </div>
-        <a routerLink="/admin/users/teachers" class="kpi-link">ניהול ←</a>
-      </div>
+        <div class="queue-breakdown">
+          @if (pendingTeachersCount) {
+            <span class="queue-badge">מורים {{ pendingTeachersCount }}</span>
+          }
+          @if (pendingServiceProvidersCount) {
+            <span class="queue-badge">בעלי מקצוע {{ pendingServiceProvidersCount }}</span>
+          }
+          @if (pendingArtistsCount) {
+            <span class="queue-badge">אומנים {{ pendingArtistsCount }}</span>
+          }
+          @if (pendingSongsCount) {
+            <span class="queue-badge">אקורדים {{ pendingSongsCount }}</span>
+          }
+        </div>
+        <span class="queue-arrow material-symbols-outlined">arrow_forward</span>
+      </a>
 
-      <div class="kpi-card kpi-accent">
-        <span class="kpi-icon material-symbols-outlined">handyman</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ totalServiceProviders }}</span>
-          <span class="kpi-label">בעלי מקצוע</span>
-        </div>
-        <a routerLink="/admin/users/service-providers" class="kpi-link">ניהול ←</a>
-      </div>
+      @if (chordRequestsCount) {
+        <a routerLink="/admin/notifications/reports" class="queue-card queue-secondary">
+          <div class="queue-card-content">
+            <span class="queue-icon material-symbols-outlined">music_note</span>
+            <div class="queue-info">
+              <span class="queue-value">{{ chordRequestsCount }}</span>
+              <span class="queue-label">בקשות אקורדים</span>
+            </div>
+          </div>
+          <span class="queue-arrow material-symbols-outlined">arrow_forward</span>
+        </a>
+      }
+    </div>
 
-      <div class="kpi-card">
-        <span class="kpi-icon material-symbols-outlined">mic</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ userStats?.totalArtists ?? '—' }}</span>
-          <span class="kpi-label">אומנים</span>
+    <!-- Pending Reports Detail -->
+    @if (pendingReports.length) {
+      <div class="dash-section">
+        <div class="section-header">
+          <h2 class="section-title">הדיווחים האחרונים</h2>
+          <a routerLink="/admin/notifications/reports" class="section-link">לכל הדיווחים ←</a>
         </div>
-        <a routerLink="/admin/users/artists" class="kpi-link">ניהול ←</a>
+        <div class="reports-list">
+          @for (r of pendingReports; track r.id) {
+            <a [routerLink]="['/admin/notifications/reports']" [queryParams]="{id: r.id}" class="report-row">
+              <span class="report-badge">{{ reportTypeLabel(r.reportType) }}</span>
+              <span class="report-title">{{ r.contentTitle || r.description }}</span>
+              <span class="report-meta">
+                <span class="report-type">{{ r.contentType }}</span>
+                <span class="report-date">{{ fmtDate(r.reportedAt) }}</span>
+              </span>
+            </a>
+          }
+        </div>
       </div>
+    }
 
-      <div class="kpi-card">
-        <span class="kpi-icon material-symbols-outlined">article</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ fmt(articleViewsLast30) }}</span>
-          <span class="kpi-label">צפיות כתבות (30 יום)</span>
-        </div>
-        <a routerLink="/admin/analytics" [queryParams]="{tab:'articles'}" class="kpi-link">אנליטיקס ←</a>
+    <!-- Quick Stats -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-value">{{ fmt(userCount) }}</span>
+        <span class="stat-label">משתמשים</span>
       </div>
-
-      <div class="kpi-card">
-        <span class="kpi-icon material-symbols-outlined">campaign</span>
-        <div class="kpi-data">
-          <span class="kpi-value">{{ dashboard?.ads?.activeCampaigns ?? '—' }}</span>
-          <span class="kpi-label">קמפיינים פעילים</span>
-        </div>
-        <a routerLink="/admin/advertising" class="kpi-link">ניהול ←</a>
+      <div class="stat-item">
+        <span class="stat-value">{{ fmt(articlesViews30) }}</span>
+        <span class="stat-label">צפיות כתבות (30 יום)</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ activeCampaigns }}</span>
+        <span class="stat-label">קמפיינים פעילים</span>
       </div>
     </div>
 
-    <!-- Main content grid -->
-    <div class="grid-main">
-
-      <!-- Left column: analytics -->
-      <div class="main-left">
-
-        <!-- Article views -->
-        <div class="dash-card">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="material-symbols-outlined">trending_up</span>
-              צפיות כתבות
-            </h2>
-            <a routerLink="/admin/analytics" [queryParams]="{tab:'articles'}" class="link-sm">אנליטיקס ←</a>
-          </div>
-
-          <div class="compare-bars">
-            <div class="compare-item">
-              <span class="compare-label">30 ימים אחרונים</span>
-              <div class="bar-track">
-                <div class="bar-fill bar-accent"
-                  [style.width.%]="barWidth(articleViewsLast30, articleViewsTotal || 1)">
-                </div>
-              </div>
-              <span class="compare-val">{{ fmt(articleViewsLast30) }}</span>
-            </div>
-            <div class="compare-item">
-              <span class="compare-label">סה"כ כל הזמנים</span>
-              <div class="bar-track">
-                <div class="bar-fill bar-dark" style="width:100%"></div>
-              </div>
-              <span class="compare-val">{{ fmt(articleViewsTotal) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Button clicks -->
-        <div class="dash-card">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="material-symbols-outlined">ads_click</span>
-              קליקים — 30 ימים אחרונים
-            </h2>
-            <span class="badge-total">{{ fmt(totalInteractions) }} סה"כ</span>
-          </div>
-
-          <div class="clicks-grid">
-            <div class="click-stat">
-              <div class="click-bar-outer">
-                <div class="click-bar-inner" [style.height.%]="barWidth(ticketLast30, maxButtonClicks)"></div>
-              </div>
-              <span class="click-count">{{ ticketLast30 }}</span>
-              <span class="click-label">כרטיסים</span>
-            </div>
-            <div class="click-stat">
-              <div class="click-bar-outer">
-                <div class="click-bar-inner" [style.height.%]="barWidth(contactLast30, maxButtonClicks)"></div>
-              </div>
-              <span class="click-count">{{ contactLast30 }}</span>
-              <span class="click-label">יצירת קשר</span>
-            </div>
-            <div class="click-stat">
-              <div class="click-bar-outer">
-                <div class="click-bar-inner" [style.height.%]="barWidth(notifLast30, maxButtonClicks)"></div>
-              </div>
-              <span class="click-count">{{ notifLast30 }}</span>
-              <span class="click-label">התראות</span>
-            </div>
-          </div>
-
-          <a routerLink="/admin/analytics" [queryParams]="{tab:'buttons'}" class="card-footer-link">
-            כל נתוני הקליקים ←
-          </a>
-        </div>
-
-        <!-- Top campaigns -->
-        <div class="dash-card">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="material-symbols-outlined">bar_chart</span>
-              קמפיינים מובילים
-            </h2>
-            <a routerLink="/admin/advertising" class="link-sm">כל הקמפיינים ←</a>
-          </div>
-
-          @if (topCampaigns.length) {
-            <div class="campaign-list">
-              @for (c of topCampaigns.slice(0, 4); track c.id) {
-                <div class="campaign-row">
-                  <div class="campaign-meta">
-                    <span class="campaign-name">{{ c.name }}</span>
-                    <span class="campaign-client">{{ c.clientName }}</span>
-                  </div>
-                  <div class="campaign-bar-wrap">
-                    <div class="bar-track">
-                      <div class="bar-fill bar-accent"
-                        [style.width.%]="barWidth(c.viewCount, maxCampaignViews)">
-                      </div>
-                    </div>
-                    <div class="campaign-nums">
-                      <span>{{ fmt(c.viewCount) }} צפיות</span>
-                      <span class="ctr-badge">{{ c.ctr.toFixed(1) }}% CTR</span>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-msg">אין נתוני קמפיינים</p>
-          }
-
-          <div class="ads-summary">
-            <div class="ads-stat">
-              <span class="ads-stat-val">{{ fmt(adsTotalViews) }}</span>
-              <span class="ads-stat-label">סה"כ צפיות</span>
-            </div>
-            <div class="ads-stat">
-              <span class="ads-stat-val">{{ fmt(adsTotalClicks) }}</span>
-              <span class="ads-stat-label">סה"כ קליקים</span>
-            </div>
-            <div class="ads-stat ads-stat-accent">
-              <span class="ads-stat-val">{{ adsAvgCtr }}%</span>
-              <span class="ads-stat-label">CTR ממוצע</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Right column -->
-      <div class="main-right">
-
-        <!-- Top events -->
-        <div class="dash-card">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="material-symbols-outlined">event</span>
-              הופעות מובילות
-            </h2>
-            <a routerLink="/admin/analytics" [queryParams]="{tab:'events'}" class="link-sm">אנליטיקס ←</a>
-          </div>
-
-          @if (topEvents.length) {
-            <div class="event-list">
-              @for (e of topEvents.slice(0, 6); track e.eventId; let i = $index) {
-                <div class="event-row">
-                  <span class="event-rank">{{ i + 1 }}</span>
-                  <div class="event-info">
-                    <span class="event-name">{{ e.eventName }}</span>
-                    <div class="bar-track thin">
-                      <div class="bar-fill bar-accent" [style.width.%]="barWidth(e.totalViews, maxEventViews)"></div>
-                    </div>
-                  </div>
-                  <span class="event-views">{{ fmt(e.totalViews) }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-msg">אין נתוני הופעות</p>
-          }
-
-          <div class="events-summary">
-            <div class="event-sum-item">
-              <span class="event-sum-val">{{ fmt(eventPageViewsTotal) }}</span>
-              <span class="event-sum-label">סה"כ צפיות</span>
-            </div>
-            <div class="event-sum-item">
-              <span class="event-sum-val">{{ fmt(eventPageViews30) }}</span>
-              <span class="event-sum-label">ב-30 יום</span>
-            </div>
-          </div>
-
-          <a routerLink="/admin/content/events" class="card-footer-link">ניהול הופעות ←</a>
-        </div>
-
-        <!-- Recent joins -->
-        <div class="dash-card">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="material-symbols-outlined">person_add</span>
-              הצטרפו לאחרונה
-            </h2>
-          </div>
-
-          @if (recentJoins.length) {
-            <div class="joins-list">
-              @for (j of recentJoins; track j.name) {
-                <div class="join-row">
-                  <div class="join-avatar">
-                    @if (j.profileImageUrl) {
-                      <img [src]="j.profileImageUrl" [alt]="j.name">
-                    } @else {
-                      <span class="avatar-initials">{{ j.name[0] }}</span>
-                    }
-                  </div>
-                  <div class="join-info">
-                    <span class="join-name">{{ j.name }}</span>
-                    <span class="join-role">{{ roleLabel(j.type) }}</span>
-                  </div>
-                  <span class="join-date">{{ fmtDate(j.date) }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-msg">אין נתונים</p>
-          }
-
-          <a routerLink="/admin/users/clients" class="card-footer-link">כל המשתמשים ←</a>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Quick navigation -->
-    <div class="dash-card quick-nav">
-      <h2 class="card-title">
-        <span class="material-symbols-outlined">apps</span>
-        ניהול מהיר
-      </h2>
-      <div class="quick-links">
-        <a routerLink="/admin/content/songs" class="quick-link">
-          <span class="material-symbols-outlined">music_note</span>
-          <span>אקורדים</span>
-        </a>
-        <a routerLink="/admin/content/articles" class="quick-link">
-          <span class="material-symbols-outlined">article</span>
-          <span>כתבות</span>
-        </a>
-        <a routerLink="/admin/content/events" class="quick-link">
-          <span class="material-symbols-outlined">event</span>
-          <span>הופעות</span>
-        </a>
-        <a routerLink="/admin/users/teachers" class="quick-link">
-          <span class="material-symbols-outlined">school</span>
-          <span>מורים</span>
-        </a>
-        <a routerLink="/admin/users/service-providers" class="quick-link">
-          <span class="material-symbols-outlined">handyman</span>
-          <span>בעלי מקצוע</span>
-        </a>
-        <a routerLink="/admin/users/artists" class="quick-link">
-          <span class="material-symbols-outlined">mic</span>
-          <span>אומנים</span>
-        </a>
-        <a routerLink="/admin/notifications/reports" class="quick-link quick-link-alert">
-          <span class="material-symbols-outlined">flag</span>
-          <span>דיווחים</span>
-        </a>
-        <a routerLink="/admin/notifications/messages" class="quick-link">
-          <span class="material-symbols-outlined">notifications</span>
-          <span>התראות</span>
-        </a>
-        <a routerLink="/admin/advertising" class="quick-link">
-          <span class="material-symbols-outlined">campaign</span>
-          <span>פרסום</span>
-        </a>
-        <a routerLink="/admin/analytics" class="quick-link">
-          <span class="material-symbols-outlined">analytics</span>
-          <span>אנליטיקס</span>
-        </a>
-        <a routerLink="/admin/system/tables" class="quick-link">
-          <span class="material-symbols-outlined">tune</span>
-          <span>מערכת</span>
-        </a>
-      </div>
+    <!-- Quick Nav -->
+    <div class="quick-nav">
+      <a routerLink="/admin/users/teachers" class="quick-link">
+        <span class="material-symbols-outlined">school</span>
+        <span>מורים</span>
+      </a>
+      <a routerLink="/admin/users/service-providers" class="quick-link">
+        <span class="material-symbols-outlined">handyman</span>
+        <span>בעלי מקצוע</span>
+      </a>
+      <a routerLink="/admin/users/artists" class="quick-link">
+        <span class="material-symbols-outlined">mic</span>
+        <span>אומנים</span>
+      </a>
+      <a routerLink="/admin/content/songs" class="quick-link">
+        <span class="material-symbols-outlined">music_note</span>
+        <span>אקורדים</span>
+      </a>
+      <a routerLink="/admin/content/articles" class="quick-link">
+        <span class="material-symbols-outlined">article</span>
+        <span>כתבות</span>
+      </a>
+      <a routerLink="/admin/content/events" class="quick-link">
+        <span class="material-symbols-outlined">event</span>
+        <span>הופעות</span>
+      </a>
+      <a routerLink="/admin/notifications/reports" class="quick-link quick-link-alert">
+        <span class="material-symbols-outlined">flag</span>
+        <span>דיווחים</span>
+      </a>
+      <a routerLink="/admin/notifications/messages" class="quick-link">
+        <span class="material-symbols-outlined">chat</span>
+        <span>הודעות</span>
+      </a>
+      <a routerLink="/admin/advertising" class="quick-link">
+        <span class="material-symbols-outlined">campaign</span>
+        <span>פרסום</span>
+      </a>
+      <a routerLink="/admin/analytics" class="quick-link">
+        <span class="material-symbols-outlined">analytics</span>
+        <span>אנליטיקס</span>
+      </a>
+      <a routerLink="/admin/system/tables" class="quick-link">
+        <span class="material-symbols-outlined">tune</span>
+        <span>מערכת</span>
+      </a>
     </div>
 
   }
