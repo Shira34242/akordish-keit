@@ -7,6 +7,10 @@
   font-weight: 300;
 }
 
+.smart-add-page.compact-song-import {
+  display: block;
+}
+
 .smart-import-card,
 .quick-add-section {
   background: #F2F2F2;
@@ -19,6 +23,13 @@
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: var(--space-xl);
   align-items: start;
+}
+
+.compact-song-import .smart-import-card {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .card-copy,
@@ -68,6 +79,10 @@ p {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+.compact-song-import .import-form {
+  min-width: 280px;
 }
 
 .content-type-grid {
@@ -143,6 +158,10 @@ label {
   gap: var(--space-sm);
 }
 
+.compact-song-import .url-row {
+  display: block;
+}
+
 input {
   min-height: 38px;
   width: 100%;
@@ -197,6 +216,11 @@ input:focus {
 
 .field-note {
   font-size: var(--font-xs);
+}
+
+.compact-song-import .field-note {
+  color: #000000;
+  font-weight: 800;
 }
 
 .field-note.error {

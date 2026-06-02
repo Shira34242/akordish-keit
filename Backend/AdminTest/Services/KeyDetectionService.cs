@@ -66,9 +66,13 @@ public static class KeyDetectionService
     private static readonly int[] MinorWeights   = [4, 1, 2, 3, 3, 2, 2];
 
     // רגקס לחילוץ אקורדים מהפורמט [Am] [C#m7] [F#/C]
-    private static readonly Regex ChordRegex = new(
+    private static readonly Regex InlineChordRegex = new(
         @"\[([A-G][b#]?[^\]/\[]*?)(?:/[A-G][b#]?)?\]",
         RegexOptions.Compiled);
+
+    private static readonly Regex ChordTokenRegex = new(
+        @"^[A-G][b#]?[^/\s]*(?:/[A-G][b#]?)?$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // רגקס לחילוץ שורש האקורד
     private static readonly Regex RootRegex = new(@"^([A-G][b#]?)", RegexOptions.Compiled);
@@ -81,13 +85,36 @@ public static class KeyDetectionService
         // 1. חילוץ וספירת אקורדים ייחודיים
         var chordCounts = new Dictionary<(int Semitone, bool IsMinor), int>();
 
-        foreach (Match m in ChordRegex.Matches(lyricsWithChords))
+        foreach (Match m in InlineChordRegex.Matches(lyricsWithChords))
         {
-            var raw = m.Groups[1].Value.Trim();
-            if (TryParseChord(raw, out int semitone, out bool isMinor))
+            AddChordCount(m.Groups[1].Value, chordCounts);
+        }
+
+        foreach (var line in lyricsWithChords.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
+        {
+            if (line.Contains('[') || line.Contains(']'))
             {
-                var key = (semitone, isMinor);
-                chordCounts[key] = chordCounts.GetValueOrDefault(key) + 1;
+                continue;
+            }
+
+            var tokens = line
+                .Split(new[] { ' ', '\t', '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(token => token.Trim('[', ']', '(', ')', '{', '}', ':', ';'))
+                .Where(token => token.Length > 0)
+                .ToList();
+
+            if (tokens.Count == 0)
+            {
+                continue;
+            }
+
+            var chordTokens = tokens.Where(IsChordToken).ToList();
+            if (chordTokens.Count > 0 && chordTokens.Count == tokens.Count)
+            {
+                foreach (var token in chordTokens)
+                {
+                    AddChordCount(token, chordCounts);
+                }
             }
         }
 
@@ -155,6 +182,25 @@ public static class KeyDetectionService
         }
 
         return score;
+    }
+
+    private static void AddChordCount(string chord, Dictionary<(int Semitone, bool IsMinor), int> chordCounts)
+    {
+        if (TryParseChord(chord, out int semitone, out bool isMinor))
+        {
+            var key = (semitone, isMinor);
+            chordCounts[key] = chordCounts.GetValueOrDefault(key) + 1;
+        }
+    }
+
+    private static bool IsChordToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token) || token.Length > 24)
+        {
+            return false;
+        }
+
+        return ChordTokenRegex.IsMatch(token.Trim());
     }
 
     private static bool TryParseChord(string chord, out int semitone, out bool isMinor)

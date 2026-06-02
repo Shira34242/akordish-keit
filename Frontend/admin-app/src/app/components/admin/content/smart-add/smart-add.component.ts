@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ModalService } from '../../../../services/modal.service';
@@ -21,6 +21,9 @@ export class SmartAddComponent {
   private readonly songService = inject(SongService);
   private readonly smartContentService = inject(SmartContentService);
 
+  @Input() compactSongOnly = false;
+  @Output() completed = new EventEmitter<void>();
+
   importUrl = '';
   selectedContentType: SmartContentType = 'song';
   importState: 'idle' | 'loading' | 'ready' | 'invalid' | 'error' = 'idle';
@@ -36,8 +39,18 @@ export class SmartAddComponent {
     { value: 'podcast', label: 'פודקאסט', hint: 'פרק פודקאסט עם מקור ותמונה', icon: 'podcasts' }
   ];
 
+  get visibleContentTypes(): { value: SmartContentType; label: string; hint: string; icon: string }[] {
+    return this.compactSongOnly
+      ? this.contentTypes.filter(type => type.value === 'song')
+      : this.contentTypes;
+  }
+
   prepareSmartImport(): void {
     const url = this.importUrl.trim();
+
+    if (this.compactSongOnly) {
+      this.selectedContentType = 'song';
+    }
 
     if (!this.isValidUrl(url)) {
       this.importState = 'invalid';
@@ -63,15 +76,32 @@ export class SmartAddComponent {
           return;
         }
 
+        if (this.compactSongOnly && result.draft) {
+          this.importResult = result;
+          this.openDraftEditor();
+          return;
+        }
+
         this.importState = 'ready';
       },
       error: (error) => {
         const result = error.error as ImportSongFromUrlResponse | undefined;
         this.importResult = result ?? null;
+
+        if (this.compactSongOnly && result?.draft) {
+          this.openDraftEditor();
+          return;
+        }
+
         this.importState = result?.draft ? 'ready' : 'error';
         this.errorMessage = result?.message || 'לא הצלחנו לייבא מהקישור הזה.';
       }
     });
+  }
+
+  onImportPaste(): void {
+    if (!this.compactSongOnly) return;
+    setTimeout(() => this.prepareSmartImport(), 0);
   }
 
   onContentTypeChange(type: SmartContentType): void {
@@ -96,6 +126,7 @@ export class SmartAddComponent {
     if (!draft) return;
 
     this.modalService.openPrefilledAddSongModal(this.normalizeDraftForForm(draft));
+    this.completed.emit();
   }
 
   addArticle(): void {
@@ -144,6 +175,7 @@ export class SmartAddComponent {
       next: (song) => {
         this.importState = 'ready';
         this.modalService.openEditSongModal(song);
+        this.completed.emit();
       },
       error: () => {
         this.importState = 'ready';

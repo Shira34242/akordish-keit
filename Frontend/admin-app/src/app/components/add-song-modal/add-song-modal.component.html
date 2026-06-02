@@ -839,6 +839,14 @@
                 <button class="btn-primary btn-large" *ngIf="currentStep === 2 && !isAdminLongForm" (click)="nextStep()">{{ 'song_modal.preview_next' | translate }}</button>
                 <button class="btn-primary" *ngIf="currentStep === 1 && !isAdminLongForm" (click)="nextStep()">{{ 'song_modal.next' | translate }}</button>
               <div class="submission-error" *ngIf="submissionError">{{ submissionError }}</div>
+              <button
+                class="btn-secondary btn-draft"
+                *ngIf="!editMode && (currentStep === 3 || isAdminLongForm)"
+                (click)="submit(true)"
+                [disabled]="isSubmitting">
+                    <span *ngIf="isSubmitting">{{ 'song_modal.saving' | translate }}</span>
+                    <span *ngIf="!isSubmitting">שמירה כטיוטה</span>
+              </button>
               <button class="btn-primary btn-submit" *ngIf="currentStep === 3 || isAdminLongForm" (click)="submit()" [disabled]="isSubmitting">
                     <span *ngIf="isSubmitting">{{ 'song_modal.saving' | translate }}</span>
                     <span *ngIf="!isSubmitting && editMode">{{ 'song_modal.save_edit' | translate }}</span>

@@ -1,6 +1,6 @@
-<div class="smart-add-page">
+<div class="smart-add-page" [class.compact-song-import]="compactSongOnly">
   <section class="smart-import-card" aria-labelledby="smart-import-title">
-    <div class="card-copy">
+    <div class="card-copy" *ngIf="!compactSongOnly">
       <span class="section-pill">ייבוא חכם</span>
       <h2 id="smart-import-title">הוספת תוכן חכמה מקישור</h2>
       <p>
@@ -9,9 +9,9 @@
     </div>
 
     <div class="import-form">
-      <div class="content-type-grid" role="radiogroup" aria-label="בחירת סוג תוכן לייבוא">
+      <div class="content-type-grid" *ngIf="!compactSongOnly" role="radiogroup" aria-label="בחירת סוג תוכן לייבוא">
         <button
-          *ngFor="let type of contentTypes"
+          *ngFor="let type of visibleContentTypes"
           type="button"
           class="type-chip"
           [class.active]="selectedContentType === type.value"
@@ -27,23 +27,28 @@
         </button>
       </div>
 
-      <label for="chord-import-url">קישור לאתר מקור</label>
+      <label for="chord-import-url">{{ compactSongOnly ? 'הדבקת לינק לשליפה' : 'קישור לאתר מקור' }}</label>
       <div class="url-row">
         <input
           id="chord-import-url"
           type="url"
           [(ngModel)]="importUrl"
+          (paste)="onImportPaste()"
           (keyup.enter)="prepareSmartImport()"
-          placeholder="https://..."
+          [placeholder]="compactSongOnly ? 'הדבק לינק לשיר...' : 'https://...'"
           dir="ltr"
+          [attr.autofocus]="compactSongOnly ? '' : null"
         />
-        <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
+        <button *ngIf="!compactSongOnly" type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
           {{ importState === 'loading' ? 'שולף...' : 'שלוף תוכן' }}
         </button>
       </div>
 
-      <p class="field-note" *ngIf="importState === 'idle'">
+      <p class="field-note" *ngIf="importState === 'idle' && !compactSongOnly">
         השליפה ממלאת טיוטה ראשונית בלבד. תמיד עוברים דרך טופס עריכה לפני פרסום.
+      </p>
+      <p class="field-note" *ngIf="importState === 'loading' && compactSongOnly">
+        שולף...
       </p>
       <p class="field-note error" *ngIf="importState === 'invalid'">
         צריך להדביק קישור מלא שמתחיל ב-http או https.
@@ -67,7 +72,7 @@
     </div>
   </section>
 
-  <section class="quick-add-section" aria-labelledby="quick-add-title">
+  <section class="quick-add-section" *ngIf="!compactSongOnly" aria-labelledby="quick-add-title">
     <div class="section-heading">
       <span class="section-pill">הוספה מהירה</span>
       <h2 id="quick-add-title">כל סוגי התוכן</h2>

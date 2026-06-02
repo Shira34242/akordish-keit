@@ -407,7 +407,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
             lyricsWithChords: this.songPrefill.lyricsWithChords || '',
             originalKeyId: this.normalizeKeyValue(this.songPrefill.originalKeyId),
             easyKeyId: this.normalizeKeyValue(this.songPrefill.easyKeyId)
-        });
+        }, { emitEvent: false });
 
         this.artistsArray.clear();
         this.songPrefill.artists?.forEach(artist => {
@@ -428,6 +428,77 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                 }));
             }
         });
+
+        this.enrichImportedDraft();
+    }
+
+    private enrichImportedDraft(): void {
+        this.resolvePrefilledArtistMatches();
+        this.enrichPrefillFromYouTube();
+        this.runPrefillKeyDetection();
+    }
+
+    private enrichPrefillFromYouTube(): void {
+        const youtubeUrl = (this.songForm.get('youtubeUrl')?.value || '').trim();
+        if (!youtubeUrl || this.songForm.get('youtubeUrl')?.invalid) {
+            return;
+        }
+
+        this.isLoadingMetadata = true;
+        this.songService.getYouTubeMetadata(youtubeUrl).pipe(
+            catchError(() => of(null)),
+            takeUntil(this.destroy$)
+        ).subscribe(metadata => {
+            this.isLoadingMetadata = false;
+            if (!metadata?.success) {
+                return;
+            }
+
+            this.youtubeMetadata = metadata;
+            this.selectedYouTubeResult = {
+                videoId: this.extractVideoIdFromUrl(youtubeUrl),
+                youtubeUrl,
+                title: this.songForm.get('title')?.value || metadata.title || '',
+                channelTitle: metadata.channelTitle,
+                thumbnailUrl: metadata.thumbnailUrl,
+                durationSeconds: metadata.durationSeconds,
+                description: metadata.description,
+                publishedAt: metadata.publishedAt,
+                suggestedArtistName: metadata.channelTitle
+            };
+
+            if (metadata.thumbnailUrl) {
+                this.songForm.get('imageUrl')?.setValue(metadata.thumbnailUrl, { emitEvent: false });
+            }
+        });
+    }
+
+    private resolvePrefilledArtistMatches(): void {
+        this.artistsArray.controls.forEach(control => {
+            const current = control.value;
+            const artistName = current?.name?.trim();
+            if (!artistName || current?.id) {
+                return;
+            }
+
+            this.resolveArtistMatches(artistName).pipe(takeUntil(this.destroy$)).subscribe(matches => {
+                const bestMatch = matches[0];
+                if (bestMatch?.result.id && bestMatch.score >= 70) {
+                    control.setValue({ id: bestMatch.result.id, name: bestMatch.result.value });
+                }
+            });
+        });
+    }
+
+    private runPrefillKeyDetection(): void {
+        const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+        if (!lyrics || lyrics.length < 10) {
+            return;
+        }
+
+        this.userChangedOriginalKey = false;
+        this.userChangedEasyKey = false;
+        setTimeout(() => this.triggerDetection(lyrics, 'both'), 0);
     }
 
     populateFormForEdit(): void {
@@ -1185,6 +1256,24 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.onYoutubeUrlBlur();
     }
 
+    private extractVideoIdFromUrl(url: string): string {
+        const patterns = [
+            /youtube\.com\/watch\?.*v=([A-Za-z0-9_-]{6,})/i,
+            /youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i,
+            /youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/i,
+            /youtu\.be\/([A-Za-z0-9_-]{6,})/i
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match?.[1]) {
+                return match[1];
+            }
+        }
+
+        return '';
+    }
+
     selectYouTubeSuggestion(result: YouTubeSearchResult) {
         this.applySelectedVideo(result);
     }
@@ -1834,10 +1923,11 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
-    submit() {
+    submit(saveAsDraft = false) {
         if (this.songForm.valid && !this.isSubmitting) {
             this.isSubmitting = true;
             const formValue = this.songForm.value;
+            const isApproved = saveAsDraft ? false : (formValue.isApproved ?? false);
 
             const request: AddSongRequest = {
                 title: formValue.title,
@@ -1865,7 +1955,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                 } : undefined,
                 lyricist: undefined,  // נשאיר כרגע - נעדכן אחר כך
                 arranger: undefined,  // נשאיר כרגע - נעדכן אחר כך
-                isApproved: formValue.isApproved ?? false,
+                isApproved,
                 uploaderUserId: this.selectedUploaderProfile?.userId,
                 uploaderProfileType: this.selectedUploaderProfile?.profileType,
                 uploaderProfileId: this.selectedUploaderProfile?.profileId
@@ -1882,7 +1972,9 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                     if (res.success) {
                         this.successMessage = this.editMode
                             ? this.langService.translate('song_modal.success_updated')
-                            : this.langService.translate('song_modal.success_sent');
+                            : saveAsDraft
+                                ? 'השיר נשמר כטיוטה'
+                                : this.langService.translate('song_modal.success_sent');
                         this.showInlineSuccess = true;
                         this.scrollModalToTop();
                         this.songAdded.emit();

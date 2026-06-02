@@ -35,8 +35,11 @@
 
 .section-action {
   display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   justify-content: flex-end;
   min-width: 0;
+  position: relative;
 }
 
 .primary-action {
@@ -51,6 +54,77 @@
   padding: 0 var(--space-lg);
   cursor: pointer;
   white-space: nowrap;
+}
+
+.smart-import-action {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.smart-import-toggle {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smart-import-toggle:hover,
+.smart-import-toggle[aria-expanded="true"] {
+  background: #ddff53;
+}
+
+.smart-import-toggle .material-icons {
+  font-size: 20px;
+}
+
+.smart-import-popover {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: var(--space-sm);
+  width: min(360px, calc(100vw - var(--space-xl) * 2));
+  padding: var(--space-sm);
+  border-radius: 16px;
+  background: #F2F2F2;
+}
+
+.smart-import-popover input {
+  min-height: 34px;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  padding: 0 var(--space-base);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+}
+
+.smart-import-popover input:focus {
+  outline: 2px solid #ddff53;
+}
+
+.smart-import-status {
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  text-align: right;
+}
+
+.smart-import-status.error {
+  font-weight: 800;
 }
 
 .wa-tabs {
@@ -123,6 +197,15 @@
 
   .primary-action {
     width: 100%;
+  }
+
+  .smart-import-action {
+    flex: 0 0 34px;
+  }
+
+  .smart-import-popover {
+    left: auto;
+    right: 0;
   }
 
   .wa-tabs {
