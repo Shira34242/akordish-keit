@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, DestroyRef, NgZone, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ViewChildren, ElementRef, DestroyRef, NgZone, QueryList, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,8 @@ interface HeroParticle {
   size: number;
 }
 
+type HomeLazySection = 'featured' | 'events' | 'podcasts';
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -70,6 +72,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('viralSection') viralSection?: ElementRef<HTMLElement>;
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
+  @ViewChildren('homeLazySentinel') homeLazySentinels?: QueryList<ElementRef<HTMLDivElement>>;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -117,6 +120,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroSurfaceEl?: HTMLElement | null;
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
+  private homeLazyObserver?: IntersectionObserver;
+  private loadedLazySections = new Set<HomeLazySection>();
+  private loadingLazySections = new Set<HomeLazySection>();
+  private deferredLoadTimers: number[] = [];
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
   private allPublishedArticles: Article[] = [];
@@ -193,6 +200,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       this.initHeroHeight();
       this.initHeroScrollListeners();
       this.initParticleEffect();
+      this.initHomeLazySections();
       this.initViralObserver();
     }, 0);
   }
@@ -204,6 +212,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
     if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     this.viralObserver?.disconnect();
+    this.homeLazyObserver?.disconnect();
+    this.deferredLoadTimers.forEach(id => window.clearTimeout(id));
   }
 
   private initHeroScrollListeners(): void {
@@ -317,54 +327,89 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadNonCriticalContent(): void {
-    this.pendingContentLoads += 9;
+    const loaders: Array<() => void> = [
+      () => this.loadRecentSongs(),
+      () => this.loadPopularSongs(),
+      () => this.loadTopArtists()
+    ];
 
-    const onDone = () => {
+    loaders.forEach((loader, index) => this.scheduleDeferredLoad(loader, 160 * index));
+  }
+
+  private scheduleDeferredLoad(loader: () => void, delayMs: number): void {
+    const timer = window.setTimeout(() => {
+      this.deferredLoadTimers = this.deferredLoadTimers.filter(id => id !== timer);
+      loader();
+    }, delayMs);
+    this.deferredLoadTimers.push(timer);
+  }
+
+  private trackPendingLoad(): () => void {
+    this.pendingContentLoads++;
+    let completed = false;
+    return () => {
+      if (completed) return;
+      completed = true;
       this.pendingContentLoads--;
       this.checkAllContentLoaded();
     };
+  }
 
+  private loadRecentSongs(): void {
+    const onDone = this.trackPendingLoad();
     this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
     });
+  }
 
+  private loadPopularSongs(): void {
+    const onDone = this.trackPendingLoad();
     this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (songs: any[]) => { this.popularSongs = songs; },
       error: (err) => console.error('loadContent: popular songs', err)
     });
+  }
 
+  private loadTopArtists(): void {
+    const onDone = this.trackPendingLoad();
     this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
+  }
 
+  private loadUpcomingEvents(): void {
+    const onDone = this.trackPendingLoad();
     this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
       error: (err) => console.error('loadContent: events', err)
     });
+  }
 
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+  private loadFeaturedPeople(): void {
+    const onTeachersDone = this.trackPendingLoad();
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onTeachersDone)).subscribe({
       next: (res: any) => { this.featuredTeachers = res.items || []; },
       error: (err) => console.error('loadContent: teachers', err)
     });
 
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    const onProvidersDone = this.trackPendingLoad();
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onProvidersDone)).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
     });
+  }
 
-    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
-      next: episodes => { this.latestPodcastEpisodes = episodes; },
-      error: err => console.error('loadContent: podcasts', err)
-    });
-
-    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+  private loadHomePodcasts(): void {
+    const onSeriesDone = this.trackPendingLoad();
+    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onSeriesDone)).subscribe({
       next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
       error: err => console.error('loadContent: podcast series', err)
     });
 
-    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    const onPopularDone = this.trackPendingLoad();
+    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onPopularDone)).subscribe({
       next: episodes => { this.popularPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: popular episodes', err)
     });
@@ -527,16 +572,52 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private initHomeLazySections(): void {
+    if (this.homeLazyObserver) this.homeLazyObserver.disconnect();
+
+    this.homeLazyObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const section = (entry.target as HTMLElement).dataset['homeLoad'] as HomeLazySection | undefined;
+          if (!section) continue;
+          this.homeLazyObserver?.unobserve(entry.target);
+          this.loadHomeLazySection(section);
+        }
+      },
+      { rootMargin: '520px 0px', threshold: 0.01 }
+    );
+
+    this.homeLazySentinels?.forEach(sentinel => {
+      this.homeLazyObserver?.observe(sentinel.nativeElement);
+    });
+  }
+
+  private loadHomeLazySection(section: HomeLazySection): void {
+    if (this.loadedLazySections.has(section) || this.loadingLazySections.has(section)) return;
+    this.loadingLazySections.add(section);
+
+    switch (section) {
+      case 'featured':
+        this.loadFeaturedPeople();
+        break;
+      case 'events':
+        this.loadUpcomingEvents();
+        break;
+      case 'podcasts':
+        this.loadHomePodcasts();
+        break;
+    }
+
+    this.loadingLazySections.delete(section);
+    this.loadedLazySections.add(section);
+  }
+
   private loadViralArticles(): void {
     if (this.viralArticlesLoaded || this.loadingViralArticles) return;
 
     this.loadingViralArticles = true;
-    if (this.allPublishedArticles.length > 0) {
-      this.setViralArticles(this.allPublishedArticles);
-      return;
-    }
-
-    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'views')
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           this.setViralArticles(this.uniqueArticles(res.items || []));
@@ -550,7 +631,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeArticles(): void {
-    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.pendingContentLoads--;
         this.checkAllContentLoaded();
@@ -711,6 +792,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private initParticleEffect(): void {
     if (window.innerWidth < 1025) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 
     const canvas = this.heroCanvas?.nativeElement;
     const heroBg = this.heroBg?.nativeElement;
@@ -736,7 +818,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private spawnHeroParticles(x: number, y: number, dx: number, dy: number): void {
     const moveSpeed = Math.sqrt(dx * dx + dy * dy);
-    const count = Math.min(10, 4 + Math.floor(moveSpeed * 0.3));
+    const count = Math.min(6, 3 + Math.floor(moveSpeed * 0.22));
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -753,7 +835,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         size: isBig ? 8 + Math.random() * 12 : 2 + Math.random() * 3.5
       });
     }
-    if (this.heroParticles.length > 400) this.heroParticles.splice(0, this.heroParticles.length - 400);
+    if (this.heroParticles.length > 180) this.heroParticles.splice(0, this.heroParticles.length - 180);
 
     if (!this.particleAnimId) {
       this.animateHeroParticles();

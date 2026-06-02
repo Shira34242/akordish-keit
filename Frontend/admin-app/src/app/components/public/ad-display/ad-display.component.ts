@@ -124,7 +124,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
         this.visibilityObserver?.disconnect();
         this.startLoadingAds();
       },
-      { rootMargin: '900px 0px', threshold: 0.01 }
+      { rootMargin: '520px 0px', threshold: 0.01 }
     );
     this.visibilityObserver.observe(this.host.nativeElement);
   }

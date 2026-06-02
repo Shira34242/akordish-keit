@@ -162,9 +162,9 @@
       </div>
 
       <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
-        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
@@ -176,9 +176,9 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of newsArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"
@@ -256,15 +256,17 @@
       </div>
     </div>
 
+    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="featured"></div>
+
     <section class="home-section index-showcase-section" *ngIf="featuredTeachers.length > 0 || featuredProviders.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
         <a routerLink="/professionals" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
       <div class="index-showcase-stack">
-        <div class="index-showcase-row" *ngIf="featuredTeachers.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="index-showcase-row" *ngIf="featuredTeachers.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="index-showcase-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
                   <img [src]="(teacher.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="teacher.displayName" [imgFallbackOriginal]="teacher.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
@@ -275,9 +277,9 @@
             </ng-container>
           </div>
         </div>
-        <div class="index-showcase-row" *ngIf="featuredProviders.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="index-showcase-row" *ngIf="featuredProviders.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="index-showcase-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
                   <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
@@ -291,14 +293,16 @@
       </div>
     </section>
 
+    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="events"></div>
+
     <section class="home-section" *ngIf="upcomingEvents.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="0" [autoScrollCopies]="3" autoScrollDirection="right">
+      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="0" [autoScrollCopies]="2" autoScrollDirection="right">
         <div class="events-loop-track">
-          <ng-container *ngFor="let copy of [0, 1, 2]">
+          <ng-container *ngFor="let copy of [0, 1]">
             <app-event-card
               *ngFor="let event of upcomingEvents; trackBy: trackById"
               [event]="event"
@@ -311,14 +315,16 @@
       </div>
     </section>
 
+    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="podcasts"></div>
+
     <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0">
       <div class="section-header">
         <h2 class="section-title">פודקאסטים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
-      <div class="podcasts-home-panel" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+      <div class="podcasts-home-panel" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
         <div class="podcasts-home-track">
-          <ng-container *ngFor="let copy of [0, 1, 2]">
+          <ng-container *ngFor="let copy of [0, 1]">
             <a
               class="home-series-image-card"
               *ngFor="let podcast of homePodcasts; trackBy: trackById"
@@ -326,8 +332,18 @@
               [queryParams]="{ series: podcast.slug }"
               [attr.aria-label]="podcast.name"
               [attr.aria-hidden]="copy > 0 ? true : null">
-              <span class="home-series-image-card__image" [style.background-image]="podcast.imageUrl ? 'url(' + podcast.imageUrl + ')' : ''">
-                <span *ngIf="!podcast.imageUrl" class="material-icons">podcasts</span>
+              <span class="home-series-image-card__image">
+                <img
+                  *ngIf="podcast.imageUrl; else podcastIcon"
+                  [src]="(podcast.imageUrl | cfImage:360:82) || ''"
+                  [alt]="podcast.name"
+                  [imgFallbackOriginal]="podcast.imageUrl"
+                  imgFallback="/assets/default-article.png"
+                  loading="lazy"
+                  decoding="async">
+                <ng-template #podcastIcon>
+                  <span class="material-icons">podcasts</span>
+                </ng-template>
               </span>
             </a>
           </ng-container>
@@ -357,9 +373,9 @@
       </div>
 
       <div *ngIf="useScrollingBlogBanner" class="news-banner-stack content-blog-stack">
-        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of blogArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
@@ -371,9 +387,9 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of blogArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"

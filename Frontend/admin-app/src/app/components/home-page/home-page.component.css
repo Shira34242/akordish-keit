@@ -605,6 +605,12 @@
   height: 1px;
 }
 
+.home-lazy-sentinel {
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
 /* ============================================
    SONGS GRID (אקורדים — גלילה אופקית, יותר מקום לטקסט)
 ============================================ */
@@ -1139,6 +1145,13 @@
   background-position: center;
   background-size: cover;
   transition: opacity 0.2s, transform 0.2s;
+}
+
+.home-series-image-card__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .home-series-image-card:hover .home-series-image-card__image {
