@@ -103,6 +103,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private fullHeroHeight = 0;
   private rafPending = false;
+  private lastViewportWidth = window.innerWidth;
+  private lastViewportHeight = window.innerHeight;
 
   private heroCtx?: CanvasRenderingContext2D | null;
   private heroParticles: HeroParticle[] = [];
@@ -197,6 +199,25 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:scroll')
   onScroll(): void {
+    this.requestHeroFrame();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    const nextWidth = window.innerWidth;
+    const widthChanged = Math.abs(nextWidth - this.lastViewportWidth) > 1;
+    this.isMobile = nextWidth <= 768;
+
+    // Mobile browsers fire resize while the address bar hides/shows during scroll.
+    // Keeping the hero baseline stable there prevents visible jumps.
+    if (!widthChanged && this.isMobile) {
+      return;
+    }
+
+    this.initHeroHeight();
+  }
+
+  private requestHeroFrame(): void {
     if (this.rafPending) return;
     this.rafPending = true;
     requestAnimationFrame(() => {
@@ -205,17 +226,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  @HostListener('window:resize')
-  onResize(): void {
-    this.isMobile = window.innerWidth <= 768;
-    this.initHeroHeight();
-  }
-
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = window.innerHeight - 16; /* top: 8px + bottom: 8px */
+    this.lastViewportWidth = window.innerWidth;
+    this.lastViewportHeight = window.innerHeight;
+    this.fullHeroHeight = Math.max(0, this.lastViewportHeight - 16); /* top: 8px + bottom: 8px */
+    bg.style.setProperty('--hero-full-height', this.fullHeroHeight + 'px');
+    bg.style.setProperty('--hero-visible-height', this.fullHeroHeight + 'px');
     bg.style.height = this.fullHeroHeight + 'px';
+    this.resizeHeroCanvas();
     this.shrinkHero();
   }
 
@@ -223,10 +243,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
     const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
-    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
-    bg.style.height = newHeight + 'px';
+    const scrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - scrollY);
+    const visibleHeight = Math.round(newHeight * 100) / 100;
+    bg.style.setProperty('--hero-visible-height', visibleHeight + 'px');
 
-    const progress = Math.min(1, window.scrollY / 160);
+    const progress = Math.min(1, scrollY / 160);
     const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
     if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
 
@@ -237,6 +259,19 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
         : 0;
       collapseOverlay.style.opacity = String(collapseProgress);
+    }
+  }
+
+  private resizeHeroCanvas(): void {
+    const canvas = this.heroCanvas?.nativeElement;
+    const heroBg = this.heroBg?.nativeElement;
+    if (!canvas || !heroBg || this.fullHeroHeight === 0) return;
+
+    const width = heroBg.clientWidth;
+    const height = this.fullHeroHeight;
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
     }
   }
 
@@ -650,8 +685,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!canvas || !heroBg) return;
 
     this.heroCtx = canvas.getContext('2d');
-    canvas.width = heroBg.clientWidth;
-    canvas.height = heroBg.clientHeight;
+    this.resizeHeroCanvas();
 
     this.heroMouseHandler = (e: MouseEvent) => {
       const rect = heroBg.getBoundingClientRect();
@@ -702,7 +736,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (heroBg) {
       const w = heroBg.clientWidth;
-      const h = heroBg.clientHeight;
+      const h = this.fullHeroHeight || heroBg.clientHeight;
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;

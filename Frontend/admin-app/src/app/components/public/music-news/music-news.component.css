@@ -123,7 +123,7 @@
 }
 
 .managed-cell ::ng-deep .banner-title {
-  font-size: var(--font-base);
+  font-size: calc(var(--font-base) * 1.4);
   line-height: 1.3;
 }
 
@@ -132,7 +132,7 @@
 }
 
 .stream-cell ::ng-deep .banner-title {
-  font-size: var(--font-sm);
+  font-size: calc(var(--font-sm) * 1.4);
   line-height: 1.35;
 }
 
@@ -230,7 +230,7 @@
     height: 265px;
   }
 
-  .managed-cell ::ng-deep .banner-title { font-size: var(--font-sm); }
+  .managed-cell ::ng-deep .banner-title { font-size: calc(var(--font-sm) * 1.4); }
   .managed-cell ::ng-deep .banner-subtitle,
   .stream-cell ::ng-deep .banner-subtitle { font-size: var(--font-xs); }
 }
@@ -260,8 +260,8 @@
     height: 160px;
   }
 
-  .managed-cell ::ng-deep .banner-title { font-size: var(--font-sm); line-height: 1.2; }
-  .stream-cell ::ng-deep .banner-title { font-size: var(--font-xs); }
+  .managed-cell ::ng-deep .banner-title { font-size: calc(var(--font-sm) * 1.4); line-height: 1.2; }
+  .stream-cell ::ng-deep .banner-title { font-size: calc(var(--font-xs) * 1.4); }
 
   .tab-bar {
     bottom: 18px;
@@ -294,7 +294,7 @@
 
   .managed-cell ::ng-deep .banner-title,
   .stream-cell ::ng-deep .banner-title {
-    font-size: var(--font-base);
+    font-size: calc(var(--font-base) * 1.4);
     line-height: 1.25;
   }
 
@@ -307,7 +307,7 @@
 @media (max-width: 360px) {
   .managed-cell ::ng-deep .banner-title,
   .stream-cell ::ng-deep .banner-title {
-    font-size: var(--font-sm);
+    font-size: calc(var(--font-sm) * 1.4);
   }
 
   .tab-bar__item {
