@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, DestroyRef, NgZone, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -79,6 +79,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
+  private readonly ngZone = inject(NgZone);
 
   recentSongs: any[] = [];
   popularSongs: any[] = [];
@@ -105,11 +106,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private rafPending = false;
   private lastViewportWidth = window.innerWidth;
   private lastViewportHeight = window.innerHeight;
+  private lastHeroVisibleHeight = -1;
 
   private heroCtx?: CanvasRenderingContext2D | null;
   private heroParticles: HeroParticle[] = [];
   private particleAnimId?: number;
   private heroMouseHandler?: (e: MouseEvent) => void;
+  private heroScrollHandler?: () => void;
+  private heroResizeHandler?: () => void;
+  private heroOverlayEl?: HTMLElement | null;
+  private heroCollapseOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
@@ -185,6 +191,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initHeroHeight();
+      this.initHeroScrollListeners();
       this.initParticleEffect();
       this.initViralObserver();
     }, 0);
@@ -194,23 +201,37 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     HomePageComponent.savedScrollY = window.scrollY;
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
+    if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
+    if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     this.viralObserver?.disconnect();
   }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.requestHeroFrame();
+  private initHeroScrollListeners(): void {
+    if (this.heroScrollHandler || this.heroResizeHandler) return;
+
+    this.ngZone.runOutsideAngular(() => {
+      this.heroScrollHandler = () => this.requestHeroFrame();
+      this.heroResizeHandler = () => this.handleHeroResize();
+      window.addEventListener('scroll', this.heroScrollHandler, { passive: true });
+      window.addEventListener('resize', this.heroResizeHandler, { passive: true });
+    });
   }
 
-  @HostListener('window:resize')
-  onResize(): void {
+  private handleHeroResize(): void {
     const nextWidth = window.innerWidth;
     const widthChanged = Math.abs(nextWidth - this.lastViewportWidth) > 1;
-    this.isMobile = nextWidth <= 768;
+    const nextIsMobile = nextWidth <= 768;
+    if (nextIsMobile !== this.isMobile) {
+      this.ngZone.run(() => {
+        this.isMobile = nextIsMobile;
+      });
+    } else {
+      this.isMobile = nextIsMobile;
+    }
 
     // Mobile browsers fire resize while the address bar hides/shows during scroll.
     // Keeping the hero baseline stable there prevents visible jumps.
-    if (!widthChanged && this.isMobile) {
+    if (!widthChanged && nextIsMobile) {
       return;
     }
 
@@ -229,11 +250,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+    this.heroOverlayEl = bg.querySelector('.hero-overlay') as HTMLElement | null;
+    this.heroCollapseOverlayEl = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+    this.lastHeroVisibleHeight = -1;
     this.lastViewportWidth = window.innerWidth;
     this.lastViewportHeight = window.innerHeight;
     this.fullHeroHeight = Math.max(0, this.lastViewportHeight - 16); /* top: 8px + bottom: 8px */
     bg.style.setProperty('--hero-full-height', this.fullHeroHeight + 'px');
-    bg.style.setProperty('--hero-visible-height', this.fullHeroHeight + 'px');
     bg.style.height = this.fullHeroHeight + 'px';
     this.resizeHeroCanvas();
     this.shrinkHero();
@@ -246,19 +269,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const scrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - scrollY);
     const visibleHeight = Math.round(newHeight * 100) / 100;
-    bg.style.setProperty('--hero-visible-height', visibleHeight + 'px');
+    if (Math.abs(visibleHeight - this.lastHeroVisibleHeight) >= 0.25) {
+      bg.style.height = visibleHeight + 'px';
+      this.lastHeroVisibleHeight = visibleHeight;
+    }
 
     const progress = Math.min(1, scrollY / 160);
-    const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
-    if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
+    if (this.heroOverlayEl) this.heroOverlayEl.style.opacity = String(Math.max(0, 1 - progress));
 
-    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
-    if (collapseOverlay) {
+    if (this.heroCollapseOverlayEl) {
       const collapseRange = this.fullHeroHeight - minHeight;
       const collapseProgress = collapseRange > 0
         ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
         : 0;
-      collapseOverlay.style.opacity = String(collapseProgress);
+      this.heroCollapseOverlayEl.style.opacity = String(collapseProgress);
     }
   }
 
