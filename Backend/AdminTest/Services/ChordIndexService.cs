@@ -48,7 +48,7 @@ public class ChordIndexService : IChordIndexService
             }
 
             var chordTokens = tokens.Where(IsChordToken).ToList();
-            if (chordTokens.Count > 0 && chordTokens.Count == tokens.Count)
+            if (chordTokens.Count > 0 && tokens.All(token => IsChordToken(token) || IsChordLineSeparator(token)))
             {
                 foreach (var token in chordTokens)
                 {
@@ -160,6 +160,9 @@ public class ChordIndexService : IChordIndexService
 
         return ChordRegex.IsMatch(token.Trim());
     }
+
+    private static bool IsChordLineSeparator(string token) =>
+        token is "→" or "->" or "←" or "<-";
 
     private static string NormalizeStatic(string chordName)
     {

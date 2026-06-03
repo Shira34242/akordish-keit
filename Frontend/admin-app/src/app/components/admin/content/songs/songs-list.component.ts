@@ -73,6 +73,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
   uploaderSearch = '';
   dateFrom = '';
   dateTo = '';
+  approvalFilter: 'all' | 'approved' | 'pending' = 'all';
   sortBy: string = 'date'; // date, views, name
 
   ngOnInit(): void {
@@ -108,7 +109,8 @@ export class SongsListComponent implements OnInit, OnDestroy {
       undefined,
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
-      this.dateTo || undefined
+      this.dateTo || undefined,
+      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
     ).subscribe({
       next: (result: any) => {
         this.songs = result.songs || result.items || result.data || [];
@@ -173,6 +175,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
       this.selectedArtistId ||
       this.dateFrom ||
       this.dateTo ||
+      this.approvalFilter !== 'all' ||
       this.sortBy !== 'date'
     );
   }
@@ -183,6 +186,7 @@ export class SongsListComponent implements OnInit, OnDestroy {
     this.uploaderSearch = '';
     this.dateFrom = '';
     this.dateTo = '';
+    this.approvalFilter = 'all';
     this.sortBy = 'date';
     this.onFilterChange();
   }

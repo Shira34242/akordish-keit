@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { ModalService } from '../../../../services/modal.service';
 import { SongService } from '../../../../services/song.service';
 import { SmartContentService } from '../../../../services/admin/smart-content.service';
-import { ImportedSongDraft, ImportSongFromUrlResponse } from '../../../../models/song.model';
+import { AddSongRequest, ImportedSongDraft, ImportSongFromUrlResponse } from '../../../../models/song.model';
 import { ImportContentFromUrlResponse, SmartContentType } from '../../../../models/smart-content.model';
 
 @Component({
@@ -30,6 +30,7 @@ export class SmartAddComponent {
   importResult: ImportSongFromUrlResponse | null = null;
   contentImportResult: ImportContentFromUrlResponse | null = null;
   errorMessage = '';
+  successMessage = '';
 
   readonly contentTypes: { value: SmartContentType; label: string; hint: string; icon: string }[] = [
     { value: 'song', label: 'אקורדים', hint: 'שליפת שיר ואקורדים לעריכת שיר', icon: 'library_music' },
@@ -59,6 +60,7 @@ export class SmartAddComponent {
 
     this.importState = 'loading';
     this.errorMessage = '';
+    this.successMessage = '';
     this.importResult = null;
     this.contentImportResult = null;
 
@@ -78,7 +80,13 @@ export class SmartAddComponent {
 
         if (this.compactSongOnly && result.draft) {
           this.importResult = result;
-          this.openDraftEditor();
+          this.saveImportedSongDraft(result.draft);
+          return;
+        }
+
+        if (this.compactSongOnly) {
+          this.importState = 'error';
+          this.errorMessage = result.message || 'לא הצלחנו לשלוף מספיק פרטים לשמירת טיוטה.';
           return;
         }
 
@@ -89,7 +97,7 @@ export class SmartAddComponent {
         this.importResult = result ?? null;
 
         if (this.compactSongOnly && result?.draft) {
-          this.openDraftEditor();
+          this.saveImportedSongDraft(result.draft);
           return;
         }
 
@@ -100,8 +108,7 @@ export class SmartAddComponent {
   }
 
   onImportPaste(): void {
-    if (!this.compactSongOnly) return;
-    setTimeout(() => this.prepareSmartImport(), 0);
+    return;
   }
 
   onContentTypeChange(type: SmartContentType): void {
@@ -180,6 +187,35 @@ export class SmartAddComponent {
       error: () => {
         this.importState = 'ready';
         this.router.navigate(['/admin/content/songs']);
+      }
+    });
+  }
+
+  private saveImportedSongDraft(draft: ImportedSongDraft): void {
+    const normalizedDraft = this.normalizeDraftForForm(draft);
+    const request: AddSongRequest = {
+      title: normalizedDraft.title,
+      artists: normalizedDraft.artists,
+      youtubeUrl: normalizedDraft.youtubeUrl,
+      imageUrl: normalizedDraft.imageUrl || undefined,
+      tags: normalizedDraft.tags || [],
+      genres: [],
+      lyricsWithChords: normalizedDraft.lyricsWithChords,
+      originalKeyId: normalizedDraft.originalKeyId || 1,
+      easyKeyId: normalizedDraft.easyKeyId || undefined,
+      isApproved: false
+    };
+
+    this.songService.addSong(request).subscribe({
+      next: () => {
+        this.importUrl = '';
+        this.importState = 'idle';
+        this.successMessage = 'השיר נשמר כטיוטה וממתין לעריכה';
+        this.modalService.notifySongUpdated();
+      },
+      error: (error) => {
+        this.importState = 'error';
+        this.errorMessage = error?.error?.message || 'השליפה הצליחה, אבל שמירת הטיוטה נכשלה.';
       }
     });
   }

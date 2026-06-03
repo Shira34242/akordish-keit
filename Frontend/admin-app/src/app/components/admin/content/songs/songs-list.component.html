@@ -18,6 +18,12 @@
         <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
       </select>
 
+      <select [(ngModel)]="approvalFilter" (change)="onFilterChange()" class="filter-select">
+        <option value="all">כל הסטטוסים</option>
+        <option value="approved">מאושרים</option>
+        <option value="pending">ממתינים לאישור</option>
+      </select>
+
       <div class="date-range-control" title="טווח תאריכים">
         <button class="icon-control-button" type="button">
           <span class="material-icons">date_range</span>
@@ -145,7 +151,7 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && songs.length > 0 && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)">
+    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved">
       <label class="grid-card-select" title="בחירת שיר">
         <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)">
       </label>
@@ -196,7 +202,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let song of songs" class="song-row" [class.selected]="isSelected(song.id)">
+        <tr *ngFor="let song of songs" class="song-row" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved">
           <!-- Selection -->
           <td class="selection-cell">
             <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)" title="בחירת שיר">

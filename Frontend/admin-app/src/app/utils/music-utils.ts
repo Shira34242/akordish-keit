@@ -377,9 +377,13 @@ function tokenize(line: string): string[] {
         .filter(Boolean);
 }
 
+function isChordLineSeparator(token: string): boolean {
+    return token === '→' || token === '->' || token === '←' || token === '<-';
+}
+
 export function isChordLine(line: string): boolean {
     const tokens = tokenize(line);
-    return tokens.length > 0 && tokens.every(token => isChord(token));
+    return tokens.length > 0 && tokens.some(token => isChord(token)) && tokens.every(token => isChord(token) || isChordLineSeparator(token));
 }
 
 export function extractChords(line: string): string[] {
@@ -395,7 +399,7 @@ export function parseConsecutiveChordLines(lines: string[]): ParsedLine[] {
     return lines.map(line => {
         const tokens = line.trim().split(/[\s|]+/).filter(tok => tok !== '/' && !/^x\d+$/i.test(tok)).filter(Boolean);
         if (tokens.length === 0) return { type: 'empty', content: '' };
-        const isChords = tokens.every(tok => isChord(tok));
+        const isChords = tokens.some(tok => isChord(tok)) && tokens.every(tok => isChord(tok) || isChordLineSeparator(tok));
         return { type: isChords ? 'chords' : 'lyrics', content: line };
     });
 }

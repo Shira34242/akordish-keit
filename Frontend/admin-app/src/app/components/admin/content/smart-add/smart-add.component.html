@@ -1,4 +1,4 @@
-<div class="smart-add-page" [class.compact-song-import]="compactSongOnly">
+﻿<div class="smart-add-page" [class.compact-song-import]="compactSongOnly">
   <section class="smart-import-card" aria-labelledby="smart-import-title">
     <div class="card-copy" *ngIf="!compactSongOnly">
       <span class="section-pill">ייבוא חכם</span>
@@ -39,8 +39,8 @@
           dir="ltr"
           [attr.autofocus]="compactSongOnly ? '' : null"
         />
-        <button *ngIf="!compactSongOnly" type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
-          {{ importState === 'loading' ? 'שולף...' : 'שלוף תוכן' }}
+        <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
+          {{ importState === 'loading' ? 'שולף...' : (compactSongOnly ? 'שלוף' : 'שלוף תוכן') }}
         </button>
       </div>
 
@@ -48,7 +48,10 @@
         השליפה ממלאת טיוטה ראשונית בלבד. תמיד עוברים דרך טופס עריכה לפני פרסום.
       </p>
       <p class="field-note" *ngIf="importState === 'loading' && compactSongOnly">
-        שולף...
+        שולף ושומר כטיוטה...
+      </p>
+      <p class="field-note success" *ngIf="successMessage">
+        {{ successMessage }}
       </p>
       <p class="field-note error" *ngIf="importState === 'invalid'">
         צריך להדביק קישור מלא שמתחיל ב-http או https.
@@ -58,7 +61,7 @@
       </p>
     </div>
 
-    <div class="import-result" *ngIf="importState === 'ready' && (importResult || contentImportResult)">
+    <div class="import-result" *ngIf="!compactSongOnly && importState === 'ready' && (importResult || contentImportResult)">
       <div>
         <h3>{{ selectedContentType === 'song' && importResult?.songId ? 'הטיוטה נוצרה' : 'שלפנו נתונים לעריכה' }}</h3>
         <p>{{ resultMessage }}</p>

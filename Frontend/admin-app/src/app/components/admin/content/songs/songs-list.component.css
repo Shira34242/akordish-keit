@@ -691,6 +691,8 @@
 .songs-table tbody tr:last-child { border-bottom: none; }
 .songs-table tbody tr:hover { background: #fafafa; }
 .songs-table tbody tr.selected { background: #fbffd9; }
+.songs-table tbody tr.pending-song { background: #fbffd9; }
+.songs-table tbody tr.pending-song:hover { background: #ddff53; }
 
 .songs-table td {
   padding: var(--space-sm) var(--space-base);
@@ -717,6 +719,25 @@
 
 .grid-card.selected {
   background: #fbffd9 !important;
+}
+
+.grid-card.pending-song {
+  background: #fbffd9;
+  outline: 2px solid #ddff53;
+}
+
+.grid-card.pending-song .grid-card-name::after {
+  content: 'ממתין';
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: var(--space-xs);
+  padding: 2px var(--space-sm);
+  border-radius: 999px;
+  background: #ddff53;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  line-height: 1;
 }
 
 .grid-card-select {

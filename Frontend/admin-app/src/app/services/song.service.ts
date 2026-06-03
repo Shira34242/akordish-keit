@@ -254,7 +254,8 @@ export class SongService {
         tagId?: number,
         uploaderSearch?: string,
         dateFrom?: string,
-        dateTo?: string
+        dateTo?: string,
+        isApproved?: boolean
     ): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
@@ -284,6 +285,9 @@ export class SongService {
         }
         if (dateTo) {
             params = params.set('dateTo', dateTo);
+        }
+        if (isApproved !== undefined) {
+            params = params.set('isApproved', String(isApproved));
         }
 
         return this.http.get<any>(`${this.apiUrl}/admin/all`, { params });

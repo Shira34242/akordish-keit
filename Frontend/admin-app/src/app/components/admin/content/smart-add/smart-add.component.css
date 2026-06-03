@@ -159,7 +159,10 @@ label {
 }
 
 .compact-song-import .url-row {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 input {
@@ -225,6 +228,11 @@ input:focus {
 
 .field-note.error {
   color: #000000;
+  font-weight: 800;
+}
+
+.field-note.success {
+  color: #1d5f2b;
   font-weight: 800;
 }
 

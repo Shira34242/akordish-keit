@@ -96,10 +96,6 @@ public class AddSongRequestDto
     [MaxLength(5, ErrorMessage = "ניתן להוסיף עד 5 אמנים בלבד")]
     public List<ArtistInputDto> Artists { get; set; } = new();
 
-    [Required(ErrorMessage = "קישור YouTube הוא שדה חובה")]
-    [Url(ErrorMessage = "כתובת YouTube לא תקינה")]
-    [RegularExpression(@"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$",
-        ErrorMessage = "יש להזין קישור תקין של YouTube")]
     public string YoutubeUrl { get; set; } = string.Empty;
 
     [Url(ErrorMessage = "כתובת Spotify לא תקינה")]
@@ -114,12 +110,8 @@ public class AddSongRequestDto
 
     // ===== שלב 2: אקורדים וסולמות =====
 
-    [Required(ErrorMessage = "מילים ואקורדים הם שדה חובה")]
-    [MinLength(10, ErrorMessage = "נדרש להזין לפחות 10 תווים")]
     public string LyricsWithChords { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "סולם מקורי הוא שדה חובה")]
-    [Range(1, int.MaxValue, ErrorMessage = "יש לבחור סולם מקורי")]
     public int OriginalKeyId { get; set; }
 
     public int? EasyKeyId { get; set; }
