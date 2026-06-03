@@ -39,16 +39,16 @@
           dir="ltr"
           [attr.autofocus]="compactSongOnly ? '' : null"
         />
-        <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="importState === 'loading'">
-          {{ importState === 'loading' ? 'שולף...' : (compactSongOnly ? 'שלוף' : 'שלוף תוכן') }}
+        <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="!compactSongOnly && importState === 'loading'">
+          {{ !compactSongOnly && importState === 'loading' ? 'שולף...' : (compactSongOnly ? 'שלוף' : 'שלוף תוכן') }}
         </button>
       </div>
 
       <p class="field-note" *ngIf="importState === 'idle' && !compactSongOnly">
         השליפה ממלאת טיוטה ראשונית בלבד. תמיד עוברים דרך טופס עריכה לפני פרסום.
       </p>
-      <p class="field-note" *ngIf="importState === 'loading' && compactSongOnly">
-        שולף ושומר כטיוטה...
+      <p class="field-note" *ngIf="compactSongOnly && activeCompactImports > 0">
+        {{ activeCompactImports }} שליפות רצות ברקע. אפשר להדביק קישור נוסף.
       </p>
       <p class="field-note success" *ngIf="successMessage">
         {{ successMessage }}

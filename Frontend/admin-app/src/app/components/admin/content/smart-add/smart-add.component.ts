@@ -31,6 +31,9 @@ export class SmartAddComponent {
   contentImportResult: ImportContentFromUrlResponse | null = null;
   errorMessage = '';
   successMessage = '';
+  activeCompactImports = 0;
+  compactImportsSaved = 0;
+  compactImportsFailed = 0;
 
   readonly contentTypes: { value: SmartContentType; label: string; hint: string; icon: string }[] = [
     { value: 'song', label: 'אקורדים', hint: 'שליפת שיר ואקורדים לעריכת שיר', icon: 'library_music' },
@@ -51,6 +54,8 @@ export class SmartAddComponent {
 
     if (this.compactSongOnly) {
       this.selectedContentType = 'song';
+      this.prepareCompactSongImport(url);
+      return;
     }
 
     if (!this.isValidUrl(url)) {
@@ -191,7 +196,43 @@ export class SmartAddComponent {
     });
   }
 
-  private saveImportedSongDraft(draft: ImportedSongDraft): void {
+  private prepareCompactSongImport(url: string): void {
+    if (!this.isValidUrl(url)) {
+      this.importState = 'invalid';
+      return;
+    }
+
+    this.importUrl = '';
+    this.importState = 'idle';
+    this.errorMessage = '';
+    this.successMessage = 'השליפה נשלחה לרקע. אפשר להדביק קישור נוסף.';
+    this.importResult = null;
+    this.contentImportResult = null;
+    this.activeCompactImports += 1;
+
+    this.songService.importSongFromUrl(url).subscribe({
+      next: (result) => {
+        if (result.draft) {
+          this.saveImportedSongDraft(result.draft, true);
+          return;
+        }
+
+        this.finishCompactImport(false, result.message || 'לא הצלחנו לשלוף מספיק פרטים לשמירת טיוטה.');
+      },
+      error: (error) => {
+        const result = error.error as ImportSongFromUrlResponse | undefined;
+
+        if (result?.draft) {
+          this.saveImportedSongDraft(result.draft, true);
+          return;
+        }
+
+        this.finishCompactImport(false, result?.message || 'לא הצלחנו לייבא מהקישור הזה.');
+      }
+    });
+  }
+
+  private saveImportedSongDraft(draft: ImportedSongDraft, backgroundCompact = false): void {
     const normalizedDraft = this.normalizeDraftForForm(draft);
     const request: AddSongRequest = {
       title: normalizedDraft.title,
@@ -208,16 +249,49 @@ export class SmartAddComponent {
 
     this.songService.addSong(request).subscribe({
       next: () => {
+        if (backgroundCompact) {
+          this.finishCompactImport(true);
+          this.modalService.notifySongUpdated();
+          return;
+        }
+
         this.importUrl = '';
         this.importState = 'idle';
         this.successMessage = 'השיר נשמר כטיוטה וממתין לעריכה';
         this.modalService.notifySongUpdated();
       },
       error: (error) => {
+        if (backgroundCompact) {
+          this.finishCompactImport(false, error?.error?.message || 'שמירת הטיוטה נכשלה.');
+          return;
+        }
+
         this.importState = 'error';
         this.errorMessage = error?.error?.message || 'השליפה הצליחה, אבל שמירת הטיוטה נכשלה.';
       }
     });
+  }
+
+  private finishCompactImport(saved: boolean, message?: string): void {
+    this.activeCompactImports = Math.max(0, this.activeCompactImports - 1);
+
+    if (saved) {
+      this.compactImportsSaved += 1;
+    } else {
+      this.compactImportsFailed += 1;
+      this.errorMessage = message || 'שליפה אחת נכשלה.';
+    }
+
+    this.importState = this.compactImportsFailed > 0 ? 'error' : 'idle';
+
+    if (this.activeCompactImports > 0) {
+      this.successMessage = `נשמרו ${this.compactImportsSaved} טיוטות. ${this.activeCompactImports} שליפות עדיין רצות ברקע.`;
+      return;
+    }
+
+    this.successMessage = this.compactImportsSaved > 0
+      ? `נשמרו ${this.compactImportsSaved} טיוטות.`
+      : '';
   }
 
   private prepareContentImport(url: string, contentType: Exclude<SmartContentType, 'song'>): void {

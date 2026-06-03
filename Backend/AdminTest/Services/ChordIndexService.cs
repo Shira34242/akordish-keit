@@ -176,20 +176,39 @@ public class ChordIndexService : IChordIndexService
             return new[] { trimmed };
         }
 
-        var parts = trimmed.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length != 2)
+        var slashIndex = trimmed.IndexOf('/');
+        if (slashIndex < 0 || trimmed.IndexOf('/', slashIndex + 1) >= 0)
         {
             return new[] { trimmed };
         }
 
-        var left = SplitGluedChordSequence(parts[0]);
-        var right = SplitGluedChordSequence(parts[1]);
-        if (left == null || right == null)
+        var left = trimmed[..slashIndex].Trim();
+        var right = trimmed[(slashIndex + 1)..].Trim();
+        if (!IsChordToken(left))
         {
             return new[] { trimmed };
         }
 
-        return left.Concat(new[] { "/" }).Concat(right);
+        var bassMatch = Regex.Match(right, @"^[A-Ga-g](?:#|b)?");
+        if (!bassMatch.Success)
+        {
+            return new[] { trimmed };
+        }
+
+        var bass = bassMatch.Value;
+        var gluedTail = right[bass.Length..];
+        if (gluedTail.Length == 0)
+        {
+            return new[] { left + "/" + bass };
+        }
+
+        var tail = SplitGluedChordSequence(gluedTail);
+        if (tail == null)
+        {
+            return new[] { trimmed };
+        }
+
+        return new[] { left + "/" + bass }.Concat(tail);
     }
 
     private static IReadOnlyList<string>? SplitGluedChordSequence(string value)
