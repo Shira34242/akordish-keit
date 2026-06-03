@@ -1042,10 +1042,39 @@ public class SmartSongImportService : ISmartSongImportService
 
         var last = current[current.Length - 1];
         var first = fragment[0];
+        if (IsLikelyHebrewWordContinuation(current, fragment))
+        {
+            return false;
+        }
+
         return !char.IsWhiteSpace(last) &&
             last != '-' &&
             last != '־' &&
             !char.IsPunctuation(first);
+    }
+
+    private static bool IsLikelyHebrewWordContinuation(StringBuilder current, string fragment)
+    {
+        var previous = GetTrailingHebrewLetters(current.ToString());
+        var next = GetLeadingHebrewLetters(fragment);
+        if (previous.Length == 0 || next.Length == 0)
+        {
+            return false;
+        }
+
+        return previous.Length <= 2 || next.Length <= 2;
+    }
+
+    private static string GetTrailingHebrewLetters(string value)
+    {
+        var match = Regex.Match(value, @"[\u0590-\u05FF]+$");
+        return match.Success ? match.Value : string.Empty;
+    }
+
+    private static string GetLeadingHebrewLetters(string value)
+    {
+        var match = Regex.Match(value, @"^[\u0590-\u05FF]+");
+        return match.Success ? match.Value : string.Empty;
     }
 
     private static string? ExtractNagnuLyricsFromPageText(string html)

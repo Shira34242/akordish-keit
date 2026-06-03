@@ -33,13 +33,14 @@ public class ChordIndexService : IChordIndexService
         {
             foreach (Match match in InlineChordRegex.Matches(line))
             {
-                AddChord(match.Groups["chord"].Value, displayByNormalized);
+                AddChordTokens(ExpandChordToken(match.Groups["chord"].Value), displayByNormalized);
             }
 
             var tokens = line
                 .Split(new[] { ' ', '\t', '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(token => token.Trim('[', ']', '(', ')', '{', '}', ':', ';'))
                 .Where(token => token.Length > 0)
+                .SelectMany(ExpandChordToken)
                 .ToList();
 
             if (tokens.Count == 0)
@@ -151,6 +152,108 @@ public class ChordIndexService : IChordIndexService
         }
     }
 
+    private static void AddChordTokens(IEnumerable<string> tokens, IDictionary<string, string> displayByNormalized)
+    {
+        foreach (var token in tokens)
+        {
+            if (!IsChordLineSeparator(token))
+            {
+                AddChord(token, displayByNormalized);
+            }
+        }
+    }
+
+    private static IEnumerable<string> ExpandChordToken(string token)
+    {
+        var trimmed = token.Trim();
+        if (trimmed.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        if (IsChordToken(trimmed) || !trimmed.Contains('/'))
+        {
+            return new[] { trimmed };
+        }
+
+        var parts = trimmed.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+        {
+            return new[] { trimmed };
+        }
+
+        var left = SplitGluedChordSequence(parts[0]);
+        var right = SplitGluedChordSequence(parts[1]);
+        if (left == null || right == null)
+        {
+            return new[] { trimmed };
+        }
+
+        return left.Concat(new[] { "/" }).Concat(right);
+    }
+
+    private static IReadOnlyList<string>? SplitGluedChordSequence(string value)
+    {
+        var trimmed = value.Trim();
+        if (trimmed.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return SplitGluedChordSequence(trimmed, 0, new Dictionary<int, IReadOnlyList<string>?>());
+    }
+
+    private static IReadOnlyList<string>? SplitGluedChordSequence(
+        string value,
+        int start,
+        IDictionary<int, IReadOnlyList<string>?> memo)
+    {
+        if (start >= value.Length)
+        {
+            return Array.Empty<string>();
+        }
+
+        if (memo.TryGetValue(start, out var cached))
+        {
+            return cached;
+        }
+
+        for (var end = start + 1; end < value.Length; end++)
+        {
+            if (!IsChordStart(value[end]))
+            {
+                continue;
+            }
+
+            var candidate = value[start..end];
+            if (!IsChordToken(candidate))
+            {
+                continue;
+            }
+
+            var rest = SplitGluedChordSequence(value, end, memo);
+            if (rest == null)
+            {
+                continue;
+            }
+
+            memo[start] = new[] { candidate }.Concat(rest).ToList();
+            return memo[start];
+        }
+
+        var remaining = value[start..];
+        memo[start] = IsChordToken(remaining)
+            ? new[] { remaining }
+            : null;
+        return memo[start];
+    }
+
+    private static bool IsChordStart(char value)
+    {
+        var upper = char.ToUpperInvariant(value);
+        return upper is >= 'A' and <= 'G';
+    }
+
     private static bool IsChordToken(string token)
     {
         if (string.IsNullOrWhiteSpace(token) || token.Length > 24)
@@ -162,7 +265,7 @@ public class ChordIndexService : IChordIndexService
     }
 
     private static bool IsChordLineSeparator(string token) =>
-        token is "→" or "->" or "←" or "<-";
+        token is "→" or "->" or "←" or "<-" or "/";
 
     private static string NormalizeStatic(string chordName)
     {
