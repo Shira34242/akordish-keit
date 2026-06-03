@@ -48,3 +48,7 @@ nul
 
 # Backup files
 *.backup
+
+# Claude Code agent files
+.agents/
+skills-lock.json
