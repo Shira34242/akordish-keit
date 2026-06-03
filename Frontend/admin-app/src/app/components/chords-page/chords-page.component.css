@@ -813,6 +813,63 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
+   NEWS SECTION — full-width scrollable rows at bottom of page
+═══════════════════════════════════════════════════════════════ */
+.news-section {
+    width: 100%;
+    border-top: 1px solid #F2F2F2;
+    padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.news-section-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.news-section-link {
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-sm);
+    font-weight: 300;
+    color: rgba(0, 0, 0, 0.45);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.news-section-link:hover {
+    color: #000;
+}
+
+.news-strip {
+    display: flex;
+    gap: var(--space-sm);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    flex: 1;
+    scroll-behavior: smooth;
+}
+
+.news-strip::-webkit-scrollbar { display: none; }
+
+.news-strip-card {
+    flex-shrink: 0;
+    width: calc(20% - 6px);
+    min-width: 200px;
+    min-height: 160px;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
    RESPONSIVE — TABLET ≤1024px
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
@@ -828,6 +885,9 @@
    RESPONSIVE — MOBILE ≤768px
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+    .news-strip-card { width: calc(33.33% - 6px); min-width: 160px; }
+    .news-section { padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+
     .hero-bg { border-radius: 20px; }
 
     /* Hero גובה מצומצם — אין מסננים, תוכן קצר יותר */
@@ -870,6 +930,9 @@
    RESPONSIVE — SMALL MOBILE ≤480px
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
+    .news-strip-card { width: calc(50% - 4px); min-width: 140px; }
+    .news-section { padding: var(--space-lg) var(--space-md) var(--space-3xl); }
+
     .hero-bg { border-radius: 16px; }
 
     .hero-content-area {

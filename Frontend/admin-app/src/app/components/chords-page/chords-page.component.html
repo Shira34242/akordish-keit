@@ -358,4 +358,45 @@
 
     </div>
 
+    <!-- Music News — full-width, outside chords-content, only in unfiltered view -->
+    <div class="news-section" *ngIf="!isFiltered && newsArticles.length > 0">
+        <div class="news-section-inner">
+            <div class="section-header">
+                <span class="section-tag section-tag--accent">חדשות מוזיקה</span>
+                <a routerLink="/music-news" class="news-section-link">כל החדשות</a>
+            </div>
+
+            <!-- Row 1 -->
+            <div class="strip-wrapper">
+                <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(newsStrip1, false)" [attr.aria-label]="'chords.prev' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="news-strip" #newsStrip1>
+                    <div class="news-strip-card" *ngFor="let article of newsRow1; trackBy: trackByNewsArticle">
+                        <app-news-banner [article]="article"></app-news-banner>
+                    </div>
+                </div>
+                <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(newsStrip1, true)" [attr.aria-label]="'chords.next' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="strip-wrapper" *ngIf="newsRow2.length > 0">
+                <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(newsStrip2, false)" [attr.aria-label]="'chords.prev' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="news-strip" #newsStrip2>
+                    <div class="news-strip-card" *ngFor="let article of newsRow2; trackBy: trackByNewsArticle">
+                        <app-news-banner [article]="article"></app-news-banner>
+                    </div>
+                </div>
+                <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(newsStrip2, true)" [attr.aria-label]="'chords.next' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>

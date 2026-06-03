@@ -6,7 +6,10 @@ import { SongService } from '../../services/song.service';
 import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
+import { ArticleService } from '../../services/admin/article.service';
+import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
+import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { Subject, Subscription, EMPTY } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
@@ -17,7 +20,7 @@ import { songSlug } from '../../utils/slug';
 @Component({
     selector: 'app-chords-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, TranslatePipe, AutoScrollDirective],
+    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent, TranslatePipe, AutoScrollDirective],
     templateUrl: './chords-page.component.html',
     styleUrls: ['./chords-page.component.css']
 })
@@ -79,6 +82,9 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     showKeyDropdown: boolean = false;
     showSortDropdown: boolean = false;
 
+    newsArticles: Article[] = [];
+    private newsSubscription?: Subscription;
+
     private searchSubject = new Subject<string>();
     private searchSubscription?: Subscription;
     private recentlyViewedKey = 'chords-recently-viewed';
@@ -108,6 +114,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         private authService: AuthService,
         private knownChordService: UserKnownChordService,
         private systemTablesService: SystemTablesService,
+        private articleService: ArticleService,
         private router: Router
     ) {
         this.searchSubscription = this.searchSubject.pipe(
@@ -179,6 +186,12 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadQuickTags();
         this.loadRecentlyViewed();
         // loadCategorySections() is deferred — runs after loadSongs() returns for the first time
+        const loadNews = () => this.loadNewsArticles();
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(loadNews, { timeout: 3000 });
+        } else {
+            setTimeout(loadNews, 1200);
+        }
     }
 
     ngAfterViewInit(): void {
@@ -192,6 +205,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.scrollObserver?.disconnect();
         this.searchSubscription?.unsubscribe();
         this.songLoadSubscription?.unsubscribe();
+        this.newsSubscription?.unsubscribe();
     }
 
     // ─────────────────────────────────────────────
@@ -632,7 +646,20 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     }
 
+    get newsRow1(): Article[] { return this.newsArticles.slice(0, 10); }
+    get newsRow2(): Article[] { return this.newsArticles.slice(10); }
+
+    private loadNewsArticles(): void {
+        this.newsSubscription = this.articleService.getArticles(
+            1, 20, undefined, undefined, ArticleContentType.News, ArticleStatus.Published
+        ).subscribe({
+            next: (result) => { this.newsArticles = result.items || []; },
+            error: () => {}
+        });
+    }
+
     trackBySong(_: number, song: any): number { return song.id; }
+    trackByNewsArticle(_: number, article: Article): number { return article.id; }
     trackByArtist(_: number, artist: any): number { return artist.id; }
     trackByTag(_: number, tag: SystemItem): number { return tag.id; }
 

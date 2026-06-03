@@ -84,7 +84,11 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background-image: url('/concert-overlay.png');
+  background-image: image-set(
+    url('/concert-overlay.avif') type('image/avif'),
+    url('/concert-overlay.webp') type('image/webp'),
+    url('/concert-overlay.png')  type('image/png')
+  );
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
