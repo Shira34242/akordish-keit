@@ -176,6 +176,7 @@
   <div class="bulk-actions-bar" *ngIf="!loading && isArticleListTab && hasSelection">
     <div class="bulk-summary">
       <span class="bulk-count">נבחרו {{ selectedCount }} כתבות</span>
+      <button class="bulk-clear" (click)="selectAllCurrentPage()" [disabled]="bulkActionLoading">סמן הכל</button>
       <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
     </div>
 
@@ -216,17 +217,17 @@
       <small *ngIf="selectedCategory !== undefined">תיווצר בקטגוריה שנבחרה</small>
     </button>
 
-    <div class="grid-card" *ngFor="let article of articles" [class.selected]="isSelected(article.id)">
-      <label class="grid-card-select" title="בחירת כתבה">
+    <div class="grid-card" *ngFor="let article of articles" [class.selected]="isSelected(article.id)" (click)="viewArticle(article)">
+      <label class="grid-card-select" title="בחירת כתבה" (click)="$event.stopPropagation()">
         <input type="checkbox" [checked]="isSelected(article.id)" (change)="toggleArticleSelection(article.id, $event)">
       </label>
-      <button class="grid-card-media" type="button" (click)="viewArticle(article)" title="פתיחת הכתבה">
+      <div class="grid-card-media">
         <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" [alt]="article.title">
         <span *ngIf="!article.featuredImageUrl" class="material-icons">article</span>
-      </button>
+      </div>
       <div class="grid-card-body">
         <div class="grid-card-topline">
-          <label class="status-menu" [ngClass]="getStatusClass(article.status)">
+          <label class="status-menu" [ngClass]="getStatusClass(article.status)" (click)="$event.stopPropagation()">
             <span>{{ getStatusName(article.status) }}</span>
             <span class="material-icons">expand_more</span>
             <select
@@ -252,8 +253,7 @@
       </div>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action primary-grid-action" (click)="editArticle(article.id)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-delete" (click)="deleteArticle(article)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action primary-grid-action" (click)="editArticle(article.id); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
   </div>

@@ -2,8 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { Podcast, PodcastEpisode } from '../../../../models/podcast.model';
+import { forkJoin, switchMap } from 'rxjs';
+import { Podcast, PodcastEpisode, CreatePodcastEpisodeDto } from '../../../../models/podcast.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { PodcastService } from '../../../../services/podcast.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
@@ -171,6 +171,28 @@ export class PodcastsListComponent implements OnInit {
     this.podcasts.forEach(podcast => this.selectedPodcastIds.add(podcast.id));
   }
 
+  selectAllCurrentEpisodesPage(): void {
+    this.selectedSeriesEpisodes.forEach(episode => this.selectedEpisodeIds.add(episode.id));
+  }
+
+  selectAllCurrentPodcastsPage(): void {
+    this.podcasts.forEach(podcast => this.selectedPodcastIds.add(podcast.id));
+  }
+
+  get allCurrentSeriesEpisodesSelected(): boolean {
+    return this.selectedSeriesEpisodes.length > 0
+      && this.selectedSeriesEpisodes.every(episode => this.selectedEpisodeIds.has(episode.id));
+  }
+
+  toggleSelectCurrentSeriesEpisodes(): void {
+    if (this.allCurrentSeriesEpisodesSelected) {
+      this.selectedSeriesEpisodes.forEach(episode => this.selectedEpisodeIds.delete(episode.id));
+      return;
+    }
+
+    this.selectedSeriesEpisodes.forEach(episode => this.selectedEpisodeIds.add(episode.id));
+  }
+
   clearSelection(): void {
     this.selectedEpisodeIds.clear();
     this.selectedPodcastIds.clear();
@@ -330,7 +352,8 @@ export class PodcastsListComponent implements OnInit {
   }
 
   async bulkSetEpisodeStatus(isActive: boolean): Promise<void> {
-    const selectedEpisodes = this.episodes.filter(episode => this.selectedEpisodeIds.has(episode.id));
+    const allEpisodes = [...this.episodes, ...this.selectedSeriesEpisodes];
+    const selectedEpisodes = allEpisodes.filter(episode => this.selectedEpisodeIds.has(episode.id));
     if (selectedEpisodes.length === 0) return;
 
     const action = isActive ? 'להציג באתר' : 'להעביר לטיוטה';
@@ -358,6 +381,50 @@ export class PodcastsListComponent implements OnInit {
       error: (error) => {
         console.error('Error updating selected episodes:', error);
         alert('שגיאה בעדכון הפרקים');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkDuplicateEpisodes(): Promise<void> {
+    const ids = Array.from(this.selectedEpisodeIds);
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} פרקים שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.podcastService.getEpisode(id))).pipe(
+      switchMap(episodes => {
+        const createRequests = episodes.map(episode => {
+          const dto: CreatePodcastEpisodeDto = {
+            podcastId: episode.podcastId,
+            title: episode.title + ' (עותק)',
+            description: episode.description,
+            episodeNumber: episode.episodeNumber,
+            sourceUrl: episode.sourceUrl,
+            embedUrl: episode.embedUrl,
+            thumbnailUrl: episode.thumbnailUrl,
+            platform: episode.platform,
+            publishedAt: episode.publishedAt,
+            displayOrder: episode.displayOrder,
+            isActive: false,
+          };
+          return this.podcastService.createEpisode(dto);
+        });
+        return forkJoin(createRequests);
+      })
+    ).subscribe({
+      next: () => {
+        this.clearSelection();
+        this.bulkActionLoading = false;
+        this.loadEpisodes();
+        if (this.selectedSeriesPodcast) {
+          this.loadSelectedSeriesEpisodes();
+        }
+      },
+      error: (error) => {
+        console.error('Error duplicating episodes:', error);
+        alert('שגיאה בשכפול הפרקים');
         this.bulkActionLoading = false;
       }
     });

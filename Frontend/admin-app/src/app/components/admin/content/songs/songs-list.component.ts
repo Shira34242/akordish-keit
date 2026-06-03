@@ -218,6 +218,10 @@ export class SongsListComponent implements OnInit, OnDestroy {
     this.songs.forEach(song => this.selectedSongIds.add(song.id));
   }
 
+  selectAllCurrentPage(): void {
+    this.songs.forEach(song => this.selectedSongIds.add(song.id));
+  }
+
   clearSelection(): void {
     this.selectedSongIds.clear();
   }

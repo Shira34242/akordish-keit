@@ -6,6 +6,138 @@
   font-family: 'Open Sans', sans-serif;
 }
 
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 14px;
+  background: #F2F2F2;
+  flex-wrap: wrap;
+}
+
+.bulk-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.bulk-count {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
+}
+
+.bulk-clear {
+  border: none;
+  background: transparent;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.bulk-btn {
+  min-height: 30px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 var(--space-md);
+  background: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 400;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.bulk-btn:hover {
+  background: #ddff53;
+}
+
+.bulk-btn:disabled,
+.bulk-clear:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.btn-danger {
+  color: #d32f2f;
+}
+
+/* Grid Card Select (Checkbox overlay) */
+.grid-card-select {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-card-select input {
+  width: 18px;
+  height: 18px;
+  accent-color: #000000;
+  cursor: pointer;
+}
+
+/* Selected State */
+.admin-series-card.selected,
+.episode-tile.selected {
+  background: #fbffd9;
+}
+
+.admin-series-card.selected .admin-series-image {
+  outline: 3px solid #ddff53;
+  outline-offset: 2px;
+}
+
+.episode-list-row.selected {
+  background: #fbffd9;
+}
+
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  background: #F2F2F2;
+  border: none;
+  border-radius: 999px;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.filter-btn:hover {
+  background: #ddff53;
+}
+
+.filter-btn .material-icons {
+  font-size: 18px;
+}
+
 .series-manager,
 .episodes-manager {
   display: grid;
@@ -194,6 +326,7 @@
   padding: var(--space-md);
   border-radius: 18px;
   background: #F2F2F2;
+  cursor: pointer;
 }
 
 .episode-tile__main {
@@ -222,12 +355,13 @@
 
 .episode-list-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-base);
   padding: var(--space-sm);
   border-radius: 16px;
   background: #F2F2F2;
+  cursor: pointer;
 }
 
 .episode-list-row:hover {

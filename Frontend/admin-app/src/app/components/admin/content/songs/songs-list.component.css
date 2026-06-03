@@ -715,6 +715,7 @@
 
 .grid-card {
   position: relative;
+  cursor: pointer;
 }
 
 .grid-card.selected {

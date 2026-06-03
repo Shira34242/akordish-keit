@@ -586,6 +586,7 @@
   color: #000000;
   font-family: 'Open Sans', sans-serif;
   text-align: right;
+  cursor: pointer;
 }
 
 .grid-card.selected {

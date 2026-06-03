@@ -71,6 +71,7 @@
   <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
     <div class="bulk-summary">
       <span class="bulk-count">נבחרו {{ selectedCount }} הופעות</span>
+      <button class="bulk-clear" type="button" (click)="selectAllCurrentPage()" [disabled]="bulkActionLoading">סמן הכל</button>
       <button class="bulk-clear" type="button" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
     </div>
 
@@ -83,6 +84,9 @@
       </button>
       <button class="filter-btn bulk-btn btn-danger" type="button" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
+      </button>
+      <button class="filter-btn bulk-btn" type="button" (click)="bulkDuplicateSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">content_copy</span> שכפול
       </button>
     </div>
   </div>
@@ -99,19 +103,19 @@
       <small>הוספה מהירה לרשימת ההופעות</small>
     </button>
 
-    <div class="grid-card" *ngFor="let event of events" [class.selected]="isSelected(event.id)">
-      <label class="grid-card-select" title="בחירת הופעה">
+    <div class="grid-card" *ngFor="let event of events" [class.selected]="isSelected(event.id)" (click)="editEvent(event)">
+      <label class="grid-card-select" title="בחירת הופעה" (click)="$event.stopPropagation()">
         <input type="checkbox" [checked]="isSelected(event.id)" (change)="toggleEventSelection(event.id, $event)">
       </label>
 
-      <button class="grid-card-media" type="button" (click)="previewEvent(event)" title="תצוגת הופעה">
+      <div class="grid-card-media">
         <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name">
         <span *ngIf="!event.imageUrl" class="material-icons">event</span>
-      </button>
+      </div>
 
       <div class="grid-card-body">
         <div class="grid-card-topline">
-          <label class="status-menu" [ngClass]="getEventStatusClass(event)">
+          <label class="status-menu" [ngClass]="getEventStatusClass(event)" (click)="$event.stopPropagation()">
             <span>{{ getAdminStatusLabel(event) }}</span>
             <span class="material-icons">expand_more</span>
             <select
@@ -134,9 +138,7 @@
       </div>
 
       <div class="grid-card-actions">
-        <button class="btn-action primary-grid-action" type="button" (click)="editEvent(event)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action" type="button" (click)="duplicateEvent(event)" title="שכפול"><span class="material-icons">content_copy</span></button>
-        <button class="btn-action btn-delete" type="button" (click)="deleteEvent(event)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action primary-grid-action" type="button" (click)="editEvent(event); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
   </div>
