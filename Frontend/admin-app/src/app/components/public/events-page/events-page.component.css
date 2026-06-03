@@ -3,10 +3,11 @@
 ============================================ */
 
 .events-page {
-  position: relative;
-  width: calc(100% - 16px);
-  margin: -48px 8px 8px;
-  height: calc(100vh - 16px);
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
   background: #404040;
   border-radius: 24px;
   overflow: hidden;
@@ -15,6 +16,7 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  z-index: 1;
 }
 
 .events-page:active {
@@ -322,11 +324,6 @@
 ============================================ */
 
 @media (max-width: 768px) {
-  .events-page {
-    margin: -42px 8px 8px;
-    height: calc(100vh - 16px);
-  }
-
   .events-header {
     top: 0;
     padding: 70px 20px 20px;
@@ -343,11 +340,6 @@
 }
 
 @media (max-width: 480px) {
-  .events-page {
-    margin: -38px 8px 8px;
-    height: calc(100vh - 16px);
-  }
-
   .events-header {
     align-items: flex-end;
     top: 0;
