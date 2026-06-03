@@ -808,19 +808,6 @@
 }
 
 /* Chords Styling */
-::ng-deep .chord-line {
-    display: block;
-    direction: rtl;
-    unicode-bidi: isolate;
-    white-space: pre-wrap;
-    text-align: right;
-}
-
-::ng-deep .chord-line-content {
-    direction: ltr;
-    unicode-bidi: isolate;
-}
-
 ::ng-deep .chord-inline {
     color: #000000;
     font-weight: 800;

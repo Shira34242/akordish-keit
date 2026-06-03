@@ -186,6 +186,26 @@ export class ChordBookPanelComponent implements OnInit {
         return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    private renderPreservedSpaces(value: string): string {
+        return value
+            .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+            .replace(/ /g, '&nbsp;');
+    }
+
+    private renderChordOnlyLine(line: string): string {
+        return (line.match(/\s+|\S+/g) ?? []).map(tok => {
+            if (/^\s+$/.test(tok)) {
+                return this.renderPreservedSpaces(tok);
+            }
+
+            if (!isChord(tok)) {
+                return this.escapeHtml(tok);
+            }
+
+            return `<span style="color:${this.chordColor};font-weight:700">${this.escapeHtml(tok)}</span>`;
+        }).join('');
+    }
+
     // ===== בניית HTML מילים =====
 
     private buildLyricsHtml(song: any): string {
@@ -194,18 +214,13 @@ export class ChordBookPanelComponent implements OnInit {
         const out = lines.map((line: string) => {
             if (isChordLine(line)) {
                 if (!this.showChords) return null;
-                const leadingSpace = line.match(/^\s*/)?.[0] ?? '';
-                const chordLine = line.slice(leadingSpace.length).replace(/\S+/g, tok => {
-                    if (!isChord(tok)) return tok;
-                    return `<span style="color:${this.chordColor};font-weight:700">${tok}</span>`;
-                });
-                return `<span dir="rtl" style="display:block;direction:rtl;unicode-bidi:isolate;white-space:pre-wrap;text-align:right">${leadingSpace}<span dir="ltr" style="direction:ltr;unicode-bidi:isolate">${chordLine}</span></span>`;
+                return this.renderChordOnlyLine(line);
             }
-            let p = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            let p = this.escapeHtml(line);
             if (this.showChords) {
                 p = p.replace(/\[(.*?)\]/g, (m: string, chord: string) => {
                     if (!isChord(chord)) return m;
-                    return `<span style="color:${this.chordColor};font-weight:700">${chord}</span>`;
+                    return `<span style="color:${this.chordColor};font-weight:700">${this.escapeHtml(chord)}</span>`;
                 });
             } else {
                 p = p.replace(/\[(.*?)\]/g, '');

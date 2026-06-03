@@ -793,67 +793,70 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     get formattedLyricsHtml(): SafeHtml {
         if (!this.hasFullSongContent) return '';
 
-        // Cache key — recompute only when relevant inputs change
         const cacheKey = `${this.song.lyricsWithChords}|${this.transposeStep}|${this.showChords}|${this.isEasyMode}|${this.activePreferFlat}`;
         if (cacheKey === this._lyricsHtmlCacheKey) return this._lyricsHtmlCache;
 
-        const lines = this.song.lyricsWithChords.split('\n');
+        const processedLines = this.song.lyricsWithChords.split('\n')
+            .map((line: string) => {
+                if (isChordLine(line)) {
+                    return this.showChords ? this.renderChordOnlyLine(line) : null;
+                }
 
-        const processedLines = lines.map((line: string) => {
-            // 1. Check for Line-over-Line Chords (Block Chords)
-            if (isChordLine(line)) {
-                if (!this.showChords) return null; // Hide line if chords are hidden
+                let processed = this.escapeHtmlValue(line);
+                if (this.showChords) {
+                    processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
+                        if (!isChord(chord)) return match;
+                        let result = this.transposeStep !== 0
+                            ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat })
+                            : chord;
+                        if (this.isEasyMode) result = simplifyChord(result);
+                        return `<span class="chord-inline">${this.escapeHtmlValue(result)}</span>`;
+                    });
+                } else {
+                    processed = processed.replace(/\[(.*?)\]/g, '');
+                }
 
-                // Wrap each non-whitespace token that isChord recognises.
-                // /\S+/g preserves all original spacing between chords.
-                const leadingSpace = line.match(/^\s*/)?.[0] ?? '';
-                const chordLine = line.slice(leadingSpace.length).replace(/\S+/g, (token) => {
-                    if (!isChord(token)) return token;
-                    let chord = this.transposeStep !== 0
-                        ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
-                        : token;
-                    if (this.isEasyMode) chord = simplifyChord(chord);
-                    return `<span class="chord-block">${chord}</span>`;
-                });
+                return processed;
+            })
+            .filter((line: string | null) => line !== null);
 
-                return `<span class="chord-line" dir="rtl">${leadingSpace}<span class="chord-line-content" dir="ltr">${chordLine}</span></span>`;
-            }
-
-            // 2. Normal Line (Lyrics + potentially Inline Chords)
-            let processed = line;
-
-            // Escape HTML (basic)
-            processed = processed
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-
-            // Inline Chords [Am] — only real chords get highlighted; [Verse], [Intro] etc. pass through as-is
-            if (this.showChords) {
-                processed = processed.replace(/\[(.*?)\]/g, (match, chord) => {
-                    if (!isChord(chord)) return match;
-                    let result = this.transposeStep !== 0
-                        ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat })
-                        : chord;
-                    if (this.isEasyMode) result = simplifyChord(result);
-                    return `<span class="chord-inline">${result}</span>`;
-                });
-            } else {
-                // Remove chords if hidden
-                processed = processed.replace(/\[(.*?)\]/g, '');
-            }
-
-            return processed;
-        }).filter((line: any) => line !== null);
-
-        // Join lines with newlines (pre-wrap handles the display)
         this._lyricsHtmlCacheKey = cacheKey;
         this._lyricsHtmlCache = this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
         return this._lyricsHtmlCache;
     }
 
+    private renderChordOnlyLine(line: string): string {
+        return (line.match(/\s+|\S+/g) ?? []).map((token) => {
+            if (/^\s+$/.test(token)) {
+                return this.renderPreservedSpaces(token);
+            }
+
+            if (!isChord(token)) {
+                return this.escapeHtmlValue(token);
+            }
+
+            let chord = this.transposeStep !== 0
+                ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
+                : token;
+            if (this.isEasyMode) chord = simplifyChord(chord);
+            return `<span class="chord-block">${this.escapeHtmlValue(chord)}</span>`;
+        }).join('');
+    }
+
+    private renderPreservedSpaces(value: string): string {
+        return value
+            .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+            .replace(/ /g, '&nbsp;');
+    }
+
+    private escapeHtmlValue(value: string): string {
+        return value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
     handleLyricsMouseOver(event: MouseEvent) {
         if (this.pinnedChord) return;
         const target = event.target as HTMLElement;

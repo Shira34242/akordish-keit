@@ -1735,12 +1735,15 @@ public class SmartSongImportService : ISmartSongImportService
             return line;
         }
 
-        return string.Concat(
-                Regex.Matches(line, @"\s+|\S+")
-                    .Cast<Match>()
-                    .Select(match => match.Value)
-                    .Reverse())
-            .TrimEnd();
+        var parts = Regex.Matches(line, @"\s+|\S+")
+            .Cast<Match>()
+            .Select(match => match.Value)
+            .ToList();
+        var chords = new Queue<string>(parts
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Reverse());
+
+        return string.Concat(parts.Select(part => string.IsNullOrWhiteSpace(part) ? part : chords.Dequeue())).TrimEnd();
     }
 
     private static IEnumerable<string> RemoveCommonLeadingIndent(IReadOnlyCollection<string> lines)

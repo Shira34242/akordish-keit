@@ -320,28 +320,52 @@ export class PrintPanelComponent implements OnInit {
         return this.sanitizer.bypassSecurityTrustHtml(this.buildLyricsHtml(this.chordColor, this.lyricsColor));
     }
 
+    private renderPreservedSpaces(value: string): string {
+        return value
+            .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+            .replace(/ /g, '&nbsp;');
+    }
+
+    private escapeHtml(value: string): string {
+        return (value || '')
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#039;');
+    }
+
+    private renderChordOnlyLine(line: string, chordCol: string): string {
+        return (line.match(/\s+|\S+/g) ?? []).map(tok => {
+            if (/^\s+$/.test(tok)) {
+                return this.renderPreservedSpaces(tok);
+            }
+
+            if (!isChord(tok)) {
+                return this.escapeHtml(tok);
+            }
+
+            let c = this.transposeStep !== 0 ? transposeChord(tok, this.transposeStep, { preferFlat: this.activePreferFlat }) : tok;
+            if (this.isEasyMode) c = simplifyChord(c);
+            return `<span style="color:${chordCol};font-weight:700">${this.escapeHtml(c)}</span>`;
+        }).join('');
+    }
+
     private buildLyricsHtml(chordCol: string, lyricsCol: string): string {
         if (!this.song?.lyricsWithChords) return '';
         const lines = this.song.lyricsWithChords.split('\n');
         const out = lines.map((line: string) => {
             if (isChordLine(line)) {
                 if (!this.showChords) return null;
-                const leadingSpace = line.match(/^\s*/)?.[0] ?? '';
-                const chordLine = line.slice(leadingSpace.length).replace(/\S+/g, tok => {
-                    if (!isChord(tok)) return tok;
-                    let c = this.transposeStep !== 0 ? transposeChord(tok, this.transposeStep, { preferFlat: this.activePreferFlat }) : tok;
-                    if (this.isEasyMode) c = simplifyChord(c);
-                    return `<span style="color:${chordCol};font-weight:700">${c}</span>`;
-                });
-                return `<span dir="rtl" style="display:block;direction:rtl;unicode-bidi:isolate;white-space:pre-wrap;text-align:right">${leadingSpace}<span dir="ltr" style="direction:ltr;unicode-bidi:isolate">${chordLine}</span></span>`;
+                return this.renderChordOnlyLine(line, chordCol);
             }
-            let p = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            let p = this.escapeHtml(line);
             if (this.showChords) {
                 p = p.replace(/\[(.*?)\]/g, (m: string, chord: string) => {
                     if (!isChord(chord)) return m;
                     let r = this.transposeStep !== 0 ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat }) : chord;
                     if (this.isEasyMode) r = simplifyChord(r);
-                    return `<span style="color:${chordCol};font-weight:700">${r}</span>`;
+                    return `<span style="color:${chordCol};font-weight:700">${this.escapeHtml(r)}</span>`;
                 });
             } else {
                 p = p.replace(/\[(.*?)\]/g, '');
