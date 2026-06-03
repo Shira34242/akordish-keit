@@ -6,6 +6,25 @@
         </div>
 
         <div class="section-action">
+            <div class="smart-import-action" *ngIf="isSongsSection">
+                <button
+                    type="button"
+                    class="smart-import-toggle"
+                    (click)="toggleSmartImport()"
+                    title="הוספה משליפה מלינק"
+                    [attr.aria-expanded]="smartImportOpen"
+                    aria-label="הוספה משליפה מלינק">
+                    <span class="material-icons">link</span>
+                </button>
+
+                <div class="smart-import-popover" *ngIf="smartImportOpen">
+                    <app-smart-add
+                        [compactSongOnly]="true"
+                        (completed)="smartImportOpen = false">
+                    </app-smart-add>
+                </div>
+            </div>
+
             <button *ngIf="state.actionLabel" type="button" class="primary-action" (click)="onPrimaryAction()">
                 {{ state.actionLabel }}
             </button>

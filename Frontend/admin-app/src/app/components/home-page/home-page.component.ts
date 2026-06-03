@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ViewChildren, ElementRef, DestroyRef, NgZone, QueryList, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,8 @@ interface HeroParticle {
   size: number;
 }
 
+type HomeLazySection = 'featured' | 'events' | 'podcasts';
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -70,6 +72,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('viralSection') viralSection?: ElementRef<HTMLElement>;
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
+  @ViewChildren('homeLazySentinel') homeLazySentinels?: QueryList<ElementRef<HTMLDivElement>>;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -79,6 +82,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
+  private readonly ngZone = inject(NgZone);
 
   recentSongs: any[] = [];
   popularSongs: any[] = [];
@@ -105,12 +109,21 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private rafPending = false;
   private lastViewportWidth = window.innerWidth;
   private lastViewportHeight = window.innerHeight;
+  private lastHeroVisibleHeight = -1;
 
   private heroCtx?: CanvasRenderingContext2D | null;
   private heroParticles: HeroParticle[] = [];
   private particleAnimId?: number;
   private heroMouseHandler?: (e: MouseEvent) => void;
+  private heroScrollHandler?: () => void;
+  private heroResizeHandler?: () => void;
+  private heroSurfaceEl?: HTMLElement | null;
+  private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
+  private homeLazyObserver?: IntersectionObserver;
+  private loadedLazySections = new Set<HomeLazySection>();
+  private loadingLazySections = new Set<HomeLazySection>();
+  private deferredLoadTimers: number[] = [];
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
   private allPublishedArticles: Article[] = [];
@@ -185,7 +198,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initHeroHeight();
+      this.initHeroScrollListeners();
       this.initParticleEffect();
+      this.initHomeLazySections();
       this.initViralObserver();
     }, 0);
   }
@@ -194,23 +209,39 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     HomePageComponent.savedScrollY = window.scrollY;
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
+    if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
+    if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     this.viralObserver?.disconnect();
+    this.homeLazyObserver?.disconnect();
+    this.deferredLoadTimers.forEach(id => window.clearTimeout(id));
   }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.requestHeroFrame();
+  private initHeroScrollListeners(): void {
+    if (this.heroScrollHandler || this.heroResizeHandler) return;
+
+    this.ngZone.runOutsideAngular(() => {
+      this.heroScrollHandler = () => this.requestHeroFrame();
+      this.heroResizeHandler = () => this.handleHeroResize();
+      window.addEventListener('scroll', this.heroScrollHandler, { passive: true });
+      window.addEventListener('resize', this.heroResizeHandler, { passive: true });
+    });
   }
 
-  @HostListener('window:resize')
-  onResize(): void {
+  private handleHeroResize(): void {
     const nextWidth = window.innerWidth;
     const widthChanged = Math.abs(nextWidth - this.lastViewportWidth) > 1;
-    this.isMobile = nextWidth <= 768;
+    const nextIsMobile = nextWidth <= 768;
+    if (nextIsMobile !== this.isMobile) {
+      this.ngZone.run(() => {
+        this.isMobile = nextIsMobile;
+      });
+    } else {
+      this.isMobile = nextIsMobile;
+    }
 
     // Mobile browsers fire resize while the address bar hides/shows during scroll.
     // Keeping the hero baseline stable there prevents visible jumps.
-    if (!widthChanged && this.isMobile) {
+    if (!widthChanged && nextIsMobile) {
       return;
     }
 
@@ -229,11 +260,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+    this.heroSurfaceEl = bg.querySelector('.hero-surface') as HTMLElement | null;
+    this.heroOverlayEl = bg.querySelector('.hero-overlay') as HTMLElement | null;
+    this.lastHeroVisibleHeight = -1;
     this.lastViewportWidth = window.innerWidth;
     this.lastViewportHeight = window.innerHeight;
     this.fullHeroHeight = Math.max(0, this.lastViewportHeight - 16); /* top: 8px + bottom: 8px */
     bg.style.setProperty('--hero-full-height', this.fullHeroHeight + 'px');
-    bg.style.setProperty('--hero-visible-height', this.fullHeroHeight + 'px');
     bg.style.height = this.fullHeroHeight + 'px';
     this.resizeHeroCanvas();
     this.shrinkHero();
@@ -246,20 +279,29 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const scrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - scrollY);
     const visibleHeight = Math.round(newHeight * 100) / 100;
-    bg.style.setProperty('--hero-visible-height', visibleHeight + 'px');
+    if (Math.abs(visibleHeight - this.lastHeroVisibleHeight) >= 0.25) {
+      bg.style.height = visibleHeight + 'px';
+      this.lastHeroVisibleHeight = visibleHeight;
+    }
 
     const progress = Math.min(1, scrollY / 160);
-    const overlay = bg.querySelector('.hero-overlay') as HTMLElement | null;
-    if (overlay) overlay.style.opacity = String(Math.max(0, 1 - progress));
+    if (this.heroOverlayEl) this.heroOverlayEl.style.opacity = String(Math.max(0, 1 - progress));
 
-    const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
-    if (collapseOverlay) {
-      const collapseRange = this.fullHeroHeight - minHeight;
-      const collapseProgress = collapseRange > 0
-        ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
-        : 0;
-      collapseOverlay.style.opacity = String(collapseProgress);
-    }
+    const collapseRange = this.fullHeroHeight - minHeight;
+    const collapseProgress = collapseRange > 0
+      ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+      : 0;
+    this.setHeroSurfaceColor(collapseProgress);
+  }
+
+  private setHeroSurfaceColor(progress: number): void {
+    if (!this.heroSurfaceEl) return;
+    const from = [221, 255, 83];
+    const to = [242, 242, 242];
+    const rgb = from.map((channel, index) =>
+      Math.round(channel + (to[index] - channel) * progress)
+    );
+    this.heroSurfaceEl.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
   }
 
   private resizeHeroCanvas(): void {
@@ -285,54 +327,89 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadNonCriticalContent(): void {
-    this.pendingContentLoads += 9;
+    const loaders: Array<() => void> = [
+      () => this.loadRecentSongs(),
+      () => this.loadPopularSongs(),
+      () => this.loadTopArtists()
+    ];
 
-    const onDone = () => {
+    loaders.forEach((loader, index) => this.scheduleDeferredLoad(loader, 160 * index));
+  }
+
+  private scheduleDeferredLoad(loader: () => void, delayMs: number): void {
+    const timer = window.setTimeout(() => {
+      this.deferredLoadTimers = this.deferredLoadTimers.filter(id => id !== timer);
+      loader();
+    }, delayMs);
+    this.deferredLoadTimers.push(timer);
+  }
+
+  private trackPendingLoad(): () => void {
+    this.pendingContentLoads++;
+    let completed = false;
+    return () => {
+      if (completed) return;
+      completed = true;
       this.pendingContentLoads--;
       this.checkAllContentLoaded();
     };
+  }
 
+  private loadRecentSongs(): void {
+    const onDone = this.trackPendingLoad();
     this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
     });
+  }
 
+  private loadPopularSongs(): void {
+    const onDone = this.trackPendingLoad();
     this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (songs: any[]) => { this.popularSongs = songs; },
       error: (err) => console.error('loadContent: popular songs', err)
     });
+  }
 
+  private loadTopArtists(): void {
+    const onDone = this.trackPendingLoad();
     this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
+  }
 
+  private loadUpcomingEvents(): void {
+    const onDone = this.trackPendingLoad();
     this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
       error: (err) => console.error('loadContent: events', err)
     });
+  }
 
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+  private loadFeaturedPeople(): void {
+    const onTeachersDone = this.trackPendingLoad();
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onTeachersDone)).subscribe({
       next: (res: any) => { this.featuredTeachers = res.items || []; },
       error: (err) => console.error('loadContent: teachers', err)
     });
 
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    const onProvidersDone = this.trackPendingLoad();
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onProvidersDone)).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
     });
+  }
 
-    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
-      next: episodes => { this.latestPodcastEpisodes = episodes; },
-      error: err => console.error('loadContent: podcasts', err)
-    });
-
-    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+  private loadHomePodcasts(): void {
+    const onSeriesDone = this.trackPendingLoad();
+    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onSeriesDone)).subscribe({
       next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
       error: err => console.error('loadContent: podcast series', err)
     });
 
-    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    const onPopularDone = this.trackPendingLoad();
+    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onPopularDone)).subscribe({
       next: episodes => { this.popularPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: popular episodes', err)
     });
@@ -495,16 +572,52 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private initHomeLazySections(): void {
+    if (this.homeLazyObserver) this.homeLazyObserver.disconnect();
+
+    this.homeLazyObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const section = (entry.target as HTMLElement).dataset['homeLoad'] as HomeLazySection | undefined;
+          if (!section) continue;
+          this.homeLazyObserver?.unobserve(entry.target);
+          this.loadHomeLazySection(section);
+        }
+      },
+      { rootMargin: '520px 0px', threshold: 0.01 }
+    );
+
+    this.homeLazySentinels?.forEach(sentinel => {
+      this.homeLazyObserver?.observe(sentinel.nativeElement);
+    });
+  }
+
+  private loadHomeLazySection(section: HomeLazySection): void {
+    if (this.loadedLazySections.has(section) || this.loadingLazySections.has(section)) return;
+    this.loadingLazySections.add(section);
+
+    switch (section) {
+      case 'featured':
+        this.loadFeaturedPeople();
+        break;
+      case 'events':
+        this.loadUpcomingEvents();
+        break;
+      case 'podcasts':
+        this.loadHomePodcasts();
+        break;
+    }
+
+    this.loadingLazySections.delete(section);
+    this.loadedLazySections.add(section);
+  }
+
   private loadViralArticles(): void {
     if (this.viralArticlesLoaded || this.loadingViralArticles) return;
 
     this.loadingViralArticles = true;
-    if (this.allPublishedArticles.length > 0) {
-      this.setViralArticles(this.allPublishedArticles);
-      return;
-    }
-
-    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'views')
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           this.setViralArticles(this.uniqueArticles(res.items || []));
@@ -518,7 +631,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeArticles(): void {
-    this.articleService.getArticles(1, 200, undefined, undefined, undefined, ArticleStatus.Published)
+    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.pendingContentLoads--;
         this.checkAllContentLoaded();
@@ -679,6 +792,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private initParticleEffect(): void {
     if (window.innerWidth < 1025) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 
     const canvas = this.heroCanvas?.nativeElement;
     const heroBg = this.heroBg?.nativeElement;
@@ -704,7 +818,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private spawnHeroParticles(x: number, y: number, dx: number, dy: number): void {
     const moveSpeed = Math.sqrt(dx * dx + dy * dy);
-    const count = Math.min(10, 4 + Math.floor(moveSpeed * 0.3));
+    const count = Math.min(6, 3 + Math.floor(moveSpeed * 0.22));
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -721,7 +835,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
         size: isBig ? 8 + Math.random() * 12 : 2 + Math.random() * 3.5
       });
     }
-    if (this.heroParticles.length > 400) this.heroParticles.splice(0, this.heroParticles.length - 400);
+    if (this.heroParticles.length > 180) this.heroParticles.splice(0, this.heroParticles.length - 180);
 
     if (!this.particleAnimId) {
       this.animateHeroParticles();

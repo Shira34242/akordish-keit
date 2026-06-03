@@ -2,7 +2,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Services;
 
@@ -10,6 +12,7 @@ public class SmartSongImportService : ISmartSongImportService
 {
     private const int DefaultOriginalKeyId = 1;
     private readonly HttpClient _httpClient;
+    private readonly AkordishKeitDbContext _context;
     private readonly ISongService _songService;
     private readonly IYouTubeService _youTubeService;
 
@@ -20,12 +23,16 @@ public class SmartSongImportService : ISmartSongImportService
         string? YoutubeUrl = null,
         string? ImageUrl = null);
 
+    private sealed record Tab4USearchResult(string Href, string? ImageUrl);
+
     public SmartSongImportService(
         HttpClient httpClient,
+        AkordishKeitDbContext context,
         ISongService songService,
         IYouTubeService youTubeService)
     {
         _httpClient = httpClient;
+        _context = context;
         _songService = songService;
         _youTubeService = youTubeService;
     }
@@ -46,6 +53,7 @@ public class SmartSongImportService : ISmartSongImportService
 
         var urlParts = ExtractUrlParts(uri);
         var siteParts = ExtractSiteSpecificParts(uri, html);
+        var isNeginaImport = uri.Host.Contains("negina.co.il", StringComparison.OrdinalIgnoreCase);
 
         var title = CleanTitle(
             siteParts.Title
@@ -64,29 +72,69 @@ public class SmartSongImportService : ISmartSongImportService
         var youtubeUrl = siteParts.YoutubeUrl ?? ExtractYouTubeUrl(html);
         var imageUrl = siteParts.ImageUrl ?? ExtractMeta(html, "og:image") ?? ExtractMeta(html, "twitter:image");
 
+        if (isNeginaImport && string.IsNullOrWhiteSpace(lyricsWithChords))
+        {
+            var readerText = await FetchReaderTextAsync(uri);
+            if (!string.IsNullOrWhiteSpace(readerText))
+            {
+                var readerParts = ExtractNeginaParts(uri, readerText);
+                if (!string.IsNullOrWhiteSpace(readerParts.LyricsWithChords))
+                {
+                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords);
+                }
+
+                youtubeUrl ??= readerParts.YoutubeUrl;
+                imageUrl ??= readerParts.ImageUrl;
+            }
+        }
+        else if (uri.Host.Contains("nagnu.co.il", StringComparison.OrdinalIgnoreCase) &&
+                 (string.IsNullOrWhiteSpace(lyricsWithChords) || IsNagnuLockedPreview(html)))
+        {
+            var readerText = await FetchReaderTextAsync(uri);
+            if (!string.IsNullOrWhiteSpace(readerText))
+            {
+                var readerParts = ExtractNagnuReaderParts(uri, readerText);
+                if (!string.IsNullOrWhiteSpace(readerParts.LyricsWithChords))
+                {
+                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords);
+                }
+
+                youtubeUrl ??= readerParts.YoutubeUrl;
+                imageUrl ??= readerParts.ImageUrl;
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(youtubeUrl))
         {
             youtubeUrl = await FindYouTubeFallbackAsync(title, artistName);
         }
 
+        var youtubeImageUrl = ExtractYouTubeThumbnailUrl(youtubeUrl);
+        if (IsUsefulImportedImageUrl(youtubeImageUrl))
+        {
+            imageUrl = youtubeImageUrl;
+        }
+        else if (!IsUsefulImportedImageUrl(imageUrl))
+        {
+            imageUrl = null;
+        }
+
         var detectedKey = KeyDetectionService.Detect(lyricsWithChords);
+        var artistInput = await BuildArtistInputAsync(artistName);
 
         var draft = new ImportedSongDraftDto
         {
             Title = string.IsNullOrWhiteSpace(title) ? "שיר מיובא" : title,
             Artists = new List<ArtistInputDto>
             {
-                new() { Name = string.IsNullOrWhiteSpace(artistName) ? "אמן לא ידוע" : artistName }
+                artistInput
             },
             YoutubeUrl = youtubeUrl ?? string.Empty,
             ImageUrl = imageUrl,
             LyricsWithChords = lyricsWithChords,
             OriginalKeyId = detectedKey?.OriginalKeyId ?? DefaultOriginalKeyId,
             EasyKeyId = detectedKey?.EasyKeyId,
-            Tags = new List<TagInputDto>
-            {
-                new() { Name = "ייבוא חכם" }
-            }
+            Tags = new List<TagInputDto>()
         };
 
         var missingFields = GetMissingFields(draft);
@@ -109,6 +157,82 @@ public class SmartSongImportService : ISmartSongImportService
             SourceUrl = sourceUrl,
             Draft = draft
         };
+    }
+
+    private async Task<ArtistInputDto> BuildArtistInputAsync(string? artistName)
+    {
+        var fallbackName = string.IsNullOrWhiteSpace(artistName) ? "אמן לא ידוע" : artistName.Trim();
+        var normalizedName = NormalizeImportedArtistName(fallbackName);
+        if (normalizedName.Length < 2)
+        {
+            return new ArtistInputDto { Name = fallbackName };
+        }
+
+        var candidates = await _context.Artists
+            .AsNoTracking()
+            .Where(artist => !artist.IsDeleted)
+            .Select(artist => new { artist.Id, artist.Name, artist.EnglishName })
+            .ToListAsync();
+
+        var ranked = candidates
+            .Select(artist => new
+            {
+                artist.Id,
+                artist.Name,
+                Score = Math.Max(
+                    ScoreImportedArtistMatch(normalizedName, NormalizeImportedArtistName(artist.Name)),
+                    ScoreImportedArtistMatch(normalizedName, NormalizeImportedArtistName(artist.EnglishName)))
+            })
+            .Where(artist => artist.Score >= 70)
+            .OrderByDescending(artist => artist.Score)
+            .ThenBy(artist => artist.Name)
+            .FirstOrDefault();
+
+        return ranked is null
+            ? new ArtistInputDto { Name = fallbackName }
+            : new ArtistInputDto { Id = ranked.Id, Name = ranked.Name };
+    }
+
+    private static int ScoreImportedArtistMatch(string source, string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(candidate))
+        {
+            return 0;
+        }
+
+        if (source == candidate)
+        {
+            return 100;
+        }
+
+        if (source.Contains(candidate, StringComparison.Ordinal) ||
+            candidate.Contains(source, StringComparison.Ordinal))
+        {
+            return Math.Min(source.Length, candidate.Length) >= 3 ? 82 : 0;
+        }
+
+        var sourceParts = source.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var candidateParts = candidate.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var sharedParts = sourceParts.Count(part => candidateParts.Contains(part));
+        if (sharedParts == 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round(70.0 * sharedParts / Math.Max(sourceParts.Length, candidateParts.Length));
+    }
+
+    private static string NormalizeImportedArtistName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var clean = WebUtility.HtmlDecode(value);
+        clean = Regex.Replace(clean, @"\s*-\s*Topic$", string.Empty, RegexOptions.IgnoreCase);
+        clean = Regex.Replace(clean, @"[^\u0590-\u05FFA-Za-z0-9]+", " ");
+        return Regex.Replace(clean, @"\s+", " ").Trim().ToLowerInvariant();
     }
 
     private async Task<string> FetchHtmlAsync(Uri uri)
@@ -137,6 +261,29 @@ public class SmartSongImportService : ISmartSongImportService
             var charset = response.Content.Headers.ContentType?.CharSet;
             var html = DecodeHtml(bytes, charset);
             return html.Length > 2_000_000 ? html[..2_000_000] : html;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private async Task<string> FetchReaderTextAsync(Uri uri)
+    {
+        try
+        {
+            var readerUri = new Uri($"https://r.jina.ai/{uri}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, readerUri);
+            request.Headers.UserAgent.ParseAdd("Mozilla/5.0");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                return string.Empty;
+            }
+
+            var text = await response.Content.ReadAsStringAsync();
+            return text.Length > 2_000_000 ? text[..2_000_000] : text;
         }
         catch
         {
@@ -342,7 +489,89 @@ public class SmartSongImportService : ISmartSongImportService
             ArtistName: FirstNotEmpty(scriptTitle.ArtistName, jsonLdArtist),
             LyricsWithChords: lyrics,
             YoutubeUrl: ExtractYouTubeUrl(html),
-            ImageUrl: ExtractMeta(html, "og:image") ?? ExtractMeta(html, "twitter:image"));
+            ImageUrl: ExtractTab4UImageUrl(html));
+    }
+
+    private static Tab4USearchResult? ExtractBestTab4USearchResult(string html, string title, string? artistName)
+    {
+        var targetTitle = NormalizeSearchText(title);
+        var targetArtist = NormalizeSearchText(artistName ?? string.Empty);
+
+        var matches = Regex.Matches(
+                html,
+                @"<a\b(?<attrs>[^>]*\bhref=[""'](?<href>[^""']*tabs/songs/[^""']+\.html)[""'][^>]*)>(?<inner>.*?)</a>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(match =>
+            {
+                var inner = match.Groups["inner"].Value;
+                var songName = ExtractClassText(inner, "sNameI19");
+                var artist = ExtractClassText(inner, "aNameI19");
+                var score = ScoreTab4USearchResult(songName, artist, targetTitle, targetArtist);
+
+                return new
+                {
+                    Href = WebUtility.HtmlDecode(match.Groups["href"].Value),
+                    ImageUrl = ExtractCssBackgroundImage(inner),
+                    Score = score
+                };
+            })
+            .Where(result => result.Score > 0)
+            .OrderByDescending(result => result.Score)
+            .ToList();
+
+        var best = matches.FirstOrDefault();
+        return best is null
+            ? null
+            : new Tab4USearchResult(best.Href, NormalizeExternalUrl(best.ImageUrl, "https://www.tab4u.com/"));
+    }
+
+    private static int ScoreTab4USearchResult(string? songName, string? artistName, string targetTitle, string targetArtist)
+    {
+        var candidateTitle = NormalizeSearchText(songName ?? string.Empty);
+        var candidateArtist = NormalizeSearchText(artistName ?? string.Empty);
+        var score = 0;
+
+        if (!string.IsNullOrWhiteSpace(targetTitle) && candidateTitle == targetTitle)
+        {
+            score += 60;
+        }
+        else if (!string.IsNullOrWhiteSpace(targetTitle) &&
+                 (candidateTitle.Contains(targetTitle, StringComparison.Ordinal) ||
+                  targetTitle.Contains(candidateTitle, StringComparison.Ordinal)))
+        {
+            score += 30;
+        }
+
+        if (!string.IsNullOrWhiteSpace(targetArtist) && candidateArtist == targetArtist)
+        {
+            score += 40;
+        }
+        else if (!string.IsNullOrWhiteSpace(targetArtist) &&
+                 (candidateArtist.Contains(targetArtist, StringComparison.Ordinal) ||
+                  targetArtist.Contains(candidateArtist, StringComparison.Ordinal)))
+        {
+            score += 20;
+        }
+
+        return score;
+    }
+
+    private static string? ExtractClassText(string html, string className)
+    {
+        var pattern = $@"<[^>]*\bclass=[""'][^""']*\b{Regex.Escape(className)}\b[^""']*[""'][^>]*>(?<text>.*?)</[^>]+>";
+        var match = Regex.Match(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success ? CleanSearchResultText(HtmlToText(match.Groups["text"].Value)) : null;
+    }
+
+    private static string CleanSearchResultText(string value) =>
+        Regex.Replace(WebUtility.HtmlDecode(value), @"\s*/\s*$", string.Empty).Trim();
+
+    private static string NormalizeSearchText(string value)
+    {
+        var clean = CleanSearchResultText(value);
+        clean = Regex.Replace(clean, @"[^\u0590-\u05FFA-Za-z0-9]+", " ");
+        return Regex.Replace(clean, @"\s+", " ").Trim().ToLowerInvariant();
     }
 
     private static ImportedSongParts ExtractNagnuParts(Uri uri, string html)
@@ -362,14 +591,35 @@ public class SmartSongImportService : ISmartSongImportService
             Title: FirstNotEmpty(urlParts.Title, pageTitle),
             ArtistName: FirstNotEmpty(urlParts.ArtistName, artistFromTitle),
             LyricsWithChords: lyrics,
-            YoutubeUrl: ExtractYouTubeUrl(html) ?? ExtractYouTubeUrlFromId(ExtractJsonStringField(html, "youTubeId")),
+            YoutubeUrl: ExtractNagnuYouTubeUrl(html),
             ImageUrl: ExtractMeta(html, "og:image") ?? ExtractMeta(html, "twitter:image"));
     }
+
+    private static ImportedSongParts ExtractNagnuReaderParts(Uri uri, string text)
+    {
+        var urlParts = ExtractNagnuUrlParts(uri);
+        var pageTitle = ExtractSongNameFromPageTitle(ExtractTitleFromReaderText(text));
+        var lyrics = ExtractNagnuLyricsFromReaderText(text);
+
+        return new ImportedSongParts(
+            Title: FirstNotEmpty(urlParts.Title, pageTitle),
+            ArtistName: urlParts.ArtistName,
+            LyricsWithChords: lyrics,
+            YoutubeUrl: ExtractYouTubeUrl(text),
+            ImageUrl: ExtractMeta(text, "og:image") ?? ExtractMeta(text, "twitter:image"));
+    }
+
+    private static bool IsNagnuLockedPreview(string html) =>
+        html.Contains("רוצים לראות את השאר", StringComparison.OrdinalIgnoreCase) ||
+        html.Contains("הצטרפו לקהילה", StringComparison.OrdinalIgnoreCase) ||
+        html.Contains("קבלו גישה לכל הגרסאות", StringComparison.OrdinalIgnoreCase);
 
     private static ImportedSongParts ExtractNeginaParts(Uri uri, string html)
     {
         var urlParts = ExtractNeginaUrlParts(uri);
-        var lyrics = IsBlockedByProtection(html) ? null : ExtractLyricsWithChords(html);
+        var lyrics = IsBlockedByProtection(html)
+            ? null
+            : ExtractNeginaLyricsWithChords(html) ?? ExtractLyricsWithChords(html);
 
         return new ImportedSongParts(
             Title: urlParts.Title,
@@ -384,6 +634,12 @@ public class SmartSongImportService : ISmartSongImportService
             ExtractMeta(html, "og:title")
             ?? ExtractMeta(html, "twitter:title")
             ?? ExtractTitleTag(html));
+
+    private static string? ExtractTitleFromReaderText(string text)
+    {
+        var match = Regex.Match(text, @"^Title:\s*(?<title>.+)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        return match.Success ? WebUtility.HtmlDecode(match.Groups["title"].Value).Trim() : null;
+    }
 
     private static (string? ArtistName, string? Title) ExtractNagnuUrlParts(Uri uri)
     {
@@ -418,6 +674,407 @@ public class SmartSongImportService : ISmartSongImportService
         }
 
         return (null, null);
+    }
+
+    private async Task<ImportedSongParts> ImportTab4UFallbackAsync(string title, string? artistName)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return new ImportedSongParts();
+        }
+
+        var searchResult = await FindTab4USearchResultAsync(title, artistName);
+        if (searchResult is null || string.IsNullOrWhiteSpace(searchResult.Href))
+        {
+            return new ImportedSongParts();
+        }
+
+        var songUri = new Uri(new Uri("https://www.tab4u.com/"), searchResult.Href);
+        var songHtml = await FetchHtmlAsync(songUri);
+        if (string.IsNullOrWhiteSpace(songHtml))
+        {
+            return new ImportedSongParts(ImageUrl: searchResult.ImageUrl);
+        }
+
+        var songParts = ExtractTab4UParts(songHtml);
+        return songParts with { ImageUrl = FirstUsefulImageUrl(songParts.ImageUrl, searchResult.ImageUrl) };
+    }
+
+    private async Task<Tab4USearchResult?> FindTab4USearchResultAsync(string title, string? artistName)
+    {
+        var queries = new[]
+            {
+                string.Join(" ", new[] { title, artistName }.Where(value => !string.IsNullOrWhiteSpace(value))),
+                title
+            }
+            .Where(query => !string.IsNullOrWhiteSpace(query))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var query in queries)
+        {
+            var searchUri = new Uri($"https://www.tab4u.com/resultsSimple?tab=songs&q={Uri.EscapeDataString(query)}");
+            var searchHtml = await FetchHtmlAsync(searchUri);
+            if (string.IsNullOrWhiteSpace(searchHtml))
+            {
+                continue;
+            }
+
+            var searchResult = ExtractBestTab4USearchResult(searchHtml, title, artistName);
+            if (searchResult is not null)
+            {
+                return searchResult;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractNeginaLyricsWithChords(string html)
+    {
+        var fields = new[]
+        {
+            "content",
+            "lyrics",
+            "lyricsWithChords",
+            "lyricsAndChords",
+            "songText",
+            "songContent",
+            "chords",
+            "body",
+            "bodyHtml",
+            "text"
+        };
+
+        var jsonCandidates = fields.SelectMany(field => ExtractJsonStringFields(html, field));
+
+        var htmlCandidates = Regex.Matches(
+                html,
+                @"<(?<tag>div|section|article|main|pre)\b[^>]*(?:class|id)=[""'][^""']*(?:lyrics|chords|song|content|post|entry)[^""']*[""'][^>]*>(?<text>.*?)</\k<tag>>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Select(match => match.Groups["text"].Value);
+
+        var candidates = htmlCandidates
+            .Concat(jsonCandidates)
+            .Append(html)
+            .Select(value => value.Contains('<') ? HtmlChordBlockToText(value) : DecodeHtmlEntitiesPreservingSpaces(value))
+            .Select(ConvertNeginaLyricsText)
+            .Where(text => !string.IsNullOrWhiteSpace(text) && ScoreLyricsBlock(text!) > 20)
+            .OrderByDescending(text => ScoreLyricsBlock(text!))
+            .ToList();
+
+        return candidates.Count == 0 ? null : CleanLyrics(candidates[0]!);
+    }
+
+    private static string? ConvertNeginaLyricsText(string text)
+    {
+        text = Regex.Replace(text, @"[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]", "");
+
+        var marker = text.IndexOf("מילים ואקורדים", StringComparison.Ordinal);
+        if (marker >= 0)
+        {
+            text = text[(marker + "מילים ואקורדים".Length)..];
+        }
+
+        var stopMarkers = new[]
+        {
+            "קאפו ",
+            "מילים:",
+            "לחן:",
+            "כל הזכויות",
+            "הדרכה בסרטון",
+            "האקורדים שמופיעים",
+            "פריטות וליווים",
+            "תגובות"
+        };
+
+        foreach (var stopMarker in stopMarkers)
+        {
+            var stop = text.IndexOf(stopMarker, StringComparison.Ordinal);
+            if (stop > 20)
+            {
+                text = text[..stop];
+            }
+        }
+
+        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n')
+            .Split('\n')
+            .Select(CleanNeginaLine)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Where(line => !IsNeginaUiLine(line))
+            .Take(420)
+            .ToList();
+
+        if (lines.Count == 0)
+        {
+            return null;
+        }
+
+        var output = new List<string>();
+        var lyricLine = new StringBuilder();
+        var chordPlacements = new List<(int Index, string Chord)>();
+        var chordProgression = new List<string>();
+        var pendingChords = new List<string>();
+
+        void FlushLyricLine()
+        {
+            if (lyricLine.Length == 0)
+            {
+                return;
+            }
+
+            var lyric = lyricLine.ToString().TrimEnd();
+            var chordLine = BuildAlignedChordLine(chordPlacements, lyric.Length);
+            if (!string.IsNullOrWhiteSpace(chordLine))
+            {
+                output.Add(chordLine);
+            }
+
+            output.Add(lyric.TrimStart());
+            lyricLine.Clear();
+            chordPlacements.Clear();
+        }
+
+        void FlushProgression()
+        {
+            if (chordProgression.Count == 0)
+            {
+                return;
+            }
+
+            output.Add(string.Join(" ", chordProgression));
+            chordProgression.Clear();
+        }
+
+        void FlushPendingChordsAsProgression()
+        {
+            if (pendingChords.Count == 0)
+            {
+                return;
+            }
+
+            chordProgression.AddRange(pendingChords);
+            pendingChords.Clear();
+        }
+
+        void AppendLyricsFragment(string fragment)
+        {
+            if (pendingChords.Count > 0)
+            {
+                if (lyricLine.Length > 0 && ShouldSeparateNeginaFragments(lyricLine, fragment))
+                {
+                    lyricLine.Append(' ');
+                }
+
+                foreach (var chord in pendingChords)
+                {
+                    chordPlacements.Add((lyricLine.Length, chord));
+                }
+
+                pendingChords.Clear();
+            }
+            else if (lyricLine.Length > 0 && ShouldSeparateNeginaFragments(lyricLine, fragment))
+            {
+                lyricLine.Append(' ');
+            }
+
+            lyricLine.Append(fragment);
+        }
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            var next = i + 1 < lines.Count ? lines[i + 1] : null;
+
+            if (IsNeginaSectionHeading(line))
+            {
+                FlushLyricLine();
+                FlushPendingChordsAsProgression();
+                FlushProgression();
+                output.Add($"{line}:");
+                continue;
+            }
+
+            if (line == "*")
+            {
+                FlushLyricLine();
+                FlushPendingChordsAsProgression();
+                FlushProgression();
+                continue;
+            }
+
+            if (IsNeginaProgressionToken(line))
+            {
+                var chordLine = NormalizeChordLine(line);
+                var nextIsLyrics = next is not null &&
+                    !IsNeginaProgressionToken(next) &&
+                    next != "*" &&
+                    !IsNeginaSectionHeading(next) &&
+                    ContainsHebrew(next);
+
+                if (IsChordOnlyLine(line) && nextIsLyrics)
+                {
+                    pendingChords.Add(chordLine);
+                }
+                else
+                {
+                    FlushPendingChordsAsProgression();
+                    chordProgression.Add(chordLine);
+                }
+
+                continue;
+            }
+
+            FlushProgression();
+            AppendLyricsFragment(CleanNeginaLyricsFragment(line));
+
+            if (next is null || !IsNeginaProgressionToken(next))
+            {
+                FlushLyricLine();
+            }
+        }
+
+        FlushLyricLine();
+        FlushPendingChordsAsProgression();
+        FlushProgression();
+
+        var result = string.Join(Environment.NewLine, output.Where(IsUsefulLyricsLine));
+        return ScoreLyricsBlock(result) > 20 ? result : null;
+    }
+
+    private static string CleanNeginaLine(string line)
+    {
+        var clean = DecodeHtmlEntitiesPreservingSpaces(line);
+        clean = clean.Replace('\u00A0', ' ');
+        clean = Regex.Replace(clean, @"^\s*#{1,6}\s*", "");
+        clean = Regex.Replace(clean, @"!\[[^\]]*\]\([^)]+\)", "");
+        clean = Regex.Replace(clean, @"\[(?<text>[^\]]+)\]\([^)]+\)", "${text}");
+        clean = Regex.Replace(clean, @"[ \t]+", " ").Trim();
+        clean = clean.Trim('`', '*', '_');
+        return clean;
+    }
+
+    private static string CleanNeginaLyricsFragment(string line) =>
+        Regex.Replace(line.Replace("*", ""), @"[ \t]+", " ").Trim();
+
+    private static bool IsNeginaUiLine(string line) =>
+        Regex.IsMatch(line, @"^(הדפסה|הוספה למועדפים|מצב לילה|שינוי טון|גודל פונט|גירסה קלה|הסתר|הגדרות|לחצ/י|הצג עוד|Image:|Button:)", RegexOptions.IgnoreCase);
+
+    private static bool IsNeginaSectionHeading(string line)
+    {
+        if (line.Length > 24 || ContainsChord(line))
+        {
+            return false;
+        }
+
+        return line is "פתיחה" or "בית" or "פזמון" or "מעבר" or "סיום" or "גשר" or "עלייה" or "סולו";
+    }
+
+    private static bool IsChordOnlyLine(string line)
+    {
+        var normalized = NormalizeChordLine(line);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        var tokens = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return tokens.Length > 0 && tokens.All(token => Regex.IsMatch(token, @"^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?\d*(?:/[A-G](?:#|b)?)?$", RegexOptions.IgnoreCase));
+    }
+
+    private static bool IsNeginaProgressionToken(string line) =>
+        IsChordOnlyLine(line) || NormalizeChordLine(line) == "→";
+
+    private static string NormalizeChordLine(string line) =>
+        Regex.Replace(line.Replace("*", " "), @"\s+", " ").Trim();
+
+    private static string BuildAlignedChordLine(IReadOnlyCollection<(int Index, string Chord)> placements, int lyricLength)
+    {
+        if (placements.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var ordered = placements
+            .Where(placement => !string.IsNullOrWhiteSpace(placement.Chord))
+            .OrderBy(placement => placement.Index)
+            .ToList();
+
+        if (ordered.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var line = new StringBuilder(new string(' ', Math.Max(lyricLength, ordered.Max(p => p.Index) + 1)));
+
+        foreach (var placement in ordered)
+        {
+            var index = Math.Max(0, placement.Index);
+            while (line.Length < index + placement.Chord.Length)
+            {
+                line.Append(' ');
+            }
+
+            while (index < line.Length && line[index] != ' ')
+            {
+                index++;
+            }
+
+            while (line.Length < index + placement.Chord.Length)
+            {
+                line.Append(' ');
+            }
+
+            for (var i = 0; i < placement.Chord.Length; i++)
+            {
+                line[index + i] = placement.Chord[i];
+            }
+        }
+
+        return line.ToString().TrimEnd();
+    }
+
+    private static bool ShouldSeparateNeginaFragments(StringBuilder current, string fragment)
+    {
+        if (current.Length == 0 || string.IsNullOrWhiteSpace(fragment))
+        {
+            return false;
+        }
+
+        var last = current[current.Length - 1];
+        var first = fragment[0];
+        if (IsLikelyHebrewWordContinuation(current, fragment))
+        {
+            return false;
+        }
+
+        return !char.IsWhiteSpace(last) &&
+            last != '-' &&
+            last != '־' &&
+            !char.IsPunctuation(first);
+    }
+
+    private static bool IsLikelyHebrewWordContinuation(StringBuilder current, string fragment)
+    {
+        var previous = GetTrailingHebrewLetters(current.ToString());
+        var next = GetLeadingHebrewLetters(fragment);
+        if (previous.Length == 0 || next.Length == 0)
+        {
+            return false;
+        }
+
+        return previous.Length <= 2 || next.Length <= 2;
+    }
+
+    private static string GetTrailingHebrewLetters(string value)
+    {
+        var match = Regex.Match(value, @"[\u0590-\u05FF]+$");
+        return match.Success ? match.Value : string.Empty;
+    }
+
+    private static string GetLeadingHebrewLetters(string value)
+    {
+        var match = Regex.Match(value, @"^[\u0590-\u05FF]+");
+        return match.Success ? match.Value : string.Empty;
     }
 
     private static string? ExtractNagnuLyricsFromPageText(string html)
@@ -469,6 +1126,121 @@ public class SmartSongImportService : ISmartSongImportService
         return lines.Count == 0 ? null : string.Join(Environment.NewLine, lines);
     }
 
+    private static string? ExtractNagnuLyricsFromReaderText(string text)
+    {
+        text = DecodeHtmlEntitiesPreservingSpaces(text);
+        var marker = "האקורדים הודפסו";
+        var start = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (start >= 0)
+        {
+            text = text[(start + marker.Length)..];
+        }
+
+        var stopMarkers = new[]
+        {
+            "רוצים לראות את השאר",
+            "איך השיר לדעתך",
+            "אולי תאהבו גם",
+            "0 תגובות לשיר"
+        };
+
+        foreach (var stopMarker in stopMarkers)
+        {
+            var stop = text.IndexOf(stopMarker, StringComparison.OrdinalIgnoreCase);
+            if (stop > 0)
+            {
+                text = text[..stop];
+            }
+        }
+
+        var output = new List<string>();
+        foreach (var rawLine in text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
+        {
+            var line = CleanNagnuReaderLine(rawLine);
+            if (string.IsNullOrWhiteSpace(line) || IsNagnuReaderUiLine(line))
+            {
+                continue;
+            }
+
+            var converted = ConvertNagnuReaderChordLine(line);
+            if (!string.IsNullOrWhiteSpace(converted))
+            {
+                output.Add(converted);
+            }
+            else if (IsUsefulLyricsLine(line))
+            {
+                output.Add(line);
+            }
+        }
+
+        var result = string.Join(Environment.NewLine, output).Trim();
+        return ScoreLyricsBlock(result) > 10 ? result : null;
+    }
+
+    private static string CleanNagnuReaderLine(string line)
+    {
+        var clean = Regex.Replace(line, @"!\[[^\]]*\]\([^)]+\)", "");
+        clean = Regex.Replace(clean, @"\[(?<text>[^\]]*)\]\([^)]+\)", "${text}");
+        clean = Regex.Replace(clean, @"^\s*#{1,6}\s*", "");
+        clean = Regex.Replace(clean, @"[ \t]+", " ").Trim();
+        return clean.Trim('`', '*', '_');
+    }
+
+    private static bool IsNagnuReaderUiLine(string line) =>
+        line.Contains("www.Nagnu.co.il", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("הסר פרסומות", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("הצג אקורדים", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("השאר מסך דולק", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("שינוי טון", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("גודל גופן", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("שינויים שבוצעו", StringComparison.OrdinalIgnoreCase) ||
+        line.Contains("מציאת גרסה קלה", StringComparison.OrdinalIgnoreCase) ||
+        Regex.IsMatch(line, @"^-?\d+(?:\.\d+)?\s+[A-G](?:#|b)?$");
+
+    private static string? ConvertNagnuReaderChordLine(string line)
+    {
+        var tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+        if (tokens.Count < 2)
+        {
+            return null;
+        }
+
+        var chords = new List<string>();
+        var lyrics = new List<string>();
+        var lyricsStarted = false;
+
+        foreach (var rawToken in tokens)
+        {
+            var token = rawToken.Trim('|', ',', ';');
+            if (!lyricsStarted && IsChordOnlyLine(token))
+            {
+                chords.Add(token);
+                continue;
+            }
+
+            if (ContainsHebrew(token))
+            {
+                lyricsStarted = true;
+            }
+
+            if (lyricsStarted)
+            {
+                lyrics.Add(rawToken.Trim('|'));
+            }
+        }
+
+        if (chords.Count == 0 || lyrics.Count == 0)
+        {
+            return null;
+        }
+
+        return string.Join(Environment.NewLine, new[]
+        {
+            string.Join(" ", chords),
+            string.Join(" ", lyrics).Trim()
+        });
+    }
+
     private static string? ExtractJsonLdSongTitle(string html)
     {
         foreach (Match match in Regex.Matches(html, @"""name""\s*:\s*""(?<value>[^""]+)""", RegexOptions.IgnoreCase))
@@ -497,9 +1269,16 @@ public class SmartSongImportService : ISmartSongImportService
 
     private static string? ExtractJsonStringField(string html, string fieldName)
     {
+        return ExtractJsonStringFields(html, fieldName).FirstOrDefault();
+    }
+
+    private static IEnumerable<string> ExtractJsonStringFields(string html, string fieldName)
+    {
         var pattern = $@"""{Regex.Escape(fieldName)}""\s*:\s*""(?<value>(?:\\.|[^""\\])*)""";
-        var match = Regex.Match(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        return match.Success ? DecodeJsonString(match.Groups["value"].Value) : null;
+        return Regex.Matches(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(match => DecodeJsonString(match.Groups["value"].Value))
+            .Where(value => !string.IsNullOrWhiteSpace(value));
     }
 
     private static string? ExtractJsString(string html, string variableName)
@@ -649,6 +1428,109 @@ public class SmartSongImportService : ISmartSongImportService
         return null;
     }
 
+    private static string? ExtractTab4UImageUrl(string html)
+    {
+        var metaImage = FirstUsefulImageUrl(
+            ExtractMeta(html, "og:image"),
+            ExtractMeta(html, "twitter:image"));
+
+        if (IsUsefulImportedImageUrl(metaImage))
+        {
+            return NormalizeExternalUrl(metaImage, "https://www.tab4u.com/");
+        }
+
+        var backgroundImage = Regex.Matches(
+                html,
+                @"background-image\s*:\s*url\((?<quote>[""']?)(?<url>.*?)(\k<quote>)\)",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(match => NormalizeExternalUrl(WebUtility.HtmlDecode(match.Groups["url"].Value.Trim()), "https://www.tab4u.com/"))
+            .FirstOrDefault(IsUsefulImportedImageUrl);
+
+        if (IsUsefulImportedImageUrl(backgroundImage))
+        {
+            return backgroundImage;
+        }
+
+        var photoInput = Regex.Match(
+            html,
+            @"<input\b[^>]*(?:name|id)=[""']ph[""'][^>]*(?:id|value)=[""'](?<file>[^""']+\.(?:jpg|jpeg|png|webp))[""'][^>]*>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (photoInput.Success)
+        {
+            var candidate = NormalizeExternalUrl($"/additions/artists_imgs/{photoInput.Groups["file"].Value}", "https://www.tab4u.com/");
+            if (IsUsefulImportedImageUrl(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractCssBackgroundImage(string html)
+    {
+        var match = Regex.Match(
+            html,
+            @"background-image\s*:\s*url\((?<quote>[""']?)(?<url>.*?)(\k<quote>)\)",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        return match.Success
+            ? WebUtility.HtmlDecode(match.Groups["url"].Value.Trim())
+            : null;
+    }
+
+    private static string? FirstUsefulImageUrl(params string?[] values) =>
+        values
+            .Select(value => NormalizeExternalUrl(value, "https://www.tab4u.com/"))
+            .FirstOrDefault(IsUsefulImportedImageUrl);
+
+    private static bool IsUsefulImportedImageUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.StartsWith("data:", StringComparison.Ordinal) ||
+            normalized.Contains("noartpic", StringComparison.Ordinal) ||
+            normalized.Contains("no-art", StringComparison.Ordinal) ||
+            normalized.Contains("placeholder", StringComparison.Ordinal) ||
+            normalized.Contains("favicon", StringComparison.Ordinal) ||
+            normalized.Contains("logo", StringComparison.Ordinal) ||
+            normalized.Contains("cloudflare", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return Regex.IsMatch(normalized, @"\.(jpg|jpeg|png|webp)(?:[?#].*)?$", RegexOptions.IgnoreCase);
+    }
+
+    private static string? NormalizeExternalUrl(string? value, string baseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var clean = WebUtility.HtmlDecode(value).Trim().Trim('"', '\'');
+        if (clean.StartsWith("//", StringComparison.Ordinal))
+        {
+            return "https:" + clean;
+        }
+
+        if (Uri.TryCreate(clean, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        return Uri.TryCreate(new Uri(baseUrl), clean, out var relative)
+            ? relative.ToString()
+            : clean;
+    }
+
     private static string ExtractLyricsWithChords(string html)
     {
         var preBlocks = Regex.Matches(html, @"<pre\b[^>]*>(?<text>.*?)</pre>", RegexOptions.IgnoreCase | RegexOptions.Singleline)
@@ -695,6 +1577,38 @@ public class SmartSongImportService : ISmartSongImportService
 
         return match.Success
             ? $"https://www.youtube.com/watch?v={match.Groups["id"].Value}"
+            : null;
+    }
+
+    private static string? ExtractNagnuYouTubeUrl(string html) =>
+        ExtractYouTubeUrl(html)
+        ?? ExtractYouTubeUrlFromId(ExtractJsonStringField(html, "youTubeId"))
+        ?? ExtractYouTubeUrlFromId(ExtractAttributeValue(html, "videoid"));
+
+    private static string? ExtractAttributeValue(string html, string attributeName)
+    {
+        var match = Regex.Match(
+            html,
+            $@"\b{Regex.Escape(attributeName)}=[""'](?<value>[^""']+)[""']",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        return match.Success ? WebUtility.HtmlDecode(match.Groups["value"].Value).Trim() : null;
+    }
+
+    private static string? ExtractYouTubeThumbnailUrl(string? youtubeUrl)
+    {
+        if (string.IsNullOrWhiteSpace(youtubeUrl))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            youtubeUrl,
+            @"(?:youtube\.com/(?:watch\?[^#]*?v=|embed/|shorts/)|youtu\.be/)(?<id>[a-zA-Z0-9_-]{11})",
+            RegexOptions.IgnoreCase);
+
+        return match.Success
+            ? $"https://img.youtube.com/vi/{match.Groups["id"].Value}/hqdefault.jpg"
             : null;
     }
 

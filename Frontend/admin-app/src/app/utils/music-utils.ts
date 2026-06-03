@@ -309,6 +309,7 @@ export function parseChord(chord: string): ParsedChord | null {
     const slashIdx = rest.indexOf('/');
     if (slashIdx !== -1) {
         bass = rest.slice(slashIdx + 1) || null;
+        if (bass && !/^[A-G][#b]?$/.test(bass)) return null;
         rest = rest.slice(0, slashIdx);
     }
 
@@ -373,13 +374,81 @@ function tokenize(line: string): string[] {
     if (!line) return [];
     return line.trim()
         .split(/[\s|]+/)
+        .flatMap(expandChordToken)
         .filter(tok => tok !== '/' && !/^x\d+$/i.test(tok))
         .filter(Boolean);
 }
 
+function isChordLineSeparator(token: string): boolean {
+    return token === '→' || token === '->' || token === '←' || token === '<-' || token === '/';
+}
+
+function expandChordToken(token: string): string[] {
+    const trimmed = token.trim();
+    if (!trimmed) return [];
+    if (isChord(trimmed) || !trimmed.includes('/')) return [trimmed];
+
+    const slashIdx = trimmed.indexOf('/');
+    if (slashIdx === -1 || trimmed.indexOf('/', slashIdx + 1) !== -1) return [trimmed];
+
+    const left = trimmed.slice(0, slashIdx);
+    const right = trimmed.slice(slashIdx + 1);
+    if (!isChord(left)) return [trimmed];
+
+    const bassMatch = right.match(/^[A-G][#b]?/);
+    if (!bassMatch) return [trimmed];
+
+    const bass = bassMatch[0];
+    const gluedTail = right.slice(bass.length);
+    if (!gluedTail) return [`${left}/${bass}`];
+
+    const tailChords = splitGluedChordSequence(gluedTail);
+    if (!tailChords) return [trimmed];
+
+    return [`${left}/${bass}`, ...tailChords];
+}
+
+function splitGluedChordSequence(value: string): string[] | null {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    return splitGluedChordSequenceFrom(trimmed, 0, new Map<number, string[] | null>());
+}
+
+function splitGluedChordSequenceFrom(
+    value: string,
+    start: number,
+    memo: Map<number, string[] | null>
+): string[] | null {
+    if (start >= value.length) return [];
+    if (memo.has(start)) return memo.get(start) ?? null;
+
+    for (let end = start + 1; end < value.length; end++) {
+        if (!isChordStart(value[end])) continue;
+
+        const candidate = value.slice(start, end);
+        if (!isChord(candidate)) continue;
+
+        const rest = splitGluedChordSequenceFrom(value, end, memo);
+        if (rest === null) continue;
+
+        const result = [candidate, ...rest];
+        memo.set(start, result);
+        return result;
+    }
+
+    const remaining = value.slice(start);
+    const result = isChord(remaining) ? [remaining] : null;
+    memo.set(start, result);
+    return result;
+}
+
+function isChordStart(value: string): boolean {
+    return /^[A-G]$/.test(value.toUpperCase());
+}
+
 export function isChordLine(line: string): boolean {
     const tokens = tokenize(line);
-    return tokens.length > 0 && tokens.every(token => isChord(token));
+    return tokens.length > 0 && tokens.some(token => isChord(token)) && tokens.every(token => isChord(token) || isChordLineSeparator(token));
 }
 
 export function extractChords(line: string): string[] {
@@ -393,9 +462,9 @@ export interface ParsedLine {
 
 export function parseConsecutiveChordLines(lines: string[]): ParsedLine[] {
     return lines.map(line => {
-        const tokens = line.trim().split(/[\s|]+/).filter(tok => tok !== '/' && !/^x\d+$/i.test(tok)).filter(Boolean);
+        const tokens = tokenize(line);
         if (tokens.length === 0) return { type: 'empty', content: '' };
-        const isChords = tokens.every(tok => isChord(tok));
+        const isChords = tokens.some(tok => isChord(tok)) && tokens.every(tok => isChord(tok) || isChordLineSeparator(tok));
         return { type: isChords ? 'chords' : 'lyrics', content: line };
     });
 }

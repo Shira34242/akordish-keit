@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ModalService } from '../../../../services/modal.service';
+import { SmartAddComponent } from '../smart-add/smart-add.component';
 
 interface LayoutState {
     title: string;
@@ -14,12 +15,13 @@ interface LayoutState {
 @Component({
     selector: 'app-admin-content-layout',
     standalone: true,
-    imports: [CommonModule, RouterModule, RouterOutlet],
+    imports: [CommonModule, RouterModule, RouterOutlet, SmartAddComponent],
     templateUrl: './content-layout.component.html',
     styleUrls: ['./content-layout.component.css']
 })
 export class AdminContentLayoutComponent {
     state: LayoutState;
+    smartImportOpen = false;
 
     constructor(
         private router: Router,
@@ -54,6 +56,14 @@ export class AdminContentLayoutComponent {
         if (url.includes('/content/podcasts')) {
             this.router.navigate(['/admin/content/podcasts/episodes/new']);
         }
+    }
+
+    get isSongsSection(): boolean {
+        return this.router.url.includes('/content/songs');
+    }
+
+    toggleSmartImport(): void {
+        this.smartImportOpen = !this.smartImportOpen;
     }
 
     private getState(url: string): LayoutState {

@@ -5,6 +5,7 @@ using AkordishKeit.Models.Enum;
 using AkordishKeit.Models.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Text.RegularExpressions;
 
 namespace AkordishKeit.Services;
 
@@ -51,6 +52,30 @@ public class SongService : ISongService
 
     public async Task<AddSongResponseDto> CreateSongAsync(AddSongRequestDto dto, int userId)
     {
+        if (dto.IsApproved)
+        {
+            var missingRequired = new List<string>();
+            if (string.IsNullOrWhiteSpace(dto.YoutubeUrl)) missingRequired.Add("קישור YouTube");
+            else if (!Regex.IsMatch(dto.YoutubeUrl, @"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$", RegexOptions.IgnoreCase))
+                missingRequired.Add("קישור YouTube תקין");
+            if (string.IsNullOrWhiteSpace(dto.LyricsWithChords) || dto.LyricsWithChords.Length < 10) missingRequired.Add("מילים ואקורדים");
+            if (dto.OriginalKeyId <= 0) missingRequired.Add("סולם מקורי");
+
+            if (missingRequired.Count > 0)
+            {
+                return new AddSongResponseDto
+                {
+                    Success = false,
+                    Message = $"חסרים שדות לפרסום: {string.Join(", ", missingRequired)}"
+                };
+            }
+        }
+
+        if (dto.OriginalKeyId <= 0)
+        {
+            dto.OriginalKeyId = 1;
+        }
+
         // Fetch YouTube metadata BEFORE opening the transaction — external HTTP calls must not hold a DB connection
         string? imageUrl = dto.ImageUrl;
         int? durationSeconds = null;
@@ -640,7 +665,8 @@ public class SongService : ISongService
         bool includeUnapproved = false,
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
-        DateTime? dateTo = null)
+        DateTime? dateTo = null,
+        bool? isApproved = null)
     {
         try
         {
@@ -662,7 +688,7 @@ public class SongService : ISongService
             // Apply filters
             if (artistId.HasValue)
             {
-                query = query.Where(s => s.SongArtists.Any(sa => sa.ArtistId == artistId.Value && sa.Order == 1));
+                query = query.Where(s => s.SongArtists.Any(sa => sa.ArtistId == artistId.Value));
             }
 
             if (genreId.HasValue)
@@ -700,6 +726,11 @@ public class SongService : ISongService
             {
                 var exclusiveDateTo = dateTo.Value.Date.AddDays(1);
                 query = query.Where(s => s.CreatedAt < exclusiveDateTo);
+            }
+
+            if (isApproved.HasValue)
+            {
+                query = query.Where(s => s.IsApproved == isApproved.Value);
             }
 
             // Search filter

@@ -33,7 +33,8 @@ public interface ISongService
         bool includeUnapproved = false,
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
-        DateTime? dateTo = null);
+        DateTime? dateTo = null,
+        bool? isApproved = null);
 
     /// <summary>
     /// Get a single song by ID

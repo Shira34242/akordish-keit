@@ -5,7 +5,13 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AdminService, UserStats, RecentJoin } from '../../../services/admin.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../services/analytics.service';
+import { ReportService } from '../../../services/report.service';
+import { Report } from '../../../models/report.model';
+import { TeacherService } from '../../../services/teacher.service';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
+import { ArtistService } from '../../../services/artist.service';
+import { SongService } from '../../../services/song.service';
+import { ArtistStatus } from '../../../models/artist.model';
 
 @Component({
     selector: 'app-admin-dashboard-placeholder',
@@ -19,14 +25,32 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     today = new Date();
 
     userStats: UserStats | null = null;
-    totalServiceProviders = 0;
     recentJoins: RecentJoin[] = [];
     dashboard: AnalyticsDashboard | null = null;
+
+    pendingReportsCount = 0;
+    pendingReports: Report[] = [];
+    chordRequestsCount = 0;
+    pendingTeachersCount = 0;
+    pendingServiceProvidersCount = 0;
+    pendingArtistsCount = 0;
+    pendingSongsCount = 0;
+
+    get totalPendingApprovals(): number {
+        return this.pendingTeachersCount +
+               this.pendingServiceProvidersCount +
+               this.pendingArtistsCount +
+               this.pendingSongsCount;
+    }
 
     constructor(
         private adminService: AdminService,
         private analyticsService: AnalyticsService,
-        private serviceProviderService: MusicServiceProviderService
+        private reportService: ReportService,
+        private teacherService: TeacherService,
+        private serviceProviderService: MusicServiceProviderService,
+        private artistService: ArtistService,
+        private songService: SongService
     ) {}
 
     ngOnInit(): void {
@@ -39,22 +63,36 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             stats: this.adminService.getUserStats().pipe(catchError(() => of(null))),
             joins: this.adminService.getRecentJoins().pipe(catchError(() => of([]))),
             dash: this.analyticsService.getDashboard().pipe(catchError(() => of(null))),
+            reports: this.reportService.getReports(1, 6, 'Pending').pipe(catchError(() => of(null))),
+            chordReqs: this.reportService.getChordRequests(1, 1).pipe(catchError(() => of(null))),
+            teachers: this.teacherService
+                .getTeachers(undefined, undefined, 0, undefined, 1, 1)
+                .pipe(catchError(() => of(null))),
             providers: this.serviceProviderService
-                .getServiceProviders(undefined, undefined, undefined, undefined, undefined, undefined, 1, 1)
+                .getServiceProviders(undefined, undefined, undefined, 0, undefined, undefined, 1, 1)
+                .pipe(catchError(() => of(null))),
+            artists: this.artistService
+                .getArtists(undefined, ArtistStatus.Pending, 1, 1)
+                .pipe(catchError(() => of(null))),
+            songs: this.songService
+                .getSongs(undefined, 1, 50, undefined, undefined, undefined, 'date')
                 .pipe(catchError(() => of(null)))
-        }).subscribe(({ stats, joins, dash, providers }) => {
+        }).subscribe(({ stats, joins, dash, reports, chordReqs, teachers, providers, artists, songs }) => {
             this.userStats = stats;
             this.recentJoins = joins as RecentJoin[];
             this.dashboard = dash;
-            this.totalServiceProviders = providers?.totalCount ?? 0;
+
+            this.pendingReportsCount = reports?.totalCount ?? 0;
+            this.pendingReports = reports?.items?.slice(0, 6) ?? [];
+            this.chordRequestsCount = chordReqs?.totalCount ?? 0;
+            this.pendingTeachersCount = teachers?.totalCount ?? 0;
+            this.pendingServiceProvidersCount = providers?.totalCount ?? 0;
+            this.pendingArtistsCount = artists?.totalCount ?? 0;
+            this.pendingSongsCount = (songs?.items ?? []).filter((s: any) => !s.isApproved).length;
+
             this.loading = false;
             this.today = new Date();
         });
-    }
-
-    barWidth(val: number, max: number): number {
-        if (!max) return 0;
-        return Math.min(100, Math.round((val / max) * 100));
     }
 
     fmt(n: number): string {
@@ -77,36 +115,21 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         return new Date(d).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
     }
 
-    get articleViewsLast30(): number { return this.dashboard?.articles?.viewsLast30Days ?? 0; }
-    get articleViewsTotal(): number  { return this.dashboard?.articles?.totalViews ?? 0; }
-
-    get ticketLast30(): number  { return this.dashboard?.buttons?.ticketClicks?.last30Days ?? 0; }
-    get contactLast30(): number { return this.dashboard?.buttons?.contactClicks?.last30Days ?? 0; }
-    get notifLast30(): number   { return this.dashboard?.buttons?.notificationLinkClicks?.last30Days ?? 0; }
-
-    get totalInteractions(): number { return this.ticketLast30 + this.contactLast30 + this.notifLast30; }
-
-    get maxButtonClicks(): number {
-        return Math.max(this.ticketLast30, this.contactLast30, this.notifLast30, 1);
+    reportTypeLabel(t: string): string {
+        const map: Record<string, string> = {
+            ContentError: 'טעות בתוכן',
+            InappropriateContent: 'תוכן לא ראוי',
+            Other: 'אחר',
+            ChordRequest: 'בקשת אקורדים',
+            NewArtist: 'אמן חדש',
+            NewGenre: 'ז\'אנר שירים',
+            NewTag: 'תגיות שירים',
+            NewPerson: 'מלחין חדש'
+        };
+        return map[t] ?? t;
     }
 
-    get adsTotalViews(): number  { return this.dashboard?.ads?.totalViews ?? 0; }
-    get adsTotalClicks(): number { return this.dashboard?.ads?.totalClicks ?? 0; }
-    get adsAvgCtr(): string {
-        const v = this.adsTotalViews;
-        return v ? ((this.adsTotalClicks / v) * 100).toFixed(1) : '0.0';
-    }
-    get topCampaigns() { return this.dashboard?.ads?.topCampaigns ?? []; }
-
-    get topEvents() { return this.dashboard?.events?.topEvents ?? []; }
-    get eventPageViewsTotal(): number   { return this.dashboard?.events?.listPageViews?.total ?? 0; }
-    get eventPageViews30(): number      { return this.dashboard?.events?.listPageViews?.last30Days ?? 0; }
-
-    get maxEventViews(): number {
-        return Math.max(...this.topEvents.map(e => e.totalViews), 1);
-    }
-
-    get maxCampaignViews(): number {
-        return Math.max(...this.topCampaigns.map(c => c.viewCount), 1);
-    }
+    get userCount(): number { return this.userStats?.totalUsers ?? 0; }
+    get articlesViews30(): number { return this.dashboard?.articles?.viewsLast30Days ?? 0; }
+    get activeCampaigns(): number { return this.dashboard?.ads?.activeCampaigns ?? 0; }
 }
