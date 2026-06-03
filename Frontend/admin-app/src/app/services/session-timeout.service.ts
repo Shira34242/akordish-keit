@@ -36,12 +36,16 @@ export class SessionTimeoutService {
    * מתחיל לעקוב אחרי פעילות המשתמש
    */
   startWatching() {
-    // עוקב רק אם המשתמש מחובר
+    let listenersActive = false;
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.setupIdleTimer();
-        this.setupActivityListeners();
+        if (!listenersActive) {
+          listenersActive = true;
+          this.setupActivityListeners();
+        }
       } else {
+        listenersActive = false;
         this.stopWatching();
       }
     });
@@ -90,26 +94,24 @@ export class SessionTimeoutService {
    * מקשיב לפעילות משתמש (עכבר, קליקים, הקלדה)
    */
   private setupActivityListeners() {
-    // מאזינים לכל האירועים שמעידים על פעילות
-    const events = [
-      fromEvent(document, 'mousemove'),
-      fromEvent(document, 'mousedown'),
-      fromEvent(document, 'keypress'),
-      fromEvent(document, 'touchstart'),
-      fromEvent(document, 'scroll')
-    ];
+    this.ngZone.runOutsideAngular(() => {
+      const events = [
+        fromEvent(document, 'mousemove'),
+        fromEvent(document, 'mousedown'),
+        fromEvent(document, 'keypress'),
+        fromEvent(document, 'touchstart'),
+        fromEvent(document, 'scroll')
+      ];
 
-    // משתמשים ב-merge כדי לאחד את כל האירועים
-    // debounceTime - מחכה 1 שנייה אחרי האירוע האחרון לפני שמאפס
-    // (כדי לא לאפס את הטיימר בכל תנועת עכבר קטנה)
-    merge(...events)
-      .pipe(
-        debounceTime(1000),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(() => {
-        this.resetIdleTimer();
-      });
+      merge(...events)
+        .pipe(
+          debounceTime(1000),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => {
+          this.resetIdleTimer();
+        });
+    });
   }
 
   private logout() {

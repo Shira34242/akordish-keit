@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -130,8 +130,15 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   showAccountTypeModal = false;
   leavingCurrentPage = false;
 
+  heroCollapsed = false;
+
   readonly CIRCUMFERENCE = 2 * Math.PI * 52;
   readonly MAX_LEVEL = 3;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.heroCollapsed = window.scrollY > 80;
+  }
 
   constructor(
     private authService: AuthService,

@@ -1425,6 +1425,7 @@ public class SongService : ISongService
                 .ThenInclude(u => u!.ManagedArtist)
             .Include(s => s.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery()
             .ToListAsync();
 
         return songs.Select(song => new SongDto

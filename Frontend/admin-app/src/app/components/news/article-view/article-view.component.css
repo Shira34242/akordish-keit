@@ -776,27 +776,9 @@
   gap: var(--space-md);
 }
 
-.related-content-more {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
+.related-sentinel {
+  height: 1px;
   margin-top: var(--space-base);
-  padding: 0 var(--space-base);
-  border: none;
-  border-radius: 999px;
-  background: #ddff53;
-  color: #000000;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-weight: 800;
-  font-family: 'Open Sans', sans-serif;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.related-content-more:hover {
-  opacity: 0.82;
-  transform: scale(1.02);
 }
 
 /* ============================================

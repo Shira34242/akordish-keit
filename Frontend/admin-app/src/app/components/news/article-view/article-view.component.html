@@ -198,13 +198,7 @@
           </app-news-banner>
         </div>
 
-        <button
-          *ngIf="hasMoreRelatedArticles"
-          type="button"
-          class="related-content-more"
-          (click)="showMoreRelatedArticles()">
-          הצג עוד
-        </button>
+        <div #relatedSentinel *ngIf="hasMoreRelatedArticles" class="related-sentinel"></div>
       </section>
     </div>
 

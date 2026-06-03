@@ -16,12 +16,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const isOptionalAuthStatusRequest =
         req.url.includes('/api/notifications/unread-count') ||
         req.url.includes('/api/LikedContent/check/');
+      const isExpectedNotFound =
+        req.url.includes('/api/Agencies/profile-badge');
 
       if (error.error instanceof ErrorEvent) {
         console.error('Client-side error:', error.error.message);
         errorMessage = 'שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שנית.';
       } else {
-        if (!isPublicAdRequest) {
+        if (!isPublicAdRequest && !isExpectedNotFound && !isOptionalAuthStatusRequest) {
           console.error(`Server returned code ${error.status}:`, error.message, error.error);
         }
 

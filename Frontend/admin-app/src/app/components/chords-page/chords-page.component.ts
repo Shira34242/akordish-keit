@@ -155,6 +155,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.sectionsLoaded = true;
                     this.loadCategorySections();
                 }
+                // If sentinel is still in viewport after load, trigger next page
+                this.checkSentinelVisible();
             }
         });
     }
@@ -304,6 +306,15 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // ─────────────────────────────────────────────
     // Infinite scroll
     // ─────────────────────────────────────────────
+
+    private checkSentinelVisible(): void {
+        const sentinel = this.catalogSentinel?.nativeElement;
+        if (!sentinel) return;
+        const rect = sentinel.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 200) {
+            this.loadMore();
+        }
+    }
 
     private initInfiniteScroll(): void {
         const sentinel = this.catalogSentinel?.nativeElement;

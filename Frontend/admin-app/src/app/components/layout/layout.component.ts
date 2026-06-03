@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener, OnInit } from '@angular/core';
+import { AfterViewInit, Component, HostListener, NgZone, OnInit } from '@angular/core';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -105,23 +105,34 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     private notificationService: NotificationService,
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
-    public langService: LanguageService
+    public langService: LanguageService,
+    private ngZone: NgZone
   ) {}
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
     const current = window.scrollY;
+    let newScrolled = this.isScrolled;
     if (current > this.lastScrollY && current > 80) {
-      this.isScrolled = true;
+      newScrolled = true;
     } else if (current < this.lastScrollY) {
-      this.isScrolled = false;
+      newScrolled = false;
     }
-
     this.lastScrollY = current;
-    this.checkFabBackground();
-    this.showUserMenu = false;
-    this.showNotificationsPopup = false;
-    this.showMobileMenu = false;
+
+    const needsStateChange = newScrolled !== this.isScrolled
+      || this.showUserMenu
+      || this.showNotificationsPopup
+      || this.showMobileMenu;
+
+    this.ngZone.runOutsideAngular(() => this.checkFabBackground());
+
+    if (needsStateChange) {
+      this.isScrolled = newScrolled;
+      this.showUserMenu = false;
+      this.showNotificationsPopup = false;
+      this.showMobileMenu = false;
+    }
   }
 
   @HostListener('document:click')
@@ -258,22 +269,24 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     const centerY = rect.top + rect.height / 2;
     const elements = document.elementsFromPoint(centerX, centerY);
 
+    let result = false;
     for (const el of elements) {
       if (fab === el || fab.contains(el as Node)) continue;
 
       const background = getComputedStyle(el as Element).backgroundColor;
       if (background === 'rgb(221, 255, 83)') {
-        this.fabOnYellow = true;
-        return;
+        result = true;
+        break;
       }
 
       if (background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent') {
-        this.fabOnYellow = false;
-        return;
+        break;
       }
     }
 
-    this.fabOnYellow = false;
+    if (result !== this.fabOnYellow) {
+      this.ngZone.run(() => { this.fabOnYellow = result; });
+    }
   }
 
   private updateAdminEditTarget(url: string): void {

@@ -41,7 +41,25 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly langService = inject(LanguageService);
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
+    this.destroyRef.onDestroy(() => {
+      this.contentPageService.clearCurrentArticle();
+      this.relatedObserver?.disconnect();
+    });
+  }
+
+  private relatedObserver: IntersectionObserver | null = null;
+
+  @ViewChild('relatedSentinel')
+  set relatedSentinelEl(el: ElementRef<HTMLElement> | undefined) {
+    this.relatedObserver?.disconnect();
+    if (el) {
+      this.relatedObserver = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && this.hasMoreRelatedArticles) {
+          this.showMoreRelatedArticles();
+        }
+      }, { rootMargin: '200px' });
+      this.relatedObserver.observe(el.nativeElement);
+    }
   }
 
   heroBg(url: string | null | undefined): string | null {
