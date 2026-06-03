@@ -194,10 +194,12 @@ export class ChordBookPanelComponent implements OnInit {
         const out = lines.map((line: string) => {
             if (isChordLine(line)) {
                 if (!this.showChords) return null;
-                return line.replace(/\S+/g, tok => {
+                const leadingSpace = line.match(/^\s*/)?.[0] ?? '';
+                const chordLine = line.slice(leadingSpace.length).replace(/\S+/g, tok => {
                     if (!isChord(tok)) return tok;
                     return `<span style="color:${this.chordColor};font-weight:700">${tok}</span>`;
                 });
+                return `<span dir="rtl" style="display:block;direction:rtl;unicode-bidi:isolate;white-space:pre-wrap;text-align:right">${leadingSpace}<span dir="ltr" style="direction:ltr;unicode-bidi:isolate">${chordLine}</span></span>`;
             }
             let p = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             if (this.showChords) {

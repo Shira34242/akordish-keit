@@ -108,6 +108,7 @@
   <div class="bulk-actions-bar" *ngIf="!loading && hasSelection">
     <div class="bulk-summary">
       <span class="bulk-count">נבחרו {{ selectedCount }} שירים</span>
+      <button class="bulk-clear" (click)="selectAllCurrentPage()" [disabled]="bulkActionLoading">סמן הכל</button>
       <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
     </div>
 
@@ -151,8 +152,8 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && songs.length > 0 && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved">
-      <label class="grid-card-select" title="בחירת שיר">
+    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved" (click)="viewSong(song)">
+      <label class="grid-card-select" title="בחירת שיר" (click)="$event.stopPropagation()">
         <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)">
       </label>
       <div class="grid-card-avatar">
@@ -170,9 +171,7 @@
         </span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="viewSong(song)" title="צפייה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" (click)="editSong(song.id)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-delete" (click)="deleteSong(song)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action" (click)="editSong(song.id); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
   </div>

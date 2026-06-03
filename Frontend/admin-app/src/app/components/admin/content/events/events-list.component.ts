@@ -2,9 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 import { EventService } from '../../../../services/admin/event.service';
-import { Event } from '../../../../models/event.model';
+import { Event, CreateEventDto } from '../../../../models/event.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { EventCardData } from '../../../../utils/event.utils';
@@ -176,6 +176,10 @@ export class EventsListComponent implements OnInit {
     this.events.forEach(event => this.selectedEventIds.add(event.id));
   }
 
+  selectAllCurrentPage(): void {
+    this.events.forEach(event => this.selectedEventIds.add(event.id));
+  }
+
   clearSelection(): void {
     this.selectedEventIds.clear();
   }
@@ -299,6 +303,48 @@ export class EventsListComponent implements OnInit {
       error: (error) => {
         console.error('Error updating selected events:', error);
         alert('שגיאה בעדכון ההופעות');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = Array.from(this.selectedEventIds);
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} הופעות שנבחרו?`)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.eventService.getEvent(id))).pipe(
+      switchMap(events => {
+        const createRequests = events.map(event => {
+          const dto: CreateEventDto = {
+            name: event.name + ' (עותק)',
+            imageUrl: event.imageUrl || '',
+            ticketUrl: event.ticketUrl || '',
+            description: event.description,
+            bannerImageUrl: event.bannerImageUrl,
+            eventDate: event.eventDate,
+            location: event.location,
+            artistName: event.artistName,
+            artistIds: event.taggedArtists?.map(a => a.artistId),
+            price: event.price,
+            displayOrder: event.displayOrder,
+            isActive: false,
+          };
+          return this.eventService.createEvent(dto);
+        });
+        return forkJoin(createRequests);
+      })
+    ).subscribe({
+      next: () => {
+        this.clearSelection();
+        this.bulkActionLoading = false;
+        this.loadEvents();
+      },
+      error: (error) => {
+        console.error('Error duplicating events:', error);
+        alert('שגיאה בשכפול ההופעות');
         this.bulkActionLoading = false;
       }
     });

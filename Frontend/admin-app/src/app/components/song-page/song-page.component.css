@@ -809,10 +809,16 @@
 
 /* Chords Styling */
 ::ng-deep .chord-line {
-    display: inline-block;
+    display: block;
+    direction: rtl;
+    unicode-bidi: isolate;
+    white-space: pre-wrap;
+    text-align: right;
+}
+
+::ng-deep .chord-line-content {
     direction: ltr;
     unicode-bidi: isolate;
-    white-space: pre;
 }
 
 ::ng-deep .chord-inline {

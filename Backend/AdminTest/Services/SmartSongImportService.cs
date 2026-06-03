@@ -54,6 +54,7 @@ public class SmartSongImportService : ISmartSongImportService
         var urlParts = ExtractUrlParts(uri);
         var siteParts = ExtractSiteSpecificParts(uri, html);
         var isNeginaImport = uri.Host.Contains("negina.co.il", StringComparison.OrdinalIgnoreCase);
+        var normalizeImportedChordOnlyLines = ShouldNormalizeImportedChordOnlyLines(uri);
 
         var title = CleanTitle(
             siteParts.Title
@@ -66,9 +67,14 @@ public class SmartSongImportService : ISmartSongImportService
             ?? uri.Host);
 
         var artistName = CleanPersonName(siteParts.ArtistName ?? urlParts.ArtistName ?? ExtractArtistName(html, title) ?? string.Empty);
+        var genericLyricsWithChords = string.IsNullOrWhiteSpace(siteParts.LyricsWithChords)
+            ? ExtractLyricsWithChords(html)
+            : null;
         var lyricsWithChords = !string.IsNullOrWhiteSpace(siteParts.LyricsWithChords)
-            ? CleanLyrics(siteParts.LyricsWithChords)
-            : ExtractLyricsWithChords(html);
+            ? CleanLyrics(siteParts.LyricsWithChords, normalizeImportedChordOnlyLines)
+            : (!string.IsNullOrWhiteSpace(genericLyricsWithChords)
+                ? CleanLyrics(genericLyricsWithChords, normalizeImportedChordOnlyLines)
+                : null);
         var youtubeUrl = siteParts.YoutubeUrl ?? ExtractYouTubeUrl(html);
         var imageUrl = siteParts.ImageUrl ?? ExtractMeta(html, "og:image") ?? ExtractMeta(html, "twitter:image");
 
@@ -80,7 +86,7 @@ public class SmartSongImportService : ISmartSongImportService
                 var readerParts = ExtractNeginaParts(uri, readerText);
                 if (!string.IsNullOrWhiteSpace(readerParts.LyricsWithChords))
                 {
-                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords);
+                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords, normalizeImportedChordOnlyLines);
                 }
 
                 youtubeUrl ??= readerParts.YoutubeUrl;
@@ -96,7 +102,7 @@ public class SmartSongImportService : ISmartSongImportService
                 var readerParts = ExtractNagnuReaderParts(uri, readerText);
                 if (!string.IsNullOrWhiteSpace(readerParts.LyricsWithChords))
                 {
-                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords);
+                    lyricsWithChords = CleanLyrics(readerParts.LyricsWithChords, normalizeImportedChordOnlyLines);
                 }
 
                 youtubeUrl ??= readerParts.YoutubeUrl;
@@ -119,7 +125,9 @@ public class SmartSongImportService : ISmartSongImportService
             imageUrl = null;
         }
 
-        var detectedKey = KeyDetectionService.Detect(lyricsWithChords);
+        var detectedKey = !string.IsNullOrWhiteSpace(lyricsWithChords)
+            ? KeyDetectionService.Detect(lyricsWithChords)
+            : null;
         var artistInput = await BuildArtistInputAsync(artistName);
 
         var draft = new ImportedSongDraftDto
@@ -131,7 +139,7 @@ public class SmartSongImportService : ISmartSongImportService
             },
             YoutubeUrl = youtubeUrl ?? string.Empty,
             ImageUrl = imageUrl,
-            LyricsWithChords = lyricsWithChords,
+            LyricsWithChords = lyricsWithChords ?? string.Empty,
             OriginalKeyId = detectedKey?.OriginalKeyId ?? DefaultOriginalKeyId,
             EasyKeyId = detectedKey?.EasyKeyId,
             Tags = new List<TagInputDto>()
@@ -1696,7 +1704,7 @@ public class SmartSongImportService : ISmartSongImportService
         return text;
     }
 
-    private static string CleanLyrics(string value)
+    private static string CleanLyrics(string value, bool normalizeImportedChordOnlyLines = false)
     {
         var lines = value.Replace("\r\n", "\n").Replace('\r', '\n')
             .Split('\n')
@@ -1705,7 +1713,34 @@ public class SmartSongImportService : ISmartSongImportService
             .Take(260)
             .ToList();
 
-        return string.Join(Environment.NewLine, RemoveCommonLeadingIndent(lines)).Trim();
+        var cleanedLines = RemoveCommonLeadingIndent(lines);
+        if (normalizeImportedChordOnlyLines)
+        {
+            cleanedLines = cleanedLines.Select(NormalizeImportedChordOnlyLineOrder);
+        }
+
+        return string.Join(Environment.NewLine, cleanedLines).Trim('\r', '\n');
+    }
+
+    private static bool ShouldNormalizeImportedChordOnlyLines(Uri sourceUri)
+    {
+        var host = sourceUri.Host.ToLowerInvariant();
+        return !host.Contains("tab4u.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeImportedChordOnlyLineOrder(string line)
+    {
+        if (!IsChordOnlyLine(line))
+        {
+            return line;
+        }
+
+        return string.Concat(
+                Regex.Matches(line, @"\s+|\S+")
+                    .Cast<Match>()
+                    .Select(match => match.Value)
+                    .Reverse())
+            .TrimEnd();
     }
 
     private static IEnumerable<string> RemoveCommonLeadingIndent(IReadOnlyCollection<string> lines)

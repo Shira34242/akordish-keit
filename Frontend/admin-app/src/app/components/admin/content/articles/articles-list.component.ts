@@ -331,6 +331,10 @@ export class ArticlesListComponent implements OnInit {
     this.articles.forEach(article => this.selectedArticleIds.add(article.id));
   }
 
+  selectAllCurrentPage(): void {
+    this.articles.forEach(article => this.selectedArticleIds.add(article.id));
+  }
+
   clearSelection(): void {
     this.selectedArticleIds.clear();
   }

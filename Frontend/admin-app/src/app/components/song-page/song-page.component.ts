@@ -806,7 +806,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
                 // Wrap each non-whitespace token that isChord recognises.
                 // /\S+/g preserves all original spacing between chords.
-                const chordLine = line.replace(/\S+/g, (token) => {
+                const leadingSpace = line.match(/^\s*/)?.[0] ?? '';
+                const chordLine = line.slice(leadingSpace.length).replace(/\S+/g, (token) => {
                     if (!isChord(token)) return token;
                     let chord = this.transposeStep !== 0
                         ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
@@ -815,7 +816,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                     return `<span class="chord-block">${chord}</span>`;
                 });
 
-                return `<span class="chord-line">${chordLine}</span>`;
+                return `<span class="chord-line" dir="rtl">${leadingSpace}<span class="chord-line-content" dir="ltr">${chordLine}</span></span>`;
             }
 
             // 2. Normal Line (Lyrics + potentially Inline Chords)
