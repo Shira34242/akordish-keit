@@ -808,6 +808,13 @@
 }
 
 /* Chords Styling */
+::ng-deep .chord-line {
+    display: inline-block;
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: pre;
+}
+
 ::ng-deep .chord-inline {
     color: #000000;
     font-weight: 800;
