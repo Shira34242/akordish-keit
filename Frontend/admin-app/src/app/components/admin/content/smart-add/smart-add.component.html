@@ -35,7 +35,7 @@
           [(ngModel)]="importUrl"
           (paste)="onImportPaste()"
           (keyup.enter)="prepareSmartImport()"
-          [placeholder]="compactSongOnly ? 'הדבק לינק לשיר...' : 'https://...'"
+          [placeholder]="compactSongOnly ? 'הדבק לינק לשיר או לעמוד אמן...' : 'https://...'"
           dir="ltr"
           [attr.autofocus]="compactSongOnly ? '' : null"
         />
@@ -74,6 +74,57 @@
       </button>
     </div>
   </section>
+
+  <div class="artist-selection-backdrop" *ngIf="showArtistSongSelection" (click)="closeArtistSongSelection()">
+    <section
+      class="artist-selection-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="artist-selection-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="artist-selection-header">
+        <div>
+          <span class="section-pill">עמוד אמן זוהה</span>
+          <h3 id="artist-selection-title">בחירת שירים לשליחה לאישור</h3>
+          <p>נמצאו {{ artistSongChoices.length }} שירים. בחר אילו מהם לשלוח לשליפה ולשמירה כטיוטה.</p>
+        </div>
+        <button type="button" class="close-selection-btn" (click)="closeArtistSongSelection()" aria-label="סגירת חלון הבחירה">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <div class="artist-selection-tools">
+        <strong>{{ selectedArtistSongsCount }} מתוך {{ artistSongChoices.length }} נבחרו</strong>
+        <div>
+          <button type="button" class="selection-link-btn" (click)="toggleAllArtistSongs(true)">בחר הכול</button>
+          <button type="button" class="selection-link-btn" (click)="toggleAllArtistSongs(false)">נקה בחירה</button>
+        </div>
+      </div>
+
+      <div class="artist-song-list">
+        <label class="artist-song-choice" *ngFor="let song of artistSongChoices">
+          <input type="checkbox" [(ngModel)]="song.selected" />
+          <span>
+            <strong>{{ song.title }}</strong>
+            <small dir="ltr">{{ song.url }}</small>
+          </span>
+        </label>
+      </div>
+
+      <footer class="artist-selection-actions">
+        <button type="button" class="selection-cancel-btn" (click)="closeArtistSongSelection()">ביטול</button>
+        <button
+          type="button"
+          class="selection-confirm-btn"
+          (click)="confirmArtistSongSelection()"
+          [disabled]="selectedArtistSongsCount === 0"
+        >
+          שלח {{ selectedArtistSongsCount }} שירים לאישור
+        </button>
+      </footer>
+    </section>
+  </div>
 
   <section class="quick-add-section" *ngIf="!compactSongOnly" aria-labelledby="quick-add-title">
     <div class="section-heading">

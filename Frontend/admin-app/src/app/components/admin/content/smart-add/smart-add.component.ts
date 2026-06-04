@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ModalService } from '../../../../services/modal.service';
@@ -34,6 +34,8 @@ export class SmartAddComponent {
   activeCompactImports = 0;
   compactImportsSaved = 0;
   compactImportsFailed = 0;
+  artistSongChoices: { url: string; title: string; selected: boolean }[] = [];
+  showArtistSongSelection = false;
 
   readonly contentTypes: { value: SmartContentType; label: string; hint: string; icon: string }[] = [
     { value: 'song', label: 'אקורדים', hint: 'שליפת שיר ואקורדים לעריכת שיר', icon: 'library_music' },
@@ -77,6 +79,16 @@ export class SmartAddComponent {
     this.songService.importSongFromUrl(url).subscribe({
       next: (result) => {
         this.importResult = result;
+
+        if (result.isArtistPage) {
+          if (result.songUrls?.length) {
+            this.openArtistSongSelection(result.songUrls);
+          } else {
+            this.importState = 'error';
+            this.errorMessage = result.message || 'לא זוהו שירים בעמוד האמן.';
+          }
+          return;
+        }
 
         if (result.songId) {
           this.openImportedSong(result.songId);
@@ -212,6 +224,16 @@ export class SmartAddComponent {
 
     this.songService.importSongFromUrl(url).subscribe({
       next: (result) => {
+        if (result.isArtistPage) {
+          if (result.songUrls?.length) {
+            this.activeCompactImports = Math.max(0, this.activeCompactImports - 1);
+            this.openArtistSongSelection(result.songUrls);
+          } else {
+            this.finishCompactImport(false, result.message || 'לא זוהו שירים בעמוד האמן.');
+          }
+          return;
+        }
+
         if (result.draft) {
           this.saveImportedSongDraft(result.draft, true);
           return;
@@ -228,6 +250,100 @@ export class SmartAddComponent {
         }
 
         this.finishCompactImport(false, result?.message || 'לא הצלחנו לייבא מהקישור הזה.');
+      }
+    });
+  }
+
+  get selectedArtistSongsCount(): number {
+    return this.artistSongChoices.filter(song => song.selected).length;
+  }
+
+  toggleAllArtistSongs(selected: boolean): void {
+    this.artistSongChoices = this.artistSongChoices.map(song => ({ ...song, selected }));
+  }
+
+  confirmArtistSongSelection(): void {
+    const selectedUrls = this.artistSongChoices
+      .filter(song => song.selected)
+      .map(song => song.url);
+
+    if (selectedUrls.length === 0) return;
+
+    this.closeArtistSongSelection();
+    this.processArtistSongUrls(selectedUrls);
+  }
+
+  closeArtistSongSelection(): void {
+    this.showArtistSongSelection = false;
+    this.artistSongChoices = [];
+    this.importState = 'idle';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showArtistSongSelection) {
+      this.closeArtistSongSelection();
+    }
+  }
+
+  private openArtistSongSelection(songUrls: string[]): void {
+    this.artistSongChoices = [...new Set(songUrls)].map(url => ({
+      url,
+      title: this.getSongTitleFromUrl(url),
+      selected: true
+    }));
+    this.showArtistSongSelection = true;
+    this.importState = 'idle';
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  private getSongTitleFromUrl(url: string): string {
+    try {
+      const fileName = decodeURIComponent(new URL(url).pathname.split('/').pop() || '');
+      const cleanName = fileName.replace(/\.html?$/i, '').replace(/^\d+_/, '').replaceAll('_', ' ');
+      const separatorIndex = cleanName.lastIndexOf(' - ');
+      return separatorIndex >= 0 ? cleanName.slice(separatorIndex + 3).trim() : cleanName.trim();
+    } catch {
+      return url;
+    }
+  }
+
+  private processArtistSongUrls(songUrls: string[]): void {
+    const uniqueUrls = [...new Set(songUrls)];
+
+    this.activeCompactImports += uniqueUrls.length;
+    this.importUrl = '';
+    this.importState = 'idle';
+    this.errorMessage = '';
+    this.successMessage = `זוהו ${uniqueUrls.length} שירים. השליפות נשלחו בנפרד לרקע.`;
+
+    this.processArtistSongUrlQueue(uniqueUrls);
+  }
+
+  private processArtistSongUrlQueue(songUrls: string[], index = 0): void {
+    if (index >= songUrls.length) return;
+
+    this.songService.importSongFromUrl(songUrls[index]).subscribe({
+      next: (result) => {
+        if (result.draft && !result.isArtistPage) {
+          this.saveImportedSongDraft(result.draft, true);
+        } else {
+          this.finishCompactImport(false, result.message || 'לא הצלחנו לשלוף מספיק פרטים לשמירת טיוטה.');
+        }
+
+        this.processArtistSongUrlQueue(songUrls, index + 1);
+      },
+      error: (error) => {
+        const result = error.error as ImportSongFromUrlResponse | undefined;
+
+        if (result?.draft && !result.isArtistPage) {
+          this.saveImportedSongDraft(result.draft, true);
+        } else {
+          this.finishCompactImport(false, result?.message || 'שליפת אחד השירים מעמוד האמן נכשלה.');
+        }
+
+        this.processArtistSongUrlQueue(songUrls, index + 1);
       }
     });
   }

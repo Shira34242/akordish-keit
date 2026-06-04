@@ -24,6 +24,7 @@ public class SmartSongImportService : ISmartSongImportService
         string? ImageUrl = null);
 
     private sealed record Tab4USearchResult(string Href, string? ImageUrl);
+    private sealed record Tab4UArtistSongs(List<string> SongUrls, int PageCount);
 
     public SmartSongImportService(
         HttpClient httpClient,
@@ -49,6 +50,23 @@ public class SmartSongImportService : ISmartSongImportService
         if (false && string.IsNullOrWhiteSpace(html))
         {
             return Fail(sourceUrl, "לא הצלחנו לקרוא את הדף", new[] { "content" });
+        }
+
+        if (IsTab4UArtistPage(uri))
+        {
+            var artistSongs = await CollectTab4UArtistSongUrlsAsync(uri, html);
+            var songUrls = artistSongs.SongUrls;
+            return new ImportSongFromUrlResponseDto
+            {
+                Success = songUrls.Count > 0,
+                Message = songUrls.Count > 0
+                    ? $"זוהו {songUrls.Count} שירים מתוך {artistSongs.PageCount} עמודי אמן."
+                    : "לא זוהו קישורי שירים בעמוד האמן.",
+                SourceUrl = sourceUrl,
+                IsArtistPage = true,
+                SongUrls = songUrls,
+                MissingFields = songUrls.Count > 0 ? new List<string>() : new List<string> { "songs" }
+            };
         }
 
         var urlParts = ExtractUrlParts(uri);
@@ -428,6 +446,116 @@ public class SmartSongImportService : ISmartSongImportService
 
         var parsed = ParseArtistAndSong(decoded);
         return new ImportedSongParts(Title: parsed.Title, ArtistName: parsed.ArtistName);
+    }
+
+    private static bool IsTab4UArtistPage(Uri uri) =>
+        uri.Host.Contains("tab4u.com", StringComparison.OrdinalIgnoreCase) &&
+        Regex.IsMatch(uri.AbsolutePath, @"^/tabs/artists/[^/]+\.html?$", RegexOptions.IgnoreCase);
+
+    private async Task<Tab4UArtistSongs> CollectTab4UArtistSongUrlsAsync(Uri sourceUri, string sourceHtml)
+    {
+        const int maxPages = 100;
+        var songUrls = new List<string>();
+        var seenSongs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenPages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var currentUri = BuildFirstTab4UArtistPageUri(sourceUri);
+        var currentHtml = SamePageUri(currentUri, sourceUri) ? sourceHtml : await FetchHtmlAsync(currentUri);
+        var pageCount = 0;
+
+        while (!string.IsNullOrWhiteSpace(currentHtml) &&
+               pageCount < maxPages &&
+               seenPages.Add(currentUri.AbsoluteUri))
+        {
+            pageCount++;
+            foreach (var songUrl in ExtractTab4UArtistSongUrls(currentUri, currentHtml))
+            {
+                if (seenSongs.Add(songUrl))
+                {
+                    songUrls.Add(songUrl);
+                }
+            }
+
+            var nextPageUri = ExtractTab4UArtistNextPageUri(currentUri, currentHtml);
+            if (nextPageUri is null || !SameArtistPage(sourceUri, nextPageUri))
+            {
+                break;
+            }
+
+            currentUri = nextPageUri;
+            currentHtml = await FetchHtmlAsync(currentUri);
+        }
+
+        return new Tab4UArtistSongs(songUrls, pageCount);
+    }
+
+    private static Uri BuildFirstTab4UArtistPageUri(Uri sourceUri)
+    {
+        var queryParts = sourceUri.Query
+            .TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Where(part => !part.StartsWith("s=", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        queryParts.Insert(0, "s=0");
+
+        var builder = new UriBuilder(sourceUri)
+        {
+            Query = string.Join("&", queryParts),
+            Fragment = string.Empty
+        };
+        return builder.Uri;
+    }
+
+    private static Uri? ExtractTab4UArtistNextPageUri(Uri currentUri, string html)
+    {
+        var match = Regex.Match(
+            html,
+            @"<a\b(?=[^>]*\bclass\s*=\s*[""'][^""']*\bnextPre\b[^""']*[""'])[^>]*\bhref\s*=\s*[""'](?<href>[^""']+)[""']",
+            RegexOptions.IgnoreCase);
+
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var href = WebUtility.HtmlDecode(match.Groups["href"].Value.Trim());
+        return Uri.TryCreate(currentUri, href, out var nextUri) ? nextUri : null;
+    }
+
+    private static bool SameArtistPage(Uri first, Uri candidate) =>
+        first.Host.Equals(candidate.Host, StringComparison.OrdinalIgnoreCase) &&
+        first.AbsolutePath.Equals(candidate.AbsolutePath, StringComparison.OrdinalIgnoreCase);
+
+    private static bool SamePageUri(Uri first, Uri second) =>
+        first.GetLeftPart(UriPartial.Path).Equals(second.GetLeftPart(UriPartial.Path), StringComparison.OrdinalIgnoreCase) &&
+        first.Query.Equals(second.Query, StringComparison.OrdinalIgnoreCase);
+
+    private static List<string> ExtractTab4UArtistSongUrls(Uri artistUri, string html)
+    {
+        var urls = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var matches = Regex.Matches(
+            html,
+            @"<a\b[^>]*\bhref\s*=\s*[""'](?<href>[^""'#?]*songs/[^""'#?]+\.html(?:\?[^""'#]*)?)[""']",
+            RegexOptions.IgnoreCase);
+
+        foreach (Match match in matches)
+        {
+            var href = WebUtility.HtmlDecode(match.Groups["href"].Value.Trim());
+            if (!Uri.TryCreate(artistUri, href, out var songUri) ||
+                !songUri.Host.Contains("tab4u.com", StringComparison.OrdinalIgnoreCase) ||
+                !Regex.IsMatch(songUri.AbsolutePath, @"^/tabs/songs/[^/]+\.html?$", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            var normalized = songUri.GetLeftPart(UriPartial.Path);
+            if (seen.Add(normalized))
+            {
+                urls.Add(normalized);
+            }
+        }
+
+        return urls;
     }
 
     private static ImportedSongParts ExtractGenericUrlParts(Uri uri)
@@ -817,6 +945,12 @@ public class SmartSongImportService : ISmartSongImportService
             return null;
         }
 
+        var preservedLinePairs = TryPreserveNeginaLinePairs(lines);
+        if (!string.IsNullOrWhiteSpace(preservedLinePairs) && ScoreLyricsBlock(preservedLinePairs) > 20)
+        {
+            return preservedLinePairs;
+        }
+
         var output = new List<string>();
         var lyricLine = new StringBuilder();
         var chordPlacements = new List<(int Index, string Chord)>();
@@ -947,6 +1081,156 @@ public class SmartSongImportService : ISmartSongImportService
 
         var result = string.Join(Environment.NewLine, output.Where(IsUsefulLyricsLine));
         return ScoreLyricsBlock(result) > 20 ? result : null;
+    }
+
+    private static string? TryPreserveNeginaLinePairs(IReadOnlyList<string> lines)
+    {
+        var output = new List<string>();
+        var progressionChords = new List<string>();
+        var pairs = new List<(string? Chord, string Lyric)>();
+        var pairedLyricsCount = 0;
+
+        void FlushBlock()
+        {
+            if (pairs.Count == 0)
+            {
+                if (progressionChords.Count > 0)
+                {
+                    output.Add(string.Join(" ", progressionChords));
+                    progressionChords.Clear();
+                }
+
+                return;
+            }
+
+            if (progressionChords.Count > 0)
+            {
+                output.Add(string.Join(" ", progressionChords));
+                progressionChords.Clear();
+            }
+
+            var current = new List<(string? Chord, string Lyric)>();
+            var chordedCount = 0;
+
+            void FlushCurrent()
+            {
+                if (current.Count == 0)
+                {
+                    return;
+                }
+
+                var chordLine = string.Join(" ", current
+                    .Select(item => item.Chord)
+                    .Where(chord => !string.IsNullOrWhiteSpace(chord)));
+                var lyricLine = JoinNeginaLyricsFragments(current.Select(item => item.Lyric));
+
+                if (!string.IsNullOrWhiteSpace(chordLine))
+                {
+                    output.Add(chordLine);
+                }
+
+                if (!string.IsNullOrWhiteSpace(lyricLine))
+                {
+                    output.Add(lyricLine);
+                }
+
+                current.Clear();
+                chordedCount = 0;
+            }
+
+            foreach (var pair in pairs)
+            {
+                var hasChord = !string.IsNullOrWhiteSpace(pair.Chord);
+                if (hasChord && chordedCount >= 2)
+                {
+                    FlushCurrent();
+                }
+
+                current.Add(pair);
+                if (hasChord)
+                {
+                    chordedCount++;
+                }
+            }
+
+            FlushCurrent();
+            pairs.Clear();
+        }
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            var next = i + 1 < lines.Count ? lines[i + 1] : null;
+
+            if (line == "*")
+            {
+                FlushBlock();
+                continue;
+            }
+
+            if (IsNeginaSectionHeading(line))
+            {
+                FlushBlock();
+                output.Add($"{line}:");
+                continue;
+            }
+
+            if (IsNeginaProgressionToken(line))
+            {
+                var chordLine = NormalizeChordLine(line);
+                var nextIsLyrics = next is not null &&
+                    next != "*" &&
+                    !IsNeginaProgressionToken(next) &&
+                    !IsNeginaSectionHeading(next) &&
+                    ContainsHebrew(next);
+
+                if (nextIsLyrics)
+                {
+                    pairs.Add((chordLine, CleanNeginaLyricsFragment(next!)));
+                    pairedLyricsCount++;
+                    i++;
+                }
+                else
+                {
+                    progressionChords.Add(chordLine);
+                }
+
+                continue;
+            }
+
+            if (ContainsHebrew(line))
+            {
+                pairs.Add((null, CleanNeginaLyricsFragment(line)));
+            }
+        }
+
+        FlushBlock();
+
+        return pairedLyricsCount >= 2
+            ? string.Join(Environment.NewLine, output.Where(IsUsefulLyricsLine))
+            : null;
+    }
+
+    private static string JoinNeginaLyricsFragments(IEnumerable<string> fragments)
+    {
+        var result = new StringBuilder();
+        foreach (var raw in fragments)
+        {
+            var fragment = raw.Trim();
+            if (fragment.Length == 0)
+            {
+                continue;
+            }
+
+            if (result.Length > 0 && ShouldSeparateNeginaFragments(result, fragment))
+            {
+                result.Append(' ');
+            }
+
+            result.Append(fragment);
+        }
+
+        return result.ToString();
     }
 
     private static string CleanNeginaLine(string line)

@@ -183,6 +183,8 @@ export interface ImportSongFromUrlResponse {
     success: boolean;
     message: string;
     sourceUrl: string;
+    isArtistPage?: boolean;
+    songUrls?: string[];
     songId?: number;
     draft: ImportedSongDraft;
     missingFields: string[];
