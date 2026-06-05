@@ -1,10 +1,10 @@
-import { Component, ElementRef, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ElementRef, HostBinding, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
 interface AdCampaign {
   id: number;
@@ -29,31 +29,35 @@ interface AdSpotResponse {
 @Component({
   selector: 'app-ad-display',
   standalone: true,
-  imports: [CloudflareImagePipe],
+  imports: [CloudflareImagePipe, CloudflareImageSrcsetPipe],
   template: `
     @if (currentAd) {
       <div class="ad-container" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
-        <a [href]="currentAd.knownUrl" target="_blank" (click)="trackClick()" class="ad-link">
-          @if (!isMobile) {
-            @if (getMediaType(currentAd.mediaUrl) === 'image') {
-              <img [src]="currentAd.mediaUrl | cfImage:'hero'" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
-            } @else if (getMediaType(currentAd.mediaUrl) === 'video') {
-              <video [src]="currentAd.mediaUrl" class="ad-media"
-                autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
-            }
-          } @else if (currentAd.mobileMediaUrl) {
-            @if (getMediaType(currentAd.mobileMediaUrl) === 'image') {
-              <img [src]="currentAd.mobileMediaUrl | cfImage:'card'" [alt]="currentAd.name" class="ad-media" loading="lazy" decoding="async" (load)="trackView()" />
-            } @else if (getMediaType(currentAd.mobileMediaUrl) === 'video') {
-              <video [src]="currentAd.mobileMediaUrl" class="ad-media"
-                autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
-            }
+        <a [attr.href]="currentAd.knownUrl || null" target="_blank" (click)="handleAdClick($event)" class="ad-link" [class.ad-link--disabled]="!currentAd.knownUrl">
+          @if (getMediaType(activeMediaUrl) === 'image') {
+            <img
+              [src]="activeMediaUrl | cfImage:imagePreset"
+              [srcset]="activeMediaUrl | cfSrcset:srcsetWidths"
+              [sizes]="imageSizes"
+              [alt]="currentAd.name"
+              class="ad-media"
+              loading="lazy"
+              decoding="async"
+              (load)="trackView()" />
+          } @else if (getMediaType(activeMediaUrl) === 'video') {
+            <video [src]="activeMediaUrl" class="ad-media"
+              autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
           }
         </a>
       </div>
     }
   `,
   styles: [`
+    :host {
+      display: block;
+      width: 100%;
+    }
+
     .ad-container {
       width: 100%;
       display: block;
@@ -73,6 +77,11 @@ interface AdSpotResponse {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
+    }
+
+    .ad-link--disabled {
+      cursor: default;
     }
   `]
 })
@@ -93,6 +102,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   maxWidth: string | null = null;
   aspectRatio: string | null = null;
   rotationInterval: number = 45000;
+  readonly srcsetWidths = [360, 600, 1000, 1600];
 
   private rotationSubscription?: Subscription;
   private routerSubscription?: Subscription;
@@ -100,6 +110,11 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   private hasStartedLoading = false;
   private readonly VIEWED_ADS_KEY = 'viewedAds';
   private readonly CLICKED_ADS_KEY = 'clickedAds';
+
+  @HostBinding('class.ad-display') readonly hostClass = true;
+  @HostBinding('class.ad-display--ready') get isReady(): boolean {
+    return !!this.currentAd;
+  }
 
   ngOnInit() {
     this.setupRouteChangeListener();
@@ -207,6 +222,21 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.hasTrackedView = false;
   }
 
+  get activeMediaUrl(): string {
+    if (!this.currentAd) return '';
+    return this.isMobile && this.currentAd.mobileMediaUrl
+      ? this.currentAd.mobileMediaUrl
+      : this.currentAd.mediaUrl;
+  }
+
+  get imagePreset(): 'card' | 'hero' {
+    return this.isMobile ? 'card' : 'hero';
+  }
+
+  get imageSizes(): string {
+    return this.maxWidth ? `(max-width: ${this.maxWidth}) 100vw, ${this.maxWidth}` : '100vw';
+  }
+
   private readonly TRACKING_TTL_MS = 24 * 60 * 60 * 1000;
 
   private getTrackedIds(key: string): Record<number, number> {
@@ -262,6 +292,15 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
       } else {
       }
     }
+  }
+
+  handleAdClick(event: MouseEvent) {
+    if (!this.currentAd?.knownUrl) {
+      event.preventDefault();
+      return;
+    }
+
+    this.trackClick();
   }
 
   trackClick() {

@@ -719,7 +719,7 @@
 
 .mid-banner-ad {
   width: 70%;
-  margin: var(--space-xl) auto 0;
+  margin: var(--space-lg) auto 0;
 }
 
 @media (max-width: 768px) {

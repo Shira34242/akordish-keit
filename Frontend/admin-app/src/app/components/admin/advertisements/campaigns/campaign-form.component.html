@@ -9,7 +9,7 @@
       <div class="modal-body">
         <!-- Campaign Name -->
         <div class="form-group">
-          <label for="name">שם הקמפיין <span class="required">*</span></label>
+          <label for="name">שם הקמפיין</label>
           <input
             type="text"
             id="name"
@@ -19,7 +19,6 @@
             placeholder="הזן שם קמפיין"
           />
           <div class="error-message" *ngIf="f['name'].invalid && f['name'].touched">
-            <span *ngIf="f['name'].errors?.['required']">שדה חובה</span>
             <span *ngIf="f['name'].errors?.['maxlength']">מקסימום 200 תווים</span>
           </div>
         </div>
@@ -27,7 +26,7 @@
         <!-- Client & Ad Spot -->
         <div class="form-row">
           <div class="form-group">
-            <label for="clientId">לקוח <span class="required">*</span></label>
+            <label for="clientId">לקוח</label>
             <select
               id="clientId"
               formControlName="clientId"
@@ -39,7 +38,7 @@
               </option>
             </select>
             <div class="error-message" *ngIf="f['clientId'].invalid && f['clientId'].touched">
-              <span *ngIf="f['clientId'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['clientId'].errors?.['missingDefaultClient']">נדרש לפחות לקוח אחד במערכת</span>
             </div>
           </div>
 
@@ -63,22 +62,26 @@
 
         <!-- Media Upload -->
         <div class="form-group">
-          <label>מדיה לדסקטופ (תמונה/וידאו/GIF)</label>
+          <label>תמונה <span class="required">*</span></label>
           <app-file-upload-input
             [url]="campaignForm.get('mediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mediaUrl: $event})"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             [showPreview]="false"
             placeholder="https://example.com/banner.jpg"
           />
+          <div class="error-message" *ngIf="f['mediaUrl'].invalid && f['mediaUrl'].touched">
+            <span *ngIf="f['mediaUrl'].errors?.['required']">שדה חובה</span>
+            <span *ngIf="f['mediaUrl'].errors?.['maxlength']">מקסימום 500 תווים</span>
+          </div>
         </div>
 
         <div class="form-group">
-          <label>מדיה למובייל (תמונה/וידאו/GIF)</label>
+          <label>תמונה למובייל</label>
           <app-file-upload-input
             [url]="campaignForm.get('mobileMediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mobileMediaUrl: $event})"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             [showPreview]="false"
             placeholder="https://example.com/mobile-banner.jpg"
           />
@@ -99,7 +102,7 @@
         <!-- Priority & Status -->
         <div class="form-row">
           <div class="form-group">
-            <label for="priority">עדיפות (1-5) <span class="required">*</span></label>
+            <label for="priority">עדיפות (1-5)</label>
             <input
               type="number"
               id="priority"
@@ -113,13 +116,12 @@
               עדיפויות תפוסות: {{ takenPriorities.join(', ') }} | עדיפויות פנויות: {{ availablePriorities.join(', ') || 'אין' }}
             </div>
             <div class="error-message" *ngIf="f['priority'].invalid && f['priority'].touched">
-              <span *ngIf="f['priority'].errors?.['required']">שדה חובה</span>
               <span *ngIf="f['priority'].errors?.['min']">עדיפות חייבת להיות לפחות 1</span>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="status">סטטוס <span class="required">*</span></label>
+            <label for="status">סטטוס</label>
             <select
               id="status"
               formControlName="status"
@@ -137,7 +139,7 @@
         <!-- Dates -->
         <div class="form-row">
           <div class="form-group">
-            <label for="startDate">תאריך התחלה <span class="required">*</span></label>
+            <label for="startDate">תאריך התחלה</label>
             <input
               type="date"
               id="startDate"
@@ -151,7 +153,7 @@
           </div>
 
           <div class="form-group">
-            <label for="endDate">תאריך סיום <span class="required">*</span></label>
+            <label for="endDate">תאריך סיום</label>
             <input
               type="date"
               id="endDate"
@@ -187,7 +189,7 @@
 
         <!-- Budget -->
         <div class="form-group">
-          <label for="budget">תקציב <span class="required">*</span></label>
+          <label for="budget">תקציב</label>
           <input
             type="number"
             id="budget"
@@ -199,7 +201,6 @@
             min="0"
           />
           <div class="error-message" *ngIf="f['budget'].invalid && f['budget'].touched">
-            <span *ngIf="f['budget'].errors?.['required']">שדה חובה</span>
             <span *ngIf="f['budget'].errors?.['min']">התקציב חייב להיות חיובי</span>
           </div>
         </div>

@@ -1176,8 +1176,8 @@
   width: 100%;
 }
 
-.ad-slot:has(.ad-container) {
-  margin: var(--space-xl) 0;
+.ad-slot:has(app-ad-display.ad-display--ready) {
+  margin: var(--space-lg) 0;
   border-radius: var(--radius-md, 16px);
   background: #F2F2F2;
   overflow: hidden;
@@ -1190,7 +1190,7 @@
   display: none;
 }
 
-.ad-slot:has(.ad-container) .ad-slot__label {
+.ad-slot:has(app-ad-display.ad-display--ready) .ad-slot__label {
   display: block;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);

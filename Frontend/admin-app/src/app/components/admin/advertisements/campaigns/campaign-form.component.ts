@@ -86,18 +86,21 @@ export class CampaignFormComponent implements OnInit, OnChanges {
   }
 
   initForm() {
+    const defaultStartDate = this.formatDateForInput(new Date());
+    const defaultEndDate = this.formatDateForInput(this.addYears(new Date(), 10));
+
     this.campaignForm = this.fb.group({
-      name: [this.campaign?.name || '', [Validators.required, Validators.maxLength(200)]],
+      name: [this.campaign?.name || '', Validators.maxLength(200)],
       adSpotId: [this.campaign?.adSpotId || null, Validators.required],
-      clientId: [this.campaign?.clientId || null, Validators.required],
-      mediaUrl: [this.campaign?.mediaUrl || '', Validators.maxLength(500)],
+      clientId: [this.campaign?.clientId || null],
+      mediaUrl: [this.campaign?.mediaUrl || '', [Validators.required, Validators.maxLength(500)]],
       mobileMediaUrl: [this.campaign?.mobileMediaUrl || '', Validators.maxLength(500)],
       knownUrl: [this.campaign?.knownUrl || '', Validators.maxLength(500)],
-      priority: [this.campaign?.priority || 0, [Validators.required, Validators.min(0)]],
-      status: [this.campaign?.status || 'Draft', Validators.required],
-      startDate: [this.campaign?.startDate ? this.formatDateForInput(this.campaign.startDate) : '', Validators.required],
-      endDate: [this.campaign?.endDate ? this.formatDateForInput(this.campaign.endDate) : '', Validators.required],
-      budget: [this.campaign?.budget || 0, [Validators.required, Validators.min(0)]]
+      priority: [this.campaign?.priority || 1, [Validators.min(1), Validators.max(5)]],
+      status: [this.campaign?.status || 'Active'],
+      startDate: [this.campaign?.startDate ? this.formatDateForInput(this.campaign.startDate) : defaultStartDate],
+      endDate: [this.campaign?.endDate ? this.formatDateForInput(this.campaign.endDate) : defaultEndDate],
+      budget: [this.campaign?.budget || 0, Validators.min(0)]
     });
 
     // Watch for changes in adSpotId, startDate, endDate, or priority to check availability
@@ -161,6 +164,13 @@ export class CampaignFormComponent implements OnInit, OnChanges {
         this.takenPriorities = response.takenPriorities;
         this.availablePriorities = response.availablePriorities;
 
+        if (response.priorityTaken && response.availablePriorities.length > 0) {
+          const nextPriority = response.availablePriorities[0];
+          this.availabilityMessage = `עדיפות ${priority} תפוסה, נבחרה אוטומטית עדיפות ${nextPriority}`;
+          this.campaignForm.patchValue({ priority: nextPriority });
+          return;
+        }
+
         if (response.maxCampaignsReached) {
           this.availabilityError = `הגעת למקסימום של 5 קמפיינים באותו שטח בטווח תאריכים זה`;
         } else if (response.priorityTaken) {
@@ -184,17 +194,49 @@ export class CampaignFormComponent implements OnInit, OnChanges {
     return d.toISOString().split('T')[0];
   }
 
+  private addYears(date: Date, years: number): Date {
+    const d = new Date(date);
+    d.setFullYear(d.getFullYear() + years);
+    return d;
+  }
+
+  private getDefaultCampaignName(adSpotId: number): string {
+    const spot = this.adSpots.find(item => item.id === adSpotId);
+    return spot ? `פרסומת - ${spot.name}` : 'פרסומת חדשה';
+  }
+
+  private getDefaultClientId(): number | null {
+    return this.clients.find(client => client.isActive)?.id ?? this.clients[0]?.id ?? null;
+  }
+
   onSubmit() {
+    if (this.campaignForm.invalid) {
+      this.campaignForm.markAllAsTouched();
+      return;
+    }
+
     if (this.campaignForm.valid) {
       const formValue = this.campaignForm.value;
+      const adSpotId = Number(formValue.adSpotId);
+      const clientId = formValue.clientId ? Number(formValue.clientId) : this.getDefaultClientId();
+
+      if (!clientId) {
+        this.campaignForm.get('clientId')?.setErrors({ missingDefaultClient: true });
+        return;
+      }
+
       const campaignData = {
         ...formValue,
-        adSpotId: Number(formValue.adSpotId),
-        clientId: Number(formValue.clientId),
+        name: (formValue.name || '').trim() || this.getDefaultCampaignName(adSpotId),
+        adSpotId,
+        clientId,
         startDate: new Date(formValue.startDate),
         endDate: new Date(formValue.endDate),
         mediaUrl: formValue.mediaUrl || '',
-        mobileMediaUrl: formValue.mobileMediaUrl || ''
+        mobileMediaUrl: formValue.mobileMediaUrl || '',
+        priority: Number(formValue.priority || 1),
+        status: formValue.status || 'Active',
+        budget: Number(formValue.budget || 0)
       };
       this.save.emit(campaignData);
     }
