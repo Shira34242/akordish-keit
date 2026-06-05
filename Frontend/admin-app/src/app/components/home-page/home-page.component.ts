@@ -633,19 +633,22 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadHomeArticles(): void {
     forkJoin({
-      featuredNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
-      regularNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, false),
+      featuredNews: this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
+      allNews: this.articleService.getArticles(1, 20, undefined, undefined, ArticleContentType.News, ArticleStatus.Published),
       blogArticles: this.articleService.getArticles(1, 80, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
     })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.pendingContentLoads--;
         this.checkAllContentLoaded();
       })).subscribe({
-        next: ({ featuredNews, regularNews, blogArticles }: any) => {
+        next: ({ featuredNews, allNews, blogArticles }: any) => {
           this.featuredNewsArticles = this.uniqueArticles(featuredNews.items || [])
             .map(article => this.withContentType(article, ArticleContentType.News));
-          this.regularNewsArticles = this.uniqueArticles(regularNews.items || [])
-            .map(article => this.withContentType(article, ArticleContentType.News));
+          const featuredArticleIds = new Set(this.featuredNewsArticles.map(article => article.id));
+          this.regularNewsArticles = this.uniqueArticles(allNews.items || [])
+            .filter(article => !featuredArticleIds.has(article.id))
+            .map(article => this.withContentType(article, ArticleContentType.News))
+            .slice(0, 10);
           this.newsArticles = this.uniqueArticles([
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
