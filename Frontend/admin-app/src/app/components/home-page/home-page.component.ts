@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ViewChildren, E
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize, forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
@@ -89,6 +89,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   topArtists: any[] = [];
   featuredArtists: any[] = [];
   newsArticles: Article[] = [];
+  featuredNewsArticles: Article[] = [];
+  regularNewsArticles: Article[] = [];
   blogArticles: Article[] = [];
   viralArticles: Article[] = [];
   visibleViralCount = 4;
@@ -126,7 +128,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private deferredLoadTimers: number[] = [];
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
-  private allPublishedArticles: Article[] = [];
 
   constructor(
     private router: Router,
@@ -513,11 +514,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get newsArticlesFirstRow(): Article[] {
-    return this.splitForRows(this.newsArticles).top;
+    return this.featuredNewsArticles;
   }
 
   get newsArticlesSecondRow(): Article[] {
-    return this.splitForRows(this.newsArticles).bottom;
+    return this.regularNewsArticles;
   }
 
   get useScrollingNewsBanner(): boolean {
@@ -631,19 +632,25 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeArticles(): void {
-    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published)
+    forkJoin({
+      featuredNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
+      regularNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, false),
+      blogArticles: this.articleService.getArticles(1, 80, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+    })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.pendingContentLoads--;
         this.checkAllContentLoaded();
       })).subscribe({
-        next: (res: any) => {
-          this.allPublishedArticles = this.uniqueArticles(res.items || []);
-          this.newsArticles = this.allPublishedArticles
-            .filter(article => this.isMusicNewsArticle(article))
-            .map(article => this.withContentType(article, ArticleContentType.News))
-            .slice(0, 12);
-          this.blogArticles = this.allPublishedArticles
-            .filter(article => !this.isMusicNewsArticle(article))
+        next: ({ featuredNews, regularNews, blogArticles }: any) => {
+          this.featuredNewsArticles = this.uniqueArticles(featuredNews.items || [])
+            .map(article => this.withContentType(article, ArticleContentType.News));
+          this.regularNewsArticles = this.uniqueArticles(regularNews.items || [])
+            .map(article => this.withContentType(article, ArticleContentType.News));
+          this.newsArticles = this.uniqueArticles([
+            ...this.featuredNewsArticles,
+            ...this.regularNewsArticles
+          ]);
+          this.blogArticles = this.uniqueArticles(blogArticles.items || [])
             .map(article => this.withContentType(article, ArticleContentType.Blog))
             .slice(0, 12);
         },
