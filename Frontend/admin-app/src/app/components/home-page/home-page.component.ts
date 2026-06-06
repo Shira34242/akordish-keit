@@ -633,8 +633,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadHomeArticles(): void {
     forkJoin({
-      featuredNews: this.articleService.getArticles(1, 10, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
-      allNews: this.articleService.getArticles(1, 20, undefined, undefined, ArticleContentType.News, ArticleStatus.Published),
+      featuredNews: this.articleService.getArticles(1, 5, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
+      allNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published),
       blogArticles: this.articleService.getArticles(1, 80, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
     })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
@@ -648,7 +648,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.regularNewsArticles = this.uniqueArticles(allNews.items || [])
             .filter(article => !featuredArticleIds.has(article.id))
             .map(article => this.withContentType(article, ArticleContentType.News))
-            .slice(0, 10);
+            .slice(0, 6);
           this.newsArticles = this.uniqueArticles([
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
