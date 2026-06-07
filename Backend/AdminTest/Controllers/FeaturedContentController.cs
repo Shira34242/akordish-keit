@@ -2,6 +2,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers
 {
@@ -11,11 +12,16 @@ namespace AkordishKeit.Controllers
     {
         private readonly IFeaturedContentService _featuredContentService;
         private readonly ILogger<FeaturedContentController> _logger;
+        private readonly IMemoryCache _cache;
 
-        public FeaturedContentController(IFeaturedContentService featuredContentService, ILogger<FeaturedContentController> logger)
+        public FeaturedContentController(
+            IFeaturedContentService featuredContentService,
+            ILogger<FeaturedContentController> logger,
+            IMemoryCache cache)
         {
             _featuredContentService = featuredContentService;
             _logger = logger;
+            _cache = cache;
         }
 
         /// <summary>
@@ -26,6 +32,19 @@ namespace AkordishKeit.Controllers
         {
             var featuredContent = await _featuredContentService.GetActiveFeaturedContentAsync();
             return Ok(featuredContent);
+        }
+
+        [HttpGet("active-banners")]
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+        public async Task<ActionResult<List<FeaturedContentBannerDto>>> GetActiveFeaturedContentBanners()
+        {
+            var banners = await _cache.GetOrCreateAsync("active_featured_content_banners_v1", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _featuredContentService.GetActiveFeaturedContentBannersAsync();
+            });
+
+            return Ok(banners!);
         }
 
         /// <summary>

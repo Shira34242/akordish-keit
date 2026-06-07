@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable } from 'rxjs';
 import {
   Article,
   ArticleBanner,
@@ -228,6 +228,43 @@ export class ArticleService {
 
   getHomeViralBanners(): Observable<ArticleBanner[]> {
     return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-viral-banners`);
+  }
+
+  getPublishedArticleBanners(
+    contentType: ArticleContentType,
+    pageNumber = 1,
+    pageSize = 12,
+    categoryIds?: number[]
+  ): Observable<PagedResult<ArticleBanner>> {
+    let params = new HttpParams()
+      .set('contentType', contentType.toString())
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    categoryIds?.forEach(id => {
+      params = params.append('categoryIds', id.toString());
+    });
+
+    return this.http.get<PagedResult<ArticleBanner>>(`${this.apiUrl}/public-banners`, { params }).pipe(
+      catchError(() => this.getArticles(
+        pageNumber,
+        pageSize,
+        undefined,
+        undefined,
+        contentType,
+        ArticleStatus.Published,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        categoryIds
+      ).pipe(
+        map(result => ({
+          ...result,
+          items: result.items as ArticleBanner[]
+        }))
+      ))
+    );
   }
 
   /**

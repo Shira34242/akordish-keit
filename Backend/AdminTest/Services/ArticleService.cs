@@ -283,6 +283,51 @@ public class ArticleService : IArticleService
             .ToListAsync();
     }
 
+    public async Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
+        int contentType,
+        int pageNumber = 1,
+        int pageSize = 12,
+        IEnumerable<int>? categoryIds = null)
+    {
+        var section = (ArticleCategorySection)contentType;
+        var query = GetPublishedBannerQuery(section);
+        var ids = categoryIds?.Distinct().ToList();
+
+        if (ids?.Count > 0)
+        {
+            query = query.Where(a => a.ArticleCategories.Any(ac => ids.Contains(ac.CategoryId)));
+        }
+
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 40);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = contentType,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        return new PagedResult<ArticleBannerDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
+
     private IQueryable<Article> GetPublishedBannerQuery(ArticleCategorySection section)
     {
         var now = DateTime.UtcNow;

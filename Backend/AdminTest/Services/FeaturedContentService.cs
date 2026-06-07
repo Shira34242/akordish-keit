@@ -38,6 +38,39 @@ namespace AkordishKeit.Services
             return featuredContents.Select(MapToDto);
         }
 
+        public async Task<List<FeaturedContentBannerDto>> GetActiveFeaturedContentBannersAsync()
+        {
+            var now = DateTime.UtcNow;
+
+            return await _context.FeaturedContents
+                .AsNoTracking()
+                .Where(fc => fc.IsActive
+                    && !fc.Article.IsDeleted
+                    && fc.Article.Status == (int)ArticleStatus.Published
+                    && fc.Article.PublishDate <= now
+                    && fc.Article.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News))
+                .OrderBy(fc => fc.DisplayOrder)
+                .Select(fc => new FeaturedContentBannerDto
+                {
+                    Id = fc.Id,
+                    ArticleId = fc.ArticleId,
+                    DisplayOrder = fc.DisplayOrder,
+                    Article = new ArticleBannerDto
+                    {
+                        Id = fc.Article.Id,
+                        Title = fc.Article.Title,
+                        FeaturedImageUrl = fc.Article.FeaturedImageUrl,
+                        Slug = fc.Article.Slug,
+                        ShortDescription = fc.Article.ShortDescription,
+                        ContentType = (int)ArticleContentType.News,
+                        IsFeatured = fc.Article.IsFeatured,
+                        DisplayOrder = fc.Article.DisplayOrder,
+                        PublishDate = fc.Article.PublishDate
+                    }
+                })
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<FeaturedContentDto>> GetAllFeaturedContentAsync()
         {
             var featuredContents = await _context.FeaturedContents

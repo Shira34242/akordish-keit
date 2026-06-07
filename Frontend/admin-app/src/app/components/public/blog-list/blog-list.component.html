@@ -20,7 +20,13 @@
           *ngFor="let row of getManagedRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
           <div class="managed-cell" *ngFor="let slot of row.slots; trackBy: trackByIndex">
-            <app-news-banner *ngIf="managedArticles[slot]" [article]="managedArticles[slot]" routePrefix="/blog"></app-news-banner>
+            <app-news-banner
+              *ngIf="managedArticles[slot]"
+              [article]="managedArticles[slot]"
+              routePrefix="/blog"
+              [imageLoading]="slot === 0 ? 'eager' : 'lazy'"
+              [imageFetchPriority]="slot === 0 ? 'high' : 'auto'">
+            </app-news-banner>
             <div *ngIf="!managedArticles[slot]" class="cell-skeleton"></div>
           </div>
         </div>

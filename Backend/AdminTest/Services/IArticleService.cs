@@ -33,6 +33,11 @@ public interface IArticleService
     Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12);
 
     Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40);
+    Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
+        int contentType,
+        int pageNumber = 1,
+        int pageSize = 12,
+        IEnumerable<int>? categoryIds = null);
 
     Task<ArticleStatsDto> GetArticleStatsAsync();
 

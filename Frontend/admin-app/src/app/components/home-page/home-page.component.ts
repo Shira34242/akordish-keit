@@ -120,7 +120,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private viralObserver?: IntersectionObserver;
   newsContentFinished = false;
   restContentStarted = false;
-  private completedChordLoads = 0;
+  private chordsContentStarted = false;
 
   constructor(
     private router: Router,
@@ -313,38 +313,37 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   loadContent() {
     this.pendingContentLoads = 0;
     this.loadHomeNewsArticles();
+    setTimeout(() => this.loadChords(), 80);
+    setTimeout(() => this.loadRemainingContent(), 160);
   }
 
   private loadChords(): void {
+    if (this.chordsContentStarted) return;
+    this.chordsContentStarted = true;
     this.newsContentFinished = true;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        this.completedChordLoads = 0;
-        this.loadRecentSongs(() => this.onChordLoadFinished());
-        this.loadPopularSongs(() => this.onChordLoadFinished());
+        this.loadRecentSongs();
+        this.loadPopularSongs();
       });
     });
-  }
-
-  private onChordLoadFinished(): void {
-    this.completedChordLoads++;
-    if (this.completedChordLoads < 2) return;
-    this.loadRemainingContent();
   }
 
   private loadRemainingContent(): void {
     if (this.restContentStarted) return;
     this.restContentStarted = true;
-    this.loadTopArtists(() => {
-      this.loadFeaturedPeople(() => {
-        this.loadUpcomingEvents(() => {
-          this.loadHomePodcasts(() => {
-            this.loadBlogArticles(() => {
-              setTimeout(() => this.initViralObserver(), 0);
-            });
-          });
-        });
-      });
+
+    const orderedLoads: Array<() => void> = [
+      () => this.loadTopArtists(),
+      () => this.loadFeaturedPeople(),
+      () => this.loadUpcomingEvents(),
+      () => this.loadHomePodcasts(),
+      () => this.loadBlogArticles(),
+      () => this.loadViralArticles()
+    ];
+
+    orderedLoads.forEach((load, index) => {
+      setTimeout(load, index * 60);
     });
   }
 
@@ -615,11 +614,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
           ]);
-          this.loadChords();
         },
         error: (err) => {
           console.error('loadContent: home news banners', err);
-          this.loadChords();
         }
       });
   }
