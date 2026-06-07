@@ -6,7 +6,8 @@
     [attr.srcset]="imageWidths.length ? (article.featuredImageUrl | cfSrcset:imageWidths:82) : null"
     [attr.sizes]="imageWidths.length ? imageSizes : null"
     [alt]="article.title"
-    loading="lazy"
+    [attr.loading]="imageLoading"
+    [attr.fetchpriority]="imageFetchPriority"
     decoding="async"
     [imgFallbackOriginal]="article.featuredImageUrl"
     imgFallback="/assets/default-article.png">

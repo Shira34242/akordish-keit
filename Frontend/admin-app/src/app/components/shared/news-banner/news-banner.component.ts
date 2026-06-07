@@ -20,6 +20,8 @@ export class NewsBannerComponent {
   @Input() imagePreset: CloudflareImagePreset | number = 'card';
   @Input() imageSizes = '(max-width: 600px) 92vw, (max-width: 1024px) 46vw, 360px';
   @Input() imageWidths: number[] = [];
+  @Input() imageLoading: 'eager' | 'lazy' = 'lazy';
+  @Input() imageFetchPriority: 'high' | 'low' | 'auto' = 'auto';
 
   get articleRoute(): string {
     return this.routePrefix ?? getArticleRoute(this.article);

@@ -14,7 +14,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
   private lastTime = 0;
   private pausedUntil = 0;
   private destroyed = false;
-  private halfWidth = 0;
+  private cycleWidth = 0;
   private resizeObserver?: ResizeObserver;
   private mutationObserver?: MutationObserver;
   private intersectionObserver?: IntersectionObserver;
@@ -33,10 +33,17 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
 
     let wrapping = false;
     const onScroll = () => {
-      if (wrapping || this.halfWidth <= 0) return;
-      if (host.scrollLeft >= this.halfWidth) {
+      if (wrapping || this.cycleWidth <= 0) return;
+      const lowerBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 0.5 : 0;
+      const upperBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 1.5 : this.cycleWidth;
+
+      if (host.scrollLeft >= upperBoundary) {
         wrapping = true;
-        host.scrollLeft = host.scrollLeft - this.halfWidth;
+        host.scrollLeft -= this.cycleWidth;
+        requestAnimationFrame(() => { wrapping = false; });
+      } else if (host.scrollLeft <= lowerBoundary && this.autoScrollCopies >= 3) {
+        wrapping = true;
+        host.scrollLeft += this.cycleWidth;
         requestAnimationFrame(() => { wrapping = false; });
       }
     };
@@ -85,15 +92,17 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
         const dt = Math.min(0.1, (now - this.lastTime) / 1000);
         this.lastTime = now;
 
-        if (this.halfWidth <= 0) return;
+        if (this.cycleWidth <= 0) return;
 
         if (now < this.pausedUntil) return;
 
         const sign = this.autoScrollDirection === 'left' ? 1 : -1;
         let next = host.scrollLeft + sign * this.autoScrollSpeed * dt;
 
-        if (next >= this.halfWidth) next -= this.halfWidth;
-        else if (next < 0) next += this.halfWidth;
+        const lowerBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 0.5 : 0;
+        const upperBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 1.5 : this.cycleWidth;
+        if (next >= upperBoundary) next -= this.cycleWidth;
+        else if (next <= lowerBoundary) next += this.cycleWidth;
 
         host.scrollLeft = next;
       };
@@ -104,15 +113,23 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
   private recompute(): void {
     const host = this.el.nativeElement;
     const copies = Math.max(2, this.autoScrollCopies);
-    const newHalf = host.scrollWidth / copies;
-    if (Math.abs(newHalf - this.halfWidth) < 1) return;
-    this.halfWidth = newHalf;
+    const track = host.firstElementChild as HTMLElement | null;
+    const children = track ? Array.from(track.children) as HTMLElement[] : [];
+    const itemsPerCopy = children.length / copies;
+    const firstItem = children[0];
+    const firstRepeatedItem = Number.isInteger(itemsPerCopy) ? children[itemsPerCopy] : undefined;
+    const newCycleWidth = firstItem && firstRepeatedItem
+      ? firstRepeatedItem.offsetLeft - firstItem.offsetLeft
+      : host.scrollWidth > host.clientWidth ? host.scrollWidth / copies : 0;
 
-    if (!this.initialized && this.halfWidth > 0) {
+    if (Math.abs(newCycleWidth - this.cycleWidth) < 1) return;
+    this.cycleWidth = newCycleWidth;
+
+    if (!this.initialized && this.cycleWidth > 0) {
       this.initialized = true;
-      if (this.autoScrollDirection === 'right') {
-        host.scrollLeft = this.halfWidth - 1;
-      }
+      host.scrollLeft = copies >= 3
+        ? this.cycleWidth
+        : this.autoScrollDirection === 'right' ? this.cycleWidth - 1 : 0;
     }
   }
 

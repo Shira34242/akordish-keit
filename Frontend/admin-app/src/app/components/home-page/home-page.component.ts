@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ViewChildren, E
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize, forkJoin } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
@@ -125,6 +125,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private homeLazyObserver?: IntersectionObserver;
   private loadedLazySections = new Set<HomeLazySection>();
   private loadingLazySections = new Set<HomeLazySection>();
+  newsContentFinished = false;
+  restContentStarted = false;
+  private completedChordLoads = 0;
   private deferredLoadTimers: number[] = [];
   private articleCategorySectionById = new Map<number, ArticleContentType>();
   private articleCategorySectionByName = new Map<string, ArticleContentType>();
@@ -323,18 +326,36 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadContent() {
     this.pendingContentLoads = 0;
-    this.loadHomeArticleCategories();
-    this.loadNonCriticalContent();
+    this.loadHomeNewsArticles();
   }
 
-  private loadNonCriticalContent(): void {
-    const loaders: Array<() => void> = [
-      () => this.loadRecentSongs(),
-      () => this.loadPopularSongs(),
-      () => this.loadTopArtists()
-    ];
+  private loadChords(): void {
+    this.newsContentFinished = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.completedChordLoads = 0;
+        this.loadRecentSongs(() => this.onChordLoadFinished());
+        this.loadPopularSongs(() => this.onChordLoadFinished());
+      });
+    });
+  }
 
-    loaders.forEach((loader, index) => this.scheduleDeferredLoad(loader, 160 * index));
+  private onChordLoadFinished(): void {
+    this.completedChordLoads++;
+    if (this.completedChordLoads < 2) return;
+    this.loadRemainingContent();
+  }
+
+  private loadRemainingContent(): void {
+    if (this.restContentStarted) return;
+    this.restContentStarted = true;
+    this.loadHomeArticleCategories();
+    this.loadBlogArticles();
+    this.scheduleDeferredLoad(() => this.loadTopArtists(), 160);
+    setTimeout(() => {
+      this.initHomeLazySections();
+      this.initViralObserver();
+    }, 0);
   }
 
   private scheduleDeferredLoad(loader: () => void, delayMs: number): void {
@@ -356,17 +377,23 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     };
   }
 
-  private loadRecentSongs(): void {
+  private loadRecentSongs(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onDone();
+      afterLoad?.();
+    })).subscribe({
       next: (res: any) => { this.recentSongs = res.songs || []; },
       error: (err) => console.error('loadContent: songs', err)
     });
   }
 
-  private loadPopularSongs(): void {
+  private loadPopularSongs(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onDone();
+      afterLoad?.();
+    })).subscribe({
       next: (songs: any[]) => { this.popularSongs = songs; },
       error: (err) => console.error('loadContent: popular songs', err)
     });
@@ -417,20 +444,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeArticleCategories(): void {
-    this.pendingContentLoads += 2;
-
+    const onDone = this.trackPendingLoad();
     this.systemTablesService.getItems('article-categories', 1, 200)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-        this.pendingContentLoads--;
-        this.checkAllContentLoaded();
-      })).subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
         next: (res: any) => {
           this.setArticleCategorySections(res.items || []);
-          this.loadHomeArticles();
         },
         error: (err) => {
           console.error('loadContent: article categories', err);
-          this.loadHomeArticles();
         }
       });
   }
@@ -575,6 +596,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private initHomeLazySections(): void {
     if (this.homeLazyObserver) this.homeLazyObserver.disconnect();
+    if (!this.restContentStarted) return;
 
     this.homeLazyObserver = new IntersectionObserver(
       entries => {
@@ -631,19 +653,28 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  private loadHomeArticles(): void {
-    forkJoin({
-      featuredNews: this.articleService.getArticles(1, 5, undefined, undefined, ArticleContentType.News, ArticleStatus.Published, true),
-      allNews: this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.News, ArticleStatus.Published),
-      blogArticles: this.articleService.getArticles(1, 80, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-    })
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-        this.pendingContentLoads--;
-        this.checkAllContentLoaded();
-      })).subscribe({
-        next: ({ featuredNews, allNews, blogArticles }: any) => {
-          this.featuredNewsArticles = this.uniqueArticles(featuredNews.items || [])
+  private loadHomeNewsArticles(): void {
+    const onFeaturedDone = this.trackPendingLoad();
+    this.articleService.getFeaturedArticles(ArticleContentType.News, 5)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onFeaturedDone)).subscribe({
+        next: (featuredNews: Article[]) => {
+          this.featuredNewsArticles = this.uniqueArticles(featuredNews || [])
             .map(article => this.withContentType(article, ArticleContentType.News));
+          this.newsArticles = [...this.featuredNewsArticles];
+          this.loadRegularHomeNewsArticles();
+        },
+        error: (err) => {
+          console.error('loadContent: featured home news articles', err);
+          this.loadRegularHomeNewsArticles();
+        }
+      });
+  }
+
+  private loadRegularHomeNewsArticles(): void {
+    const onNewsDone = this.trackPendingLoad();
+    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onNewsDone)).subscribe({
+        next: (allNews: any) => {
           const featuredArticleIds = new Set(this.featuredNewsArticles.map(article => article.id));
           this.regularNewsArticles = this.uniqueArticles(allNews.items || [])
             .filter(article => !featuredArticleIds.has(article.id))
@@ -653,11 +684,24 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
           ]);
-          this.blogArticles = this.uniqueArticles(blogArticles.items || [])
-            .map(article => this.withContentType(article, ArticleContentType.Blog))
-            .slice(0, 12);
+          this.loadChords();
         },
-        error: (err) => console.error('loadContent: home articles', err)
+        error: (err) => {
+          console.error('loadContent: regular home news articles', err);
+          this.loadChords();
+        }
+      });
+  }
+
+  private loadBlogArticles(): void {
+    const onBlogDone = this.trackPendingLoad();
+    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onBlogDone)).subscribe({
+        next: (blogArticles: any) => {
+          this.blogArticles = this.uniqueArticles(blogArticles.items || [])
+            .map(article => this.withContentType(article, ArticleContentType.Blog));
+        },
+        error: (err) => console.error('loadContent: home blog articles', err)
       });
   }
 
