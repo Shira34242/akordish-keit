@@ -4,6 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Article,
+  ArticleBanner,
   CreateArticleDto,
   ArticleCategory,
   ArticleContentType,
@@ -74,6 +75,11 @@ export interface BulkArticleActionResultDto {
   requestedCount: number;
   affectedCount: number;
   articles: Article[];
+}
+
+export interface HomeNewsBannersDto {
+  featured: ArticleBanner[];
+  regular: ArticleBanner[];
 }
 
 export interface ArticleNewsCleanupSettingsDto {
@@ -210,6 +216,18 @@ export class ArticleService {
     }
 
     return this.http.get<Article[]>(`${this.apiUrl}/featured`, { params });
+  }
+
+  getHomeNewsBanners(): Observable<HomeNewsBannersDto> {
+    return this.http.get<HomeNewsBannersDto>(`${this.apiUrl}/home-news-banners`);
+  }
+
+  getHomeContentBanners(): Observable<ArticleBanner[]> {
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-content-banners`);
+  }
+
+  getHomeViralBanners(): Observable<ArticleBanner[]> {
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-viral-banners`);
   }
 
   /**

@@ -63,6 +63,12 @@ export interface Article {
     uploaderProfileId?: number;
 }
 
+export type ArticleBanner = Pick<
+    Article,
+    'id' | 'title' | 'featuredImageUrl' | 'slug' | 'shortDescription' |
+    'contentType' | 'isFeatured' | 'displayOrder' | 'publishDate'
+>;
+
 export interface CreateArticleDto {
     title: string;
     subtitle?: string;

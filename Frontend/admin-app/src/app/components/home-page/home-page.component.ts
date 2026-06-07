@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ViewChildren, ElementRef, DestroyRef, NgZone, QueryList, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, DestroyRef, NgZone, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +13,6 @@ import { MusicServiceProviderService } from '../../services/music-service-provid
 import { PodcastService } from '../../services/podcast.service';
 import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
 import { SearchService, SearchResults, SearchItem } from '../../services/search.service';
-import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { ArtistCircleComponent } from '../shared/artist-circle/artist-circle.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
@@ -22,12 +21,12 @@ import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
-import { Article, ArticleStatus, ArticleContentType } from '../../models/article.model';
+import { ArticleBanner } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
 import { TeacherListDto } from '../../models/teacher.model';
 import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
-import { Podcast, PodcastEpisode } from '../../models/podcast.model';
+import { PodcastEpisodeBanner, PodcastHomeCard } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
@@ -41,8 +40,6 @@ interface HeroParticle {
   life: number; maxLife: number;
   size: number;
 }
-
-type HomeLazySection = 'featured' | 'events' | 'podcasts';
 
 @Component({
   selector: 'app-home-page',
@@ -72,7 +69,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('viralSection') viralSection?: ElementRef<HTMLElement>;
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
-  @ViewChildren('homeLazySentinel') homeLazySentinels?: QueryList<ElementRef<HTMLDivElement>>;
 
   searchQuery = '';
   searchResults: SearchResults | null = null;
@@ -88,11 +84,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   popularSongs: any[] = [];
   topArtists: any[] = [];
   featuredArtists: any[] = [];
-  newsArticles: Article[] = [];
-  featuredNewsArticles: Article[] = [];
-  regularNewsArticles: Article[] = [];
-  blogArticles: Article[] = [];
-  viralArticles: Article[] = [];
+  newsArticles: ArticleBanner[] = [];
+  featuredNewsArticles: ArticleBanner[] = [];
+  regularNewsArticles: ArticleBanner[] = [];
+  blogArticles: ArticleBanner[] = [];
+  blogArticlesLoaded = false;
+  viralArticles: ArticleBanner[] = [];
   visibleViralCount = 4;
   loadingViralArticles = false;
   viralArticlesLoaded = false;
@@ -100,9 +97,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
-  homePodcasts: Podcast[] = [];
-  latestPodcastEpisodes: PodcastEpisode[] = [];
-  popularPodcastEpisodes: PodcastEpisode[] = [];
+  homePodcasts: PodcastHomeCard[] = [];
+  popularPodcastEpisodes: PodcastEpisodeBanner[] = [];
 
 
   isMobile = window.innerWidth <= 768;
@@ -122,15 +118,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroSurfaceEl?: HTMLElement | null;
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
-  private homeLazyObserver?: IntersectionObserver;
-  private loadedLazySections = new Set<HomeLazySection>();
-  private loadingLazySections = new Set<HomeLazySection>();
   newsContentFinished = false;
   restContentStarted = false;
   private completedChordLoads = 0;
-  private deferredLoadTimers: number[] = [];
-  private articleCategorySectionById = new Map<number, ArticleContentType>();
-  private articleCategorySectionByName = new Map<string, ArticleContentType>();
 
   constructor(
     private router: Router,
@@ -143,7 +133,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     private podcastService: PodcastService,
     private quickAddAssistantService: QuickAddAssistantService,
     private searchService: SearchService,
-    private systemTablesService: SystemTablesService
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -204,7 +193,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       this.initHeroHeight();
       this.initHeroScrollListeners();
       this.initParticleEffect();
-      this.initHomeLazySections();
       this.initViralObserver();
     }, 0);
   }
@@ -216,8 +204,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
     if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     this.viralObserver?.disconnect();
-    this.homeLazyObserver?.disconnect();
-    this.deferredLoadTimers.forEach(id => window.clearTimeout(id));
   }
 
   private initHeroScrollListeners(): void {
@@ -349,21 +335,17 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadRemainingContent(): void {
     if (this.restContentStarted) return;
     this.restContentStarted = true;
-    this.loadHomeArticleCategories();
-    this.loadBlogArticles();
-    this.scheduleDeferredLoad(() => this.loadTopArtists(), 160);
-    setTimeout(() => {
-      this.initHomeLazySections();
-      this.initViralObserver();
-    }, 0);
-  }
-
-  private scheduleDeferredLoad(loader: () => void, delayMs: number): void {
-    const timer = window.setTimeout(() => {
-      this.deferredLoadTimers = this.deferredLoadTimers.filter(id => id !== timer);
-      loader();
-    }, delayMs);
-    this.deferredLoadTimers.push(timer);
+    this.loadTopArtists(() => {
+      this.loadFeaturedPeople(() => {
+        this.loadUpcomingEvents(() => {
+          this.loadHomePodcasts(() => {
+            this.loadBlogArticles(() => {
+              setTimeout(() => this.initViralObserver(), 0);
+            });
+          });
+        });
+      });
+    });
   }
 
   private trackPendingLoad(): () => void {
@@ -399,61 +381,76 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private loadTopArtists(): void {
+  private loadTopArtists(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onDone();
+      afterLoad?.();
+    })).subscribe({
       next: (artists: any[]) => { this.topArtists = artists; },
       error: (err) => console.error('loadContent: top artists', err)
     });
   }
 
-  private loadUpcomingEvents(): void {
+  private loadUpcomingEvents(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
+    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onDone();
+      afterLoad?.();
+    })).subscribe({
       next: (events: UpcomingEventDto[]) => { this.upcomingEvents = events; },
       error: (err) => console.error('loadContent: events', err)
     });
   }
 
-  private loadFeaturedPeople(): void {
+  private loadFeaturedPeople(afterLoad?: () => void): void {
+    let completedLoads = 0;
+    const completeLoad = () => {
+      completedLoads++;
+      if (completedLoads === 2) afterLoad?.();
+    };
     const onTeachersDone = this.trackPendingLoad();
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onTeachersDone)).subscribe({
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onTeachersDone();
+      completeLoad();
+    })).subscribe({
       next: (res: any) => { this.featuredTeachers = res.items || []; },
       error: (err) => console.error('loadContent: teachers', err)
     });
 
     const onProvidersDone = this.trackPendingLoad();
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(onProvidersDone)).subscribe({
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onProvidersDone();
+      completeLoad();
+    })).subscribe({
       next: (res: any) => { this.featuredProviders = res.items || []; },
       error: (err) => console.error('loadContent: providers', err)
     });
   }
 
-  private loadHomePodcasts(): void {
+  private loadHomePodcasts(afterLoad?: () => void): void {
+    let completedLoads = 0;
+    const completeLoad = () => {
+      completedLoads++;
+      if (completedLoads === 2) afterLoad?.();
+    };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(onSeriesDone)).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts.slice(0, 6); },
+    this.podcastService.getHomePodcastCards().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onSeriesDone();
+      completeLoad();
+    })).subscribe({
+      next: podcasts => { this.homePodcasts = podcasts; },
       error: err => console.error('loadContent: podcast series', err)
     });
 
     const onPopularDone = this.trackPendingLoad();
-    this.podcastService.getPopularEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(onPopularDone)).subscribe({
+    this.podcastService.getHomePopularEpisodeBanners().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onPopularDone();
+      completeLoad();
+    })).subscribe({
       next: episodes => { this.popularPodcastEpisodes = episodes; },
       error: err => console.error('loadContent: popular episodes', err)
     });
-  }
-
-  private loadHomeArticleCategories(): void {
-    const onDone = this.trackPendingLoad();
-    this.systemTablesService.getItems('article-categories', 1, 200)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onDone)).subscribe({
-        next: (res: any) => {
-          this.setArticleCategorySections(res.items || []);
-        },
-        error: (err) => {
-          console.error('loadContent: article categories', err);
-        }
-      });
   }
 
   private onAllContentLoaded(): void {
@@ -511,10 +508,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return item.id;
   }
 
-  getPodcastEpisodeThumbnail(episode: PodcastEpisode): string | null {
-    return episode.thumbnailUrl || this.buildYouTubeThumbnail(episode.sourceUrl) || this.buildYouTubeThumbnail(episode.embedUrl);
-  }
-
   get hasNoResults(): boolean {
     if (this.isSearchingDeep) return false;
     if (this.lyricsMatches.length > 0) return false;
@@ -528,17 +521,17 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 200);
   }
 
-  private splitForRows(articles: Article[]): { top: Article[]; bottom: Article[] } {
+  private splitForRows<T>(articles: T[]): { top: T[]; bottom: T[] } {
     if (articles.length <= 1) return { top: articles, bottom: [] };
     const half = Math.ceil(articles.length / 2);
     return { top: articles.slice(0, half), bottom: articles.slice(half) };
   }
 
-  get newsArticlesFirstRow(): Article[] {
+  get newsArticlesFirstRow(): ArticleBanner[] {
     return this.featuredNewsArticles;
   }
 
-  get newsArticlesSecondRow(): Article[] {
+  get newsArticlesSecondRow(): ArticleBanner[] {
     return this.regularNewsArticles;
   }
 
@@ -550,15 +543,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.blogArticles.length >= 2;
   }
 
-  get blogArticlesFirstRow(): Article[] {
+  get blogArticlesFirstRow(): ArticleBanner[] {
     return this.splitForRows(this.blogArticles).top;
   }
 
-  get blogArticlesSecondRow(): Article[] {
+  get blogArticlesSecondRow(): ArticleBanner[] {
     return this.splitForRows(this.blogArticles).bottom;
   }
 
-  get visibleViralArticles(): Article[] {
+  get visibleViralArticles(): ArticleBanner[] {
     return this.viralArticles.slice(0, this.visibleViralCount);
   }
 
@@ -594,56 +587,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private initHomeLazySections(): void {
-    if (this.homeLazyObserver) this.homeLazyObserver.disconnect();
-    if (!this.restContentStarted) return;
-
-    this.homeLazyObserver = new IntersectionObserver(
-      entries => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const section = (entry.target as HTMLElement).dataset['homeLoad'] as HomeLazySection | undefined;
-          if (!section) continue;
-          this.homeLazyObserver?.unobserve(entry.target);
-          this.loadHomeLazySection(section);
-        }
-      },
-      { rootMargin: '520px 0px', threshold: 0.01 }
-    );
-
-    this.homeLazySentinels?.forEach(sentinel => {
-      this.homeLazyObserver?.observe(sentinel.nativeElement);
-    });
-  }
-
-  private loadHomeLazySection(section: HomeLazySection): void {
-    if (this.loadedLazySections.has(section) || this.loadingLazySections.has(section)) return;
-    this.loadingLazySections.add(section);
-
-    switch (section) {
-      case 'featured':
-        this.loadFeaturedPeople();
-        break;
-      case 'events':
-        this.loadUpcomingEvents();
-        break;
-      case 'podcasts':
-        this.loadHomePodcasts();
-        break;
-    }
-
-    this.loadingLazySections.delete(section);
-    this.loadedLazySections.add(section);
-  }
-
   private loadViralArticles(): void {
     if (this.viralArticlesLoaded || this.loadingViralArticles) return;
 
     this.loadingViralArticles = true;
-    this.articleService.getArticles(1, 80, undefined, undefined, undefined, ArticleStatus.Published, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'views')
+    this.articleService.getHomeViralBanners()
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res: any) => {
-          this.setViralArticles(this.uniqueArticles(res.items || []));
+        next: (articles) => {
+          this.setViralArticles(this.uniqueArticles(articles || []));
         },
         error: (err) => {
           console.error('loadContent: viral articles', err);
@@ -654,32 +605,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadHomeNewsArticles(): void {
-    const onFeaturedDone = this.trackPendingLoad();
-    this.articleService.getFeaturedArticles(ArticleContentType.News, 5)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onFeaturedDone)).subscribe({
-        next: (featuredNews: Article[]) => {
-          this.featuredNewsArticles = this.uniqueArticles(featuredNews || [])
-            .map(article => this.withContentType(article, ArticleContentType.News));
-          this.newsArticles = [...this.featuredNewsArticles];
-          this.loadRegularHomeNewsArticles();
-        },
-        error: (err) => {
-          console.error('loadContent: featured home news articles', err);
-          this.loadRegularHomeNewsArticles();
-        }
-      });
-  }
-
-  private loadRegularHomeNewsArticles(): void {
     const onNewsDone = this.trackPendingLoad();
-    this.articleService.getArticles(1, 8, undefined, undefined, ArticleContentType.News, ArticleStatus.Published)
+    this.articleService.getHomeNewsBanners()
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(onNewsDone)).subscribe({
-        next: (allNews: any) => {
-          const featuredArticleIds = new Set(this.featuredNewsArticles.map(article => article.id));
-          this.regularNewsArticles = this.uniqueArticles(allNews.items || [])
-            .filter(article => !featuredArticleIds.has(article.id))
-            .map(article => this.withContentType(article, ArticleContentType.News))
-            .slice(0, 6);
+        next: (banners) => {
+          this.featuredNewsArticles = this.uniqueArticles(banners.featured || []);
+          this.regularNewsArticles = this.uniqueArticles(banners.regular || []);
           this.newsArticles = this.uniqueArticles([
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
@@ -687,19 +618,22 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadChords();
         },
         error: (err) => {
-          console.error('loadContent: regular home news articles', err);
+          console.error('loadContent: home news banners', err);
           this.loadChords();
         }
       });
   }
 
-  private loadBlogArticles(): void {
+  private loadBlogArticles(afterLoad?: () => void): void {
     const onBlogDone = this.trackPendingLoad();
-    this.articleService.getArticles(1, 12, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onBlogDone)).subscribe({
-        next: (blogArticles: any) => {
-          this.blogArticles = this.uniqueArticles(blogArticles.items || [])
-            .map(article => this.withContentType(article, ArticleContentType.Blog));
+    this.articleService.getHomeContentBanners()
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.blogArticlesLoaded = true;
+        onBlogDone();
+        afterLoad?.();
+      })).subscribe({
+        next: (blogArticles) => {
+          this.blogArticles = this.uniqueArticles(blogArticles || []);
         },
         error: (err) => console.error('loadContent: home blog articles', err)
       });
@@ -708,20 +642,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private checkAllContentLoaded(): void {
     if (this.pendingContentLoads <= 0) {
       this.onAllContentLoaded();
-    }
-  }
-
-  private setArticleCategorySections(categories: SystemItem[]): void {
-    this.articleCategorySectionById = new Map<number, ArticleContentType>();
-    this.articleCategorySectionByName = new Map<string, ArticleContentType>();
-
-    for (const category of categories) {
-      const type = this.getCategoryTypeFromName(category.name)
-        ?? (Number(category['section']) === 1 ? ArticleContentType.Blog : ArticleContentType.News);
-      this.articleCategorySectionById.set(category.id, type);
-      if (category.name) {
-        this.articleCategorySectionByName.set(this.normalizeCategoryName(category.name), type);
-      }
     }
   }
 
@@ -738,103 +658,21 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.max(0, full);
   }
 
-  private setViralArticles(articles: Article[]): void {
-    const newsArticles = articles
-      .filter(article => this.isMusicNewsArticle(article));
-
-    const popularArticles = newsArticles
-      .sort((a: Article, b: Article) => (b.viewCount || 0) - (a.viewCount || 0));
-
-    this.viralArticles = popularArticles.slice(0, 40);
-    this.viralArticles = this.viralArticles.map(article => this.withContentType(article, ArticleContentType.News));
+  private setViralArticles(articles: ArticleBanner[]): void {
+    this.viralArticles = articles.slice(0, 40);
     this.visibleViralCount = this.floorToFullRows(4, this.viralArticles.length);
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
     setTimeout(() => this.initViralObserver(), 0);
   }
 
-  private isMusicNewsArticle(article: Article): boolean {
-    const categoryType = this.getArticleCategorySection(article);
-    if (categoryType !== null) return categoryType === ArticleContentType.News;
-    return this.normalizeArticleContentType(article) === ArticleContentType.News;
-  }
-
-  private isContentArticle(article: Article): boolean {
-    const categoryType = this.getArticleCategorySection(article);
-    if (categoryType !== null) return categoryType === ArticleContentType.Blog;
-    return this.normalizeArticleContentType(article) === ArticleContentType.Blog;
-  }
-
-  private getArticleCategorySection(article: Article): ArticleContentType | null {
-    const ids = Array.isArray(article.categoryIds) ? article.categoryIds : [];
-    const categoryNames = Array.isArray(article.categoryNames) ? article.categoryNames : [];
-    const typeFromNames = this.getArticleCategoryTypeFromNames(categoryNames);
-    if (typeFromNames !== null) return typeFromNames;
-
-    const knownCategoryTypes = ids
-      .map(id => this.articleCategorySectionById.get(id))
-      .filter((type): type is ArticleContentType => type !== undefined);
-
-    if (knownCategoryTypes.includes(ArticleContentType.News)) return ArticleContentType.News;
-    if (knownCategoryTypes.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
-
-    const knownNameTypes = categoryNames
-      .map(name => this.articleCategorySectionByName.get(this.normalizeCategoryName(name)))
-      .filter((type): type is ArticleContentType => type !== undefined);
-
-    if (knownNameTypes.includes(ArticleContentType.News)) return ArticleContentType.News;
-    if (knownNameTypes.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
-    return null;
-  }
-
-  private normalizeCategoryName(name: string): string {
-    return String(name || '').trim().toLowerCase();
-  }
-
-  private getArticleCategoryTypeFromNames(categoryNames: string[]): ArticleContentType | null {
-    const types = categoryNames
-      .map(name => this.getCategoryTypeFromName(name))
-      .filter((type): type is ArticleContentType => type !== null);
-
-    if (types.includes(ArticleContentType.News)) return ArticleContentType.News;
-    if (types.includes(ArticleContentType.Blog)) return ArticleContentType.Blog;
-    return null;
-  }
-
-  private getCategoryTypeFromName(name: string): ArticleContentType | null {
-    const text = this.normalizeCategoryName(name);
-    if (!text) return null;
-    if (text.includes('חדשות') || text.includes('news')) return ArticleContentType.News;
-    if (text.includes('תוכן') || text.includes('blog') || text.includes('content')) return ArticleContentType.Blog;
-    return null;
-  }
-
-  private withContentType(article: Article, contentType: ArticleContentType): Article {
-    return { ...article, contentType };
-  }
-
-  private uniqueArticles(articles: Article[]): Article[] {
+  private uniqueArticles<T extends { id: number }>(articles: T[]): T[] {
     const seen = new Set<number>();
     return articles.filter(article => {
       if (seen.has(article.id)) return false;
       seen.add(article.id);
       return true;
     });
-  }
-
-  private buildYouTubeThumbnail(url: string): string | null {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|img\.youtube\.com\/vi\/)([A-Za-z0-9_-]{6,})/i);
-    return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
-  }
-
-  private normalizeArticleContentType(article: Article): ArticleContentType | null {
-    const rawType = (article as Article & { contentType?: ArticleContentType | string }).contentType;
-    if (rawType === ArticleContentType.News || rawType === ArticleContentType.Blog) return rawType;
-
-    const textType = String(rawType ?? '').trim().toLowerCase();
-    if (textType === '0' || textType === 'news' || textType === 'article' || textType.includes('חדשות')) return ArticleContentType.News;
-    if (textType === '1' || textType === 'blog' || textType === 'blogpost' || textType === 'content' || textType.includes('תוכן')) return ArticleContentType.Blog;
-    return null;
   }
 
   private revealMoreViralArticles(): void {

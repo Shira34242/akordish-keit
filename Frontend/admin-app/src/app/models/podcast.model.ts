@@ -31,6 +31,17 @@ export interface PodcastDetail extends Podcast {
   episodes: PodcastEpisode[];
 }
 
+export type PodcastHomeCard = Pick<Podcast, 'id' | 'name' | 'slug' | 'imageUrl'>;
+
+export interface PodcastEpisodeBanner {
+  id: number;
+  podcastName: string;
+  podcastSlug: string;
+  title: string;
+  slug: string;
+  thumbnailUrl?: string;
+}
+
 export interface PodcastEpisode {
   id: number;
   podcastId: number;

@@ -117,6 +117,49 @@ namespace AkordishKeit.Services
                 .ToListAsync();
         }
 
+        public async Task<List<PodcastHomeCardDto>> GetHomePodcastCardsAsync(int limit = 6)
+        {
+            limit = Math.Clamp(limit, 1, 12);
+
+            return await _context.Podcasts
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted && p.IsActive)
+                .OrderBy(p => p.DisplayOrder)
+                .ThenBy(p => p.Name)
+                .Take(limit)
+                .Select(p => new PodcastHomeCardDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    ImageUrl = p.ImageUrl
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<PodcastEpisodeBannerDto>> GetHomePopularEpisodeBannersAsync(int limit = 8)
+        {
+            limit = Math.Clamp(limit, 1, 24);
+
+            return await _context.PodcastEpisodes
+                .AsNoTracking()
+                .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
+                .OrderByDescending(e => e.ViewCount)
+                .ThenByDescending(e => e.PublishedAt)
+                .ThenByDescending(e => e.Id)
+                .Take(limit)
+                .Select(e => new PodcastEpisodeBannerDto
+                {
+                    Id = e.Id,
+                    PodcastName = e.Podcast.Name,
+                    PodcastSlug = e.Podcast.Slug,
+                    Title = e.Title,
+                    Slug = e.Slug,
+                    ThumbnailUrl = e.ThumbnailUrl
+                })
+                .ToListAsync();
+        }
+
         public async Task<PodcastDetailDto?> GetPodcastBySlugAsync(string slug, bool includeInactive = false)
         {
             var podcast = await _context.Podcasts

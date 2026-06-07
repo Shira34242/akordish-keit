@@ -609,12 +609,6 @@
   height: 1px;
 }
 
-.home-lazy-sentinel {
-  height: 1px;
-  width: 100%;
-  pointer-events: none;
-}
-
 /* ============================================
    SONGS GRID (אקורדים — גלילה אופקית, יותר מקום לטקסט)
 ============================================ */
@@ -1029,8 +1023,12 @@
   width: 100%;
 }
 
+.events-loop-track app-event-card ::ng-deep .event-card--past {
+  opacity: 1;
+}
+
 .events-loop-track app-event-card ::ng-deep .event-card__poster {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
 }
 
 /* ============================================

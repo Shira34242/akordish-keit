@@ -6,6 +6,8 @@ namespace AkordishKeit.Services
     {
         Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null);
         Task<IEnumerable<PodcastDto>> GetPublicPodcastsAsync();
+        Task<List<PodcastHomeCardDto>> GetHomePodcastCardsAsync(int limit = 6);
+        Task<List<PodcastEpisodeBannerDto>> GetHomePopularEpisodeBannersAsync(int limit = 8);
         Task<PodcastDetailDto?> GetPodcastBySlugAsync(string slug, bool includeInactive = false);
         Task<PodcastDto?> GetPodcastByIdAsync(int id);
         Task<PodcastDto> CreatePodcastAsync(CreatePodcastDto dto);

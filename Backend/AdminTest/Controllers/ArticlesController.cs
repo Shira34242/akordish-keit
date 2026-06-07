@@ -110,6 +110,51 @@ public class ArticlesController : ControllerBase
         return Ok(articles);
     }
 
+    // GET: api/Articles/home-news-banners
+    [HttpGet("home-news-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<HomeNewsBannersDto>> GetHomeNewsBanners()
+    {
+        const string cacheKey = "home_news_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeNewsBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
+    // GET: api/Articles/home-content-banners
+    [HttpGet("home-content-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners()
+    {
+        const string cacheKey = "home_content_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeContentBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
+    // GET: api/Articles/home-viral-banners
+    [HttpGet("home-viral-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners()
+    {
+        const string cacheKey = "home_viral_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeViralBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
     // GET: api/Articles/stats
     [HttpGet("stats")]
     public async Task<ActionResult<ArticleStatsDto>> GetArticleStats()

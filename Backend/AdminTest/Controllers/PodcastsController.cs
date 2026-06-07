@@ -2,6 +2,7 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers
 {
@@ -11,11 +12,16 @@ namespace AkordishKeit.Controllers
     {
         private readonly IPodcastService _podcastService;
         private readonly ILogger<PodcastsController> _logger;
+        private readonly IMemoryCache _cache;
 
-        public PodcastsController(IPodcastService podcastService, ILogger<PodcastsController> logger)
+        public PodcastsController(
+            IPodcastService podcastService,
+            ILogger<PodcastsController> logger,
+            IMemoryCache cache)
         {
             _podcastService = podcastService;
             _logger = logger;
+            _cache = cache;
         }
 
         [HttpGet]
@@ -35,6 +41,32 @@ namespace AkordishKeit.Controllers
         public async Task<ActionResult<IEnumerable<PodcastDto>>> GetPublicPodcasts()
         {
             return Ok(await _podcastService.GetPublicPodcastsAsync());
+        }
+
+        [HttpGet("home-cards")]
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+        public async Task<ActionResult<List<PodcastHomeCardDto>>> GetHomePodcastCards()
+        {
+            var cards = await _cache.GetOrCreateAsync("home_podcast_cards_v1", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _podcastService.GetHomePodcastCardsAsync();
+            });
+
+            return Ok(cards!);
+        }
+
+        [HttpGet("home-popular-episode-banners")]
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+        public async Task<ActionResult<List<PodcastEpisodeBannerDto>>> GetHomePopularEpisodeBanners()
+        {
+            var banners = await _cache.GetOrCreateAsync("home_popular_episode_banners_v1", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _podcastService.GetHomePopularEpisodeBannersAsync();
+            });
+
+            return Ok(banners!);
         }
 
         [HttpGet("latest-episodes")]

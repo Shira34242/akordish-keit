@@ -16,9 +16,14 @@
    =========================== */
 
 .profile-hero {
-  position: relative;
-  width: calc(100% - 16px);
-  margin: 8px auto 0;
+  --profile-collapse-progress: 0;
+  --profile-hero-full-height: 300px;
+  --profile-avatar-size: 160px;
+  --profile-avatar-bottom: -68px;
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
   background: #000000;
   color: #ffffff;
   display: flex;
@@ -27,7 +32,14 @@
   padding: var(--space-2xl) var(--space-xl) var(--space-xl);
   text-align: center;
   border-radius: 28px;
-  min-height: 300px;
+  height: var(--profile-hero-full-height);
+  overflow: visible;
+  will-change: height;
+  z-index: 895;
+}
+
+.profile-hero-spacer {
+  height: var(--profile-hero-full-height, 300px);
 }
 
 .profile-title {
@@ -36,6 +48,7 @@
   color: #ffffff;
   margin: 0 0 var(--space-sm);
   line-height: var(--lh-heading);
+  opacity: calc(1 - var(--profile-collapse-progress));
 }
 
 .profile-subtitle {
@@ -43,10 +56,11 @@
   font-weight: 300;
   color: rgba(255,255,255,0.55);
   margin: 0 0 var(--space-xl);
+  opacity: calc(1 - var(--profile-collapse-progress));
 }
 
 /* ===========================
-   AVATAR + PROGRESS RING
+   AVATAR
    =========================== */
 
 .avatar-wrapper {
@@ -54,42 +68,30 @@
   bottom: calc(-1 * var(--space-3xl));
   left: 50%;
   transform: translateX(-50%);
-  width: 152px;
-  height: 152px;
-  transition: bottom 0.28s cubic-bezier(0.2, 0, 0.2, 1), width 0.28s cubic-bezier(0.2, 0, 0.2, 1), height 0.28s cubic-bezier(0.2, 0, 0.2, 1);
+  width: var(--profile-avatar-size);
+  height: var(--profile-avatar-size);
+  bottom: var(--profile-avatar-bottom);
   z-index: 2;
-}
-
-.profile-hero--collapsed .avatar-wrapper {
-  width: 104px;
-  height: 104px;
-  bottom: calc(-1 * var(--space-xl));
-}
-
-.progress-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transition: stroke-dashoffset 0.6s ease;
+  will-change: width, height, bottom;
 }
 
 .profile-avatar {
   position: absolute;
-  inset: 10px;
-  width: calc(100% - 20px);
-  height: calc(100% - 20px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
   background: #404040;
+  border: 6px solid #ffffff;
 }
 
 .edit-avatar-btn {
   position: absolute;
-  bottom: var(--space-sm);
-  right: 0;
-  width: 30px;
-  height: 30px;
+  bottom: calc(-1 * var(--space-xs));
+  right: var(--space-sm);
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #F2F2F2;
   border: none;
@@ -116,9 +118,9 @@
 
 .avatar-upload-overlay {
   position: absolute;
-  inset: 10px;
-  width: calc(100% - 20px);
-  height: calc(100% - 20px);
+  inset: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -142,68 +144,6 @@
 .edit-avatar-btn .material-icons {
   font-size: 20px;
   color: rgba(0,0,0,0.35);
-}
-
-/* ===========================
-   LEVEL + BADGES
-   =========================== */
-
-.level-badges-row {
-  position: absolute;
-  left: calc(50% - 275px);
-  right: auto;
-  bottom: var(--space-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.level-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--font-sm);
-  font-weight: 300;
-  color: #ffffff;
-}
-
-.info-icon {
-  font-size: 20px;
-  color: rgba(255,255,255,0.55);
-  cursor: help;
-}
-
-.level-progress-text {
-  font-size: var(--font-xs);
-  font-weight: 300;
-  color: rgba(255,255,255,0.7);
-  margin-right: var(--space-xs);
-}
-
-.badges {
-  display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-}
-
-.badge {
-  padding: var(--space-xs) var(--space-base);
-  border-radius: 999px;
-  font-size: var(--font-xs);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.badge-pro {
-  background: #ddff53;
-  color: #000000;
-}
-
-.badge-level {
-  background: #ffffff;
-  color: #000000;
 }
 
 /* ===========================
@@ -233,6 +173,219 @@
   margin: calc(var(--space-4xl) + var(--space-lg)) auto 0;
   padding: 0 var(--space-lg);
   text-align: center;
+  position: relative;
+  z-index: 896;
+}
+
+.level-progress-banner {
+  margin: var(--space-xl) auto 0;
+  padding: var(--space-base) var(--space-xl) var(--space-2xl);
+  max-width: 620px;
+  border-radius: 16px;
+  background: rgba(242,242,242,0.65);
+  text-align: right;
+}
+
+.level-progress-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.level-progress-copy strong {
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.level-progress-copy span {
+  font-size: var(--font-xs);
+  color: rgba(0,0,0,0.45);
+  line-height: var(--lh-small);
+}
+
+.current-level-badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-base);
+  font-size: var(--font-xs);
+  color: rgba(0,0,0,0.55);
+}
+
+.current-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  background: #000000;
+  color: #ddff53;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.current-level-badge .material-icons {
+  font-size: 18px;
+}
+
+.level-progress-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+  margin-top: var(--space-md);
+  font-size: var(--font-xs);
+  color: rgba(0,0,0,0.55);
+}
+
+.level-progress-status span:first-child {
+  font-weight: 800;
+  color: #000000;
+}
+
+.level-loader {
+  position: relative;
+  margin: var(--space-base) var(--space-md) 0;
+  margin-bottom: calc(var(--space-3xl) + var(--space-base));
+  border-radius: 999px;
+  background: #535353;
+  height: 12px;
+}
+
+.level-bar {
+  --level-progress: 0%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: #ddff53;
+}
+
+.level-loader--animate .level-bar {
+  animation: levelBarEnter 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes levelBarEnter {
+  0% {
+    width: 0;
+    background: #ffffff;
+  }
+  45% {
+    background: #ffffff;
+  }
+  100% {
+    width: var(--level-progress);
+    background: #ddff53;
+  }
+}
+
+.level-current-marker {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translate(50%, -50%);
+  opacity: 0;
+  z-index: 2;
+}
+
+.level-loader--animate .level-current-marker {
+  animation: currentMarkerEnter 0.35s ease-out 2.75s forwards, currentMarkerSparkle 2.2s ease-in-out 3.1s infinite;
+}
+
+@keyframes currentMarkerEnter {
+  to { opacity: 1; }
+}
+
+@keyframes currentMarkerSparkle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(221,255,83,0), 0 0 0 0 rgba(255,255,255,0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(221,255,83,0.25), 0 0 12px 4px rgba(255,255,255,0.75);
+  }
+}
+
+.level-checkpoint {
+  position: absolute;
+  top: -5px;
+  transform: translateX(50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.level-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border-radius: 50%;
+  background: #535353;
+  transform: scale(0.78);
+  transition: transform 0.25s ease, background-color 0.25s ease;
+  opacity: 0;
+}
+
+.level-loader--animate .level-check {
+  animation: levelCheckEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes levelCheckEnter {
+  from { opacity: 0; transform: scale(0.55); }
+  to { opacity: 1; }
+}
+
+.level-check svg {
+  width: 100%;
+  height: 100%;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  opacity: 0.35;
+}
+
+.level-checkpoint--reached .level-check {
+  background: #ddff53;
+  transform: scale(1);
+}
+
+.level-checkpoint--reached .level-check svg {
+  stroke: #000000;
+  opacity: 1;
+}
+
+.level-checkpoint--current .level-check {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.level-check-label {
+  position: absolute;
+  top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 105px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.level-check-label strong {
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.level-check-label span {
+  font-size: var(--font-xs);
+  color: rgba(0,0,0,0.45);
 }
 
 .profile-tags {
@@ -266,6 +419,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
+  position: relative;
+  z-index: 896;
 }
 
 /* ===========================
@@ -1114,6 +1269,9 @@
 @media (max-width: 600px) {
   .profile-hero {
     padding: var(--space-xl) var(--space-base) var(--space-2xl);
+    left: 4px;
+    right: 4px;
+    top: 4px;
   }
 
   .profile-content {
@@ -1133,9 +1291,17 @@
   }
 
   .profile-hero {
-    width: calc(100% - 8px);
-    margin-top: 4px;
     border-radius: 18px;
+  }
+
+  .level-progress-banner {
+    padding: var(--space-md) var(--space-lg) var(--space-2xl);
+  }
+
+  .level-check-label {
+    width: 70px;
+    white-space: normal;
+    line-height: 1.2;
   }
 
   .known-chords-board {

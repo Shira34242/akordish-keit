@@ -262,8 +262,6 @@
       </div>
     </div>
 
-    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="featured"></div>
-
     <section class="home-section index-showcase-section" *ngIf="featuredTeachers.length > 0 || featuredProviders.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
@@ -299,8 +297,6 @@
       </div>
     </section>
 
-    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="events"></div>
-
     <section class="home-section" *ngIf="upcomingEvents.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
@@ -320,8 +316,6 @@
         </div>
       </div>
     </section>
-
-    <div #homeLazySentinel class="home-lazy-sentinel" data-home-load="podcasts"></div>
 
     <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0">
       <div class="section-header">
@@ -362,7 +356,7 @@
       <app-ad-display spotTechnicalId="home-bottom-banner" [isMobile]="isMobile"></app-ad-display>
     </div>
 
-    <section class="home-section content-articles-section">
+    <section class="home-section content-articles-section" *ngIf="blogArticlesLoaded">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
         <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>

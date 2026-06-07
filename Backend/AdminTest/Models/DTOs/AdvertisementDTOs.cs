@@ -89,8 +89,8 @@ public class AdCampaignDto
     public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
     public string AdSpotName { get; set; } = string.Empty;
-    public int ClientId { get; set; }
-    public string ClientName { get; set; } = string.Empty;
+    public int? ClientId { get; set; }
+    public string ClientName { get; set; } = "לקוח מזדמן";
     public string? KnownUrl { get; set; }
     public string? MediaUrl { get; set; }
     public string? MobileMediaUrl { get; set; }
@@ -113,7 +113,7 @@ public class CreateAdCampaignDto
 {
     public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
-    public int ClientId { get; set; }
+    public int? ClientId { get; set; }
     public string? KnownUrl { get; set; }
     public string? MediaUrl { get; set; }
     public string? MobileMediaUrl { get; set; }
@@ -128,7 +128,7 @@ public class UpdateAdCampaignDto
 {
     public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
-    public int ClientId { get; set; }
+    public int? ClientId { get; set; }
     public string? KnownUrl { get; set; }
     public string? MediaUrl { get; set; }
     public string? MobileMediaUrl { get; set; }

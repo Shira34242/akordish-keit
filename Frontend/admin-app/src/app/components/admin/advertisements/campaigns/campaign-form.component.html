@@ -32,14 +32,11 @@
               formControlName="clientId"
               class="form-control"
               [class.error]="f['clientId'].invalid && f['clientId'].touched">
-              <option [value]="null">בחר לקוח</option>
+              <option [ngValue]="null">לקוח מזדמן</option>
               <option *ngFor="let client of clients" [value]="client.id">
                 {{ client.businessName }}
               </option>
             </select>
-            <div class="error-message" *ngIf="f['clientId'].invalid && f['clientId'].touched">
-              <span *ngIf="f['clientId'].errors?.['missingDefaultClient']">נדרש לפחות לקוח אחד במערכת</span>
-            </div>
           </div>
 
           <div class="form-group">
@@ -66,7 +63,7 @@
           <app-file-upload-input
             [url]="campaignForm.get('mediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mediaUrl: $event})"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            accept="image/*,.heic,.heif,.jxl"
             [showPreview]="false"
             placeholder="https://example.com/banner.jpg"
           />
@@ -81,7 +78,7 @@
           <app-file-upload-input
             [url]="campaignForm.get('mobileMediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mobileMediaUrl: $event})"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            accept="image/*,.heic,.heif,.jxl"
             [showPreview]="false"
             placeholder="https://example.com/mobile-banner.jpg"
           />

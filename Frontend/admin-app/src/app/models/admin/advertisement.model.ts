@@ -90,7 +90,7 @@ export interface AdCampaign {
   name: string;
   adSpotId: number;
   adSpotName: string;
-  clientId: number;
+  clientId?: number | null;
   clientName: string;
   knownUrl?: string;
   mediaUrl?: string;
@@ -111,7 +111,7 @@ export interface AdCampaign {
 export interface CreateAdCampaignRequest {
   name: string;
   adSpotId: number;
-  clientId: number;
+  clientId?: number | null;
   knownUrl?: string;
   mediaUrl?: string;
   mobileMediaUrl?: string;
@@ -125,7 +125,7 @@ export interface CreateAdCampaignRequest {
 export interface UpdateAdCampaignRequest {
   name: string;
   adSpotId: number;
-  clientId: number;
+  clientId?: number | null;
   knownUrl?: string;
   mediaUrl?: string;
   mobileMediaUrl?: string;

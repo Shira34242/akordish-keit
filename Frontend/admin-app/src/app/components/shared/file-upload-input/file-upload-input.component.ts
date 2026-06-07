@@ -109,7 +109,7 @@ export class FileUploadInputComponent implements OnDestroy {
   }
 
   isImage(url: string): boolean {
-    return /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+    return /\.(jpg|jpeg|png|gif|webp|avif|svg|bmp|tif|tiff|ico|heic|heif|jxl)(\?.*)?$/i.test(url);
   }
 
   clear(): void {

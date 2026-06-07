@@ -27,7 +27,7 @@ const PRESET_QUALITY: Record<CloudflareImagePreset, number> = {
   lightbox: 88
 };
 
-const TRANSFORMABLE_EXTENSIONS = /\.(jpe?g|png|gif|webp)(\?.*)?$/i;
+const TRANSFORMABLE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif)(\?.*)?$/i;
 const UNTOUCHED_PREFIXES = ['data:', 'blob:', 'mailto:', 'tel:'];
 
 export function cloudflareImageUrl(

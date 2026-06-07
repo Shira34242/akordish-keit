@@ -205,10 +205,6 @@ export class CampaignFormComponent implements OnInit, OnChanges {
     return spot ? `פרסומת - ${spot.name}` : 'פרסומת חדשה';
   }
 
-  private getDefaultClientId(): number | null {
-    return this.clients.find(client => client.isActive)?.id ?? this.clients[0]?.id ?? null;
-  }
-
   onSubmit() {
     if (this.campaignForm.invalid) {
       this.campaignForm.markAllAsTouched();
@@ -218,12 +214,7 @@ export class CampaignFormComponent implements OnInit, OnChanges {
     if (this.campaignForm.valid) {
       const formValue = this.campaignForm.value;
       const adSpotId = Number(formValue.adSpotId);
-      const clientId = formValue.clientId ? Number(formValue.clientId) : this.getDefaultClientId();
-
-      if (!clientId) {
-        this.campaignForm.get('clientId')?.setErrors({ missingDefaultClient: true });
-        return;
-      }
+      const clientId = formValue.clientId ? Number(formValue.clientId) : null;
 
       const campaignData = {
         ...formValue,

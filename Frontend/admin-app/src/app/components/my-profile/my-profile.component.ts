@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -70,9 +70,14 @@ interface ProfileArticleCard {
   templateUrl: './my-profile.component.html',
   styleUrls: ['./my-profile.component.css']
 })
-export class MyProfileComponent implements OnInit, OnDestroy {
+export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('profileHero') profileHero?: ElementRef<HTMLDivElement>;
+  private fullHeroHeight = 0;
+  private heroRafPending = false;
+  private expandedAvatarSize = 160;
+  private expandedAvatarBottom = -68;
 
   readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
   readonly accountWarningSubtitle = '\u05dc\u05d0 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05e3 \u05d0\u05d7\u05d3. \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4 \u05e2\u05dc \u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3 \u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d5\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05ea\u05e0\u05ea\u05e7.';
@@ -130,14 +135,26 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   showAccountTypeModal = false;
   leavingCurrentPage = false;
 
-  heroCollapsed = false;
-
-  readonly CIRCUMFERENCE = 2 * Math.PI * 52;
   readonly MAX_LEVEL = 3;
+  readonly levelSteps = [0, 1, 2, 3];
+  readonly levelThresholds = [0, 1, 5, 20];
+  readonly levelDisplayPositions = [3, 20, 43, 97];
+  readonly DISPLAY_POINTS_MULTIPLIER = 10;
+  progressAnimated = false;
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.heroCollapsed = window.scrollY > 80;
+    if (this.heroRafPending) return;
+    this.heroRafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkHero();
+      this.heroRafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.initHeroHeight();
   }
 
   constructor(
@@ -181,6 +198,42 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.loadMyPageInfo();
     this.loadMyAllPages();
     this.loadSubscription();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initHeroHeight(), 0);
+    setTimeout(() => this.progressAnimated = true, 120);
+  }
+
+  private initHeroHeight(): void {
+    const hero = this.profileHero?.nativeElement;
+    if (!hero) return;
+
+    this.fullHeroHeight = 300;
+    this.expandedAvatarSize = window.innerWidth <= 600 ? 144 : 160;
+    this.expandedAvatarBottom = window.innerWidth <= 600 ? -60 : -68;
+    hero.style.height = `${this.fullHeroHeight}px`;
+    hero.style.setProperty('--profile-hero-full-height', `${this.fullHeroHeight}px`);
+    this.shrinkHero();
+  }
+
+  private shrinkHero(): void {
+    const hero = this.profileHero?.nativeElement;
+    if (!hero || this.fullHeroHeight === 0) return;
+
+    const minHeight = 56;
+    const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
+    const collapseRange = this.fullHeroHeight - minHeight;
+    const progress = collapseRange > 0
+      ? Math.min(1, (this.fullHeroHeight - newHeight) / collapseRange)
+      : 0;
+    const avatarSize = this.expandedAvatarSize - ((this.expandedAvatarSize - 88) * progress);
+    const avatarBottom = this.expandedAvatarBottom + ((-24 - this.expandedAvatarBottom) * progress);
+
+    hero.style.height = `${newHeight}px`;
+    hero.style.setProperty('--profile-collapse-progress', String(progress));
+    hero.style.setProperty('--profile-avatar-size', `${avatarSize}px`);
+    hero.style.setProperty('--profile-avatar-bottom', `${avatarBottom}px`);
   }
 
   get profileIncomplete(): boolean {
@@ -732,20 +785,54 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  getLevelName(): string {
+  getLevelName(level = this.getLevelNumber()): string {
     const keys: Record<number, string> = {
       0: 'profile.level_0',
       1: 'profile.level_1',
       2: 'profile.level_2',
       3: 'profile.level_3'
     };
-    return this.langService.translate(keys[this.getLevelNumber()]);
+    return this.langService.translate(keys[level]);
   }
 
-  getDashOffset(): number {
-    const tag = this.user?.contentTag ?? 0;
-    const progress = tag / this.MAX_LEVEL;
-    return this.CIRCUMFERENCE * (1 - progress);
+  getContributionPoints(): number {
+    return this.user?.uploadCount ?? 0;
+  }
+
+  getDisplayPoints(): number {
+    return this.getContributionPoints() * this.DISPLAY_POINTS_MULTIPLIER;
+  }
+
+  getLevelThreshold(level: number): number {
+    return this.levelThresholds[level] ?? 0;
+  }
+
+  getDisplayLevelThreshold(level: number): number {
+    return this.getLevelThreshold(level) * this.DISPLAY_POINTS_MULTIPLIER;
+  }
+
+  getLevelCheckpointDisplayPercent(level: number): number {
+    return this.levelDisplayPositions[level] ?? 0;
+  }
+
+  getLevelTrackPercent(): number {
+    const points = this.getContributionPoints();
+    if (points >= this.levelThresholds[this.MAX_LEVEL]) {
+      return this.levelDisplayPositions[this.MAX_LEVEL];
+    }
+
+    for (let level = 0; level < this.MAX_LEVEL; level++) {
+      const startPoints = this.levelThresholds[level];
+      const endPoints = this.levelThresholds[level + 1];
+      if (points <= endPoints) {
+        const segmentProgress = Math.max(0, (points - startPoints) / (endPoints - startPoints));
+        const startPosition = this.levelDisplayPositions[level];
+        const endPosition = this.levelDisplayPositions[level + 1];
+        return startPosition + ((endPosition - startPosition) * segmentProgress);
+      }
+    }
+
+    return this.levelDisplayPositions[0];
   }
 
   getNextThreshold(): number {
@@ -773,7 +860,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     if (this.isMaxLevel()) {
       return this.langService.translate('profile.level_max');
     }
-    const needed = this.getUploadsForNextLevel();
+    const needed = this.getUploadsForNextLevel() * this.DISPLAY_POINTS_MULTIPLIER;
     return this.langService.translate('profile.level_needed_prefix') + needed + this.langService.translate('profile.level_needed_suffix');
   }
 

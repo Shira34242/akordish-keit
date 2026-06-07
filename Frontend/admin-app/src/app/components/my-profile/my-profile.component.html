@@ -1,23 +1,9 @@
 <div class="profile-page">
-  <div class="profile-hero" [class.profile-hero--collapsed]="heroCollapsed">
+  <div class="profile-hero" #profileHero>
     <h1 class="profile-title">{{ 'profile.title' | translate }}</h1>
     <p class="profile-subtitle">{{ 'profile.subtitle' | translate }}</p>
 
     <div class="avatar-wrapper">
-      <svg class="progress-ring" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="60" cy="60" r="52" fill="none" stroke="#404040" stroke-width="6"/>
-        <circle
-          cx="60"
-          cy="60"
-          r="52"
-          fill="none"
-          stroke="#ddff53"
-          stroke-width="6"
-          stroke-linecap="round"
-          [attr.stroke-dasharray]="CIRCUMFERENCE"
-          [attr.stroke-dashoffset]="getDashOffset()"
-          transform="rotate(-90 60 60)"/>
-      </svg>
       <img
         class="profile-avatar"
         [class.profile-avatar--uploading]="uploadingAvatar"
@@ -38,15 +24,8 @@
         (change)="onAvatarFileSelected($event)"/>
     </div>
 
-    <div class="level-badges-row">
-      <span class="level-label">
-        {{ 'profile.level' | translate }} {{ getLevelNumber() }}
-        <span class="material-icons info-icon">info</span>
-      </span>
-      <span class="level-progress-text">{{ getLevelProgressText() }}</span>
-    </div>
-
   </div>
+  <div class="profile-hero-spacer" aria-hidden="true"></div>
   <div class="profile-identity">
     <h2 class="profile-name">{{ user?.username }}</h2>
     <p class="profile-email">{{ user?.email }}</p>
@@ -58,6 +37,46 @@
       <span class="profile-tag">{{ 'profile.instrument_piano' | translate }}</span>
       <span class="profile-tag">{{ getLevelName() }}</span>
     </div>
+    <section class="level-progress-banner">
+      <div class="level-progress-copy">
+        <strong>{{ 'profile.level_progress_title' | translate }}</strong>
+        <span>{{ 'profile.level_progress_description' | translate }}</span>
+      </div>
+      <div class="current-level-badge-row">
+        <span>{{ 'profile.your_badge' | translate }}</span>
+        <strong class="current-level-badge">
+          <span class="material-icons">workspace_premium</span>
+          {{ getLevelName() }}
+        </strong>
+      </div>
+      <div class="level-progress-status">
+        <span>{{ getDisplayPoints() }} {{ 'profile.points' | translate }}</span>
+        <span>{{ getLevelProgressText() }}</span>
+      </div>
+      <div class="level-loader" [class.level-loader--animate]="progressAnimated">
+        <div class="level-bar" [style.--level-progress]="getLevelTrackPercent() + '%'"></div>
+        <span class="level-current-marker" [style.right.%]="getLevelTrackPercent()"></span>
+        @for (level of levelSteps; track level) {
+          <div
+            class="level-checkpoint"
+            [style.right.%]="getLevelCheckpointDisplayPercent(level)"
+            [class.level-checkpoint--reached]="getContributionPoints() >= getLevelThreshold(level)"
+            [class.level-checkpoint--current]="getLevelNumber() === level"
+            [class.level-checkpoint--level-0]="level === 0"
+            [class.level-checkpoint--level-1]="level === 1">
+            <span class="level-check" [style.animation-delay.ms]="250 + (getLevelCheckpointDisplayPercent(level) * 20)">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m4.5 12.75 6 6 9-13.5" stroke-linejoin="round" stroke-linecap="round"></path>
+              </svg>
+            </span>
+            <span class="level-check-label">
+              <strong>{{ getLevelName(level) }}</strong>
+              <span>{{ getDisplayLevelThreshold(level) }} {{ 'profile.points' | translate }}</span>
+            </span>
+          </div>
+        }
+      </div>
+    </section>
   </div>
 
   <div class="profile-content">
