@@ -26,10 +26,10 @@
             <div class="header-image-section">
                 <div class="song-cover-wrapper">
                     <div class="song-cover-link" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo()" style="cursor:pointer;display:block;width:100%;height:100%;">
-                        <img [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 700px) 82vw, 420px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
+                        <img [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 400px) 90px, (max-width: 600px) 110px, (max-width: 900px) 180px, 260px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
                             (error)="handleImageError($event)">
                     </div>
-                    <img *ngIf="!song.youtubeUrl" [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 700px) 82vw, 420px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
+                    <img *ngIf="!song.youtubeUrl" [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 400px) 90px, (max-width: 600px) 110px, (max-width: 900px) 180px, 260px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
                         (error)="handleImageError($event)">
                     <button class="youtube-play-btn" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo()">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="18" height="18">
@@ -371,7 +371,6 @@
                 [style.transform]="activeTooltipAbove ? 'translate(-50%, -110%)' : 'translate(-50%, 0)'"
                 [style.zIndex]="1000"
                 [style.pointer-events]="pinnedChord ? 'auto' : 'none'"
-                (playBtnHoverChange)="handlePlayBtnHover($event)"
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>

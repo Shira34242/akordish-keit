@@ -1653,6 +1653,10 @@ html[dir="ltr"] .footer-newsletter-input {
         left: 16px;
     }
 
+    .fab-chat-container.fab-hidden-on-mobile-song {
+        display: none;
+    }
+
     .fab-add-song {
         width: 40px;
         height: 40px;

@@ -309,7 +309,9 @@
     <router-outlet></router-outlet>
 </main>
 
- <div class="fab-chat-container" [class.fab-chat-expanded]="showQuickAddAssistant">
+ <div class="fab-chat-container"
+      [class.fab-chat-expanded]="showQuickAddAssistant"
+      [class.fab-hidden-on-mobile-song]="isSongPage">
     <app-quick-add-assistant-modal
         *ngIf="showQuickAddAssistant"
         [entryPoint]="quickAddEntryPoint"

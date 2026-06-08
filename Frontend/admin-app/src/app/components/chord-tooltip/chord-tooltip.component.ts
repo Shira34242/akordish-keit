@@ -20,7 +20,7 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
     @Input() instrument: 'guitar' | 'piano' | 'ukulele' = 'guitar';
     @Input() isPinned: boolean = false;
     @Output() closePinned = new EventEmitter<void>();
-    @Output() playBtnHoverChange = new EventEmitter<boolean>();
+    @Output() tooltipHoverChange = new EventEmitter<boolean>();
 
     isPlaying = false;
     private playTimer: any = null;
@@ -168,6 +168,7 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         // Parse original chord once — used to detect slash-chord fallback
         const originalParsed = parseChord(this.chordName);
         const originalBass = originalParsed?.bass ?? null;
+        this.parsedBass = originalBass;
 
         const chordVariations = this.getChordVariations(this.chordName);
 
@@ -177,15 +178,11 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
             this.pianoBlackKeys = [];
-            this.parsedBass = null;
             this.bassAbsoluteNote = null;
             for (const variation of chordVariations) {
                 if (GUITAR_CHORDS[variation]) {
                     this.guitarChord = GUITAR_CHORDS[variation];
                     this.displayChordName = variation;
-                    if (originalBass && !variation.includes('/')) {
-                        this.parsedBass = originalBass;
-                    }
                     return;
                 }
             }
@@ -197,7 +194,6 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
             this.activeAbsoluteNotes = new Set();
             this.pianoWhiteKeys = [];
             this.pianoBlackKeys = [];
-            this.parsedBass = null;
             this.bassAbsoluteNote = null;
             for (const variation of chordVariations) {
                 if (UKULELE_CHORDS[variation]) {
@@ -211,15 +207,11 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         } else {
             this.guitarChord = null;
             this.ukuleleChord = null;
-            this.parsedBass = null;
             this.bassAbsoluteNote = null;
             for (const variation of chordVariations) {
                 if (PIANO_CHORDS[variation]) {
                     this.pianoKeys = PIANO_CHORDS[variation];
                     this.displayChordName = variation;
-                    if (originalBass && !variation.includes('/')) {
-                        this.parsedBass = originalBass;
-                    }
                     this.computeAbsoluteNotes();
                     return;
                 }
@@ -259,8 +251,17 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         }
         this.activeAbsoluteNotes = new Set(absoluteNotes);
 
+        this.bassAbsoluteNote = null;
+        if (this.parsedBass) {
+            const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+            if (bassSemitone >= 0) {
+                this.bassAbsoluteNote = bassSemitone;
+                this.activeAbsoluteNotes.add(bassSemitone);
+            }
+        }
+
         // Determine display range: start from 0 (C), end just past the highest note
-        const maxNote = Math.max(...absoluteNotes);
+        const maxNote = Math.max(...this.activeAbsoluteNotes);
         // Find the next white note after maxNote to end cleanly
         const endNote = this.getNextWhiteNoteAfter(maxNote);
 
@@ -294,17 +295,6 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         // Set display width based on number of white keys
         this.pianoDisplayWidth = this.pianoWhiteKeys.length * 20;
 
-        // Compute which absolute note corresponds to the bass note (for slash chord fallback)
-        this.bassAbsoluteNote = null;
-        if (this.parsedBass) {
-            const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
-            if (bassSemitone >= 0) {
-                const bassAbsolute = bassSemitone >= root ? bassSemitone : bassSemitone + 12;
-                if (this.activeAbsoluteNotes.has(bassAbsolute)) {
-                    this.bassAbsoluteNote = bassAbsolute;
-                }
-            }
-        }
     }
 
     /**
@@ -474,6 +464,10 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         return '#ddff53'; // all active notes (including bass) get accent yellow
     }
 
+    getPianoBassDotFill(note: number, isBlack: boolean): string {
+        return this.getPianoKeyFill(note, isBlack) === 'black' ? '#ddff53' : '#000000';
+    }
+
     /**
      * Returns the string index (0=low E … 5=high e) that produces the bass note,
      * or null if the bass note is not found in the current guitar voicing.
@@ -486,6 +480,18 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
         for (let i = 0; i < 6; i++) {
             if (this.guitarChord.frets[i] < 0) continue; // muted
             if ((openStrings[i] + this.guitarChord.frets[i]) % 12 === bassSemitone) return i;
+        }
+        return null;
+    }
+
+    getUkuBassStringIndex(): number | null {
+        if (!this.ukuleleChord || !this.parsedBass) return null;
+        const bassSemitone = this.noteToSemitone[this.parsedBass] ?? -1;
+        if (bassSemitone < 0) return null;
+        const openStrings = [7, 0, 4, 9]; // G C E A
+        for (let i = 0; i < 4; i++) {
+            if (this.ukuleleChord.frets[i] < 0) continue;
+            if ((openStrings[i] + this.ukuleleChord.frets[i]) % 12 === bassSemitone) return i;
         }
         return null;
     }

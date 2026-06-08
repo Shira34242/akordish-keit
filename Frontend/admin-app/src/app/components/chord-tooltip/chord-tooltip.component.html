@@ -1,11 +1,12 @@
-<div class="tooltip-container" (click)="$event.stopPropagation()">
+<div class="tooltip-container"
+    (click)="$event.stopPropagation()"
+    (mouseenter)="tooltipHoverChange.emit(true)"
+    (mouseleave)="tooltipHoverChange.emit(false)">
     <button
         class="known-chord-btn"
         [class.known]="isKnownChord"
         [disabled]="isSavingKnownChord"
         (click)="toggleKnownChord($event)"
-        (mouseenter)="playBtnHoverChange.emit(true)"
-        (mouseleave)="playBtnHoverChange.emit(false)"
         [title]="isKnownChord ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'"
         [attr.aria-label]="isKnownChord ? 'האקורד ברשימת האקורדים שאני יודע לנגן' : 'להוספה לרשימת האקורדים שאני יודע לנגן'">
         {{ isKnownChord ? '✓' : '+' }}
@@ -40,12 +41,16 @@
 
                 <!-- Open (o) — filled yellow if this string is the bass note -->
                 <circle *ngIf="fret === 0" [attr.cx]="10 + i*10" cy="5" r="2"
-                    [attr.fill]="getBassStringIndex() === i ? '#ddff53' : 'none'"
+                    fill="none"
                     stroke="black" stroke-width="1" />
+                <circle *ngIf="fret === 0 && getBassStringIndex() === i"
+                    [attr.cx]="10 + i*10" cy="5" r="1" fill="#000000" />
 
                 <!-- Finger (filled circle) — yellow if this string is the bass note -->
                 <circle *ngIf="fret > 0" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5"
-                    [attr.fill]="getBassStringIndex() === i ? '#ddff53' : '#1a1a1a'" />
+                    fill="#1a1a1a" />
+                <circle *ngIf="fret > 0 && getBassStringIndex() === i"
+                    [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="1.5" fill="#ddff53" />
             </ng-container>
 
             <!-- Barres -->
@@ -77,7 +82,8 @@
                     [attr.fill]="getPianoKeyFill(key.note, false)" />
                 <!-- Bass note indicator: small dot at bottom of white key -->
                 <circle *ngIf="bassAbsoluteNote !== null && key.note === bassAbsoluteNote"
-                    [attr.cx]="i * 20 + 10" cy="53" r="3" fill="#000" />
+                    [attr.cx]="i * 20 + 10" cy="53" r="3"
+                    [attr.fill]="getPianoBassDotFill(key.note, false)" />
             </ng-container>
 
             <!-- Black Keys -->
@@ -86,7 +92,8 @@
                     [attr.fill]="getPianoKeyFill(key.note, true)" />
                 <!-- Bass note indicator: small dot inside black key -->
                 <circle *ngIf="bassAbsoluteNote !== null && key.note === bassAbsoluteNote"
-                    [attr.cx]="key.x + 6" cy="29" r="2.5" fill="white" />
+                    [attr.cx]="key.x + 6" cy="29" r="2.5"
+                    [attr.fill]="getPianoBassDotFill(key.note, true)" />
             </ng-container>
         </svg>
 
@@ -126,10 +133,15 @@
                 <circle *ngIf="fret === 0"
                     [attr.cx]="getUkuStringX(i)" cy="5" r="2"
                     fill="none" stroke="black" stroke-width="1" />
+                <circle *ngIf="fret === 0 && getUkuBassStringIndex() === i"
+                    [attr.cx]="getUkuStringX(i)" cy="5" r="1" fill="#000000" />
 
                 <circle *ngIf="fret > 0"
                     [attr.cx]="getUkuStringX(i)" [attr.cy]="getUkuFretY(fret) - 6" r="3.5"
                     fill="#1a1a1a" />
+                <circle *ngIf="fret > 0 && getUkuBassStringIndex() === i"
+                    [attr.cx]="getUkuStringX(i)" [attr.cy]="getUkuFretY(fret) - 6" r="1.5"
+                    fill="#ddff53" />
             </ng-container>
 
             <!-- Barres -->
@@ -160,8 +172,6 @@
         class="play-chord-btn"
         [class.playing]="isPlaying"
         (click)="playChord($event)"
-        (mouseenter)="playBtnHoverChange.emit(true)"
-        (mouseleave)="playBtnHoverChange.emit(false)"
         title="נגן אקורד">
         <!-- אייקון רמקול -->
         <svg *ngIf="!isPlaying" viewBox="0 0 24 24" width="13" height="13" fill="none"

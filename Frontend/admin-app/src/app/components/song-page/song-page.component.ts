@@ -908,8 +908,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     // Check if user is on a touch/mobile device (pointer: coarse = no precise cursor)
     isMobileDevice(): boolean {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-               (window.matchMedia?.('(pointer: coarse)').matches ?? false);
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     // Show copy notification

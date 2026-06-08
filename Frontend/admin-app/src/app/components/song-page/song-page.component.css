@@ -81,6 +81,7 @@
 .header-image-section {
     flex: 0 0 260px;
     position: relative;
+    transition: width 0.25s ease, flex-basis 0.25s ease;
 }
 
 .song-cover-wrapper {
@@ -786,7 +787,8 @@
     border-radius: 24px;
     width: 100%;
     box-sizing: border-box;
-    min-width: 0; /* מונע CSS Grid blowout — מאפשר ל-chord-diagrams-bar לגלול */
+    min-width: 0;
+    transition: padding 0.25s ease, border-radius 0.25s ease;
 }
 
 .lyrics-column.dark-mode {
@@ -1261,6 +1263,13 @@
         text-align: center;
     }
 
+    /* Sidebar: 2-column grid on tablet */
+    .sidebar-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+    }
+
     .lyrics-column {
         padding: var(--space-lg);
     }
@@ -1335,6 +1344,13 @@
     .action-btn svg {
         width: 17px;
         height: 17px;
+    }
+
+    /* Sidebar: single column on mobile */
+    .sidebar-column {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: unset;
     }
 
     /* toolbar — מרווח צמוד יותר בנייד */
@@ -1457,6 +1473,32 @@
     .artist-name-link,
     .artist-separator {
         font-size: var(--font-xs);
+    }
+}
+
+@media (max-width: 360px) {
+    .header-image-section {
+        width: 72px;
+        flex: 0 0 72px;
+    }
+
+    .main-title {
+        font-size: var(--font-base);
+    }
+
+    .artist-name-link,
+    .artist-separator {
+        font-size: 11px;
+    }
+
+    .lyrics-column {
+        padding: var(--space-sm);
+        border-radius: 12px;
+        min-height: 200px;
+    }
+
+    .main-layout {
+        padding: 0 var(--space-xs);
     }
 }
 

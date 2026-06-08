@@ -10,7 +10,7 @@ import { UserWithProfileDto } from '../../models/user.model';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map, takeUntil } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { extractChords, parseChord } from '../../utils/music-utils';
+import { extractChords, isChord, isChordLine, parseChord, preferFlatForKey, transposeChord } from '../../utils/music-utils';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
@@ -902,6 +902,53 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!lyrics || lyrics.length < 10) return;
         this.userChangedEasyKey = false;
         this.triggerDetection(lyrics, 'easy');
+    }
+
+    canTransposeOriginalKey(): boolean {
+        return this.normalizeKeyId(this.songForm.get('originalKeyId')?.value) !== null
+            && !!this.songForm.get('lyricsWithChords')?.value?.trim();
+    }
+
+    transposeOriginalKey(direction: -1 | 1): void {
+        const currentKeyId = this.normalizeKeyId(this.songForm.get('originalKeyId')?.value);
+        const lyrics = this.songForm.get('lyricsWithChords')?.value ?? '';
+        const currentKey = this.allKeys.find(key => key.id === currentKeyId);
+        if (!currentKey || !lyrics.trim()) return;
+
+        const targetSemitone = (currentKey.semitone + direction + 12) % 12;
+        const targetKey = this.allKeys.find(key =>
+            key.semitone === targetSemitone && key.isMinor === currentKey.isMinor
+        );
+        if (!targetKey) return;
+
+        const targetKeyName = this.getKeyNameById(targetKey.id) ?? '';
+        const preferFlat = preferFlatForKey(targetKeyName);
+        const transposedLyrics = lyrics
+            .split('\n')
+            .map((line: string) => this.transposeLyricsLine(line, direction, preferFlat))
+            .join('\n');
+
+        this.songForm.get('lyricsWithChords')?.setValue(transposedLyrics, { emitEvent: false });
+        this.songForm.get('lyricsWithChords')?.markAsDirty();
+        this.songForm.get('originalKeyId')?.setValue(String(targetKey.id), { emitEvent: false });
+        this.songForm.get('originalKeyId')?.markAsDirty();
+        this.userChangedOriginalKey = true;
+        this.autoDetectedOriginalKeyName = targetKeyName || null;
+        this.keyDetectionFailed = false;
+    }
+
+    private transposeLyricsLine(line: string, semitones: number, preferFlat: boolean): string {
+        const withInlineChords = line.replace(/\[([^\]]+)\]/g, (match, chord: string) =>
+            isChord(chord) ? `[${transposeChord(chord, semitones, { preferFlat })}]` : match
+        );
+
+        if (withInlineChords !== line) return withInlineChords;
+        if (!isChordLine(line)) return line;
+
+        return (line.match(/\s+|\S+/g) ?? []).map(token => {
+            if (/^\s+$/.test(token) || !isChord(token)) return token;
+            return transposeChord(token, semitones, { preferFlat });
+        }).join('');
     }
 
     private triggerDetection(lyrics: string, target: 'original' | 'easy' | 'both'): void {

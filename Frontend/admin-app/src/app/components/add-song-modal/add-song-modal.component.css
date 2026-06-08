@@ -328,10 +328,10 @@ select option {
 .key-input-group {
     display: flex;
     align-items: center;
-    gap:8px;
+    gap: var(--space-xs);
     border: 1px solid #000;
     border-radius: 999px;
-    padding: 0 6px 0 10px;
+    padding: 0 var(--space-xs);
     background: #fff;
     transition: border-color 0.15s;
 }
@@ -350,16 +350,54 @@ select option {
     font-size: 0.9rem;
     font-weight: 300;
     color: #000;
-    padding: 10px 0;
+    padding: var(--space-md) var(--space-xs);
     cursor: pointer;
     outline: none;
     min-width: 0;
     direction: rtl;
 }
 
+.key-transpose-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.key-transpose-group select {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.transpose-key-btn {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border: none;
+    border-radius: 50%;
+    background: #F2F2F2;
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-base);
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s, opacity 0.15s;
+}
+
+.transpose-key-btn:not(:disabled):hover {
+    background: #ddff53;
+    transform: scale(1.06);
+}
+
+.transpose-key-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
 .detect-btn {
-    height: 30px;
-    padding: 0 12px;
+    height: 26px;
+    padding: 0 var(--space-md);
     border-radius: 999px;
     background: #F2F2F2;
     border: none;
@@ -1386,7 +1424,7 @@ select option {
 
 .smart-keys-row .key-field {
     flex: 1;
-    min-width: 140px;
+    min-width: 180px;
 }
 
 .smart-keys-row .key-field select {
@@ -1397,6 +1435,11 @@ select option {
     font-size: var(--font-base);
     font-family: 'Open Sans', sans-serif;
     background: #ffffff;
+}
+
+.smart-keys-row .key-transpose-group select {
+    width: 100%;
+    min-width: 90px;
 }
 
 .preview-inline-editor {

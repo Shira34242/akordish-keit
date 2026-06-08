@@ -74,6 +74,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   unreadNotificationCount = 0;
   isArtistPage = false;
   isArticlePage = false;
+  isSongPage = false;
   isPodcastViewerPage = false;
 
   showAuthModal = false;
@@ -299,6 +300,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
     this.isArtistPage = false;
     this.isArticlePage = false;
+    this.isSongPage = false;
 
     if (artistMatch) {
       this.isArtistPage = true;
@@ -359,6 +361,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     }
 
     if (songMatch) {
+      this.isSongPage = true;
       this.adminEditTarget = {
         label: '\u05e2\u05e8\u05d9\u05db\u05ea \u05e9\u05d9\u05e8',
         url: '/admin/content/songs'

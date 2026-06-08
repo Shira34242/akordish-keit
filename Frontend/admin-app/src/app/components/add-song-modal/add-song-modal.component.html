@@ -224,10 +224,16 @@
                         <div class="keys-row smart-keys-row">
                             <div class="key-field">
                                 <label class="key-label">{{ 'song_modal.original_key_field' | translate }}</label>
-                                <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
-                                    <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
-                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
-                                </select>
+                                <div class="key-transpose-group">
+                                    <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(-1)"
+                                        [disabled]="!canTransposeOriginalKey()" title="הורד את הסולם בחצי טון" aria-label="הורד את הסולם בחצי טון">−</button>
+                                    <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
+                                        <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
+                                        <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                    </select>
+                                    <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(1)"
+                                        [disabled]="!canTransposeOriginalKey()" title="העלה את הסולם בחצי טון" aria-label="העלה את הסולם בחצי טון">+</button>
+                                </div>
                                 <div class="error" *ngIf="songForm.get('originalKeyId')?.invalid && songForm.get('originalKeyId')?.touched">
                                     {{ 'song_modal.key_error' | translate }}
                                 </div>
@@ -342,10 +348,16 @@
                         <div class="form-row">
                             <div class="form-group half">
                                 <label>{{ 'song_modal.original_key_field' | translate }}</label>
-                                <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
-                                    <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
-                                    <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
-                                </select>
+                                <div class="key-transpose-group">
+                                    <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(-1)"
+                                        [disabled]="!canTransposeOriginalKey()" title="הורד את הסולם בחצי טון" aria-label="הורד את הסולם בחצי טון">−</button>
+                                    <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
+                                        <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
+                                        <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
+                                    </select>
+                                    <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(1)"
+                                        [disabled]="!canTransposeOriginalKey()" title="העלה את הסולם בחצי טון" aria-label="העלה את הסולם בחצי טון">+</button>
+                                </div>
                             </div>
                             <div class="form-group half">
                                 <label>{{ 'song_modal.easy_key_field' | translate }}</label>
@@ -635,10 +647,16 @@
                     <div class="key-field">
                         <label class="key-label">{{ 'song_modal.original_key_field' | translate }}</label>
                         <div class="key-input-group">
+                            <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(-1)"
+                                    [disabled]="!canTransposeOriginalKey()" title="הורד את הסולם בחצי טון"
+                                    aria-label="הורד את הסולם בחצי טון">−</button>
                             <select formControlName="originalKeyId" (change)="userChangedOriginalKey = true">
                                 <option [ngValue]="null">{{ 'song_modal.select_key' | translate }}</option>
                                 <option *ngFor="let key of musicalKeys" [value]="key.id">{{ key.name }}</option>
                             </select>
+                            <button type="button" class="transpose-key-btn" (click)="transposeOriginalKey(1)"
+                                    [disabled]="!canTransposeOriginalKey()" title="העלה את הסולם בחצי טון"
+                                    aria-label="העלה את הסולם בחצי טון">+</button>
                             <button type="button" class="detect-btn"
                                     (click)="runOriginalKeyDetection()"
                                     [disabled]="isDetectingOriginalKey"
