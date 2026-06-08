@@ -483,27 +483,15 @@ public class ReportService : IReportService
 
             if (artistExists && !hasPendingSongArtists)
             {
-                // אמן כבר אושר וכל השירים קושרו — סגור את כל הדיווחים
-                foreach (var r in reports)
-                {
-                    r.Status = "Resolved";
-                    r.ResolvedAt = DateTime.UtcNow;
-                    r.ResolvedByUserId = adminUserId;
-                    r.AdminNotes = $"נסגר אוטומטית — האמן '{artistName}' כבר קיים במערכת";
-                    closedCount++;
-                }
+                // אמן כבר אושר וכל השירים קושרו — מחק את כל הדיווחים
+                _context.ContentReports.RemoveRange(reports);
+                closedCount += reports.Count;
             }
             else if (reports.Count > 1)
             {
-                // כמה דיווחים על אותו אמן — שמור את הישן ביותר, סגור את שאר הכפילויות
-                foreach (var r in reports.Skip(1))
-                {
-                    r.Status = "Dismissed";
-                    r.ResolvedAt = DateTime.UtcNow;
-                    r.ResolvedByUserId = adminUserId;
-                    r.AdminNotes = $"נסגר כפילות — כבר קיים דיווח פתוח לאמן '{artistName}'";
-                    closedCount++;
-                }
+                // כמה דיווחים על אותו אמן — שמור את הישן ביותר, מחק את שאר הכפילויות
+                _context.ContentReports.RemoveRange(reports.Skip(1));
+                closedCount += reports.Count - 1;
             }
         }
 
