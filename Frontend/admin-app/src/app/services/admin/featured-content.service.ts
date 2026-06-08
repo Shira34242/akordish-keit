@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable } from 'rxjs';
 import {
   FeaturedContent,
+  FeaturedContentBanner,
   CreateFeaturedContentDto,
   UpdateFeaturedContentDto,
   UpdateFeaturedContentBulkDto
@@ -21,6 +22,14 @@ export class FeaturedContentService {
    */
   getActiveFeaturedContent(): Observable<FeaturedContent[]> {
     return this.http.get<FeaturedContent[]>(`${this.apiUrl}/active`);
+  }
+
+  getActiveFeaturedContentBanners(): Observable<FeaturedContentBanner[]> {
+    return this.http.get<FeaturedContentBanner[]>(`${this.apiUrl}/active-banners`).pipe(
+      catchError(() => this.getActiveFeaturedContent().pipe(
+        map(items => items as FeaturedContentBanner[])
+      ))
+    );
   }
 
   /**

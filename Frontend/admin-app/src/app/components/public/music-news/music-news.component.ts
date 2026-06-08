@@ -6,8 +6,8 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
 import { NewsPageSectionService } from '../../../services/news-page-section.service';
-import { FeaturedContent } from '../../../models/featured-content.model';
-import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { FeaturedContentBanner } from '../../../models/featured-content.model';
+import { ArticleBanner, ArticleContentType } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
@@ -30,12 +30,12 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private mobileMql?: MediaQueryList;
 
   private cachedManagedRows: { slots: number[]; gridCols: string }[] | null = null;
-  private cachedStreamRows: { articles: Article[]; gridCols: string }[] | null = null;
+  private cachedStreamRows: { articles: ArticleBanner[]; gridCols: string }[] | null = null;
 
   readonly managedSlots = Array.from({ length: 5 }, (_, index) => index);
 
-  featuredArticles: FeaturedContent[] = [];
-  newsArticles: Article[] = [];
+  featuredArticles: FeaturedContentBanner[] = [];
+  newsArticles: ArticleBanner[] = [];
   isLoading = true;
   isLoadingMore = false;
   hasError = false;
@@ -57,10 +57,14 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.loadVisibleCategorySettings()
-      .then(() => this.loadFeaturedContent())
-      .then(() => this.loadNewsArticles())
+    Promise.all([
+      this.loadFeaturedContent(),
+      this.loadVisibleCategorySettings().then(() => this.loadNewsArticles())
+    ])
       .then(() => {
+        const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
+        this.newsArticles = this.newsArticles.filter(article => !featuredIds.has(article.id));
+        this.invalidateCache();
         this.isLoading = false;
 
         const hasContent = this.featuredArticles.length > 0 || this.newsArticles.length > 0;
@@ -73,6 +77,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
           this.hasError = true;
         } else {
           // יש תוכן — גם אם featured נכשל, מציגים את מה שיש
+          this.loadFailed = false;
           setTimeout(() => this.setupObserver(), 100);
         }
       });
@@ -112,13 +117,13 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  trackById(_index: number, article: Article): number {
+  trackById(_index: number, article: ArticleBanner): number {
     return article.id;
   }
 
   private loadFeaturedContent(): Promise<void> {
     return new Promise((resolve) => {
-      this.featuredContentService.getActiveFeaturedContent()
+      this.featuredContentService.getActiveFeaturedContentBanners()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (content) => {
@@ -141,17 +146,10 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     this.isLoadingMore = true;
 
     return new Promise((resolve) => {
-      this.articleService.getArticles(
+      this.articleService.getPublishedArticleBanners(
+        ArticleContentType.News,
         this.currentPage,
         this.pageSize,
-        undefined,
-        undefined,
-        ArticleContentType.News,
-        ArticleStatus.Published,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
         this.visibleCategoryIds
       )
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -193,11 +191,11 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     this.observer.observe(this.sentinelRef.nativeElement);
   }
 
-  getFeaturedArticle(index: number): Article | null {
+  getFeaturedArticle(index: number): ArticleBanner | null {
     return this.featuredArticles[index]?.article ?? null;
   }
 
-  getManagedArticle(index: number): Article | null {
+  getManagedArticle(index: number): ArticleBanner | null {
     const featuredArticle = this.getFeaturedArticle(index);
     if (featuredArticle) {
       return featuredArticle;
@@ -207,7 +205,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     return this.newsArticles[fallbackIndex] ?? null;
   }
 
-  getStreamArticles(): Article[] {
+  getStreamArticles(): ArticleBanner[] {
     return this.newsArticles.slice(this.emptyManagedSlotCount);
   }
 
@@ -240,11 +238,11 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     return this.cachedManagedRows;
   }
 
-  getStreamRows(): { articles: Article[]; gridCols: string }[] {
+  getStreamRows(): { articles: ArticleBanner[]; gridCols: string }[] {
     if (this.cachedStreamRows) return this.cachedStreamRows;
 
     const articles = this.getStreamArticles();
-    const rows: { articles: Article[]; gridCols: string }[] = [];
+    const rows: { articles: ArticleBanner[]; gridCols: string }[] = [];
     let i = 0;
 
     if (this.isMobile) {

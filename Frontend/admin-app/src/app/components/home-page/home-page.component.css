@@ -609,12 +609,6 @@
   height: 1px;
 }
 
-.home-lazy-sentinel {
-  height: 1px;
-  width: 100%;
-  pointer-events: none;
-}
-
 /* ============================================
    SONGS GRID (אקורדים — גלילה אופקית, יותר מקום לטקסט)
 ============================================ */
@@ -1037,8 +1031,12 @@
   width: 100%;
 }
 
+.events-loop-track app-event-card ::ng-deep .event-card--past {
+  opacity: 1;
+}
+
 .events-loop-track app-event-card ::ng-deep .event-card__poster {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
 }
 
 /* ============================================
@@ -1184,8 +1182,8 @@
   width: 100%;
 }
 
-.ad-slot:has(.ad-container) {
-  margin: var(--space-xl) 0;
+.ad-slot:has(app-ad-display.ad-display--ready) {
+  margin: var(--space-lg) 0;
   border-radius: var(--radius-md, 16px);
   background: #F2F2F2;
   overflow: hidden;
@@ -1198,7 +1196,7 @@
   display: none;
 }
 
-.ad-slot:has(.ad-container) .ad-slot__label {
+.ad-slot:has(app-ad-display.ad-display--ready) .ad-slot__label {
   display: block;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);

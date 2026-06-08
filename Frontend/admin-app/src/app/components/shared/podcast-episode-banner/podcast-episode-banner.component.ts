@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { PodcastEpisode } from '../../../models/podcast.model';
+import { PodcastEpisodeBanner } from '../../../models/podcast.model';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
@@ -13,6 +13,6 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
   styleUrls: ['./podcast-episode-banner.component.css']
 })
 export class PodcastEpisodeBannerComponent {
-  @Input() episode!: PodcastEpisode;
+  @Input() episode!: PodcastEpisodeBanner;
   @Input() showDescription = true;
 }

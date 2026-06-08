@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { ArticleBanner, ArticleContentType } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 
 @Component({
@@ -25,13 +25,13 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private mobileMql?: MediaQueryList;
 
   private cachedManagedRows: { slots: number[]; gridCols: string }[] | null = null;
-  private cachedStreamRows: { articles: Article[]; gridCols: string }[] | null = null;
+  private cachedStreamRows: { articles: ArticleBanner[]; gridCols: string }[] | null = null;
 
 
   private readonly pageSize = 12;
 
-  managedArticles: Article[] = [];
-  streamArticles: Article[] = [];
+  managedArticles: ArticleBanner[] = [];
+  streamArticles: ArticleBanner[] = [];
   isLoading = true;
   isLoadingMore = false;
   hasError = false;
@@ -68,12 +68,12 @@ export class BlogListComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  trackById(_index: number, article: Article): number {
+  trackById(_index: number, article: ArticleBanner): number {
     return article.id;
   }
 
   private loadInitialArticles(): void {
-    this.articleService.getArticles(1, this.pageSize, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+    this.articleService.getPublishedArticleBanners(ArticleContentType.Blog, 1, this.pageSize)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
@@ -100,7 +100,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
     if (!this.hasMore || this.isLoadingMore) return;
     this.isLoadingMore = true;
 
-    this.articleService.getArticles(this.currentPage, this.pageSize, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Published)
+    this.articleService.getPublishedArticleBanners(ArticleContentType.Blog, this.currentPage, this.pageSize)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
@@ -149,10 +149,10 @@ export class BlogListComponent implements OnInit, OnDestroy {
     return this.cachedManagedRows;
   }
 
-  getStreamRows(): { articles: Article[]; gridCols: string }[] {
+  getStreamRows(): { articles: ArticleBanner[]; gridCols: string }[] {
     if (this.cachedStreamRows) return this.cachedStreamRows;
 
-    const rows: { articles: Article[]; gridCols: string }[] = [];
+    const rows: { articles: ArticleBanner[]; gridCols: string }[] = [];
     let i = 0;
 
     if (this.isMobile) {

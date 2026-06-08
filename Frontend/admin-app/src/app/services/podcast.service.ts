@@ -9,7 +9,9 @@ import {
   Podcast,
   PodcastDetail,
   PodcastEpisode,
+  PodcastEpisodeBanner,
   PodcastEpisodeDetail,
+  PodcastHomeCard,
   SubmitPodcastDto,
   SubmitPodcastEpisodeDto,
   UpdatePodcastDto,
@@ -80,6 +82,14 @@ export class PodcastService {
     if (podcastId !== undefined) params = params.set('podcastId', podcastId);
 
     return this.http.get<PodcastEpisode[]>(`${this.apiUrl}/popular-episodes`, { params });
+  }
+
+  getHomePodcastCards(): Observable<PodcastHomeCard[]> {
+    return this.http.get<PodcastHomeCard[]>(`${this.apiUrl}/home-cards`);
+  }
+
+  getHomePopularEpisodeBanners(): Observable<PodcastEpisodeBanner[]> {
+    return this.http.get<PodcastEpisodeBanner[]>(`${this.apiUrl}/home-popular-episode-banners`);
   }
 
   getPublicEpisodes(pageNumber = 1, pageSize = 12, podcastId?: number, search?: string): Observable<PagedResult<PodcastEpisode>> {

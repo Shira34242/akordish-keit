@@ -8,6 +8,7 @@ namespace AkordishKeit.Services
         /// קבלת כל התוכן המרכזי הפעיל (4 כתבות)
         /// </summary>
         Task<IEnumerable<FeaturedContentDto>> GetActiveFeaturedContentAsync();
+        Task<List<FeaturedContentBannerDto>> GetActiveFeaturedContentBannersAsync();
 
         /// <summary>
         /// קבלת כל התוכן המרכזי (כולל לא פעיל)

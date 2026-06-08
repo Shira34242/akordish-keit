@@ -23,6 +23,24 @@ namespace AkordishKeit.Models.DTOs
         public List<PodcastEpisodeDto> Episodes { get; set; } = new();
     }
 
+    public class PodcastHomeCardDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+    }
+
+    public class PodcastEpisodeBannerDto
+    {
+        public int Id { get; set; }
+        public string PodcastName { get; set; } = string.Empty;
+        public string PodcastSlug { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string? ThumbnailUrl { get; set; }
+    }
+
     public class PodcastEpisodeDto
     {
         public int Id { get; set; }

@@ -110,6 +110,77 @@ public class ArticlesController : ControllerBase
         return Ok(articles);
     }
 
+    // GET: api/Articles/home-news-banners
+    [HttpGet("home-news-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<HomeNewsBannersDto>> GetHomeNewsBanners()
+    {
+        const string cacheKey = "home_news_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeNewsBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
+    // GET: api/Articles/home-content-banners
+    [HttpGet("home-content-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners()
+    {
+        const string cacheKey = "home_content_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeContentBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
+    // GET: api/Articles/home-viral-banners
+    [HttpGet("home-viral-banners")]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners()
+    {
+        const string cacheKey = "home_viral_banners_v1";
+        var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _articleService.GetHomeViralBannersAsync();
+        });
+
+        return Ok(banners!);
+    }
+
+    // GET: api/Articles/public-banners
+    [HttpGet("public-banners")]
+    public async Task<ActionResult<PagedResult<ArticleBannerDto>>> GetPublishedArticleBanners(
+        [FromQuery] int contentType,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 12,
+        [FromQuery] List<int>? categoryIds = null)
+    {
+        if (!Enum.IsDefined(typeof(ArticleContentType), contentType))
+        {
+            return BadRequest(new { message = "Invalid content type" });
+        }
+
+        var categoryKey = categoryIds?.Count > 0
+            ? string.Join("-", categoryIds.OrderBy(id => id))
+            : "all";
+        var cacheKey = $"public_article_banners_v1_{contentType}_{pageNumber}_{pageSize}_{categoryKey}";
+        var result = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+            return await _articleService.GetPublishedArticleBannersAsync(contentType, pageNumber, pageSize, categoryIds);
+        });
+
+        return Ok(result!);
+    }
+
     // GET: api/Articles/stats
     [HttpGet("stats")]
     public async Task<ActionResult<ArticleStatsDto>> GetArticleStats()

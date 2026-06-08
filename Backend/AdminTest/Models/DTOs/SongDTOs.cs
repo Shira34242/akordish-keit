@@ -462,6 +462,8 @@ public class ImportSongFromUrlResponseDto
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public string SourceUrl { get; set; } = string.Empty;
+    public bool IsArtistPage { get; set; }
+    public List<string> SongUrls { get; set; } = new();
     public int? SongId { get; set; }
     public ImportedSongDraftDto Draft { get; set; } = new();
     public List<string> MissingFields { get; set; } = new();

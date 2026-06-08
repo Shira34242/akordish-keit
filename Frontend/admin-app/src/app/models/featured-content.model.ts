@@ -1,4 +1,4 @@
-import { Article } from './article.model';
+import { Article, ArticleBanner } from './article.model';
 
 /**
  * מודל לתוכן מרכזי (4 כתבות בראש דף חדשות המוזיקה)
@@ -13,6 +13,13 @@ export interface FeaturedContent {
   createdBy?: string;
   updatedBy?: string;
   article: Article;
+}
+
+export interface FeaturedContentBanner {
+  id: number;
+  articleId: number;
+  displayOrder: number;
+  article: ArticleBanner;
 }
 
 /**

@@ -50,6 +50,14 @@ namespace AkordishKeit.Models.DTOs
         public ArticleDto Article { get; set; } = null!;
     }
 
+    public class FeaturedContentBannerDto
+    {
+        public int Id { get; set; }
+        public int ArticleId { get; set; }
+        public int DisplayOrder { get; set; }
+        public ArticleBannerDto Article { get; set; } = null!;
+    }
+
     /// <summary>
     /// DTO לעדכון מהיר של כל 4 הכתבות המרכזיות בבת אחת
     /// </summary>

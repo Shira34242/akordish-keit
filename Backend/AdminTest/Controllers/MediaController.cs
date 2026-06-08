@@ -22,7 +22,12 @@ namespace AkordishKeit.Controllers
         private static readonly string[] VideoExtensions = { ".mp4", ".webm" };
         private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
         private static readonly string[] DocumentExtensions = { ".pdf" };
-        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm", ".webp", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf" };
+        private static readonly string[] AllowedExtensions =
+        {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".svg", ".bmp",
+            ".tif", ".tiff", ".ico", ".heic", ".heif", ".jxl",
+            ".mp4", ".webm", ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".pdf"
+        };
         private const long MaxFileSizeBytes = 30 * 1024 * 1024; // 30MB
 
         public MediaController(
@@ -57,7 +62,7 @@ namespace AkordishKeit.Controllers
             {
                 _logger.LogWarning("Upload rejected — invalid file type: {FileName} ({Extension}) IP={IP}",
                     file.FileName, fileExtension, HttpContext.Connection.RemoteIpAddress);
-                return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, GIF, MP4, WEBM, WEBP, MP3, WAV, M4A, AAC, OGG, PDF" });
+                return BadRequest(new { message = "Invalid file type" });
             }
 
             if (file.Length > MaxFileSizeBytes)
@@ -365,6 +370,14 @@ namespace AkordishKeit.Controllers
             ".png"            => "image/png",
             ".gif"            => "image/gif",
             ".webp"           => "image/webp",
+            ".avif"           => "image/avif",
+            ".svg"            => "image/svg+xml",
+            ".bmp"            => "image/bmp",
+            ".tif" or ".tiff" => "image/tiff",
+            ".ico"            => "image/x-icon",
+            ".heic"           => "image/heic",
+            ".heif"           => "image/heif",
+            ".jxl"            => "image/jxl",
             ".mp4"            => "video/mp4",
             ".webm"           => "video/webm",
             ".mp3"            => "audio/mpeg",

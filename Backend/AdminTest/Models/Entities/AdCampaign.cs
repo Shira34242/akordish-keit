@@ -7,7 +7,7 @@ public class AdCampaign
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int AdSpotId { get; set; }
-    public int ClientId { get; set; }
+    public int? ClientId { get; set; }
     public string? KnownUrl { get; set; }
     public string? MediaUrl { get; set; }
     public string? MobileMediaUrl { get; set; }
@@ -25,7 +25,7 @@ public class AdCampaign
 
     // Navigation Properties
     public virtual AdSpot AdSpot { get; set; } = null!;
-    public virtual Client Client { get; set; } = null!;
+    public virtual Client? Client { get; set; }
     public virtual User? CreatedByUser { get; set; }
     public virtual User? UpdatedByUser { get; set; }
 }

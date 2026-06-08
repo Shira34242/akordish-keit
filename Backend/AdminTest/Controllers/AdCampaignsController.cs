@@ -46,7 +46,7 @@ namespace AkordishKeit.Controllers
                     AdSpotId = c.AdSpotId,
                     AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client != null ? c.Client.BusinessName : "",
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -84,7 +84,7 @@ namespace AkordishKeit.Controllers
                     AdSpotId = c.AdSpotId,
                     AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client != null ? c.Client.BusinessName : "",
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -121,7 +121,7 @@ namespace AkordishKeit.Controllers
                     AdSpotId = c.AdSpotId,
                     AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client != null ? c.Client.BusinessName : "",
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -162,7 +162,7 @@ namespace AkordishKeit.Controllers
                     AdSpotId = c.AdSpotId,
                     AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client != null ? c.Client.BusinessName : "",
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -202,7 +202,7 @@ namespace AkordishKeit.Controllers
                     AdSpotId = c.AdSpotId,
                     AdSpotName = c.AdSpot != null ? c.AdSpot.Name : "",
                     ClientId = c.ClientId,
-                    ClientName = c.Client != null ? c.Client.BusinessName : "",
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     KnownUrl = c.KnownUrl,
                     MediaUrl = c.MediaUrl,
                     MobileMediaUrl = c.MobileMediaUrl,
@@ -270,7 +270,7 @@ namespace AkordishKeit.Controllers
                 {
                     c.Id,
                     c.Name,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     c.StartDate,
                     c.EndDate,
                     c.Priority
@@ -314,9 +314,11 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "Ad Spot not found" });
             }
 
-            // Validate Client exists
-            var client = await _context.Clients.FindAsync(dto.ClientId);
-            if (client == null)
+            // Validate Client only when the campaign is linked to a specific client.
+            var client = dto.ClientId.HasValue
+                ? await _context.Clients.FindAsync(dto.ClientId.Value)
+                : null;
+            if (dto.ClientId.HasValue && client == null)
             {
                 return BadRequest(new { message = "Client not found" });
             }
@@ -367,7 +369,10 @@ namespace AkordishKeit.Controllers
 
             // Reload with navigation properties
             await _context.Entry(campaign).Reference(c => c.AdSpot).LoadAsync();
-            await _context.Entry(campaign).Reference(c => c.Client).LoadAsync();
+            if (campaign.ClientId.HasValue)
+            {
+                await _context.Entry(campaign).Reference(c => c.Client).LoadAsync();
+            }
 
             var now = DateTime.UtcNow;
             var campaignDto = new AdCampaignDto
@@ -377,7 +382,7 @@ namespace AkordishKeit.Controllers
                 AdSpotId = campaign.AdSpotId,
                 AdSpotName = campaign.AdSpot.Name,
                 ClientId = campaign.ClientId,
-                ClientName = campaign.Client.BusinessName,
+                ClientName = campaign.Client?.BusinessName ?? "לקוח מזדמן",
                 KnownUrl = campaign.KnownUrl,
                 MediaUrl = campaign.MediaUrl,
                 MobileMediaUrl = campaign.MobileMediaUrl,
@@ -416,8 +421,8 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "Ad Spot not found" });
             }
 
-            // Validate Client exists
-            if (!await _context.Clients.AnyAsync(c => c.Id == dto.ClientId))
+            // Validate Client only when the campaign is linked to a specific client.
+            if (dto.ClientId.HasValue && !await _context.Clients.AnyAsync(c => c.Id == dto.ClientId.Value))
             {
                 return BadRequest(new { message = "Client not found" });
             }
@@ -615,7 +620,7 @@ namespace AkordishKeit.Controllers
                     c.MobileMediaUrl,
                     c.KnownUrl,
                     c.Priority,
-                    ClientName = c.Client.BusinessName
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן"
                 })
                 .ToListAsync();
 
@@ -675,7 +680,7 @@ namespace AkordishKeit.Controllers
                     c.MobileMediaUrl,
                     c.KnownUrl,
                     c.Priority,
-                    ClientName = c.Client.BusinessName
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן"
                 })
                 .FirstOrDefaultAsync();
 

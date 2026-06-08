@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable } from 'rxjs';
 import {
   Article,
+  ArticleBanner,
   CreateArticleDto,
   ArticleCategory,
   ArticleContentType,
@@ -74,6 +75,11 @@ export interface BulkArticleActionResultDto {
   requestedCount: number;
   affectedCount: number;
   articles: Article[];
+}
+
+export interface HomeNewsBannersDto {
+  featured: ArticleBanner[];
+  regular: ArticleBanner[];
 }
 
 export interface ArticleNewsCleanupSettingsDto {
@@ -210,6 +216,55 @@ export class ArticleService {
     }
 
     return this.http.get<Article[]>(`${this.apiUrl}/featured`, { params });
+  }
+
+  getHomeNewsBanners(): Observable<HomeNewsBannersDto> {
+    return this.http.get<HomeNewsBannersDto>(`${this.apiUrl}/home-news-banners`);
+  }
+
+  getHomeContentBanners(): Observable<ArticleBanner[]> {
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-content-banners`);
+  }
+
+  getHomeViralBanners(): Observable<ArticleBanner[]> {
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-viral-banners`);
+  }
+
+  getPublishedArticleBanners(
+    contentType: ArticleContentType,
+    pageNumber = 1,
+    pageSize = 12,
+    categoryIds?: number[]
+  ): Observable<PagedResult<ArticleBanner>> {
+    let params = new HttpParams()
+      .set('contentType', contentType.toString())
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    categoryIds?.forEach(id => {
+      params = params.append('categoryIds', id.toString());
+    });
+
+    return this.http.get<PagedResult<ArticleBanner>>(`${this.apiUrl}/public-banners`, { params }).pipe(
+      catchError(() => this.getArticles(
+        pageNumber,
+        pageSize,
+        undefined,
+        undefined,
+        contentType,
+        ArticleStatus.Published,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        categoryIds
+      ).pipe(
+        map(result => ({
+          ...result,
+          items: result.items as ArticleBanner[]
+        }))
+      ))
+    );
   }
 
   /**

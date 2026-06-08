@@ -210,7 +210,7 @@ namespace AkordishKeit.Controllers
                 {
                     c.Id,
                     c.Name,
-                    ClientName = c.Client.BusinessName,
+                    ClientName = c.Client != null ? c.Client.BusinessName : "לקוח מזדמן",
                     c.ViewCount,
                     c.ClickCount,
                     Ctr = c.ViewCount > 0 ? Math.Round((double)c.ClickCount / c.ViewCount * 100, 1) : 0

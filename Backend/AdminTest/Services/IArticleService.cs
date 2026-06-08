@@ -28,6 +28,17 @@ public interface IArticleService
 
     Task<List<ArticleDto>> GetFeaturedArticlesAsync(int? contentType, int limit);
 
+    Task<HomeNewsBannersDto> GetHomeNewsBannersAsync(int featuredLimit = 5, int regularLimit = 6);
+
+    Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12);
+
+    Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40);
+    Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
+        int contentType,
+        int pageNumber = 1,
+        int pageSize = 12,
+        IEnumerable<int>? categoryIds = null);
+
     Task<ArticleStatsDto> GetArticleStatsAsync();
 
     Task<ArticleDto> CreateArticleAsync(CreateArticleDto dto, int? callerUserId = null);

@@ -188,6 +188,157 @@ public class ArticleService : IArticleService
         return articles.Select(MapToDto).ToList();
     }
 
+    public async Task<HomeNewsBannersDto> GetHomeNewsBannersAsync(int featuredLimit = 5, int regularLimit = 6)
+    {
+        var now = DateTime.UtcNow;
+        var newsQuery = _context.Articles
+            .AsNoTracking()
+            .Where(a => !a.IsDeleted
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= now
+                && a.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News));
+
+        var featured = await newsQuery
+            .Where(a => a.IsFeatured)
+            .OrderBy(a => a.DisplayOrder)
+            .ThenByDescending(a => a.PublishDate)
+            .Take(Math.Clamp(featuredLimit, 1, 10))
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = (int)ArticleContentType.News,
+                IsFeatured = true,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        var featuredIds = featured.Select(a => a.Id).ToList();
+        var regular = await newsQuery
+            .Where(a => !featuredIds.Contains(a.Id))
+            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .Take(Math.Clamp(regularLimit, 1, 20))
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = (int)ArticleContentType.News,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        return new HomeNewsBannersDto
+        {
+            Featured = featured,
+            Regular = regular
+        };
+    }
+
+    public async Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12)
+    {
+        return await GetPublishedBannerQuery(ArticleCategorySection.Content)
+            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .Take(Math.Clamp(limit, 1, 20))
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = (int)ArticleContentType.Blog,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40)
+    {
+        return await GetPublishedBannerQuery(ArticleCategorySection.News)
+            .OrderByDescending(a => a.ViewCount)
+            .Take(Math.Clamp(limit, 1, 40))
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = (int)ArticleContentType.News,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+    }
+
+    public async Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
+        int contentType,
+        int pageNumber = 1,
+        int pageSize = 12,
+        IEnumerable<int>? categoryIds = null)
+    {
+        var section = (ArticleCategorySection)contentType;
+        var query = GetPublishedBannerQuery(section);
+        var ids = categoryIds?.Distinct().ToList();
+
+        if (ids?.Count > 0)
+        {
+            query = query.Where(a => a.ArticleCategories.Any(ac => ids.Contains(ac.CategoryId)));
+        }
+
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 40);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = contentType,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        return new PagedResult<ArticleBannerDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
+
+    private IQueryable<Article> GetPublishedBannerQuery(ArticleCategorySection section)
+    {
+        var now = DateTime.UtcNow;
+        return _context.Articles
+            .AsNoTracking()
+            .Where(a => !a.IsDeleted
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= now
+                && a.ArticleCategories.Any(ac => ac.Category.Section == section));
+    }
+
     public async Task<ArticleStatsDto> GetArticleStatsAsync()
     {
         return new ArticleStatsDto
