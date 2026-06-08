@@ -21,6 +21,8 @@
 .filter-btn { display: inline-flex; align-items: center; gap: var(--space-xs); padding: var(--space-md) var(--space-lg); border: none; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-weight: 300; font-size: var(--font-sm); cursor: pointer; transition: background 0.15s ease; background: #ffffff; color: #000000; }
 .filter-btn:hover { background: #ddff53; }
 .btn-reset { background: #ffffff; }
+.btn-cleanup { background: #fff0f0; color: #c00; }
+.btn-cleanup:hover { background: #ffd6d6; }
 
 /* Stats */
 .stats { display: flex; align-items: center; gap: var(--space-md); }

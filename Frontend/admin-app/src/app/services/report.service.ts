@@ -69,4 +69,8 @@ export class ReportService {
   approveArtist(reportId: number): Observable<{ message: string; artistId: number }> {
     return this.http.post<{ message: string; artistId: number }>(`${this.apiUrl}/${reportId}/approve-artist`, {});
   }
+
+  cleanupArtistDuplicates(): Observable<{ message: string; closedCount: number }> {
+    return this.http.post<{ message: string; closedCount: number }>(`${this.apiUrl}/cleanup-artist-duplicates`, {});
+  }
 }

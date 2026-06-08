@@ -193,6 +193,18 @@ export class ReportsListComponent implements OnInit {
     });
   }
 
+  async cleanupArtistDuplicates(): Promise<void> {
+    if (!(await this.siteAlerts.confirm('לנקות כפילויות אמנים? דיווחים עודפים יסגרו אוטומטית.'))) return;
+
+    this.reportService.cleanupArtistDuplicates().subscribe({
+      next: (res) => {
+        this.siteAlerts.show(res.message);
+        this.loadReports();
+      },
+      error: () => alert('שגיאה בניקוי הכפילויות')
+    });
+  }
+
   isNewContentReport(report: Report): boolean {
     return ['NewArtist', 'NewGenre', 'NewTag', 'NewPerson'].includes(report.reportType);
   }

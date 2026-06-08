@@ -429,6 +429,8 @@ public class ReportService : IReportService
             var artistName = ExtractArtistNameFromDescription(report.Description);
             if (artistName != null)
             {
+                // לדיווח NewArtist — הכותרת הרלוונטית היא שם האמן, לא שם השיר
+                contentTitle = artistName;
                 songCount = await _context.SongArtists
                     .CountAsync(sa => sa.IsTemporary && sa.TempArtistName == artistName);
             }
@@ -451,6 +453,62 @@ public class ReportService : IReportService
             AdminNotes = report.AdminNotes,
             SongCount = songCount
         };
+    }
+
+    public async Task<int> CleanupArtistDuplicatesAsync(int adminUserId)
+    {
+        var pendingReports = await _context.ContentReports
+            .Where(r => r.ReportType == "NewArtist" && r.Status == "Pending")
+            .OrderBy(r => r.ReportedAt)
+            .ToListAsync();
+
+        var grouped = pendingReports
+            .Select(r => new { Report = r, ArtistName = ExtractArtistNameFromDescription(r.Description) })
+            .Where(x => x.ArtistName != null)
+            .GroupBy(x => x.ArtistName!)
+            .ToList();
+
+        int closedCount = 0;
+
+        foreach (var group in grouped)
+        {
+            var artistName = group.Key;
+            var reports = group.Select(x => x.Report).ToList(); // already ordered by ReportedAt
+
+            bool artistExists = await _context.Artists
+                .AnyAsync(a => a.Name == artistName && !a.IsDeleted);
+
+            bool hasPendingSongArtists = await _context.SongArtists
+                .AnyAsync(sa => sa.IsTemporary && sa.TempArtistName == artistName);
+
+            if (artistExists && !hasPendingSongArtists)
+            {
+                // אמן כבר אושר וכל השירים קושרו — סגור את כל הדיווחים
+                foreach (var r in reports)
+                {
+                    r.Status = "Resolved";
+                    r.ResolvedAt = DateTime.UtcNow;
+                    r.ResolvedByUserId = adminUserId;
+                    r.AdminNotes = $"נסגר אוטומטית — האמן '{artistName}' כבר קיים במערכת";
+                    closedCount++;
+                }
+            }
+            else if (reports.Count > 1)
+            {
+                // כמה דיווחים על אותו אמן — שמור את הישן ביותר, סגור את שאר הכפילויות
+                foreach (var r in reports.Skip(1))
+                {
+                    r.Status = "Dismissed";
+                    r.ResolvedAt = DateTime.UtcNow;
+                    r.ResolvedByUserId = adminUserId;
+                    r.AdminNotes = $"נסגר כפילות — כבר קיים דיווח פתוח לאמן '{artistName}'";
+                    closedCount++;
+                }
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return closedCount;
     }
 
     private static string? ExtractArtistNameFromDescription(string description)

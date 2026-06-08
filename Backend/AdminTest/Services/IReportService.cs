@@ -28,4 +28,6 @@ public interface IReportService
     Task<bool> DeleteReportAsync(int id);
 
     Task<(bool Success, string Message, int? ArtistId)> ApproveNewArtistAsync(int reportId, int adminUserId);
+
+    Task<int> CleanupArtistDuplicatesAsync(int adminUserId);
 }

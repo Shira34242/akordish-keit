@@ -201,6 +201,28 @@ public class ReportsController : ControllerBase
         }
     }
 
+    // POST: api/Reports/cleanup-artist-duplicates
+    [HttpPost("cleanup-artist-duplicates")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CleanupArtistDuplicates()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int adminUserId))
+                return Unauthorized(new { message = "משתמש לא מורשה" });
+
+            var closedCount = await _reportService.CleanupArtistDuplicatesAsync(adminUserId);
+            _logger.LogInformation("Cleanup artist duplicates: {Count} reports closed by admin {AdminId}", closedCount, adminUserId);
+            return Ok(new { message = $"הניקוי הסתיים — {closedCount} דיווחים נסגרו", closedCount });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Cleanup artist duplicates failed");
+            return BadRequest(new { message = "שגיאה בניקוי הכפילויות", error = ex.Message });
+        }
+    }
+
     // DELETE: api/Reports/5
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
