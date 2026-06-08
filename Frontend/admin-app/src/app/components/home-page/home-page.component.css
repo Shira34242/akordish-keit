@@ -927,10 +927,18 @@
 }
 
 #promo-chords {
-  background-image: url('/artist-composer-creating-new-song-his-electro-guitar-studio.png');
+  background-image: image-set(
+    url('/artist-composer-creating-new-song-his-electro-guitar-studio.avif') type('image/avif'),
+    url('/artist-composer-creating-new-song-his-electro-guitar-studio.webp') type('image/webp'),
+    url('/artist-composer-creating-new-song-his-electro-guitar-studio.png')  type('image/png')
+  );
 }
 #promo-index {
-  background-image: url('/collection-guitars-guitars-are-display-room.png');
+  background-image: image-set(
+    url('/collection-guitars-guitars-are-display-room.avif') type('image/avif'),
+    url('/collection-guitars-guitars-are-display-room.webp') type('image/webp'),
+    url('/collection-guitars-guitars-are-display-room.png')  type('image/png')
+  );
   background-size: auto 100%;
   background-position: right center;
 }
