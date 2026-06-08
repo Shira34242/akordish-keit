@@ -18,7 +18,6 @@
       <!-- Share and Favorite Icons -->
       <div class="article-actions">
           <span class="material-icons" (click)="shareArticle()" title="שתף">share</span>
-          <span class="material-icons" [class.active]="isFavorite" (click)="toggleFavorite()" [title]="isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
           <span class="material-icons" (click)="openReportModal()" title="דווח על טעות">report</span>
       </div>
 
@@ -26,6 +25,7 @@
       <div *ngIf="article.uploaderProfile" class="hero-uploader-badge">
         <app-content-uploader-badge [profile]="article.uploaderProfile" />
       </div>
+
     </div>
   </div>
 
@@ -138,6 +138,20 @@
         </div>
 
 
+      </div>
+
+      <div class="reaction-banner" role="group" aria-label="תגובות לכתבה">
+        <button
+          *ngFor="let reaction of reactions"
+          type="button"
+          class="reaction-button"
+          [class.selected]="selectedReaction === reaction.id"
+          (click)="reactToArticle(reaction.id)"
+          [attr.aria-label]="reaction.label"
+          [attr.title]="reaction.label">
+          <img class="reaction-icon" [src]="reaction.icon" alt="" aria-hidden="true">
+          <span class="reaction-count" *ngIf="reactionCounts[reaction.id]">{{ reactionCounts[reaction.id] }}</span>
+        </button>
       </div>
 
       <!-- Feedback Section -->

@@ -169,7 +169,7 @@
                 *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
                 [article]="article"
-                [imagePreset]="360"
+                [imagePreset]="600"
                 [imageLoading]="copy === 1 ? 'eager' : 'lazy'"
                 [imageFetchPriority]="copy === 1 ? 'high' : 'auto'"
                 [showDescription]="false"

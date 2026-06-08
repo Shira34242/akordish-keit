@@ -1557,7 +1557,7 @@
 
 /* Bookmark Saved State */
 .btn-bookmark {
-    --bookmark-accent: #ddff53;
+    --bookmark-accent: #e63939;
     overflow: visible;
     position: relative;
 }

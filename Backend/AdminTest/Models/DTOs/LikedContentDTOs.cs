@@ -12,6 +12,7 @@ public class LikedContentDto
     public string ContentType { get; set; } = string.Empty;
     public int ContentId { get; set; }
     public DateTime LikedAt { get; set; }
+    public string? Reaction { get; set; }
 
     // פרטי התוכן
     public string? Title { get; set; }
@@ -31,4 +32,25 @@ public class AddLikedContentDto
 
     [Required(ErrorMessage = "מזהה התוכן הוא שדה חובה")]
     public int ContentId { get; set; }
+}
+
+public class SetContentReactionDto
+{
+    [Required]
+    [RegularExpression("^(like|love|clap|wow|fire|smile)$")]
+    public string Reaction { get; set; } = string.Empty;
+}
+
+public class ContentReactionCountDto
+{
+    public string Reaction { get; set; } = string.Empty;
+    public int Count { get; set; }
+}
+
+public class ContentReactionSummaryDto
+{
+    public bool IsLiked { get; set; }
+    public string? UserReaction { get; set; }
+    public int TotalCount { get; set; }
+    public List<ContentReactionCountDto> Reactions { get; set; } = [];
 }

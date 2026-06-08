@@ -23,4 +23,10 @@ public interface ILikedContentService
     /// בדיקה האם תוכן מסוים במועדפים
     /// </summary>
     Task<bool> IsContentLikedAsync(string contentType, int contentId, int userId);
+
+    Task<ContentReactionSummaryDto> GetReactionSummaryAsync(string contentType, int contentId, int? userId);
+
+    Task<ContentReactionSummaryDto> SetReactionAsync(string contentType, int contentId, string reaction, int userId);
+
+    Task<ContentReactionSummaryDto> ClearReactionAsync(string contentType, int contentId, int userId);
 }
