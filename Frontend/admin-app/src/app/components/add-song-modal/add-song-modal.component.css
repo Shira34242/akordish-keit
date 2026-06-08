@@ -273,6 +273,53 @@ textarea::placeholder {
     color: #999;
 }
 
+/* Floating labels for the manual song fields */
+.modal-content .form-group:has(> input:not([type="checkbox"])),
+.modal-content .form-group:has(> textarea),
+.modal-content .form-group:has(> select) {
+    padding-top: 6px;
+}
+
+.modal-content .form-group:has(> input:not([type="checkbox"])) > label,
+.modal-content .form-group:has(> textarea) > label,
+.modal-content .form-group:has(> select) > label {
+    position: absolute;
+    top: 0;
+    right: 14px;
+    z-index: 2;
+    width: fit-content;
+    margin: 0;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #fff;
+    color: #404040;
+    font-size: var(--font-xs);
+    line-height: var(--lh-small);
+    pointer-events: none;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.modal-content .form-group > input:not([type="checkbox"]),
+.modal-content .form-group > textarea,
+.modal-content .form-group > select {
+    border: 2px solid #404040;
+    transition: border-color 0.2s ease, outline-color 0.2s ease;
+}
+
+.modal-content .form-group:focus-within > label {
+    background: #ddff53;
+    color: #000000;
+}
+
+.modal-content .form-group > input:not([type="checkbox"]):focus,
+.modal-content .form-group > textarea:focus,
+.modal-content .form-group > select:focus {
+    border-color: #000000;
+    outline: 3px solid #ddff53;
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
 select option {
     background: #fff;
     color: #000;

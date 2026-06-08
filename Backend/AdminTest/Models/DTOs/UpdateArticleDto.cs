@@ -40,7 +40,7 @@ public class UpdateArticleDto
     [StringLength(500)]
     public string? AudioEmbedUrl { get; set; }
 
-    [StringLength(200)]
+    [StringLength(2000)]
     public string? ImageCredit { get; set; }
 
     [StringLength(1000)]
