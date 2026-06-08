@@ -48,10 +48,6 @@
         <span class="material-icons">restart_alt</span> איפוס סינון
       </button>
 
-      <!-- Cleanup Artist Duplicates -->
-      <button class="filter-btn btn-cleanup" (click)="cleanupArtistDuplicates()" title="סגור כפילויות ודיווחי אמנים שכבר אושרו">
-        <span class="material-icons">auto_fix_high</span> ניקוי כפילויות
-      </button>
     </div>
 
     <!-- Stats -->
@@ -77,10 +73,7 @@
           {{ statusLabels[report.status] }}
         </span>
       </div>
-      <h3>
-        {{ report.contentTitle }}
-        <span class="song-count-badge" *ngIf="report.reportType === 'NewArtist' && report.songCount && report.songCount > 0">{{ report.songCount }} שירים</span>
-      </h3>
+      <h3>{{ report.contentTitle }}</h3>
       <div class="report-card-badges">
         <span class="content-type-badge">{{ contentTypeLabels[report.contentType] }}</span>
         <span class="report-type-badge">{{ reportTypeLabels[report.reportType] }}</span>
@@ -159,9 +152,6 @@
             <!-- Title -->
             <td class="title-cell">
               <div class="content-title">{{ report.contentTitle }}</div>
-              <span class="song-count-badge" *ngIf="report.reportType === 'NewArtist' && report.songCount && report.songCount > 0">
-                {{ report.songCount }} שירים
-              </span>
             </td>
 
             <!-- Report Type -->
