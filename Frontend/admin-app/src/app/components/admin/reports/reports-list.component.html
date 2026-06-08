@@ -72,7 +72,10 @@
           {{ statusLabels[report.status] }}
         </span>
       </div>
-      <h3>{{ report.contentTitle }}</h3>
+      <h3>
+        {{ report.contentTitle }}
+        <span class="song-count-badge" *ngIf="report.reportType === 'NewArtist' && report.songCount && report.songCount > 0">{{ report.songCount }} שירים</span>
+      </h3>
       <div class="report-card-badges">
         <span class="content-type-badge">{{ contentTypeLabels[report.contentType] }}</span>
         <span class="report-type-badge">{{ reportTypeLabels[report.reportType] }}</span>
@@ -151,6 +154,9 @@
             <!-- Title -->
             <td class="title-cell">
               <div class="content-title">{{ report.contentTitle }}</div>
+              <span class="song-count-badge" *ngIf="report.reportType === 'NewArtist' && report.songCount && report.songCount > 0">
+                {{ report.songCount }} שירים
+              </span>
             </td>
 
             <!-- Report Type -->

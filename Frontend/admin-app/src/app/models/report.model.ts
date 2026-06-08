@@ -19,6 +19,7 @@ export interface Report {
     resolvedAt?: Date;
     resolvedByUsername?: string;
     adminNotes?: string;
+    songCount?: number;
 }
 
 export interface UpdateReportStatusDto {

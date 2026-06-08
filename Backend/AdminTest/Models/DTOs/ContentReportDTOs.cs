@@ -43,6 +43,7 @@ public class ReportDto
     public DateTime? ResolvedAt { get; set; }
     public string? ResolvedByUsername { get; set; }
     public string? AdminNotes { get; set; }
+    public int? SongCount { get; set; }
 }
 
 public class ChordRequestDto

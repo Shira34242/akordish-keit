@@ -190,17 +190,27 @@ public class SongService : ISongService
                         IsTemporary = true
                     });
 
-                    // Create a report for admin review
-                    _context.ContentReports.Add(new ContentReport
+                    // יצירת דיווח רק אם אין כבר דיווח Pending לאותו אמן
+                    var normalizedArtistName = artist.Name.Trim();
+                    var artistMarker = $"'{normalizedArtistName}'";
+                    bool artistReportExists = await _context.ContentReports.AnyAsync(r =>
+                        r.ReportType == "NewArtist" &&
+                        r.Status == "Pending" &&
+                        r.Description.Contains(artistMarker));
+
+                    if (!artistReportExists)
                     {
-                        UserId = userId,
-                        ContentType = "Song",
-                        ContentId = song.Id,
-                        ReportType = "NewArtist",
-                        Description = $"נוסף שיר עם אמן שלא קיים במערכת: '{artist.Name}' בשיר '{song.Title}'",
-                        ReportedAt = DateTime.UtcNow,
-                        Status = "Pending"
-                    });
+                        _context.ContentReports.Add(new ContentReport
+                        {
+                            UserId = userId,
+                            ContentType = "Song",
+                            ContentId = song.Id,
+                            ReportType = "NewArtist",
+                            Description = $"נוסף שיר עם אמן שלא קיים במערכת: '{normalizedArtistName}' בשיר '{song.Title}'",
+                            ReportedAt = DateTime.UtcNow,
+                            Status = "Pending"
+                        });
+                    }
                 }
             }
 
@@ -472,17 +482,27 @@ public class SongService : ISongService
                         IsTemporary = true
                     });
 
-                    // Create a report for admin review
-                    _context.ContentReports.Add(new ContentReport
+                    // יצירת דיווח רק אם אין כבר דיווח Pending לאותו אמן
+                    var normalizedArtistName = artist.Name.Trim();
+                    var artistMarker = $"'{normalizedArtistName}'";
+                    bool artistReportExists = await _context.ContentReports.AnyAsync(r =>
+                        r.ReportType == "NewArtist" &&
+                        r.Status == "Pending" &&
+                        r.Description.Contains(artistMarker));
+
+                    if (!artistReportExists)
                     {
-                        UserId = userId,
-                        ContentType = "Song",
-                        ContentId = song.Id,
-                        ReportType = "NewArtist",
-                        Description = $"עודכן שיר עם אמן שלא קיים במערכת: '{artist.Name}' בשיר '{song.Title}'",
-                        ReportedAt = DateTime.UtcNow,
-                        Status = "Pending"
-                    });
+                        _context.ContentReports.Add(new ContentReport
+                        {
+                            UserId = userId,
+                            ContentType = "Song",
+                            ContentId = song.Id,
+                            ReportType = "NewArtist",
+                            Description = $"עודכן שיר עם אמן שלא קיים במערכת: '{normalizedArtistName}' בשיר '{song.Title}'",
+                            ReportedAt = DateTime.UtcNow,
+                            Status = "Pending"
+                        });
+                    }
                 }
             }
 

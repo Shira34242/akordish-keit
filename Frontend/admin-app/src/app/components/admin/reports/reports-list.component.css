@@ -48,6 +48,9 @@
 .reports-table tbody tr:hover { background: #fafafa; }
 .reports-table td { padding: var(--space-sm) var(--space-base); vertical-align: middle; color: #000000; }
 
+/* Song count badge (NewArtist reports) */
+.song-count-badge { display: inline-block; background: #ddff53; color: #000000; font-size: var(--font-xs); font-weight: 600; padding: 1px 8px; border-radius: 999px; margin-top: 3px; }
+
 /* Report row */
 .report-row { }
 .report-row.expanded { background: #F2F2F2; }

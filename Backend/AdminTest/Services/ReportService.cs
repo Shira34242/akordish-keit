@@ -355,15 +355,10 @@ public class ReportService : IReportService
         if (report.Status != "Pending")
             return (false, "הדיווח כבר טופל", null);
 
-        // חילוץ שם האמן מהתיאור: "נוסף שיר עם אמן שלא קיים במערכת: 'ArtistName' בשיר 'SongTitle'"
-        var desc = report.Description;
-        var firstQuote = desc.IndexOf('\'');
-        var secondQuote = firstQuote >= 0 ? desc.IndexOf('\'', firstQuote + 1) : -1;
-
-        if (firstQuote < 0 || secondQuote < 0)
+        // חילוץ שם האמן מהתיאור
+        var artistName = ExtractArtistNameFromDescription(report.Description);
+        if (artistName == null)
             return (false, "לא ניתן לחלץ שם אמן מהתיאור", null);
-
-        var artistName = desc.Substring(firstQuote + 1, secondQuote - firstQuote - 1).Trim();
 
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -379,30 +374,39 @@ public class ReportService : IReportService
             _context.Artists.Add(artist);
             await _context.SaveChangesAsync();
 
-            // מציאת ה-SongArtist הזמני וקישורו לאמן החדש
-            var songArtist = await _context.SongArtists
-                .FirstOrDefaultAsync(sa =>
-                    sa.SongId == report.ContentId &&
-                    sa.IsTemporary == true &&
-                    sa.TempArtistName == artistName);
+            // קישור כל ה-SongArtists הזמניים עם שם זה לאמן החדש
+            var allTempSongArtists = await _context.SongArtists
+                .Where(sa => sa.IsTemporary && sa.TempArtistName == artistName)
+                .ToListAsync();
 
-            if (songArtist != null)
+            foreach (var sa in allTempSongArtists)
             {
-                songArtist.ArtistId = artist.Id;
-                songArtist.IsTemporary = false;
-                songArtist.TempArtistName = null;
+                sa.ArtistId = artist.Id;
+                sa.IsTemporary = false;
+                sa.TempArtistName = null;
             }
 
-            // סגירת הדיווח
-            report.Status = "Resolved";
-            report.ResolvedAt = DateTime.UtcNow;
-            report.ResolvedByUserId = adminUserId;
-            report.AdminNotes = $"אמן '{artistName}' נוצר ואושר על ידי מנהל";
+            // סגירת כל הדיווחים הפתוחים לאמן זה
+            var artistMarker = $"'{artistName}'";
+            var allPendingReports = await _context.ContentReports
+                .Where(r =>
+                    r.ReportType == "NewArtist" &&
+                    r.Status == "Pending" &&
+                    r.Description.Contains(artistMarker))
+                .ToListAsync();
+
+            foreach (var r in allPendingReports)
+            {
+                r.Status = "Resolved";
+                r.ResolvedAt = DateTime.UtcNow;
+                r.ResolvedByUserId = adminUserId;
+                r.AdminNotes = $"אמן '{artistName}' נוצר ואושר על ידי מנהל ({allTempSongArtists.Count} שירים קושרו)";
+            }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return (true, $"האמן '{artistName}' נוצר ואושר בהצלחה", artist.Id);
+            return (true, $"האמן '{artistName}' נוצר ואושר בהצלחה ({allTempSongArtists.Count} שירים קושרו)", artist.Id);
         }
         catch (Exception ex)
         {
@@ -419,6 +423,17 @@ public class ReportService : IReportService
     {
         var (contentTitle, contentUrl) = await GetContentInfoAsync(report.ContentType, report.ContentId);
 
+        int? songCount = null;
+        if (report.ReportType == "NewArtist")
+        {
+            var artistName = ExtractArtistNameFromDescription(report.Description);
+            if (artistName != null)
+            {
+                songCount = await _context.SongArtists
+                    .CountAsync(sa => sa.IsTemporary && sa.TempArtistName == artistName);
+            }
+        }
+
         return new ReportDto
         {
             Id = report.Id,
@@ -433,8 +448,17 @@ public class ReportService : IReportService
             ReporterUsername = report.User?.Username,
             ResolvedAt = report.ResolvedAt,
             ResolvedByUsername = report.ResolvedByUser?.Username,
-            AdminNotes = report.AdminNotes
+            AdminNotes = report.AdminNotes,
+            SongCount = songCount
         };
+    }
+
+    private static string? ExtractArtistNameFromDescription(string description)
+    {
+        var firstQuote = description.IndexOf('\'');
+        var secondQuote = firstQuote >= 0 ? description.IndexOf('\'', firstQuote + 1) : -1;
+        if (firstQuote < 0 || secondQuote < 0) return null;
+        return description.Substring(firstQuote + 1, secondQuote - firstQuote - 1).Trim();
     }
 
     private async Task<(string title, string url)> GetContentInfoAsync(string contentType, int contentId)
