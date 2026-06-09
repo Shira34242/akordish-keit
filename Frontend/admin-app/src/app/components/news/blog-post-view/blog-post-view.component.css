@@ -717,13 +717,13 @@
    MID-ARTICLE BANNER AD — 70% width centered
 ============================================ */
 
-.mid-banner-ad {
+.mid-content-area {
   width: 70%;
   margin: var(--space-lg) auto 0;
 }
 
 @media (max-width: 768px) {
-  .mid-banner-ad {
+  .mid-content-area {
     width: 90%;
   }
 }

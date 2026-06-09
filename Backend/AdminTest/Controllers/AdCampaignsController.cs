@@ -491,6 +491,7 @@ namespace AkordishKeit.Controllers
 
         // POST: api/AdCampaigns/5/track-view
         [HttpPost("{id}/track-view")]
+        [HttpPost("/api/media/{id}/log-view")]
         public async Task<IActionResult> TrackView(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
@@ -529,6 +530,7 @@ namespace AkordishKeit.Controllers
 
         // POST: api/AdCampaigns/5/track-click
         [HttpPost("{id}/track-click")]
+        [HttpPost("/api/media/{id}/log-click")]
         public async Task<IActionResult> TrackClick(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
@@ -585,6 +587,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/Public/GetAd?spotTechnicalId=header-banner
         [HttpGet("Public/GetAd")]
+        [HttpGet("/api/media/item")]
         public async Task<ActionResult<object>> GetAdForSpot([FromQuery] string spotTechnicalId)
         {
             if (string.IsNullOrEmpty(spotTechnicalId))

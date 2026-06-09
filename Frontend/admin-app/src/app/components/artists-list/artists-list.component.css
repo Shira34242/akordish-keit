@@ -509,11 +509,11 @@
 /* ============================================
    AD SLOTS
 ============================================ */
-.artists-ad-slot {
+.artists-content-slot {
   width: 100%;
 }
 
-.artists-ad-slot:has(app-ad-display.ad-display--ready) {
+.artists-content-slot:has(app-media-item.media-item--ready) {
   margin: var(--space-lg) 0;
   border-radius: var(--radius-md, 16px);
   background: #F2F2F2;
@@ -523,11 +523,11 @@
   align-items: center;
 }
 
-.artists-ad-slot .ad-slot__label {
+.artists-content-slot .content-slot__label {
   display: none;
 }
 
-.artists-ad-slot:has(app-ad-display.ad-display--ready) .ad-slot__label {
+.artists-content-slot:has(app-media-item.media-item--ready) .content-slot__label {
   display: block;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);

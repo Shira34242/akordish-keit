@@ -1178,11 +1178,11 @@
 /* ============================================
    AD SLOTS — מוצג רק כשיש פרסומת פעילה
 ============================================ */
-.ad-slot {
+.content-slot {
   width: 100%;
 }
 
-.ad-slot:has(app-ad-display.ad-display--ready) {
+.content-slot:has(app-media-item.media-item--ready) {
   margin: var(--space-lg) 0;
   border-radius: var(--radius-md, 16px);
   background: #F2F2F2;
@@ -1192,11 +1192,11 @@
   align-items: center;
 }
 
-.ad-slot__label {
+.content-slot__label {
   display: none;
 }
 
-.ad-slot:has(app-ad-display.ad-display--ready) .ad-slot__label {
+.content-slot:has(app-media-item.media-item--ready) .content-slot__label {
   display: block;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);

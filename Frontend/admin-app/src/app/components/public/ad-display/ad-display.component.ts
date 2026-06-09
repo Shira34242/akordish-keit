@@ -27,25 +27,25 @@ interface AdSpotResponse {
 }
 
 @Component({
-  selector: 'app-ad-display',
+  selector: 'app-media-item',
   standalone: true,
   imports: [CloudflareImagePipe, CloudflareImageSrcsetPipe],
   template: `
     @if (currentAd) {
-      <div class="ad-container" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
-        <a [attr.href]="currentAd.knownUrl || null" target="_blank" (click)="handleAdClick($event)" class="ad-link" [class.ad-link--disabled]="!currentAd.knownUrl">
+      <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
+        <a [attr.href]="currentAd.knownUrl || null" target="_blank" (click)="handleAdClick($event)" class="media-link" [class.media-link--disabled]="!currentAd.knownUrl">
           @if (getMediaType(activeMediaUrl) === 'image') {
             <img
               [src]="activeMediaUrl | cfImage:imagePreset"
               [srcset]="activeMediaUrl | cfSrcset:srcsetWidths"
               [sizes]="imageSizes"
               [alt]="currentAd.name"
-              class="ad-media"
+              class="media-asset"
               loading="lazy"
               decoding="async"
               (load)="trackView()" />
           } @else if (getMediaType(activeMediaUrl) === 'video') {
-            <video [src]="activeMediaUrl" class="ad-media"
+            <video [src]="activeMediaUrl" class="media-asset"
               autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
           }
         </a>
@@ -58,21 +58,21 @@ interface AdSpotResponse {
       width: 100%;
     }
 
-    .ad-container {
+    .media-wrapper {
       width: 100%;
       display: block;
       overflow: hidden;
       margin: 0 auto;
     }
 
-    .ad-link {
+    .media-link {
       display: block;
       width: 100%;
       height: 100%;
       text-decoration: none;
     }
 
-    .ad-media {
+    .media-asset {
       display: block;
       width: 100%;
       height: 100%;
@@ -80,7 +80,7 @@ interface AdSpotResponse {
       object-position: center;
     }
 
-    .ad-link--disabled {
+    .media-link--disabled {
       cursor: default;
     }
   `]
@@ -92,7 +92,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly apiUrl = `${environment.apiBaseUrl}/api/AdCampaigns`;
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/media`;
 
   campaigns: AdCampaign[] = [];
   currentAd: AdCampaign | null = null;
@@ -111,8 +111,8 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   private readonly VIEWED_ADS_KEY = 'viewedAds';
   private readonly CLICKED_ADS_KEY = 'clickedAds';
 
-  @HostBinding('class.ad-display') readonly hostClass = true;
-  @HostBinding('class.ad-display--ready') get isReady(): boolean {
+  @HostBinding('class.media-item') readonly hostClass = true;
+  @HostBinding('class.media-item--ready') get isReady(): boolean {
     return !!this.currentAd;
   }
 
@@ -156,7 +156,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     const params = new HttpParams().set('spotTechnicalId', this.spotTechnicalId);
-    this.http.get<AdSpotResponse>(`${this.apiUrl}/Public/GetAd`, { params })
+    this.http.get<AdSpotResponse>(`${this.apiUrl}/item`, { params })
       .subscribe({
         next: (response) => {
           this.loading = false;
@@ -287,7 +287,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
       if (!this.hasViewedAd(this.currentAd.id)) {
         this.hasTrackedView = true;
         this.markAdAsViewed(this.currentAd.id);
-        this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-view`, {})
+        this.http.post(`${this.apiUrl}/${this.currentAd.id}/log-view`, {})
           .subscribe({ next: () => {}, error: () => {} });
       } else {
       }
@@ -307,7 +307,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     if (this.currentAd) {
       if (!this.hasClickedAd(this.currentAd.id)) {
         this.markAdAsClicked(this.currentAd.id);
-        this.http.post(`${this.apiUrl}/${this.currentAd.id}/track-click`, {})
+        this.http.post(`${this.apiUrl}/${this.currentAd.id}/log-click`, {})
           .subscribe({ next: () => {}, error: () => {} });
       } 
     }

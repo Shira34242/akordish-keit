@@ -71,9 +71,9 @@
   </div>
 
   <!-- פרסומת ראשונה — בין שורות האמנים לרשת הכללית -->
-  <div class="ad-slot artists-ad-slot">
-    <span class="ad-slot__label">פרסומת</span>
-    <app-ad-display spotTechnicalId="artists-list-top-banner"></app-ad-display>
+  <div class="content-slot artists-content-slot">
+    <span class="content-slot__label">פרסומת</span>
+    <app-media-item spotTechnicalId="artists-list-top-banner"></app-media-item>
   </div>
 
   <main class="artists-content">
@@ -102,9 +102,9 @@
     </div>
 
     <!-- פרסומת שנייה — לפני ה-pagination -->
-    <div class="ad-slot artists-ad-slot" *ngIf="!loadingAll && allArtists.length > 0">
-      <span class="ad-slot__label">פרסומת</span>
-      <app-ad-display spotTechnicalId="artists-list-bottom-banner"></app-ad-display>
+    <div class="content-slot artists-content-slot" *ngIf="!loadingAll && allArtists.length > 0">
+      <span class="content-slot__label">פרסומת</span>
+      <app-media-item spotTechnicalId="artists-list-bottom-banner"></app-media-item>
     </div>
 
     <div class="pagination" *ngIf="totalPages > 1 && !loadingAll && !searchTerm">

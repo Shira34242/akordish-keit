@@ -1061,7 +1061,7 @@
   margin-bottom: var(--space-sm);
 }
 
-.prof-ad-slot:has(app-ad-display.ad-display--ready) {
+.prof-ad-slot:has(app-media-item.media-item--ready) {
   background: #F2F2F2;
   border-radius: 16px;
   overflow: hidden;
