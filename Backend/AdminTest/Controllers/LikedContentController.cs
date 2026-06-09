@@ -60,6 +60,42 @@ public class LikedContentController : ControllerBase
         return Ok(new { isLiked });
     }
 
+    [AllowAnonymous]
+    [HttpGet("reactions/{contentType}/{contentId}")]
+    public async Task<ActionResult<ContentReactionSummaryDto>> GetReactions(string contentType, int contentId)
+    {
+        var result = await _likedContentService.GetReactionSummaryAsync(contentType, contentId, GetCurrentUserId());
+        return Ok(result);
+    }
+
+    [HttpPost("reactions/{contentType}/{contentId}")]
+    public async Task<ActionResult<ContentReactionSummaryDto>> SetReaction(
+        string contentType,
+        int contentId,
+        [FromBody] SetContentReactionDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        var result = await _likedContentService.SetReactionAsync(contentType, contentId, dto.Reaction, userId.Value);
+        return Ok(result);
+    }
+
+    [HttpDelete("reactions/{contentType}/{contentId}")]
+    public async Task<ActionResult<ContentReactionSummaryDto>> ClearReaction(string contentType, int contentId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var result = await _likedContentService.ClearReactionAsync(contentType, contentId, userId.Value);
+        return Ok(result);
+    }
+
     // ============================================
     // POST: api/LikedContent
     // הוספת תוכן למועדפים

@@ -19,6 +19,9 @@ public class LikedContentConfiguration : IEntityTypeConfiguration<LikedContent>
         builder.Property(lc => lc.LikedAt)
             .IsRequired();
 
+        builder.Property(lc => lc.Reaction)
+            .HasMaxLength(32);
+
         // Unique index - משתמש לא יכול לסמן אותו תוכן פעמיים
         builder.HasIndex(lc => new { lc.UserId, lc.ContentType, lc.ContentId })
             .IsUnique()
@@ -27,6 +30,10 @@ public class LikedContentConfiguration : IEntityTypeConfiguration<LikedContent>
         // Index לשאילתות מהירות
         builder.HasIndex(lc => new { lc.UserId, lc.LikedAt })
             .HasDatabaseName("IX_LikedContent_User_LikedAt");
+
+        builder.HasIndex(lc => new { lc.ContentType, lc.ContentId, lc.Reaction })
+            .HasFilter("[Reaction] IS NOT NULL")
+            .HasDatabaseName("IX_LikedContent_Content_Reaction");
 
         // Foreign Key ל-User
         builder.HasOne(lc => lc.User)

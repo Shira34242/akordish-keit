@@ -81,6 +81,7 @@
 .header-image-section {
     flex: 0 0 260px;
     position: relative;
+    transition: width 0.25s ease, flex-basis 0.25s ease;
 }
 
 .song-cover-wrapper {
@@ -786,7 +787,8 @@
     border-radius: 24px;
     width: 100%;
     box-sizing: border-box;
-    min-width: 0; /* מונע CSS Grid blowout — מאפשר ל-chord-diagrams-bar לגלול */
+    min-width: 0;
+    transition: padding 0.25s ease, border-radius 0.25s ease;
 }
 
 .lyrics-column.dark-mode {
@@ -1261,6 +1263,13 @@
         text-align: center;
     }
 
+    /* Sidebar: 2-column grid on tablet */
+    .sidebar-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+    }
+
     .lyrics-column {
         padding: var(--space-lg);
     }
@@ -1335,6 +1344,13 @@
     .action-btn svg {
         width: 17px;
         height: 17px;
+    }
+
+    /* Sidebar: single column on mobile */
+    .sidebar-column {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: unset;
     }
 
     /* toolbar — מרווח צמוד יותר בנייד */
@@ -1460,6 +1476,32 @@
     }
 }
 
+@media (max-width: 360px) {
+    .header-image-section {
+        width: 72px;
+        flex: 0 0 72px;
+    }
+
+    .main-title {
+        font-size: var(--font-base);
+    }
+
+    .artist-name-link,
+    .artist-separator {
+        font-size: 11px;
+    }
+
+    .lyrics-column {
+        padding: var(--space-sm);
+        border-radius: 12px;
+        min-height: 200px;
+    }
+
+    .main-layout {
+        padding: 0 var(--space-xs);
+    }
+}
+
 /* Copy Notification Toast */
 .copy-notification {
     position: fixed;
@@ -1514,12 +1556,115 @@
 }
 
 /* Bookmark Saved State */
-.btn-bookmark.saved {
-    color: #e63939;
+.btn-bookmark {
+    --bookmark-accent: #e63939;
+    overflow: visible;
+    position: relative;
 }
-.btn-bookmark.saved svg {
-    fill: #e63939;
-    stroke: #e63939;
+
+.btn-bookmark .bookmark-icon {
+    position: relative;
+    transform-origin: top center;
+    z-index: 1;
+}
+
+.btn-bookmark .bookmark-burst,
+.btn-bookmark .bookmark-burst::before {
+    border-radius: 50%;
+    left: 50%;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0);
+}
+
+.btn-bookmark .bookmark-burst {
+    border: 1px solid var(--bookmark-accent);
+    height: 34px;
+    width: 34px;
+}
+
+.btn-bookmark .bookmark-burst::before {
+    box-shadow:
+        0 -24px 0 -3px var(--bookmark-accent),
+        17px -17px 0 -3px var(--bookmark-accent),
+        24px 0 0 -3px var(--bookmark-accent),
+        17px 17px 0 -3px var(--bookmark-accent),
+        0 24px 0 -3px var(--bookmark-accent),
+        -17px 17px 0 -3px var(--bookmark-accent),
+        -24px 0 0 -3px var(--bookmark-accent),
+        -17px -17px 0 -3px var(--bookmark-accent);
+    content: "";
+    height: 8px;
+    width: 8px;
+}
+
+.btn-bookmark.saved {
+    color: var(--bookmark-accent);
+}
+
+.btn-bookmark.saved .bookmark-icon {
+    animation: song-bookmark-pop 0.3s ease-out forwards;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+.btn-bookmark.saved .bookmark-burst {
+    animation: song-bookmark-ring 0.45s ease-out forwards;
+}
+
+.btn-bookmark.saved .bookmark-burst::before {
+    animation: song-bookmark-sparks 0.45s ease-out forwards;
+}
+
+@keyframes song-bookmark-pop {
+    50% {
+        transform: scaleY(0.6);
+    }
+
+    100% {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes song-bookmark-ring {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes song-bookmark-sparks {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    40% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-bookmark.saved .bookmark-icon,
+    .btn-bookmark.saved .bookmark-burst,
+    .btn-bookmark.saved .bookmark-burst::before {
+        animation: none;
+    }
 }
 
 /* YouTube Modal */

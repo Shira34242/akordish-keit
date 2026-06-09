@@ -572,26 +572,24 @@ export function enharmonicRoot(root: string): string | null {
  * Simplify a chord to its beginner-friendly form.
  *
  * Rules:
- *  - minor, minor7, dim, dim7, halfDim (m7b5)  → root + m   (keep minor quality)
- *  - dominant (7)                                → root + 7   (strip modifiers/extensions)
- *  - major + numeric extensions ≥ 9 (G9, G13)  → root + 7   (implied dominant)
- *  - major7, aug, sus2, sus4, sus               → root only
- *  - major + add9/add11 modifiers               → root only
- *  - plain major, plain minor                   → unchanged
- *  - Slash chords: simplify root part, keep bass note
+ *  - Remove alternate bass notes and optional color tones.
+ *  - Preserve qualities that change the chord's harmonic core:
+ *    diminished, augmented, suspended and half-diminished.
+ *  - Reduce extended dominant chords to 7, minor extensions to minor,
+ *    and major color tones to the major triad.
  *
  * Examples:
  *  Cmaj7 → C,  Cadd9 → C,  Gsus4 → G,  Caug → C
- *  Bm7b5 → Bm, Cdim → Cm,  F#m7 → F#m
+ *  Bm7b5 → Bm7b5, Cdim7 → Cdim,  F#m7 → F#m
  *  G7b9 → G7,  G13 → G7,   G9 → G7
- *  Cmaj7/B → C/B,  Bm7b5/F → Bm/F
+ *  Cmaj7/B → C,  Bm7b5/F → Bm7b5
  */
 export function simplifyChord(symbol = ''): string {
     if (!symbol) return symbol;
     const parsed = parseChord(symbol);
     if (!parsed) return symbol;
 
-    const { root, quality, extensions, bass } = parsed;
+    const { root, quality, extensions } = parsed;
 
     let simplifiedSuffix: string;
 
@@ -604,19 +602,29 @@ export function simplifyChord(symbol = ''): string {
             simplifiedSuffix = '7';
             break;
         case 'minor7':
-        case 'dim':
-        case 'dim7':
-        case 'halfDim':
-            // Reduce to plain minor
             simplifiedSuffix = 'm';
             break;
+        case 'dim':
+        case 'dim7':
+            simplifiedSuffix = 'dim';
+            break;
+        case 'halfDim':
+            simplifiedSuffix = 'm7b5';
+            break;
         case 'major7':
-        case 'aug':
-        case 'sus2':
-        case 'sus4':
-        case 'sus':
-            // Reduce to root
             simplifiedSuffix = '';
+            break;
+        case 'aug':
+            simplifiedSuffix = 'aug';
+            break;
+        case 'sus2':
+            simplifiedSuffix = 'sus2';
+            break;
+        case 'sus4':
+            simplifiedSuffix = 'sus4';
+            break;
+        case 'sus':
+            simplifiedSuffix = 'sus';
             break;
         case 'major':
         default:
@@ -625,7 +633,7 @@ export function simplifyChord(symbol = ''): string {
             break;
     }
 
-    return root + simplifiedSuffix + (bass ? '/' + bass : '');
+    return root + simplifiedSuffix;
 }
 
 // -------------------------------------------------------------------
@@ -749,32 +757,32 @@ const SIMPLIFY_TEST_CASES: SimplifyTestCase[] = [
     // add chords → root
     { input: 'Cadd9',     expected: 'C'    },
     { input: 'Amadd9',    expected: 'Am'   },
-    // Suspended → root (plain sus) or 7 (7sus)
-    { input: 'Csus4',     expected: 'C'    },
-    { input: 'Gsus2',     expected: 'G'    },
+    // Suspended — preserve the harmonic quality
+    { input: 'Csus4',     expected: 'Csus4'},
+    { input: 'Gsus2',     expected: 'Gsus2'},
     { input: 'G7sus4',    expected: 'G7'   },
-    // Diminished / half-dim → minor
-    { input: 'Cdim',      expected: 'Cm'   },
-    { input: 'Cdim7',     expected: 'Cm'   },
-    { input: 'Bm7b5',     expected: 'Bm'   },
-    // Augmented → root
-    { input: 'Caug',      expected: 'C'    },
+    // Diminished / half-dim — preserve the harmonic quality
+    { input: 'Cdim',      expected: 'Cdim' },
+    { input: 'Cdim7',     expected: 'Cdim' },
+    { input: 'Bm7b5',     expected: 'Bm7b5'},
+    // Augmented — preserve the harmonic quality
+    { input: 'Caug',      expected: 'Caug' },
     // Dominant alterations → 7
     { input: 'G7b9',      expected: 'G7'   },
     { input: 'E7#9',      expected: 'E7'   },
     // Plain extensions on major (implied dominant) → 7
     { input: 'G9',        expected: 'G7'   },
     { input: 'G13',       expected: 'G7'   },
-    // Slash chords — simplify root, keep bass
-    { input: 'G/B',       expected: 'G/B'  },
-    { input: 'Cmaj7/B',   expected: 'C/B'  },
-    { input: 'Bm7b5/F#',  expected: 'Bm/F#'},
+    // Slash chords — remove alternate bass
+    { input: 'G/B',       expected: 'G'  },
+    { input: 'Cmaj7/B',   expected: 'C'  },
+    { input: 'Bm7b5/F#',  expected: 'Bm7b5' },
     // Alias inputs
     { input: 'CΔ7',       expected: 'C'    },
     { input: 'C7+',       expected: 'C'    },
-    { input: 'C°',        expected: 'Cm'   },
-    { input: 'Cø7',       expected: 'Cm'   },
-    { input: 'C+',        expected: 'C'    },
+    { input: 'C°',        expected: 'Cdim' },
+    { input: 'Cø7',       expected: 'Cm7b5'},
+    { input: 'C+',        expected: 'Caug' },
     { input: 'C-',        expected: 'Cm'   },
     { input: 'C-7',       expected: 'Cm'   },
 ];

@@ -7,7 +7,7 @@
     text-align: center;
     border: 1px solid #e5e7eb;
     min-width: 120px;
-    pointer-events: none;
+    pointer-events: auto;
     /* Force LTR for all chord names and musical notation (fixes G# → #G RTL bug) */
     direction: ltr;
 }

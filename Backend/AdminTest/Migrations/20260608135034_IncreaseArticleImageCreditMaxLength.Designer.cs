@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkordishKeit.Migrations
 {
     [DbContext(typeof(AkordishKeitDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608135034_IncreaseArticleImageCreditMaxLength")]
+    partial class IncreaseArticleImageCreditMaxLength
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2086,10 +2089,6 @@ namespace AkordishKeit.Migrations
                     b.Property<DateTime>("LikedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Reaction")
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -2097,10 +2096,6 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("UserId", "LikedAt")
                         .HasDatabaseName("IX_LikedContent_User_LikedAt");
-
-                    b.HasIndex("ContentType", "ContentId", "Reaction")
-                        .HasDatabaseName("IX_LikedContent_Content_Reaction")
-                        .HasFilter("[Reaction] IS NOT NULL");
 
                     b.HasIndex("UserId", "ContentType", "ContentId")
                         .IsUnique()

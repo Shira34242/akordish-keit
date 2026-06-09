@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { LikedContent, AddLikedContentDto } from '../models/liked-content.model';
+import { LikedContent, AddLikedContentDto, ContentReactionSummary } from '../models/liked-content.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,5 +26,34 @@ export class LikedContentService {
 
   removeLikedContent(contentType: 'Article' | 'BlogPost', contentId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${contentType}/${contentId}`, { withCredentials: true });
+  }
+
+  getReactions(contentType: 'Article' | 'BlogPost', contentId: number): Observable<ContentReactionSummary> {
+    return this.http.get<ContentReactionSummary>(
+      `${this.apiUrl}/reactions/${contentType}/${contentId}`,
+      { withCredentials: true }
+    );
+  }
+
+  setReaction(
+    contentType: 'Article' | 'BlogPost',
+    contentId: number,
+    reaction: string
+  ): Observable<ContentReactionSummary> {
+    return this.http.post<ContentReactionSummary>(
+      `${this.apiUrl}/reactions/${contentType}/${contentId}`,
+      { reaction },
+      { withCredentials: true }
+    );
+  }
+
+  clearReaction(
+    contentType: 'Article' | 'BlogPost',
+    contentId: number
+  ): Observable<ContentReactionSummary> {
+    return this.http.delete<ContentReactionSummary>(
+      `${this.apiUrl}/reactions/${contentType}/${contentId}`,
+      { withCredentials: true }
+    );
   }
 }

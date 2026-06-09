@@ -7,6 +7,16 @@ namespace AkordishKeit.Services;
 
 public class LikedContentService : ILikedContentService
 {
+    private static readonly HashSet<string> AllowedReactions =
+    [
+        "like",
+        "love",
+        "clap",
+        "wow",
+        "fire",
+        "smile"
+    ];
+
     private readonly AkordishKeitDbContext _context;
 
     public LikedContentService(AkordishKeitDbContext context)
@@ -30,7 +40,8 @@ public class LikedContentService : ILikedContentService
                 Id = lc.Id,
                 ContentType = lc.ContentType,
                 ContentId = lc.ContentId,
-                LikedAt = lc.LikedAt
+                LikedAt = lc.LikedAt,
+                Reaction = lc.Reaction
             };
 
             // טעינת פרטי הכתבה/בלוג
@@ -78,7 +89,8 @@ public class LikedContentService : ILikedContentService
             Id = likedContent.Id,
             ContentType = likedContent.ContentType,
             ContentId = likedContent.ContentId,
-            LikedAt = likedContent.LikedAt
+            LikedAt = likedContent.LikedAt,
+            Reaction = likedContent.Reaction
         };
     }
 
@@ -104,5 +116,102 @@ public class LikedContentService : ILikedContentService
             .AnyAsync(lc => lc.UserId == userId &&
                            lc.ContentType == contentType &&
                            lc.ContentId == contentId);
+    }
+
+    public async Task<ContentReactionSummaryDto> GetReactionSummaryAsync(
+        string contentType,
+        int contentId,
+        int? userId)
+    {
+        var counts = await _context.LikedContents
+            .AsNoTracking()
+            .Where(lc => lc.ContentType == contentType &&
+                         lc.ContentId == contentId &&
+                         lc.Reaction != null)
+            .GroupBy(lc => lc.Reaction!)
+            .Select(group => new ContentReactionCountDto
+            {
+                Reaction = group.Key,
+                Count = group.Count()
+            })
+            .ToListAsync();
+
+        string? userReaction = null;
+        var isLiked = false;
+        if (userId.HasValue)
+        {
+            var userLike = await _context.LikedContents
+                .AsNoTracking()
+                .Where(lc => lc.UserId == userId.Value &&
+                             lc.ContentType == contentType &&
+                             lc.ContentId == contentId)
+                .Select(lc => new { lc.Reaction })
+                .FirstOrDefaultAsync();
+
+            isLiked = userLike != null;
+            userReaction = userLike?.Reaction;
+        }
+
+        return new ContentReactionSummaryDto
+        {
+            IsLiked = isLiked,
+            UserReaction = userReaction,
+            TotalCount = counts.Sum(item => item.Count),
+            Reactions = counts
+        };
+    }
+
+    public async Task<ContentReactionSummaryDto> SetReactionAsync(
+        string contentType,
+        int contentId,
+        string reaction,
+        int userId)
+    {
+        if (!AllowedReactions.Contains(reaction))
+            throw new ArgumentException("Invalid reaction.", nameof(reaction));
+
+        var likedContent = await _context.LikedContents
+            .FirstOrDefaultAsync(lc => lc.UserId == userId &&
+                                      lc.ContentType == contentType &&
+                                      lc.ContentId == contentId);
+
+        if (likedContent == null)
+        {
+            likedContent = new LikedContent
+            {
+                UserId = userId,
+                ContentType = contentType,
+                ContentId = contentId,
+                LikedAt = DateTime.UtcNow,
+                Reaction = reaction
+            };
+            _context.LikedContents.Add(likedContent);
+        }
+        else
+        {
+            likedContent.Reaction = reaction;
+        }
+
+        await _context.SaveChangesAsync();
+        return await GetReactionSummaryAsync(contentType, contentId, userId);
+    }
+
+    public async Task<ContentReactionSummaryDto> ClearReactionAsync(
+        string contentType,
+        int contentId,
+        int userId)
+    {
+        var likedContent = await _context.LikedContents
+            .FirstOrDefaultAsync(lc => lc.UserId == userId &&
+                                      lc.ContentType == contentType &&
+                                      lc.ContentId == contentId);
+
+        if (likedContent != null)
+        {
+            _context.LikedContents.Remove(likedContent);
+            await _context.SaveChangesAsync();
+        }
+
+        return await GetReactionSummaryAsync(contentType, contentId, userId);
     }
 }

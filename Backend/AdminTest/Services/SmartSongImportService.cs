@@ -25,6 +25,7 @@ public class SmartSongImportService : ISmartSongImportService
 
     private sealed record Tab4USearchResult(string Href, string? ImageUrl);
     private sealed record Tab4UArtistSongs(List<string> SongUrls, int PageCount);
+    private sealed record Tab4ULyricsRow(string Text, bool IsChordLine);
 
     public SmartSongImportService(
         HttpClient httpClient,
@@ -73,6 +74,7 @@ public class SmartSongImportService : ISmartSongImportService
         var siteParts = ExtractSiteSpecificParts(uri, html);
         var isNeginaImport = uri.Host.Contains("negina.co.il", StringComparison.OrdinalIgnoreCase);
         var normalizeImportedChordOnlyLines = ShouldNormalizeImportedChordOnlyLines(uri);
+        var preserveImportedChordLineTrailingSpaces = uri.Host.Contains("tab4u.com", StringComparison.OrdinalIgnoreCase);
 
         var title = CleanTitle(
             siteParts.Title
@@ -89,9 +91,9 @@ public class SmartSongImportService : ISmartSongImportService
             ? ExtractLyricsWithChords(html)
             : null;
         var lyricsWithChords = !string.IsNullOrWhiteSpace(siteParts.LyricsWithChords)
-            ? CleanLyrics(siteParts.LyricsWithChords, normalizeImportedChordOnlyLines)
+            ? CleanLyrics(siteParts.LyricsWithChords, normalizeImportedChordOnlyLines, preserveImportedChordLineTrailingSpaces)
             : (!string.IsNullOrWhiteSpace(genericLyricsWithChords)
-                ? CleanLyrics(genericLyricsWithChords, normalizeImportedChordOnlyLines)
+                ? CleanLyrics(genericLyricsWithChords, normalizeImportedChordOnlyLines, preserveImportedChordLineTrailingSpaces)
                 : null);
         var youtubeUrl = siteParts.YoutubeUrl ?? ExtractYouTubeUrl(html);
         var imageUrl = siteParts.ImageUrl ?? ExtractMeta(html, "og:image") ?? ExtractMeta(html, "twitter:image");
@@ -616,7 +618,8 @@ public class SmartSongImportService : ISmartSongImportService
             ?? ExtractMeta(html, "og:title")
             ?? ExtractTitleTag(html));
 
-        var lyrics = ExtractPreservedElementById(html, "songContentTPL")
+        var lyrics = ExtractTab4ULyricsWithChords(html)
+            ?? ExtractPreservedElementById(html, "songContentTPL")
             ?? ExtractPreservedElementById(html, "songContent")
             ?? ExtractPreservedElementById(html, "songContentDiv");
 
@@ -627,6 +630,96 @@ public class SmartSongImportService : ISmartSongImportService
             YoutubeUrl: ExtractYouTubeUrl(html),
             ImageUrl: ExtractTab4UImageUrl(html));
     }
+
+    private static string? ExtractTab4ULyricsWithChords(string html)
+    {
+        var songContent = ExtractRawElementById(html, "songContentTPL")
+            ?? ExtractRawElementById(html, "songContent")
+            ?? ExtractRawElementById(html, "songContentDiv");
+        if (string.IsNullOrWhiteSpace(songContent))
+        {
+            return null;
+        }
+
+        var rows = Regex.Matches(
+                songContent,
+                @"<td\b(?<attrs>(?=[^>]*\bclass\s*=\s*[""'][^""']*\b(?:song|chords)\b[^""']*[""'])[^>]*)>(?<text>.*?)</td>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(match =>
+            {
+                var isChordLine = Regex.IsMatch(
+                    match.Groups["attrs"].Value,
+                    @"\bclass\s*=\s*[""'][^""']*\bchords\b",
+                    RegexOptions.IgnoreCase);
+                return new Tab4ULyricsRow(Tab4UCellToText(match.Groups["text"].Value), isChordLine);
+            })
+            .Where(row => !string.IsNullOrWhiteSpace(row.Text))
+            .ToList();
+
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+
+        var text = string.Join(Environment.NewLine, NormalizeTab4URowIndentation(rows));
+        return ScoreLyricsBlock(text) > 10 ? text : null;
+    }
+
+    private static string Tab4UCellToText(string html)
+    {
+        const string nbspToken = "\uE001";
+        var text = Regex.Replace(html, @"<script\b[^>]*>.*?</script>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<style\b[^>]*>.*?</style>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        text = text
+            .Replace("&nbsp;", nbspToken, StringComparison.OrdinalIgnoreCase)
+            .Replace("&#160;", nbspToken, StringComparison.OrdinalIgnoreCase)
+            .Replace("&#xa0;", nbspToken, StringComparison.OrdinalIgnoreCase);
+        text = Regex.Replace(text, @"<[^>]+>", "");
+        text = WebUtility.HtmlDecode(text);
+        text = text.Replace('\u00A0', ' ');
+        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        text = Regex.Replace(text, @"[\u200E\u200F]", "");
+        text = text.Trim('\r', '\n', '\t');
+        text = text.Replace(nbspToken, " ");
+        return text.TrimEnd('\t');
+    }
+
+    private static IEnumerable<string> NormalizeTab4URowIndentation(IReadOnlyList<Tab4ULyricsRow> rows)
+    {
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var row = rows[index];
+            if (!row.IsChordLine)
+            {
+                yield return row.Text.TrimEnd();
+                continue;
+            }
+
+            var nextLyricsRow = index + 1 < rows.Count && !rows[index + 1].IsChordLine
+                ? rows[index + 1]
+                : null;
+            var sharedIndent = nextLyricsRow is null
+                ? 0
+                : Math.Min(LeadingWhitespaceLength(row.Text), LeadingWhitespaceLength(nextLyricsRow.Text));
+            var chordLine = RemoveLeadingWhitespace(row.Text, sharedIndent).TrimEnd();
+            var visualIndent = LeadingWhitespaceLength(chordLine);
+            chordLine = RemoveLeadingWhitespace(chordLine, visualIndent);
+
+            // Visual indent is stored as leading spaces so it is visible in both
+            // the public display (RTL & nbsp; rendering) and the admin editor (textarea).
+            yield return new string(' ', visualIndent) + chordLine;
+
+            if (nextLyricsRow is not null)
+            {
+                yield return RemoveLeadingWhitespace(nextLyricsRow.Text, sharedIndent).TrimEnd();
+                index++;
+            }
+        }
+    }
+
+    private static string RemoveLeadingWhitespace(string value, int count) =>
+        count <= 0 ? value : value[Math.Min(count, value.Length)..];
 
     private static Tab4USearchResult? ExtractBestTab4USearchResult(string html, string title, string? artistName)
     {
@@ -1593,6 +1686,13 @@ public class SmartSongImportService : ISmartSongImportService
         return ScoreLyricsBlock(text) > 10 ? text : null;
     }
 
+    private static string? ExtractRawElementById(string html, string id)
+    {
+        var pattern = $@"<(?<tag>[a-z0-9]+)\b[^>]*\bid=[""']{Regex.Escape(id)}[""'][^>]*>(?<text>.*?)</\k<tag>>";
+        var match = Regex.Match(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success ? match.Groups["text"].Value : null;
+    }
+
     private static string? ExtractPreservedElementById(string html, string id)
     {
         var pattern = $@"<(?<tag>[a-z0-9]+)\b[^>]*\bid=[""']{Regex.Escape(id)}[""'][^>]*>(?<text>.*?)</\k<tag>>";
@@ -1988,11 +2088,14 @@ public class SmartSongImportService : ISmartSongImportService
         return text;
     }
 
-    private static string CleanLyrics(string value, bool normalizeImportedChordOnlyLines = false)
+    private static string CleanLyrics(
+        string value,
+        bool normalizeImportedChordOnlyLines = false,
+        bool preserveChordOnlyLineTrailingSpaces = false)
     {
         var lines = value.Replace("\r\n", "\n").Replace('\r', '\n')
             .Split('\n')
-            .Select(line => line.TrimEnd().TrimStart('\t'))
+            .Select(line => CleanImportedLyricsLine(line, preserveChordOnlyLineTrailingSpaces))
             .Where(line => !string.IsNullOrWhiteSpace(line))
             .Take(260)
             .ToList();
@@ -2004,6 +2107,14 @@ public class SmartSongImportService : ISmartSongImportService
         }
 
         return string.Join(Environment.NewLine, cleanedLines).Trim('\r', '\n');
+    }
+
+    private static string CleanImportedLyricsLine(string line, bool preserveChordOnlyLineTrailingSpaces)
+    {
+        var clean = line.TrimStart('\t');
+        return preserveChordOnlyLineTrailingSpaces && IsChordOnlyLine(clean)
+            ? clean.TrimEnd('\t')
+            : clean.TrimEnd();
     }
 
     private static bool ShouldNormalizeImportedChordOnlyLines(Uri sourceUri)

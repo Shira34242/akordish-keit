@@ -25,6 +25,11 @@ public class LikedContent
     public int ContentId { get; set; }
 
     /// <summary>
+    /// Optional reaction selected by the user for article and blog content.
+    /// </summary>
+    public string? Reaction { get; set; }
+
+    /// <summary>
     /// תאריך שבו התוכן נוסף למועדפים
     /// </summary>
     public DateTime LikedAt { get; set; }

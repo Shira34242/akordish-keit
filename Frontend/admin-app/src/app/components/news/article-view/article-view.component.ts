@@ -83,6 +83,15 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
   isFavorite = false;
+  selectedReaction: string | null = null;
+  reactionCounts: Record<string, number> = {};
+  readonly reactions = [
+    { id: 'like', icon: '/assets/twemoji/like.svg', label: 'אהבתי' },
+    { id: 'love', icon: '/assets/twemoji/love.svg', label: 'אהבה' },
+    { id: 'clap', icon: '/assets/twemoji/clap.svg', label: 'כל הכבוד' },
+    { id: 'wow', icon: '/assets/twemoji/fire.svg', label: 'מעולה' },
+    { id: 'smile', icon: '/assets/twemoji/smile.svg', label: 'עשה לי טוב' }
+  ];
   feedbackGiven = false;
   feedbackChoice: 'yes' | 'no' | null = null;
   feedbackYesCount = 0;
@@ -213,6 +222,8 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   private handleLoadedArticle(article: Article): void {
     this.article = article;
+    this.selectedReaction = null;
+    this.reactionCounts = {};
     this.contentPageService.setCurrentArticle(article.id);
     if (this.redirectToCanonicalArticle(article)) return;
     this.applySeo(article);
@@ -227,7 +238,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     }
 
     this.loadRelatedArticles(article);
-    this.checkIfLiked(article.id);
+    this.loadReactions(article.id);
     this.loadFeedback(article.id);
     this.loading = false;
   }
@@ -449,6 +460,69 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
           }
         });
     }
+  }
+
+  reactToArticle(reaction: string): void {
+    if (!this.article) return;
+    if (!this.authService.isLoggedIn) {
+      this.authService.requestLogin(this.router.url);
+      return;
+    }
+
+    const previousReaction = this.selectedReaction;
+    const previousCounts = { ...this.reactionCounts };
+    const isClearing = previousReaction === reaction;
+    this.applyOptimisticReaction(reaction);
+
+    const request = isClearing
+      ? this.likedContentService.clearReaction('Article', this.article.id)
+      : this.likedContentService.setReaction('Article', this.article.id, reaction);
+
+    request
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => this.applyReactionSummary(result),
+        error: (error) => {
+          console.error('Error adding article reaction:', error);
+          this.selectedReaction = previousReaction;
+          this.reactionCounts = previousCounts;
+          this.isFavorite = !!previousReaction;
+        }
+      });
+  }
+
+  loadReactions(articleId: number): void {
+    this.likedContentService.getReactions('Article', articleId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => this.applyReactionSummary(result),
+        error: (error) => console.error('Error loading article reactions:', error)
+      });
+  }
+
+  private applyReactionSummary(result: { isLiked: boolean; userReaction: string | null; reactions: { reaction: string; count: number }[] }): void {
+    this.isFavorite = result.isLiked;
+    this.selectedReaction = result.userReaction;
+    this.reactionCounts = Object.fromEntries(result.reactions.map(item => [item.reaction, item.count]));
+  }
+
+  private applyOptimisticReaction(reaction: string): void {
+    const previousReaction = this.selectedReaction;
+    this.reactionCounts = { ...this.reactionCounts };
+
+    if (previousReaction && this.reactionCounts[previousReaction] > 0) {
+      this.reactionCounts[previousReaction]--;
+    }
+
+    if (previousReaction === reaction) {
+      this.selectedReaction = null;
+      this.isFavorite = false;
+      return;
+    }
+
+    this.selectedReaction = reaction;
+    this.isFavorite = true;
+    this.reactionCounts[reaction] = (this.reactionCounts[reaction] || 0) + 1;
   }
 
   // ─── Feedback ─────────────────────────────────────────────────────────────
