@@ -38,6 +38,13 @@
       <span class="profile-tag">{{ getLevelName() }}</span>
     </div>
     <section class="level-progress-banner">
+      <div class="level-points-counter" [class.level-points-counter--running]="pointsCounterRunning" aria-live="polite">
+        <i aria-hidden="true"></i>
+        <i aria-hidden="true"></i>
+        <i aria-hidden="true"></i>
+        <strong>{{ animatedDisplayPoints }}</strong>
+        <span>{{ 'profile.points' | translate }}</span>
+      </div>
       <div class="level-progress-copy">
         <strong>{{ 'profile.level_progress_title' | translate }}</strong>
         <span>{{ 'profile.level_progress_description' | translate }}</span>
@@ -50,21 +57,10 @@
         </strong>
       </div>
       <div class="level-progress-status">
-        <span>{{ getDisplayPoints() }} {{ 'profile.points' | translate }}</span>
         <span>{{ getLevelProgressText() }}</span>
       </div>
       <div class="level-loader" [class.level-loader--animate]="progressAnimated">
-        <div class="level-bar" [style.--level-progress]="getLevelTrackPercent() + '%'">
-          <span class="level-particles" aria-hidden="true">
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-          </span>
-        </div>
-        <span class="level-current-marker" [style.right.%]="getLevelTrackPercent()"></span>
+        <canvas #levelCanvas class="level-canvas" aria-hidden="true"></canvas>
         @for (level of levelSteps; track level) {
           <div
             class="level-checkpoint"

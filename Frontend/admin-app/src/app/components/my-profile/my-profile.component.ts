@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -51,6 +51,18 @@ interface ProfileArticleCard {
   status?: number;
 }
 
+interface LevelParticle {
+  x: number;
+  y: number;
+  angle: number;
+  speed: number;
+  accel: number;
+  radius: number;
+  decay: number;
+  life: number;
+  hueOffset: number;
+}
+
 @Component({
   selector: 'app-my-profile',
   standalone: true,
@@ -74,10 +86,22 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
   @ViewChild('profileHero') profileHero?: ElementRef<HTMLDivElement>;
+  @ViewChild('levelCanvas') levelCanvas?: ElementRef<HTMLCanvasElement>;
   private fullHeroHeight = 0;
   private heroRafPending = false;
   private expandedAvatarSize = 160;
   private expandedAvatarBottom = -68;
+  private levelAnimationFrame = 0;
+  private levelCanvasWidth = 0;
+  private levelCanvasHeight = 0;
+  private levelCanvasProgress = 0;
+  private levelCanvasTick = 0;
+  private levelCanvasSettled = false;
+  private levelCanvasSettleProgress = 0;
+  private levelParticles: LevelParticle[] = [];
+  private pointsAnimationFrame = 0;
+  animatedDisplayPoints = 0;
+  pointsCounterRunning = false;
 
   readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
   readonly accountWarningSubtitle = '\u05dc\u05d0 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05e3 \u05d0\u05d7\u05d3. \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4 \u05e2\u05dc \u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3 \u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d5\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05ea\u05e0\u05ea\u05e7.';
@@ -169,6 +193,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
+    private ngZone: NgZone,
     public langService: LanguageService
   ) {}
 
@@ -202,7 +227,11 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => this.initHeroHeight(), 0);
-    setTimeout(() => this.progressAnimated = true, 120);
+    setTimeout(() => {
+      this.progressAnimated = true;
+      this.ngZone.runOutsideAngular(() => this.startLevelCanvas());
+      this.startPointsCounter();
+    }, 120);
   }
 
   private initHeroHeight(): void {
@@ -306,6 +335,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
             uploadCount: data.uploadCount ?? this.user.uploadCount
           };
           this.authService.updateCurrentUser(this.user);
+          this.startPointsCounter();
         }
       },
       error: () => {}
@@ -986,8 +1016,225 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    cancelAnimationFrame(this.levelAnimationFrame);
+    cancelAnimationFrame(this.pointsAnimationFrame);
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private startLevelCanvas(): void {
+    const canvas = this.levelCanvas?.nativeElement;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const drawFrame = () => {
+      this.resizeLevelCanvas(canvas, context);
+
+      const width = this.levelCanvasWidth;
+      const height = this.levelCanvasHeight;
+      const trackHeight = 16;
+      const trackY = (height - trackHeight) / 2;
+      const targetProgress = Math.max(0.03, this.getLevelTrackPercent() / 100);
+      if (this.levelCanvasSettled && Math.abs(targetProgress - this.levelCanvasProgress) > 0.005) {
+        this.levelCanvasSettled = false;
+        this.levelCanvasSettleProgress = 0;
+      }
+
+      if (!this.levelCanvasSettled) {
+        this.levelCanvasProgress += (targetProgress - this.levelCanvasProgress) * (reduceMotion ? 1 : 0.014);
+        if (reduceMotion) {
+          this.levelCanvasProgress = targetProgress;
+          this.levelCanvasSettled = true;
+          this.levelCanvasSettleProgress = 1;
+          this.levelParticles = [];
+        } else if (Math.abs(targetProgress - this.levelCanvasProgress) < 0.012) {
+          this.levelCanvasProgress = targetProgress;
+          this.levelCanvasSettleProgress = Math.min(1, this.levelCanvasSettleProgress + 0.006);
+          if (this.levelCanvasSettleProgress >= 1) {
+            this.levelCanvasSettled = true;
+            this.levelParticles = [];
+          }
+        }
+      }
+
+      const fillWidth = width * this.levelCanvasProgress;
+      const headX = width - fillWidth;
+      const hue = (this.levelCanvasTick * 0.8) % 360;
+      const settleProgress = this.levelCanvasSettled ? 1 : this.levelCanvasSettleProgress;
+      const motionStrength = 1 - settleProgress;
+
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#000000';
+      this.roundRect(context, 0, trackY, width, trackHeight, trackHeight / 2);
+      context.fill();
+
+      context.save();
+      this.roundRect(context, 0, trackY, width, trackHeight, trackHeight / 2);
+      context.clip();
+
+      const liquid = context.createLinearGradient(headX, 0, width, 0);
+      liquid.addColorStop(0, this.mixLevelColor(hue, settleProgress));
+      liquid.addColorStop(0.45, this.mixLevelColor((hue + 55) % 360, settleProgress));
+      liquid.addColorStop(1, this.mixLevelColor((hue + 115) % 360, settleProgress));
+      context.fillStyle = liquid;
+      context.beginPath();
+      context.moveTo(width, trackY + trackHeight);
+      context.lineTo(width, trackY);
+      for (let x = width; x >= headX; x -= 3) {
+        const wave = Math.sin((x * 0.075) + (this.levelCanvasTick * 0.09)) * 2 * motionStrength;
+        context.lineTo(x, trackY + wave);
+      }
+      context.lineTo(headX, trackY + trackHeight);
+      context.closePath();
+      context.fill();
+
+      context.globalCompositeOperation = 'lighter';
+      context.fillStyle = `rgba(255,255,255,${0.32 * motionStrength})`;
+      context.fillRect(headX, trackY + 2, fillWidth, trackHeight / 3);
+      context.restore();
+
+      if (!reduceMotion && !this.levelCanvasSettled) {
+        if (Math.random() < motionStrength) {
+          this.spawnLevelParticle(headX, height / 2, hue);
+        }
+        this.updateAndDrawLevelParticles(context, hue, motionStrength);
+      }
+
+      context.globalCompositeOperation = 'source-over';
+      if (this.levelCanvasSettled && !reduceMotion) {
+        const sparkleProgress = (Math.sin(this.levelCanvasTick * 0.08) + 1) / 2;
+        context.strokeStyle = `rgba(221,255,83,${0.15 + (sparkleProgress * 0.35)})`;
+        context.lineWidth = 1.5;
+        context.beginPath();
+        context.arc(headX, height / 2, 7 + (sparkleProgress * 5), 0, Math.PI * 2);
+        context.stroke();
+      }
+
+      context.fillStyle = '#ffffff';
+      context.beginPath();
+      context.arc(headX, height / 2, 4.5, 0, Math.PI * 2);
+      context.fill();
+
+      this.levelCanvasTick++;
+      this.levelAnimationFrame = requestAnimationFrame(drawFrame);
+    };
+
+    drawFrame();
+  }
+
+  private resizeLevelCanvas(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void {
+    const width = Math.max(1, Math.round(canvas.clientWidth));
+    const height = Math.max(1, Math.round(canvas.clientHeight));
+    if (width === this.levelCanvasWidth && height === this.levelCanvasHeight) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.levelCanvasWidth = width;
+    this.levelCanvasHeight = height;
+  }
+
+  private spawnLevelParticle(x: number, y: number, hue: number): void {
+    if (this.levelParticles.length > 80 || this.levelCanvasTick % 2 !== 0) return;
+
+    const angle = Math.PI + ((Math.random() - 0.5) * Math.PI * 1.6);
+    this.levelParticles.push({
+      x,
+      y: y + ((Math.random() - 0.5) * 10),
+      angle,
+      speed: Math.random() * 0.7,
+      accel: 0.012 + (Math.random() * 0.018),
+      radius: 3 + (Math.random() * 4),
+      decay: 0.018 + (Math.random() * 0.012),
+      life: 1,
+      hueOffset: hue + (Math.random() * 100)
+    });
+  }
+
+  private updateAndDrawLevelParticles(context: CanvasRenderingContext2D, hue: number, motionStrength: number): void {
+    context.globalCompositeOperation = 'lighter';
+
+    for (let index = this.levelParticles.length - 1; index >= 0; index--) {
+      const particle = this.levelParticles[index];
+      particle.speed += particle.accel;
+      particle.x += Math.cos(particle.angle) * particle.speed;
+      particle.y += Math.sin(particle.angle) * particle.speed;
+      particle.angle += Math.PI / 70;
+      particle.accel *= 1.012;
+      particle.life -= particle.decay;
+
+      if (particle.life <= 0) {
+        this.levelParticles.splice(index, 1);
+        continue;
+      }
+
+      const colorHue = (hue + particle.hueOffset) % 360;
+      context.strokeStyle = `hsla(${colorHue}, 100%, 65%, ${particle.life * 0.65 * motionStrength})`;
+      const previous = this.levelParticles[index - 1];
+      if (previous && Math.abs(previous.x - particle.x) < 28) {
+        context.beginPath();
+        context.moveTo(particle.x, particle.y);
+        context.lineTo(previous.x, previous.y);
+        context.stroke();
+      }
+
+      context.fillStyle = `hsla(${colorHue}, 100%, 65%, ${particle.life * motionStrength})`;
+      context.beginPath();
+      context.arc(particle.x, particle.y, Math.max(0.2, particle.life * particle.radius), 0, Math.PI * 2);
+      context.fill();
+
+      const sparkSize = Math.random() * 1.5;
+      context.fillRect(
+        particle.x + ((Math.random() - 0.5) * 30 * particle.life),
+        particle.y + ((Math.random() - 0.5) * 30 * particle.life),
+        sparkSize,
+        sparkSize
+      );
+    }
+  }
+
+  private mixLevelColor(hue: number, settleProgress: number): string {
+    const yellowHue = 72;
+    const mixedHue = hue + ((yellowHue - hue) * settleProgress);
+    const lightness = 58 + (8 * settleProgress);
+    return `hsl(${mixedHue}, 100%, ${lightness}%)`;
+  }
+
+  private startPointsCounter(): void {
+    cancelAnimationFrame(this.pointsAnimationFrame);
+    const target = this.getDisplayPoints();
+    const startTime = performance.now();
+    const duration = 6200;
+    this.pointsCounterRunning = true;
+
+    const update = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      this.animatedDisplayPoints = Math.round(target * eased);
+
+      if (progress < 1) {
+        this.pointsAnimationFrame = requestAnimationFrame(update);
+      } else {
+        this.pointsCounterRunning = false;
+      }
+    };
+
+    this.pointsAnimationFrame = requestAnimationFrame(update);
+  }
+
+  private roundRect(
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number
+  ): void {
+    context.beginPath();
+    context.roundRect(x, y, width, height, radius);
   }
 
   showMoreLiked(): void {
