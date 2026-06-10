@@ -87,6 +87,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
   @ViewChild('profileHero') profileHero?: ElementRef<HTMLDivElement>;
   @ViewChild('levelCanvas') levelCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('levelLoader') levelLoader?: ElementRef<HTMLDivElement>;
   private fullHeroHeight = 0;
   private heroRafPending = false;
   private expandedAvatarSize = 160;
@@ -101,7 +102,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private levelParticles: LevelParticle[] = [];
   private pointsAnimationFrame = 0;
   animatedDisplayPoints = 0;
-  pointsCounterRunning = false;
 
   readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
   readonly accountWarningSubtitle = '\u05dc\u05d0 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05e3 \u05d0\u05d7\u05d3. \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4 \u05e2\u05dc \u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3 \u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d5\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05ea\u05e0\u05ea\u05e7.';
@@ -1034,7 +1034,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const width = this.levelCanvasWidth;
       const height = this.levelCanvasHeight;
-      const trackHeight = 16;
+      const trackHeight = 10;
       const trackY = (height - trackHeight) / 2;
       const targetProgress = Math.max(0.03, this.getLevelTrackPercent() / 100);
       if (this.levelCanvasSettled && Math.abs(targetProgress - this.levelCanvasProgress) > 0.005) {
@@ -1061,12 +1061,13 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const fillWidth = width * this.levelCanvasProgress;
       const headX = width - fillWidth;
+      this.levelLoader?.nativeElement.style.setProperty('--level-live-progress', `${this.levelCanvasProgress * 100}%`);
       const hue = (this.levelCanvasTick * 0.8) % 360;
       const settleProgress = this.levelCanvasSettled ? 1 : this.levelCanvasSettleProgress;
       const motionStrength = 1 - settleProgress;
 
       context.clearRect(0, 0, width, height);
-      context.fillStyle = '#000000';
+      context.fillStyle = '#dedede';
       this.roundRect(context, 0, trackY, width, trackHeight, trackHeight / 2);
       context.fill();
 
@@ -1207,18 +1208,15 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     cancelAnimationFrame(this.pointsAnimationFrame);
     const target = this.getDisplayPoints();
     const startTime = performance.now();
-    const duration = 6200;
-    this.pointsCounterRunning = true;
+    const duration = 8200;
 
     const update = (now: number) => {
       const progress = Math.min(1, (now - startTime) / duration);
-      const eased = 1 - Math.pow(1 - progress, 4);
+      const eased = progress * progress * (3 - (2 * progress));
       this.animatedDisplayPoints = Math.round(target * eased);
 
       if (progress < 1) {
         this.pointsAnimationFrame = requestAnimationFrame(update);
-      } else {
-        this.pointsCounterRunning = false;
       }
     };
 

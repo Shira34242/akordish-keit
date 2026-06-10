@@ -38,28 +38,19 @@
       <span class="profile-tag">{{ getLevelName() }}</span>
     </div>
     <section class="level-progress-banner">
-      <div class="level-points-counter" [class.level-points-counter--running]="pointsCounterRunning" aria-live="polite">
-        <i aria-hidden="true"></i>
-        <i aria-hidden="true"></i>
-        <i aria-hidden="true"></i>
-        <strong>{{ animatedDisplayPoints }}</strong>
-        <span>{{ 'profile.points' | translate }}</span>
-      </div>
+      <strong class="current-level-badge">
+        <span class="material-icons">workspace_premium</span>
+        {{ getLevelName() }}
+      </strong>
       <div class="level-progress-copy">
         <strong>{{ 'profile.level_progress_title' | translate }}</strong>
         <span>{{ 'profile.level_progress_description' | translate }}</span>
       </div>
-      <div class="current-level-badge-row">
-        <span>{{ 'profile.your_badge' | translate }}</span>
-        <strong class="current-level-badge">
-          <span class="material-icons">workspace_premium</span>
-          {{ getLevelName() }}
-        </strong>
-      </div>
-      <div class="level-progress-status">
-        <span>{{ getLevelProgressText() }}</span>
-      </div>
-      <div class="level-loader" [class.level-loader--animate]="progressAnimated">
+      <div #levelLoader class="level-loader" [class.level-loader--animate]="progressAnimated">
+        <span class="level-live-points" aria-live="polite">
+          <span>{{ 'profile.points' | translate }}</span>
+          <strong>{{ animatedDisplayPoints }}</strong>
+        </span>
         <canvas #levelCanvas class="level-canvas" aria-hidden="true"></canvas>
         @for (level of levelSteps; track level) {
           <div
@@ -75,8 +66,8 @@
               </svg>
             </span>
             <span class="level-check-label">
+              <span>{{ getDisplayLevelThreshold(level) }}</span>
               <strong>{{ getLevelName(level) }}</strong>
-              <span>{{ getDisplayLevelThreshold(level) }} {{ 'profile.points' | translate }}</span>
             </span>
           </div>
         }
