@@ -54,7 +54,16 @@
         <span>{{ getLevelProgressText() }}</span>
       </div>
       <div class="level-loader" [class.level-loader--animate]="progressAnimated">
-        <div class="level-bar" [style.--level-progress]="getLevelTrackPercent() + '%'"></div>
+        <div class="level-bar" [style.--level-progress]="getLevelTrackPercent() + '%'">
+          <span class="level-particles" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+        </div>
         <span class="level-current-marker" [style.right.%]="getLevelTrackPercent()"></span>
         @for (level of levelSteps; track level) {
           <div
@@ -124,13 +133,29 @@
             </div>
           </div>
           <div class="manage-card-actions">
-            <button
-              class="manage-account-link"
-              [class.manage-account-link--off]="isPageActive(page)"
-              (click)="togglePageVisibility(page)"
-              [disabled]="!canTogglePage(page) || togglingPageId === page.profileId">
-              {{ togglingPageId === page.profileId ? ('profile.saving' | translate) : (isPageActive(page) ? ('profile.disable_page' | translate) : ('profile.enable_page' | translate)) }}
-            </button>
+            <div class="profile-switch">
+              <input
+                class="profile-switch-input"
+                type="checkbox"
+                [id]="'page-visibility-' + page.profileType + '-' + page.profileId"
+                [checked]="isPageActive(page)"
+                [disabled]="!canTogglePage(page) || togglingPageId === page.profileId"
+                (change)="togglePageVisibility(page)">
+              <label [attr.for]="'page-visibility-' + page.profileType + '-' + page.profileId">
+                <span class="profile-switch-track" aria-hidden="true">
+                  <span class="profile-switch-knob"></span>
+                </span>
+                <span class="profile-switch-text">
+                  @if (togglingPageId === page.profileId) {
+                    {{ 'profile.saving' | translate }}
+                  } @else if (isPageActive(page)) {
+                    {{ 'profile.switch_on' | translate }}
+                  } @else {
+                    {{ 'profile.switch_off' | translate }}
+                  }
+                </span>
+              </label>
+            </div>
             <button class="manage-account-link" (click)="openManageAccountFlow()">{{ 'profile.change_account_type' | translate }}</button>
           </div>
         </div>
@@ -175,9 +200,23 @@
           <p class="manage-card-subtitle">קבלת עדכונים והצעות מאקורדישקייט. אפשר לשנות בכל רגע.</p>
         </div>
         <div class="manage-card-actions">
-          <button class="manage-account-link" (click)="toggleMarketingConsent()" [disabled]="marketingSaving">
-            {{ marketingSaving ? 'שומר...' : (user?.marketingConsent ? 'הפסק דיוור' : 'הפעל דיוור') }}
-          </button>
+          <div class="profile-switch">
+            <input
+              class="profile-switch-input"
+              type="checkbox"
+              id="marketing-consent-switch"
+              [checked]="user?.marketingConsent"
+              [disabled]="marketingSaving"
+              (change)="toggleMarketingConsent()">
+            <label for="marketing-consent-switch">
+              <span class="profile-switch-track" aria-hidden="true">
+                <span class="profile-switch-knob"></span>
+              </span>
+              <span class="profile-switch-text">
+                {{ marketingSaving ? ('profile.saving' | translate) : ((user?.marketingConsent ? 'profile.switch_on' : 'profile.switch_off') | translate) }}
+              </span>
+            </label>
+          </div>
         </div>
       </div>
       <div class="manage-card-col manage-card-col--info">

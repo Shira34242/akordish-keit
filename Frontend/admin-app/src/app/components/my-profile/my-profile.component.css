@@ -181,8 +181,8 @@
   margin: var(--space-xl) auto 0;
   padding: var(--space-base) var(--space-xl) var(--space-2xl);
   max-width: 620px;
-  border-radius: 16px;
-  background: rgba(242,242,242,0.65);
+  border-radius: 20px;
+  background: #F2F2F2;
   text-align: right;
 }
 
@@ -249,8 +249,8 @@
   margin: var(--space-base) var(--space-md) 0;
   margin-bottom: calc(var(--space-3xl) + var(--space-base));
   border-radius: 999px;
-  background: #535353;
-  height: 12px;
+  background: #000000;
+  height: 14px;
 }
 
 .level-bar {
@@ -262,6 +262,7 @@
   height: 100%;
   border-radius: 999px;
   background: #ddff53;
+  isolation: isolate;
 }
 
 .level-loader--animate .level-bar {
@@ -271,22 +272,162 @@
 @keyframes levelBarEnter {
   0% {
     width: 0;
-    background: #ffffff;
-  }
-  45% {
-    background: #ffffff;
   }
   100% {
     width: var(--level-progress);
-    background: #ddff53;
+  }
+}
+
+.level-particles {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+}
+
+.level-particles::before,
+.level-particles::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-top-color: #ddff53;
+  border-left-color: #ffffff;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: levelEnergyOrbit 1.25s linear 0.2s infinite;
+}
+
+.level-particles::after {
+  width: 34px;
+  height: 34px;
+  border-width: 1px;
+  border-top-color: rgba(255,255,255,0.7);
+  border-left-color: rgba(221,255,83,0.7);
+  animation-duration: 1.9s;
+  animation-direction: reverse;
+}
+
+.level-loader--animate .level-particles {
+  animation: levelParticlesReveal 0.2s ease-out 0.15s forwards;
+}
+
+.level-particles i {
+  --particle-mid-x: -9px;
+  --particle-mid-y: -12px;
+  --particle-x: 5px;
+  --particle-y: -25px;
+  --particle-delay: 0s;
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ddff53;
+  opacity: 0;
+  animation: levelParticleFloat 1.8s ease-out var(--particle-delay) infinite;
+}
+
+.level-particles i:nth-child(2) {
+  --particle-mid-x: 8px;
+  --particle-mid-y: -9px;
+  --particle-x: -10px;
+  --particle-y: -21px;
+  --particle-delay: 0.35s;
+  width: 3px;
+  height: 3px;
+  background: #ffffff;
+}
+
+.level-particles i:nth-child(3) {
+  --particle-mid-x: -13px;
+  --particle-mid-y: 5px;
+  --particle-x: -20px;
+  --particle-y: -15px;
+  --particle-delay: 0.7s;
+  width: 3px;
+  height: 3px;
+}
+
+.level-particles i:nth-child(4) {
+  --particle-mid-x: 12px;
+  --particle-mid-y: 4px;
+  --particle-x: 18px;
+  --particle-y: -20px;
+  --particle-delay: 1.05s;
+  width: 2px;
+  height: 2px;
+  background: #ffffff;
+}
+
+.level-particles i:nth-child(5) {
+  --particle-mid-x: -5px;
+  --particle-mid-y: -14px;
+  --particle-x: -16px;
+  --particle-y: -32px;
+  --particle-delay: 1.35s;
+  width: 2px;
+  height: 2px;
+}
+
+.level-particles i:nth-child(6) {
+  --particle-mid-x: 13px;
+  --particle-mid-y: -11px;
+  --particle-x: 22px;
+  --particle-y: -8px;
+  --particle-delay: 1.6s;
+  width: 3px;
+  height: 3px;
+}
+
+@keyframes levelParticlesReveal {
+  to { opacity: 1; }
+}
+
+@keyframes levelEnergyOrbit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.75);
+  }
+  25%, 70% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(360deg) scale(1.15);
+  }
+}
+
+@keyframes levelParticleFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, -50%) scale(0.5);
+  }
+  18% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.8;
+    transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-x), var(--particle-y)) scale(0);
   }
 }
 
 .level-current-marker {
   position: absolute;
   top: 50%;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #ffffff;
   transform: translate(50%, -50%);
@@ -304,10 +445,10 @@
 
 @keyframes currentMarkerSparkle {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(221,255,83,0), 0 0 0 0 rgba(255,255,255,0);
+    outline: 0 solid rgba(221,255,83,0);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(221,255,83,0.25), 0 0 12px 4px rgba(255,255,255,0.75);
+    outline: 5px solid rgba(221,255,83,0.25);
   }
 }
 
@@ -341,6 +482,27 @@
 @keyframes levelCheckEnter {
   from { opacity: 0; transform: scale(0.55); }
   to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-loader--animate .level-bar,
+  .level-loader--animate .level-current-marker,
+  .level-loader--animate .level-check,
+  .level-loader--animate .level-particles,
+  .level-particles::before,
+  .level-particles::after,
+  .level-particles i {
+    animation: none;
+  }
+
+  .level-loader--animate .level-bar {
+    width: var(--level-progress);
+  }
+
+  .level-loader--animate .level-current-marker,
+  .level-loader--animate .level-check {
+    opacity: 1;
+  }
 }
 
 .level-check svg {
@@ -1145,6 +1307,76 @@
 .manage-account-link--off {
   background: #000000;
   color: #ddff53;
+}
+
+.profile-switch {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+}
+
+.profile-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-switch label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: #404040;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  user-select: none;
+}
+
+.profile-switch-track {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #404040;
+  transition: background-color 0.15s ease-out;
+}
+
+.profile-switch-knob {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.15s ease-out;
+}
+
+.profile-switch-input:checked + label .profile-switch-track {
+  background: #ddff53;
+}
+
+.profile-switch-input:checked + label .profile-switch-knob {
+  transform: translateX(-18px);
+}
+
+.profile-switch-input:focus-visible + label .profile-switch-track {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.profile-switch-input:disabled + label {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.profile-switch-text {
+  min-width: 42px;
 }
 
 .manage-card--page .manage-card-col--info .manage-card-actions {
