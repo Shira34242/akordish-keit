@@ -1098,7 +1098,7 @@
 }
 
 .fab-add-song:hover {
-    transform: scale(1.1);
+    transform: rotate(90deg) scale(1.1);
     box-shadow: 0 4px 14px rgba(221, 255, 83, 0.45);
 }
 
