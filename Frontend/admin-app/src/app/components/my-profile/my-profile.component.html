@@ -49,9 +49,17 @@
       <div #levelLoader class="level-loader" [class.level-loader--animate]="progressAnimated">
         <span class="level-live-points" aria-live="polite">
           <span>{{ 'profile.points' | translate }}</span>
-          <strong>{{ animatedDisplayPoints }}</strong>
+          <strong class="level-points-reels">{{ animatedDisplayPoints }}</strong>
         </span>
         <canvas #levelCanvas class="level-canvas" aria-hidden="true"></canvas>
+        <span class="level-ruler" aria-hidden="true">
+          @for (tick of rulerTicks; track tick) {
+            <i
+              [style.right.%]="tick"
+              [class.level-ruler-tick--major]="isMajorRulerTick(tick)">
+            </i>
+          }
+        </span>
         @for (level of levelSteps; track level) {
           <div
             class="level-checkpoint"
@@ -60,11 +68,6 @@
             [class.level-checkpoint--current]="getLevelNumber() === level"
             [class.level-checkpoint--level-0]="level === 0"
             [class.level-checkpoint--level-1]="level === 1">
-            <span class="level-check" [style.animation-delay.ms]="250 + (getLevelCheckpointDisplayPercent(level) * 20)">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="m4.5 12.75 6 6 9-13.5" stroke-linejoin="round" stroke-linecap="round"></path>
-              </svg>
-            </span>
             <span class="level-check-label">
               <span>{{ getDisplayLevelThreshold(level) }}</span>
               <strong>{{ getLevelName(level) }}</strong>

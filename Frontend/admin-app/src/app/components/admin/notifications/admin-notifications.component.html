@@ -230,31 +230,35 @@
             </button>
           </div>
 
-          <div class="composer-line">
-            <div class="attach-wrap">
-              <button type="button" class="attach-button" (click)="toggleAttachMenu()" aria-label="צירוף">
-                <span class="material-icons">add</span>
-              </button>
-              <div class="attach-menu" *ngIf="showAttachMenu">
-                <button type="button" (click)="chooseAttachment('link')"><span class="material-icons">link</span> קישור</button>
-                <button type="button" (click)="chooseAttachment('image')"><span class="material-icons">image</span> תמונה</button>
-                <button type="button" (click)="chooseAttachment('video')"><span class="material-icons">smart_display</span> וידאו</button>
-                <button type="button" (click)="chooseAttachment('file')"><span class="material-icons">attach_file</span> קובץ</button>
-              </div>
-            </div>
-
-            <input type="text" [(ngModel)]="message" name="message" maxlength="1000" (ngModelChange)="onDraftChanged()" placeholder="כתוב הודעה...">
+          <div class="composer-meta">
+            <input class="campaign-input" *ngIf="composerMode === 'group'" type="text" [(ngModel)]="campaignName" name="campaignName" maxlength="160" (ngModelChange)="onDraftChanged()" placeholder="שם פנימי">
 
             <label class="marketing-toggle">
               <input type="checkbox" [(ngModel)]="isMarketingContent" name="isMarketingContent" (ngModelChange)="onDraftChanged()">
               <span>תוכן שיווקי</span>
             </label>
+          </div>
 
-            <input class="campaign-input" *ngIf="composerMode === 'group'" type="text" [(ngModel)]="campaignName" name="campaignName" maxlength="160" (ngModelChange)="onDraftChanged()" placeholder="שם פנימי">
+          <div class="composer-line">
+            <div class="composer-main" [class.is-expanded]="composerInputFocused || (hasDraftBubble && !showAttachActions)">
+              <div class="attach-wrap">
+                <div class="quick-attachments" aria-label="צירופים מהירים">
+                  <button type="button" (click)="chooseAttachment('image')" aria-label="צירוף תמונה"><span class="material-icons">image</span></button>
+                  <button type="button" (click)="chooseAttachment('video')" aria-label="צירוף וידאו"><span class="material-icons">smart_display</span></button>
+                  <button type="button" (click)="chooseAttachment('file')" aria-label="צירוף קובץ"><span class="material-icons">attach_file</span></button>
+                  <button type="button" (click)="chooseAttachment('link')" aria-label="צירוף קישור"><span class="material-icons">link</span></button>
+                </div>
+                <button type="button" class="attach-button" (mousedown)="revealAttachActions(); $event.preventDefault()" (click)="revealAttachActions()" aria-label="הצגת אפשרויות צירוף">
+                  <span class="material-icons">add</span>
+                </button>
+              </div>
 
-            <button type="submit" class="send-button" [disabled]="isSending || isUploadingAttachment">
-              <span class="material-icons">{{ isSending ? 'hourglass_empty' : 'send' }}</span>
-            </button>
+              <input type="text" [(ngModel)]="message" name="message" maxlength="1000" (focus)="focusComposerInput()" (blur)="blurComposerInput()" (ngModelChange)="onDraftChanged()" placeholder="כתוב הודעה...">
+
+              <button type="submit" class="send-button" [class.visible]="hasDraftBubble" [disabled]="isSending || isUploadingAttachment" aria-label="שליחת הודעה">
+                <span class="material-icons">{{ isSending ? 'hourglass_empty' : 'arrow_upward' }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="form-message success" *ngIf="successMessage">{{ successMessage }}</div>

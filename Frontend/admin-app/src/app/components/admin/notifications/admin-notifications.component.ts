@@ -73,7 +73,8 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
   attachmentUploadProgress = 0;
   groupImageUploadProgress = 0;
   isSavingGroup = false;
-  showAttachMenu = false;
+  showAttachActions = true;
+  composerInputFocused = false;
   showAttachPanel = false;
   attachmentType: AttachmentType | null = null;
   attachmentInputMode: AttachmentInputMode = 'url';
@@ -537,17 +538,23 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
     this.loadUsers();
   }
 
-  toggleAttachMenu(): void {
-    this.showAttachMenu = !this.showAttachMenu;
-    if (!this.showAttachMenu) {
-      this.showAttachPanel = false;
-    }
+  focusComposerInput(): void {
+    this.composerInputFocused = true;
+    this.showAttachActions = false;
+  }
+
+  blurComposerInput(): void {
+    this.composerInputFocused = false;
+  }
+
+  revealAttachActions(): void {
+    this.showAttachActions = true;
+    this.composerInputFocused = false;
   }
 
   chooseAttachment(type: AttachmentType): void {
     this.attachmentType = type;
     this.attachmentInputMode = 'url';
-    this.showAttachMenu = false;
     this.showAttachPanel = true;
 
     if (type === 'image' || type === 'video' || type === 'file') {
@@ -924,7 +931,7 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
   }
 
   private closeAttachUi(): void {
-    this.showAttachMenu = false;
+    this.showAttachActions = true;
     this.showAttachPanel = false;
     this.selectedFileName = '';
   }

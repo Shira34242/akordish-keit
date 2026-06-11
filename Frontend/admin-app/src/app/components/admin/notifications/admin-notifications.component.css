@@ -568,8 +568,7 @@ button:disabled {
 
 .member-picker-head button,
 .attachment-preview button,
-.add-attachment-button,
-.marketing-toggle {
+.add-attachment-button {
   min-height: 30px;
   background: #F2F2F2;
   color: #000;
@@ -816,32 +815,158 @@ button:disabled {
 }
 
 .composer-line {
-  align-items: stretch;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
-.composer-line > input {
+.composer-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 28px;
+}
+
+.composer-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 54px;
+}
+
+.composer-main > input {
   min-height: 44px;
+}
+
+.composer-main > input[name="message"] {
+  width: calc(100% - 154px);
+  max-width: calc(100% - 154px);
+  margin-inline-start: 154px;
+  flex: 0 0 auto;
+  border: none;
+  background: #F2F2F2;
+  padding-inline: var(--space-base) 52px;
+  transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), max-width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), margin 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), padding 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), background-color 0.25s ease;
+  z-index: 1;
+}
+
+.composer-main.is-expanded > input[name="message"] {
+  outline: none;
+  width: 100%;
+  max-width: 100%;
+  margin-inline-start: 0;
+  padding-inline: 52px;
+  background: #e8e8e8;
+}
+
+.composer-main > input[name="message"]::placeholder {
+  color: #404040;
 }
 
 .campaign-input {
   max-width: 220px;
+  min-height: 34px;
+  border: 2px solid #F2F2F2;
 }
 
 .marketing-toggle {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  min-height: 26px;
+  margin-inline-start: auto;
+  background: transparent;
   border-radius: 999px;
+  padding: 0 var(--space-sm);
+  color: #404040;
+  font-size: var(--font-xs);
   white-space: nowrap;
+  transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.marketing-toggle:hover {
+  color: #000000;
+  transform: none;
 }
 
 .marketing-toggle input {
-  width: auto;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.marketing-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.marketing-toggle span::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border: 2px solid #F2F2F2;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.marketing-toggle input:checked + span {
+  font-weight: 800;
+}
+
+.marketing-toggle input:checked + span::after {
+  background: #ddff53;
+  border-color: #000000;
+  transform: scale(0.82);
+}
+
+.marketing-toggle:has(input:checked) {
+  color: #000000;
 }
 
 .attach-wrap {
-  position: relative;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  width: 148px;
   flex-shrink: 0;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.quick-attachments {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: #404040;
+  transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
+}
+
+.quick-attachments button {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #404040;
+  padding: 0;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.quick-attachments button:hover,
+.quick-attachments button:focus-visible {
+  color: #000000;
+  transform: scale(1.12);
+}
+
+.quick-attachments .material-icons {
+  font-size: 20px;
 }
 
 .attach-button,
@@ -858,40 +983,77 @@ button:disabled {
 }
 
 .send-button {
-  background: #000;
+  position: absolute;
+  left: var(--space-xs);
+  top: 50%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
   color: #ddff53;
+  background: #000000;
+  transform: translateY(-50%) scale(0.25);
   flex-shrink: 0;
+  z-index: 2;
+}
+
+.attach-button,
+.send-button {
+  transition: background-color 0.25s ease, color 0.25s ease, opacity 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05), visibility 0.5s ease;
+}
+
+.attach-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: #ffffff;
+  color: #404040;
+  transform: translate(20px, -50%) scale(0.75);
+  z-index: 3;
+}
+
+.attach-button:hover,
+.attach-button:focus-visible {
+  background: #ddff53;
+  color: #000;
+  transform: translate(0, -50%) scale(1.06);
+}
+
+.composer-main.is-expanded .quick-attachments {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  filter: blur(5px);
+  transform: translateX(12px);
+}
+
+.composer-main.is-expanded .attach-button {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(0, -50%) scale(1);
+}
+
+.send-button.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+.send-button.visible:hover,
+.send-button.visible:focus-visible {
+  background: #ddff53;
+  color: #000000;
+  transform: translateY(-50%) scale(1.06);
 }
 
 .attach-button .material-icons,
 .send-button .material-icons,
 .attachment-head .material-icons {
   font-size: 20px;
-}
-
-.attach-menu {
-  position: absolute;
-  bottom: calc(100% + var(--space-sm));
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  z-index: 4;
-}
-
-.attach-menu button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  background: #F2F2F2;
-  color: #000;
-  padding: var(--space-sm) var(--space-base);
-  white-space: nowrap;
-  font-size: var(--font-sm);
-}
-
-.attach-menu .material-icons {
-  font-size: 18px;
 }
 
 .attachment-panel {
@@ -1078,8 +1240,7 @@ button:disabled {
 
 @media (max-width: 680px) {
   .page-header,
-  .conversation-header,
-  .composer-line {
+  .conversation-header {
     flex-direction: column;
     align-items: stretch;
   }
@@ -1091,6 +1252,7 @@ button:disabled {
 
   .campaign-input {
     max-width: none;
+    flex-basis: 100%;
   }
 
   .joined {

@@ -227,7 +227,7 @@
   margin: calc(var(--space-xl) + var(--space-lg)) var(--space-md) 0;
   margin-bottom: calc(var(--space-xl) + var(--space-sm));
   border-radius: 999px;
-  height: 10px;
+  height: 14px;
 }
 
 .level-live-points {
@@ -261,6 +261,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.level-points-reels {
+  display: block;
+  direction: ltr;
+  min-width: 2ch;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .level-live-points span {
   font-size: var(--font-xs);
   font-weight: 300;
@@ -278,62 +287,35 @@
   z-index: 1;
 }
 
+.level-ruler {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.level-ruler i {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 5px;
+  background: rgba(0,0,0,0.18);
+  transform: translate(50%, -50%);
+}
+
+.level-ruler i.level-ruler-tick--major {
+  height: 10px;
+  background: rgba(0,0,0,0.32);
+}
+
 .level-checkpoint {
   position: absolute;
-  top: -4px;
+  top: 0;
   transform: translateX(50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 2;
-}
-
-.level-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 6px;
-  border-radius: 50%;
-  background: #dedede;
-  transform: scale(0.72);
-  transition: transform 0.25s ease, background-color 0.25s ease;
-  opacity: 0;
-}
-
-.level-loader--animate .level-check {
-  animation: levelCheckEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes levelCheckEnter {
-  from { opacity: 0; transform: scale(0.55); }
-  to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .level-loader--animate .level-check {
-    animation: none;
-  }
-
-  .level-loader--animate .level-check {
-    opacity: 1;
-  }
-}
-
-.level-check svg {
-  display: none;
-}
-
-.level-checkpoint--reached .level-check {
-  background: #ddff53;
-  transform: scale(0.82);
-}
-
-.level-checkpoint--current .level-check {
-  background: #ffffff;
-  outline: 1px solid rgba(0,0,0,0.35);
-  outline-offset: 1px;
+  z-index: 3;
 }
 
 .level-check-label {

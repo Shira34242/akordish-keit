@@ -99,8 +99,8 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private levelCanvasTick = 0;
   private levelCanvasSettled = false;
   private levelCanvasSettleProgress = 0;
+  private levelCanvasStartTime = 0;
   private levelParticles: LevelParticle[] = [];
-  private pointsAnimationFrame = 0;
   animatedDisplayPoints = 0;
 
   readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
@@ -163,6 +163,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly levelSteps = [0, 1, 2, 3];
   readonly levelThresholds = [0, 1, 5, 20];
   readonly levelDisplayPositions = [3, 20, 43, 97];
+  readonly rulerTicks = Array.from(new Set([
+    ...Array.from({ length: 33 }, (_, index) => index * (100 / 32)),
+    ...this.levelDisplayPositions
+  ])).sort((a, b) => a - b);
   readonly DISPLAY_POINTS_MULTIPLIER = 10;
   progressAnimated = false;
 
@@ -230,7 +234,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.progressAnimated = true;
       this.ngZone.runOutsideAngular(() => this.startLevelCanvas());
-      this.startPointsCounter();
     }, 120);
   }
 
@@ -335,7 +338,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
             uploadCount: data.uploadCount ?? this.user.uploadCount
           };
           this.authService.updateCurrentUser(this.user);
-          this.startPointsCounter();
         }
       },
       error: () => {}
@@ -845,6 +847,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.levelDisplayPositions[level] ?? 0;
   }
 
+  isMajorRulerTick(tick: number): boolean {
+    return this.levelDisplayPositions.some(position => Math.abs(position - tick) < 0.01);
+  }
+
   getLevelTrackPercent(): number {
     const points = this.getContributionPoints();
     if (points >= this.levelThresholds[this.MAX_LEVEL]) {
@@ -1017,7 +1023,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.levelAnimationFrame);
-    cancelAnimationFrame(this.pointsAnimationFrame);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -1028,51 +1033,68 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!canvas || !context) return;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.levelCanvasStartTime = performance.now();
 
-    const drawFrame = () => {
+    const drawFrame = (now = performance.now()) => {
       this.resizeLevelCanvas(canvas, context);
 
       const width = this.levelCanvasWidth;
       const height = this.levelCanvasHeight;
-      const trackHeight = 10;
+      const trackHeight = 14;
       const trackY = (height - trackHeight) / 2;
+      const trackInset = 3;
+      const innerTrackY = trackY + trackInset;
+      const innerTrackHeight = trackHeight - (trackInset * 2);
+      const innerTrackWidth = width - (trackInset * 2);
       const targetProgress = Math.max(0.03, this.getLevelTrackPercent() / 100);
       if (this.levelCanvasSettled && Math.abs(targetProgress - this.levelCanvasProgress) > 0.005) {
         this.levelCanvasSettled = false;
         this.levelCanvasSettleProgress = 0;
+        this.levelCanvasStartTime = now;
       }
 
       if (!this.levelCanvasSettled) {
-        this.levelCanvasProgress += (targetProgress - this.levelCanvasProgress) * (reduceMotion ? 1 : 0.014);
+        const progress = reduceMotion ? 1 : Math.min(1, (now - this.levelCanvasStartTime) / 5000);
+        this.levelCanvasProgress = targetProgress * this.getBalancedProgress(progress);
         if (reduceMotion) {
           this.levelCanvasProgress = targetProgress;
           this.levelCanvasSettled = true;
           this.levelCanvasSettleProgress = 1;
           this.levelParticles = [];
-        } else if (Math.abs(targetProgress - this.levelCanvasProgress) < 0.012) {
-          this.levelCanvasProgress = targetProgress;
-          this.levelCanvasSettleProgress = Math.min(1, this.levelCanvasSettleProgress + 0.006);
-          if (this.levelCanvasSettleProgress >= 1) {
+        } else if (progress >= 0.95) {
+          this.levelCanvasSettleProgress = Math.min(1, this.levelCanvasSettleProgress + 0.02);
+          if (progress >= 1 && this.levelCanvasSettleProgress >= 1) {
+            this.levelCanvasProgress = targetProgress;
             this.levelCanvasSettled = true;
             this.levelParticles = [];
           }
         }
       }
 
-      const fillWidth = width * this.levelCanvasProgress;
-      const headX = width - fillWidth;
+      const fillWidth = innerTrackWidth * this.levelCanvasProgress;
+      const headX = width - trackInset - fillWidth;
       this.levelLoader?.nativeElement.style.setProperty('--level-live-progress', `${this.levelCanvasProgress * 100}%`);
+      const progressRatio = targetProgress > 0 ? Math.min(1, this.levelCanvasProgress / targetProgress) : 1;
+      const displayPoints = Math.round(this.getDisplayPoints() * progressRatio);
+      if (displayPoints !== this.animatedDisplayPoints) {
+        this.ngZone.run(() => {
+          this.animatedDisplayPoints = displayPoints;
+        });
+      }
       const hue = (this.levelCanvasTick * 0.8) % 360;
       const settleProgress = this.levelCanvasSettled ? 1 : this.levelCanvasSettleProgress;
       const motionStrength = 1 - settleProgress;
 
       context.clearRect(0, 0, width, height);
-      context.fillStyle = '#dedede';
+      context.fillStyle = '#e2e2e2';
       this.roundRect(context, 0, trackY, width, trackHeight, trackHeight / 2);
       context.fill();
+      context.strokeStyle = '#ddff53';
+      context.lineWidth = 2;
+      context.stroke();
 
       context.save();
-      this.roundRect(context, 0, trackY, width, trackHeight, trackHeight / 2);
+      this.roundRect(context, trackInset, innerTrackY, innerTrackWidth, innerTrackHeight, innerTrackHeight / 2);
       context.clip();
 
       const liquid = context.createLinearGradient(headX, 0, width, 0);
@@ -1081,19 +1103,19 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       liquid.addColorStop(1, this.mixLevelColor((hue + 115) % 360, settleProgress));
       context.fillStyle = liquid;
       context.beginPath();
-      context.moveTo(width, trackY + trackHeight);
-      context.lineTo(width, trackY);
+      context.moveTo(width - trackInset, innerTrackY + innerTrackHeight);
+      context.lineTo(width - trackInset, innerTrackY);
       for (let x = width; x >= headX; x -= 3) {
         const wave = Math.sin((x * 0.075) + (this.levelCanvasTick * 0.09)) * 2 * motionStrength;
-        context.lineTo(x, trackY + wave);
+        context.lineTo(x, innerTrackY + wave);
       }
-      context.lineTo(headX, trackY + trackHeight);
+      context.lineTo(headX, innerTrackY + innerTrackHeight);
       context.closePath();
       context.fill();
 
       context.globalCompositeOperation = 'lighter';
-      context.fillStyle = `rgba(255,255,255,${0.32 * motionStrength})`;
-      context.fillRect(headX, trackY + 2, fillWidth, trackHeight / 3);
+      context.fillStyle = `rgba(255,255,255,${0.16 * motionStrength})`;
+      context.fillRect(headX, innerTrackY + 1, fillWidth, innerTrackHeight / 3);
       context.restore();
 
       if (!reduceMotion && !this.levelCanvasSettled) {
@@ -1204,23 +1226,14 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     return `hsl(${mixedHue}, 100%, ${lightness}%)`;
   }
 
-  private startPointsCounter(): void {
-    cancelAnimationFrame(this.pointsAnimationFrame);
-    const target = this.getDisplayPoints();
-    const startTime = performance.now();
-    const duration = 8200;
+  private getBalancedProgress(progress: number): number {
+    if (progress <= 0.9) {
+      return progress;
+    }
 
-    const update = (now: number) => {
-      const progress = Math.min(1, (now - startTime) / duration);
-      const eased = progress * progress * (3 - (2 * progress));
-      this.animatedDisplayPoints = Math.round(target * eased);
-
-      if (progress < 1) {
-        this.pointsAnimationFrame = requestAnimationFrame(update);
-      }
-    };
-
-    this.pointsAnimationFrame = requestAnimationFrame(update);
+    const finalProgress = (progress - 0.9) / 0.1;
+    const easedFinalProgress = 1 - Math.pow(1 - finalProgress, 2);
+    return 0.9 + (easedFinalProgress * 0.1);
   }
 
   private roundRect(
