@@ -2276,3 +2276,209 @@
     font-weight: 600;
 }
 
+/* ==========================================
+   Mobile Floating Bottom Toolbar (≤768px)
+   ========================================== */
+
+.mobile-bottom-toolbar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* Hide desktop sticky toolbar */
+    .sticky-toolbar {
+        display: none !important;
+    }
+
+    /* Bottom padding so last content isn't hidden behind floating bar */
+    .content-wrapper {
+        padding-bottom: 100px;
+    }
+
+    /* ---- Outer container: flex column, centered when collapsed ---- */
+    .mobile-bottom-toolbar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        z-index: 960;
+        pointer-events: none; /* pass-through on empty space */
+    }
+
+    /* ---- COLLAPSED: small auto-width centered pill ---- */
+    .mob-collapsed {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ddff53;
+        border-radius: 100px;
+        padding: 7px 14px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .mob-autoscroll-area {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    /* ---- EXPANDED: 2 stacked bubbles, full width ---- */
+    .mob-expanded {
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+    }
+
+    /* Each bubble */
+    .mob-bubble {
+        background: #ddff53;
+        border-radius: 100px;
+        padding: 6px 10px;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.17);
+        display: flex;
+        align-items: center;
+    }
+
+    /* Instrument bubble: ללא רקע — הכלים צפים לבד */
+    .mob-instr-bubble {
+        justify-content: center;
+        background: transparent;
+        box-shadow: none;
+        padding: 4px 0;
+    }
+
+    .mob-instr-bubble .mob-instrument-group {
+        background: rgba(255, 255, 255, 0.88) !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13);
+    }
+
+    /* Controls bubble: spaced row */
+    .mob-controls-bubble {
+        justify-content: space-between;
+        gap: 3px;
+        flex-wrap: nowrap;
+        padding: 6px 12px;
+    }
+
+    /* Vertical separator */
+    .mob-sep-v {
+        display: block;
+        width: 1px;
+        height: 16px;
+        background: rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+        align-self: center;
+    }
+
+    /* Instrument group inside mobile bubbles */
+    .mob-instrument-group {
+        background: rgba(0, 0, 0, 0.08) !important;
+        padding: 2px 4px !important;
+        gap: 2px !important;
+    }
+
+    /* Transpose section */
+    .mob-transpose {
+        gap: 1px !important;
+        flex-shrink: 0;
+    }
+
+    .mob-transpose .current-key-label {
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        margin-inline-end: 1px !important;
+        white-space: nowrap;
+    }
+
+    .mob-transpose .transpose-val {
+        font-size: 11px !important;
+        width: 13px !important;
+    }
+
+    /* Easy version button */
+    .mob-easy-btn {
+        font-size: 11px !important;
+        padding: 0 6px !important;
+        height: 26px !important;
+        flex-shrink: 0;
+    }
+
+    /* Speed display (collapsed + expanded) */
+    .mob-speed-val {
+        font-size: 11px;
+        font-weight: 800;
+        width: 18px;
+        text-align: center;
+        color: #000;
+        flex-shrink: 0;
+    }
+
+    /* Speed controls in expanded controls bubble */
+    .mob-speed-controls {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+
+    /* ---- All buttons inside the mobile toolbar ---- */
+    .mobile-bottom-toolbar .toolbar-btn {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        flex-shrink: 0;
+        border-radius: 50%;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn.btn-text {
+        width: auto;
+        min-width: auto;
+        height: 26px;
+        border-radius: 100px;
+        padding: 0 7px;
+        font-size: 11px;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn-sm {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        color: #000;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn.active,
+    .mobile-bottom-toolbar .instrument-btn.active {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+    }
+
+    .mobile-bottom-toolbar .toolbar-btn-reset {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    .mobile-bottom-toolbar .btn-stop {
+        background: rgba(220, 38, 38, 0.15) !important;
+        color: #b91c1c !important;
+    }
+
+    .mob-expand-btn {
+        background: rgba(0, 0, 0, 0.1) !important;
+        flex-shrink: 0;
+    }
+}
+

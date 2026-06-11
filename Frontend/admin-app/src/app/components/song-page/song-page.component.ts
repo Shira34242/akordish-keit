@@ -76,6 +76,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     selectedInstrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics' = 'guitar';
     isDarkMode: boolean = false;
     isToolbarSticky: boolean = false;
+    isMobileToolbarExpanded: boolean = true;
     preferFlat: boolean = false;
     isEasyMode: boolean = false;
     showInlineChordDiagrams: boolean = false;
@@ -517,6 +518,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         if (this.isMobileDevice() && this.hoveredChord) {
             this.ngZone.run(() => { this.hoveredChord = null; });
         }
+
+        // On mobile, manual scroll collapses the floating toolbar
+        if (window.innerWidth <= 768 && !this.isAutoScroll && this.isMobileToolbarExpanded) {
+            this.ngZone.run(() => { this.isMobileToolbarExpanded = false; });
+        }
     };
 
 
@@ -633,6 +639,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     toggleTheme() {
         this.isDarkMode = !this.isDarkMode;
+    }
+
+    toggleMobileToolbar() {
+        this.isMobileToolbarExpanded = !this.isMobileToolbarExpanded;
     }
 
     toggleAutoScroll() {
