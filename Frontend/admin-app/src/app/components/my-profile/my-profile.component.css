@@ -178,9 +178,10 @@
 }
 
 .level-progress-banner {
+  position: relative;
   margin: var(--space-xl) auto 0;
-  padding: var(--space-base) var(--space-xl) var(--space-2xl);
-  max-width: 620px;
+  padding: var(--space-base) var(--space-lg) var(--space-xl);
+  max-width: 570px;
   border-radius: 20px;
   background: #F2F2F2;
   text-align: right;
@@ -190,6 +191,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  padding-left: calc(var(--space-3xl) + var(--space-lg));
 }
 
 .level-progress-copy strong {
@@ -203,274 +205,99 @@
   line-height: var(--lh-small);
 }
 
-.current-level-badge-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-top: var(--space-base);
-  font-size: var(--font-xs);
-  color: rgba(0,0,0,0.55);
-}
-
 .current-level-badge {
+  position: absolute;
+  top: var(--space-base);
+  left: var(--space-lg);
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  min-height: 28px;
-  padding: 0 var(--space-base);
-  border-radius: 999px;
-  background: #000000;
-  color: #ddff53;
+  color: rgba(0,0,0,0.6);
   font-size: var(--font-xs);
   font-weight: 800;
 }
 
 .current-level-badge .material-icons {
   font-size: 18px;
-}
-
-.level-progress-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-base);
-  margin-top: var(--space-md);
-  font-size: var(--font-xs);
-  color: rgba(0,0,0,0.55);
-}
-
-.level-progress-status span:first-child {
-  font-weight: 800;
   color: #000000;
 }
 
 .level-loader {
   position: relative;
-  margin: var(--space-base) var(--space-md) 0;
-  margin-bottom: calc(var(--space-3xl) + var(--space-base));
+  margin: calc(var(--space-xl) + var(--space-lg)) var(--space-md) 0;
+  margin-bottom: calc(var(--space-xl) + var(--space-sm));
   border-radius: 999px;
-  background: #000000;
-  height: 14px;
-}
-
-.level-bar {
-  --level-progress: 0%;
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 100%;
-  border-radius: 999px;
-  background: #ddff53;
-  isolation: isolate;
-}
-
-.level-loader--animate .level-bar {
-  animation: levelBarEnter 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes levelBarEnter {
-  0% {
-    width: 0;
-  }
-  100% {
-    width: var(--level-progress);
-  }
-}
-
-.level-particles {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  pointer-events: none;
-  opacity: 0;
-  z-index: 3;
-}
-
-.level-particles::before,
-.level-particles::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  border: 2px solid transparent;
-  border-top-color: #ddff53;
-  border-left-color: #ffffff;
-  border-radius: 50%;
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  animation: levelEnergyOrbit 1.25s linear 0.2s infinite;
-}
-
-.level-particles::after {
-  width: 34px;
-  height: 34px;
-  border-width: 1px;
-  border-top-color: rgba(255,255,255,0.7);
-  border-left-color: rgba(221,255,83,0.7);
-  animation-duration: 1.9s;
-  animation-direction: reverse;
-}
-
-.level-loader--animate .level-particles {
-  animation: levelParticlesReveal 0.2s ease-out 0.15s forwards;
-}
-
-.level-particles i {
-  --particle-mid-x: -9px;
-  --particle-mid-y: -12px;
-  --particle-x: 5px;
-  --particle-y: -25px;
-  --particle-delay: 0s;
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #ddff53;
-  opacity: 0;
-  animation: levelParticleFloat 1.8s ease-out var(--particle-delay) infinite;
-}
-
-.level-particles i:nth-child(2) {
-  --particle-mid-x: 8px;
-  --particle-mid-y: -9px;
-  --particle-x: -10px;
-  --particle-y: -21px;
-  --particle-delay: 0.35s;
-  width: 3px;
-  height: 3px;
-  background: #ffffff;
-}
-
-.level-particles i:nth-child(3) {
-  --particle-mid-x: -13px;
-  --particle-mid-y: 5px;
-  --particle-x: -20px;
-  --particle-y: -15px;
-  --particle-delay: 0.7s;
-  width: 3px;
-  height: 3px;
-}
-
-.level-particles i:nth-child(4) {
-  --particle-mid-x: 12px;
-  --particle-mid-y: 4px;
-  --particle-x: 18px;
-  --particle-y: -20px;
-  --particle-delay: 1.05s;
-  width: 2px;
-  height: 2px;
-  background: #ffffff;
-}
-
-.level-particles i:nth-child(5) {
-  --particle-mid-x: -5px;
-  --particle-mid-y: -14px;
-  --particle-x: -16px;
-  --particle-y: -32px;
-  --particle-delay: 1.35s;
-  width: 2px;
-  height: 2px;
-}
-
-.level-particles i:nth-child(6) {
-  --particle-mid-x: 13px;
-  --particle-mid-y: -11px;
-  --particle-x: 22px;
-  --particle-y: -8px;
-  --particle-delay: 1.6s;
-  width: 3px;
-  height: 3px;
-}
-
-@keyframes levelParticlesReveal {
-  to { opacity: 1; }
-}
-
-@keyframes levelEnergyOrbit {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(0deg) scale(0.75);
-  }
-  25%, 70% {
-    opacity: 0.75;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(360deg) scale(1.15);
-  }
-}
-
-@keyframes levelParticleFloat {
-  0% {
-    opacity: 0;
-    transform: translate(0, -50%) scale(0.5);
-  }
-  18% {
-    opacity: 1;
-  }
-  52% {
-    opacity: 0.8;
-    transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(0.8);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--particle-x), var(--particle-y)) scale(0);
-  }
-}
-
-.level-current-marker {
-  position: absolute;
-  top: 50%;
-  width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background: #ffffff;
-  transform: translate(50%, -50%);
-  opacity: 0;
-  z-index: 2;
 }
 
-.level-loader--animate .level-current-marker {
-  animation: currentMarkerEnter 0.35s ease-out 2.75s forwards, currentMarkerSparkle 2.2s ease-in-out 3.1s infinite;
-}
-
-@keyframes currentMarkerEnter {
-  to { opacity: 1; }
-}
-
-@keyframes currentMarkerSparkle {
-  0%, 100% {
-    outline: 0 solid rgba(221,255,83,0);
-  }
-  50% {
-    outline: 5px solid rgba(221,255,83,0.25);
-  }
-}
-
-.level-checkpoint {
+.level-live-points {
   position: absolute;
-  top: -5px;
+  right: var(--level-live-progress, 0%);
+  bottom: calc(100% + var(--space-sm));
+  z-index: 3;
   transform: translateX(50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+  direction: ltr;
+  color: #000000;
+}
+
+.level-live-points::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  width: 1px;
+  height: var(--space-sm);
+  background: rgba(0,0,0,0.25);
+}
+
+.level-live-points strong {
+  font-size: var(--font-base);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.level-live-points span {
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0,0,0,0.45);
+}
+
+.level-canvas {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 100%;
+  height: 76px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.level-checkpoint {
+  position: absolute;
+  top: -4px;
+  transform: translateX(50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
 }
 
 .level-check {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 4px;
+  width: 18px;
+  height: 18px;
+  padding: 6px;
   border-radius: 50%;
-  background: #535353;
-  transform: scale(0.78);
+  background: #dedede;
+  transform: scale(0.72);
   transition: transform 0.25s ease, background-color 0.25s ease;
   opacity: 0;
 }
@@ -485,69 +312,56 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .level-loader--animate .level-bar,
-  .level-loader--animate .level-current-marker,
-  .level-loader--animate .level-check,
-  .level-loader--animate .level-particles,
-  .level-particles::before,
-  .level-particles::after,
-  .level-particles i {
+  .level-loader--animate .level-check {
     animation: none;
   }
 
-  .level-loader--animate .level-bar {
-    width: var(--level-progress);
-  }
-
-  .level-loader--animate .level-current-marker,
   .level-loader--animate .level-check {
     opacity: 1;
   }
 }
 
 .level-check svg {
-  width: 100%;
-  height: 100%;
-  stroke: #ffffff;
-  stroke-width: 2.5;
-  opacity: 0.35;
+  display: none;
 }
 
 .level-checkpoint--reached .level-check {
   background: #ddff53;
-  transform: scale(1);
-}
-
-.level-checkpoint--reached .level-check svg {
-  stroke: #000000;
-  opacity: 1;
+  transform: scale(0.82);
 }
 
 .level-checkpoint--current .level-check {
-  outline: 2px solid #000000;
-  outline-offset: 2px;
+  background: #ffffff;
+  outline: 1px solid rgba(0,0,0,0.35);
+  outline-offset: 1px;
 }
 
 .level-check-label {
   position: absolute;
-  top: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  top: 0;
   width: 105px;
   text-align: center;
   white-space: nowrap;
 }
 
 .level-check-label strong {
+  position: absolute;
+  top: calc(var(--space-lg) + var(--space-xs));
+  left: 50%;
+  transform: translateX(-50%);
   font-size: var(--font-xs);
-  font-weight: 800;
+  font-weight: 300;
+  color: rgba(0,0,0,0.55);
 }
 
 .level-check-label span {
+  position: absolute;
+  bottom: calc(var(--space-lg) + var(--space-xs));
+  left: 50%;
+  transform: translateX(-50%);
   font-size: var(--font-xs);
-  color: rgba(0,0,0,0.45);
+  font-weight: 300;
+  color: rgba(0,0,0,0.38);
 }
 
 .profile-tags {
@@ -1527,7 +1341,11 @@
   }
 
   .level-progress-banner {
-    padding: var(--space-md) var(--space-lg) var(--space-2xl);
+    padding: var(--space-md) var(--space-base) var(--space-xl);
+  }
+
+  .level-progress-copy {
+    padding-left: calc(var(--space-3xl) + var(--space-base));
   }
 
   .level-check-label {
