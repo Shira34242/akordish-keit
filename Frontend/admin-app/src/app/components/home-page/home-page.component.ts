@@ -98,6 +98,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
   homePodcasts: PodcastHomeCard[] = [];
+  latestPodcastEpisodes: PodcastEpisodeBanner[] = [];
   popularPodcastEpisodes: PodcastEpisodeBanner[] = [];
 
 
@@ -431,15 +432,24 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     let completedLoads = 0;
     const completeLoad = () => {
       completedLoads++;
-      if (completedLoads === 2) afterLoad?.();
+      if (completedLoads === 3) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getHomePodcastCards().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts; },
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 10); },
       error: err => console.error('loadContent: podcast series', err)
+    });
+
+    const onLatestDone = this.trackPendingLoad();
+    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onLatestDone();
+      completeLoad();
+    })).subscribe({
+      next: episodes => { this.latestPodcastEpisodes = episodes; },
+      error: err => console.error('loadContent: latest podcast episodes', err)
     });
 
     const onPopularDone = this.trackPendingLoad();

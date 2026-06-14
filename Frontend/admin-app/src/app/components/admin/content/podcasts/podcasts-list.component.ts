@@ -55,7 +55,7 @@ export class PodcastsListComponent implements OnInit {
   loadPodcasts(): void {
     this.podcastService.getPodcasts(1, 200).subscribe({
       next: result => {
-        this.podcasts = result.items;
+        this.podcasts = [...result.items].sort((a, b) => this.compareDatesDescending(a.createdAt, b.createdAt));
         this.selectedPodcastIds.clear();
         if (!this.selectedSeriesPodcast && this.podcasts.length > 0) {
           this.selectSeries(this.podcasts[0]);
@@ -247,6 +247,10 @@ export class PodcastsListComponent implements OnInit {
 
   editPodcast(podcast: Podcast): void {
     this.router.navigate(['/admin/content/podcasts/edit', podcast.id]);
+  }
+
+  private compareDatesDescending(first: string, second: string): number {
+    return new Date(second).getTime() - new Date(first).getTime();
   }
 
   editEpisode(episode: PodcastEpisode): void {

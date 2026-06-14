@@ -426,6 +426,24 @@
       </div>
     </section>
 
+    <section class="home-section popular-episodes-section" *ngIf="latestPodcastEpisodes.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">פרקים אחרונים</h2>
+        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
+      </div>
+
+      <div class="podcast-episodes-row">
+        <div class="podcast-episodes-track">
+          <app-podcast-episode-banner
+            *ngFor="let episode of latestPodcastEpisodes; trackBy: trackById"
+            class="podcast-episode-card"
+            [episode]="episode"
+            [showDescription]="true">
+          </app-podcast-episode-banner>
+        </div>
+      </div>
+    </section>
+
     <section
       class="home-section viral-section"
       #viralSection
