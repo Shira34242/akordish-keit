@@ -877,8 +877,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             this.tooltipPosition = { x: pos.x, y: pos.y };
             this.tooltipAbove = pos.above;
         }
-        // אין else — הטולטיפ נשאר פתוח כשנעים בתוך אזור המילים
-        // סגירה מתרחשת רק כשעוזבים את אזור המילים (handleLyricsLeave)
+    }
+
+    handleLyricsMouseOut(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.classList.contains('chord-inline') && !target.classList.contains('chord-block')) return;
+        this.handleLyricsLeave();
     }
 
     handleLyricsLeave() {

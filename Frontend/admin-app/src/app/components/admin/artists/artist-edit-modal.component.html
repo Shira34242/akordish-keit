@@ -511,6 +511,7 @@
               <option [value]="0">ממתין לאישור</option>
               <option [value]="1">פעיל</option>
               <option [value]="2">מוסתר</option>
+              <option [value]="3">טיוטה</option>
             </select>
           </div>
 
@@ -528,7 +529,7 @@
       <!-- Form Actions -->
       <div class="form-actions">
         <button type="button" class="btn-cancel" (click)="onClose()" [disabled]="saving">
-          ביטול
+          {{ draftCloseLabel }}
         </button>
         <button type="submit" class="btn-submit" [disabled]="saving" [class.saving]="saving">
           <span class="material-icons" *ngIf="!saving">save</span>

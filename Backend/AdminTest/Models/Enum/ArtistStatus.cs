@@ -18,5 +18,10 @@ public enum ArtistStatus
     /// <summary>
     /// מוסתר/מושעה
     /// </summary>
-    Hidden = 2
+    Hidden = 2,
+
+    /// <summary>
+    /// טיוטה שעדיין לא הושלמה
+    /// </summary>
+    Draft = 3
 }

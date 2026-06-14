@@ -301,7 +301,12 @@
   gap: var(--space-md);
   flex-wrap: nowrap;
   max-width: calc(100% - 460px);
-  overflow: hidden;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hero-social::-webkit-scrollbar {
+  display: none;
 }
 
 .social-icon-btn {
@@ -1167,7 +1172,12 @@
   .hero-avatar { width: 100px; height: 100px; }
   .hero-name { font-size: 1.8rem; }
   .hero-stats { gap: var(--space-base); }
-  .hero-social { display: none; }
+  .hero-social {
+    right: var(--space-md);
+    left: var(--space-md);
+    bottom: var(--space-md);
+    max-width: none;
+  }
 
   .hero-short-bio {
     display: -webkit-box;

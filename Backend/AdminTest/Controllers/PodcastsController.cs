@@ -1,5 +1,6 @@
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
+using AkordishKeit.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -40,11 +41,11 @@ namespace AkordishKeit.Controllers
         [HttpGet("public")]
         public async Task<ActionResult<IEnumerable<PodcastDto>>> GetPublicPodcasts()
         {
-            return Ok(await _podcastService.GetPublicPodcastsAsync());
+            var podcasts = await _podcastService.GetPublicPodcastsAsync();
+            return HttpCacheRevalidation.Revalidate(this, podcasts);
         }
 
         [HttpGet("home-cards")]
-        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<List<PodcastHomeCardDto>>> GetHomePodcastCards()
         {
             var cards = await _cache.GetOrCreateAsync("home_podcast_cards_v1", async entry =>
@@ -53,11 +54,10 @@ namespace AkordishKeit.Controllers
                 return await _podcastService.GetHomePodcastCardsAsync();
             });
 
-            return Ok(cards!);
+            return HttpCacheRevalidation.Revalidate(this, cards!);
         }
 
         [HttpGet("home-popular-episode-banners")]
-        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<List<PodcastEpisodeBannerDto>>> GetHomePopularEpisodeBanners()
         {
             var banners = await _cache.GetOrCreateAsync("home_popular_episode_banners_v1", async entry =>
@@ -66,13 +66,14 @@ namespace AkordishKeit.Controllers
                 return await _podcastService.GetHomePopularEpisodeBannersAsync();
             });
 
-            return Ok(banners!);
+            return HttpCacheRevalidation.Revalidate(this, banners!);
         }
 
         [HttpGet("latest-episodes")]
         public async Task<ActionResult<IEnumerable<PodcastEpisodeDto>>> GetLatestEpisodes([FromQuery] int limit = 8)
         {
-            return Ok(await _podcastService.GetLatestEpisodesAsync(limit));
+            var episodes = await _podcastService.GetLatestEpisodesAsync(limit);
+            return HttpCacheRevalidation.Revalidate(this, episodes);
         }
 
         [HttpGet("popular-episodes")]
@@ -121,6 +122,7 @@ namespace AkordishKeit.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var podcast = await _podcastService.CreatePodcastAsync(dto);
+            InvalidatePublicPodcastCaches();
             _logger.LogInformation("Podcast created: PodcastId={PodcastId} Name={Name}", podcast.Id, podcast.Name);
             return CreatedAtAction(nameof(GetPodcast), new { id = podcast.Id }, podcast);
         }
@@ -168,7 +170,10 @@ namespace AkordishKeit.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var podcast = await _podcastService.UpdatePodcastAsync(id, dto);
             if (podcast != null)
+            {
+                InvalidatePublicPodcastCaches();
                 _logger.LogInformation("Podcast updated: PodcastId={PodcastId}", id);
+            }
             return podcast == null ? NotFound(new { message = "הפודקאסט לא נמצא" }) : Ok(podcast);
         }
 
@@ -178,7 +183,10 @@ namespace AkordishKeit.Controllers
         {
             var deleted = await _podcastService.DeletePodcastAsync(id);
             if (deleted)
+            {
+                InvalidatePublicPodcastCaches();
                 _logger.LogInformation("Podcast deleted: PodcastId={PodcastId}", id);
+            }
             return deleted
                 ? NoContent()
                 : NotFound(new { message = "הפודקאסט לא נמצא" });
@@ -215,6 +223,7 @@ namespace AkordishKeit.Controllers
             try
             {
                 var episode = await _podcastService.CreateEpisodeAsync(dto);
+                InvalidatePublicPodcastCaches();
                 _logger.LogInformation("Podcast episode created: EpisodeId={EpisodeId} PodcastId={PodcastId} Title={Title}",
                     episode.Id, dto.PodcastId, episode.Title);
                 return CreatedAtAction(nameof(GetEpisode), new { id = episode.Id }, episode);
@@ -264,7 +273,10 @@ namespace AkordishKeit.Controllers
             {
                 var episode = await _podcastService.UpdateEpisodeAsync(id, dto);
                 if (episode != null)
+                {
+                    InvalidatePublicPodcastCaches();
                     _logger.LogInformation("Podcast episode updated: EpisodeId={EpisodeId}", id);
+                }
                 return episode == null ? NotFound(new { message = "הפרק לא נמצא" }) : Ok(episode);
             }
             catch (InvalidOperationException ex)
@@ -280,10 +292,19 @@ namespace AkordishKeit.Controllers
         {
             var deleted = await _podcastService.DeleteEpisodeAsync(id);
             if (deleted)
+            {
+                InvalidatePublicPodcastCaches();
                 _logger.LogInformation("Podcast episode deleted: EpisodeId={EpisodeId}", id);
+            }
             return deleted
                 ? NoContent()
                 : NotFound(new { message = "הפרק לא נמצא" });
+        }
+
+        private void InvalidatePublicPodcastCaches()
+        {
+            _cache.Remove("home_podcast_cards_v1");
+            _cache.Remove("home_popular_episode_banners_v1");
         }
     }
 }

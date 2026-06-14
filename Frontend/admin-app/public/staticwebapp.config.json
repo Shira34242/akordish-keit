@@ -37,6 +37,12 @@
       }
     },
     {
+      "route": "/*.avif",
+      "headers": {
+        "Cache-Control": "public, max-age=2592000"
+      }
+    },
+    {
       "route": "/*.svg",
       "headers": {
         "Cache-Control": "public, max-age=2592000"
@@ -63,7 +69,7 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/*.{png,jpg,jpeg,gif,svg,ico,webp,css,js,woff,woff2,ttf,eot,map,json,txt,xml,html}"]
+    "exclude": ["/assets/*", "/*.{png,jpg,jpeg,gif,svg,ico,webp,avif,css,js,woff,woff2,ttf,eot,map,json,txt,xml,html}"]
   },
   "globalHeaders": {
     "Referrer-Policy": "strict-origin-when-cross-origin"

@@ -128,7 +128,8 @@ export interface SocialLink {
 export enum ArtistStatus {
   Pending = 0,    // ממתין לאישור
   Active = 1,     // פעיל
-  Hidden = 2      // מוסתר/מושעה
+  Hidden = 2,     // מוסתר/מושעה
+  Draft = 3       // טיוטה שעדיין לא הושלמה
 }
 
 /**

@@ -3,6 +3,12 @@
 const sharpScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const flatScale  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+const BIDI_CONTROL_REGEX = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+
+function stripBidiControls(value: string): string {
+    return value.replace(BIDI_CONTROL_REGEX, '');
+}
+
 const allNotes: { [key: string]: number } = {
     'C': 0, 'B#': 0,
     'C#': 1, 'Db': 1,
@@ -88,7 +94,7 @@ export interface ParsedChord {
  */
 export function normalizeChordInput(raw: string): string {
     if (!raw) return raw;
-    let s = raw.trim();
+    let s = stripBidiControls(raw).trim();
 
     // 1. Flatten parentheses inline
     s = s.replace(/\(([^)]+)\)/g, '$1');
@@ -359,7 +365,7 @@ export function isChordLegacy(token: string = ''): boolean {
  */
 export function isChord(token: string = ''): boolean {
     if (!token || typeof token !== 'string') return false;
-    const stripped = token.trim();
+    const stripped = stripBidiControls(token).trim();
     if (!stripped) return false;
     if (!/^[A-G]/.test(stripped)) return false; // fast pre-check
     const parsed = parseChord(stripped);
@@ -372,7 +378,7 @@ export function isChord(token: string = ''): boolean {
 
 function tokenize(line: string): string[] {
     if (!line) return [];
-    return line.trim()
+    return stripBidiControls(line).trim()
         .split(/[\s|]+/)
         .flatMap(expandChordToken)
         .filter(tok => tok !== '/' && !/^x\d+$/i.test(tok))

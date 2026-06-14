@@ -561,6 +561,7 @@
 
             <div class="lyrics-content" *ngIf="hasFullSongContent; else lockedSongContent" [innerHTML]="formattedLyricsHtml"
                 (mouseover)="handleLyricsMouseOver($event)"
+                (mouseout)="handleLyricsMouseOut($event)"
                 (mouseleave)="handleLyricsLeave()"
                 (click)="handleLyricsClick($event)">
             </div>
@@ -589,7 +590,8 @@
                 [style.top.px]="activeTooltipPosition.y"
                 [style.transform]="activeTooltipAbove ? 'translate(-50%, -110%)' : 'translate(-50%, 0)'"
                 [style.zIndex]="1000"
-                [style.pointer-events]="pinnedChord ? 'auto' : 'none'"
+                [style.pointer-events]="'auto'"
+                (tooltipHoverChange)="handlePlayBtnHover($event)"
                 (closePinned)="closePinnedTooltip()">
             </app-chord-tooltip>
         </div>
@@ -758,6 +760,7 @@
                         <div class="known-summary-missing"
                              *ngIf="!summary.knowsAll"
                              (mouseover)="handleLyricsMouseOver($event)"
+                             (mouseout)="handleLyricsMouseOut($event)"
                              (mouseleave)="handleLyricsLeave()"
                              (click)="handleLyricsClick($event)">
                             <span class="known-summary-missing-label">{{ 'song.need_to_learn' | translate }}</span>

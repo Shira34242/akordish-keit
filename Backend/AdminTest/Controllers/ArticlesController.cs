@@ -2,6 +2,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
+using AkordishKeit.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -101,18 +102,17 @@ public class ArticlesController : ControllerBase
         [FromQuery] int? contentType = null,
         [FromQuery] int limit = 5)
     {
-        var cacheKey = $"featured_articles_{contentType}_{limit}";
+        var cacheKey = $"featured_articles_{GetPublicArticleCacheVersion()}_{contentType}_{limit}";
         if (!_cache.TryGetValue(cacheKey, out List<ArticleDto>? articles))
         {
             articles = await _articleService.GetFeaturedArticlesAsync(contentType, limit);
             _cache.Set(cacheKey, articles, TimeSpan.FromMinutes(5));
         }
-        return Ok(articles);
+        return HttpCacheRevalidation.Revalidate<IEnumerable<ArticleDto>>(this, articles!);
     }
 
     // GET: api/Articles/home-news-banners
     [HttpGet("home-news-banners")]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<ActionResult<HomeNewsBannersDto>> GetHomeNewsBanners()
     {
         const string cacheKey = "home_news_banners_v1";
@@ -122,12 +122,11 @@ public class ArticlesController : ControllerBase
             return await _articleService.GetHomeNewsBannersAsync();
         });
 
-        return Ok(banners!);
+        return HttpCacheRevalidation.Revalidate(this, banners!);
     }
 
     // GET: api/Articles/home-content-banners
     [HttpGet("home-content-banners")]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners()
     {
         const string cacheKey = "home_content_banners_v1";
@@ -137,12 +136,11 @@ public class ArticlesController : ControllerBase
             return await _articleService.GetHomeContentBannersAsync();
         });
 
-        return Ok(banners!);
+        return HttpCacheRevalidation.Revalidate(this, banners!);
     }
 
     // GET: api/Articles/home-viral-banners
     [HttpGet("home-viral-banners")]
-    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
     public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners()
     {
         const string cacheKey = "home_viral_banners_v1";
@@ -152,7 +150,7 @@ public class ArticlesController : ControllerBase
             return await _articleService.GetHomeViralBannersAsync();
         });
 
-        return Ok(banners!);
+        return HttpCacheRevalidation.Revalidate(this, banners!);
     }
 
     // GET: api/Articles/public-banners
@@ -171,14 +169,14 @@ public class ArticlesController : ControllerBase
         var categoryKey = categoryIds?.Count > 0
             ? string.Join("-", categoryIds.OrderBy(id => id))
             : "all";
-        var cacheKey = $"public_article_banners_v1_{contentType}_{pageNumber}_{pageSize}_{categoryKey}";
+        var cacheKey = $"public_article_banners_v1_{GetPublicArticleCacheVersion()}_{contentType}_{pageNumber}_{pageSize}_{categoryKey}";
         var result = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
             return await _articleService.GetPublishedArticleBannersAsync(contentType, pageNumber, pageSize, categoryIds);
         });
 
-        return Ok(result!);
+        return HttpCacheRevalidation.Revalidate(this, result!);
     }
 
     // GET: api/Articles/stats
@@ -213,6 +211,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
+            InvalidatePublicArticleCaches();
             _logger.LogInformation("Article created (admin): ArticleId={ArticleId} Title={Title}",
                 article.Id, article.Title);
             return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
@@ -268,6 +267,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleAsync(id, dto, GetCurrentUserId());
+            InvalidatePublicArticleCaches();
 
             if (dto.Status == (int)ArticleStatus.Published)
             {
@@ -308,6 +308,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleStatusAsync(id, dto.Status);
+            InvalidatePublicArticleCaches();
 
             if (dto.Status == (int)ArticleStatus.Published)
             {
@@ -344,6 +345,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleCategoriesAsync(id, dto);
+            InvalidatePublicArticleCaches();
             return Ok(article);
         }
         catch (KeyNotFoundException ex)
@@ -364,6 +366,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var result = await _articleService.BulkUpdateArticleCategoriesAsync(dto);
+            InvalidatePublicArticleCaches();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -384,6 +387,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var result = await _articleService.BulkUpdateArticleStatusAsync(dto);
+            InvalidatePublicArticleCaches();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -404,6 +408,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleArtistsAsync(id, dto);
+            InvalidatePublicArticleCaches();
             return Ok(article);
         }
         catch (KeyNotFoundException ex)
@@ -424,6 +429,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var result = await _articleService.BulkUpdateArticleArtistsAsync(dto);
+            InvalidatePublicArticleCaches();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -444,6 +450,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var article = await _articleService.UpdateArticleUploaderAsync(id, dto, GetCurrentUserId());
+            InvalidatePublicArticleCaches();
             return Ok(article);
         }
         catch (KeyNotFoundException ex)
@@ -464,6 +471,7 @@ public class ArticlesController : ControllerBase
         try
         {
             var result = await _articleService.BulkUpdateArticleUploaderAsync(dto, GetCurrentUserId());
+            InvalidatePublicArticleCaches();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -516,6 +524,7 @@ public class ArticlesController : ControllerBase
     public async Task<ActionResult<BulkArticleActionResultDto>> BulkDeleteArticles([FromBody] BulkArticleIdsDto dto)
     {
         var result = await _articleService.BulkDeleteArticlesAsync(dto);
+        InvalidatePublicArticleCaches();
         return Ok(result);
     }
 
@@ -547,6 +556,7 @@ public class ArticlesController : ControllerBase
     public async Task<ActionResult<ArticleNewsCleanupResultDto>> CleanupOldNews([FromBody] CleanupOldNewsDto dto)
     {
         var result = await _articleService.CleanupOldNewsAsync(dto.OlderThanDays);
+        InvalidatePublicArticleCaches();
         _logger.LogInformation(
             "Old news cleanup executed manually: OlderThanDays={OlderThanDays} DeletedCount={DeletedCount}",
             result.OlderThanDays,
@@ -567,6 +577,7 @@ public class ArticlesController : ControllerBase
         }
 
         _logger.LogInformation("Article deleted: ArticleId={ArticleId}", id);
+        InvalidatePublicArticleCaches();
         return NoContent();
     }
 
@@ -670,6 +681,23 @@ public class ArticlesController : ControllerBase
         if (User.Identity?.IsAuthenticated != true) return null;
         var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
         return claim != null && int.TryParse(claim.Value, out var id) ? id : null;
+    }
+
+    private void InvalidatePublicArticleCaches()
+    {
+        _cache.Remove("home_news_banners_v1");
+        _cache.Remove("home_content_banners_v1");
+        _cache.Remove("home_viral_banners_v1");
+        _cache.Set("public_article_cache_version", Guid.NewGuid().ToString("N"));
+    }
+
+    private string GetPublicArticleCacheVersion()
+    {
+        return _cache.GetOrCreate("public_article_cache_version", entry =>
+        {
+            entry.Priority = CacheItemPriority.NeverRemove;
+            return Guid.NewGuid().ToString("N");
+        })!;
     }
 
     // GET: api/Articles/youtube-metadata?url=...

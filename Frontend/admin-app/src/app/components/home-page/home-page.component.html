@@ -162,7 +162,7 @@
       </div>
 
       <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
-        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <app-news-banner
@@ -178,7 +178,7 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <app-news-banner

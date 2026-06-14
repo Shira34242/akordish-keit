@@ -43,7 +43,8 @@ export class ArtistService {
         page: number = 1,
         pageSize: number = 20,
         sortBy: string = 'name',
-        search?: string
+        search?: string,
+        includeDrafts: boolean = false
     ): Observable<PagedResult<ArtistListDto>> {
         let params = new HttpParams()
             .set('page', page.toString())
@@ -60,6 +61,10 @@ export class ArtistService {
 
         if (search !== undefined && search.trim() !== '') {
             params = params.set('search', search.trim());
+        }
+
+        if (includeDrafts) {
+            params = params.set('includeDrafts', 'true');
         }
 
         return this.http.get<PagedResult<ArtistListDto>>(this.apiUrl, { params });

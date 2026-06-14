@@ -1115,7 +1115,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
-  direction: ltr;
+  direction: rtl;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -1128,7 +1128,7 @@
 
 .podcasts-home-track {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   gap: var(--space-lg);
   width: max-content;
   align-items: stretch;

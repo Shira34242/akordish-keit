@@ -1,5 +1,6 @@
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
+using AkordishKeit.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -35,7 +36,6 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpGet("active-banners")]
-        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<List<FeaturedContentBannerDto>>> GetActiveFeaturedContentBanners()
         {
             var banners = await _cache.GetOrCreateAsync("active_featured_content_banners_v1", async entry =>
@@ -44,7 +44,7 @@ namespace AkordishKeit.Controllers
                 return await _featuredContentService.GetActiveFeaturedContentBannersAsync();
             });
 
-            return Ok(banners!);
+            return HttpCacheRevalidation.Revalidate(this, banners!);
         }
 
         /// <summary>
@@ -86,6 +86,7 @@ namespace AkordishKeit.Controllers
             try
             {
                 var featuredContent = await _featuredContentService.CreateFeaturedContentAsync(dto);
+                InvalidatePublicFeaturedContentCache();
                 _logger.LogInformation("Featured content created: FeaturedContentId={Id}", featuredContent.Id);
                 return CreatedAtAction(nameof(GetFeaturedContent), new { id = featuredContent.Id }, featuredContent);
             }
@@ -114,6 +115,7 @@ namespace AkordishKeit.Controllers
                     return NotFound(new { message = "התוכן המרכזי לא נמצא" });
 
                 _logger.LogInformation("Featured content updated: FeaturedContentId={Id}", id);
+                InvalidatePublicFeaturedContentCache();
                 return Ok(featuredContent);
             }
             catch (InvalidOperationException ex)
@@ -135,6 +137,7 @@ namespace AkordishKeit.Controllers
             try
             {
                 var featuredContent = await _featuredContentService.UpdateFeaturedContentBulkAsync(dto);
+                InvalidatePublicFeaturedContentCache();
                 return Ok(featuredContent);
             }
             catch (InvalidOperationException ex)
@@ -156,7 +159,13 @@ namespace AkordishKeit.Controllers
                 return NotFound(new { message = "התוכן המרכזי לא נמצא" });
 
             _logger.LogInformation("Featured content deleted: FeaturedContentId={Id}", id);
+            InvalidatePublicFeaturedContentCache();
             return NoContent();
+        }
+
+        private void InvalidatePublicFeaturedContentCache()
+        {
+            _cache.Remove("active_featured_content_banners_v1");
         }
     }
 }

@@ -54,7 +54,8 @@ export class ArtistsAdminListComponent implements OnInit {
     { value: null, label: 'כל הסטטוסים' },
     { value: ArtistStatus.Pending, label: 'ממתין לאישור' },
     { value: ArtistStatus.Active, label: 'פעיל' },
-    { value: ArtistStatus.Hidden, label: 'מוסתר' }
+    { value: ArtistStatus.Hidden, label: 'מוסתר' },
+    { value: ArtistStatus.Draft, label: 'טיוטה' }
   ];
 
   premiumOptions = [
@@ -102,7 +103,9 @@ export class ArtistsAdminListComponent implements OnInit {
       this.filterStatus ?? undefined,
       this.currentPage,
       this.pageSize,
-      this.sortBy
+      this.sortBy,
+      this.searchTerm,
+      true
     ).subscribe({
       next: (result: PagedResult<ArtistListDto>) => {
         this.artists = result.items;
@@ -239,6 +242,7 @@ export class ArtistsAdminListComponent implements OnInit {
       case ArtistStatus.Pending: return 'badge-warning';
       case ArtistStatus.Active: return 'badge-success';
       case ArtistStatus.Hidden: return 'badge-danger';
+      case ArtistStatus.Draft: return 'badge-secondary';
       default: return 'badge-secondary';
     }
   }
@@ -248,6 +252,7 @@ export class ArtistsAdminListComponent implements OnInit {
       case ArtistStatus.Pending: return 'ממתין לאישור';
       case ArtistStatus.Active: return 'פעיל';
       case ArtistStatus.Hidden: return 'מוסתר';
+      case ArtistStatus.Draft: return 'טיוטה';
       default: return 'לא ידוע';
     }
   }

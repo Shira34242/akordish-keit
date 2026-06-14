@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { ArtistService } from '../../../services/artist.service';
 import { SongService } from '../../../services/song.service';
 import { EventService } from '../../../services/event.service';
@@ -82,6 +83,7 @@ export class ArtistEditModalComponent implements OnInit {
   saving = false;
   error: string | null = null;
   isEditMode = false;
+  private closeWithoutDraftSave = false;
 
   readonly MUSIC_PLATFORMS = [3, 7, 8, 9, 10, 11]; // YouTube, Spotify, Zing, Jewzik, 24Six, Apple Music
 
@@ -207,14 +209,14 @@ export class ArtistEditModalComponent implements OnInit {
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
-          socialLinks: artist.socialLinks?.filter(l => !this.MUSIC_PLATFORMS.includes(l.platform)).map(link => ({
+          socialLinks: artist.socialLinks?.filter(l => !this.isMusicPlatform(l.platform)).map(link => ({
             id: link.id,
-            platform: link.platform,
+            platform: this.normalizePlatform(link.platform),
             url: link.url
           })) || [],
-          musicLinks: artist.socialLinks?.filter(l => this.MUSIC_PLATFORMS.includes(l.platform)).map(link => ({
+          musicLinks: artist.socialLinks?.filter(l => this.isMusicPlatform(l.platform)).map(link => ({
             id: link.id,
-            platform: link.platform,
+            platform: this.normalizePlatform(link.platform),
             url: link.url
           })) || [],
           galleryItems,
@@ -265,31 +267,7 @@ export class ArtistEditModalComponent implements OnInit {
     this.saving = true;
     this.error = null;
 
-    const bannerType = this.editForm.bannerMediaType;
-    const bannerUrl = this.optionalText(this.editForm.bannerUrl);
-
-    const commonPayload: Partial<UpdateArtistDto> = {
-      name: this.editForm.name.trim(),
-      englishName: this.optionalText(this.editForm.englishName),
-      shortBio: this.optionalText(this.editForm.shortBio),
-      biography: this.optionalText(this.editForm.biography),
-      imageUrl: this.optionalText(this.editForm.imageUrl),
-      // רק שדה אחד מתאים מתמלא — בחירה אחת בלבד
-      bannerImageUrl: bannerType === 'image' ? bannerUrl : undefined,
-      bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') ? bannerUrl : undefined,
-      bannerMediaType: bannerUrl ? bannerType : null,
-      bannerBlur: this.normalizedBannerBlur(this.editForm.bannerBlur),
-      websiteUrl: this.optionalText(this.editForm.websiteUrl),
-      status: Number(this.editForm.status),
-      isPremium: this.editForm.isPremium,
-      performanceIsActive: this.editForm.performance.enabled,
-      performanceEvent: this.buildPerformanceEvent(),
-      socialLinks: this.normalizedLinks(),
-      galleryImages: this.normalizedGalleryImages(),
-      videos: this.normalizedVideos(),
-      hits: this.normalizedHits(),
-      albums: this.normalizedAlbums()
-    };
+    const commonPayload = this.buildPayload(Number(this.editForm.status));
 
     if (this.isEditMode && this.artistId) {
       // Update existing artist
@@ -301,7 +279,7 @@ export class ArtistEditModalComponent implements OnInit {
         next: () => {
           this.saving = false;
           this.saved.emit();
-          this.onClose();
+          this.closeImmediately();
         },
         error: (err) => {
           console.error('שגיאה בעדכון אומן:', err);
@@ -322,7 +300,7 @@ export class ArtistEditModalComponent implements OnInit {
         next: () => {
           this.saving = false;
           this.saved.emit();
-          this.onClose();
+          this.closeImmediately();
         },
         error: (err) => {
           console.error('שגיאה ביצירת אומן:', err);
@@ -654,6 +632,32 @@ export class ArtistEditModalComponent implements OnInit {
       .filter(link => Number.isFinite(link.platform) && link.platform >= 1 && link.platform <= 11);
   }
 
+  private isMusicPlatform(platform: number | string): boolean {
+    return this.MUSIC_PLATFORMS.includes(this.normalizePlatform(platform));
+  }
+
+  private normalizePlatform(platform: number | string): number {
+    if (typeof platform === 'number') return platform;
+
+    const numericPlatform = Number(platform);
+    if (Number.isFinite(numericPlatform)) return numericPlatform;
+
+    const platformNames: Record<string, number> = {
+      Instagram: 1,
+      Facebook: 2,
+      YouTube: 3,
+      TikTok: 4,
+      Website: 5,
+      Twitter: 6,
+      Spotify: 7,
+      Zing: 8,
+      Jewzik: 9,
+      TwentyFourSix: 10,
+      AppleMusic: 11
+    };
+    return platformNames[platform] ?? 0;
+  }
+
   private normalizedGalleryImages() {
     return this.editForm.galleryItems
       .filter(it => it.kind === 'image' && it.imageUrl?.trim())
@@ -709,6 +713,7 @@ export class ArtistEditModalComponent implements OnInit {
       case ArtistStatus.Pending: return 'ממתין לאישור';
       case ArtistStatus.Active: return 'פעיל';
       case ArtistStatus.Hidden: return 'מוסתר';
+      case ArtistStatus.Draft: return 'טיוטה';
       default: return 'לא ידוע';
     }
   }
@@ -718,12 +723,26 @@ export class ArtistEditModalComponent implements OnInit {
       case ArtistStatus.Pending: return 'pending';
       case ArtistStatus.Active: return 'active';
       case ArtistStatus.Hidden: return 'hidden';
+      case ArtistStatus.Draft: return 'draft';
       default: return '';
     }
   }
 
+  get draftCloseLabel(): string {
+    return (!this.isEditMode || Number(this.editForm.status) === ArtistStatus.Draft)
+      ? 'סגור ושמור טיוטה'
+      : 'ביטול';
+  }
+
   onClose(): void {
-    this.close.emit();
+    if (this.saving) return;
+
+    if (!this.closeWithoutDraftSave && this.shouldSaveDraftOnClose()) {
+      this.saveDraftAndClose();
+      return;
+    }
+
+    this.closeImmediately();
   }
 
   onBackdropClick(event: MouseEvent): void {
@@ -756,5 +775,86 @@ export class ArtistEditModalComponent implements OnInit {
     }
     if (err.message) return err.message;
     return fallback;
+  }
+
+  private buildPayload(status: ArtistStatus): UpdateArtistDto {
+    const isDraft = status === ArtistStatus.Draft;
+    const bannerType = this.editForm.bannerMediaType;
+    const bannerUrl = this.optionalText(this.editForm.bannerUrl);
+
+    return {
+      name: this.optionalText(this.editForm.name),
+      englishName: this.optionalText(this.editForm.englishName),
+      shortBio: this.optionalText(this.editForm.shortBio),
+      biography: this.optionalText(this.editForm.biography),
+      imageUrl: this.optionalText(this.editForm.imageUrl),
+      bannerImageUrl: bannerType === 'image' ? bannerUrl : undefined,
+      bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') ? bannerUrl : undefined,
+      bannerMediaType: bannerUrl ? bannerType : null,
+      bannerBlur: this.normalizedBannerBlur(this.editForm.bannerBlur),
+      websiteUrl: this.optionalText(this.editForm.websiteUrl),
+      status,
+      isPremium: this.editForm.isPremium,
+      performanceIsActive: isDraft ? false : this.editForm.performance.enabled,
+      performanceEvent: isDraft ? null : this.buildPerformanceEvent(),
+      socialLinks: this.normalizedLinks(),
+      galleryImages: this.normalizedGalleryImages(),
+      videos: this.normalizedVideos(),
+      hits: this.normalizedHits(),
+      albums: this.normalizedAlbums()
+    };
+  }
+
+  private shouldSaveDraftOnClose(): boolean {
+    const isNewOrDraft = !this.isEditMode || Number(this.editForm.status) === ArtistStatus.Draft;
+    return isNewOrDraft && this.hasMeaningfulDraftContent();
+  }
+
+  private hasMeaningfulDraftContent(): boolean {
+    const textValues = [
+      this.editForm.name,
+      this.editForm.englishName,
+      this.editForm.shortBio,
+      this.editForm.biography,
+      this.editForm.imageUrl,
+      this.editForm.bannerUrl,
+      this.editForm.websiteUrl
+    ];
+
+    return textValues.some(value => !!value?.trim()) ||
+      this.normalizedLinks().length > 0 ||
+      this.normalizedGalleryImages().length > 0 ||
+      this.normalizedVideos().length > 0 ||
+      this.normalizedHits().length > 0 ||
+      this.normalizedAlbums().length > 0 ||
+      this.editForm.performance.enabled;
+  }
+
+  private saveDraftAndClose(): void {
+    this.saving = true;
+    this.error = null;
+    const draftPayload = this.buildPayload(ArtistStatus.Draft);
+    const request: Observable<unknown> = this.isEditMode && this.artistId
+      ? this.artistService.updateArtist(this.artistId, draftPayload)
+      : this.artistService.createArtist(draftPayload);
+
+    request.subscribe({
+      next: () => {
+        this.saving = false;
+        this.saved.emit();
+        this.closeImmediately();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        const message = this.extractErrorMessage(err, 'לא ניתן לשמור את טיוטת האמן');
+        this.error = message;
+        window.alert(message);
+      }
+    });
+  }
+
+  private closeImmediately(): void {
+    this.closeWithoutDraftSave = true;
+    this.close.emit();
   }
 }

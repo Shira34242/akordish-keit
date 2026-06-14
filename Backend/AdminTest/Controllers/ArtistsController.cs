@@ -50,12 +50,14 @@ public class ArtistsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string sortBy = "name",
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] bool includeDrafts = false)
     {
         try
         {
+            var allowDrafts = includeDrafts && User.IsInRole("Admin");
             var query = _context.Artists
-                .Where(a => !a.IsDeleted);
+                .Where(a => !a.IsDeleted && (allowDrafts || a.Status != ArtistStatus.Draft));
 
             if (status.HasValue)
                 query = query.Where(a => a.Status == status.Value);
@@ -207,6 +209,9 @@ public class ArtistsController : ControllerBase
                 .FirstOrDefaultAsync();
 
             if (artist == null)
+                return NotFound("אומן לא נמצא");
+
+            if (artist.Status == ArtistStatus.Draft && !User.IsInRole("Admin"))
                 return NotFound("אומן לא נמצא");
 
             var songCount = await _context.SongArtists
@@ -1112,12 +1117,16 @@ public class ArtistsController : ControllerBase
         try
         {
             // וולידציה
-            if (string.IsNullOrWhiteSpace(dto.Name))
+            var isDraft = dto.Status == ArtistStatus.Draft;
+            if (!isDraft && string.IsNullOrWhiteSpace(dto.Name))
                 return BadRequest("שם האומן הוא שדה חובה");
 
             // בדיקה אם אומן בשם זה כבר קיים
-            var existingArtist = await _context.Artists
-                .FirstOrDefaultAsync(a => a.Name == dto.Name && !a.IsDeleted);
+            var artistName = dto.Name?.Trim() ?? string.Empty;
+            var existingArtist = string.IsNullOrWhiteSpace(artistName)
+                ? null
+                : await _context.Artists
+                    .FirstOrDefaultAsync(a => a.Name == artistName && !a.IsDeleted);
 
             if (existingArtist != null)
                 return BadRequest("אומן בשם זה כבר קיים במערכת");
@@ -1129,7 +1138,7 @@ public class ArtistsController : ControllerBase
 
             var artist = new Artist
             {
-                Name = dto.Name,
+                Name = artistName,
                 EnglishName = dto.EnglishName,
                 ShortBio = dto.ShortBio,
                 Biography = dto.Biography,
