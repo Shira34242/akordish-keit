@@ -47,9 +47,9 @@
                     [attr.cx]="10 + i*10" cy="5" r="1" fill="#000000" />
 
                 <!-- Finger (filled circle) — yellow if this string is the bass note -->
-                <circle *ngIf="fret > 0" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5"
+                <circle *ngIf="fret > 0 && !isGuitarStringCoveredByBarre(i, fret)" [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="3.5"
                     fill="#1a1a1a" />
-                <circle *ngIf="fret > 0 && getBassStringIndex() === i"
+                <circle *ngIf="fret > 0 && !isGuitarStringCoveredByBarre(i, fret) && getBassStringIndex() === i"
                     [attr.cx]="10 + i*10" [attr.cy]="10 + fret*12 - 6" r="1.5" fill="#ddff53" />
             </ng-container>
 
@@ -57,7 +57,7 @@
             <ng-container *ngIf="guitarChord.barres">
                 <rect *ngFor="let barre of guitarChord.barres" [attr.x]="getBarreX(barre)"
                     [attr.y]="10 + barre.fret*12 - 9" [attr.width]="getBarreWidth(barre)" height="6" rx="3"
-                    fill="#1a1a1a" opacity="0.2" />
+                    fill="#1a1a1a" />
             </ng-container>
 
             <!-- Fret position label (e.g. "3fr") — shown when chord is not at nut -->

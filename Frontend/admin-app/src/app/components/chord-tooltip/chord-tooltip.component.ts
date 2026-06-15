@@ -498,13 +498,26 @@ export class ChordTooltipComponent implements OnChanges, OnDestroy {
 
     // Helpers for Barre (guitar)
     getBarreX(barre: any): number {
-        const minString = Math.min(barre.fromString, barre.toString);
-        return 10 + minString * 10 - 4;
+        const firstStringIndex = Math.min(6 - barre.fromString, 6 - barre.toString);
+        return this.getStringX(firstStringIndex) - 4;
     }
 
     getBarreWidth(barre: any): number {
-        const diff = Math.abs(barre.fromString - barre.toString);
-        return diff * 10 + 8;
+        const stringSpan = Math.abs(barre.fromString - barre.toString);
+        return stringSpan * 10 + 8;
+    }
+
+    isGuitarStringCoveredByBarre(stringIndex: number, fret: number): boolean {
+        if (!this.guitarChord?.barres) return false;
+        const guitarStringNumber = 6 - stringIndex;
+
+        return this.guitarChord.barres.some(barre => {
+            const firstString = Math.min(barre.fromString, barre.toString);
+            const lastString = Math.max(barre.fromString, barre.toString);
+            return barre.fret === fret
+                && guitarStringNumber >= firstString
+                && guitarStringNumber <= lastString;
+        });
     }
 
     // Helpers for Ukulele SVG (4 strings, spacing 14px, start x=10)

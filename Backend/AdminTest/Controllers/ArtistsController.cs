@@ -1136,6 +1136,8 @@ public class ArtistsController : ControllerBase
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
             var artist = new Artist
             {
                 Name = artistName,
@@ -1216,6 +1218,7 @@ public class ArtistsController : ControllerBase
             await SyncArtistAlbumsAsync(artist.Id, dto.Albums);
 
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             // החזרת פרטי האומן המלאים
             var result = await _context.Artists
@@ -1299,7 +1302,7 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating artist (admin): Name={Name}", dto.Name);
-            return StatusCode(500, $"שגיאה ביצירת אומן: {ex.Message}");
+            return StatusCode(500, $"שגיאה ביצירת אומן: {ex.GetBaseException().Message}");
         }
     }
 
