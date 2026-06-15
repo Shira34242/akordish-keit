@@ -641,6 +641,11 @@
                     </div>
                 </div>
 
+                <!-- Lyrics chord preview -->
+                <div class="preview-lyrics-box" *ngIf="songForm.get('lyricsWithChords')?.value">
+                    <div class="lyrics-content" [innerHTML]="formattedLyrics"></div>
+                </div>
+
                 <!-- Keys row -->
                 <div class="keys-row">
 
