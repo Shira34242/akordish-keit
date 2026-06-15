@@ -937,6 +937,7 @@
   background-position: right center;
 }
 .promo-content {
+  width: 100%;
   max-width: 600px;
   text-align: right;
 }
@@ -965,6 +966,7 @@
   display: flex;
   gap: var(--space-base);
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .promo-btn {
@@ -1263,12 +1265,12 @@
   .promo-box {
     border-radius: 20px;
     padding: var(--space-xl) var(--space-xl);
-    justify-content: center;
+    justify-content: flex-end;
     margin: var(--space-xl) 0;
   }
 
   .promo-content {
-    text-align: center;
+    text-align: right;
   }
 
   .promo-title {
@@ -1276,7 +1278,7 @@
   }
 
   .promo-actions {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .news-grid {

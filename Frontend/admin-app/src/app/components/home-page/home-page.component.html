@@ -197,24 +197,6 @@
       </div>
     </section>
 
-    <section class="home-section" *ngIf="newsContentFinished">
-      <div class="section-header">
-        <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
-      </div>
-      <div class="songs-grid">
-        <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
-      </div>
-    </section>
-
-    <section class="home-section" *ngIf="newsContentFinished">
-      <div class="section-header">
-        <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
-      </div>
-      <div class="songs-grid">
-        <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
-      </div>
-    </section>
-
     <ng-container *ngIf="restContentStarted">
 
     <div class="content-slot">
@@ -233,15 +215,38 @@
       </div>
     </div>
 
+    <section class="home-section" *ngIf="newsContentFinished">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
+      </div>
+      <div class="songs-grid">
+        <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
+      </div>
+    </section>
+
+    <section class="home-section" *ngIf="newsContentFinished">
+      <div class="section-header">
+        <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
+      </div>
+      <div class="songs-grid">
+        <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
+      </div>
+    </section>
+
     <section class="home-section">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
         <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
       </div>
-      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
         <div class="artists-loop-track">
-          <app-artist-circle *ngFor="let artist of topArtists; trackBy: trackById" [artist]="artist"></app-artist-circle>
-          <app-artist-circle *ngFor="let artist of topArtists; trackBy: trackById" [artist]="artist" aria-hidden="true"></app-artist-circle>
+          <ng-container *ngFor="let copy of [0, 1, 2]">
+            <app-artist-circle
+              *ngFor="let artist of topArtists; trackBy: trackById"
+              [artist]="artist"
+              [attr.aria-hidden]="copy !== 1 ? true : null">
+            </app-artist-circle>
+          </ng-container>
         </div>
       </div>
     </section>
