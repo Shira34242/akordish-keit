@@ -1025,6 +1025,20 @@ select option {
     line-height: 1.4;
 }
 
+::ng-deep .chord-block {
+    color: #000;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: inline-block;
+    background: rgba(221, 255, 83, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1.4;
+    direction: ltr;
+    unicode-bidi: embed;
+}
+
 @media (max-width: 600px) {
     .modal-container {
         width: 95%;
