@@ -18,7 +18,7 @@ public class ArtistAlbumConfiguration : IEntityTypeConfiguration<ArtistAlbum>
 
         builder.Property(e => e.CoverImageUrl)
                .IsRequired()
-               .HasMaxLength(500);
+               .HasMaxLength(2048);
 
         builder.Property(e => e.ExternalUrl)
                .IsRequired()

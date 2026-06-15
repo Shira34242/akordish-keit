@@ -244,6 +244,7 @@
             <app-artist-circle
               *ngFor="let artist of topArtists; trackBy: trackById"
               [artist]="artist"
+              [showSongCount]="false"
               [attr.aria-hidden]="copy !== 1 ? true : null">
             </app-artist-circle>
           </ng-container>

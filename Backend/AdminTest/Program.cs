@@ -514,7 +514,7 @@ dbContext.Database.ExecuteSqlRaw(@"
                 [Id] int NOT NULL IDENTITY,
                 [ArtistId] int NOT NULL,
                 [Title] nvarchar(200) NOT NULL,
-                [CoverImageUrl] nvarchar(500) NOT NULL,
+                [CoverImageUrl] nvarchar(2048) NOT NULL,
                 [ReleaseYear] int NULL,
                 [ExternalUrl] nvarchar(500) NOT NULL,
                 [DisplayOrder] int NOT NULL CONSTRAINT [DF_ArtistAlbums_DisplayOrder] DEFAULT 0,
@@ -524,6 +524,12 @@ dbContext.Database.ExecuteSqlRaw(@"
                 CONSTRAINT [FK_ArtistAlbums_Artists_ArtistId] FOREIGN KEY ([ArtistId]) REFERENCES [Artists] ([Id]) ON DELETE CASCADE
             );
             CREATE INDEX [IX_ArtistAlbums_ArtistId] ON [ArtistAlbums] ([ArtistId]);
+        END
+
+        IF OBJECT_ID(N'[ArtistAlbums]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'ArtistAlbums', N'CoverImageUrl') < 4096
+        BEGIN
+            ALTER TABLE [ArtistAlbums] ALTER COLUMN [CoverImageUrl] nvarchar(2048) NOT NULL;
         END
 
         IF OBJECT_ID(N'[ArtistHits]', N'U') IS NULL

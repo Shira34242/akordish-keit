@@ -5,6 +5,7 @@ namespace AkordishKeit.Services;
 public class ExternalImageStorageService : IExternalImageStorageService
 {
     private const long MaxImageBytes = 10 * 1024 * 1024;
+    private const int MaxStoredUrlLength = 2048;
 
     private readonly HttpClient _httpClient;
     private readonly IAzureBlobService _blobService;
@@ -30,13 +31,17 @@ public class ExternalImageStorageService : IExternalImageStorageService
             return await StoreDataImageAsync(url, folder, fallbackFileNamePrefix);
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            return url;
+            return EnsureStorableUrl(url);
 
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
-            return url;
+            return EnsureStorableUrl(url);
+
+        var googleImageUrl = TryExtractGoogleImageUrl(uri);
+        if (googleImageUrl != null)
+            return await StoreExternalImageIfNeededAsync(googleImageUrl, folder, fallbackFileNamePrefix);
 
         if (IsAlreadyStoredMedia(uri))
-            return url;
+            return EnsureStorableUrl(url);
 
         try
         {
@@ -48,18 +53,18 @@ public class ExternalImageStorageService : IExternalImageStorageService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("External image import skipped. Status={StatusCode}, Url={Url}", response.StatusCode, url);
-                return url;
+                return EnsureStorableUrl(url);
             }
 
             var mediaType = response.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(mediaType) || !mediaType.StartsWith("image/"))
-                return url;
+                return EnsureStorableUrl(url);
 
             var contentLength = response.Content.Headers.ContentLength;
             if (contentLength.HasValue && contentLength.Value > MaxImageBytes)
             {
                 _logger.LogWarning("External image import skipped because file is too large. Size={Size}, Url={Url}", contentLength.Value, url);
-                return url;
+                return EnsureStorableUrl(url);
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync();
@@ -68,12 +73,12 @@ public class ExternalImageStorageService : IExternalImageStorageService
             var fileName = $"{safePrefix}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
             var storedUrl = await _blobService.UploadAsync(stream, fileName, mediaType, folder);
 
-            return storedUrl ?? url;
+            return EnsureStorableUrl(storedUrl ?? url);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "External image import failed. Url={Url}", url);
-            return url;
+            return EnsureStorableUrl(url);
         }
     }
 
@@ -122,6 +127,38 @@ public class ExternalImageStorageService : IExternalImageStorageService
     {
         return uri.Host.EndsWith("blob.core.windows.net", StringComparison.OrdinalIgnoreCase)
             || uri.Host.Equals("akordishkaytmedia.blob.core.windows.net", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? TryExtractGoogleImageUrl(Uri uri)
+    {
+        if (!uri.Host.EndsWith("google.com", StringComparison.OrdinalIgnoreCase) ||
+            !uri.AbsolutePath.Equals("/imgres", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        foreach (var part in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separatorIndex = part.IndexOf('=');
+            if (separatorIndex <= 0)
+                continue;
+
+            var key = Uri.UnescapeDataString(part[..separatorIndex]);
+            if (!key.Equals("imgurl", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var value = Uri.UnescapeDataString(part[(separatorIndex + 1)..]);
+            return Uri.TryCreate(value, UriKind.Absolute, out _) ? value : null;
+        }
+
+        return null;
+    }
+
+    private static string EnsureStorableUrl(string url)
+    {
+        if (url.Length <= MaxStoredUrlLength)
+            return url;
+
+        throw new InvalidOperationException(
+            "קישור התמונה ארוך מדי ואינו כתובת ישירה לתמונה. יש להעלות את התמונה או להדביק כתובת תמונה ישירה.");
     }
 
     private static string GetExtension(string mediaType, string path)

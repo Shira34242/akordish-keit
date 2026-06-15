@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { ArtistService } from '../../services/artist.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistPageService } from '../../services/artist-page.service';
-import { Artist, SocialPlatform } from '../../models/artist.model';
+import { Artist, ArtistAlbum, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
 import { Event as EventModel, UpcomingEventDto } from '../../models/event.model';
@@ -631,6 +631,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get visibleArticles(): Article[] {
     return this.articlesExpanded ? this.articles : this.articles.slice(0, 6);
+  }
+
+  get sortedAlbums(): ArtistAlbum[] {
+    return [...(this.artist?.albums || [])].sort((a, b) =>
+      (b.releaseYear ?? Number.NEGATIVE_INFINITY) - (a.releaseYear ?? Number.NEGATIVE_INFINITY)
+    );
   }
 
   toggleArticlesExpanded(): void {

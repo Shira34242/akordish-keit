@@ -14,6 +14,7 @@ import { artistRoute } from '../../../utils/slug';
 })
 export class ArtistCircleComponent {
     @Input() artist: any;
+    @Input() showSongCount = true;
 
     get artistLink(): (string | number)[] {
         if (!this.artist?.id) return ['/artists'];

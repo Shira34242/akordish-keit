@@ -167,7 +167,7 @@
       </div>
       <div class="artist-horizontal-row artist-horizontal-row--albums">
         <a
-          *ngFor="let album of artist.albums"
+          *ngFor="let album of sortedAlbums"
           class="artist-album-card"
           [attr.href]="album.externalUrl || null"
           [attr.target]="album.externalUrl ? '_blank' : null"
