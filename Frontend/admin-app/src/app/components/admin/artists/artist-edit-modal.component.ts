@@ -618,16 +618,16 @@ export class ArtistEditModalComponent implements OnInit {
     return Math.max(0, Math.min(20, numericValue));
   }
 
-  private normalizedLinks() {
+  private normalizedLinks(preserveIncomplete = false) {
     return [
       ...this.editForm.socialLinks,
       ...this.editForm.musicLinks
     ]
-      .filter(link => link.url?.trim())
+      .filter(link => preserveIncomplete || link.url?.trim())
       .map(link => ({
         id: link.id,
         platform: Number(link.platform),
-        url: link.url.trim()
+        url: link.url?.trim() || ''
       }))
       .filter(link => Number.isFinite(link.platform) && link.platform >= 1 && link.platform <= 11);
   }
@@ -658,44 +658,44 @@ export class ArtistEditModalComponent implements OnInit {
     return platformNames[platform] ?? 0;
   }
 
-  private normalizedGalleryImages() {
+  private normalizedGalleryImages(preserveIncomplete = false) {
     return this.editForm.galleryItems
-      .filter(it => it.kind === 'image' && it.imageUrl?.trim())
+      .filter(it => it.kind === 'image' && (preserveIncomplete || it.imageUrl?.trim()))
       .map((it, index) => ({
-        imageUrl: it.imageUrl!.trim(),
+        imageUrl: it.imageUrl?.trim() || '',
         caption: this.optionalText(it.caption),
         displayOrder: index
       }));
   }
 
-  private normalizedVideos() {
+  private normalizedVideos(preserveIncomplete = false) {
     return this.editForm.galleryItems
-      .filter(it => it.kind === 'video' && it.videoUrl?.trim())
+      .filter(it => it.kind === 'video' && (preserveIncomplete || it.videoUrl?.trim()))
       .map((it, index) => ({
-        videoUrl: it.videoUrl!.trim(),
+        videoUrl: it.videoUrl?.trim() || '',
         title: this.optionalText(it.title),
         displayOrder: index
       }));
   }
 
-  private normalizedHits() {
+  private normalizedHits(preserveIncomplete = false) {
     return this.editForm.hits
-      .filter(hit => hit.youTubeUrl?.trim())
+      .filter(hit => preserveIncomplete ? !this.isBlankHit(hit) : !!hit.youTubeUrl?.trim())
       .map((hit, index) => ({
         title: hit.title?.trim() || 'להיט גדול',
         imageUrl: this.optionalText(hit.imageUrl),
-        youTubeUrl: hit.youTubeUrl.trim(),
+        youTubeUrl: hit.youTubeUrl?.trim() || '',
         displayOrder: index,
         isActive: hit.isActive
       }));
   }
 
-  private normalizedAlbums() {
+  private normalizedAlbums(preserveIncomplete = false) {
     return this.editForm.albums
-      .filter(album => album.coverImageUrl?.trim())
+      .filter(album => preserveIncomplete ? !this.isBlankAlbum(album) : !!album.coverImageUrl?.trim())
       .map((album, index) => ({
         title: album.title?.trim() || 'אלבום',
-        coverImageUrl: album.coverImageUrl.trim(),
+        coverImageUrl: album.coverImageUrl?.trim() || '',
         releaseYear: album.releaseYear ?? undefined,
         externalUrl: album.externalUrl?.trim() || '',
         displayOrder: index,
@@ -797,11 +797,11 @@ export class ArtistEditModalComponent implements OnInit {
       isPremium: this.editForm.isPremium,
       performanceIsActive: isDraft ? false : this.editForm.performance.enabled,
       performanceEvent: isDraft ? null : this.buildPerformanceEvent(),
-      socialLinks: this.normalizedLinks(),
-      galleryImages: this.normalizedGalleryImages(),
-      videos: this.normalizedVideos(),
-      hits: this.normalizedHits(),
-      albums: this.normalizedAlbums()
+      socialLinks: this.normalizedLinks(isDraft),
+      galleryImages: this.normalizedGalleryImages(isDraft),
+      videos: this.normalizedVideos(isDraft),
+      hits: this.normalizedHits(isDraft),
+      albums: this.normalizedAlbums(isDraft)
     };
   }
 
@@ -822,11 +822,11 @@ export class ArtistEditModalComponent implements OnInit {
     ];
 
     return textValues.some(value => !!value?.trim()) ||
-      this.normalizedLinks().length > 0 ||
-      this.normalizedGalleryImages().length > 0 ||
-      this.normalizedVideos().length > 0 ||
-      this.normalizedHits().length > 0 ||
-      this.normalizedAlbums().length > 0 ||
+      this.normalizedLinks(true).length > 0 ||
+      this.normalizedGalleryImages(true).length > 0 ||
+      this.normalizedVideos(true).length > 0 ||
+      this.normalizedHits(true).length > 0 ||
+      this.normalizedAlbums(true).length > 0 ||
       this.editForm.performance.enabled;
   }
 

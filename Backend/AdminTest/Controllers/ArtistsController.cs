@@ -512,7 +512,7 @@ public class ArtistsController : ControllerBase
                 return Forbid();
             var wasActive = artist.Status == ArtistStatus.Active;
 
-            var richMediaError = ValidateArtistRichMedia(dto);
+            var richMediaError = ValidateArtistRichMedia(dto, isAdmin && dto.Status == ArtistStatus.Draft);
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
@@ -628,8 +628,9 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            await SyncArtistHitsAsync(id, dto.Hits);
-            await SyncArtistAlbumsAsync(id, dto.Albums);
+            var preserveIncompleteDraftItems = isAdmin && artist.Status == ArtistStatus.Draft;
+            await SyncArtistHitsAsync(id, dto.Hits, preserveIncompleteDraftItems);
+            await SyncArtistAlbumsAsync(id, dto.Albums, preserveIncompleteDraftItems);
 
             await _context.SaveChangesAsync();
 
@@ -1132,11 +1133,24 @@ public class ArtistsController : ControllerBase
                 return BadRequest("אומן בשם זה כבר קיים במערכת");
 
             // יצירת אומן חדש
-            var richMediaError = ValidateArtistRichMedia(dto);
+            var richMediaError = ValidateArtistRichMedia(dto, isDraft);
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var imageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.ImageUrl,
+                "uploads/artists",
+                "artist-new");
+            var bannerImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.BannerImageUrl,
+                "uploads/artists",
+                "artist-banner-new");
+            var bannerGifUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                dto.BannerGifUrl,
+                "uploads/artists",
+                "artist-banner-new");
 
             var artist = new Artist
             {
@@ -1144,9 +1158,9 @@ public class ArtistsController : ControllerBase
                 EnglishName = dto.EnglishName,
                 ShortBio = dto.ShortBio,
                 Biography = dto.Biography,
-                ImageUrl = dto.ImageUrl,
-                BannerImageUrl = dto.BannerImageUrl,
-                BannerGifUrl = dto.BannerGifUrl,
+                ImageUrl = imageUrl,
+                BannerImageUrl = bannerImageUrl,
+                BannerGifUrl = bannerGifUrl,
                 BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType),
                 BannerBlur = dto.BannerBlur.HasValue ? Math.Clamp(dto.BannerBlur.Value, 0, 20) : 0,
                 WebsiteUrl = dto.WebsiteUrl,
@@ -1189,10 +1203,15 @@ public class ArtistsController : ControllerBase
             {
                 foreach (var img in dto.GalleryImages)
                 {
+                    var galleryImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
+                        img.ImageUrl,
+                        "uploads/artists/gallery",
+                        $"artist-gallery-{artist.Id}");
+
                     _context.ArtistGalleryImages.Add(new ArtistGalleryImage
                     {
                         ArtistId = artist.Id,
-                        ImageUrl = img.ImageUrl,
+                        ImageUrl = galleryImageUrl ?? string.Empty,
                         Caption = img.Caption,
                         DisplayOrder = img.DisplayOrder
                     });
@@ -1214,8 +1233,8 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            await SyncArtistHitsAsync(artist.Id, dto.Hits);
-            await SyncArtistAlbumsAsync(artist.Id, dto.Albums);
+            await SyncArtistHitsAsync(artist.Id, dto.Hits, isDraft);
+            await SyncArtistAlbumsAsync(artist.Id, dto.Albums, isDraft);
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -1555,8 +1574,11 @@ public class ArtistsController : ControllerBase
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim();
     }
 
-    private static string? ValidateArtistRichMedia(UpdateArtistDto dto)
+    private static string? ValidateArtistRichMedia(UpdateArtistDto dto, bool allowIncomplete = false)
     {
+        if (allowIncomplete)
+            return null;
+
         if (dto.PerformanceIsActive == true)
         {
             var performance = dto.PerformanceEvent;
@@ -1603,7 +1625,10 @@ public class ArtistsController : ControllerBase
         return null;
     }
 
-    private async Task SyncArtistHitsAsync(int artistId, List<AddArtistHitDto>? hits)
+    private async Task SyncArtistHitsAsync(
+        int artistId,
+        List<AddArtistHitDto>? hits,
+        bool preserveIncomplete = false)
     {
         if (hits == null) return;
 
@@ -1612,7 +1637,12 @@ public class ArtistsController : ControllerBase
             .ToListAsync();
         _context.ArtistHits.RemoveRange(existingHits);
 
-        foreach (var hit in hits.Where(h => !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
+        foreach (var hit in hits.Where(h =>
+            preserveIncomplete
+                ? !string.IsNullOrWhiteSpace(h.Title) ||
+                  !string.IsNullOrWhiteSpace(h.ImageUrl) ||
+                  !string.IsNullOrWhiteSpace(h.YouTubeUrl)
+                : !string.IsNullOrWhiteSpace(h.YouTubeUrl)))
         {
             var imageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
                 hit.ImageUrl,
@@ -1624,7 +1654,7 @@ public class ArtistsController : ControllerBase
                 ArtistId = artistId,
                 Title = string.IsNullOrWhiteSpace(hit.Title) ? "להיט גדול" : hit.Title.Trim(),
                 ImageUrl = imageUrl,
-                YouTubeUrl = hit.YouTubeUrl.Trim(),
+                YouTubeUrl = hit.YouTubeUrl?.Trim() ?? string.Empty,
                 DisplayOrder = hit.DisplayOrder,
                 IsActive = hit.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -1632,7 +1662,10 @@ public class ArtistsController : ControllerBase
         }
     }
 
-    private async Task SyncArtistAlbumsAsync(int artistId, List<AddArtistAlbumDto>? albums)
+    private async Task SyncArtistAlbumsAsync(
+        int artistId,
+        List<AddArtistAlbumDto>? albums,
+        bool preserveIncomplete = false)
     {
         if (albums == null) return;
 
@@ -1641,7 +1674,13 @@ public class ArtistsController : ControllerBase
             .ToListAsync();
         _context.ArtistAlbums.RemoveRange(existingAlbums);
 
-        foreach (var album in albums.Where(a => !string.IsNullOrWhiteSpace(a.CoverImageUrl)))
+        foreach (var album in albums.Where(a =>
+            preserveIncomplete
+                ? !string.IsNullOrWhiteSpace(a.Title) ||
+                  !string.IsNullOrWhiteSpace(a.CoverImageUrl) ||
+                  !string.IsNullOrWhiteSpace(a.ExternalUrl) ||
+                  a.ReleaseYear.HasValue
+                : !string.IsNullOrWhiteSpace(a.CoverImageUrl)))
         {
             var coverImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
                 album.CoverImageUrl,
@@ -1652,7 +1691,7 @@ public class ArtistsController : ControllerBase
             {
                 ArtistId = artistId,
                 Title = string.IsNullOrWhiteSpace(album.Title) ? "אלבום" : album.Title.Trim(),
-                CoverImageUrl = coverImageUrl ?? album.CoverImageUrl.Trim(),
+                CoverImageUrl = coverImageUrl ?? album.CoverImageUrl?.Trim() ?? string.Empty,
                 ReleaseYear = album.ReleaseYear,
                 ExternalUrl = string.IsNullOrWhiteSpace(album.ExternalUrl) ? string.Empty : album.ExternalUrl.Trim(),
                 DisplayOrder = album.DisplayOrder,

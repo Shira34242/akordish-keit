@@ -26,6 +26,9 @@ public class ExternalImageStorageService : IExternalImageStorageService
         if (string.IsNullOrWhiteSpace(url))
             return null;
 
+        if (url.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+            return await StoreDataImageAsync(url, folder, fallbackFileNamePrefix);
+
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             return url;
 
@@ -72,6 +75,47 @@ public class ExternalImageStorageService : IExternalImageStorageService
             _logger.LogWarning(ex, "External image import failed. Url={Url}", url);
             return url;
         }
+    }
+
+    private async Task<string> StoreDataImageAsync(string dataUrl, string folder, string fallbackFileNamePrefix)
+    {
+        var commaIndex = dataUrl.IndexOf(',');
+        if (commaIndex <= 5)
+            throw new InvalidOperationException("תמונת Base64 אינה תקינה.");
+
+        var metadata = dataUrl[..commaIndex];
+        if (!metadata.EndsWith(";base64", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("פורמט תמונת Base64 אינו נתמך.");
+
+        var mediaType = metadata[5..^7].ToLowerInvariant();
+        if (!mediaType.StartsWith("image/", StringComparison.Ordinal))
+            throw new InvalidOperationException("הקובץ שסופק אינו תמונה.");
+
+        var base64 = dataUrl[(commaIndex + 1)..];
+        if (base64.Length > ((MaxImageBytes + 2) / 3) * 4)
+            throw new InvalidOperationException("התמונה גדולה מדי. הגודל המרבי הוא 10MB.");
+
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(base64);
+        }
+        catch (FormatException)
+        {
+            throw new InvalidOperationException("תמונת Base64 אינה תקינה.");
+        }
+
+        if (bytes.LongLength > MaxImageBytes)
+            throw new InvalidOperationException("התמונה גדולה מדי. הגודל המרבי הוא 10MB.");
+
+        await using var stream = new MemoryStream(bytes, writable: false);
+        var extension = GetExtension(mediaType, string.Empty);
+        var safePrefix = SanitizeFileNamePrefix(fallbackFileNamePrefix);
+        var fileName = $"{safePrefix}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+        var storedUrl = await _blobService.UploadAsync(stream, fileName, mediaType, folder);
+
+        return storedUrl
+            ?? throw new InvalidOperationException("לא ניתן היה לשמור את התמונה שהועלתה.");
     }
 
     private static bool IsAlreadyStoredMedia(Uri uri)
