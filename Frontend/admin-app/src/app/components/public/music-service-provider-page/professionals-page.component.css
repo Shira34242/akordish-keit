@@ -628,6 +628,11 @@
   display: block;
 }
 
+.prof-card--provider .prof-card-img img {
+  object-fit: contain;
+  object-position: center center;
+}
+
 .prof-card-img::after {
   content: "";
   position: absolute;

@@ -290,7 +290,7 @@
         <div class="index-showcase-row" *ngIf="featuredProviders.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="index-showcase-track">
             <ng-container *ngFor="let copy of [0, 1]">
-              <a class="person-card provider-showcase-card" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || pro.location || ''" [attr.aria-hidden]="copy > 0 ? true : null">
+              <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''" [attr.aria-hidden]="copy > 0 ? true : null">
                 <div class="person-avatar">
                   <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
                 </div>

@@ -258,6 +258,19 @@
   color: #ffffff;
 }
 
+.profile-image-link-field {
+  width: min(100%, 420px);
+  margin: var(--space-md) auto 0;
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.field-label {
+  font-size: var(--font-sm);
+  font-weight: 800;
+  color: #000000;
+}
+
 .hidden-file-input {
   position: absolute;
   width: 1px;

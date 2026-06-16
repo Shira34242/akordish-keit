@@ -379,6 +379,7 @@
         <app-file-upload-input
           inputId="provider-profile-image"
           [(url)]="profileImageUrl"
+          accept="image/*,.heic,.heif,.jxl"
           placeholder="https://..."
         />
         <small class="form-hint">העלה קובץ או הזן קישור</small>
@@ -523,16 +524,27 @@
               placeholder="א׳-ה׳ 9:00-19:00, ו׳ 9:00-13:00"
             />
           </div>
+          <div class="branch-draft-actions">
           <button type="button" class="btn-secondary" (click)="addBranch()">
             <span class="material-icons">add_location</span>
+            <span *ngIf="editingBranchIndex !== null">עדכון סניף</span>
+            <span *ngIf="editingBranchIndex === null">
             הוסף סניף
+            </span>
           </button>
+          <button type="button" class="btn-cancel btn-cancel-branch-edit" *ngIf="editingBranchIndex !== null" (click)="cancelBranchEdit()">
+            ביטול עריכה
+          </button>
+          </div>
         </div>
 
         <div class="branch-list" *ngIf="branches.length > 0">
           <article class="branch-edit-card" *ngFor="let branch of branches; let i = index">
             <button type="button" class="media-card-remove" (click)="removeBranch(i)" aria-label="מחיקת סניף">
               <span class="material-icons">close</span>
+            </button>
+            <button type="button" class="media-card-edit" (click)="editBranch(i)" aria-label="עריכת סניף">
+              <span class="material-icons">edit</span>
             </button>
             <strong class="branch-card-name">{{ branch.name }}</strong>
             <img *ngIf="branch.imageUrl" [src]="branch.imageUrl" [alt]="branch.name" class="branch-card-image" />

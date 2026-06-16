@@ -92,6 +92,7 @@ export class ServiceProviderFormComponent implements OnInit {
   newTestimonial = { clientName: '', text: '' };
   branches: CreateServiceProviderBranchDto[] = [];
   newBranch: CreateServiceProviderBranchDto = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+  editingBranchIndex: number | null = null;
 
   // Available categories, cities, and users loaded from API
   availableCategories: SystemItem[] = [];
@@ -586,7 +587,7 @@ export class ServiceProviderFormComponent implements OnInit {
       alert('נא להזין שם סניף');
       return;
     }
-    this.branches.push({
+    const branch: CreateServiceProviderBranchDto = {
       name: this.newBranch.name.trim(),
       cityId: this.newBranch.cityId,
       imageUrl: this.newBranch.imageUrl?.trim() || undefined,
@@ -594,16 +595,55 @@ export class ServiceProviderFormComponent implements OnInit {
       phoneNumber: this.newBranch.phoneNumber?.trim() || undefined,
       email: this.newBranch.email?.trim() || undefined,
       openingHours: this.newBranch.openingHours?.trim() || undefined,
-      order: this.branches.length
-    });
-    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
+      order: this.editingBranchIndex ?? this.branches.length
+    };
+
+    if (this.editingBranchIndex !== null) {
+      this.branches[this.editingBranchIndex] = branch;
+      this.branches.forEach((b, idx) => b.order = idx);
+    } else {
+      this.branches.push(branch);
+    }
+
+    this.resetBranchDraft();
   }
 
   async removeBranch(index: number): Promise<void> {
     if (await this.siteAlerts.confirm('האם למחוק את הסניף הזה?')) {
       this.branches.splice(index, 1);
       this.branches.forEach((b, idx) => b.order = idx);
+      if (this.editingBranchIndex === index) {
+        this.resetBranchDraft();
+      } else if (this.editingBranchIndex !== null && this.editingBranchIndex > index) {
+        this.editingBranchIndex--;
+      }
     }
+  }
+
+  editBranch(index: number): void {
+    const branch = this.branches[index];
+    if (!branch) return;
+
+    this.editingBranchIndex = index;
+    this.newBranch = {
+      name: branch.name || '',
+      cityId: branch.cityId,
+      imageUrl: branch.imageUrl || '',
+      address: branch.address || '',
+      phoneNumber: branch.phoneNumber || '',
+      email: branch.email || '',
+      openingHours: branch.openingHours || '',
+      order: branch.order ?? index
+    };
+  }
+
+  cancelBranchEdit(): void {
+    this.resetBranchDraft();
+  }
+
+  private resetBranchDraft(): void {
+    this.editingBranchIndex = null;
+    this.newBranch = { name: '', cityId: undefined, imageUrl: '', address: '', phoneNumber: '', email: '', openingHours: '', order: 0 };
   }
 
   private optionalText(value: string | undefined): string | undefined {

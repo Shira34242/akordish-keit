@@ -41,7 +41,18 @@
               <span class="material-icons">{{ profileImageUrl ? 'edit' : 'add_photo_alternate' }}</span>
               <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
             </button>
-            <input #profileImageInput type="file" accept="image/*" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
+            <input #profileImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
+            <div class="profile-image-link-field">
+              <label class="field-label" for="service-provider-profile-image-url">קישור לתמונת פרופיל</label>
+              <input
+                id="service-provider-profile-image-url"
+                type="url"
+                [(ngModel)]="profileImageUrl"
+                name="profileImageUrl"
+                class="text-input"
+                placeholder="https://..."
+              />
+            </div>
             <div class="upload-progress" *ngIf="profileImageUploading">
               <div><span [style.width.%]="profileImageUploadProgress"></span></div>
               <strong>{{ profileImageUploadProgress }}%</strong>
