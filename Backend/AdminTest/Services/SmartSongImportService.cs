@@ -706,9 +706,17 @@ public class SmartSongImportService : ISmartSongImportService
             var visualIndent = LeadingWhitespaceLength(chordLine);
             chordLine = RemoveLeadingWhitespace(chordLine, visualIndent);
 
+            // tab4u chord cells are LTR: leading spaces push the chord rightward toward the
+            // RTL lyric's first word. Our system is RTL where leading spaces push leftward,
+            // so we mirror: new_indent = lyric_length - old_indent - chord_length.
+            // For non-Hebrew lyrics the original LTR indent is preserved as-is.
+            var outputIndent = nextLyricsRow is not null && ContainsHebrew(nextLyricsRow.Text)
+                ? Math.Max(0, nextLyricsRow.Text.TrimEnd().Length - visualIndent - chordLine.Length)
+                : visualIndent;
+
             // Visual indent is stored as leading spaces so it is visible in both
             // the public display (RTL & nbsp; rendering) and the admin editor (textarea).
-            yield return new string(' ', visualIndent) + chordLine;
+            yield return new string(' ', outputIndent) + chordLine;
 
             if (nextLyricsRow is not null)
             {
