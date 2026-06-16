@@ -2065,26 +2065,22 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         const rawLyrics = this.songForm.get('lyricsWithChords')?.value || '';
         if (!rawLyrics) return '';
 
-        const processedLines = rawLyrics.split('\n').map((line: string) => {
-            if (isChordLine(line)) {
-                return (line.match(/\s+|\S+/g) ?? []).map((token: string) => {
-                    if (/^\s+$/.test(token)) {
-                        return token.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/ /g, '&nbsp;');
-                    }
-                    const escaped = token.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return `<span class="chord-block">${escaped}</span>`;
-                }).join('');
-            }
-            let safeLine = line
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-            return safeLine.replace(/\[(.*?)\]/g, '<span class="chord">$1</span>');
-        });
+        // Escape HTML to prevent XSS (basic)
+        let safeLyrics = rawLyrics
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-        return this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
+        // Replace newlines with <br>
+        safeLyrics = safeLyrics.replace(/\n/g, '<br>');
+
+        // Replace chords [Am] with <span class="chord">Am</span>
+        // We use a regex to find content inside brackets
+        const html = safeLyrics.replace(/\[(.*?)\]/g, '<span class="chord">$1</span>');
+
+        return this.sanitizer.bypassSecurityTrustHtml(html);
     }
 
     closeModal() {
