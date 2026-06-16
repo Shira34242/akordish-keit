@@ -711,7 +711,7 @@ public class SmartSongImportService : ISmartSongImportService
             // so we mirror: new_indent = lyric_length - old_indent - chord_length.
             // For non-Hebrew lyrics the original LTR indent is preserved as-is.
             var outputIndent = nextLyricsRow is not null && ContainsHebrew(nextLyricsRow.Text)
-                ? Math.Max(0, nextLyricsRow.Text.TrimEnd().Length - visualIndent - chordLine.Length)
+                ? Math.Max(0, nextLyricsRow.Text.Length - sharedIndent - visualIndent - chordLine.Length)
                 : visualIndent;
 
             // Visual indent is stored as leading spaces so it is visible in both
