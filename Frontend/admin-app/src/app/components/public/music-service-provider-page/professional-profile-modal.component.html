@@ -50,7 +50,7 @@
 
         <div class="hero-website-block" *ngIf="professional.websiteUrl">
           <span class="hero-website-label">בקרו באתר שלנו</span>
-          <a [href]="professional.websiteUrl"
+          <a [href]="getExternalLinkHref(professional.websiteUrl)"
              target="_blank"
              rel="noopener"
              class="hero-website-link">
@@ -85,7 +85,7 @@
               <span class="material-icons">email</span>
               <span>{{ agencyBadge?.email }}</span>
             </a>
-            <a *ngIf="showAgencyContact && agencyBadge?.websiteUrl" [href]="agencyBadge?.websiteUrl" target="_blank" rel="noopener" class="contact-item" (click)="trackAgencyContact('website')">
+            <a *ngIf="showAgencyContact && agencyBadge?.websiteUrl" [href]="getExternalLinkHref(agencyBadge?.websiteUrl)" target="_blank" rel="noopener" class="contact-item" (click)="trackAgencyContact('website')">
               <span class="material-icons">language</span>
               <span>{{ getShortUrl(agencyBadge!.websiteUrl!) }}</span>
             </a>
@@ -104,7 +104,7 @@
               <span class="material-icons">email</span>
               <span>{{ professional.email }}</span>
             </a>
-            <a *ngIf="showDirectContact && professional.websiteUrl" [href]="professional.websiteUrl" target="_blank" rel="noopener" class="contact-item">
+            <a *ngIf="showDirectContact && professional.websiteUrl" [href]="getExternalLinkHref(professional.websiteUrl)" target="_blank" rel="noopener" class="contact-item">
               <span class="material-icons">language</span>
               <span>{{ getShortUrl(professional.websiteUrl) }}</span>
             </a>
@@ -139,7 +139,7 @@
         <span class="hero-actions-divider" *ngIf="socialLinks.length > 0 && (quickWhatsAppNumber || hasNavigationTarget)"></span>
         <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
           <a *ngFor="let link of socialLinks"
-             [href]="link.url"
+             [href]="getSocialLinkHref(link.url)"
              target="_blank"
              rel="noopener"
              class="hero-social-btn"

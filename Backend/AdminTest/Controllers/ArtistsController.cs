@@ -882,12 +882,14 @@ public class ArtistsController : ControllerBase
                 return Unauthorized("משתמש לא מזוהה");
 
             // וולידציה
+            var isDraft = dto.Status == ArtistStatus.Draft;
             if (string.IsNullOrWhiteSpace(dto.Name))
                 return BadRequest("שם האומן הוא שדה חובה");
+            var artistName = dto.Name.Trim();
 
             // בדיקה אם המשתמש כבר יצר אומן בשם זה
             var existingArtist = await _context.Artists
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.Name == dto.Name && !a.IsDeleted);
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.Name == artistName && !a.IsDeleted);
 
             if (existingArtist != null)
                 return BadRequest("כבר יצרת אומן בשם זה");
@@ -909,7 +911,7 @@ public class ArtistsController : ControllerBase
             // קביעת Premium לפי המנוי (אם קיים)
             bool isPremium = activeSubscription?.Plan == SubscriptionPlan.Premium;
 
-            var richMediaError = ValidateArtistRichMedia(dto);
+            var richMediaError = ValidateArtistRichMedia(dto, isDraft);
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
@@ -917,7 +919,7 @@ public class ArtistsController : ControllerBase
             var artist = new Artist
             {
                 UserId = userId,
-                Name = dto.Name,
+                Name = artistName,
                 EnglishName = dto.EnglishName,
                 ShortBio = dto.ShortBio,
                 Biography = dto.Biography,
@@ -925,7 +927,7 @@ public class ArtistsController : ControllerBase
                 WebsiteUrl = dto.WebsiteUrl,
                 IsPrimaryProfile = isPrimaryProfile,
                 IsPremium = isPremium,
-                Status = ArtistStatus.Pending, // ממתין לאישור
+                Status = isDraft ? ArtistStatus.Draft : ArtistStatus.Pending,
                 IsVerified = false,
                 DisplayOrder = 999,
                 CreatedAt = DateTime.UtcNow,
@@ -964,7 +966,7 @@ public class ArtistsController : ControllerBase
             // Keep the artist performance banner and linked event in sync.
             await SyncPerformanceEventAsync(
                 artist,
-                artist.PerformanceIsActive ? dto.PerformanceEvent : null);
+                !isDraft && artist.PerformanceIsActive ? dto.PerformanceEvent : null);
             await _context.SaveChangesAsync();
 
             // הוספת קישורים לרשתות חברתיות
@@ -1011,14 +1013,18 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            await SyncArtistHitsAsync(artist.Id, dto.Hits);
-            await SyncArtistAlbumsAsync(artist.Id, dto.Albums);
+            await SyncArtistHitsAsync(artist.Id, dto.Hits, isDraft);
+            await SyncArtistAlbumsAsync(artist.Id, dto.Albums, isDraft);
 
             await _context.SaveChangesAsync();
 
-            await _notificationService.NotifyArtistSubmittedAsync(userId, artist.Id, artist.Name);
-            _logger.LogInformation("Artist profile created (pending approval): ArtistId={ArtistId} Name={Name} UserId={UserId} IsPremium={IsPremium}",
-                artist.Id, artist.Name, userId, artist.IsPremium);
+            if (!isDraft)
+            {
+                await _notificationService.NotifyArtistSubmittedAsync(userId, artist.Id, artistName);
+            }
+
+            _logger.LogInformation("Artist profile created: ArtistId={ArtistId} Name={Name} UserId={UserId} Status={Status} IsPremium={IsPremium}",
+                artist.Id, artist.Name, userId, artist.Status, artist.IsPremium);
 
             // החזרת פרטי האומן המלאים
             var result = await _context.Artists

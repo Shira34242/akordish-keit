@@ -32,6 +32,23 @@
               placeholder="https://..."
             >
           </div>
+          <div class="profile-image-link-field">
+            <label class="field-label" for="become-professional-banner-image-url">תמונת באנר</label>
+            <div class="media-link-row">
+              <input
+                id="become-professional-banner-image-url"
+                type="url"
+                [(ngModel)]="bannerImageUrl"
+                name="professionalBannerImageUrl"
+                class="form-input"
+                placeholder="https://..."
+              >
+              <button type="button" class="media-upload-btn" (click)="bannerInput.click()" [disabled]="bannerImageUploading">
+                <span class="material-icons">{{ bannerImageUploading ? 'hourglass_empty' : 'attach_file' }}</span>
+              </button>
+              <input #bannerInput type="file" accept="image/*,.heic,.heif,.jxl" hidden (change)="onBannerImageSelected($event)">
+            </div>
+          </div>
         </div>
 
         <div class="field-grid">
@@ -134,7 +151,7 @@
               [class.filled]="hasSocialUrl(platform.value)"
               (click)="selectSocialPlatform(platform.value)"
               [title]="platform.label">
-              <span class="material-icons">{{ platform.icon }}</span>
+              <span class="social-platform-icon" [innerHTML]="getSocialIconSvg(platform.value)"></span>
             </button>
           </div>
           <input

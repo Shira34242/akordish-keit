@@ -30,8 +30,9 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   loadingFeatured = true;
   loadingPopular = true;
   loadingAll = true;
+  loadingMore = false;
 
-  // Pagination
+  // Infinite list state
   currentPage = 1;
   pageSize = 20;
   totalCount = 0;
@@ -83,6 +84,7 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.rafPending = true;
     requestAnimationFrame(() => {
       this.shrinkHero();
+      this.loadNextArtistsIfNeeded();
       this.rafPending = false;
     });
   }
@@ -157,8 +159,13 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  loadAllArtists(page: number = 1, search?: string): void {
-    this.loadingAll = true;
+  loadAllArtists(page: number = 1, search?: string, append: boolean = false): void {
+    if (append) {
+      this.loadingMore = true;
+    } else {
+      this.loadingAll = true;
+      this.loadingMore = false;
+    }
 
     const searchParam = search !== undefined ? search : this.searchTerm.trim() || undefined;
 
@@ -171,16 +178,37 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
       searchParam
     ).subscribe({
       next: (result) => {
-        this.allArtists = result.items;
+        if (append) {
+          const existingIds = new Set(this.allArtists.map(artist => artist.id));
+          const newArtists = result.items.filter(artist => !existingIds.has(artist.id));
+          this.allArtists = [...this.allArtists, ...newArtists];
+        } else {
+          this.allArtists = result.items;
+        }
         this.totalCount = result.totalCount;
         this.currentPage = page;
         this.loadingAll = false;
+        this.loadingMore = false;
+        setTimeout(() => this.loadNextArtistsIfNeeded(), 0);
       },
       error: (error) => {
         console.error('Error loading artists:', error);
         this.loadingAll = false;
+        this.loadingMore = false;
       }
     });
+  }
+
+  loadNextArtistsIfNeeded(): void {
+    if (this.loadingAll || this.loadingMore || !this.hasMoreArtists) return;
+
+    const documentHeight = document.documentElement.scrollHeight;
+    const viewportBottom = window.scrollY + window.innerHeight;
+    const loadThreshold = 600;
+
+    if (viewportBottom >= documentHeight - loadThreshold) {
+      this.loadAllArtists(this.currentPage + 1, undefined, true);
+    }
   }
 
   onFilterChange(): void {
@@ -209,24 +237,8 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(artistRoute(artist));
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.totalCount / this.pageSize);
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.loadAllArtists(this.currentPage + 1);
-    }
-  }
-
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.loadAllArtists(this.currentPage - 1);
-    }
-  }
-
-  goToPage(page: number): void {
-    this.loadAllArtists(page);
+  get hasMoreArtists(): boolean {
+    return this.allArtists.length < this.totalCount;
   }
 
   becomeArtist(): void {

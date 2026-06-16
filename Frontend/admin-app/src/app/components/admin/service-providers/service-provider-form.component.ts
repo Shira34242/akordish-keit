@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, inject, HostListener, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
@@ -23,6 +24,7 @@ import {
 import { UserListDto } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
+import { getSocialPlatformIconSvg, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
 
 
 interface PlatformLinkOption {
@@ -43,6 +45,7 @@ export class ServiceProviderFormComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly sanitizer = inject(DomSanitizer);
   @Input() embedded = false;
   @Input() serviceProviderIdInput?: number;
   @Input() userIdInput?: number;
@@ -109,11 +112,13 @@ export class ServiceProviderFormComponent implements OnInit {
   categorySearchText = '';
   filteredCategories: SystemItem[] = [];
   readonly socialPlatformOptions: PlatformLinkOption[] = [
-    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: 'קישור לאינסטגרם' },
-    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: 'קישור לפייסבוק' },
-    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: 'קישור ליוטיוב' },
-    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: 'קישור לטיקטוק' },
-    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: 'קישור ל-X / Twitter' }
+    { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'instagram', placeholder: 'קישור לאינסטגרם' },
+    { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'facebook', placeholder: 'קישור לפייסבוק' },
+    { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'youtube', placeholder: 'קישור ליוטיוב' },
+    { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'tiktok', placeholder: 'קישור לטיקטוק' },
+    { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'x', placeholder: 'קישור ל-X / Twitter' },
+    { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'spotify', placeholder: 'קישור לספוטיפיי' },
+    { platform: SocialPlatform.Website, label: 'Website', icon: 'website', placeholder: 'קישור נוסף' }
   ];
   readonly ServiceProviderParkingType = ServiceProviderParkingType;
 
@@ -223,7 +228,7 @@ export class ServiceProviderFormComponent implements OnInit {
           caption: img.caption,
           order: img.order
         })) || [];
-        this.socialLinks = provider.socialLinks || [];
+        this.socialLinks = this.normalizeSocialLinks(provider.socialLinks);
         this.customerTestimonials = provider.customerTestimonials?.map(item => ({
           clientName: item.clientName,
           text: item.text,
@@ -536,20 +541,21 @@ export class ServiceProviderFormComponent implements OnInit {
   }
 
   getPlatformLink(platform: SocialPlatform): string {
-    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+    return this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform)?.url ?? '';
   }
 
   setPlatformLink(platform: SocialPlatform, url: string): void {
     const normalizedUrl = url.trim();
-    const existingLink = this.socialLinks.find(link => link.platform === platform);
+    const existingLink = this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform);
 
     if (!normalizedUrl) {
-      this.socialLinks = this.socialLinks.filter(link => link.platform !== platform);
+      this.socialLinks = this.socialLinks.filter(link => normalizeSocialPlatform(link.platform) !== platform);
       return;
     }
 
     if (existingLink) {
       existingLink.url = normalizedUrl;
+      existingLink.platform = platform;
       return;
     }
 
@@ -558,6 +564,10 @@ export class ServiceProviderFormComponent implements OnInit {
 
   trackByPlatform(_index: number, option: PlatformLinkOption): number {
     return option.platform;
+  }
+
+  getSocialIconSvg(platform: SocialPlatform): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(platform));
   }
 
   addTestimonial(): void {
@@ -666,7 +676,17 @@ export class ServiceProviderFormComponent implements OnInit {
       .filter(link => link.url?.trim())
       .map(link => ({
         id: link.id,
-        platform: link.platform,
+        platform: normalizeSocialPlatform(link.platform),
+        url: link.url.trim()
+      }));
+  }
+
+  private normalizeSocialLinks(links: SocialLinkDto[] | undefined): SocialLinkDto[] {
+    return (links ?? [])
+      .filter(link => !!link?.url?.trim())
+      .map(link => ({
+        ...link,
+        platform: normalizeSocialPlatform(link.platform),
         url: link.url.trim()
       }));
   }

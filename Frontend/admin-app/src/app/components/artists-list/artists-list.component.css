@@ -352,6 +352,10 @@
   padding: var(--space-4xl) var(--space-xl);
 }
 
+.loading-state--more {
+  padding: var(--space-xl) var(--space-xl) 0;
+}
+
 .spinner {
   width: 34px;
   height: 34px;
@@ -385,45 +389,6 @@
 }
 
 .empty-state span {
-  font-weight: 300;
-  font-size: var(--font-sm);
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-md);
-  margin-top: var(--space-2xl);
-}
-
-.page-btn {
-  min-height: 34px;
-  padding: 0 var(--space-base);
-  border-radius: 999px;
-  border: none;
-  background: #F2F2F2;
-  color: #000000;
-  font-family: 'Open Sans', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-variation-settings: "wdth" 100;
-  font-size: var(--font-sm);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #ddff53;
-}
-
-.page-btn:disabled {
-  color: rgba(0, 0, 0, 0.25);
-  cursor: not-allowed;
-}
-
-.page-info {
   font-weight: 300;
   font-size: var(--font-sm);
   color: rgba(0, 0, 0, 0.45);

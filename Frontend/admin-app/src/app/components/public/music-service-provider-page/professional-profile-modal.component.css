@@ -345,6 +345,8 @@
 .hero-social-btn svg {
   width: 18px;
   height: 18px;
+  display: block;
+  fill: currentColor;
 }
 
 .hero-scroll-spacer {

@@ -94,6 +94,8 @@
 
 .social-link-row { display: grid; grid-template-columns: 34px 110px minmax(0, 1fr); align-items: center; gap: var(--space-md); background: #F2F2F2; border-radius: 18px; padding: var(--space-md); }
 .social-link-row .material-icons { width: 34px; height: 34px; border-radius: 50%; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #000000; }
+.social-platform-icon { width: 34px; height: 34px; border-radius: 50%; background: #ffffff; color: #000000; display: inline-flex; align-items: center; justify-content: center; }
+.social-platform-icon svg { width: 18px; height: 18px; display: block; fill: currentColor; }
 .social-link-row label { font-size: var(--font-sm); font-weight: 800; color: #000000; }
 
 .testimonial-draft { display: grid; gap: var(--space-base); padding: var(--space-base); border-radius: 18px; background: #F2F2F2; }

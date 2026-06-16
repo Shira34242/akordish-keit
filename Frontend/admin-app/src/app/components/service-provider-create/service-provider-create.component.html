@@ -53,6 +53,23 @@
                 placeholder="https://..."
               />
             </div>
+            <div class="profile-image-link-field">
+              <label class="field-label" for="service-provider-banner-image-url">תמונת באנר</label>
+              <div class="media-link-row">
+                <input
+                  id="service-provider-banner-image-url"
+                  type="url"
+                  [(ngModel)]="bannerImageUrl"
+                  name="bannerImageUrl"
+                  class="text-input"
+                  placeholder="https://..."
+                />
+                <button type="button" class="media-upload-btn" (click)="bannerImageInput.click()" [disabled]="bannerImageUploading">
+                  <span class="material-icons">{{ bannerImageUploading ? 'hourglass_empty' : 'attach_file' }}</span>
+                </button>
+                <input #bannerImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
+              </div>
+            </div>
             <div class="upload-progress" *ngIf="profileImageUploading">
               <div><span [style.width.%]="profileImageUploadProgress"></span></div>
               <strong>{{ profileImageUploadProgress }}%</strong>
@@ -114,7 +131,7 @@
               <div class="soft-label">רשתות חברתיות</div>
               <div class="social-row">
                 <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (click)="selectSocialPlatform(option.platform)">
-                  <span class="material-icons">{{ option.icon }}</span>
+                  <span class="social-platform-icon" [innerHTML]="getSocialIconSvg(option.platform)"></span>
                 </button>
               </div>
               <input *ngIf="activeSocialPlatform" type="url" class="text-input" name="activeSocialLink" [placeholder]="getActiveSocialPlaceholder()" [ngModel]="getPlatformLink(activeSocialPlatform)" (ngModelChange)="setPlatformLink(activeSocialPlatform, $event)" />
