@@ -208,7 +208,7 @@
           <span class="section-tag section-tag--accent">נמצאו {{ filteredProfessionals.length }} תוצאות</span>
         </div>
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
-          <a class="prof-card" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+          <a class="prof-card prof-card--provider" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
@@ -239,7 +239,7 @@
             <button class="btn-show-all" (click)="onViewMore('featured')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <a class="prof-card" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+            <a class="prof-card prof-card--provider" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
@@ -340,7 +340,7 @@
             <button class="btn-show-all" (click)="onViewMore('musicStores')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <a class="prof-card" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+            <a class="prof-card prof-card--provider" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
               </div>
@@ -363,7 +363,7 @@
             <button class="btn-show-all" (click)="onViewMore('recordingStudios')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <a class="prof-card" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+            <a class="prof-card prof-card--provider" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
               </div>
@@ -386,7 +386,7 @@
             <button class="btn-show-all" (click)="onViewMore('amplification')">הצג הכל ›</button>
           </div>
           <div class="professionals-strip">
-            <a class="prof-card" *ngFor="let p of amplification; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+            <a class="prof-card prof-card--provider" *ngFor="let p of amplification; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
                 <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
               </div>
@@ -416,7 +416,7 @@
           <span class="total-badge">{{ additionalProfessionals.length + additionalTeachers.length }}</span>
         </div>
         <div class="professionals-grid">
-          <a class="prof-card" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
+          <a class="prof-card prof-card--provider" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
             </div>

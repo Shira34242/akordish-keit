@@ -20,7 +20,18 @@
             <span class="material-icons">{{ profileImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
             <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
           </button>
-          <input #profileInput type="file" accept="image/*" hidden (change)="onProfileImageSelected($event)">
+          <input #profileInput type="file" accept="image/*,.heic,.heif,.jxl" hidden (change)="onProfileImageSelected($event)">
+          <div class="profile-image-link-field">
+            <label class="field-label" for="become-professional-profile-image-url">קישור לתמונת פרופיל</label>
+            <input
+              id="become-professional-profile-image-url"
+              type="url"
+              [(ngModel)]="profileImageUrl"
+              name="professionalProfileImageUrl"
+              class="form-input"
+              placeholder="https://..."
+            >
+          </div>
         </div>
 
         <div class="field-grid">
