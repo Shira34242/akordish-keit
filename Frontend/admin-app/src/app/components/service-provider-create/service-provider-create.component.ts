@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LanguageService } from '../../services/language.service';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +26,7 @@ import {
   SubscriptionDto
 } from '../../models/subscription.model';
 import { SocialLinkDto, SocialPlatform } from '../../models/music-service-provider.model';
+import { getSocialPlatformIconSvg, normalizeSocialPlatform } from '../../utils/social-platform-icons';
 
 interface Category {
   id: number;
@@ -47,6 +49,7 @@ interface PlatformLinkOption {
 })
 export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   @Input() embedded = false;
   @Input() presetCategoryId?: number;
@@ -90,6 +93,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   newTestimonial = { clientName: '', text: '' };
   activeSocialPlatform: SocialPlatform | null = null;
   profileImageUploading = false;
+  bannerImageUploading = false;
   galleryUploadingCount = 0;
   galleryUploadProgress = 0;
   profileImageUploadProgress = 0;
@@ -117,11 +121,13 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   private galleryUploadSubs: Subscription[] = [];
   get socialPlatformOptions(): PlatformLinkOption[] {
     return [
-      { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera', placeholder: this.langService.translate('create.link_instagram') },
-      { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'thumb_up', placeholder: this.langService.translate('create.link_facebook') },
-      { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display', placeholder: this.langService.translate('create.link_youtube') },
-      { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note', placeholder: this.langService.translate('create.link_tiktok') },
-      { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email', placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'instagram', placeholder: this.langService.translate('create.link_instagram') },
+      { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'facebook', placeholder: this.langService.translate('create.link_facebook') },
+      { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'youtube', placeholder: this.langService.translate('create.link_youtube') },
+      { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'tiktok', placeholder: this.langService.translate('create.link_tiktok') },
+      { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'x', placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'spotify', placeholder: 'קישור לספוטיפיי' },
+      { platform: SocialPlatform.Website, label: 'Website', icon: 'website', placeholder: this.langService.translate('create.link_profile') },
     ];
   }
 
@@ -365,6 +371,26 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     });
   }
 
+  onBannerImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.bannerImageUploading) return;
+
+    this.bannerImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (response) => {
+        this.bannerImageUrl = response.url;
+        this.bannerImageUploading = false;
+      },
+      error: (error) => {
+        console.error('Error uploading banner image:', error);
+        this.error = this.langService.translate('common.error_profile_image');
+        this.bannerImageUploading = false;
+      }
+    });
+  }
+
   onGalleryFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
@@ -556,20 +582,21 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   }
 
   getPlatformLink(platform: SocialPlatform): string {
-    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+    return this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform)?.url ?? '';
   }
 
   setPlatformLink(platform: SocialPlatform, url: string): void {
     const normalizedUrl = url.trim();
-    const existingLink = this.socialLinks.find(link => link.platform === platform);
+    const existingLink = this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform);
 
     if (!normalizedUrl) {
-      this.socialLinks = this.socialLinks.filter(link => link.platform !== platform);
+      this.socialLinks = this.socialLinks.filter(link => normalizeSocialPlatform(link.platform) !== platform);
       return;
     }
 
     if (existingLink) {
       existingLink.url = normalizedUrl;
+      existingLink.platform = platform;
       return;
     }
 
@@ -590,6 +617,10 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
 
   trackByPlatform(_index: number, option: PlatformLinkOption): number {
     return option.platform;
+  }
+
+  getSocialIconSvg(platform: SocialPlatform): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(platform));
   }
 
   onSubmit() {
@@ -642,7 +673,11 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
       galleryImages: [...normalizedGalleryImages, ...videoGalleryItems],
       socialLinks: this.socialLinks
         .filter(link => link.url?.trim())
-        .map(link => ({ ...link, url: link.url.trim() })),
+        .map(link => ({
+          ...link,
+          platform: normalizeSocialPlatform(link.platform),
+          url: link.url.trim()
+        })),
       customerTestimonials: this.customerTestimonials,
       branches: this.hasBranches ? this.normalizedBranches() : []
     };

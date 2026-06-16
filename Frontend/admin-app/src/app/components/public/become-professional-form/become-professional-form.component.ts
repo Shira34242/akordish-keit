@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { SystemTablesService, SystemItem } from '../../../services/system-tables.service';
@@ -9,6 +10,7 @@ import { AuthService } from '../../../services/auth.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
+import { getSocialPlatformIconSvg, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
 
 interface Category {
   id: number;
@@ -31,6 +33,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   private readonly mediaService = inject(MediaService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly langService = inject(LanguageService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
@@ -49,6 +52,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   email: string = '';
   websiteUrl: string = '';
   profileImageUrl: string = '';
+  bannerImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
@@ -62,6 +66,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   activeSocialPlatform: SocialPlatform | null = null;
   hasWhatsAppForPhone = false;
   profileImageUploading = false;
+  bannerImageUploading = false;
   galleryUploadingCount = 0;
   showVideoLinkInput = false;
 
@@ -79,13 +84,13 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   filteredCategories: Category[] = [];
   readonly ServiceProviderParkingType = ServiceProviderParkingType;
   readonly SOCIAL_PLATFORMS = [
-    { value: SocialPlatform.Instagram, label: 'Instagram', icon: 'photo_camera' },
+    { value: SocialPlatform.Instagram, label: 'Instagram', icon: 'instagram' },
     { value: SocialPlatform.Facebook, label: 'Facebook', icon: 'facebook' },
-    { value: SocialPlatform.YouTube, label: 'YouTube', icon: 'smart_display' },
-    { value: SocialPlatform.TikTok, label: 'TikTok', icon: 'music_note' },
-    { value: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'alternate_email' },
-    { value: SocialPlatform.Spotify, label: 'Spotify', icon: 'graphic_eq' },
-    { value: SocialPlatform.Website, label: 'Website', icon: 'language' }
+    { value: SocialPlatform.YouTube, label: 'YouTube', icon: 'youtube' },
+    { value: SocialPlatform.TikTok, label: 'TikTok', icon: 'tiktok' },
+    { value: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'x' },
+    { value: SocialPlatform.Spotify, label: 'Spotify', icon: 'spotify' },
+    { value: SocialPlatform.Website, label: 'Website', icon: 'website' }
   ];
 
   ngOnInit(): void {
@@ -234,6 +239,25 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  onBannerImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.bannerImageUploading) return;
+
+    this.bannerImageUploading = true;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: (response) => {
+        this.bannerImageUrl = response.url;
+        this.bannerImageUploading = false;
+      },
+      error: () => {
+        this.bannerImageUploading = false;
+        alert(this.langService.translate('form.error_profile_image'));
+      }
+    });
+  }
+
   onGalleryFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
@@ -282,20 +306,21 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   selectSocialPlatform(platform: SocialPlatform): void {
     this.activeSocialPlatform = this.activeSocialPlatform === platform ? null : platform;
-    if (this.activeSocialPlatform && !this.socialLinks.some(link => link.platform === platform)) {
+    if (this.activeSocialPlatform && !this.socialLinks.some(link => normalizeSocialPlatform(link.platform) === platform)) {
       this.socialLinks = [...this.socialLinks, { platform, url: '' }];
     }
   }
 
   getSocialUrl(platform: SocialPlatform): string {
-    return this.socialLinks.find(link => link.platform === platform)?.url ?? '';
+    return this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform)?.url ?? '';
   }
 
   setSocialUrl(platform: SocialPlatform, event: Event): void {
     const url = (event.target as HTMLInputElement).value;
-    const existing = this.socialLinks.find(link => link.platform === platform);
+    const existing = this.socialLinks.find(link => normalizeSocialPlatform(link.platform) === platform);
     if (existing) {
       existing.url = url;
+      existing.platform = platform;
       return;
     }
     this.socialLinks = [...this.socialLinks, { platform, url }];
@@ -307,6 +332,10 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
 
   trackBySocialPlatform(_: number, item: { value: SocialPlatform }): number {
     return item.value;
+  }
+
+  getSocialIconSvg(platform: SocialPlatform): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(platform));
   }
 
   // Navigation methods
@@ -369,6 +398,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       email: this.email,
       websiteUrl: this.websiteUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl,
+      bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       videoUrl: this.videoUrl,
       yearsOfExperience: this.yearsOfExperience,
       workingHours: this.workingHours,
@@ -385,7 +415,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       socialLinks: this.socialLinks
         .filter(link => !!link.url?.trim())
         .map(link => ({
-          platform: link.platform,
+          platform: normalizeSocialPlatform(link.platform),
           url: link.url.trim()
         }))
     };

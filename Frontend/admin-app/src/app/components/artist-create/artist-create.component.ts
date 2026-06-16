@@ -2,6 +2,8 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, inject } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ArtistService } from '../../services/artist.service';
@@ -9,7 +11,7 @@ import { SongService } from '../../services/song.service';
 import { FileUploadInputComponent } from '../shared/file-upload-input/file-upload-input.component';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { SubscriptionDto, SubscriptionPlan } from '../../models/subscription.model';
-import { BannerMediaType, PerformanceEventInput, UpdateArtistDto } from '../../models/artist.model';
+import { ArtistStatus, BannerMediaType, PerformanceEventInput, UpdateArtistDto } from '../../models/artist.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 
@@ -73,6 +75,7 @@ export class ArtistCreateComponent implements OnInit {
   error = '';
   subscription?: SubscriptionDto;
   isPremium = false;
+  private draftSaved = false;
 
   readonly GALLERY_MIN_ITEMS = 5;
 
@@ -385,6 +388,28 @@ export class ArtistCreateComponent implements OnInit {
     return text?.length || 0;
   }
 
+  canDeactivate(): boolean | Observable<boolean> {
+    if (!this.shouldSaveDraftOnExit()) {
+      return true;
+    }
+
+    this.saving = true;
+    this.error = '';
+
+    return this.artistService.createArtistProfile(this.buildArtistDto(ArtistStatus.Draft)).pipe(
+      map(() => {
+        this.draftSaved = true;
+        this.saving = false;
+        return true;
+      }),
+      catchError((err) => {
+        this.saving = false;
+        console.error('Error saving artist draft:', err);
+        return of(true);
+      })
+    );
+  }
+
   onSubmit() {
     // Validation
     if (!this.artistForm.name.trim()) {
@@ -482,6 +507,7 @@ export class ArtistCreateComponent implements OnInit {
     const bannerUrl = this.artistForm.bannerUrl?.trim();
 
     const dto: UpdateArtistDto = {
+      status: ArtistStatus.Pending,
       name: this.artistForm.name.trim(),
       englishName: this.artistForm.englishName?.trim() || undefined,
       shortBio: this.artistForm.shortBio?.trim() || undefined,
@@ -571,6 +597,112 @@ export class ArtistCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/artists']);
+  }
+
+  private shouldSaveDraftOnExit(): boolean {
+    return !this.embedded
+      && !this.saving
+      && !this.submitted
+      && !this.draftSaved
+      && !!this.artistForm.name?.trim();
+  }
+
+  private buildArtistDto(status: ArtistStatus): UpdateArtistDto {
+    const allLinks = [
+      ...this.artistForm.socialLinks,
+      ...this.artistForm.musicLinks
+    ]
+      .filter(link => link.url?.trim())
+      .map(link => ({
+        platform: Number(link.platform),
+        url: link.url.trim()
+      }))
+      .filter(link => Number.isFinite(link.platform) && link.platform >= 1 && link.platform <= 11);
+
+    const items = this.artistForm.galleryItems || [];
+    const galleryImages = items
+      .filter(it => it.kind === 'image' && it.imageUrl?.trim())
+      .map((it, index) => ({
+        imageUrl: it.imageUrl!.trim(),
+        caption: it.caption?.trim() || undefined,
+        displayOrder: index
+      }));
+
+    const videos = items
+      .filter(it => it.kind === 'video' && it.videoUrl?.trim())
+      .map((it, index) => ({
+        videoUrl: it.videoUrl!.trim(),
+        title: it.title?.trim() || undefined,
+        displayOrder: index
+      }));
+
+    const hits = (this.artistForm.hits || [])
+      .filter(hit => hit.youTubeUrl?.trim())
+      .map((hit, index) => ({
+        title: hit.title?.trim() || this.langService.translate('artist_create.default_hit_title'),
+        imageUrl: hit.imageUrl?.trim() || undefined,
+        youTubeUrl: hit.youTubeUrl.trim(),
+        displayOrder: index,
+        isActive: hit.isActive
+      }));
+
+    const albums = (this.artistForm.albums || [])
+      .filter(album => album.coverImageUrl?.trim())
+      .map((album, index) => ({
+        title: album.title?.trim() || this.langService.translate('artist_create.default_album_title'),
+        coverImageUrl: album.coverImageUrl.trim(),
+        releaseYear: album.releaseYear ?? undefined,
+        externalUrl: album.externalUrl?.trim() || '',
+        displayOrder: index,
+        isActive: album.isActive
+      }));
+
+    const performanceImageUrl = this.artistForm.performance.imageUrl?.trim()
+      || this.artistForm.performance.bannerImageUrl?.trim()
+      || '';
+    const performanceBannerImageUrl = this.artistForm.performance.bannerImageUrl?.trim()
+      || performanceImageUrl;
+
+    const performance: PerformanceEventInput | null = this.artistForm.performance.enabled
+      && performanceImageUrl
+      ? {
+          name: this.artistForm.performance.name?.trim() || this.artistForm.name.trim(),
+          description: this.artistForm.performance.description?.trim() || undefined,
+          imageUrl: performanceImageUrl,
+          bannerImageUrl: performanceBannerImageUrl,
+          ticketUrl: this.artistForm.performance.ticketUrl?.trim() || '',
+          eventDate: this.artistForm.performance.eventDate
+            ? new Date(this.artistForm.performance.eventDate).toISOString()
+            : new Date().toISOString(),
+          location: this.artistForm.performance.location?.trim() || undefined,
+          price: this.artistForm.performance.price ?? null,
+          isActive: this.artistForm.performance.isActive
+        }
+      : null;
+
+    const bannerType = this.artistForm.bannerMediaType;
+    const bannerUrl = this.artistForm.bannerUrl?.trim();
+
+    return {
+      status,
+      name: this.artistForm.name.trim(),
+      englishName: this.artistForm.englishName?.trim() || undefined,
+      shortBio: this.artistForm.shortBio?.trim() || undefined,
+      biography: this.artistForm.biography?.trim() || undefined,
+      imageUrl: this.artistForm.imageUrl?.trim() || undefined,
+      websiteUrl: this.artistForm.websiteUrl?.trim() || undefined,
+      socialLinks: allLinks.length > 0 ? allLinks : undefined,
+      performanceIsActive: this.artistForm.performance.enabled,
+      performanceEvent: performance,
+      bannerImageUrl: bannerType === 'image' && bannerUrl ? bannerUrl : undefined,
+      bannerGifUrl: (bannerType === 'gif' || bannerType === 'video') && bannerUrl ? bannerUrl : undefined,
+      bannerMediaType: bannerUrl ? bannerType : null,
+      bannerBlur: this.normalizedBannerBlur(this.artistForm.bannerBlur),
+      galleryImages: galleryImages.length > 0 ? galleryImages : undefined,
+      videos: videos.length > 0 ? videos : undefined,
+      hits: hits.length > 0 ? hits : undefined,
+      albums: albums.length > 0 ? albums : undefined
+    };
   }
 
   private validateRichContent(): string | null {

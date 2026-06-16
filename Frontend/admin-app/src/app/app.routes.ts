@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
+import { pendingArtistDraftGuard } from './guards/pending-artist-draft.guard';
 
 export const routes: Routes = [
     {
@@ -131,6 +132,7 @@ export const routes: Routes = [
                 path: 'artist/create',
                 loadComponent: () => import('./components/artist-create/artist-create.component').then(m => m.ArtistCreateComponent),
                 canActivate: [authGuard],
+                canDeactivate: [pendingArtistDraftGuard],
                 title: 'צור פרופיל אומן - אקורדישקייט'
             },
             {

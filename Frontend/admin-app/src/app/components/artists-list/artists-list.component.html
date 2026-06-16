@@ -90,7 +90,7 @@
 
     <div class="artists-grid" *ngIf="!loadingAll && allArtists.length > 0">
       <app-artist-circle
-        *ngFor="let artist of allArtists"
+        *ngFor="let artist of allArtists; trackBy: trackById"
         [artist]="artist">
       </app-artist-circle>
     </div>
@@ -101,16 +101,14 @@
       <span *ngIf="searchTerm">{{ 'artists.empty_search' | translate }}</span>
     </div>
 
-    <!-- פרסומת שנייה — לפני ה-pagination -->
+    <!-- פרסומת שנייה -->
     <div class="content-slot artists-content-slot" *ngIf="!loadingAll && allArtists.length > 0">
       <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="artists-list-bottom-banner"></app-media-item>
     </div>
 
-    <div class="pagination" *ngIf="totalPages > 1 && !loadingAll && !searchTerm">
-      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">{{ 'shared.prev' | translate }}</button>
-      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">{{ 'shared.next' | translate }}</button>
+    <div class="loading-state loading-state--more" *ngIf="loadingMore">
+      <div class="spinner"></div>
     </div>
 
     </section>

@@ -200,7 +200,7 @@
       <div class="social-links-admin">
         <h3 class="subsection-title">רשתות חברתיות</h3>
         <div class="social-link-row" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform">
-          <span class="material-icons">{{ option.icon }}</span>
+          <span class="social-platform-icon" [innerHTML]="getSocialIconSvg(option.platform)"></span>
           <label>{{ option.label }}</label>
           <input
             type="url"
@@ -389,6 +389,7 @@
         <label class="form-label">תמונת באנר</label>
         <app-file-upload-input
           [(url)]="bannerImageUrl"
+          accept="image/*,.heic,.heif,.jxl"
           placeholder="https://..."
         />
         <small class="form-hint">תמונה רחבה לראש דף נותן השירות</small>
