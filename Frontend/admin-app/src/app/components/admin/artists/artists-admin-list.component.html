@@ -80,6 +80,7 @@
       <div class="grid-card-sub" *ngIf="artist.shortBio">{{ artist.shortBio }}</div>
       <div class="grid-card-badges">
         <span class="badge" [ngClass]="getStatusBadgeClass(artist.status)">{{ getStatusLabel(artist.status) }}</span>
+        <span *ngIf="artist.isFeatured" class="badge badge-premium">מומלץ</span>
         <span *ngIf="artist.isPremium" class="badge badge-premium">Premium</span>
       </div>
       <div class="grid-card-actions">
@@ -103,6 +104,7 @@
           <th>מספר שירים</th>
           <th>סטטוס</th>
           <th>Premium</th>
+          <th>מומלץ</th>
           <th>תאריך יצירה</th>
           <th>פעולות</th>
         </tr>
@@ -140,6 +142,10 @@
               Premium
             </span>
             <span *ngIf="!artist.isPremium" class="badge badge-secondary">חינם</span>
+          </td>
+          <td>
+            <span *ngIf="artist.isFeatured" class="badge badge-premium">מומלץ</span>
+            <span *ngIf="!artist.isFeatured" class="badge badge-secondary">-</span>
           </td>
           <td>{{ artist.createdAt | date: 'dd/MM/yyyy' }}</td>
           <td class="actions-cell">

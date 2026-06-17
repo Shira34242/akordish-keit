@@ -1029,6 +1029,11 @@ namespace AkordishKeit.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsPremium")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1099,6 +1104,9 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_Artists_Name");
+
+                    b.HasIndex("IsFeatured")
+                        .HasDatabaseName("IX_Artists_IsFeatured");
 
                     b.HasIndex("PerformanceEventId");
 

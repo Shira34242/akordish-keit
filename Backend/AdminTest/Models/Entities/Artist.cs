@@ -50,6 +50,7 @@ public class Artist
 
     // Legacy fields - לתאימות לאחור
     public bool IsPremium { get; set; }              // חשבון משלם (deprecated - use Tier)
+    public bool IsFeatured { get; set; }             // מוצג כאמן מומלץ בדף הבית
     public DateTime? LastBoostDate { get; set; }     // תאריך בוסט אחרון
     public int DisplayOrder { get; set; }            // סדר תצוגה
 

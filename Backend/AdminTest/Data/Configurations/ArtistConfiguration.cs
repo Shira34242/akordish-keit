@@ -56,6 +56,10 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                .IsRequired()
                .HasDefaultValue(false);
 
+        builder.Property(e => e.IsFeatured)
+               .IsRequired()
+               .HasDefaultValue(false);
+
         builder.Property(e => e.DisplayOrder)
                .IsRequired()
                .HasDefaultValue(0);
@@ -109,6 +113,9 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
 
         builder.HasIndex(e => e.PersonId)
                .HasDatabaseName("IX_Artists_PersonId");
+
+        builder.HasIndex(e => e.IsFeatured)
+               .HasDatabaseName("IX_Artists_IsFeatured");
 
         // Relationships
         builder.HasOne(a => a.User)

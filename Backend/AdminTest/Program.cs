@@ -718,6 +718,15 @@ dbContext.Database.ExecuteSqlRaw(@"
            AND COL_LENGTH(N'[Artists]', N'BumpCount') IS NULL
             ALTER TABLE [Artists] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_Artists_BumpCount] DEFAULT 0;
 
+        IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Artists]', N'IsFeatured') IS NULL
+            ALTER TABLE [Artists] ADD [IsFeatured] bit NOT NULL CONSTRAINT [DF_Artists_IsFeatured] DEFAULT 0;
+
+        IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Artists]', N'IsFeatured') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Artists_IsFeatured' AND object_id = OBJECT_ID(N'[Artists]'))
+            CREATE INDEX [IX_Artists_IsFeatured] ON [Artists] ([IsFeatured]);
+
         IF OBJECT_ID(N'[BumpSchedules]', N'U') IS NULL
         BEGIN
             CREATE TABLE [BumpSchedules] (

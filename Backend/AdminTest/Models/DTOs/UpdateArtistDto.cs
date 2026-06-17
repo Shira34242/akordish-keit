@@ -21,6 +21,7 @@ public class UpdateArtistDto
     public string? WebsiteUrl { get; set; }
     public ArtistStatus? Status { get; set; }        // ניהול סטטוס (Admin)
     public bool? IsPremium { get; set; }             // חשבון משלם (Admin)
+    public bool? IsFeatured { get; set; }            // מוצג כאמן מומלץ בדף הבית (Admin)
 
     // באנר הופעה — legacy
     public string? PerformanceImageUrl { get; set; }

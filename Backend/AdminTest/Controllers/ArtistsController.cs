@@ -95,6 +95,7 @@ public class ArtistsController : ControllerBase
                     ImageUrl = a.ImageUrl,
                     IsVerified = a.IsVerified,
                     IsPremium = a.IsPremium,
+                    IsFeatured = a.IsFeatured,
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
                     Status = a.Status,
                     CreatedAt = a.CreatedAt,
@@ -127,10 +128,12 @@ public class ArtistsController : ControllerBase
         {
             var artists = await _context.Artists
                 .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active)
-                .Where(a => a.IsPremium || a.LastBoostDate.HasValue)
-                .OrderByDescending(a => a.IsPremium)
+                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue)
+                .OrderByDescending(a => a.IsFeatured)
+                .ThenByDescending(a => a.IsPremium)
                 .ThenByDescending(a => a.LastBoostDate)
                 .ThenBy(a => a.DisplayOrder)
+                .ThenBy(a => a.Name)
                 .Take(count)
                 .Select(a => new ArtistListDto
                 {
@@ -140,6 +143,7 @@ public class ArtistsController : ControllerBase
                     ImageUrl = a.ImageUrl,
                     IsVerified = a.IsVerified,
                     IsPremium = a.IsPremium,
+                    IsFeatured = a.IsFeatured,
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
                     Status = a.Status,
                     CreatedAt = a.CreatedAt,
@@ -241,6 +245,7 @@ public class ArtistsController : ControllerBase
                 WebsiteUrl = artist.WebsiteUrl,
                 IsVerified = artist.IsVerified,
                 IsPremium = artist.IsPremium,
+                IsFeatured = artist.IsFeatured,
                 Status = artist.Status,
                 UserId = artist.UserId,
                 PerformanceImageUrl = artist.PerformanceImageUrl,
@@ -562,6 +567,9 @@ public class ArtistsController : ControllerBase
 
                 if (dto.IsPremium.HasValue)
                     artist.IsPremium = dto.IsPremium.Value;
+
+                if (dto.IsFeatured.HasValue)
+                    artist.IsFeatured = dto.IsFeatured.Value;
             }
 
             // עדכון רשתות חברתיות (מחיקת הקיימים והוספה מחדש)
@@ -927,6 +935,7 @@ public class ArtistsController : ControllerBase
                 WebsiteUrl = dto.WebsiteUrl,
                 IsPrimaryProfile = isPrimaryProfile,
                 IsPremium = isPremium,
+                IsFeatured = false,
                 Status = isDraft ? ArtistStatus.Draft : ArtistStatus.Pending,
                 IsVerified = false,
                 DisplayOrder = 999,
@@ -1042,6 +1051,7 @@ public class ArtistsController : ControllerBase
                     WebsiteUrl = a.WebsiteUrl,
                     IsVerified = a.IsVerified,
                     IsPremium = a.IsPremium,
+                    IsFeatured = a.IsFeatured,
                     Status = a.Status,
                     UserId = a.UserId,
                     PerformanceImageUrl = a.PerformanceImageUrl,
@@ -1172,6 +1182,7 @@ public class ArtistsController : ControllerBase
                 WebsiteUrl = dto.WebsiteUrl,
                 Status = dto.Status ?? ArtistStatus.Pending,
                 IsPremium = dto.IsPremium ?? false,
+                IsFeatured = dto.IsFeatured ?? false,
                 IsVerified = false,
                 DisplayOrder = 999,
                 CreatedAt = DateTime.UtcNow,
@@ -1261,6 +1272,7 @@ public class ArtistsController : ControllerBase
                     WebsiteUrl = a.WebsiteUrl,
                     IsVerified = a.IsVerified,
                     IsPremium = a.IsPremium,
+                    IsFeatured = a.IsFeatured,
                     Status = a.Status,
                     UserId = a.UserId,
                     PerformanceImageUrl = a.PerformanceImageUrl,
@@ -1391,6 +1403,7 @@ public class ArtistsController : ControllerBase
                 WebsiteUrl = original.WebsiteUrl,
                 Status = ArtistStatus.Pending,
                 IsPremium = false,
+                IsFeatured = false,
                 IsVerified = false,
                 IsPrimaryProfile = false,
                 Tier = ProfileTier.Free,
@@ -1490,6 +1503,7 @@ public class ArtistsController : ControllerBase
                     WebsiteUrl = a.WebsiteUrl,
                     IsVerified = a.IsVerified,
                     IsPremium = a.IsPremium,
+                    IsFeatured = a.IsFeatured,
                     Status = a.Status,
                     UserId = a.UserId,
                     PerformanceImageUrl = a.PerformanceImageUrl,

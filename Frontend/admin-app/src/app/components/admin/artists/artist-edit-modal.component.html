@@ -517,6 +517,16 @@
 
           <div class="form-group">
             <label class="form-label">תגיות מיוחדות</label>
+            <div class="checkbox-wrapper" [class.checked]="editForm.isFeatured">
+              <input
+                type="checkbox"
+                [(ngModel)]="editForm.isFeatured"
+                name="isFeatured"
+                id="artistIsFeatured"
+              />
+              <span>הצג כאמן מומלץ בדף הבית</span>
+            </div>
+            <small class="form-hint">אמנים מסומנים יקבלו קדימות באזור האמנים בדף הבית.</small>
             <div class="quick-info-bar">
               <span class="status-badge" [ngClass]="getStatusBadgeClass(editForm.status)">
                 {{ getStatusLabel(editForm.status) }}

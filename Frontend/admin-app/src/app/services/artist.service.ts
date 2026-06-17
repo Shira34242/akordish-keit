@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
+import { shareReplay, tap } from 'rxjs/operators';
 import {
   Artist,
   ArtistListDto,
@@ -158,7 +158,9 @@ export class ArtistService {
      * עדכון פרטי אומן בסיסיים (רק Admin או האומן עצמו)
      */
     updateArtist(id: number, data: UpdateArtistDto): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/${id}`, data);
+        return this.http.put<void>(`${this.apiUrl}/${id}`, data).pipe(
+            tap(() => this.clearFeaturedArtistsCache())
+        );
     }
 
     /**
@@ -219,7 +221,9 @@ export class ArtistService {
      * Boost - קידום חד פעמי (10₪)
      */
     boostArtist(id: number): Observable<BoostArtistResponse> {
-        return this.http.post<BoostArtistResponse>(`${this.apiUrl}/${id}/boost`, {});
+        return this.http.post<BoostArtistResponse>(`${this.apiUrl}/${id}/boost`, {}).pipe(
+            tap(() => this.clearFeaturedArtistsCache())
+        );
     }
 
     /**
@@ -248,21 +252,27 @@ export class ArtistService {
      * יצירת אומן חדש (Admin בלבד)
      */
     createArtist(data: UpdateArtistDto): Observable<Artist> {
-        return this.http.post<Artist>(this.apiUrl, data);
+        return this.http.post<Artist>(this.apiUrl, data).pipe(
+            tap(() => this.clearFeaturedArtistsCache())
+        );
     }
 
     /**
      * מחיקת אומן (Admin בלבד)
      */
     deleteArtist(id: number): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+            tap(() => this.clearFeaturedArtistsCache())
+        );
     }
 
     /**
      * שינוי סטטוס אומן (Admin בלבד)
      */
     updateArtistStatus(id: number, status: ArtistStatus): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/${id}/status`, status);
+        return this.http.put<void>(`${this.apiUrl}/${id}/status`, status).pipe(
+            tap(() => this.clearFeaturedArtistsCache())
+        );
     }
 
     /**
@@ -270,5 +280,9 @@ export class ArtistService {
      */
     duplicateArtist(id: number): Observable<Artist> {
         return this.http.post<Artist>(`${this.apiUrl}/${id}/duplicate`, {});
+    }
+
+    private clearFeaturedArtistsCache(): void {
+        this.featuredArtistsCache$ = undefined;
     }
 }

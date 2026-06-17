@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, Des
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize, catchError } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
@@ -383,7 +383,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadTopArtists(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.artistService.getTopArtists(12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.artistService.getFeaturedArtists(12).pipe(
+      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(12)),
+      catchError(() => this.artistService.getTopArtists(12)),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({

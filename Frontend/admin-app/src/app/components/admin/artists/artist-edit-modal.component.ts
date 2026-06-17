@@ -102,6 +102,7 @@ export class ArtistEditModalComponent implements OnInit {
     websiteUrl: '',
     status: ArtistStatus.Pending,
     isPremium: false,
+    isFeatured: false,
     socialLinks: [] as SocialLinkForm[],
     musicLinks: [] as SocialLinkForm[],
     galleryItems: [] as GalleryItemForm[],
@@ -209,6 +210,7 @@ export class ArtistEditModalComponent implements OnInit {
           websiteUrl: artist.websiteUrl || '',
           status: artist.status,
           isPremium: artist.isPremium,
+          isFeatured: artist.isFeatured || false,
           socialLinks: artist.socialLinks?.filter(l => !this.isMusicPlatform(l.platform)).map(link => ({
             id: link.id,
             platform: this.normalizePlatform(link.platform),
@@ -795,6 +797,7 @@ export class ArtistEditModalComponent implements OnInit {
       websiteUrl: this.optionalText(this.editForm.websiteUrl),
       status,
       isPremium: this.editForm.isPremium,
+      isFeatured: this.editForm.isFeatured,
       performanceIsActive: isDraft ? false : this.editForm.performance.enabled,
       performanceEvent: isDraft ? null : this.buildPerformanceEvent(),
       socialLinks: this.normalizedLinks(isDraft),

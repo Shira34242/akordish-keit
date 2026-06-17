@@ -21,6 +21,7 @@ export interface Artist {
   websiteUrl?: string;             // אתר אישי
   isVerified: boolean;             // אומן מאומת
   isPremium: boolean;              // חשבון משלם (deprecated - use tier)
+  isFeatured: boolean;
   tier: number;                    // ProfileTier: 0=Free, 1=Subscribed
   subscriptionId?: number;         // קישור למנוי שמממן פרופיל זה
   status: ArtistStatus;            // סטטוס: Pending/Active/Hidden
@@ -60,6 +61,7 @@ export interface ArtistListDto {
   imageUrl?: string;
   isVerified: boolean;
   isPremium: boolean;        // deprecated - use tier
+  isFeatured: boolean;
   tier: number;              // ProfileTier: 0=Free, 1=Subscribed
   subscriptionId?: number;
   songCount: number;
@@ -169,6 +171,7 @@ export interface UpdateArtistDto {
   websiteUrl?: string;
   status?: ArtistStatus;           // ניהול סטטוס (Admin)
   isPremium?: boolean;             // חשבון משלם (Admin)
+  isFeatured?: boolean;
   performanceImageUrl?: string;
   performanceTicketUrl?: string;
   performanceIsActive?: boolean;

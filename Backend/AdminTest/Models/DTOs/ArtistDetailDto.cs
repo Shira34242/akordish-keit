@@ -22,6 +22,7 @@ public class ArtistDetailDto
     public string? WebsiteUrl { get; set; }
     public bool IsVerified { get; set; }
     public bool IsPremium { get; set; }
+    public bool IsFeatured { get; set; }
     public ArtistStatus Status { get; set; }
     public int? UserId { get; set; }
 
@@ -62,6 +63,7 @@ public class ArtistListDto
     public string? ImageUrl { get; set; }
     public bool IsVerified { get; set; }
     public bool IsPremium { get; set; }
+    public bool IsFeatured { get; set; }
     public int SongCount { get; set; }
     public ArtistStatus Status { get; set; }  // נדרש עבור Admin
     public DateTime CreatedAt { get; set; }    // נדרש עבור Admin
