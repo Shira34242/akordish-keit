@@ -714,9 +714,19 @@ public class SmartSongImportService : ISmartSongImportService
                 ? Math.Max(0, Math.Max(row.Text.Length, nextLyricsRow.Text.Length) - sharedIndent - visualIndent - chordLine.Length)
                 : visualIndent;
 
-            // Visual indent is stored as leading spaces so it is visible in both
-            // the public display (RTL & nbsp; rendering) and the admin editor (textarea).
-            yield return new string(' ', outputIndent) + chordLine;
+            var rawLine = new string(' ', outputIndent) + chordLine;
+
+            if (nextLyricsRow is not null && ContainsHebrew(nextLyricsRow.Text))
+            {
+                // In Open Sans, space ≈ 0.32em and Hebrew char ≈ 0.48em (ratio ~1.5).
+                // Scale every run of spaces by 3/2 so chord positions align visually
+                // with the Hebrew characters beneath them.
+                yield return ScaleChordSpaces(rawLine, 15, 10);
+            }
+            else
+            {
+                yield return rawLine;
+            }
 
             if (nextLyricsRow is not null)
             {
@@ -724,6 +734,32 @@ public class SmartSongImportService : ISmartSongImportService
                 index++;
             }
         }
+    }
+
+    private static string ScaleChordSpaces(string line, int numerator, int denominator)
+    {
+        var sb = new System.Text.StringBuilder(line.Length * numerator / denominator + 8);
+        var i = 0;
+        var afterChord = false;
+        while (i < line.Length)
+        {
+            if (line[i] != ' ')
+            {
+                sb.Append(line[i++]);
+                afterChord = true;
+                continue;
+            }
+            var count = 0;
+            while (i < line.Length && line[i] == ' ') { count++; i++; }
+            var scaled = (count * numerator + denominator - 1) / denominator;
+            // chord-block has padding: 3px each side = 6px. With scale 1.5 that's
+            // ~1.7 space-widths of extra width per chord — subtract 2 to compensate.
+            if (afterChord && i < line.Length)
+                scaled = Math.Max(0, scaled - 2);
+            sb.Append(' ', scaled);
+            afterChord = false;
+        }
+        return sb.ToString();
     }
 
     private static string RemoveLeadingWhitespace(string value, int count) =>
