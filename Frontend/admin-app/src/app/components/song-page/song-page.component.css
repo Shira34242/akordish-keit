@@ -801,7 +801,7 @@
     user-select: none;
     -webkit-user-select: none;
     white-space: pre-wrap;
-    line-height: 2.2;
+    line-height: 1.7;
     font-size: var(--lyrics-font-size, 1.1rem);
     letter-spacing: 0.07em;
 }
@@ -839,12 +839,13 @@
 
 ::ng-deep .chord-block {
     color: #000000;
-    font-weight: 800;
-    font-size: 1em;
+    font-weight: 700;
+    font-size: 0.78em;
     letter-spacing: normal;
     background: #ddff53;
-    padding: 2px 3px;
-    border-radius: 4px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin-inline-end: 0.5px;
     cursor: pointer;
     user-select: none;
     direction: ltr;

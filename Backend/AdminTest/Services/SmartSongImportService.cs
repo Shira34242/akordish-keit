@@ -752,10 +752,10 @@ public class SmartSongImportService : ISmartSongImportService
             var count = 0;
             while (i < line.Length && line[i] == ' ') { count++; i++; }
             var scaled = (count * numerator + denominator - 1) / denominator;
-            // chord-block has padding: 3px each side = 6px. With scale 1.5 that's
-            // ~1.7 space-widths of extra width per chord — subtract 2 to compensate.
+            // chord-block has padding 3px each side = 6px. Subtract 2 to compensate;
+            // keep minimum 1 so adjacent chords never fully merge.
             if (afterChord && i < line.Length)
-                scaled = Math.Max(0, scaled - 2);
+                scaled = Math.Max(1, scaled - 2);
             sb.Append(' ', scaled);
             afterChord = false;
         }

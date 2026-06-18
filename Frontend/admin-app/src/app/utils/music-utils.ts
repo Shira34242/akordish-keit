@@ -392,7 +392,11 @@ function isChordLineSeparator(token: string): boolean {
 function expandChordToken(token: string): string[] {
     const trimmed = token.trim();
     if (!trimmed) return [];
-    if (isChord(trimmed) || !trimmed.includes('/')) return [trimmed];
+    if (isChord(trimmed)) return [trimmed];
+    if (!trimmed.includes('/')) {
+        const split = splitGluedChordSequence(trimmed);
+        return (split && split.length > 0) ? split : [trimmed];
+    }
 
     const slashIdx = trimmed.indexOf('/');
     if (slashIdx === -1 || trimmed.indexOf('/', slashIdx + 1) !== -1) return [trimmed];
@@ -414,7 +418,7 @@ function expandChordToken(token: string): string[] {
     return [`${left}/${bass}`, ...tailChords];
 }
 
-function splitGluedChordSequence(value: string): string[] | null {
+export function splitGluedChordSequence(value: string): string[] | null {
     const trimmed = value.trim();
     if (!trimmed) return [];
     return splitGluedChordSequenceFrom(trimmed, 0, new Map<number, string[] | null>());
