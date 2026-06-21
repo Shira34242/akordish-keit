@@ -265,22 +265,64 @@ public class ArticleService : IArticleService
 
     public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40)
     {
-        return await GetPublishedBannerQuery(ArticleCategorySection.News)
-            .OrderByDescending(a => a.ViewCount)
-            .Take(Math.Clamp(limit, 1, 40))
-            .Select(a => new ArticleBannerDto
+        var now = DateTime.UtcNow;
+        var monthAgo = now.AddDays(-30);
+        var take = Math.Clamp(limit, 1, 40);
+
+        var candidates = await _context.Articles
+            .AsNoTracking()
+            .Where(a => !a.IsDeleted
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= now
+                && a.ArticleCategories.Any(ac =>
+                    ac.Category.Section == ArticleCategorySection.News
+                    || ac.Category.Section == ArticleCategorySection.Content))
+            .Select(a => new
             {
-                Id = a.Id,
-                Title = a.Title,
-                FeaturedImageUrl = a.FeaturedImageUrl,
-                Slug = a.Slug,
-                ShortDescription = a.ShortDescription,
-                ContentType = (int)ArticleContentType.News,
-                IsFeatured = a.IsFeatured,
-                DisplayOrder = a.DisplayOrder,
-                PublishDate = a.PublishDate
+                Article = new ArticleBannerDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    FeaturedImageUrl = a.FeaturedImageUrl,
+                    Slug = a.Slug,
+                    ShortDescription = a.ShortDescription,
+                    ContentType = a.ContentType,
+                    IsFeatured = a.IsFeatured,
+                    DisplayOrder = a.DisplayOrder,
+                    PublishDate = a.PublishDate
+                },
+                MonthlyViews = _context.ArticleViews.Count(av =>
+                    av.ArticleId == a.Id
+                    && av.ViewedAt >= monthAgo
+                    && av.ViewedAt <= now),
+                TotalViews = a.ViewCount
             })
             .ToListAsync();
+
+        var popularityOrder = candidates
+            .OrderByDescending(a => a.MonthlyViews)
+            .ThenByDescending(a => a.TotalViews)
+            .ThenByDescending(a => a.Article.PublishDate)
+            .ThenBy(a => a.Article.DisplayOrder)
+            .ToList();
+
+        var firstTen = popularityOrder
+            .Where(a => a.Article.IsFeatured)
+            .Take(10)
+            .ToList();
+
+        var firstTenIds = firstTen.Select(a => a.Article.Id).ToHashSet();
+        firstTen.AddRange(popularityOrder
+            .Where(a => !firstTenIds.Contains(a.Article.Id))
+            .Take(10 - firstTen.Count));
+
+        var prioritizedIds = firstTen.Select(a => a.Article.Id).ToHashSet();
+
+        return firstTen
+            .Concat(popularityOrder.Where(a => !prioritizedIds.Contains(a.Article.Id)))
+            .Take(take)
+            .Select(a => a.Article)
+            .ToList();
     }
 
     public async Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(

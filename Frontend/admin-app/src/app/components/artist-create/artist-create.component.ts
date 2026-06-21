@@ -279,6 +279,17 @@ export class ArtistCreateComponent implements OnInit {
     this.artistForm.hits?.forEach((hit, order) => hit.displayOrder = order);
   }
 
+  moveHit(index: number, direction: -1 | 1): void {
+    const hits = this.artistForm.hits;
+    if (!hits) return;
+
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= hits.length) return;
+
+    [hits[index], hits[newIndex]] = [hits[newIndex], hits[index]];
+    hits.forEach((hit, order) => hit.displayOrder = order);
+  }
+
   onHitYouTubeUrlChange(index: number): void {
     const hit = this.artistForm.hits?.[index];
     if (!hit || !hit.youTubeUrl?.trim() || hit.imageUrl?.trim()) return;

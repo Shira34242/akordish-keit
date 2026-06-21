@@ -284,6 +284,14 @@
               <button type="button" class="media-card-remove" (click)="removeHit(i)" aria-label="הסר">
                 <span class="material-icons">close</span>
               </button>
+              <div class="media-card-order" aria-label="סדר תצוגה">
+                <button type="button" (click)="moveHit(i, -1)" [disabled]="i === 0" aria-label="העלה למעלה">
+                  <span class="material-icons">keyboard_arrow_up</span>
+                </button>
+                <button type="button" (click)="moveHit(i, 1)" [disabled]="i === (artistForm.hits?.length || 0) - 1" aria-label="הורד למטה">
+                  <span class="material-icons">keyboard_arrow_down</span>
+                </button>
+              </div>
               <div class="media-card-preview" [class.has-image]="hit.imageUrl">
                 <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט'" />
                 <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>

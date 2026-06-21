@@ -461,14 +461,21 @@
 
       <div class="viral-loading" *ngIf="loadingViralArticles">טוען כתבות פופולאריות...</div>
 
-      <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="viral-grid">
-        <app-news-banner
-          *ngFor="let article of visibleViralArticles; trackBy: trackById"
-          class="news-banner-card"
-          [article]="article"
-          [imagePreset]="360"
-          [showDescription]="false">
-        </app-news-banner>
+      <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="stream-grid">
+        <div
+          class="stream-row"
+          *ngFor="let row of getViralRows(); trackBy: trackByIndex"
+          [ngStyle]="{'grid-template-columns': row.gridCols}">
+          <div
+            class="stream-cell"
+            *ngFor="let article of row.articles; trackBy: trackById">
+            <app-news-banner
+              [article]="article"
+              [imagePreset]="360"
+              [showDescription]="false">
+            </app-news-banner>
+          </div>
+        </div>
       </div>
 
       <div class="viral-sentinel" #viralSentinel *ngIf="canRevealMoreViralArticles"></div>

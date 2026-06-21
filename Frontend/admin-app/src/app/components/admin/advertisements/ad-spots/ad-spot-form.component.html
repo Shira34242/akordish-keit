@@ -15,6 +15,7 @@
               id="name"
               formControlName="name"
               class="form-control"
+              maxlength="200"
               [class.error]="f['name'].invalid && f['name'].touched"
               placeholder="למשל: באנר ראשי"
             />
@@ -31,6 +32,7 @@
               id="technicalId"
               formControlName="technicalId"
               class="form-control"
+              maxlength="100"
               [class.error]="f['technicalId'].invalid && f['technicalId'].touched"
               placeholder="למשל: BANNER_TOP_1"
             />
@@ -49,6 +51,7 @@
               id="dimensions"
               formControlName="dimensions"
               class="form-control"
+              maxlength="50"
               placeholder="למשל: 728x90"
             />
             <small class="help-text">שטח זה תומך בכל סוגי המדיה: תמונות, וידאו וגיפים</small>
@@ -81,6 +84,7 @@
             id="description"
             formControlName="description"
             class="form-control textarea"
+            maxlength="1000"
             rows="4"
             placeholder="תיאור מפורט של שטח הפרסום..."></textarea>
         </div>

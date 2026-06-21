@@ -1779,7 +1779,7 @@
     display: flex;
     padding-bottom: 0.75em;
     position: relative;
-    direction: ltr; /* כוכבים — שמאל לימין תמיד */
+    direction: rtl;
 }
 
 .rating__star {

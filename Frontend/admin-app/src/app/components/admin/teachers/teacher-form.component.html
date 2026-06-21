@@ -670,6 +670,19 @@
           <span>מורה מומלץ (יוצג בראש הדף)</span>
         </label>
       </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [ngModel]="isPublished"
+            (ngModelChange)="setPublished($event)"
+            name="isPublished"
+          />
+          <span>פורסם</span>
+        </label>
+        <small class="form-hint">סימון התיבה יאשר את פרסום המורה באתר.</small>
+      </div>
     </div>
 
     <!-- Form Actions -->

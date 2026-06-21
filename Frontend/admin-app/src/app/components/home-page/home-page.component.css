@@ -589,20 +589,60 @@
   text-align: center;
 }
 
-.viral-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.viral-section .stream-grid {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
+  overflow-x: hidden;
 }
 
-.viral-grid .news-banner-card {
+.viral-section .stream-row {
+  display: grid;
+  gap: var(--space-md);
   min-width: 0;
 }
 
-.viral-grid ::ng-deep .news-banner {
-  aspect-ratio: 1.35 / 1;
-  border-radius: 22px;
+.viral-section .stream-cell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #F2F2F2;
+  height: 310px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.viral-section .stream-cell app-news-banner {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.viral-section .stream-cell ::ng-deep .news-banner {
   width: 100%;
+  height: 100%;
+  aspect-ratio: unset;
+  border-radius: 0;
+}
+
+.viral-section .stream-cell ::ng-deep .banner-text {
+  right: var(--space-base);
+  left: 3.5rem;
+  bottom: var(--space-base);
+}
+
+.viral-section .stream-cell ::ng-deep .banner-arrow-btn {
+  left: var(--space-base);
+  bottom: var(--space-base);
+}
+
+.viral-section .stream-cell ::ng-deep .banner-title {
+  font-size: calc(var(--font-sm) * 1.4);
+  line-height: 1.35;
+}
+
+.viral-section .stream-cell ::ng-deep .banner-subtitle {
+  font-size: var(--font-xs);
 }
 
 .viral-sentinel {
@@ -1290,8 +1330,14 @@
     grid-template-columns: 1fr;
   }
 
-  .viral-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .viral-section .stream-grid,
+  .viral-section .stream-row {
+    gap: var(--space-sm);
+  }
+
+  .viral-section .stream-cell {
+    border-radius: 16px;
+    height: 265px;
   }
 
   .news-banner-track > .news-banner-card {
@@ -1374,8 +1420,19 @@
     min-height: 14rem;
   }
 
-  .viral-grid {
-    grid-template-columns: 1fr;
+  .viral-section .stream-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .viral-section .stream-cell {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+  }
+
+  .viral-section .stream-cell ::ng-deep .banner-title {
+    font-size: calc(var(--font-base) * 1.4);
+    line-height: 1.25;
   }
 
   .provider-showcase-card {

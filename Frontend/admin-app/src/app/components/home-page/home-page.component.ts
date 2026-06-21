@@ -521,6 +521,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return item.id;
   }
 
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   get hasNoResults(): boolean {
     if (this.isSearchingDeep) return false;
     if (this.lyricsMatches.length > 0) return false;
@@ -566,6 +570,53 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get visibleViralArticles(): ArticleBanner[] {
     return this.viralArticles.slice(0, this.visibleViralCount);
+  }
+
+  getViralRows(): { articles: ArticleBanner[]; gridCols: string }[] {
+    const articles = this.visibleViralArticles;
+    const rows: { articles: ArticleBanner[]; gridCols: string }[] = [];
+    let i = 0;
+
+    if (window.innerWidth <= 640) {
+      let rowType = 0;
+      while (i < articles.length) {
+        const count = rowType % 2 === 0 ? 2 : 1;
+        const end = Math.min(i + count, articles.length);
+        rows.push({ articles: articles.slice(i, end), gridCols: count === 2 ? '1fr 1fr' : '1fr' });
+        i = end;
+        rowType++;
+      }
+    } else {
+      const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
+      const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];
+
+      let twoIdx = 0;
+      let threeIdx = 0;
+      let rowType = 0;
+
+      while (i < articles.length) {
+        const cols = rowType % 2 === 0 ? 2 : 3;
+        const end = Math.min(i + cols, articles.length);
+        const actualCols = end - i;
+
+        let gridCols: string;
+        if (actualCols === 1) {
+          gridCols = '1fr';
+        } else if (actualCols === 2) {
+          gridCols = twoColPatterns[twoIdx % twoColPatterns.length];
+          twoIdx++;
+        } else {
+          gridCols = threeColPatterns[threeIdx % threeColPatterns.length];
+          threeIdx++;
+        }
+
+        rows.push({ articles: articles.slice(i, end), gridCols });
+        i = end;
+        rowType++;
+      }
+    }
+
+    return rows;
   }
 
   get canRevealMoreViralArticles(): boolean {

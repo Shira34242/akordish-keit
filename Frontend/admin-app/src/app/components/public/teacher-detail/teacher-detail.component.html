@@ -10,10 +10,13 @@
   <div class="top-scroll-mask"></div>
 
   <section class="teacher-hero-bg"
-           #teacherHeroBg
-           [style.backgroundImage]="heroBannerSrc ? 'url(' + (heroBannerSrc | cfImage:'hero') + ')' : null">
-    <div class="hero-bg-photo" *ngIf="teacher.profileImageUrl && !heroBannerSrc">
-      <img [src]="teacher.profileImageUrl | cfImage:'hero'" alt="" class="hero-bg-img" aria-hidden="true" />
+           #teacherHeroBg>
+    <div class="hero-bg-photo" *ngIf="heroBannerSrc || teacher.profileImageUrl">
+      <img [src]="(heroBannerSrc || teacher.profileImageUrl) | cfImage:'hero'"
+           alt=""
+           class="hero-bg-img"
+           [class.hero-banner-img]="!!heroBannerSrc"
+           aria-hidden="true" />
     </div>
     <div class="hero-dark-overlay"></div>
     <div class="hero-collapse-overlay"></div>

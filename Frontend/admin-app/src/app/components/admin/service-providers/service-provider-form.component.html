@@ -517,13 +517,13 @@
           </div>
           <div class="form-group">
             <label class="form-label">שעות פתיחה</label>
-            <input
-              type="text"
+            <textarea
               [(ngModel)]="newBranch.openingHours"
               [ngModelOptions]="{standalone: true}"
-              class="form-input"
+              class="form-input form-textarea"
               placeholder="א׳-ה׳ 9:00-19:00, ו׳ 9:00-13:00"
-            />
+              rows="3"
+            ></textarea>
           </div>
           <div class="branch-draft-actions">
           <button type="button" class="btn-secondary" (click)="addBranch()">
@@ -582,6 +582,19 @@
           />
           <span>בעל מקצוע מומלץ (יוצג בראש הדף)</span>
         </label>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [ngModel]="isPublished"
+            (ngModelChange)="setPublished($event)"
+            name="isPublished"
+          />
+          <span>פורסם</span>
+        </label>
+        <small class="form-hint">סימון התיבה יאשר את פרסום נותן השירות באתר.</small>
       </div>
     </div>
 

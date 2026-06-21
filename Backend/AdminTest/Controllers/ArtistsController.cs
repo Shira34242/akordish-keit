@@ -494,8 +494,8 @@ public class ArtistsController : ControllerBase
                         .ToList(),
                     DaysUntilEvent = (e.EventDate.Date - today).Days,
                     EventStatus = e.EventDate.Date == today
-                        ? "׳”׳™׳•׳"
-                        : $"׳¢׳•׳“ {(e.EventDate.Date - today).Days} ׳™׳׳™׳"
+                        ? "היום"
+                        : $"עוד {(e.EventDate.Date - today).Days} ימים"
                 })
                 .ToListAsync();
 

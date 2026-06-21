@@ -143,7 +143,7 @@ public class ArticlesController : ControllerBase
     [HttpGet("home-viral-banners")]
     public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners()
     {
-        const string cacheKey = "home_viral_banners_v1";
+        const string cacheKey = "home_viral_banners_v2";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -688,6 +688,7 @@ public class ArticlesController : ControllerBase
         _cache.Remove("home_news_banners_v1");
         _cache.Remove("home_content_banners_v1");
         _cache.Remove("home_viral_banners_v1");
+        _cache.Remove("home_viral_banners_v2");
         _cache.Set("public_article_cache_version", Guid.NewGuid().ToString("N"));
     }
 

@@ -19,6 +19,7 @@ export class FileUploadInputComponent implements OnDestroy {
   @Input() placeholder: string = 'https://...';
   @Input() showPreview: boolean = true;
   @Input() inputId?: string;
+  @Input() maxLength?: number;
   @Input() fileOnly: boolean = false;
   @Input() uploadButtonText: string = '';
   @Input() uploadIcon: string = 'attach_file';

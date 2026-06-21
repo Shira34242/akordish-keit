@@ -7,6 +7,7 @@
       class="fui-url-input form-input"
       [value]="url || ''"
       (input)="onUrlInput($event)"
+      [attr.maxlength]="maxLength ?? null"
       [placeholder]="placeholder"
     />
     <button

@@ -116,7 +116,7 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let artist of artists" [class.selected]="isSelected(artist.id)" (click)="artist.status !== ArtistStatus.Draft ? viewArtist(artist) : editArtist(artist.id)">
+    <div class="grid-card" *ngFor="let artist of artists" [class.selected]="isSelected(artist.id)" (click)="!isDraftStatus(artist.status) ? viewArtist(artist) : editArtist(artist.id)">
       <label class="grid-card-select" title="בחירת אומן" (click)="$event.stopPropagation()">
         <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
       </label>
@@ -161,7 +161,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let artist of artists" class="selectable-row" [class.selected]="isSelected(artist.id)" (click)="artist.status !== ArtistStatus.Draft ? viewArtist(artist) : editArtist(artist.id)">
+        <tr *ngFor="let artist of artists" class="selectable-row" [class.selected]="isSelected(artist.id)" (click)="!isDraftStatus(artist.status) ? viewArtist(artist) : editArtist(artist.id)">
           <td class="selection-cell" (click)="$event.stopPropagation()">
             <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
           </td>

@@ -15,6 +15,7 @@
               id="businessName"
               formControlName="businessName"
               class="form-control"
+              maxlength="200"
               [class.error]="f['businessName'].invalid && f['businessName'].touched"
               placeholder="הזן שם עסק"
             />
@@ -31,6 +32,7 @@
               id="contactPerson"
               formControlName="contactPerson"
               class="form-control"
+              maxlength="150"
               [class.error]="f['contactPerson'].invalid && f['contactPerson'].touched"
               placeholder="הזן שם איש קשר"
             />
@@ -49,6 +51,7 @@
               id="email"
               formControlName="email"
               class="form-control"
+              maxlength="150"
               [class.error]="f['email'].invalid && f['email'].touched"
               placeholder="example@domain.com"
             />
@@ -65,6 +68,7 @@
               id="phone"
               formControlName="phone"
               class="form-control"
+              maxlength="20"
               [class.error]="f['phone'].invalid && f['phone'].touched"
             />
             <div class="error-message" *ngIf="f['phone'].invalid && f['phone'].touched">
@@ -78,6 +82,7 @@
           <app-file-upload-input
             [url]="clientForm.get('logoUrl')?.value || ''"
             (urlChange)="clientForm.patchValue({logoUrl: $event})"
+            [maxLength]="500"
             placeholder="https://example.com/logo.png"
           />
         </div>

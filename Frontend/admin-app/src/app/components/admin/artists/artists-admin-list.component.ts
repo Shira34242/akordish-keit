@@ -243,8 +243,8 @@ export class ArtistsAdminListComponent implements OnInit {
     this.showEditModal = true;
   }
 
-  getStatusBadgeClass(status: ArtistStatus): string {
-    switch (status) {
+  getStatusBadgeClass(status: ArtistStatus | string | number): string {
+    switch (this.normalizeArtistStatus(status)) {
       case ArtistStatus.Pending: return 'badge-warning';
       case ArtistStatus.Active: return 'badge-success';
       case ArtistStatus.Hidden: return 'badge-danger';
@@ -253,8 +253,8 @@ export class ArtistsAdminListComponent implements OnInit {
     }
   }
 
-  getStatusLabel(status: ArtistStatus): string {
-    switch (status) {
+  getStatusLabel(status: ArtistStatus | string | number): string {
+    switch (this.normalizeArtistStatus(status)) {
       case ArtistStatus.Pending: return 'ממתין לאישור';
       case ArtistStatus.Active: return 'פעיל';
       case ArtistStatus.Hidden: return 'מוסתר';
@@ -360,13 +360,28 @@ export class ArtistsAdminListComponent implements OnInit {
     return '';
   }
 
+  isDraftStatus(status: ArtistStatus | string | number): boolean {
+    return this.isArtistStatus(status, ArtistStatus.Draft);
+  }
+
   private isArtistStatus(status: ArtistStatus | string | number, target: ArtistStatus): boolean {
+    return this.normalizeArtistStatus(status) === target;
+  }
+
+  private normalizeArtistStatus(status: ArtistStatus | string | number): ArtistStatus | null {
     const numericStatus = Number(status);
-    if (Number.isFinite(numericStatus)) return numericStatus === target;
+    if (Number.isFinite(numericStatus)) {
+      return Object.values(ArtistStatus).includes(numericStatus as ArtistStatus)
+        ? numericStatus as ArtistStatus
+        : null;
+    }
 
     const statusText = String(status).toLowerCase();
-    const targetText = ArtistStatus[target]?.toLowerCase();
-    return statusText === targetText;
+    const match = Object.values(ArtistStatus)
+      .filter((value): value is string => typeof value === 'string')
+      .find(value => value.toLowerCase() === statusText);
+
+    return match ? ArtistStatus[match as keyof typeof ArtistStatus] : null;
   }
 
   openBumpModal(): void {

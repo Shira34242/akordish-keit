@@ -117,6 +117,14 @@ export class TeacherFormComponent implements OnInit {
   filteredLanguageOptions = getTeachingLanguageOptions();
   filteredAudienceOptions = getTargetAudienceOptions();
 
+  get isPublished(): boolean {
+    return this.status === ProfileStatus.Active;
+  }
+
+  setPublished(isPublished: boolean): void {
+    this.status = isPublished ? ProfileStatus.Active : ProfileStatus.Pending;
+  }
+
   ngOnInit(): void {
     this.loadInstruments();
     this.loadCities();

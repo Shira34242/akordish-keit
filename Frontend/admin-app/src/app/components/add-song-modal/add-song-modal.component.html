@@ -138,6 +138,7 @@
                                 #titleInput
                                 formControlName="title"
                                 class="smart-search-input"
+                                maxlength="120"
                                 [placeholder]="'song_modal.song_title_input' | translate"
                                 [class.invalid]="songForm.get('title')?.invalid && songForm.get('title')?.touched"
                                 (keydown.enter)="searchYouTubeByTitle(); $event.preventDefault()">
@@ -383,7 +384,7 @@
                 <!-- Title -->
                 <div class="form-group">
                     <label>{{ 'song_modal.song_name_req' | translate }}</label>
-                    <input type="text" formControlName="title" [placeholder]="'song_modal.song_name_placeholder_legacy' | translate"
+                    <input type="text" formControlName="title" maxlength="120" [placeholder]="'song_modal.song_name_placeholder_legacy' | translate"
                         [class.invalid]="songForm.get('title')?.invalid && songForm.get('title')?.touched">
                     <div class="youtube-search-helper" *ngIf="songForm.get('title')?.value?.length >= 2 && !editMode">
                         <span *ngIf="isSearchingYouTube">{{ 'song_modal.yt_searching' | translate }}</span>

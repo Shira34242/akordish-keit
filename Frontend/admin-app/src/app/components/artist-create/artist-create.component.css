@@ -669,6 +669,37 @@
   z-index: 1;
 }
 
+.media-card-order {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  gap: var(--space-xs);
+  z-index: 1;
+}
+
+.media-card-order button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.media-card-order button:hover:not(:disabled) {
+  background: #ddff53;
+}
+
+.media-card-order button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .media-card-preview {
   height: 140px;
   border-radius: 18px;

@@ -367,6 +367,15 @@ export class ArtistEditModalComponent implements OnInit {
 
   removeHit(index: number): void {
     this.editForm.hits.splice(index, 1);
+    this.editForm.hits.forEach((hit, order) => hit.displayOrder = order);
+  }
+
+  moveHit(index: number, direction: -1 | 1): void {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= this.editForm.hits.length) return;
+
+    [this.editForm.hits[index], this.editForm.hits[newIndex]] = [this.editForm.hits[newIndex], this.editForm.hits[index]];
+    this.editForm.hits.forEach((hit, order) => hit.displayOrder = order);
   }
 
   onHitYouTubeUrlChange(index: number): void {

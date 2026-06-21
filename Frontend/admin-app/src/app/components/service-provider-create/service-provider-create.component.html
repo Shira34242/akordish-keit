@@ -158,7 +158,7 @@
                 </select>
                 <input type="text" [(ngModel)]="newBranch.address" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="כתובת הסניף" />
                 <input type="tel" [(ngModel)]="newBranch.phoneNumber" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="טלפון סניף" />
-                <input type="text" [(ngModel)]="newBranch.openingHours" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="שעות פתיחה" />
+                <textarea [(ngModel)]="newBranch.openingHours" [ngModelOptions]="{standalone: true}" class="text-input" placeholder="שעות פתיחה" rows="2"></textarea>
                 <button type="button" class="primary-action" (click)="addBranch()">הוספת סניף</button>
               </div>
               <div class="upload-progress" *ngIf="branchImageUploading">

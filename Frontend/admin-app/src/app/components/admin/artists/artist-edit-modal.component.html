@@ -374,6 +374,18 @@
                 <span class="material-icons">delete</span>
               </button>
             </div>
+
+            <div class="form-group hit-order-group">
+              <label class="form-label">סדר</label>
+              <div class="hit-order-actions">
+                <button type="button" class="btn-order" (click)="moveHit(i, -1)" [disabled]="i === 0" aria-label="העלה למעלה">
+                  <span class="material-icons">keyboard_arrow_up</span>
+                </button>
+                <button type="button" class="btn-order" (click)="moveHit(i, 1)" [disabled]="i === editForm.hits.length - 1" aria-label="הורד למטה">
+                  <span class="material-icons">keyboard_arrow_down</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

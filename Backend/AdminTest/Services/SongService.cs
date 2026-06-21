@@ -1960,9 +1960,9 @@ public class SongService : ISongService
         };
 
         _context.Songs.Add(newSong);
-        await _chordIndexService.SyncSongChordsAsync(newSong.Id, newSong.LyricsWithChords);
-
         await _context.SaveChangesAsync();
+
+        await _chordIndexService.SyncSongChordsAsync(newSong.Id, newSong.LyricsWithChords);
 
         foreach (var sa in original.SongArtists)
         {
