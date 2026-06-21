@@ -32,15 +32,21 @@
   right: 8px;
   border-radius: 28px;
   overflow: hidden;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
   will-change: height;
   /* גובה מוגדר ע"י JS */
+}
+
+.hero-bg {
+  position: absolute;
+  inset: -6px; /* extends slightly to hide blur edge artifacts */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(5px);
 }
 
 /* Spacer שמחזיק את המקום של ה-hero הקבוע */
@@ -64,8 +70,8 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* backdrop-filter removed — caused z-index compositing bug where overlapping content
+     with higher z-index was incorrectly captured in the blur snapshot */
 }
 
 .hero-content {
@@ -187,6 +193,7 @@
 
 .content-with-sidebars {
   position: relative;
+  z-index: 11; /* creates explicit stacking context above article-hero (z-index: 10) */
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--space-lg);
@@ -229,6 +236,9 @@
   border-radius: 24px;
   overflow: hidden;
   padding-bottom: var(--space-2xl);
+  /* force GPU layer so backdrop-filter on hero-overlay doesn't bleed into this element */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .reaction-banner {
@@ -917,7 +927,7 @@
 @media (min-width: 769px) and (max-width: 1023px) {
   .content-with-sidebars {
     padding: 0 var(--space-lg);
-    overflow-x: hidden;
+    /* overflow-x: hidden הוסר — גורם לחיתוך של content-container שמוזז ב-180px- */
   }
 
   .hero-content {
@@ -967,9 +977,6 @@
 
   .content-box {
     border-radius: 16px;
-    /* fix: iOS Safari overflow:hidden + border-radius clipping bug */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
   }
 
   /* --- Video — padding מלא + radius מלא = כרטיס צף מעל התוכן --- */
@@ -1012,7 +1019,7 @@
 
   /* --- Audio --- */
   .audio-section {
-    padding: 0 var(--space-xl) var(--space-base);
+    padding: var(--space-base) var(--space-xl);
   }
 
   /* --- Tagged artists --- */
@@ -1136,15 +1143,6 @@
     max-height: none;
     object-fit: contain;
     background: #000000;
-  }
-
-  .video-wrapper {
-    aspect-ratio: 16 / 9;
-    padding-bottom: 0;
-  }
-
-  .video-wrapper iframe {
-    height: 100%;
   }
 }
 

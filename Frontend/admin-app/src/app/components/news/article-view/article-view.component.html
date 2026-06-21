@@ -3,7 +3,8 @@
   <div class="top-scroll-mask"></div>
 
   <!-- Hero Section with Background Image -->
-  <div class="article-hero" #articleHero [style.backgroundImage]="heroBg(article.featuredImageUrl)">
+  <div class="article-hero" #articleHero>
+    <div class="hero-bg" [style.backgroundImage]="heroBg(article.featuredImageUrl)"></div>
     <div class="hero-collapse-overlay"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
