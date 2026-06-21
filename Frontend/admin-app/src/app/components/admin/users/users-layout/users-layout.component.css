@@ -61,6 +61,160 @@
   display: none;
 }
 
+:host ::ng-deep .layout-content .bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+  padding: var(--space-sm);
+  border-radius: 999px;
+  background: #F2F2F2;
+  flex-wrap: wrap;
+}
+
+:host ::ng-deep .layout-content .bulk-summary,
+:host ::ng-deep .layout-content .bulk-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+:host ::ng-deep .layout-content .bulk-count {
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+:host ::ng-deep .layout-content .bulk-clear {
+  border: none;
+  background: transparent;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+:host ::ng-deep .layout-content .bulk-btn {
+  min-height: 30px;
+  padding: 0 var(--space-base);
+  background: #ffffff;
+}
+
+:host ::ng-deep .layout-content .bulk-select {
+  min-height: 30px;
+  max-width: 220px;
+  padding: 0 var(--space-base);
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: var(--font-xs);
+}
+
+:host ::ng-deep .layout-content .bulk-btn:disabled,
+:host ::ng-deep .layout-content .bulk-clear:disabled,
+:host ::ng-deep .layout-content .bulk-select:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+:host ::ng-deep .layout-content .btn-danger:hover:not(:disabled) {
+  background: #404040;
+  color: #ffffff;
+}
+
+:host ::ng-deep .layout-content .grid-card {
+  position: relative;
+  cursor: pointer;
+}
+
+:host ::ng-deep .layout-content .grid-card.selected {
+  background: #fbffd9 !important;
+}
+
+:host ::ng-deep .layout-content tbody tr.selectable-row {
+  cursor: pointer;
+}
+
+:host ::ng-deep .layout-content tbody tr.selected td {
+  background: #fbffd9 !important;
+}
+
+:host ::ng-deep .layout-content .grid-card-select,
+:host ::ng-deep .layout-content .selection-cell {
+  width: 24px;
+}
+
+:host ::ng-deep .layout-content .grid-card-select {
+  position: absolute;
+  top: var(--space-base);
+  right: var(--space-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"],
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  border: 2px solid #404040;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.75);
+  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"]::before,
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]::before {
+  content: "";
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: opacity 0.15s ease, transform 0.2s ease;
+}
+
+:host ::ng-deep .layout-content .grid-card:hover .grid-card-select input[type="checkbox"],
+:host ::ng-deep .layout-content tbody tr:hover .selection-cell input[type="checkbox"],
+:host ::ng-deep .layout-content thead .selection-cell input[type="checkbox"],
+:host ::ng-deep .layout-content .grid-card-select:focus-within input[type="checkbox"],
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]:focus-visible,
+:host ::ng-deep .layout-content input[type="checkbox"]:checked {
+  opacity: 1;
+  transform: scale(1);
+}
+
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"]:hover,
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]:hover,
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"]:focus-visible,
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]:focus-visible {
+  border-color: #000000;
+  outline: 3px solid #ddff53;
+  outline-offset: 2px;
+}
+
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"]:checked,
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]:checked {
+  border-color: #000000;
+  background: #000000;
+}
+
+:host ::ng-deep .layout-content .grid-card-select input[type="checkbox"]:checked::before,
+:host ::ng-deep .layout-content .selection-cell input[type="checkbox"]:checked::before {
+  opacity: 1;
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

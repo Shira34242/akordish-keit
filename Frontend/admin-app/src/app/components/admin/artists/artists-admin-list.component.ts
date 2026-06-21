@@ -6,8 +6,9 @@ import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { ArtistService } from '../../../services/artist.service';
 import { AgencyService } from '../../../services/agency.service';
+import { UserService } from '../../../services/user.service';
 import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
-import { PagedResult } from '../../../models/user.model';
+import { PagedResult, UserListDto } from '../../../models/user.model';
 import { AgencyListDto, UpsertAgencyProfileDto, AgencyContactMode } from '../../../models/agency.model';
 import { ArtistEditModalComponent } from './artist-edit-modal.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
@@ -73,6 +74,7 @@ export class ArtistsAdminListComponent implements OnInit {
   constructor(
     private artistService: ArtistService,
     private agencyService: AgencyService,
+    private userService: UserService,
     private http: HttpClient,
     private router: Router,
     private layoutActions: AdminUsersLayoutActionsService
@@ -83,11 +85,14 @@ export class ArtistsAdminListComponent implements OnInit {
   selectedIds = new Set<number>();
   bumpModalOpen = false;
   agencies: AgencyListDto[] = [];
+  users: UserListDto[] = [];
   selectedAgencyId: number | null = null;
+  selectedUserId: number | null = null;
 
   ngOnInit(): void {
     this.loadArtists();
     this.loadAgencies();
+    this.loadUsers();
     this.layoutActions.addArtistRequest$.subscribe(() => {
       this.showEditModal = true;
       this.selectedArtistId = null;
@@ -111,6 +116,7 @@ export class ArtistsAdminListComponent implements OnInit {
         this.artists = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.clearSelection();
         this.loading = false;
       },
       error: (err) => {
@@ -283,6 +289,7 @@ export class ArtistsAdminListComponent implements OnInit {
   clearSelection(): void {
     this.selectedIds.clear();
     this.selectedAgencyId = null;
+    this.selectedUserId = null;
   }
 
   toggleArtist(id: number): void {
@@ -305,8 +312,61 @@ export class ArtistsAdminListComponent implements OnInit {
     return this.artists.length > 0 && this.artists.every(a => this.selectedIds.has(a.id));
   }
 
+  get selectedCount(): number {
+    return this.selectedIds.size;
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedIds.size > 0;
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedIds.has(id);
+  }
+
   get selectedIdsArray(): number[] {
     return Array.from(this.selectedIds);
+  }
+
+  get canAssignUser(): boolean {
+    return this.selectedIds.size === 1 && !!this.selectedUserId;
+  }
+
+  get selectedArtists(): ArtistListDto[] {
+    return this.artists.filter(artist => this.selectedIds.has(artist.id));
+  }
+
+  get selectedArtist(): ArtistListDto | null {
+    return this.selectedArtists.length === 1 ? this.selectedArtists[0] : null;
+  }
+
+  get canPublishSelection(): boolean {
+    return !!this.selectedArtist && this.isArtistStatus(this.selectedArtist.status, ArtistStatus.Draft);
+  }
+
+  get canDraftSelection(): boolean {
+    return !!this.selectedArtist && this.isArtistStatus(this.selectedArtist.status, ArtistStatus.Active);
+  }
+
+  get selectedStatusTarget(): ArtistStatus | null {
+    if (this.canPublishSelection) return ArtistStatus.Active;
+    if (this.canDraftSelection) return ArtistStatus.Draft;
+    return null;
+  }
+
+  get selectedStatusActionLabel(): string {
+    if (this.selectedStatusTarget === ArtistStatus.Active) return 'פרסם';
+    if (this.selectedStatusTarget === ArtistStatus.Draft) return 'העבר לטיוטה';
+    return '';
+  }
+
+  private isArtistStatus(status: ArtistStatus | string | number, target: ArtistStatus): boolean {
+    const numericStatus = Number(status);
+    if (Number.isFinite(numericStatus)) return numericStatus === target;
+
+    const statusText = String(status).toLowerCase();
+    const targetText = ArtistStatus[target]?.toLowerCase();
+    return statusText === targetText;
   }
 
   openBumpModal(): void {
@@ -335,6 +395,71 @@ export class ArtistsAdminListComponent implements OnInit {
     });
   }
 
+  async bulkStatusSelected(status: ArtistStatus): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    const label = this.getBulkStatusActionLabel(status);
+    if (!await this.siteAlerts.confirm(`${label} ${ids.length} אומנים?`)) return;
+    forkJoin(ids.map(id => this.artistService.updateArtistStatus(id, status))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadArtists();
+      },
+      error: (err) => {
+        console.error('שגיאה בעדכון סטטוס מרובה:', err);
+        alert('שגיאה בעדכון סטטוס האומנים');
+      }
+    });
+  }
+
+  async bulkToggleSelectedStatus(): Promise<void> {
+    if (this.selectedStatusTarget === null) return;
+    await this.bulkStatusSelected(this.selectedStatusTarget);
+  }
+
+  async bulkFeaturedSelected(isFeatured: boolean): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    const label = isFeatured ? 'להציג בדף הבית' : 'להסיר מדף הבית';
+    if (!await this.siteAlerts.confirm(`${label} ${ids.length} אומנים?`)) return;
+    forkJoin(ids.map(id => this.artistService.updateArtist(id, { isFeatured }))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadArtists();
+      },
+      error: (err) => {
+        console.error('שגיאה בעדכון הצגה בדף הבית:', err);
+        alert('שגיאה בעדכון הצגה בדף הבית');
+      }
+    });
+  }
+
+  private getBulkStatusActionLabel(status: ArtistStatus): string {
+    switch (status) {
+      case ArtistStatus.Active: return 'לפרסם';
+      case ArtistStatus.Draft: return 'להעביר לטיוטה';
+      case ArtistStatus.Pending: return 'להעביר לממתין לאישור';
+      case ArtistStatus.Hidden: return 'להסתיר';
+      default: return 'לעדכן';
+    }
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} אומנים?`)) return;
+    forkJoin(ids.map(id => this.artistService.duplicateArtist(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadArtists();
+      },
+      error: (err) => {
+        console.error('שגיאה בשכפול מרובה:', err);
+        alert('שגיאה בשכפול האומנים');
+      }
+    });
+  }
+
   private loadAgencies(): void {
     this.http.get<{ items: AgencyListDto[] }>(`${environment.apiBaseUrl}/api/Agencies`, { params: { pageSize: '100' } })
       .subscribe({
@@ -343,10 +468,55 @@ export class ArtistsAdminListComponent implements OnInit {
       });
   }
 
+  private loadUsers(): void {
+    this.userService.getUsers(undefined, undefined, undefined, 1, 1000).subscribe({
+      next: (result) => this.users = result.items || [],
+      error: () => this.users = []
+    });
+  }
+
+  onAgencySelectionChange(agencyId: number | null): void {
+    if (!agencyId) return;
+    void this.assignToAgency();
+  }
+
+  onUserSelectionChange(userId: number | null): void {
+    if (!userId || this.selectedCount !== 1) return;
+    void this.assignToUser();
+  }
+
+  async assignToUser(): Promise<void> {
+    if (!this.canAssignUser || !this.selectedUserId) return;
+
+    const [artistId] = this.selectedIdsArray;
+    const targetUser = this.users.find(user => user.id === this.selectedUserId);
+    if (!artistId || !targetUser) {
+      this.selectedUserId = null;
+      return;
+    }
+
+    if (!await this.siteAlerts.confirm(`לשייך את האמן למשתמש "${targetUser.username}"?`)) return;
+
+    this.artistService.linkToUser(artistId, this.selectedUserId).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.selectedUserId = null;
+        this.loadArtists();
+      },
+      error: (err) => {
+        console.error('שגיאה בשיוך אמן למשתמש:', err);
+        alert(err?.error?.message || 'שגיאה בשיוך האמן למשתמש');
+      }
+    });
+  }
+
   async assignToAgency(): Promise<void> {
     if (!this.selectedAgencyId || this.selectedIds.size === 0) return;
     const targetAgency = this.agencies.find(a => a.id === this.selectedAgencyId);
-    if (!targetAgency) return;
+    if (!targetAgency) {
+      this.selectedAgencyId = null;
+      return;
+    }
 
     if (!await this.siteAlerts.confirm(`לשייך ${this.selectedIds.size} אמנים לסוכנות "${targetAgency.name}"?`)) return;
 

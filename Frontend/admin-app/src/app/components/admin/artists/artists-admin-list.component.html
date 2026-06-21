@@ -52,6 +52,57 @@
     </div>
   </div>
 
+  <div class="bulk-actions-bar" *ngIf="!loading && !error && hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">נבחרו {{ selectedCount }} אומנים</span>
+      <button class="bulk-clear" (click)="toggleSelectAll()">סמן הכל</button>
+      <button class="bulk-clear" (click)="clearSelection()">נקה בחירה</button>
+    </div>
+    <div class="bulk-buttons">
+      <select class="bulk-select" [(ngModel)]="selectedAgencyId" (ngModelChange)="onAgencySelectionChange($event)">
+        <option [ngValue]="null">שיוך לסוכנות</option>
+        <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
+      </select>
+      <button class="btn bulk-btn" *ngIf="false" (click)="assignToAgency()" [disabled]="!selectedAgencyId">
+        <span class="material-icons">business</span> שייך
+      </button>
+      <select class="bulk-select" [(ngModel)]="selectedUserId" [disabled]="selectedCount !== 1" (ngModelChange)="onUserSelectionChange($event)">
+        <option [ngValue]="null">שיוך למשתמש</option>
+        <option *ngFor="let user of users" [ngValue]="user.id">{{ user.username }} - {{ user.email }}</option>
+      </select>
+      <button class="btn bulk-btn" *ngIf="false" (click)="assignToUser()" [disabled]="!canAssignUser">
+        <span class="material-icons">person_add</span> שייך משתמש
+      </button>
+      <button class="btn bulk-btn" *ngIf="false">
+        <span class="material-icons">home</span> הצג בבית
+      </button>
+      <button class="btn bulk-btn" *ngIf="false">
+        <span class="material-icons">home_work</span> הסר מהבית
+      </button>
+      <button class="btn bulk-btn" *ngIf="selectedStatusTarget !== null" (click)="bulkToggleSelectedStatus()">
+        <span class="material-icons">{{ selectedStatusTarget === ArtistStatus.Active ? 'publish' : 'edit_note' }}</span> {{ selectedStatusActionLabel }}
+      </button>
+      <button class="btn bulk-btn" *ngIf="false" (click)="bulkStatusSelected(ArtistStatus.Draft)">
+        <span class="material-icons">edit_note</span> טיוטה
+      </button>
+      <button class="btn bulk-btn" *ngIf="false" (click)="bulkStatusSelected(ArtistStatus.Pending)">
+        <span class="material-icons">hourglass_empty</span> ממתין
+      </button>
+      <button class="btn bulk-btn" *ngIf="false" (click)="bulkStatusSelected(ArtistStatus.Hidden)">
+        <span class="material-icons">visibility_off</span> מוסתר
+      </button>
+      <button class="btn bulk-btn" (click)="bulkDuplicateSelected()">
+        <span class="material-icons">content_copy</span> שכפול
+      </button>
+      <button class="btn bulk-btn" *ngIf="false" (click)="openBumpModal()">
+        <span class="material-icons">trending_up</span> הקפצה
+      </button>
+      <button class="btn bulk-btn btn-danger" (click)="bulkDeleteSelected()">
+        <span class="material-icons">delete</span> מחיקה
+      </button>
+    </div>
+  </div>
+
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
@@ -65,9 +116,9 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let artist of artists">
-      <label class="grid-checkbox-label">
-        <input type="checkbox" [checked]="selectedIds.has(artist.id)" (click)="$event.stopPropagation(); toggleArtist(artist.id)">
+    <div class="grid-card" *ngFor="let artist of artists" [class.selected]="isSelected(artist.id)" (click)="artist.status !== ArtistStatus.Draft ? viewArtist(artist) : editArtist(artist.id)">
+      <label class="grid-card-select" title="בחירת אומן" (click)="$event.stopPropagation()">
+        <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
       </label>
       <div class="grid-card-avatar">
         <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.name" imgFallback>
@@ -84,9 +135,7 @@
         <span *ngIf="artist.isPremium" class="badge badge-premium">Premium</span>
       </div>
       <div class="grid-card-actions">
-        <button *ngIf="artist.status !== ArtistStatus.Draft" class="btn-action" (click)="viewArtist(artist)" title="צפייה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" (click)="editArtist(artist.id)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-delete" (click)="deleteArtist(artist.id)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action" (click)="editArtist(artist.id); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
     <div class="no-data" *ngIf="artists.length === 0">לא נמצאו אומנים</div>
@@ -97,7 +146,9 @@
     <table class="artists-table">
       <thead>
         <tr>
-          <th style="width:40px"></th>
+          <th class="selection-cell">
+            <input type="checkbox" [checked]="isAllSelected" (change)="toggleSelectAll()">
+          </th>
           <th>תמונה</th>
           <th>שם</th>
           <th>תיאור קצר</th>
@@ -110,9 +161,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let artist of artists">
-          <td>
-            <input type="checkbox" [checked]="selectedIds.has(artist.id)" (click)="toggleArtist(artist.id)">
+        <tr *ngFor="let artist of artists" class="selectable-row" [class.selected]="isSelected(artist.id)" (click)="artist.status !== ArtistStatus.Draft ? viewArtist(artist) : editArtist(artist.id)">
+          <td class="selection-cell" (click)="$event.stopPropagation()">
+            <input type="checkbox" [checked]="selectedIds.has(artist.id)" (change)="toggleArtist(artist.id)">
           </td>
           <td>
             <img
@@ -151,57 +202,11 @@
           <td class="actions-cell">
             <div class="action-buttons">
               <button
-                *ngIf="artist.status !== ArtistStatus.Draft"
-                class="btn-action btn-view"
-                (click)="viewArtist(artist)"
-                title="צפה בדף אומן"
-              >
-                <span class="material-icons">visibility</span>
-              </button>
-              <button
                 class="btn-action btn-edit"
-                (click)="editArtist(artist.id)"
+                (click)="editArtist(artist.id); $event.stopPropagation()"
                 title="ערוך"
               >
                 <span class="material-icons">edit</span>
-              </button>
-              <button
-                *ngIf="artist.status === ArtistStatus.Pending"
-                class="btn-action btn-approve"
-                (click)="approveArtist(artist.id)"
-                title="אשר והפוך לפעיל"
-              >
-                <span class="material-icons">check_circle</span>
-              </button>
-              <button
-                *ngIf="artist.status === ArtistStatus.Active"
-                class="btn-action btn-hide"
-                (click)="hideArtist(artist.id)"
-                title="הסתר אומן"
-              >
-                <span class="material-icons">visibility_off</span>
-              </button>
-              <button
-                *ngIf="artist.status === ArtistStatus.Hidden"
-                class="btn-action btn-approve"
-                (click)="activateArtist(artist.id)"
-                title="הפעל דף"
-              >
-                <span class="material-icons">visibility</span>
-              </button>
-              <button
-                class="btn-action btn-duplicate"
-                (click)="duplicateArtist(artist.id, artist.name)"
-                title="שכפל"
-              >
-                <span class="material-icons">content_copy</span>
-              </button>
-              <button
-                class="btn-action btn-delete"
-                (click)="deleteArtist(artist.id)"
-                title="מחק"
-              >
-                <span class="material-icons">delete</span>
               </button>
             </div>
           </td>

@@ -106,6 +106,7 @@ export class ServiceProvidersListComponent implements OnInit {
         this.providers = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.clearSelection();
         this.loading = false;
       },
       error: (err) => {
@@ -329,6 +330,18 @@ export class ServiceProvidersListComponent implements OnInit {
     return this.providers.length > 0 && this.providers.every(p => this.selectedIds.has(p.id));
   }
 
+  get selectedCount(): number {
+    return this.selectedIds.size;
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedIds.size > 0;
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedIds.has(id);
+  }
+
   get selectedIdsArray(): number[] {
     return Array.from(this.selectedIds);
   }
@@ -355,6 +368,54 @@ export class ServiceProvidersListComponent implements OnInit {
       error: (err) => {
         console.error('שגיאה במחיקה מרובה:', err);
         alert('שגיאה במחיקת בעלי המקצוע');
+      }
+    });
+  }
+
+  async bulkApproveSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`לאשר ${ids.length} בעלי מקצוע?`)) return;
+    forkJoin(ids.map(id => this.providerService.approveServiceProvider(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadProviders();
+      },
+      error: (err) => {
+        console.error('שגיאה באישור מרובה:', err);
+        alert('שגיאה באישור בעלי המקצוע');
+      }
+    });
+  }
+
+  async bulkRejectSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`להשעות ${ids.length} בעלי מקצוע?`)) return;
+    forkJoin(ids.map(id => this.providerService.rejectServiceProvider(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadProviders();
+      },
+      error: (err) => {
+        console.error('שגיאה בהשעיה מרובה:', err);
+        alert('שגיאה בהשעיית בעלי המקצוע');
+      }
+    });
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} בעלי מקצוע?`)) return;
+    forkJoin(ids.map(id => this.providerService.duplicateServiceProvider(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadProviders();
+      },
+      error: (err) => {
+        console.error('שגיאה בשכפול מרובה:', err);
+        alert('שגיאה בשכפול בעלי המקצוע');
       }
     });
   }

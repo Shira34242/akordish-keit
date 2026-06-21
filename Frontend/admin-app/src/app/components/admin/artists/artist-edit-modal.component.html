@@ -508,10 +508,10 @@
               name="status"
               class="form-select"
             >
-              <option [value]="0">ממתין לאישור</option>
-              <option [value]="1">פעיל</option>
-              <option [value]="2">מוסתר</option>
-              <option [value]="3">טיוטה</option>
+              <option [ngValue]="ArtistStatus.Pending">ממתין לאישור</option>
+              <option [ngValue]="ArtistStatus.Active">פעיל</option>
+              <option [ngValue]="ArtistStatus.Hidden">מוסתר</option>
+              <option [ngValue]="ArtistStatus.Draft">טיוטה</option>
             </select>
           </div>
 
@@ -527,11 +527,6 @@
               <span>הצג כאמן מומלץ בדף הבית</span>
             </div>
             <small class="form-hint">אמנים מסומנים יקבלו קדימות באזור האמנים בדף הבית.</small>
-            <div class="quick-info-bar">
-              <span class="status-badge" [ngClass]="getStatusBadgeClass(editForm.status)">
-                {{ getStatusLabel(editForm.status) }}
-              </span>
-            </div>
           </div>
         </div>
       </div>

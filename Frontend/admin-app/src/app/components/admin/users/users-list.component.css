@@ -128,7 +128,31 @@ select.form-control {
 }
 
 .users-table tbody tr:last-child td { border-bottom: none; }
+.users-table tbody tr {
+  cursor: pointer;
+}
+
 .users-table tbody tr:hover { background: #fafafa; }
+.users-table tbody tr.selected { background: #fbffd9; }
+
+.select-column {
+  width: 36px;
+}
+
+.table-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.table-select input,
+.grid-card-select input {
+  width: 18px;
+  height: 18px;
+  accent-color: #000000;
+  cursor: pointer;
+}
 
 /* Badges */
 .badge {
@@ -279,9 +303,23 @@ select.form-control {
   flex-direction: column;
   gap: var(--space-xs);
   transition: background 0.12s;
+  position: relative;
+  cursor: pointer;
 }
 
 .grid-card:hover { background: #e8e8e8; }
+.grid-card.selected { background: #fbffd9; }
+
+.grid-card-select {
+  position: absolute;
+  top: var(--space-base);
+  right: var(--space-base);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .grid-card-avatar {
   width: 52px;
@@ -383,6 +421,57 @@ select.form-control {
   margin: 0;
   font-size: var(--font-xs);
   color: #404040;
+}
+
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+  padding: var(--space-sm);
+  border-radius: 999px;
+  background: #F2F2F2;
+  flex-wrap: wrap;
+}
+
+.bulk-summary,
+.bulk-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.bulk-count {
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.bulk-clear {
+  border: none;
+  background: transparent;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bulk-btn {
+  min-height: 30px;
+  padding: 0 var(--space-base);
+  background: #ffffff;
+}
+
+.bulk-btn:disabled,
+.bulk-clear:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #404040;
+  color: #ffffff;
 }
 
 /* Responsive */

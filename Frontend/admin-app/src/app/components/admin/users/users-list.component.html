@@ -66,6 +66,33 @@
     </div>
   </div>
 
+  <div class="bulk-actions-bar" *ngIf="!loading && !error && hasSelection">
+    <div class="bulk-summary">
+      <span class="bulk-count">נבחרו {{ selectedCount }} משתמשים</span>
+      <button class="bulk-clear" (click)="selectAllCurrentPage()" [disabled]="bulkActionLoading">סמן הכל</button>
+      <button class="bulk-clear" (click)="clearSelection()" [disabled]="bulkActionLoading">נקה בחירה</button>
+    </div>
+
+    <div class="bulk-buttons">
+      <button class="btn bulk-btn" (click)="bulkUpgradeToAdmin()" [disabled]="bulkActionLoading">
+        <span class="material-icons">admin_panel_settings</span>
+        שדרוג למנהל
+      </button>
+      <button class="btn bulk-btn" (click)="upgradeSelectedToTeacher()" [disabled]="bulkActionLoading || selectedCount !== 1">
+        <span class="material-icons">school</span>
+        טופס מורה
+      </button>
+      <button class="btn bulk-btn" (click)="upgradeSelectedToServiceProvider()" [disabled]="bulkActionLoading || selectedCount !== 1">
+        <span class="material-icons">music_note</span>
+        טופס בעל מקצוע
+      </button>
+      <button class="btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
+        <span class="material-icons">delete</span>
+        מחיקה
+      </button>
+    </div>
+  </div>
+
   <!-- Loading State -->
   <div class="loading-container" *ngIf="loading">
     <div class="spinner"></div>
@@ -79,7 +106,10 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && !error && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let user of users">
+    <div class="grid-card" *ngFor="let user of users" [class.selected]="isSelected(user.id)" (click)="viewUser(user.id)">
+      <label class="grid-card-select" title="בחירת משתמש" (click)="$event.stopPropagation()">
+        <input type="checkbox" [checked]="isSelected(user.id)" (change)="toggleUserSelection(user.id, $event)">
+      </label>
       <div class="grid-card-avatar">
         <img *ngIf="user.profileImageUrl" [src]="user.profileImageUrl" [alt]="user.username">
         <span *ngIf="!user.profileImageUrl">{{ user.username.charAt(0) }}</span>
@@ -94,10 +124,7 @@
         </span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="viewUser(user.id)" title="צפייה"><span class="material-icons">visibility</span></button>
-        <button class="btn-action" (click)="editUser(user)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-admin" (click)="upgradeToAdmin(user)" title="שדרג למנהל מערכת" [disabled]="user.role === UserRole.Admin"><span class="material-icons">admin_panel_settings</span></button>
-        <button class="btn-action btn-delete" (click)="deleteUser(user.id)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action" (click)="editUser(user); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
     <div class="no-data" *ngIf="users.length === 0">לא נמצאו משתמשים</div>
@@ -108,6 +135,11 @@
     <table class="users-table" *ngIf="users.length > 0">
       <thead>
         <tr>
+          <th class="selection-cell">
+            <label class="table-select" title="בחירת כל המשתמשים בדף">
+              <input type="checkbox" [checked]="allCurrentPageSelected" (change)="toggleSelectCurrentPage($event)">
+            </label>
+          </th>
           <th>שם משתמש</th>
           <th>אימייל</th>
           <th>טלפון</th>
@@ -119,7 +151,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of users">
+        <tr *ngFor="let user of users" [class.selected]="isSelected(user.id)" (click)="viewUser(user.id)">
+          <td class="selection-cell" (click)="$event.stopPropagation()">
+            <label class="table-select" title="בחירת משתמש">
+              <input type="checkbox" [checked]="isSelected(user.id)" (change)="toggleUserSelection(user.id, $event)">
+            </label>
+          </td>
           <td>{{ user.username }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.phone || '-' }}</td>
@@ -147,47 +184,11 @@
           <td class="actions-cell">
             <div class="action-buttons">
               <button
-                class="btn-action btn-view"
-                (click)="viewUser(user.id)"
-                title="צפייה"
-              >
-                <span class="material-icons">visibility</span>
-              </button>
-              <button
                 class="btn-action btn-edit"
-                (click)="editUser(user)"
+                (click)="editUser(user); $event.stopPropagation()"
                 title="עריכה"
               >
                 <span class="material-icons">edit</span>
-              </button>
-              <button
-                class="btn-action btn-admin"
-                (click)="upgradeToAdmin(user)"
-                [disabled]="user.role === UserRole.Admin"
-                title="שדרג למנהל מערכת"
-              >
-                <span class="material-icons">admin_panel_settings</span>
-              </button>
-              <button
-                class="btn-action btn-upgrade"
-                (click)="upgradeToTeacher(user.id)"
-                title="שדרג למורה"
-              >
-                <span class="material-icons">school</span>
-              </button>
-              <button
-                class="btn-action btn-upgrade-service"
-                (click)="upgradeToServiceProvider(user.id)"
-                title="שדרג לבעל מקצוע"
-              >
-                <span class="material-icons">music_note</span>
-              </button>
-              <button
-                class="btn-action btn-delete"
-                (click)="deleteUser(user.id)"
-                title="מחיקה"
-              >
-                <span class="material-icons">delete</span>
               </button>
             </div>
           </td>

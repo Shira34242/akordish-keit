@@ -282,6 +282,13 @@ export class ArtistService {
         return this.http.post<Artist>(`${this.apiUrl}/${id}/duplicate`, {});
     }
 
+    /**
+     * Link artist profile to a user (Admin only)
+     */
+    linkToUser(artistId: number, userId: number): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/${artistId}/link-user/${userId}`, {});
+    }
+
     private clearFeaturedArtistsCache(): void {
         this.featuredArtistsCache$ = undefined;
     }

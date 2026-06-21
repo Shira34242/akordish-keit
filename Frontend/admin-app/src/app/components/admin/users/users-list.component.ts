@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { AdminUpdateUserDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
@@ -30,6 +31,8 @@ export class UsersListComponent implements OnInit {
   editingUser: UserListDto | null = null;
   savingUser = false;
   editUserError: string | null = null;
+  selectedUserIds = new Set<number>();
+  bulkActionLoading = false;
   userEditForm: AdminUpdateUserDto = {
     username: '',
     email: '',
@@ -98,6 +101,7 @@ export class UsersListComponent implements OnInit {
         this.users = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.clearSelection();
         this.loading = false;
       },
       error: (err: any) => {
@@ -136,6 +140,60 @@ export class UsersListComponent implements OnInit {
 
   viewUser(id: number): void {
     this.router.navigate(['/admin/users/view', id]);
+  }
+
+  get selectedCount(): number {
+    return this.selectedUserIds.size;
+  }
+
+  get selectedUserIdsArray(): number[] {
+    return Array.from(this.selectedUserIds);
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedUserIds.size > 0;
+  }
+
+  get allCurrentPageSelected(): boolean {
+    return this.users.length > 0 && this.users.every(user => this.selectedUserIds.has(user.id));
+  }
+
+  isSelected(userId: number): boolean {
+    return this.selectedUserIds.has(userId);
+  }
+
+  toggleUserSelection(userId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.bulkActionLoading) return;
+
+    if (this.selectedUserIds.has(userId)) {
+      this.selectedUserIds.delete(userId);
+      return;
+    }
+
+    this.selectedUserIds.add(userId);
+  }
+
+  toggleSelectCurrentPage(event?: Event): void {
+    event?.stopPropagation();
+    if (this.bulkActionLoading) return;
+
+    if (this.allCurrentPageSelected) {
+      this.users.forEach(user => this.selectedUserIds.delete(user.id));
+      return;
+    }
+
+    this.selectAllCurrentPage();
+  }
+
+  selectAllCurrentPage(): void {
+    if (this.bulkActionLoading) return;
+    this.users.forEach(user => this.selectedUserIds.add(user.id));
+  }
+
+  clearSelection(): void {
+    if (this.bulkActionLoading) return;
+    this.selectedUserIds.clear();
   }
 
   editUser(user: UserListDto): void {
@@ -199,6 +257,68 @@ export class UsersListComponent implements OnInit {
       });
     }
   }
+  async bulkUpgradeToAdmin(): Promise<void> {
+    const selectedUsers = this.getSelectedUsers();
+    const usersToUpgrade = selectedUsers.filter(user => user.role !== UserRole.Admin);
+
+    if (usersToUpgrade.length === 0) {
+      this.siteAlerts.show('כל המשתמשים שנבחרו כבר מנהלי מערכת');
+      return;
+    }
+
+    if (!await this.siteAlerts.confirm(`לשדרג ${usersToUpgrade.length} משתמשים למנהלי מערכת?`)) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    forkJoin(usersToUpgrade.map(user => this.userService.updateUser(user.id, {
+      username: user.username,
+      email: user.email,
+      phone: user.phone || '',
+      role: UserRole.Admin,
+      isActive: user.isActive
+    }))).subscribe({
+      next: (updatedUsers) => {
+        this.users = this.users.map(user => updatedUsers.find(updated => updated.id === user.id) || user);
+        this.bulkActionLoading = false;
+        this.clearSelection();
+      },
+      error: (err: any) => {
+        console.error('שגיאה בשדרוג משתמשים למנהל:', err);
+        this.bulkActionLoading = false;
+        this.siteAlerts.show('לא הצלחנו לשדרג את המשתמשים שנבחרו');
+      }
+    });
+  }
+
+  async bulkDeleteSelected(): Promise<void> {
+    const ids = this.selectedUserIdsArray;
+    if (ids.length === 0) return;
+
+    if (!await this.siteAlerts.confirm(`למחוק ${ids.length} משתמשים? פעולה זו אינה הפיכה.`)) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    forkJoin(ids.map(id => this.userService.deleteUser(id))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.siteAlerts.show('המשתמשים שנבחרו נמחקו בהצלחה');
+        this.clearSelection();
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        console.error('שגיאה במחיקת משתמשים:', err);
+        this.bulkActionLoading = false;
+        this.siteAlerts.show('שגיאה במחיקת המשתמשים שנבחרו');
+      }
+    });
+  }
+
+  private getSelectedUsers(): UserListDto[] {
+    return this.users.filter(user => this.selectedUserIds.has(user.id));
+  }
+
   private buildUserUpdatePayload(): AdminUpdateUserDto {
     return { ...this.userEditForm };
   }
@@ -226,6 +346,18 @@ export class UsersListComponent implements OnInit {
   upgradeToServiceProvider(userId: number): void {
     this.selectedProfileUserId = userId;
     this.showProviderFormModal = true;
+  }
+
+  upgradeSelectedToTeacher(): void {
+    const [userId] = this.selectedUserIdsArray;
+    if (!userId || this.selectedCount !== 1) return;
+    this.upgradeToTeacher(userId);
+  }
+
+  upgradeSelectedToServiceProvider(): void {
+    const [userId] = this.selectedUserIdsArray;
+    if (!userId || this.selectedCount !== 1) return;
+    this.upgradeToServiceProvider(userId);
   }
 
   closeProfileFormModal(): void {
