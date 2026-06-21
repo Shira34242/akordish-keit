@@ -55,8 +55,8 @@
 }
 
 .hero-banner-img {
-  filter: brightness(0.72);
-  transform: none;
+  filter: blur(24px) brightness(0.72);
+  transform: scale(1.14);
 }
 
 .hero-dark-overlay {
@@ -329,12 +329,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
   text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+  background: #ffffff;
+  color: #000000;
 }
 
 .hero-social-btn:hover {
@@ -553,6 +555,7 @@
   color: #000000;
   text-decoration: none;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .branch-detail .material-icons {
@@ -972,13 +975,13 @@
   }
 
   .hero-social-btn {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
   }
 
   .hero-social-btn svg {
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
   }
 }
 

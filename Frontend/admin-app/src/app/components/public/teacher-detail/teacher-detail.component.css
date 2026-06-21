@@ -54,6 +54,11 @@
   transform: scale(1.14);
 }
 
+.hero-banner-img {
+  filter: blur(24px) brightness(0.72);
+  transform: scale(1.14);
+}
+
 .hero-dark-overlay {
   background: linear-gradient(to left, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.52) 44%, rgba(0, 0, 0, 0.18) 100%);
   pointer-events: none;
@@ -299,21 +304,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
   text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+  background: #ffffff;
+  color: #000000;
 }
 
 .hero-social-btn:hover {
   background: #ddff53;
   color: #000000;
-}
-
-.hero-social-btn .material-icons {
-  font-size: 18px;
 }
 
 .hero-social-btn svg {
@@ -818,13 +821,13 @@
   }
 
   .hero-social-btn {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
   }
 
   .hero-social-btn svg {
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
   }
 
 }
@@ -944,13 +947,13 @@
   }
 
   .hero-social-btn {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 
   .hero-social-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 17px;
+    height: 17px;
   }
 
 }
