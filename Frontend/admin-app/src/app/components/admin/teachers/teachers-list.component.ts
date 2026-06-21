@@ -93,6 +93,7 @@ export class TeachersListComponent implements OnInit {
         this.teachers = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.clearSelection();
         this.loading = false;
       },
       error: (err) => {
@@ -332,6 +333,18 @@ export class TeachersListComponent implements OnInit {
     return this.teachers.length > 0 && this.teachers.every(t => this.selectedIds.has(t.id));
   }
 
+  get selectedCount(): number {
+    return this.selectedIds.size;
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedIds.size > 0;
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedIds.has(id);
+  }
+
   get selectedIdsArray(): number[] {
     return Array.from(this.selectedIds);
   }
@@ -358,6 +371,54 @@ export class TeachersListComponent implements OnInit {
       error: (err) => {
         console.error('שגיאה במחיקה מרובה:', err);
         alert('שגיאה במחיקת המורים');
+      }
+    });
+  }
+
+  async bulkApproveSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`לאשר ${ids.length} מורים?`)) return;
+    forkJoin(ids.map(id => this.teacherService.approveTeacher(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadTeachers();
+      },
+      error: (err) => {
+        console.error('שגיאה באישור מרובה:', err);
+        alert('שגיאה באישור המורים');
+      }
+    });
+  }
+
+  async bulkRejectSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`להשעות ${ids.length} מורים?`)) return;
+    forkJoin(ids.map(id => this.teacherService.rejectTeacher(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadTeachers();
+      },
+      error: (err) => {
+        console.error('שגיאה בהשעיה מרובה:', err);
+        alert('שגיאה בהשעיית המורים');
+      }
+    });
+  }
+
+  async bulkDuplicateSelected(): Promise<void> {
+    const ids = this.selectedIdsArray;
+    if (ids.length === 0) return;
+    if (!await this.siteAlerts.confirm(`לשכפל ${ids.length} מורים?`)) return;
+    forkJoin(ids.map(id => this.teacherService.duplicateTeacher(id))).subscribe({
+      next: () => {
+        this.selectedIds.clear();
+        this.loadTeachers();
+      },
+      error: (err) => {
+        console.error('שגיאה בשכפול מרובה:', err);
+        alert('שגיאה בשכפול המורים');
       }
     });
   }

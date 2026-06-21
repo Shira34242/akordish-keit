@@ -226,8 +226,13 @@ public class ArtistsController : ControllerBase
                 .Where(aa => aa.ArtistId == id && !aa.Article.IsDeleted)
                 .CountAsync();
 
+            var today = DateTime.UtcNow.Date;
+
             var upcomingEventCount = await _context.EventArtists
-                .Where(ea => ea.ArtistId == id && ea.Event.EventDate >= DateTime.UtcNow && !ea.Event.IsDeleted)
+                .Where(ea => ea.ArtistId == id &&
+                             ea.Event.EventDate.Date >= today &&
+                             !ea.Event.IsDeleted &&
+                             ea.Event.IsActive)
                 .CountAsync();
 
             var result = new ArtistDetailDto
@@ -466,9 +471,11 @@ public class ArtistsController : ControllerBase
     {
         try
         {
+            var today = DateTime.UtcNow.Date;
+
             var events = await _context.EventArtists
                 .Where(ea => ea.ArtistId == id &&
-                             ea.Event.EventDate >= DateTime.UtcNow &&
+                             ea.Event.EventDate.Date >= today &&
                              !ea.Event.IsDeleted &&
                              ea.Event.IsActive)
                 .Select(ea => ea.Event)
@@ -480,7 +487,15 @@ public class ArtistsController : ControllerBase
                     ImageUrl = e.ImageUrl,
                     TicketUrl = e.TicketUrl,
                     EventDate = e.EventDate,
-                    Location = e.Location
+                    Location = e.Location,
+                    ArtistName = e.ArtistName,
+                    TaggedArtistNames = e.EventArtists
+                        .Select(eventArtist => eventArtist.Artist.Name)
+                        .ToList(),
+                    DaysUntilEvent = (e.EventDate.Date - today).Days,
+                    EventStatus = e.EventDate.Date == today
+                        ? "׳”׳™׳•׳"
+                        : $"׳¢׳•׳“ {(e.EventDate.Date - today).Days} ׳™׳׳™׳"
                 })
                 .ToListAsync();
 
@@ -1842,6 +1857,47 @@ public class ArtistsController : ControllerBase
             return StatusCode(500, $"שגיאה בעדכון סטטוס: {ex.Message}");
         }
     }
+
+    // POST: api/Artists/5/link-user/10
+    [HttpPost("{id}/link-user/{userId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> LinkToUser(int id, int userId)
+    {
+        try
+        {
+            var artist = await _context.Artists
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (artist == null)
+                return NotFound(new { message = "האמן לא נמצא" });
+
+            if (false && artist.UserId.HasValue)
+                return BadRequest(new { message = "האמן כבר מקושר למשתמש" });
+
+            var userExists = await _context.Users
+                .AnyAsync(u => u.Id == userId && !u.IsDeleted);
+
+            if (!userExists)
+                return BadRequest(new { message = "המשתמש לא נמצא" });
+
+            var userHasArtist = await _context.Artists
+                .AnyAsync(a => a.Id != id && a.UserId == userId && !a.IsDeleted);
+
+            if (userHasArtist)
+                return BadRequest(new { message = "למשתמש כבר יש פרופיל אמן" });
+
+            artist.UserId = userId;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Artist linked to user: ArtistId={ArtistId} UserId={UserId}", id, userId);
+            return Ok(new { message = "האמן קושר למשתמש בהצלחה" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error linking artist to user: ArtistId={ArtistId} UserId={UserId}", id, userId);
+            return StatusCode(500, new { message = "שגיאה בשיוך האמן למשתמש" });
+        }
+    }
 }
 
 public class ArtistWithCountDto : ArtistBasicDto
@@ -1865,4 +1921,8 @@ public class ArtistEventItemDto
     public string TicketUrl { get; set; } = string.Empty;
     public DateTime EventDate { get; set; }
     public string? Location { get; set; }
+    public string? ArtistName { get; set; }
+    public List<string> TaggedArtistNames { get; set; } = new();
+    public int DaysUntilEvent { get; set; }
+    public string EventStatus { get; set; } = string.Empty;
 }

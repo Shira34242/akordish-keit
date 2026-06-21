@@ -21,10 +21,11 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class SessionTimeoutService {
-  private readonly IDLE_TIME = 30 * 60 * 1000;
+  private readonly ADMIN_IDLE_TIME = 48 * 60 * 60 * 1000;
 
   private idleTimer: any;
   private destroy$ = new Subject<void>();
+  private isWatching = false;
 
   constructor(
     private authService: AuthService,
@@ -36,16 +37,14 @@ export class SessionTimeoutService {
    * מתחיל לעקוב אחרי פעילות המשתמש
    */
   startWatching() {
-    let listenersActive = false;
     this.authService.currentUser$.subscribe(user => {
-      if (user) {
+      if (this.authService.isAdminOrManager(user)) {
         this.setupIdleTimer();
-        if (!listenersActive) {
-          listenersActive = true;
+        if (!this.isWatching) {
+          this.isWatching = true;
           this.setupActivityListeners();
         }
       } else {
-        listenersActive = false;
         this.stopWatching();
       }
     });
@@ -57,6 +56,7 @@ export class SessionTimeoutService {
   stopWatching() {
     this.clearTimers();
     this.destroy$.next();
+    this.isWatching = false;
   }
 
   /**
@@ -77,7 +77,7 @@ export class SessionTimeoutService {
         this.ngZone.run(() => {
           this.logout();
         });
-      }, this.IDLE_TIME);
+      }, this.ADMIN_IDLE_TIME);
     });
   }
 

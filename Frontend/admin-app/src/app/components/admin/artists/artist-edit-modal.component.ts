@@ -208,7 +208,7 @@ export class ArtistEditModalComponent implements OnInit {
           bannerUrl: bannerUrl,
           bannerBlur: this.normalizedBannerBlur(artist.bannerBlur),
           websiteUrl: artist.websiteUrl || '',
-          status: artist.status,
+          status: Number(artist.status),
           isPremium: artist.isPremium,
           isFeatured: artist.isFeatured || false,
           socialLinks: artist.socialLinks?.filter(l => !this.isMusicPlatform(l.platform)).map(link => ({
