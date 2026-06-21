@@ -102,6 +102,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAgencyService, AgencyService>();
 builder.Services.AddScoped<IPodcastService, PodcastService>();
+builder.Services.AddScoped<IArtistSuggestionService, ArtistSuggestionService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
@@ -282,6 +283,19 @@ using (var scope = app.Services.CreateScope())
            AND COL_LENGTH(N'[PodcastEpisodes]', N'ViewCount') IS NULL
             ALTER TABLE [PodcastEpisodes] ADD [ViewCount] int NOT NULL CONSTRAINT [DF_PodcastEpisodes_ViewCount] DEFAULT 0;
 
+        IF OBJECT_ID(N'[PodcastEpisodeArtists]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [PodcastEpisodeArtists] (
+                [Id] int NOT NULL IDENTITY,
+                [PodcastEpisodeId] int NOT NULL,
+                [ArtistId] int NOT NULL,
+                [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_PodcastEpisodeArtists_CreatedAt] DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_PodcastEpisodeArtists] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_PodcastEpisodeArtists_PodcastEpisodes_PodcastEpisodeId] FOREIGN KEY ([PodcastEpisodeId]) REFERENCES [PodcastEpisodes] ([Id]) ON DELETE CASCADE,
+                CONSTRAINT [FK_PodcastEpisodeArtists_Artists_ArtistId] FOREIGN KEY ([ArtistId]) REFERENCES [Artists] ([Id]) ON DELETE CASCADE
+            );
+        END
+
         IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Podcasts_Slug' AND object_id = OBJECT_ID(N'[Podcasts]'))
             CREATE UNIQUE INDEX [IX_Podcasts_Slug] ON [Podcasts] ([Slug]) WHERE [IsDeleted] = 0;
@@ -301,6 +315,14 @@ using (var scope = app.Services.CreateScope())
         IF OBJECT_ID(N'[PodcastEpisodes]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodes_Public_Popular' AND object_id = OBJECT_ID(N'[PodcastEpisodes]'))
             CREATE INDEX [IX_PodcastEpisodes_Public_Popular] ON [PodcastEpisodes] ([IsDeleted], [IsActive], [ViewCount] DESC);
+
+        IF OBJECT_ID(N'[PodcastEpisodeArtists]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeArtists_EpisodeId_ArtistId' AND object_id = OBJECT_ID(N'[PodcastEpisodeArtists]'))
+            CREATE UNIQUE INDEX [IX_PodcastEpisodeArtists_EpisodeId_ArtistId] ON [PodcastEpisodeArtists] ([PodcastEpisodeId], [ArtistId]);
+
+        IF OBJECT_ID(N'[PodcastEpisodeArtists]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeArtists_ArtistId' AND object_id = OBJECT_ID(N'[PodcastEpisodeArtists]'))
+            CREATE INDEX [IX_PodcastEpisodeArtists_ArtistId] ON [PodcastEpisodeArtists] ([ArtistId]);
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"

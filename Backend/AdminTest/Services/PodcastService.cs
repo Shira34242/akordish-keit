@@ -110,7 +110,15 @@ namespace AkordishKeit.Services
                             DisplayOrder = e.DisplayOrder,
                             IsActive = e.IsActive,
                             CreatedAt = e.CreatedAt,
-                            UpdatedAt = e.UpdatedAt
+                            UpdatedAt = e.UpdatedAt,
+                            TaggedArtists = e.PodcastEpisodeArtists
+                                .Select(pa => new PodcastEpisodeArtistDto
+                                {
+                                    ArtistId = pa.ArtistId,
+                                    ArtistName = pa.Artist.Name,
+                                    ArtistImageUrl = pa.Artist.ImageUrl
+                                })
+                                .ToList()
                         })
                         .FirstOrDefault()
                 })
@@ -164,6 +172,8 @@ namespace AkordishKeit.Services
         {
             var podcast = await _context.Podcasts
                 .Include(p => p.Episodes.Where(e => !e.IsDeleted))
+                    .ThenInclude(e => e.PodcastEpisodeArtists)
+                        .ThenInclude(pa => pa.Artist)
                 .FirstOrDefaultAsync(p => p.Slug == slug && !p.IsDeleted && (includeInactive || p.IsActive));
 
             if (podcast == null) return null;
@@ -273,6 +283,8 @@ namespace AkordishKeit.Services
         {
             var query = _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
+                    .ThenInclude(pa => pa.Artist)
                 .Where(e => !e.IsDeleted && !e.Podcast.IsDeleted)
                 .AsQueryable();
 
@@ -319,6 +331,8 @@ namespace AkordishKeit.Services
 
             var query = _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
+                    .ThenInclude(pa => pa.Artist)
                 .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
                 .AsQueryable();
 
@@ -347,6 +361,8 @@ namespace AkordishKeit.Services
         {
             var episodes = await _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
+                    .ThenInclude(pa => pa.Artist)
                 .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
                 .OrderByDescending(e => e.PublishedAt)
                 .ThenByDescending(e => e.Id)
@@ -362,6 +378,8 @@ namespace AkordishKeit.Services
 
             var query = _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
+                    .ThenInclude(pa => pa.Artist)
                 .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
                 .AsQueryable();
 
@@ -381,6 +399,8 @@ namespace AkordishKeit.Services
         {
             var podcast = await _context.Podcasts
                 .Include(p => p.Episodes.Where(e => !e.IsDeleted))
+                    .ThenInclude(e => e.PodcastEpisodeArtists)
+                        .ThenInclude(pa => pa.Artist)
                 .FirstOrDefaultAsync(p => p.Slug == podcastSlug && !p.IsDeleted && (includeInactive || p.IsActive));
 
             if (podcast == null) return null;
@@ -423,6 +443,7 @@ namespace AkordishKeit.Services
                 IsActive = episode.IsActive,
                 CreatedAt = episode.CreatedAt,
                 UpdatedAt = episode.UpdatedAt,
+                TaggedArtists = MapEpisodeArtists(episode),
                 PreviousEpisode = index > 0 ? MapEpisode(orderedEpisodes[index - 1], podcast) : null,
                 NextEpisode = index >= 0 && index < orderedEpisodes.Count - 1 ? MapEpisode(orderedEpisodes[index + 1], podcast) : null,
                 SeriesEpisodes = orderedEpisodes.Select(e => MapEpisode(e, podcast)).ToList()
@@ -435,6 +456,8 @@ namespace AkordishKeit.Services
         {
             var episode = await _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
+                    .ThenInclude(pa => pa.Artist)
                 .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted && !e.Podcast.IsDeleted);
 
             return episode == null ? null : MapEpisode(episode, episode.Podcast);
@@ -447,6 +470,8 @@ namespace AkordishKeit.Services
             {
                 throw new InvalidOperationException("הפודקאסט לא נמצא");
             }
+            await EnsureValidPodcastEpisodeArtistsAsync(dto.ArtistIds);
+
             var sourceUrl = dto.SourceUrl.Trim();
             var thumbnailUrl = await ResolveEpisodeThumbnailAsync(sourceUrl, dto.ThumbnailUrl);
             var episode = new PodcastEpisode
@@ -469,16 +494,22 @@ namespace AkordishKeit.Services
             _context.PodcastEpisodes.Add(episode);
             await _context.SaveChangesAsync();
 
-            return MapEpisode(episode, podcast);
+            AddPodcastEpisodeArtists(episode.Id, dto.ArtistIds);
+            await _context.SaveChangesAsync();
+
+            return await GetEpisodeByIdAsync(episode.Id) ?? MapEpisode(episode, podcast);
         }
 
         public async Task<PodcastEpisodeDto?> UpdateEpisodeAsync(int id, UpdatePodcastEpisodeDto dto)
         {
             var episode = await _context.PodcastEpisodes
                 .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists)
                 .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
 
             if (episode == null) return null;
+
+            await EnsureValidPodcastEpisodeArtistsAsync(dto.ArtistIds);
 
             var podcast = await _context.Podcasts.FirstOrDefaultAsync(p => p.Id == dto.PodcastId && !p.IsDeleted);
             if (podcast == null)
@@ -501,9 +532,11 @@ namespace AkordishKeit.Services
             episode.DisplayOrder = dto.DisplayOrder;
             episode.IsActive = dto.IsActive;
             episode.UpdatedAt = DateTime.UtcNow;
+            ReplacePodcastEpisodeArtists(episode, dto.ArtistIds);
 
             await _context.SaveChangesAsync();
             await _context.Entry(episode).Reference(e => e.Podcast).LoadAsync();
+            await _context.Entry(episode).Collection(e => e.PodcastEpisodeArtists).Query().Include(pa => pa.Artist).LoadAsync();
 
             return MapEpisode(episode, episode.Podcast);
         }
@@ -558,8 +591,76 @@ namespace AkordishKeit.Services
             DisplayOrder = episode.DisplayOrder,
             IsActive = episode.IsActive,
             CreatedAt = episode.CreatedAt,
-            UpdatedAt = episode.UpdatedAt
+            UpdatedAt = episode.UpdatedAt,
+            TaggedArtists = MapEpisodeArtists(episode)
         };
+
+        private static List<PodcastEpisodeArtistDto> MapEpisodeArtists(PodcastEpisode episode)
+        {
+            return episode.PodcastEpisodeArtists?
+                .Where(pa => pa.Artist != null)
+                .Select(pa => new PodcastEpisodeArtistDto
+                {
+                    ArtistId = pa.ArtistId,
+                    ArtistName = pa.Artist.Name,
+                    ArtistImageUrl = pa.Artist.ImageUrl
+                })
+                .OrderBy(a => a.ArtistName)
+                .ToList() ?? new List<PodcastEpisodeArtistDto>();
+        }
+
+        private async Task EnsureValidPodcastEpisodeArtistsAsync(IEnumerable<int>? artistIds)
+        {
+            var requestedIds = artistIds?.Where(id => id > 0).Distinct().ToList() ?? new List<int>();
+            if (!requestedIds.Any()) return;
+
+            var validCount = await _context.Artists
+                .CountAsync(a => requestedIds.Contains(a.Id) && !a.IsDeleted);
+
+            if (validCount != requestedIds.Count)
+            {
+                throw new InvalidOperationException("אחד האמנים שנבחרו אינו קיים");
+            }
+        }
+
+        private void AddPodcastEpisodeArtists(int episodeId, IEnumerable<int>? artistIds)
+        {
+            foreach (var artistId in artistIds?.Where(id => id > 0).Distinct() ?? Enumerable.Empty<int>())
+            {
+                _context.PodcastEpisodeArtists.Add(new PodcastEpisodeArtist
+                {
+                    PodcastEpisodeId = episodeId,
+                    ArtistId = artistId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        private void ReplacePodcastEpisodeArtists(PodcastEpisode episode, IEnumerable<int>? artistIds)
+        {
+            var requestedIds = artistIds?.Where(id => id > 0).Distinct().ToList() ?? new List<int>();
+            var existingLinks = episode.PodcastEpisodeArtists.ToList();
+
+            var linksToRemove = existingLinks
+                .Where(link => !requestedIds.Contains(link.ArtistId))
+                .ToList();
+            _context.PodcastEpisodeArtists.RemoveRange(linksToRemove);
+
+            var existingIds = existingLinks
+                .Where(link => requestedIds.Contains(link.ArtistId))
+                .Select(link => link.ArtistId)
+                .ToHashSet();
+
+            foreach (var artistId in requestedIds.Where(id => !existingIds.Contains(id)))
+            {
+                _context.PodcastEpisodeArtists.Add(new PodcastEpisodeArtist
+                {
+                    PodcastEpisodeId = episode.Id,
+                    ArtistId = artistId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
 
         private async Task<AgencyContentBannerDto?> GetAgencyBannerForPodcastAsync(int podcastId)
         {

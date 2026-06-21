@@ -79,6 +79,10 @@
             <span class="stat-num">{{ artist.upcomingEventCount }}</span>
             <span class="stat-lbl">הופעות</span>
           </div>
+          <div class="hero-stat" *ngIf="artist.podcastEpisodeCount && artist.podcastEpisodeCount > 0">
+            <span class="stat-num">{{ artist.podcastEpisodeCount }}</span>
+            <span class="stat-lbl">פודקאסטים</span>
+          </div>
         </div>
         <a *ngIf="artist.websiteUrl"
            [href]="artist.websiteUrl"
@@ -252,6 +256,28 @@
           [event]="event"
           (cardClick)="openEventModal(event)">
         </app-event-card>
+      </div>
+    </div>
+
+    <div class="podcast-episodes-section" *ngIf="podcastEpisodes.length > 0 || loadingPodcastEpisodes">
+      <div class="section-header">
+        <h2 class="section-title">פרקי פודקאסט</h2>
+      </div>
+      <div class="loading-small" *ngIf="loadingPodcastEpisodes">טוען פרקים...</div>
+      <div class="podcast-episodes-grid" *ngIf="!loadingPodcastEpisodes && podcastEpisodes.length > 0">
+        <a
+          *ngFor="let episode of podcastEpisodes"
+          class="podcast-episode-card"
+          [routerLink]="getPodcastEpisodeLink(episode)">
+          <div class="podcast-episode-thumb">
+            <img *ngIf="episode.thumbnailUrl" [src]="episode.thumbnailUrl" [alt]="episode.title" loading="lazy" decoding="async" imgFallback="/logo.png">
+            <span *ngIf="!episode.thumbnailUrl" class="material-icons">podcasts</span>
+          </div>
+          <div class="podcast-episode-info">
+            <span class="podcast-episode-kicker">{{ episode.podcastName }}</span>
+            <span class="podcast-episode-title">{{ episode.title }}</span>
+          </div>
+        </a>
       </div>
     </div>
 

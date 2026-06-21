@@ -841,6 +841,26 @@
   line-height: var(--lh-body);
 }
 
+.episode-description {
+  margin-top: var(--space-sm);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+::ng-deep .episode-description .content-mention {
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #ddff53;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
+::ng-deep .episode-description .content-mention:hover {
+  background: #ddff53;
+  color: #000000;
+  text-decoration-color: transparent;
+}
+
 .series-description {
   min-height: 0;
 }

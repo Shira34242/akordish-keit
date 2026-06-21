@@ -1133,6 +1133,20 @@
   }
 }
 
+::ng-deep .article-content .content-mention {
+  color: #000000;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #ddff53;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
+::ng-deep .article-content .content-mention:hover {
+  background: #ddff53;
+  text-decoration-color: transparent;
+}
+
 /* Targeted article responsive polish */
 @media (max-width: 1400px) {
   .article-title {

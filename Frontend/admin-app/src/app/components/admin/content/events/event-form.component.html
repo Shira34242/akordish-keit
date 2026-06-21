@@ -66,7 +66,7 @@
                 class="dropdown-search"
                 [placeholder]="selectedArtistIds.length > 0 ? selectedArtistIds.length + ' אמנים נבחרו' : 'חפש אמן או כתוב שם חופשי...'"
                 (click)="$event.stopPropagation(); openDropdown()"
-                (input)="openDropdown()"
+                (input)="onArtistSearchInput()"
               />
               <span class="dropdown-arrow" (click)="toggleDropdown()">
                 {{ dropdownOpen ? '▲' : '▼' }}
@@ -109,6 +109,35 @@
               {{ getArtistName(artistId) }}
               <span class="remove-icon">×</span>
             </span>
+          </div>
+
+          <div class="artist-suggestions" *ngIf="artistSuggestionsLoading || artistSuggestions.length > 0">
+            <div class="artist-suggestions-header">
+              <span>הצעות אוטומטיות מהתוכן</span>
+              <button type="button" class="btn-rescan-artists" (click)="scanArtistSuggestions()">
+                <span class="material-icons">refresh</span>
+                סריקה מחדש
+              </button>
+            </div>
+
+            <div class="artist-suggestion-loading" *ngIf="artistSuggestionsLoading">בודק אזכורי אמנים...</div>
+
+            <div class="artist-suggestion-list" *ngIf="!artistSuggestionsLoading">
+              <div *ngFor="let suggestion of artistSuggestions" class="artist-suggestion-chip">
+                <img *ngIf="suggestion.artistImageUrl" [src]="suggestion.artistImageUrl" [alt]="suggestion.artistName">
+                <span *ngIf="!suggestion.artistImageUrl" class="artist-suggestion-initial">{{ suggestion.artistName.charAt(0) }}</span>
+                <div>
+                  <strong>{{ suggestion.artistName }}</strong>
+                  <small>{{ suggestion.matchedFields.join(', ') }}</small>
+                </div>
+                <button type="button" class="btn-add-suggestion" (click)="addSuggestedArtist(suggestion)" title="הוסף תיוג">
+                  <span class="material-icons">add</span>
+                </button>
+                <button type="button" class="btn-dismiss-suggestion" (click)="dismissSuggestedArtist(suggestion.artistId)" title="הסתר הצעה">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -175,6 +204,8 @@
           [(ngModel)]="event.name"
           name="name"
           class="form-input"
+          (input)="onEventDescriptionInput($event)"
+          (blur)="closeMentionMenu()"
           placeholder="אופציונלי"
         />
         <small class="form-hint">אם לא תוזן כותרת, המערכת תשתמש בשם האמן או בשם ברירת מחדל.</small>
@@ -187,9 +218,26 @@
           [(ngModel)]="event.description"
           name="description"
           class="form-textarea"
+          (input)="onEventTextInput()"
           rows="4"
           placeholder="תיאור קצר על ההופעה..."
         ></textarea>
+        <div class="mention-menu" *ngIf="mentionOpen" (mousedown)="$event.preventDefault()">
+          <div class="mention-menu-loading" *ngIf="mentionLoading">מחפש פרופילים...</div>
+          <button
+            type="button"
+            class="mention-menu-item"
+            *ngFor="let profile of mentionResults"
+            (click)="insertMention(profile)">
+            <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName">
+            <span *ngIf="!profile.imageUrl" class="mention-menu-initial">{{ profile.displayName.charAt(0) }}</span>
+            <span class="mention-menu-copy">
+              <strong>{{ profile.displayName }}</strong>
+              <small>{{ getMentionProfileLabel(profile) }}</small>
+            </span>
+          </button>
+          <div class="mention-menu-empty" *ngIf="!mentionLoading && mentionResults.length === 0">לא נמצאו פרופילים</div>
+        </div>
       </div>
 
       <div class="form-row">

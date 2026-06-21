@@ -78,7 +78,7 @@ public class UserService : IUserService
     }
 
 
-    public async Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20, string? profileKind = null)
+    public async Task<List<UserWithProfileDto>> SearchUsersWithProfilesAsync(string? query, int limit = 20, string? profileKind = null, bool includeAgencies = false)
     {
         var results = new List<UserWithProfileDto>();
         var q = query?.Trim().ToLower() ?? "";
@@ -141,6 +141,30 @@ public class UserService : IUserService
             .ToListAsync();
 
         results.AddRange(providers);
+        }
+
+        if ((includeAgencies && kind == "all") || kind == "agency")
+        {
+            var agencies = await _context.Agencies
+                .Where(a => !a.IsDeleted
+                    && a.IsActive
+                    && (string.IsNullOrEmpty(q) || a.Name.ToLower().Contains(q)))
+                .OrderBy(a => a.Name)
+                .Take(safeLimit)
+                .Select(a => new UserWithProfileDto
+                {
+                    UserId = null,
+                    DisplayName = a.Name,
+                    ImageUrl = a.LogoUrl,
+                    ProfileType = "agency",
+                    ProfileId = a.Id,
+                    ProfileUrl = $"/agency/{a.Slug}",
+                    IsTeacher = false,
+                    Status = a.IsActive ? "Active" : "Inactive"
+                })
+                .ToListAsync();
+
+            results.AddRange(agencies);
         }
 
         if (kind == "all" || kind == "user")

@@ -401,8 +401,8 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.article.shortDescription = this.article.shortDescription?.trim() || undefined;
     this.article.readTimeMinutes = Math.max(1, Math.ceil(this.article.content.split(/\s+/).length / 200));
     this.article.uploaderUserId = this.selectedUploaderProfile?.userId;
-    this.article.uploaderProfileType = this.selectedUploaderProfile?.profileType;
-    this.article.uploaderProfileId = this.selectedUploaderProfile?.profileId;
+    this.article.uploaderProfileType = this.selectedUploaderProfile?.profileType === 'agency' ? undefined : this.selectedUploaderProfile?.profileType;
+    this.article.uploaderProfileId = this.selectedUploaderProfile?.profileType === 'agency' ? undefined : this.selectedUploaderProfile?.profileId;
 
     this.articleService.submitArticle(this.article).subscribe({
       next: () => {

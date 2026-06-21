@@ -224,16 +224,15 @@
 .btn-remove { background: #404040; color: #ffffff; padding: var(--space-sm); min-width: 34px; justify-content: center; border-radius: 50%; }
 .btn-remove:hover { background: #000000; }
 
-.hit-order-group {
-  min-width: 78px;
+.hit-sort-item {
+  cursor: default;
 }
 
-.hit-order-actions {
-  display: inline-flex;
-  gap: var(--space-xs);
+.hit-drag-group {
+  min-width: 44px;
 }
 
-.btn-order {
+.btn-drag {
   width: 34px;
   height: 34px;
   border: none;
@@ -243,17 +242,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: grab;
   transition: background 0.15s ease;
 }
 
-.btn-order:hover:not(:disabled) {
+.btn-drag:hover {
   background: #ddff53;
 }
 
-.btn-order:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+.btn-drag:active {
+  cursor: grabbing;
 }
 
 /* Dynamic List Items */

@@ -42,6 +42,12 @@ export interface PodcastEpisodeBanner {
   thumbnailUrl?: string;
 }
 
+export interface PodcastEpisodeArtist {
+  artistId: number;
+  artistName: string;
+  artistImageUrl?: string;
+}
+
 export interface PodcastEpisode {
   id: number;
   podcastId: number;
@@ -61,6 +67,7 @@ export interface PodcastEpisode {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  taggedArtists?: PodcastEpisodeArtist[];
 
   // Uploader profile
   uploaderUserId?: number | null;
@@ -99,6 +106,7 @@ export interface CreatePodcastEpisodeDto {
   publishedAt?: string;
   displayOrder?: number;
   isActive?: boolean;
+  artistIds?: number[];
 
   // Uploader profile
   uploaderUserId?: number | null;

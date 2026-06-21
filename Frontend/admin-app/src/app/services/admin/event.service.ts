@@ -83,7 +83,7 @@ export class EventService {
   /**
    * קבלת הופעות קרובות (לדף הראשי)
    */
-  getUpcomingEvents(limit: number = 6): Observable<UpcomingEventDto[]> {
+  getUpcomingEvents(limit: number = 15): Observable<UpcomingEventDto[]> {
     const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<UpcomingEventDto[]>(`${this.apiUrl}/upcoming`, { params });
   }

@@ -503,8 +503,8 @@ export class ArticlesListComponent implements OnInit {
 
     const payload = {
       uploaderUserId: profile.userId ?? undefined,
-      uploaderProfileType: profile.profileType === 'user' ? undefined : profile.profileType,
-      uploaderProfileId: profile.profileType === 'user' ? undefined : profile.profileId
+      uploaderProfileType: profile.profileType === 'user' || profile.profileType === 'agency' ? undefined : profile.profileType,
+      uploaderProfileId: profile.profileType === 'user' || profile.profileType === 'agency' ? undefined : profile.profileId
     };
 
     const onSuccess = () => {

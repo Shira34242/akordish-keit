@@ -5,6 +5,12 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Remove=".tmp\**" />
+	  <Content Remove=".tmp\**" />
+	  <EmbeddedResource Remove=".tmp\**" />
+	  <None Remove=".tmp\**" />
+	</ItemGroup>
+	<ItemGroup>
 	  <Compile Remove="Models\Enums\**" />
 	  <Content Remove="Models\Enums\**" />
 	  <EmbeddedResource Remove="Models\Enums\**" />

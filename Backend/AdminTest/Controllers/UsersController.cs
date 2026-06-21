@@ -25,9 +25,10 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<List<UserWithProfileDto>>> GetUsersWithProfiles(
         [FromQuery] string? q = null,
         [FromQuery] int limit = 20,
-        [FromQuery] string? profileKind = null)
+        [FromQuery] string? profileKind = null,
+        [FromQuery] bool includeAgencies = false)
     {
-        var results = await _service.SearchUsersWithProfilesAsync(q, limit, profileKind);
+        var results = await _service.SearchUsersWithProfilesAsync(q, limit, profileKind, includeAgencies);
         return Ok(results);
     }
 

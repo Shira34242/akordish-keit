@@ -347,11 +347,30 @@
         <h2 class="section-title">להיטים גדולים</h2>
         <p class="section-desc">שורה נגללת בדף האמן. כל להיט צריך שם וקישור YouTube; תמונה היא אופציונלית.</p>
 
-        <div *ngFor="let hit of editForm.hits; let i = index" class="gallery-item">
+        <div
+          *ngFor="let hit of editForm.hits; let i = index; trackBy: trackHit"
+          class="gallery-item hit-sort-item"
+          (dragover)="onHitDragOver($event)"
+          (drop)="onHitDrop(i)"
+        >
           <div class="form-row">
+            <div class="form-group hit-drag-group">
+              <label class="form-label">&nbsp;</label>
+              <button
+                type="button"
+                class="btn-drag"
+                draggable="true"
+                (dragstart)="onHitDragStart(i)"
+                (dragend)="onHitDragEnd()"
+                aria-label="גרור לשינוי סדר"
+              >
+                <span class="material-icons">drag_indicator</span>
+              </button>
+            </div>
+
             <div class="form-group" style="flex: 2;">
               <label class="form-label">שם הלהיט</label>
-              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + i" class="form-input" placeholder="שם הסינגל..." />
+              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + hit.clientKey" class="form-input" placeholder="שם הסינגל..." />
             </div>
 
             <div class="form-group" style="flex: 2;">
@@ -365,7 +384,7 @@
 
             <div class="form-group" style="flex: 2;">
               <label class="form-label">קישור YouTube</label>
-              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + hit.clientKey" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
             </div>
 
             <div class="form-group" style="flex: 0 0 60px;">
@@ -375,17 +394,6 @@
               </button>
             </div>
 
-            <div class="form-group hit-order-group">
-              <label class="form-label">סדר</label>
-              <div class="hit-order-actions">
-                <button type="button" class="btn-order" (click)="moveHit(i, -1)" [disabled]="i === 0" aria-label="העלה למעלה">
-                  <span class="material-icons">keyboard_arrow_up</span>
-                </button>
-                <button type="button" class="btn-order" (click)="moveHit(i, 1)" [disabled]="i === editForm.hits.length - 1" aria-label="הורד למטה">
-                  <span class="material-icons">keyboard_arrow_down</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 

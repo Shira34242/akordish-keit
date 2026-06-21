@@ -273,36 +273,43 @@
             יוצג בדף האמן כשורת מלבנים נגללת. צריך שם וקישור YouTube; תמונה היא אופציונלית.
           </p>
 
-          <div class="media-grid">
+          <div class="media-grid hits-sort-list">
             <button type="button" class="media-add-card media-add-card--video" (click)="addHit()">
               <span class="material-icons">smart_display</span>
               <strong>הוסף להיט</strong>
               <span>שם, תמונה וקישור YouTube</span>
             </button>
 
-            <div *ngFor="let hit of artistForm.hits; let i = index" class="media-card media-card--video">
+            <div
+              *ngFor="let hit of artistForm.hits; let i = index; trackBy: trackHit"
+              class="media-card media-card--video hit-sort-card"
+              (dragover)="onHitDragOver($event)"
+              (drop)="onHitDrop(i)"
+            >
+              <button
+                type="button"
+                class="hit-drag-handle"
+                draggable="true"
+                (dragstart)="onHitDragStart(i)"
+                (dragend)="onHitDragEnd()"
+                aria-label="גרור לשינוי סדר"
+              >
+                <span class="material-icons">drag_indicator</span>
+              </button>
               <button type="button" class="media-card-remove" (click)="removeHit(i)" aria-label="הסר">
                 <span class="material-icons">close</span>
               </button>
-              <div class="media-card-order" aria-label="סדר תצוגה">
-                <button type="button" (click)="moveHit(i, -1)" [disabled]="i === 0" aria-label="העלה למעלה">
-                  <span class="material-icons">keyboard_arrow_up</span>
-                </button>
-                <button type="button" (click)="moveHit(i, 1)" [disabled]="i === (artistForm.hits?.length || 0) - 1" aria-label="הורד למטה">
-                  <span class="material-icons">keyboard_arrow_down</span>
-                </button>
-              </div>
               <div class="media-card-preview" [class.has-image]="hit.imageUrl">
                 <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט'" />
                 <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
               </div>
-              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + i" class="form-input" placeholder="שם הלהיט" />
+              <input type="text" [(ngModel)]="hit.title" [name]="'hit_title_' + hit.clientKey" class="form-input" placeholder="שם הלהיט" />
               <app-file-upload-input
                 [(url)]="hit.imageUrl"
                 placeholder="https://example.com/image.jpg"
                 [showPreview]="false"
               />
-              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + i" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="hit.youTubeUrl" (blur)="onHitYouTubeUrlChange(i)" [name]="'hit_youtube_' + hit.clientKey" [attr.data-validation-target]="'hit-youtube-' + i" class="form-input" placeholder="https://youtube.com/..." />
               <small class="field-error" *ngIf="getHitValidationMessage(i) as hitError">{{ hitError }}</small>
             </div>
           </div>

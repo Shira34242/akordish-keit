@@ -2004,8 +2004,8 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
                 arranger: undefined,  // נשאיר כרגע - נעדכן אחר כך
                 isApproved,
                 uploaderUserId: this.selectedUploaderProfile?.userId,
-                uploaderProfileType: this.selectedUploaderProfile?.profileType,
-                uploaderProfileId: this.selectedUploaderProfile?.profileId
+                uploaderProfileType: this.selectedUploaderProfile?.profileType === 'agency' ? undefined : this.selectedUploaderProfile?.profileType,
+                uploaderProfileId: this.selectedUploaderProfile?.profileType === 'agency' ? undefined : this.selectedUploaderProfile?.profileId
             };
 
             // Choose add or update based on mode

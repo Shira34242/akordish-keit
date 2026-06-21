@@ -94,8 +94,8 @@ export class SubmitArticleComponent implements OnInit {
 
       const profile = profiles[0];
       this.article.uploaderUserId = profile.userId;
-      this.article.uploaderProfileType = profile.profileType;
-      this.article.uploaderProfileId = profile.profileId;
+      this.article.uploaderProfileType = profile.profileType === 'agency' ? undefined : profile.profileType;
+      this.article.uploaderProfileId = profile.profileType === 'agency' ? undefined : profile.profileId;
     });
   }
 

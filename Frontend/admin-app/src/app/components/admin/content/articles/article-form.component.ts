@@ -14,6 +14,8 @@ import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { SmartContentService } from '../../../../services/admin/smart-content.service';
+import { ArtistSuggestion, ArtistSuggestionService } from '../../../../services/admin/artist-suggestion.service';
+import { ActiveMention, ContentMentionService } from '../../../../services/admin/content-mention.service';
 import { StoredSmartDraft } from '../../../../models/smart-content.model';
 
 import {
@@ -50,6 +52,8 @@ export class ArticleFormComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly smartContentService = inject(SmartContentService);
+  private readonly artistSuggestionService = inject(ArtistSuggestionService);
+  private readonly contentMentionService = inject(ContentMentionService);
 
   // State
   categories: CategoryWithSection[] = [];
@@ -121,6 +125,15 @@ export class ArticleFormComponent implements OnInit {
 
   // Artists collapse state
   artistsExpanded = false;
+  artistSuggestions: ArtistSuggestion[] = [];
+  artistSuggestionsLoading = false;
+  private readonly artistSuggestion$ = new Subject<void>();
+  mentionResults: UserWithProfileDto[] = [];
+  mentionLoading = false;
+  mentionOpen = false;
+  private activeMention: ActiveMention | null = null;
+  private mentionTextarea: HTMLTextAreaElement | null = null;
+  private readonly mentionSearch$ = new Subject<string>();
 
   // Enums for template
   ArticleCategory = ArticleCategory;
@@ -162,6 +175,8 @@ export class ArticleFormComponent implements OnInit {
     this.loadPopularTags();
     this.initProfileSearch();
     this.initTagSearch();
+    this.initArtistSuggestions();
+    this.initMentionSearch();
 
     // Check if we're in edit mode
     this.route.params.subscribe(params => {
@@ -179,6 +194,7 @@ export class ArticleFormComponent implements OnInit {
         this.tagSearchQuery = '';
         this.showNewTagInput = false;
         this.artistsExpanded = false;
+        this.artistSuggestions = [];
         this.advancedOpen = false;
         this.newGalleryImage = { imageUrl: '', caption: '' };
         this.initializeUploaderSelector();
@@ -331,8 +347,8 @@ export class ArticleFormComponent implements OnInit {
   selectProfile(profile: UserWithProfileDto): void {
     this.selectedProfile = profile;
     this.article.uploaderUserId = profile.userId;
-    this.article.uploaderProfileType = profile.profileType;
-    this.article.uploaderProfileId = profile.profileId;
+    this.article.uploaderProfileType = profile.profileType === 'agency' ? undefined : profile.profileType;
+    this.article.uploaderProfileId = profile.profileType === 'agency' ? undefined : profile.profileId;
     this.profileSearchQuery = profile.displayName;
     this.showProfileDropdown = false;
     this.profileSearchResults = [];
@@ -536,6 +552,7 @@ export class ArticleFormComponent implements OnInit {
           this.profileSearchQuery = data.uploaderProfile.name;
         }
         this.loading = false;
+        this.queueArtistSuggestionScan();
       },
       error: (error) => {
         console.error('Error loading article:', error);
@@ -555,6 +572,8 @@ export class ArticleFormComponent implements OnInit {
     if (!this.article.metaTitle) {
       this.article.metaTitle = this.article.title;
     }
+
+    this.queueArtistSuggestionScan();
   }
 
   generateSlug(text: string): string {
@@ -573,6 +592,12 @@ export class ArticleFormComponent implements OnInit {
       const wordCount = this.article.content.split(/\s+/).length;
       this.article.readTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
     }
+    this.queueArtistSuggestionScan();
+  }
+
+  onArticleContentInput(event: Event): void {
+    this.calculateReadTime();
+    this.handleMentionInput(event);
   }
 
   onSubmit(): void {
@@ -757,6 +782,115 @@ export class ArticleFormComponent implements OnInit {
     } else {
       this.article.artistIds.push(artistId);
     }
+    this.artistSuggestions = this.artistSuggestions.filter(suggestion => suggestion.artistId !== artistId);
+  }
+
+  addSuggestedArtist(suggestion: ArtistSuggestion): void {
+    if (!this.article.artistIds) {
+      this.article.artistIds = [];
+    }
+    if (!this.article.artistIds.includes(suggestion.artistId)) {
+      this.article.artistIds.push(suggestion.artistId);
+    }
+    this.artistSuggestions = this.artistSuggestions.filter(item => item.artistId !== suggestion.artistId);
+  }
+
+  dismissSuggestedArtist(artistId: number): void {
+    this.artistSuggestions = this.artistSuggestions.filter(item => item.artistId !== artistId);
+  }
+
+  scanArtistSuggestions(): void {
+    this.queueArtistSuggestionScan();
+  }
+
+  private initArtistSuggestions(): void {
+    this.artistSuggestion$.pipe(
+      debounceTime(600),
+      switchMap(() => {
+        const hasText = [this.article.title, this.article.subtitle, this.article.shortDescription, this.article.content]
+          .some(value => (value || '').trim().length >= 3);
+        if (!hasText) {
+          this.artistSuggestionsLoading = false;
+          return of([] as ArtistSuggestion[]);
+        }
+
+        this.artistSuggestionsLoading = true;
+        return this.artistSuggestionService.suggestArtists({
+          contentType: this.article.contentType === ArticleContentType.Blog ? 'blog' : 'news',
+          title: this.article.title,
+          subtitle: this.article.subtitle,
+          description: this.article.shortDescription,
+          content: this.article.content,
+          selectedArtistIds: this.article.artistIds || []
+        }).pipe(catchError(() => of([] as ArtistSuggestion[])));
+      })
+    ).subscribe(suggestions => {
+      const selectedIds = new Set(this.article.artistIds || []);
+      this.artistSuggestions = suggestions.filter(suggestion => !selectedIds.has(suggestion.artistId));
+      this.artistSuggestionsLoading = false;
+    });
+  }
+
+  private queueArtistSuggestionScan(): void {
+    this.artistSuggestion$.next();
+  }
+
+  private initMentionSearch(): void {
+    this.mentionSearch$.pipe(
+      debounceTime(180),
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.mentionLoading = true;
+        return this.userService.searchUsersWithProfiles(query, 8, undefined, true).pipe(catchError(() => of([] as UserWithProfileDto[])));
+      })
+    ).subscribe(results => {
+      this.mentionResults = results.filter(profile => !!profile.profileUrl);
+      this.mentionLoading = false;
+      this.mentionOpen = !!this.activeMention;
+    });
+  }
+
+  handleMentionInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.mentionTextarea = textarea;
+    this.activeMention = this.contentMentionService.getActiveMention(this.article.content || '', textarea.selectionStart || 0);
+
+    if (!this.activeMention) {
+      this.closeMentionMenu();
+      return;
+    }
+
+    this.mentionOpen = true;
+    this.mentionSearch$.next(this.activeMention.query);
+  }
+
+  insertMention(profile: UserWithProfileDto): void {
+    if (!this.activeMention) return;
+
+    const result = this.contentMentionService.insertMention(this.article.content || '', this.activeMention, profile);
+    this.article.content = result.value;
+    this.closeMentionMenu();
+    this.calculateReadTime();
+    this.queueArtistSuggestionScan();
+
+    setTimeout(() => {
+      this.mentionTextarea?.focus();
+      this.mentionTextarea?.setSelectionRange(result.cursor, result.cursor);
+    });
+  }
+
+  closeMentionMenu(): void {
+    this.mentionOpen = false;
+    this.mentionLoading = false;
+    this.mentionResults = [];
+    this.activeMention = null;
+  }
+
+  getMentionProfileLabel(profile: UserWithProfileDto): string {
+    if (profile.profileType === 'artist') return 'אמן';
+    if (profile.profileType === 'serviceProvider') return profile.isTeacher ? 'מורה' : 'נותן שירות';
+    if (profile.profileType === 'agency') return 'סוכנות';
+    return 'משתמש';
   }
 
   toggleArtistsExpanded(): void {

@@ -21,5 +21,6 @@ namespace AkordishKeit.Models.Entities
         public bool IsDeleted { get; set; }
 
         public virtual Podcast Podcast { get; set; } = null!;
+        public virtual ICollection<PodcastEpisodeArtist> PodcastEpisodeArtists { get; set; } = new List<PodcastEpisodeArtist>();
     }
 }

@@ -36,6 +36,63 @@ public class ArtistsController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("{id}/podcast-episodes")]
+    public async Task<ActionResult<List<PodcastEpisodeDto>>> GetArtistPodcastEpisodes(int id, [FromQuery] int limit = 12)
+    {
+        try
+        {
+            limit = Math.Clamp(limit, 1, 48);
+
+            var episodes = await _context.PodcastEpisodeArtists
+                .AsNoTracking()
+                .Where(pa => pa.ArtistId == id &&
+                             !pa.PodcastEpisode.IsDeleted &&
+                             pa.PodcastEpisode.IsActive &&
+                             !pa.PodcastEpisode.Podcast.IsDeleted &&
+                             pa.PodcastEpisode.Podcast.IsActive)
+                .Select(pa => pa.PodcastEpisode)
+                .OrderByDescending(e => e.PublishedAt)
+                .ThenByDescending(e => e.Id)
+                .Take(limit)
+                .Select(e => new PodcastEpisodeDto
+                {
+                    Id = e.Id,
+                    PodcastId = e.PodcastId,
+                    PodcastName = e.Podcast.Name,
+                    PodcastSlug = e.Podcast.Slug,
+                    Title = e.Title,
+                    Slug = e.Slug,
+                    Description = e.Description,
+                    EpisodeNumber = e.EpisodeNumber,
+                    SourceUrl = e.SourceUrl,
+                    EmbedUrl = e.EmbedUrl,
+                    ThumbnailUrl = e.ThumbnailUrl,
+                    Platform = e.Platform,
+                    ViewCount = e.ViewCount,
+                    PublishedAt = e.PublishedAt,
+                    DisplayOrder = e.DisplayOrder,
+                    IsActive = e.IsActive,
+                    CreatedAt = e.CreatedAt,
+                    UpdatedAt = e.UpdatedAt,
+                    TaggedArtists = e.PodcastEpisodeArtists
+                        .Select(tag => new PodcastEpisodeArtistDto
+                        {
+                            ArtistId = tag.ArtistId,
+                            ArtistName = tag.Artist.Name,
+                            ArtistImageUrl = tag.Artist.ImageUrl
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return Ok(episodes);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"שגיאה בטעינת פרקי פודקאסט: {ex.Message}");
+        }
+    }
+
     // ========================================
     // רשימות אומנים
     // ========================================
@@ -235,6 +292,14 @@ public class ArtistsController : ControllerBase
                              ea.Event.IsActive)
                 .CountAsync();
 
+            var podcastEpisodeCount = await _context.PodcastEpisodeArtists
+                .Where(pa => pa.ArtistId == id &&
+                             !pa.PodcastEpisode.IsDeleted &&
+                             pa.PodcastEpisode.IsActive &&
+                             !pa.PodcastEpisode.Podcast.IsDeleted &&
+                             pa.PodcastEpisode.Podcast.IsActive)
+                .CountAsync();
+
             var result = new ArtistDetailDto
             {
                 Id = artist.Id,
@@ -316,6 +381,7 @@ public class ArtistsController : ControllerBase
                 SongCount = songCount,
                 ArticleCount = articleCount,
                 UpcomingEventCount = upcomingEventCount,
+                PodcastEpisodeCount = podcastEpisodeCount,
                 CreatedAt = artist.CreatedAt
             };
 

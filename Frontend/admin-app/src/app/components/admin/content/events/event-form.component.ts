@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { EventService } from '../../../../services/admin/event.service';
 import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
+import { ArtistSuggestion, ArtistSuggestionService } from '../../../../services/admin/artist-suggestion.service';
+import { ActiveMention, ContentMentionService } from '../../../../services/admin/content-mention.service';
 import { CreateEventDto, UpdateEventDto, Event } from '../../../../models/event.model';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
@@ -31,6 +33,8 @@ export class EventFormComponent implements OnInit {
   private readonly requiredFieldFeedback = inject(RequiredFieldFeedbackService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly smartContentService = inject(SmartContentService);
+  private readonly artistSuggestionService = inject(ArtistSuggestionService);
+  private readonly contentMentionService = inject(ContentMentionService);
 
   isEditMode = false;
   eventId?: number;
@@ -50,6 +54,15 @@ export class EventFormComponent implements OnInit {
 
   // Dropdown state
   dropdownOpen: boolean = false;
+  artistSuggestions: ArtistSuggestion[] = [];
+  artistSuggestionsLoading = false;
+  private readonly artistSuggestion$ = new Subject<void>();
+  mentionResults: UserWithProfileDto[] = [];
+  mentionLoading = false;
+  mentionOpen = false;
+  private activeMention: ActiveMention | null = null;
+  private mentionTextarea: HTMLTextAreaElement | null = null;
+  private readonly mentionSearch$ = new Subject<string>();
 
   // Uploader profile
   selectedProfile: UserWithProfileDto | null = null;
@@ -78,6 +91,8 @@ export class EventFormComponent implements OnInit {
     // טעינת רשימת אמנים זמינים
     this.loadArtists();
     this.initProfileSearch();
+    this.initArtistSuggestions();
+    this.initMentionSearch();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -137,6 +152,7 @@ export class EventFormComponent implements OnInit {
         // טעינת האמנים המתוייגים
         this.selectedArtistIds = taggedArtistIds;
         this.artistSearchTerm = taggedArtistIds.length > 0 ? '' : (event.artistName ?? '');
+        this.queueArtistSuggestionScan();
 
         // טעינת פרופיל מעלה
         if (event.uploaderProfile) {
@@ -185,6 +201,7 @@ export class EventFormComponent implements OnInit {
         };
         this.selectedArtistIds = taggedArtistIds;
         this.artistSearchTerm = taggedArtistIds.length > 0 ? '' : (event.artistName ?? '');
+        this.queueArtistSuggestionScan();
         this.loading = false;
       },
       error: (error) => {
@@ -207,6 +224,7 @@ export class EventFormComponent implements OnInit {
       ticketUrl: draft.sourceUrl || this.event.ticketUrl,
       eventDate: this.getFutureDateForInput(draft.publishedAt) || this.event.eventDate
     };
+    this.queueArtistSuggestionScan();
   }
 
   initProfileSearch(): void {
@@ -248,8 +266,8 @@ export class EventFormComponent implements OnInit {
   selectProfile(profile: UserWithProfileDto): void {
     this.selectedProfile = profile;
     this.event.uploaderUserId = profile.userId;
-    this.event.uploaderProfileType = profile.profileType;
-    this.event.uploaderProfileId = profile.profileId;
+    this.event.uploaderProfileType = profile.profileType === 'agency' ? undefined : profile.profileType;
+    this.event.uploaderProfileId = profile.profileType === 'agency' ? undefined : profile.profileId;
     this.profileSearchQuery = profile.displayName;
     this.showProfileDropdown = false;
     this.profileSearchResults = [];
@@ -304,6 +322,7 @@ export class EventFormComponent implements OnInit {
     }
     // עדכון ה-DTO
     this.event.artistIds = [...this.selectedArtistIds];
+    this.artistSuggestions = this.artistSuggestions.filter(suggestion => suggestion.artistId !== artistId);
   }
 
   isArtistSelected(artistId: number): boolean {
@@ -336,6 +355,37 @@ export class EventFormComponent implements OnInit {
 
   closeDropdown(): void {
     this.dropdownOpen = false;
+  }
+
+  onEventTextInput(): void {
+    this.queueArtistSuggestionScan();
+  }
+
+  onEventDescriptionInput(event: globalThis.Event): void {
+    this.onEventTextInput();
+    this.handleMentionInput(event);
+  }
+
+  onArtistSearchInput(): void {
+    this.openDropdown();
+    this.queueArtistSuggestionScan();
+  }
+
+  addSuggestedArtist(suggestion: ArtistSuggestion): void {
+    if (!this.selectedArtistIds.includes(suggestion.artistId)) {
+      this.selectedArtistIds.push(suggestion.artistId);
+      this.event.artistIds = [...this.selectedArtistIds];
+      this.artistSearchTerm = '';
+    }
+    this.artistSuggestions = this.artistSuggestions.filter(item => item.artistId !== suggestion.artistId);
+  }
+
+  dismissSuggestedArtist(artistId: number): void {
+    this.artistSuggestions = this.artistSuggestions.filter(item => item.artistId !== artistId);
+  }
+
+  scanArtistSuggestions(): void {
+    this.queueArtistSuggestionScan();
   }
 
   onSubmit(): void {
@@ -416,5 +466,93 @@ export class EventFormComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/admin/content/events']);
+  }
+
+  private initArtistSuggestions(): void {
+    this.artistSuggestion$.pipe(
+      debounceTime(600),
+      switchMap(() => {
+        const hasText = [this.event.name, this.event.description, this.artistSearchTerm, this.event.artistName]
+          .some(value => (value || '').trim().length >= 3);
+        if (!hasText) {
+          this.artistSuggestionsLoading = false;
+          return of([] as ArtistSuggestion[]);
+        }
+
+        this.artistSuggestionsLoading = true;
+        return this.artistSuggestionService.suggestArtists({
+          contentType: 'event',
+          title: this.event.name,
+          description: this.event.description,
+          artistName: this.artistSearchTerm || this.event.artistName,
+          selectedArtistIds: this.selectedArtistIds
+        }).pipe(catchError(() => of([] as ArtistSuggestion[])));
+      })
+    ).subscribe(suggestions => {
+      const selectedIds = new Set(this.selectedArtistIds);
+      this.artistSuggestions = suggestions.filter(suggestion => !selectedIds.has(suggestion.artistId));
+      this.artistSuggestionsLoading = false;
+    });
+  }
+
+  private queueArtistSuggestionScan(): void {
+    this.artistSuggestion$.next();
+  }
+
+  private initMentionSearch(): void {
+    this.mentionSearch$.pipe(
+      debounceTime(180),
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.mentionLoading = true;
+        return this.userService.searchUsersWithProfiles(query, 8, undefined, true).pipe(catchError(() => of([] as UserWithProfileDto[])));
+      })
+    ).subscribe(results => {
+      this.mentionResults = results.filter(profile => !!profile.profileUrl);
+      this.mentionLoading = false;
+      this.mentionOpen = !!this.activeMention;
+    });
+  }
+
+  handleMentionInput(event: globalThis.Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.mentionTextarea = textarea;
+    this.activeMention = this.contentMentionService.getActiveMention(this.event.description || '', textarea.selectionStart || 0);
+
+    if (!this.activeMention) {
+      this.closeMentionMenu();
+      return;
+    }
+
+    this.mentionOpen = true;
+    this.mentionSearch$.next(this.activeMention.query);
+  }
+
+  insertMention(profile: UserWithProfileDto): void {
+    if (!this.activeMention) return;
+
+    const result = this.contentMentionService.insertMention(this.event.description || '', this.activeMention, profile);
+    this.event.description = result.value;
+    this.closeMentionMenu();
+    this.queueArtistSuggestionScan();
+
+    setTimeout(() => {
+      this.mentionTextarea?.focus();
+      this.mentionTextarea?.setSelectionRange(result.cursor, result.cursor);
+    });
+  }
+
+  closeMentionMenu(): void {
+    this.mentionOpen = false;
+    this.mentionLoading = false;
+    this.mentionResults = [];
+    this.activeMention = null;
+  }
+
+  getMentionProfileLabel(profile: UserWithProfileDto): string {
+    if (profile.profileType === 'artist') return 'אמן';
+    if (profile.profileType === 'serviceProvider') return profile.isTeacher ? 'מורה' : 'נותן שירות';
+    if (profile.profileType === 'agency') return 'סוכנות';
+    return 'משתמש';
   }
 }

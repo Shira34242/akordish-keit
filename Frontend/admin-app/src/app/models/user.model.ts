@@ -2,7 +2,7 @@ export interface UserWithProfileDto {
   userId?: number | null;
   displayName: string;
   imageUrl?: string;
-  profileType: 'artist' | 'serviceProvider' | 'user';
+  profileType: 'artist' | 'serviceProvider' | 'user' | 'agency';
   profileId: number;
   profileUrl: string;
   isTeacher: boolean;

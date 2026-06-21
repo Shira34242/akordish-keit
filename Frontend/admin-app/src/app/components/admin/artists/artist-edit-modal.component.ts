@@ -35,6 +35,7 @@ interface GalleryItemForm {
 
 interface HitForm {
   id?: number;
+  clientKey: string;
   title: string;
   imageUrl: string;
   youTubeUrl: string;
@@ -84,6 +85,8 @@ export class ArtistEditModalComponent implements OnInit {
   error: string | null = null;
   isEditMode = false;
   private closeWithoutDraftSave = false;
+  private hitKeySeed = 0;
+  private draggedHitIndex: number | null = null;
 
   readonly MUSIC_PLATFORMS = [3, 7, 8, 9, 10, 11]; // YouTube, Spotify, Zing, Jewzik, 24Six, Apple Music
 
@@ -224,6 +227,7 @@ export class ArtistEditModalComponent implements OnInit {
           galleryItems,
           hits: (artist.hits || []).map((hit, index) => ({
             id: hit.id,
+            clientKey: this.createHitKey(hit.id),
             title: hit.title || '',
             imageUrl: hit.imageUrl || '',
             youTubeUrl: hit.youTubeUrl || hit.youtubeUrl || '',
@@ -357,6 +361,7 @@ export class ArtistEditModalComponent implements OnInit {
 
   addHit(): void {
     this.editForm.hits.push({
+      clientKey: this.createHitKey(),
       title: '',
       imageUrl: '',
       youTubeUrl: '',
@@ -367,15 +372,44 @@ export class ArtistEditModalComponent implements OnInit {
 
   removeHit(index: number): void {
     this.editForm.hits.splice(index, 1);
+    this.syncHitOrder();
+  }
+
+  onHitDragStart(index: number): void {
+    this.draggedHitIndex = index;
+  }
+
+  onHitDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onHitDrop(index: number): void {
+    if (this.draggedHitIndex === null || this.draggedHitIndex === index) {
+      this.draggedHitIndex = null;
+      return;
+    }
+
+    const [draggedHit] = this.editForm.hits.splice(this.draggedHitIndex, 1);
+    this.editForm.hits.splice(index, 0, draggedHit);
+    this.draggedHitIndex = null;
+    this.syncHitOrder();
+  }
+
+  onHitDragEnd(): void {
+    this.draggedHitIndex = null;
+  }
+
+  trackHit(_index: number, hit: HitForm): string {
+    return hit.clientKey;
+  }
+
+  private syncHitOrder(): void {
     this.editForm.hits.forEach((hit, order) => hit.displayOrder = order);
   }
 
-  moveHit(index: number, direction: -1 | 1): void {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= this.editForm.hits.length) return;
-
-    [this.editForm.hits[index], this.editForm.hits[newIndex]] = [this.editForm.hits[newIndex], this.editForm.hits[index]];
-    this.editForm.hits.forEach((hit, order) => hit.displayOrder = order);
+  private createHitKey(id?: number): string {
+    this.hitKeySeed += 1;
+    return id ? `hit-${id}` : `new-hit-${this.hitKeySeed}`;
   }
 
   onHitYouTubeUrlChange(index: number): void {

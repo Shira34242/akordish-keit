@@ -134,6 +134,36 @@
   margin: 0;
 }
 
+.modal-description {
+  max-width: 34rem;
+  display: -webkit-box;
+  overflow: hidden;
+  margin: var(--space-xs) 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  line-height: var(--lh-small);
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+::ng-deep .modal-description .content-mention {
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #ddff53;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
+::ng-deep .modal-description .content-mention:hover {
+  background: #ddff53;
+  color: #000000;
+  text-decoration-color: transparent;
+}
+
 /* ============================================
    PILLS
 ============================================ */

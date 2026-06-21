@@ -68,7 +68,7 @@ namespace AkordishKeit.Controllers
         /// </summary>
         [HttpGet("upcoming")]
         public async Task<ActionResult<IEnumerable<UpcomingEventDto>>> GetUpcomingEvents(
-            [FromQuery] int limit = 6)
+            [FromQuery] int limit = 15)
         {
             var events = await _eventService.GetUpcomingEventsAsync(limit);
             return Ok(events);

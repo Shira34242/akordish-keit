@@ -129,21 +129,37 @@ namespace AkordishKeit.Services
             return eventEntity == null ? null : MapToDto(eventEntity);
         }
 
-        public async Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 6)
+        public async Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 15)
         {
             var today = DateTime.UtcNow.Date;
-            var oneMonthAgo = today.AddMonths(-1);
 
-            var events = await _context.Events
+            var upcomingEvents = await _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .Where(e => !e.IsDeleted && e.IsActive && e.EventDate >= oneMonthAgo)
+                .Where(e => !e.IsDeleted && e.IsActive && e.EventDate >= today)
                 .OrderBy(e => e.EventDate)
                 .ThenBy(e => e.DisplayOrder)
                 .Take(limit)
                 .ToListAsync();
 
-            return events.Select(e => new UpcomingEventDto
+            var allEvents = new List<Event>(upcomingEvents);
+
+            if (allEvents.Count < limit)
+            {
+                var remaining = limit - allEvents.Count;
+                var pastEvents = await _context.Events
+                    .Include(e => e.EventArtists)
+                        .ThenInclude(ea => ea.Artist)
+                    .Where(e => !e.IsDeleted && e.IsActive && e.EventDate < today)
+                    .OrderByDescending(e => e.EventDate)
+                    .ThenBy(e => e.DisplayOrder)
+                    .Take(remaining)
+                    .ToListAsync();
+
+                allEvents.AddRange(pastEvents);
+            }
+
+            return allEvents.Select(e => new UpcomingEventDto
             {
                 Id = e.Id,
                 Name = e.Name,

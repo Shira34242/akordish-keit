@@ -10,6 +10,7 @@ import { Artist, ArtistAlbum, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
 import { Event as EventModel, UpcomingEventDto } from '../../models/event.model';
+import { PodcastEpisode } from '../../models/podcast.model';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { ArtistEditModalComponent } from '../admin/artists/artist-edit-modal.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
@@ -44,12 +45,14 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   songs: SongDto[] = [];
   articles: Article[] = [];
   events: UpcomingEventDto[] = [];
+  podcastEpisodes: PodcastEpisode[] = [];
   selectedEvent: UpcomingEventDto | null = null;
 
   loading = true;
   loadingSongs = false;
   loadingArticles = false;
   loadingEvents = false;
+  loadingPodcastEpisodes = false;
 
   songsPage = 1;
   articlesPage = 1;
@@ -182,6 +185,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadSongs(id);
         this.loadArticles(id);
         this.loadEvents(id);
+        this.loadPodcastEpisodes(id);
         this.updateDefaultSongsCount();
         setTimeout(() => {
           this.cdr.detectChanges();
@@ -677,6 +681,21 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => { this.loadingEvents = false; }
     });
+  }
+
+  loadPodcastEpisodes(artistId: number): void {
+    this.loadingPodcastEpisodes = true;
+    this.artistService.getArtistPodcastEpisodes(artistId, 12).subscribe({
+      next: episodes => {
+        this.podcastEpisodes = episodes;
+        this.loadingPodcastEpisodes = false;
+      },
+      error: () => { this.loadingPodcastEpisodes = false; }
+    });
+  }
+
+  getPodcastEpisodeLink(episode: PodcastEpisode): (string | number)[] {
+    return ['/podcasts', episode.podcastSlug, episode.slug];
   }
 
   // ============================================================

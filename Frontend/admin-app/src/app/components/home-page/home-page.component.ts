@@ -398,7 +398,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadUpcomingEvents(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.eventService.getUpcomingEvents(6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.eventService.getUpcomingEvents(15).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({

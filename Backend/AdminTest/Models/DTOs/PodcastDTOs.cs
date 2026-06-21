@@ -61,6 +61,14 @@ namespace AkordishKeit.Models.DTOs
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<PodcastEpisodeArtistDto> TaggedArtists { get; set; } = new();
+    }
+
+    public class PodcastEpisodeArtistDto
+    {
+        public int ArtistId { get; set; }
+        public string ArtistName { get; set; } = string.Empty;
+        public string? ArtistImageUrl { get; set; }
     }
 
     public class PodcastEpisodeDetailDto : PodcastEpisodeDto
@@ -137,6 +145,7 @@ namespace AkordishKeit.Models.DTOs
         public DateTime? PublishedAt { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsActive { get; set; } = true;
+        public List<int>? ArtistIds { get; set; }
     }
 
     public class UpdatePodcastEpisodeDto : CreatePodcastEpisodeDto

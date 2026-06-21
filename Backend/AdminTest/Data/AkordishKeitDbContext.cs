@@ -44,6 +44,7 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<ArtistAlbum> ArtistAlbums { get; set; }
     public DbSet<ArticleArtist> ArticleArtists { get; set; }
     public DbSet<EventArtist> EventArtists { get; set; }
+    public DbSet<PodcastEpisodeArtist> PodcastEpisodeArtists { get; set; }
 
     // Advertisements
     public DbSet<Client> Clients { get; set; }
@@ -154,6 +155,7 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ArtistAlbumConfiguration());
         modelBuilder.ApplyConfiguration(new ArticleArtistConfiguration());
         modelBuilder.ApplyConfiguration(new EventArtistConfiguration());
+        modelBuilder.ApplyConfiguration(new PodcastEpisodeArtistConfiguration());
         modelBuilder.ApplyConfiguration(new InstrumentConfiguration());
         modelBuilder.ApplyConfiguration(new UserInstrumentConfiguration());
 

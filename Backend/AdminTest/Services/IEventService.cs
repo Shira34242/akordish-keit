@@ -28,7 +28,7 @@ namespace AkordishKeit.Services
         /// <summary>
         /// קבלת הופעות קרובות (לדף הראשי)
         /// </summary>
-        Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 6);
+        Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 15);
 
         /// <summary>
         /// יצירת הופעה חדשה

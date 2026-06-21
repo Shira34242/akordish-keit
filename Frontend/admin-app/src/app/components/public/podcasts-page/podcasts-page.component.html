@@ -182,6 +182,7 @@
           <div class="now-playing" *ngIf="selectedEpisode">
             <span>מנגן עכשיו</span>
             <strong>{{ selectedEpisode.title }}</strong>
+            <p class="episode-description" *ngIf="selectedEpisode.description" [innerHTML]="selectedEpisode.description"></p>
             <div *ngIf="selectedEpisode.uploaderProfile" class="podcast-uploader-badge">
               <app-content-uploader-badge [profile]="selectedEpisode.uploaderProfile" />
             </div>

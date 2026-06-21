@@ -20,6 +20,7 @@ import { PagedResult } from '../models/user.model';
 import { SongDto } from '../models/song.model';
 import { Article } from '../models/article.model';
 import { UpcomingEventDto } from '../models/event.model';
+import { PodcastEpisode } from '../models/podcast.model';
 
 @Injectable({
     providedIn: 'root'
@@ -148,6 +149,11 @@ export class ArtistService {
      */
     getArtistEvents(id: number): Observable<UpcomingEventDto[]> {
         return this.http.get<UpcomingEventDto[]>(`${this.apiUrl}/${id}/events`);
+    }
+
+    getArtistPodcastEpisodes(id: number, limit: number = 12): Observable<PodcastEpisode[]> {
+        const params = new HttpParams().set('limit', limit.toString());
+        return this.http.get<PodcastEpisode[]>(`${this.apiUrl}/${id}/podcast-episodes`, { params });
     }
 
     // ========================================

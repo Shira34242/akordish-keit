@@ -15,6 +15,15 @@ import { ArtistStatus, BannerMediaType, PerformanceEventInput, UpdateArtistDto }
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 
+interface ArtistHitForm {
+  clientKey: string;
+  title: string;
+  imageUrl?: string;
+  youTubeUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 interface ArtistFormData {
   userId: number;
   name: string;
@@ -44,7 +53,7 @@ interface ArtistFormData {
   bannerBlur: number;
   // Premium fields - gallery (unified)
   galleryItems?: { kind: 'image' | 'video'; imageUrl?: string; caption?: string; videoUrl?: string; title?: string; displayOrder: number }[];
-  hits?: { title: string; imageUrl?: string; youTubeUrl: string; displayOrder: number; isActive: boolean }[];
+  hits?: ArtistHitForm[];
   albums?: { title: string; coverImageUrl: string; releaseYear: number | null; externalUrl: string; displayOrder: number; isActive: boolean }[];
 }
 
@@ -76,6 +85,8 @@ export class ArtistCreateComponent implements OnInit {
   subscription?: SubscriptionDto;
   isPremium = false;
   private draftSaved = false;
+  private hitKeySeed = 0;
+  private draggedHitIndex: number | null = null;
 
   readonly GALLERY_MIN_ITEMS = 5;
 
@@ -266,6 +277,7 @@ export class ArtistCreateComponent implements OnInit {
   addHit(): void {
     if (!this.artistForm.hits) this.artistForm.hits = [];
     this.artistForm.hits.push({
+      clientKey: this.createHitKey(),
       title: '',
       imageUrl: '',
       youTubeUrl: '',
@@ -276,18 +288,45 @@ export class ArtistCreateComponent implements OnInit {
 
   removeHit(index: number): void {
     this.artistForm.hits?.splice(index, 1);
+    this.syncHitOrder();
+  }
+
+  onHitDragStart(index: number): void {
+    this.draggedHitIndex = index;
+  }
+
+  onHitDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onHitDrop(index: number): void {
+    const hits = this.artistForm.hits;
+    if (!hits || this.draggedHitIndex === null || this.draggedHitIndex === index) {
+      this.draggedHitIndex = null;
+      return;
+    }
+
+    const [draggedHit] = hits.splice(this.draggedHitIndex, 1);
+    hits.splice(index, 0, draggedHit);
+    this.draggedHitIndex = null;
+    this.syncHitOrder();
+  }
+
+  onHitDragEnd(): void {
+    this.draggedHitIndex = null;
+  }
+
+  trackHit(_index: number, hit: ArtistHitForm): string {
+    return hit.clientKey;
+  }
+
+  private syncHitOrder(): void {
     this.artistForm.hits?.forEach((hit, order) => hit.displayOrder = order);
   }
 
-  moveHit(index: number, direction: -1 | 1): void {
-    const hits = this.artistForm.hits;
-    if (!hits) return;
-
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= hits.length) return;
-
-    [hits[index], hits[newIndex]] = [hits[newIndex], hits[index]];
-    hits.forEach((hit, order) => hit.displayOrder = order);
+  private createHitKey(): string {
+    this.hitKeySeed += 1;
+    return `hit-${this.hitKeySeed}`;
   }
 
   onHitYouTubeUrlChange(index: number): void {

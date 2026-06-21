@@ -92,4 +92,5 @@ public class Artist
     public virtual ICollection<ArtistAlbum> Albums { get; set; } = new List<ArtistAlbum>();
     public virtual ICollection<ArticleArtist> ArticleArtists { get; set; } = new List<ArticleArtist>();
     public virtual ICollection<EventArtist> EventArtists { get; set; } = new List<EventArtist>();
+    public virtual ICollection<PodcastEpisodeArtist> PodcastEpisodeArtists { get; set; } = new List<PodcastEpisodeArtist>();
 }

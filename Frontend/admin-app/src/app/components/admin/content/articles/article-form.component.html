@@ -90,10 +90,27 @@
             class="form-textarea article-body-input"
             [(ngModel)]="article.content"
             name="content"
-            (input)="calculateReadTime()"
+            (input)="onArticleContentInput($event)"
+            (blur)="closeMentionMenu()"
             rows="7"
             placeholder="כתיבת הכתבה..."
             required></textarea>
+          <div class="mention-menu" *ngIf="mentionOpen" (mousedown)="$event.preventDefault()">
+            <div class="mention-menu-loading" *ngIf="mentionLoading">מחפש פרופילים...</div>
+            <button
+              type="button"
+              class="mention-menu-item"
+              *ngFor="let profile of mentionResults"
+              (click)="insertMention(profile)">
+              <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName">
+              <span *ngIf="!profile.imageUrl" class="mention-menu-initial">{{ profile.displayName.charAt(0) }}</span>
+              <span class="mention-menu-copy">
+                <strong>{{ profile.displayName }}</strong>
+                <small>{{ getMentionProfileLabel(profile) }}</small>
+              </span>
+            </button>
+            <div class="mention-menu-empty" *ngIf="!mentionLoading && mentionResults.length === 0">לא נמצאו פרופילים</div>
+          </div>
           <div class="field-hint" *ngIf="article.readTimeMinutes">
             זמן קריאה משוער: {{ article.readTimeMinutes }} דקות
           </div>
@@ -387,6 +404,35 @@
                   [name]="'artist-' + artist.id">
                 <span>{{ artist.name }}</span>
               </label>
+            </div>
+
+            <div class="artist-suggestions" *ngIf="artistSuggestionsLoading || artistSuggestions.length > 0">
+              <div class="artist-suggestions-header">
+                <span>הצעות אוטומטיות מהתוכן</span>
+                <button type="button" class="btn-rescan-artists" (click)="scanArtistSuggestions()">
+                  <span class="material-icons">refresh</span>
+                  סריקה מחדש
+                </button>
+              </div>
+
+              <div class="artist-suggestion-loading" *ngIf="artistSuggestionsLoading">בודק אזכורי אמנים...</div>
+
+              <div class="artist-suggestion-list" *ngIf="!artistSuggestionsLoading">
+                <div *ngFor="let suggestion of artistSuggestions" class="artist-suggestion-chip">
+                  <img *ngIf="suggestion.artistImageUrl" [src]="suggestion.artistImageUrl" [alt]="suggestion.artistName">
+                  <span *ngIf="!suggestion.artistImageUrl" class="artist-suggestion-initial">{{ suggestion.artistName.charAt(0) }}</span>
+                  <div>
+                    <strong>{{ suggestion.artistName }}</strong>
+                    <small>{{ suggestion.matchedFields.join(', ') }}</small>
+                  </div>
+                  <button type="button" class="btn-add-suggestion" (click)="addSuggestedArtist(suggestion)" title="הוסף תיוג">
+                    <span class="material-icons">add</span>
+                  </button>
+                  <button type="button" class="btn-dismiss-suggestion" (click)="dismissSuggestedArtist(suggestion.artistId)" title="הסתר הצעה">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <button

@@ -46,6 +46,7 @@ public class ArtistDetailDto
     public int SongCount { get; set; }
     public int ArticleCount { get; set; }
     public int UpcomingEventCount { get; set; }
+    public int PodcastEpisodeCount { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? BumpedAt { get; set; }

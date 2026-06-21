@@ -45,6 +45,7 @@ export interface Artist {
   songCount: number;               // כמות שירים
   articleCount: number;            // כמות כתבות
   upcomingEventCount: number;      // כמות הופעות קרובות
+  podcastEpisodeCount?: number;
 
   hits: ArtistHit[];
   albums: ArtistAlbum[];

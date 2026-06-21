@@ -501,7 +501,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private applySeoForSeries(podcast: PodcastDetail): void {
     const title = `${podcast.name} - פודקאסט | אקורדישקייט`;
     const description = podcast.description
-      ? podcast.description.replace(/\s+/g, ' ').trim().slice(0, 160)
+      ? this.stripHtml(podcast.description).replace(/\s+/g, ' ').trim().slice(0, 160)
       : `${podcast.name} – פודקאסט. ${podcast.episodeCount ? `${podcast.episodeCount} פרקים. ` : ''}האזינו באקורדישקייט.`;
 
     this.seo.set({
@@ -516,7 +516,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     const seriesName = this.selectedPodcast?.name || episode.podcastName;
     const title = `${episode.title} - ${seriesName} | אקורדישקייט`;
     const description = episode.description
-      ? episode.description.replace(/\s+/g, ' ').trim().slice(0, 160)
+      ? this.stripHtml(episode.description).replace(/\s+/g, ' ').trim().slice(0, 160)
       : `${episode.title} – פרק בפודקאסט ${seriesName}. האזינו באקורדישקייט.`;
 
     this.seo.set({
@@ -535,5 +535,9 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       title: 'פודקאסטים - אקורדישקייט',
       description: 'פודקאסטים בנושא מוזיקה יהודית, ראיונות עם אמנים, תוכן מוזיקלי והפקות. האזינו ישירות באקורדישקייט.'
     });
+  }
+
+  private stripHtml(value: string): string {
+    return value.replace(/<[^>]*>/g, ' ');
   }
 }
