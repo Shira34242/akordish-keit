@@ -54,8 +54,14 @@ export class NotificationService {
     );
   }
 
-  deleteNotification(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
+  deleteNotification(id: number, wasUnread = false): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true }).pipe(
+      tap(() => {
+        if (wasUnread) {
+          this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - 1));
+        }
+      })
+    );
   }
 
   deleteAllNotifications(): Observable<void> {

@@ -32,4 +32,6 @@ public interface INotificationService
     Task NotifyServiceProviderApprovedAsync(int userId, int providerId, string displayName);
     Task NotifyArtistSubmittedAsync(int userId, int artistId, string artistName);
     Task NotifyArtistApprovedAsync(int userId, int artistId, string artistName);
+    Task NotifyTeacherRejectedAsync(int userId, int teacherId, string displayName);
+    Task NotifyServiceProviderRejectedAsync(int userId, int providerId, string displayName);
 }

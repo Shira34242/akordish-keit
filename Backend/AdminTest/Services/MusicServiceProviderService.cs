@@ -415,6 +415,14 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         serviceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
+        if (serviceProvider.UserId.HasValue)
+        {
+            await _notificationService.NotifyServiceProviderRejectedAsync(
+                serviceProvider.UserId.Value,
+                serviceProvider.Id,
+                serviceProvider.DisplayName);
+        }
+
         return true;
     }
 

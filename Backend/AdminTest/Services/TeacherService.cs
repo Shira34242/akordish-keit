@@ -421,6 +421,14 @@ public class TeacherService : ITeacherService
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
+        if (teacher.ServiceProvider.UserId.HasValue)
+        {
+            await _notificationService.NotifyTeacherRejectedAsync(
+                teacher.ServiceProvider.UserId.Value,
+                teacher.Id,
+                teacher.ServiceProvider.DisplayName);
+        }
+
         return true;
     }
 

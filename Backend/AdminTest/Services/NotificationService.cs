@@ -144,18 +144,9 @@ public class NotificationService : INotificationService
 
     public async Task DeleteAllAsync(int userId)
     {
-        var now = DateTime.UtcNow;
-        var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsDeleted)
-            .ToListAsync();
-
-        foreach (var notification in notifications)
-        {
-            notification.IsDeleted = true;
-            notification.DeletedAt = now;
-        }
-
-        await _context.SaveChangesAsync();
+        await _context.Notifications
+            .Where(n => n.UserId == userId)
+            .ExecuteDeleteAsync();
     }
 
     public Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId)
@@ -564,6 +555,34 @@ public class NotificationService : INotificationService
             RelatedEntityType = "Artist",
             RelatedEntityId = artistId,
             ActionUrl = $"/artist/{artistId}"
+        });
+    }
+
+    public Task NotifyTeacherRejectedAsync(int userId, int teacherId, string displayName)
+    {
+        return CreateAsync(new CreateNotificationDto
+        {
+            UserId = userId,
+            Title = "דף המורה לא אושר",
+            Message = $"דף המורה \"{displayName}\" לא עמד בדרישות האתר ולא פורסם. לפרטים פנה לצוות האתר.",
+            Type = NotificationType.Rejection,
+            Category = NotificationCategory.Teacher,
+            RelatedEntityType = "Teacher",
+            RelatedEntityId = teacherId
+        });
+    }
+
+    public Task NotifyServiceProviderRejectedAsync(int userId, int providerId, string displayName)
+    {
+        return CreateAsync(new CreateNotificationDto
+        {
+            UserId = userId,
+            Title = "דף בעל המקצוע לא אושר",
+            Message = $"דף בעל המקצוע \"{displayName}\" לא עמד בדרישות האתר ולא פורסם. לפרטים פנה לצוות האתר.",
+            Type = NotificationType.Rejection,
+            Category = NotificationCategory.ServiceProvider,
+            RelatedEntityType = "ServiceProvider",
+            RelatedEntityId = providerId
         });
     }
 
