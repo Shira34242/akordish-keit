@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
@@ -18,6 +18,7 @@ import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
 import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
+import { attachArticleContentImageFallbacks, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
 import { artistRoute } from '../../../utils/slug';
 
 @Component({
@@ -39,6 +40,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly seo = inject(SeoService);
   private readonly langService = inject(LanguageService);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -80,6 +82,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   article: Article | null = null;
+  articleContentHtml: SafeHtml | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
   isFavorite = false;
@@ -222,6 +225,8 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   private handleLoadedArticle(article: Article): void {
     this.article = article;
+    this.articleContentHtml = this.sanitizer.bypassSecurityTrustHtml(prepareArticleContentHtml(article.content));
+    setTimeout(() => attachArticleContentImageFallbacks(this.host.nativeElement));
     this.selectedReaction = null;
     this.reactionCounts = {};
     this.contentPageService.setCurrentArticle(article.id);

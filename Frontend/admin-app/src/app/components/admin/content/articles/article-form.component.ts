@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
+import { RichArticleEditorComponent } from '../../../shared/rich-article-editor/rich-article-editor.component';
 import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { ArtistService } from '../../../../services/artist.service';
@@ -38,7 +39,7 @@ interface SelectedTag {
 @Component({
   selector: 'app-article-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadInputComponent],
+  imports: [CommonModule, FormsModule, FileUploadInputComponent, RichArticleEditorComponent],
   templateUrl: './article-form.component.html',
   styleUrls: ['./article-form.component.css']
 })
@@ -589,10 +590,18 @@ export class ArticleFormComponent implements OnInit {
   calculateReadTime(): void {
     if (this.article.content) {
       const wordsPerMinute = 200;
-      const wordCount = this.article.content.split(/\s+/).length;
+      const plainText = this.article.content
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .trim();
+      const wordCount = plainText ? plainText.split(/\s+/).length : 0;
       this.article.readTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
     }
     this.queueArtistSuggestionScan();
+  }
+
+  onRichArticleContentInput(): void {
+    this.calculateReadTime();
   }
 
   onArticleContentInput(event: Event): void {
@@ -645,7 +654,12 @@ export class ArticleFormComponent implements OnInit {
       return false;
     }
 
-    if (!this.article.content?.trim()) {
+    const plainContent = (this.article.content || '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+
+    if (!plainContent && !/(<img\b|<iframe\b)/i.test(this.article.content || '')) {
       alert('נא להזין תוכן');
       return false;
     }

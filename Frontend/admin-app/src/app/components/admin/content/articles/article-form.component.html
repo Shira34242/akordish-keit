@@ -85,32 +85,11 @@
       <div class="form-row">
         <div class="form-group full-width">
           <label class="form-label required" for="article-content">הכתבה עצמה</label>
-          <textarea
+          <app-rich-article-editor
             id="article-content"
-            class="form-textarea article-body-input"
-            [(ngModel)]="article.content"
-            name="content"
-            (input)="onArticleContentInput($event)"
-            (blur)="closeMentionMenu()"
-            rows="7"
-            placeholder="כתיבת הכתבה..."
-            required></textarea>
-          <div class="mention-menu" *ngIf="mentionOpen" (mousedown)="$event.preventDefault()">
-            <div class="mention-menu-loading" *ngIf="mentionLoading">מחפש פרופילים...</div>
-            <button
-              type="button"
-              class="mention-menu-item"
-              *ngFor="let profile of mentionResults"
-              (click)="insertMention(profile)">
-              <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName">
-              <span *ngIf="!profile.imageUrl" class="mention-menu-initial">{{ profile.displayName.charAt(0) }}</span>
-              <span class="mention-menu-copy">
-                <strong>{{ profile.displayName }}</strong>
-                <small>{{ getMentionProfileLabel(profile) }}</small>
-              </span>
-            </button>
-            <div class="mention-menu-empty" *ngIf="!mentionLoading && mentionResults.length === 0">לא נמצאו פרופילים</div>
-          </div>
+            [(value)]="article.content"
+            (contentInput)="onRichArticleContentInput()"
+          />
           <div class="field-hint" *ngIf="article.readTimeMinutes">
             זמן קריאה משוער: {{ article.readTimeMinutes }} דקות
           </div>

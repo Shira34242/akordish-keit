@@ -1,0 +1,201 @@
+<div class="rich-editor-shell">
+  <div #floatingMenu class="editor-main-menu">
+    <div class="editor-main-menu-row">
+      <button type="button" [class.active]="mediaPanel === 'image'" (click)="openPanel('image')" title="הוספת תמונה">
+        <span class="material-icons">add_photo_alternate</span>
+      </button>
+      <button type="button" [class.active]="mediaPanel === 'video'" (click)="openPanel('video')" title="הוספת וידאו">
+        <span class="material-icons">smart_display</span>
+      </button>
+      <button type="button" [class.active]="mediaPanel === 'button'" (click)="openPanel('button')" title="הוספת לחצן">
+        <span class="material-icons">ads_click</span>
+      </button>
+    </div>
+
+    <div class="insert-panel" *ngIf="mediaPanel === 'image'">
+      <div class="insert-panel-grid">
+        <div class="insert-panel-field">
+          <label>תמונה בתוך הכתבה</label>
+          <app-file-upload-input
+            [(url)]="imageUrl"
+            [fileOnly]="true"
+            uploadIcon="add_photo_alternate"
+            uploadButtonText="בחירת תמונה"
+            [showPreview]="false"
+            (urlChange)="onImageUploaded($event)"
+          />
+        </div>
+        <div class="insert-panel-field">
+          <label>כיתוב</label>
+          <input type="text" [(ngModel)]="imageCaption" placeholder="כיתוב קצר לתמונה">
+        </div>
+        <div class="insert-panel-field">
+          <label>קישור לתמונה</label>
+          <input type="url" [(ngModel)]="imageLink" placeholder="https://...">
+        </div>
+        <div class="insert-panel-field">
+          <label>גודל {{ imageSize }}%</label>
+          <input class="panel-range" type="range" min="30" max="100" step="5" [(ngModel)]="imageSize">
+        </div>
+        <div class="button-variant">
+          <button type="button" [class.selected]="imageAlign === 'right'" (click)="imageAlign = 'right'">ימין</button>
+          <button type="button" [class.selected]="imageAlign === 'center'" (click)="imageAlign = 'center'">מרכז</button>
+          <button type="button" [class.selected]="imageAlign === 'left'" (click)="imageAlign = 'left'">שמאל</button>
+        </div>
+      </div>
+      <button type="button" class="panel-submit" [disabled]="!imageUrl.trim()" (click)="insertImage()">הוספת תמונה</button>
+    </div>
+
+    <div class="insert-panel" *ngIf="mediaPanel === 'video'">
+      <div class="insert-panel-grid">
+        <div class="insert-panel-field">
+          <label>קישור YouTube</label>
+          <input type="url" [(ngModel)]="videoUrl" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="button-variant">
+          <button type="button" [class.selected]="videoSize === 70" (click)="videoSize = 70">70%</button>
+          <button type="button" [class.selected]="videoSize === 85" (click)="videoSize = 85">85%</button>
+          <button type="button" [class.selected]="videoSize === 100" (click)="videoSize = 100">100%</button>
+        </div>
+      </div>
+      <button type="button" class="panel-submit" [disabled]="!videoUrl.trim()" (click)="insertVideo()">הוספת וידאו</button>
+    </div>
+
+    <div class="insert-panel" *ngIf="mediaPanel === 'button'">
+      <div class="insert-panel-grid">
+        <div class="insert-panel-field">
+          <label>טקסט בלחצן</label>
+          <input type="text" [(ngModel)]="buttonLabel" placeholder="לקריאה נוספת">
+        </div>
+        <div class="insert-panel-field">
+          <label>קישור</label>
+          <input type="url" [(ngModel)]="buttonUrl" placeholder="https://...">
+        </div>
+        <div class="button-variant">
+          <button type="button" [class.selected]="buttonVariant === 'primary'" (click)="buttonVariant = 'primary'">צהוב</button>
+          <button type="button" [class.selected]="buttonVariant === 'dark'" (click)="buttonVariant = 'dark'">שחור</button>
+          <button type="button" [class.selected]="buttonVariant === 'soft'" (click)="buttonVariant = 'soft'">רך</button>
+        </div>
+        <div class="button-variant">
+          <button type="button" [class.selected]="buttonSize === 'small'" (click)="buttonSize = 'small'">קטן</button>
+          <button type="button" [class.selected]="buttonSize === 'regular'" (click)="buttonSize = 'regular'">רגיל</button>
+          <button type="button" [class.selected]="buttonSize === 'large'" (click)="buttonSize = 'large'">גדול</button>
+        </div>
+        <div class="button-variant">
+          <button type="button" [class.selected]="buttonAlign === 'right'" (click)="buttonAlign = 'right'">ימין</button>
+          <button type="button" [class.selected]="buttonAlign === 'center'" (click)="buttonAlign = 'center'">מרכז</button>
+          <button type="button" [class.selected]="buttonAlign === 'left'" (click)="buttonAlign = 'left'">שמאל</button>
+        </div>
+      </div>
+      <button type="button" class="panel-submit" [disabled]="!buttonUrl.trim() || !buttonLabel.trim()" (click)="insertButton()">הוספת לחצן</button>
+    </div>
+  </div>
+
+  <div #bubbleMenu class="selection-menu">
+    <ng-container *ngIf="hasTextSelection() && !isActive('link')">
+      <button type="button" [class.active]="isActive('bold')" (click)="toggleBold()" title="הדגשה">
+        <span class="material-icons">format_bold</span>
+      </button>
+      <button type="button" [class.active]="isActive('articleAccent', { variant: 'softTitle' })" (click)="setInlineAccent('softTitle')" title="כותרת עדינה">
+        <span class="menu-label">עדין</span>
+      </button>
+      <button type="button" [class.active]="isActive('articleAccent', { variant: 'smallTitle' })" (click)="setInlineAccent('smallTitle')" title="כותרת קטנה">
+        <span class="menu-label">קטן</span>
+      </button>
+      <button type="button" [class.active]="isActive('articleAccent', { variant: 'highlight' })" (click)="setInlineAccent('highlight')" title="הבלטה">
+        <span class="material-icons">border_color</span>
+      </button>
+      <button type="button" [class.active]="isActive('heading', { level: 2 })" (click)="setHeading(2)" title="כותרת שורה">
+        <span class="menu-label">H2</span>
+      </button>
+      <button type="button" [class.active]="isActive('heading', { level: 3 })" (click)="setHeading(3)" title="כותרת משנה">
+        <span class="menu-label">H3</span>
+      </button>
+      <button type="button" [class.active]="isActive({ textAlign: 'right' })" (click)="setTextAlign('right')" title="יישור ימין">
+        <span class="material-icons">format_align_right</span>
+      </button>
+      <button type="button" [class.active]="isActive({ textAlign: 'center' })" (click)="setTextAlign('center')" title="יישור מרכז">
+        <span class="material-icons">format_align_center</span>
+      </button>
+      <button type="button" [class.active]="isActive({ textAlign: 'left' })" (click)="setTextAlign('left')" title="יישור שמאל">
+        <span class="material-icons">format_align_left</span>
+      </button>
+      <button type="button" (click)="setLink()" title="קישור">
+        <span class="material-icons">link</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="isActive('link') && !isActive('articleButton')">
+      <span class="selection-menu-static">קישור</span>
+      <button type="button" (click)="editLink()" title="עריכת קישור">
+        <span class="material-icons">edit</span>
+      </button>
+      <button type="button" (click)="setLink()" title="הסרת קישור">
+        <span class="material-icons">link_off</span>
+      </button>
+      <button type="button" (click)="openActiveLink()" title="מעבר לקישור">
+        <span class="material-icons">open_in_new</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="isActive('articleFigure')">
+      <span class="selection-menu-static">תמונה</span>
+      <input
+        class="menu-range"
+        type="range"
+        min="30"
+        max="100"
+        step="5"
+        [ngModel]="activeFigureSize()"
+        (ngModelChange)="updateFigure({ size: $event })">
+      <button type="button" (click)="toggleFigureAlign('right')" title="ימין">
+        <span class="material-icons">format_align_right</span>
+      </button>
+      <button type="button" (click)="toggleFigureAlign('center')" title="מרכז">
+        <span class="material-icons">format_align_center</span>
+      </button>
+      <button type="button" (click)="toggleFigureAlign('left')" title="שמאל">
+        <span class="material-icons">format_align_left</span>
+      </button>
+      <button type="button" (click)="editFigureLink()" title="קישור לתמונה">
+        <span class="material-icons">link</span>
+      </button>
+      <button type="button" (click)="updateFigure({ linkHref: '' })" title="הסרת קישור מהתמונה">
+        <span class="material-icons">link_off</span>
+      </button>
+      <button type="button" (click)="openFigureLink()" title="מעבר לקישור">
+        <span class="material-icons">open_in_new</span>
+      </button>
+      <button type="button" (click)="removeSelectedNode()" title="הסרה">
+        <span class="material-icons">delete</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="isActive('articleButton')">
+      <span class="selection-menu-static">לחצן</span>
+      <button type="button" (click)="editButton()" title="עריכת טקסט וקישור">
+        <span class="material-icons">edit</span>
+      </button>
+      <button type="button" [class.active]="activeButtonVariant() === 'primary'" (click)="toggleButtonVariant('primary')">צהוב</button>
+      <button type="button" [class.active]="activeButtonVariant() === 'dark'" (click)="toggleButtonVariant('dark')">שחור</button>
+      <button type="button" [class.active]="activeButtonVariant() === 'soft'" (click)="toggleButtonVariant('soft')">רך</button>
+      <button type="button" [class.active]="activeButtonSize() === 'small'" (click)="toggleButtonSize('small')">S</button>
+      <button type="button" [class.active]="activeButtonSize() === 'regular'" (click)="toggleButtonSize('regular')">M</button>
+      <button type="button" [class.active]="activeButtonSize() === 'large'" (click)="toggleButtonSize('large')">L</button>
+      <button type="button" (click)="toggleButtonAlign('right')" title="ימין"><span class="material-icons">format_align_right</span></button>
+      <button type="button" (click)="toggleButtonAlign('center')" title="מרכז"><span class="material-icons">format_align_center</span></button>
+      <button type="button" (click)="toggleButtonAlign('left')" title="שמאל"><span class="material-icons">format_align_left</span></button>
+      <button type="button" (click)="removeSelectedNode()" title="הסרה"><span class="material-icons">delete</span></button>
+    </ng-container>
+
+    <ng-container *ngIf="isActive('youtube')">
+      <span class="selection-menu-static">וידאו</span>
+      <button type="button" (click)="updateVideoWidth(70)">70%</button>
+      <button type="button" (click)="updateVideoWidth(85)">85%</button>
+      <button type="button" (click)="updateVideoWidth(100)">100%</button>
+      <button type="button" (click)="removeSelectedNode()" title="הסרה"><span class="material-icons">delete</span></button>
+    </ng-container>
+  </div>
+
+  <div #editorHost class="editor-host"></div>
+</div>

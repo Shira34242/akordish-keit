@@ -3,7 +3,9 @@ using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace AkordishKeit.Services;
 
@@ -46,6 +48,99 @@ public class ArticleService : IArticleService
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
             && (uri.Host.Equals("img.youtube.com", StringComparison.OrdinalIgnoreCase)
                 || uri.Host.Equals("i.ytimg.com", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string SanitizeArticleContent(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return string.Empty;
+        }
+
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Clear();
+        foreach (var tag in new[]
+        {
+            "p", "br", "strong", "b", "em", "i", "u", "a", "h2", "h3", "span",
+            "figure", "figcaption", "img", "iframe"
+        })
+        {
+            sanitizer.AllowedTags.Add(tag);
+        }
+
+        sanitizer.AllowedAttributes.Clear();
+        foreach (var attribute in new[]
+        {
+            "href", "src", "alt", "title", "target", "rel", "class",
+            "width", "height", "frameborder", "allow", "allowfullscreen", "style", "data-align",
+            "loading", "decoding"
+        })
+        {
+            sanitizer.AllowedAttributes.Add(attribute);
+        }
+
+        sanitizer.AllowedSchemes.Clear();
+        sanitizer.AllowedSchemes.Add("http");
+        sanitizer.AllowedSchemes.Add("https");
+        sanitizer.AllowedSchemes.Add("mailto");
+        sanitizer.AllowedSchemes.Add("tel");
+        sanitizer.AllowedCssProperties.Clear();
+        foreach (var property in new[] { "width", "max-width", "margin-left", "margin-right", "text-align" })
+        {
+            sanitizer.AllowedCssProperties.Add(property);
+        }
+
+        var sanitized = sanitizer.Sanitize(content);
+        return FilterArticleTemplateClasses(sanitized);
+    }
+
+    private static string FilterArticleTemplateClasses(string html)
+    {
+        var allowedClasses = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "article-media",
+            "article-media-link",
+            "article-media-align-right",
+            "article-media-align-center",
+            "article-media-align-left",
+            "article-inline-image",
+            "article-video-frame",
+            "article-action",
+            "article-button",
+            "article-button-primary",
+            "article-button-dark",
+            "article-button-soft",
+            "article-button-small",
+            "article-button-regular",
+            "article-button-large",
+            "article-action-right",
+            "article-action-center",
+            "article-action-left",
+            "article-text-soft-title",
+            "article-text-small-title",
+            "article-text-highlight",
+            "content-mention"
+        };
+
+        for (var size = 30; size <= 100; size += 5)
+        {
+            allowedClasses.Add($"article-media-size-{size}");
+        }
+
+        return Regex.Replace(
+            html,
+            "\\sclass=\"(?<classes>[^\"]*)\"",
+            match =>
+            {
+                var classes = match.Groups["classes"].Value
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(allowedClasses.Contains)
+                    .Distinct()
+                    .ToList();
+
+                return classes.Count == 0 ? string.Empty : $" class=\"{string.Join(' ', classes)}\"";
+            },
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
@@ -414,12 +509,13 @@ public class ArticleService : IArticleService
             dto.UploaderProfileId);
         var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
         var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
+        var sanitizedContent = SanitizeArticleContent(dto.Content);
 
         var article = new Article
         {
             Title = dto.Title,
             Subtitle = dto.Subtitle,
-            Content = dto.Content,
+            Content = sanitizedContent,
             FeaturedImageUrl = featuredImageUrl,
             PublishDate = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
@@ -507,11 +603,12 @@ public class ArticleService : IArticleService
             dto.UploaderProfileId);
         var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
         var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
+        var sanitizedContent = SanitizeArticleContent(dto.Content);
 
         // Update article properties
         article.Title = dto.Title;
         article.Subtitle = dto.Subtitle;
-        article.Content = dto.Content;
+        article.Content = sanitizedContent;
         article.FeaturedImageUrl = featuredImageUrl;
         article.UpdatedAt = DateTime.UtcNow;
         article.AuthorName = dto.AuthorName;

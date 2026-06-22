@@ -1,0 +1,410 @@
+.rich-editor-shell {
+  position: relative;
+  border-radius: 18px;
+  background: #ffffff;
+  overflow: visible;
+}
+
+.editor-host {
+  min-height: 260px;
+}
+
+:host ::ng-deep .rich-editor-surface {
+  min-height: 260px;
+  padding: var(--space-lg);
+  border-radius: 18px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 300;
+  line-height: var(--lh-body);
+  color: #000000;
+  background: #ffffff;
+  outline: none;
+}
+
+:host ::ng-deep .rich-editor-surface p {
+  margin: 0 0 var(--space-base);
+}
+
+:host ::ng-deep .rich-editor-surface h2,
+:host ::ng-deep .rich-editor-surface h3 {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 800;
+  line-height: var(--lh-heading);
+  margin: var(--space-xl) 0 var(--space-base);
+}
+
+:host ::ng-deep .rich-editor-surface h2 { font-size: var(--font-2xl); }
+:host ::ng-deep .rich-editor-surface h3 { font-size: var(--font-xl); }
+
+:host ::ng-deep .rich-editor-surface strong {
+  font-weight: 800;
+}
+
+:host ::ng-deep .rich-editor-surface a {
+  color: #000000;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media {
+  margin: var(--space-xl) 0;
+  max-width: 100%;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media img,
+:host ::ng-deep .rich-editor-surface .article-inline-image {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
+  border-radius: 18px;
+  object-fit: contain;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media-size-30 { width: 30%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-35 { width: 35%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-40 { width: 40%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-45 { width: 45%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-50 { width: 50%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-55 { width: 55%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-60 { width: 60%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-65 { width: 65%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-70 { width: 70%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-75 { width: 75%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-80 { width: 80%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-85 { width: 85%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-90 { width: 90%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-95 { width: 95%; }
+:host ::ng-deep .rich-editor-surface .article-media-size-100 { width: 100%; }
+
+:host ::ng-deep .rich-editor-surface .article-media-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media-align-left {
+  margin-right: auto;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media-align-right {
+  margin-left: auto;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media.ProseMirror-selectednode,
+:host ::ng-deep .rich-editor-surface .article-action.ProseMirror-selectednode,
+:host ::ng-deep .rich-editor-surface iframe.ProseMirror-selectednode {
+  outline: 2px solid #ddff53;
+  outline-offset: 4px;
+}
+
+:host ::ng-deep .rich-editor-surface .article-media figcaption {
+  margin-top: var(--space-sm);
+  color: #404040;
+  font-size: var(--font-sm);
+  line-height: var(--lh-small);
+}
+
+:host ::ng-deep .rich-editor-surface iframe {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  border: 0;
+  border-radius: 18px;
+  margin: var(--space-xl) 0;
+}
+
+:host ::ng-deep .rich-editor-surface iframe[width="70"] {
+  width: 70%;
+}
+
+:host ::ng-deep .rich-editor-surface iframe[width="85"] {
+  width: 85%;
+}
+
+:host ::ng-deep .rich-editor-surface .article-action {
+  margin: var(--space-xl) 0;
+  text-align: right;
+}
+
+:host ::ng-deep .rich-editor-surface .article-action-center {
+  text-align: center;
+}
+
+:host ::ng-deep .rich-editor-surface .article-action-left {
+  text-align: left;
+}
+
+:host ::ng-deep .rich-editor-surface .article-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 var(--space-xl);
+  font-size: var(--font-sm);
+  font-weight: 800;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+:host ::ng-deep .rich-editor-surface .article-button-small {
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  font-size: var(--font-xs);
+}
+
+:host ::ng-deep .rich-editor-surface .article-button-large {
+  min-height: 44px;
+  padding: 0 var(--space-2xl);
+  font-size: var(--font-base);
+}
+
+:host ::ng-deep .rich-editor-surface .article-button-primary {
+  background: #ddff53;
+  color: #000000;
+}
+
+:host ::ng-deep .rich-editor-surface .article-button-dark {
+  background: #000000;
+  color: #ddff53;
+}
+
+:host ::ng-deep .rich-editor-surface .article-button-soft {
+  background: #F2F2F2;
+  color: #000000;
+}
+
+:host ::ng-deep .rich-editor-surface .article-text-soft-title,
+:host ::ng-deep .rich-editor-surface .article-text-small-title,
+:host ::ng-deep .rich-editor-surface .article-text-highlight {
+  font-weight: 800;
+}
+
+:host ::ng-deep .rich-editor-surface .article-text-soft-title {
+  font-size: var(--font-lg);
+}
+
+:host ::ng-deep .rich-editor-surface .article-text-small-title {
+  font-size: var(--font-base);
+}
+
+:host ::ng-deep .rich-editor-surface .article-text-highlight {
+  background: #ddff53;
+  border-radius: 999px;
+  padding: 0 var(--space-xs);
+}
+
+:host ::ng-deep .rich-editor-surface p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: right;
+  color: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  height: 0;
+}
+
+.editor-main-menu,
+.selection-menu {
+  padding: var(--space-xs);
+  border: 1px solid #F2F2F2;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #000000;
+  z-index: 30;
+}
+
+.selection-menu {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.editor-main-menu {
+  display: grid;
+  gap: var(--space-xs);
+  max-width: min(760px, calc(100vw - (var(--space-lg) * 2)));
+  max-height: calc(100vh - (var(--space-lg) * 2));
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.editor-main-menu-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.selection-menu button,
+.editor-main-menu button,
+.panel-submit,
+.button-variant button {
+  border: 0;
+  font-family: 'Open Sans', sans-serif;
+  cursor: pointer;
+}
+
+.selection-menu button,
+.editor-main-menu button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #F2F2F2;
+  color: #000000;
+}
+
+.selection-menu button.active,
+.selection-menu button:hover,
+.editor-main-menu button.active,
+.editor-main-menu button:hover {
+  background: #ddff53;
+  color: #000000;
+}
+
+.selection-menu .material-icons,
+.editor-main-menu .material-icons {
+  font-size: 18px;
+}
+
+.selection-menu-label,
+.menu-label {
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.menu-separator {
+  width: 1px;
+  height: 22px;
+  background: #F2F2F2;
+  margin: 0 var(--space-xs);
+}
+
+.selection-menu-static {
+  padding: 0 var(--space-sm);
+  color: #404040;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.menu-range {
+  width: 110px;
+  accent-color: #ddff53;
+}
+
+.insert-panel {
+  width: min(720px, calc(100vw - (var(--space-lg) * 2)));
+  max-width: 100%;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  display: grid;
+  gap: var(--space-base);
+  padding: var(--space-base);
+  border-radius: 18px;
+  background: #F2F2F2;
+  border: 1px solid #ffffff;
+}
+
+.insert-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-base);
+}
+
+.insert-panel-field {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.insert-panel label {
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.insert-panel input {
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 var(--space-base);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  background: #ffffff;
+  color: #000000;
+  outline: none;
+}
+
+.insert-panel input[type="range"],
+.panel-range {
+  padding: 0;
+  accent-color: #000000;
+}
+
+.panel-submit {
+  justify-self: start;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 var(--space-xl);
+  background: #ddff53;
+  color: #000000;
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.panel-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button-variant {
+  display: inline-flex;
+  align-items: center;
+  align-self: end;
+  gap: var(--space-sm);
+  padding: var(--space-xs);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.button-variant button {
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 var(--space-base);
+  background: transparent;
+  color: #000000;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.button-variant button.selected {
+  background: #ddff53;
+}
+
+@media (max-width: 640px) {
+  :host ::ng-deep .rich-editor-surface {
+    min-height: 220px;
+    padding: var(--space-base);
+  }
+
+  .editor-main-menu {
+    max-width: calc(100vw - (var(--space-base) * 2));
+  }
+
+  .insert-panel {
+    width: calc(100vw - (var(--space-base) * 2));
+  }
+}
