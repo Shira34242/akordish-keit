@@ -5,11 +5,12 @@ import { AnalyticsService } from '../../../services/analytics.service';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ContentUploaderBadgeComponent } from '../content-uploader-badge/content-uploader-badge.component';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
 @Component({
   selector: 'app-event-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ContentUploaderBadgeComponent, CloudflareImagePipe],
+  imports: [CommonModule, TranslatePipe, ContentUploaderBadgeComponent, CloudflareImagePipe, ImgFallbackDirective],
   templateUrl: './event-modal.component.html',
   styleUrls: ['./event-modal.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

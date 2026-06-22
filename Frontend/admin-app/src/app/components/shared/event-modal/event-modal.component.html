@@ -5,7 +5,9 @@
       *ngIf="event.imageUrl"
       [src]="event.imageUrl | cfImage:'hero'"
       [alt]="event.name"
-      class="modal-img">
+      class="modal-img"
+      [imgFallbackOriginal]="event.imageUrl"
+      imgFallback="/logo.png">
     <div *ngIf="!event.imageUrl" class="modal-placeholder">
       <span class="material-icons">music_note</span>
     </div>
