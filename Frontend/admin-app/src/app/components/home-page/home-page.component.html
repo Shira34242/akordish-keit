@@ -328,31 +328,28 @@
         <h2 class="section-title">פודקאסטים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
-      <div class="podcasts-home-panel" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
+      <div class="podcasts-home-panel">
         <div class="podcasts-home-track">
-          <ng-container *ngFor="let copy of [0, 1]">
-            <a
-              class="home-series-image-card"
-              *ngFor="let podcast of homePodcasts; trackBy: trackById"
-              routerLink="/podcasts"
-              [queryParams]="{ series: podcast.slug }"
-              [attr.aria-label]="podcast.name"
-              [attr.aria-hidden]="copy > 0 ? true : null">
-              <span class="home-series-image-card__image">
-                <img
-                  *ngIf="podcast.imageUrl; else podcastIcon"
-                  [src]="(podcast.imageUrl | cfImage:360:82) || ''"
-                  [alt]="podcast.name"
-                  [imgFallbackOriginal]="podcast.imageUrl"
-                  imgFallback="/assets/default-article.png"
-                  loading="lazy"
-                  decoding="async">
-                <ng-template #podcastIcon>
-                  <span class="material-icons">podcasts</span>
-                </ng-template>
-              </span>
-            </a>
-          </ng-container>
+          <a
+            class="home-series-image-card"
+            *ngFor="let podcast of homePodcasts; trackBy: trackById"
+            routerLink="/podcasts"
+            [queryParams]="{ series: podcast.slug }"
+            [attr.aria-label]="podcast.name">
+            <span class="home-series-image-card__image">
+              <img
+                *ngIf="podcast.imageUrl; else podcastIcon"
+                [src]="(podcast.imageUrl | cfImage:360:82) || ''"
+                [alt]="podcast.name"
+                [imgFallbackOriginal]="podcast.imageUrl"
+                imgFallback="/assets/default-article.png"
+                loading="lazy"
+                decoding="async">
+              <ng-template #podcastIcon>
+                <span class="material-icons">podcasts</span>
+              </ng-template>
+            </span>
+          </a>
         </div>
       </div>
     </section>

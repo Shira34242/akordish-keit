@@ -11,6 +11,12 @@ namespace AkordishKeit.Controllers;
 public class SystemSettingsController : ControllerBase
 {
     private const string TickerConfigKey = "hero_news_ticker_config";
+    private const string SiteGateEnabledKey = "site_access_gate_enabled";
+    private const string SiteGatePasswordHashKey = "site_access_gate_password_hash";
+    private const string SiteGatePasswordVersionKey = "site_access_gate_password_version";
+    private const string SiteGateEnabledDescription = "דרישת סיסמה בכניסה לאתר";
+    private const string SiteGatePasswordHashDescription = "סיסמת כניסה לאתר - שמורה מוצפנת";
+    private const string SiteGatePasswordVersionDescription = "גרסת סיסמת כניסה לאתר";
     private const string TickerConfigDescription = "הגדרות פס חדשות הירו בדף הבית";
 
     private readonly ISystemSettingsService _settingsService;
@@ -31,11 +37,74 @@ public class SystemSettingsController : ControllerBase
         return Ok(new { key, value });
     }
 
+    [HttpGet("access-gate")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SiteAccessGateStatusDto>> GetAccessGate()
+    {
+        return Ok(await BuildAccessGateStatusAsync());
+    }
+
+    [HttpPost("access-gate/verify")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SiteAccessGateStatusDto>> VerifyAccessGate([FromBody] VerifySiteAccessGateDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var status = await BuildAccessGateStatusAsync();
+        if (!status.Enabled)
+            return Ok(status);
+
+        var passwordHash = await _settingsService.GetValueAsync(SiteGatePasswordHashKey);
+        if (string.IsNullOrWhiteSpace(passwordHash) || !BCrypt.Net.BCrypt.Verify(dto.Password, passwordHash))
+            return Unauthorized(new { message = "סיסמה שגויה" });
+
+        return Ok(status);
+    }
+
+    [HttpPut("access-gate")]
+    public async Task<ActionResult<SiteAccessGateStatusDto>> UpdateAccessGate([FromBody] UpdateSiteAccessGateDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var currentHash = await _settingsService.GetValueAsync(SiteGatePasswordHashKey);
+        var hasNewPassword = !string.IsNullOrWhiteSpace(dto.Password);
+
+        if (dto.Enabled && string.IsNullOrWhiteSpace(currentHash) && !hasNewPassword)
+            return BadRequest(new { message = "כדי להפעיל דרישת סיסמה צריך להגדיר סיסמה" });
+
+        await _settingsService.UpsertAsync(
+            SiteGateEnabledKey,
+            dto.Enabled ? "true" : "false",
+            SiteGateEnabledDescription);
+
+        if (hasNewPassword)
+        {
+            await _settingsService.UpsertAsync(
+                SiteGatePasswordHashKey,
+                BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                SiteGatePasswordHashDescription);
+
+            await _settingsService.UpsertAsync(
+                SiteGatePasswordVersionKey,
+                DateTime.UtcNow.Ticks.ToString(),
+                SiteGatePasswordVersionDescription);
+        }
+        else
+        {
+            await EnsureAccessGateVersionAsync();
+        }
+
+        return Ok(await BuildAccessGateStatusAsync());
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<SystemSettingDto>>> GetAll()
     {
+        await EnsureAccessGateDefaultsAsync();
         var settings = await _settingsService.GetAllAsync();
-        return Ok(settings);
+        return Ok(settings.Where(s => s.Key != SiteGatePasswordHashKey).ToList());
     }
 
     [HttpPut("{key}")]
@@ -44,9 +113,47 @@ public class SystemSettingsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        if (key == SiteGatePasswordHashKey || key == SiteGatePasswordVersionKey)
+            return BadRequest(new { message = "הגדרה זו מתעדכנת רק דרך הגדרות סיסמת הכניסה לאתר" });
+
         var description = key == TickerConfigKey ? TickerConfigDescription : "";
         var updated = await _settingsService.UpsertAsync(key, dto.Value, description);
 
         return Ok(updated);
+    }
+
+    private async Task<SiteAccessGateStatusDto> BuildAccessGateStatusAsync()
+    {
+        var enabled = await _settingsService.GetBoolAsync(SiteGateEnabledKey);
+        var passwordHash = await _settingsService.GetValueAsync(SiteGatePasswordHashKey);
+        var version = await _settingsService.GetValueAsync(SiteGatePasswordVersionKey);
+
+        return new SiteAccessGateStatusDto
+        {
+            Enabled = enabled,
+            PasswordConfigured = !string.IsNullOrWhiteSpace(passwordHash),
+            AccessVersion = version ?? string.Empty
+        };
+    }
+
+    private async Task EnsureAccessGateDefaultsAsync()
+    {
+        if (await _settingsService.GetValueAsync(SiteGateEnabledKey) == null)
+        {
+            await _settingsService.UpsertAsync(SiteGateEnabledKey, "false", SiteGateEnabledDescription);
+        }
+
+        await EnsureAccessGateVersionAsync();
+    }
+
+    private async Task EnsureAccessGateVersionAsync()
+    {
+        if (await _settingsService.GetValueAsync(SiteGatePasswordVersionKey) == null)
+        {
+            await _settingsService.UpsertAsync(
+                SiteGatePasswordVersionKey,
+                DateTime.UtcNow.Ticks.ToString(),
+                SiteGatePasswordVersionDescription);
+        }
     }
 }

@@ -448,11 +448,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const onLatestDone = this.trackPendingLoad();
-    this.podcastService.getLatestEpisodes(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getLatestEpisodes(16).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onLatestDone();
       completeLoad();
     })).subscribe({
-      next: episodes => { this.latestPodcastEpisodes = episodes; },
+      next: episodes => { this.latestPodcastEpisodes = this.uniquePodcastEpisodesBySeries(episodes).slice(0, 8); },
       error: err => console.error('loadContent: latest podcast episodes', err)
     });
 
@@ -733,6 +733,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return articles.filter(article => {
       if (seen.has(article.id)) return false;
       seen.add(article.id);
+      return true;
+    });
+  }
+
+  private uniquePodcastEpisodesBySeries<T extends { podcastSlug: string }>(episodes: T[]): T[] {
+    const seen = new Set<string>();
+    return episodes.filter(episode => {
+      if (seen.has(episode.podcastSlug)) return false;
+      seen.add(episode.podcastSlug);
       return true;
     });
   }

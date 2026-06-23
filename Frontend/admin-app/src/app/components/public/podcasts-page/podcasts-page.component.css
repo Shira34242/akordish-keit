@@ -277,31 +277,20 @@
 
 .series-strip::-webkit-scrollbar,
 .podcasts-home-panel {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 4px;
-  direction: ltr;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-
-.podcasts-home-panel::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
+  direction: rtl;
 }
 
 .podcasts-home-track {
-  display: flex;
-  direction: ltr;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  direction: rtl;
   gap: var(--space-lg);
-  width: max-content;
   align-items: stretch;
 }
 
 .home-series-image-card {
-  flex: 0 0 13.5rem;
-  width: 13.5rem;
+  width: 100%;
   color: #000000;
   text-decoration: none;
   border-radius: 24px;
@@ -1360,8 +1349,7 @@
   }
 
   .home-series-image-card {
-    flex-basis: 10rem;
-    width: 10rem;
+    width: 100%;
   }
 }
 
@@ -1371,8 +1359,7 @@
   }
 
   .home-series-image-card {
-    flex-basis: 9.5rem;
-    width: 9.5rem;
+    width: 100%;
     border-radius: 18px;
   }
 

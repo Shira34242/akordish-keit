@@ -75,6 +75,11 @@ html {
   cursor: pointer;
 }
 
+.gate-box button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .gate-error {
   color: #e53935;
   font-size: 0.85rem;

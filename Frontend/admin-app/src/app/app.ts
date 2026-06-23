@@ -13,6 +13,7 @@ import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
 import { environment } from '../environments/environment';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
+import { SiteAccessGateStatusDto, SystemSettingsService } from './services/system-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -24,20 +25,32 @@ import { AdBlockDetectionService } from './services/adblock-detection.service';
 export class AppComponent implements OnInit {
   title = 'אקורדישקייט';
 
-  // סיסמה זמנית לבדיקות — להסיר לאחר השקה
   private readonly GATE_KEY = 'akordishkayt_beta_access';
-  private readonly GATE_PASSWORD = 'test2026';
-  showGate = environment.production && localStorage.getItem(this.GATE_KEY) !== '1';
+  showGate = false;
+  gateChecking = true;
+  gateSubmitting = false;
   gateInput = '';
-  gateError = false;
+  gateError: string | null = null;
 
   submitGate() {
-    if (this.gateInput === this.GATE_PASSWORD) {
-      localStorage.setItem(this.GATE_KEY, '1');
-      this.showGate = false;
-    } else {
-      this.gateError = true;
-    }
+    if (!this.gateInput.trim() || this.gateSubmitting) return;
+
+    this.gateSubmitting = true;
+    this.gateError = null;
+
+    this.settingsService.verifyAccessGate(this.gateInput).subscribe({
+      next: (status) => {
+        localStorage.setItem(this.GATE_KEY, status.accessVersion || 'open');
+        this.showGate = false;
+        this.gateSubmitting = false;
+        this.gateInput = '';
+        this.startAppServices();
+      },
+      error: () => {
+        this.gateError = 'סיסמה שגויה';
+        this.gateSubmitting = false;
+      }
+    });
   }
 
   isAddSongModalOpen = false;
@@ -59,10 +72,38 @@ export class AppComponent implements OnInit {
     private requiredFieldFeedback: RequiredFieldFeedbackService,
     private authService: AuthService,
     private seoRouteService: SeoRouteService,
-    private adBlockDetectionService: AdBlockDetectionService
+    private adBlockDetectionService: AdBlockDetectionService,
+    private settingsService: SystemSettingsService
   ) { }
 
   ngOnInit() {
+    this.loadAccessGate();
+  }
+
+  private loadAccessGate(): void {
+    this.settingsService.getAccessGate().subscribe({
+      next: (status) => this.applyAccessGateStatus(status),
+      error: () => {
+        this.gateChecking = false;
+        this.showGate = environment.production;
+        if (!this.showGate) this.startAppServices();
+      }
+    });
+  }
+
+  private applyAccessGateStatus(status: SiteAccessGateStatusDto): void {
+    const savedVersion = localStorage.getItem(this.GATE_KEY);
+    const accessVersion = status.accessVersion || 'open';
+
+    this.gateChecking = false;
+    this.showGate = status.enabled && savedVersion !== accessVersion;
+
+    if (!this.showGate) {
+      this.startAppServices();
+    }
+  }
+
+  private startAppServices(): void {
     this.seoRouteService.start();
     this.adBlockDetectionService.start();
     this.siteAlertService.patchBrowserAlerts();

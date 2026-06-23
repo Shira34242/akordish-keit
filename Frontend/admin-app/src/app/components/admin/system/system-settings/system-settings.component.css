@@ -58,6 +58,10 @@
   border: none;
 }
 
+.access-gate-card {
+  align-items: flex-start;
+}
+
 .setting-info { flex: 1; min-width: 0; }
 
 .setting-label {
@@ -100,6 +104,12 @@
   align-items: center;
   gap: var(--space-sm);
   flex-shrink: 0;
+}
+
+.access-gate-control {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Toggle */
@@ -190,3 +200,27 @@
 .spinning { animation: spin 1s linear infinite; display: inline-block; }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 700px) {
+  .setting-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .setting-control,
+  .access-gate-control,
+  .text-control {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .text-control {
+    flex-wrap: wrap;
+  }
+
+  .setting-input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+}

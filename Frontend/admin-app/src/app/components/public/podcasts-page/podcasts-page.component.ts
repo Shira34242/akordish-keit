@@ -234,12 +234,12 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loading = true;
     forkJoin({
       podcasts: this.podcastService.getPublicPodcasts(),
-      latest: this.podcastService.getLatestEpisodes(10),
+      latest: this.podcastService.getLatestEpisodes(20),
       popular: this.podcastService.getPopularEpisodes(10)
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: ({ podcasts, latest, popular }) => {
         this.podcasts = podcasts;
-        this.latestEpisodes = latest;
+        this.latestEpisodes = this.uniquePodcastEpisodesBySeries(latest).slice(0, 10);
         this.popularEpisodes = popular;
         this.loading = false;
       },
@@ -470,6 +470,15 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private normalizeSearch(value: string): string {
     return value.trim().toLowerCase();
+  }
+
+  private uniquePodcastEpisodesBySeries<T extends { podcastSlug: string }>(episodes: T[]): T[] {
+    const seen = new Set<string>();
+    return episodes.filter(episode => {
+      if (seen.has(episode.podcastSlug)) return false;
+      seen.add(episode.podcastSlug);
+      return true;
+    });
   }
 
   private buildPlayableUrl(...urls: Array<string | null | undefined>): string | null {

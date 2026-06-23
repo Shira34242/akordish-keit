@@ -1,14 +1,16 @@
 <div *ngIf="showGate" class="gate-overlay">
   <div class="gate-box" dir="rtl">
     <h2>אקורדישקייט</h2>
-    <p>האתר בשלב בדיקות — הכנס סיסמה להמשך</p>
+    <p>האתר בשלב בדיקות - הכנס סיסמה להמשך</p>
     <input [(ngModel)]="gateInput" type="password" placeholder="סיסמה" (keyup.enter)="submitGate()" autofocus />
-    <p *ngIf="gateError" class="gate-error">סיסמה שגויה</p>
-    <button (click)="submitGate()">כניסה</button>
+    <p *ngIf="gateError" class="gate-error">{{ gateError }}</p>
+    <button (click)="submitGate()" [disabled]="gateSubmitting">
+      {{ gateSubmitting ? 'בודק...' : 'כניסה' }}
+    </button>
   </div>
 </div>
 
-<div class="app-container" *ngIf="!showGate">
+<div class="app-container" *ngIf="!showGate && !gateChecking">
   <router-outlet></router-outlet>
   <app-site-alerts></app-site-alerts>
 
