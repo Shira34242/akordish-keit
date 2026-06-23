@@ -2,7 +2,7 @@ import { AfterViewInit, Component, HostListener, NgZone, OnInit } from '@angular
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { GoogleSigninButtonModule, SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
+import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
 import { AuthResponse, AuthService, User } from '../../services/auth.service';
 import { SongService } from '../../services/song.service';
 import { ModalService } from '../../services/modal.service';
@@ -31,7 +31,6 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
   standalone: true,
   imports: [
     CommonModule,
-    GoogleSigninButtonModule,
     AddSongModalComponent,
     QuickAddAssistantModalComponent,
     AuthModalComponent,

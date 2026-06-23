@@ -312,6 +312,7 @@
  <div class="fab-chat-container"
       [class.fab-chat-expanded]="showQuickAddAssistant"
       [class.fab-hidden-on-mobile-song]="isSongPage">
+    @defer (when showQuickAddAssistant) {
     <app-quick-add-assistant-modal
         *ngIf="showQuickAddAssistant"
         [entryPoint]="quickAddEntryPoint"
@@ -320,6 +321,7 @@
         (close)="closeFabMenu()"
         (actionSelected)="handleQuickAddAction($event)">
     </app-quick-add-assistant-modal>
+    }
 
     <button class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)">
         <span class="material-icons fab-add-icon" [class.rotated]="showQuickAddAssistant">add</span>
@@ -411,22 +413,29 @@
 
 </footer>
 
+@defer (when showAddSongModal) {
 <app-add-song-modal *ngIf="showAddSongModal" (close)="closeAddSongModal()" (songAdded)="onSongAdded()">
 </app-add-song-modal>
+}
 
+@defer (when showAuthModal) {
 <app-auth-modal
     *ngIf="showAuthModal"
     (close)="closeAuthModal()"
     (authSuccess)="onAuthSuccess($event)"
     (forgotPassword)="onForgotPassword()">
 </app-auth-modal>
+}
 
+@defer (when showAdditionalDetailsModal) {
 <app-additional-details-modal
     *ngIf="showAdditionalDetailsModal"
     (close)="closeAdditionalDetailsModal()"
     (complete)="onProfileComplete($event)">
 </app-additional-details-modal>
+}
 
+@defer (when showSoftReminderModal) {
 <app-profile-soft-reminder-modal
     *ngIf="showSoftReminderModal"
     [kind]="softReminderKind"
@@ -434,13 +443,17 @@
     (saved)="closeSoftReminderModal()"
     (dismissed)="closeSoftReminderModal()">
 </app-profile-soft-reminder-modal>
+}
 
+@defer (when showForgotPasswordModal) {
 <app-forgot-password-modal
     *ngIf="showForgotPasswordModal"
     (close)="closeForgotPasswordModal()"
     (success)="onPasswordResetSuccess()">
 </app-forgot-password-modal>
+}
 
+@defer (when showReportModal) {
 <app-report-modal
     [isOpen]="showReportModal"
     [contentType]="'General'"
@@ -448,3 +461,4 @@
     [contentTitle]="'notif.general_report_title' | translate"
     (close)="closeReportModal()">
 </app-report-modal>
+}
