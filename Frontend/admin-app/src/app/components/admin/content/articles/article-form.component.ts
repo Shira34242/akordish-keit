@@ -496,6 +496,20 @@ export class ArticleFormComponent implements OnInit {
     return this.categories.filter(c => (c.section ?? 0) === 1);
   }
 
+  get isContentArticleForm(): boolean {
+    if (this.article.contentType === ArticleContentType.Blog || this.pendingSmartArticleType === 'blog') {
+      return true;
+    }
+
+    if (!this.article.categoryIds?.length || this.categories.length === 0) {
+      return false;
+    }
+
+    return !this.categories.some(
+      category => this.article.categoryIds.includes(category.id) && (category.section ?? 0) === 0
+    );
+  }
+
   loadArticle(): void {
     if (!this.articleId) return;
 
@@ -739,6 +753,9 @@ export class ArticleFormComponent implements OnInit {
     );
 
     this.article.contentType = hasNewsCategory ? ArticleContentType.News : ArticleContentType.Blog;
+    if (hasNewsCategory) {
+      this.article.heroBackgroundImageUrl = '';
+    }
   }
 
   private applySmartDraft(draft: StoredSmartDraft): void {

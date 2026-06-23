@@ -69,7 +69,7 @@
           />
         </div>
 
-        <div class="form-group" *ngIf="article.contentType === ArticleContentType.Blog">
+        <div class="form-group" *ngIf="isContentArticleForm">
           <label class="form-label">תמונת רקע לקוביה הראשית</label>
           <app-file-upload-input
             [(url)]="article.heroBackgroundImageUrl"
