@@ -29,6 +29,9 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(e => e.FeaturedImageUrl)
                .HasMaxLength(500);
 
+        builder.Property(e => e.HeroBackgroundImageUrl)
+               .HasMaxLength(500);
+
         builder.Property(e => e.PublishDate)
                .IsRequired();
 

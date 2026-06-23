@@ -508,6 +508,7 @@ public class ArticleService : IArticleService
             dto.UploaderProfileType,
             dto.UploaderProfileId);
         var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
+        var heroBackgroundImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.HeroBackgroundImageUrl);
         var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
         var sanitizedContent = SanitizeArticleContent(dto.Content);
 
@@ -517,6 +518,7 @@ public class ArticleService : IArticleService
             Subtitle = dto.Subtitle,
             Content = sanitizedContent,
             FeaturedImageUrl = featuredImageUrl,
+            HeroBackgroundImageUrl = heroBackgroundImageUrl,
             PublishDate = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             AuthorName = dto.AuthorName,
@@ -602,6 +604,7 @@ public class ArticleService : IArticleService
             dto.UploaderProfileType,
             dto.UploaderProfileId);
         var featuredImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.FeaturedImageUrl);
+        var heroBackgroundImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.HeroBackgroundImageUrl);
         var openGraphImageUrl = await StoreYouTubeThumbnailIfNeededAsync(dto.OpenGraphImageUrl);
         var sanitizedContent = SanitizeArticleContent(dto.Content);
 
@@ -610,6 +613,7 @@ public class ArticleService : IArticleService
         article.Subtitle = dto.Subtitle;
         article.Content = sanitizedContent;
         article.FeaturedImageUrl = featuredImageUrl;
+        article.HeroBackgroundImageUrl = heroBackgroundImageUrl;
         article.UpdatedAt = DateTime.UtcNow;
         article.AuthorName = dto.AuthorName;
         article.Slug = dto.Slug;
@@ -1352,6 +1356,7 @@ public class ArticleService : IArticleService
             Subtitle = original.Subtitle,
             Content = original.Content,
             FeaturedImageUrl = original.FeaturedImageUrl,
+            HeroBackgroundImageUrl = original.HeroBackgroundImageUrl,
             AuthorName = original.AuthorName,
             ContentType = original.ContentType,
             Slug = slug,
@@ -1651,6 +1656,7 @@ public class ArticleService : IArticleService
             Subtitle = article.Subtitle,
             Content = article.Content,
             FeaturedImageUrl = article.FeaturedImageUrl,
+            HeroBackgroundImageUrl = article.HeroBackgroundImageUrl,
             PublishDate = article.PublishDate,
             CreatedAt = article.CreatedAt,
             UpdatedAt = article.UpdatedAt,

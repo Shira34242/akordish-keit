@@ -50,6 +50,10 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     return cloudflareBackgroundImage(url, 'hero');
   }
 
+  heroBackgroundUrl(article: Article): string | null | undefined {
+    return article.heroBackgroundImageUrl || article.featuredImageUrl;
+  }
+
   private _heroEl: ElementRef<HTMLElement> | undefined;
 
   /* סטר — מופעל ברגע ש-*ngIf הופך true ואלמנט ה-hero מופיע ב-DOM */

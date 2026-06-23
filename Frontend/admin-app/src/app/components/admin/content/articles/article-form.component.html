@@ -69,6 +69,15 @@
           />
         </div>
 
+        <div class="form-group" *ngIf="article.contentType === ArticleContentType.Blog">
+          <label class="form-label">תמונת רקע לקוביה הראשית</label>
+          <app-file-upload-input
+            [(url)]="article.heroBackgroundImageUrl"
+            placeholder="אם ריק, תוצג תמונת הכתבה"
+          />
+          <div class="field-hint">משפיע רק על כתבות תוכן.</div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">העלאת קובץ שמע</label>
           <app-file-upload-input

@@ -299,6 +299,7 @@ namespace AkordishKeit.Controllers
                 var articles = await _context.Articles
                     .Where(a => !a.IsDeleted &&
                         ((a.FeaturedImageUrl != null && (a.FeaturedImageUrl.Contains("i.ytimg.com") || a.FeaturedImageUrl.Contains("img.youtube.com"))) ||
+                         (a.HeroBackgroundImageUrl != null && (a.HeroBackgroundImageUrl.Contains("i.ytimg.com") || a.HeroBackgroundImageUrl.Contains("img.youtube.com"))) ||
                          (a.OpenGraphImageUrl != null && (a.OpenGraphImageUrl.Contains("i.ytimg.com") || a.OpenGraphImageUrl.Contains("img.youtube.com")))))
                     .OrderBy(a => a.Id)
                     .Take(remaining)
@@ -307,6 +308,8 @@ namespace AkordishKeit.Controllers
                 foreach (var article in articles)
                 {
                     article.FeaturedImageUrl = await ConvertUrlAsync(article.FeaturedImageUrl, nameof(Article), article.Id, nameof(Article.FeaturedImageUrl));
+                    if (remaining <= 0) break;
+                    article.HeroBackgroundImageUrl = await ConvertUrlAsync(article.HeroBackgroundImageUrl, nameof(Article), article.Id, nameof(Article.HeroBackgroundImageUrl));
                     if (remaining <= 0) break;
                     article.OpenGraphImageUrl = await ConvertUrlAsync(article.OpenGraphImageUrl, nameof(Article), article.Id, nameof(Article.OpenGraphImageUrl));
                     if (remaining <= 0) break;

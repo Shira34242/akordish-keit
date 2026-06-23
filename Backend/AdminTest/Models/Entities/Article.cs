@@ -7,6 +7,7 @@ public class Article
     public string? Subtitle { get; set; }
     public string Content { get; set; } = string.Empty;
     public string? FeaturedImageUrl { get; set; }
+    public string? HeroBackgroundImageUrl { get; set; }
     public DateTime PublishDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

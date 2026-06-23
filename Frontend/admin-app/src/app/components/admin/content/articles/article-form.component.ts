@@ -147,6 +147,7 @@ export class ArticleFormComponent implements OnInit {
     subtitle: '',
     content: '',
     featuredImageUrl: '',
+    heroBackgroundImageUrl: '',
     authorName: '',
     categoryIds: [], // Default to empty array
     contentType: ArticleContentType.News,
@@ -229,6 +230,7 @@ export class ArticleFormComponent implements OnInit {
       subtitle: '',
       content: '',
       featuredImageUrl: '',
+      heroBackgroundImageUrl: '',
       authorName: '',
       categoryIds: [],
       contentType,
@@ -505,6 +507,7 @@ export class ArticleFormComponent implements OnInit {
           subtitle: data.subtitle || '',
           content: data.content,
           featuredImageUrl: data.featuredImageUrl || '',
+          heroBackgroundImageUrl: data.heroBackgroundImageUrl || '',
           authorName: data.authorName || '',
           categoryIds: data.categoryIds || [],
           contentType: data.contentType,
@@ -617,6 +620,9 @@ export class ArticleFormComponent implements OnInit {
     }
 
     this.syncContentTypeFromCategories();
+    if (this.article.contentType !== ArticleContentType.Blog) {
+      this.article.heroBackgroundImageUrl = '';
+    }
     this.saving = true;
 
     if (this.isEditMode && this.articleId) {
