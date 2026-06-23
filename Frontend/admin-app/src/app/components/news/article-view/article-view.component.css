@@ -352,6 +352,7 @@
   text-align: right;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  overflow-x: hidden;
 }
 
 /* תמונות בתוכן דינמי — לא יוצאות מה-container */
@@ -405,9 +406,14 @@
 }
 
 .article-content .article-media {
+  --article-media-width: 100%;
+  display: block;
+  width: var(--article-media-width) !important;
   margin: var(--space-xl) 0;
   white-space: normal;
-  max-width: 100%;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .article-content .article-media img,
@@ -415,32 +421,42 @@
   width: 100%;
   height: auto;
   max-width: 100%;
+  max-height: none;
   display: block;
   border-radius: 18px;
   object-fit: contain;
 }
 
+.article-content .article-media *,
+.article-content .article-media-link {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .article-content .article-media-link {
   display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 18px;
   color: inherit;
   text-decoration: none;
 }
 
-.article-content .article-media-size-30 { width: 30%; }
-.article-content .article-media-size-35 { width: 35%; }
-.article-content .article-media-size-40 { width: 40%; }
-.article-content .article-media-size-45 { width: 45%; }
-.article-content .article-media-size-50 { width: 50%; }
-.article-content .article-media-size-55 { width: 55%; }
-.article-content .article-media-size-60 { width: 60%; }
-.article-content .article-media-size-65 { width: 65%; }
-.article-content .article-media-size-70 { width: 70%; }
-.article-content .article-media-size-75 { width: 75%; }
-.article-content .article-media-size-80 { width: 80%; }
-.article-content .article-media-size-85 { width: 85%; }
-.article-content .article-media-size-90 { width: 90%; }
-.article-content .article-media-size-95 { width: 95%; }
-.article-content .article-media-size-100 { width: 100%; }
+.article-content .article-media-size-30 { --article-media-width: 30%; }
+.article-content .article-media-size-35 { --article-media-width: 35%; }
+.article-content .article-media-size-40 { --article-media-width: 40%; }
+.article-content .article-media-size-45 { --article-media-width: 45%; }
+.article-content .article-media-size-50 { --article-media-width: 50%; }
+.article-content .article-media-size-55 { --article-media-width: 55%; }
+.article-content .article-media-size-60 { --article-media-width: 60%; }
+.article-content .article-media-size-65 { --article-media-width: 65%; }
+.article-content .article-media-size-70 { --article-media-width: 70%; }
+.article-content .article-media-size-75 { --article-media-width: 75%; }
+.article-content .article-media-size-80 { --article-media-width: 80%; }
+.article-content .article-media-size-85 { --article-media-width: 85%; }
+.article-content .article-media-size-90 { --article-media-width: 90%; }
+.article-content .article-media-size-95 { --article-media-width: 95%; }
+.article-content .article-media-size-100 { --article-media-width: 100%; }
 
 .article-content .article-media-align-center {
   margin-left: auto;

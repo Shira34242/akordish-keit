@@ -86,8 +86,6 @@ const ArticleFigure = Node.create({
     const size = clampPercent(HTMLAttributes['size'], 100);
     const align = normalizeAlign(HTMLAttributes['align']);
     const style = [
-      `width: ${size}%`,
-      'max-width: 100%',
       align === 'center' ? 'margin-left: auto' : '',
       align === 'center' ? 'margin-right: auto' : '',
       align === 'left' ? 'margin-right: auto' : '',
