@@ -443,21 +443,21 @@
   text-decoration: none;
 }
 
-.article-content .article-media-size-30 { --article-media-width: 30%; }
-.article-content .article-media-size-35 { --article-media-width: 35%; }
-.article-content .article-media-size-40 { --article-media-width: 40%; }
-.article-content .article-media-size-45 { --article-media-width: 45%; }
-.article-content .article-media-size-50 { --article-media-width: 50%; }
-.article-content .article-media-size-55 { --article-media-width: 55%; }
-.article-content .article-media-size-60 { --article-media-width: 60%; }
-.article-content .article-media-size-65 { --article-media-width: 65%; }
-.article-content .article-media-size-70 { --article-media-width: 70%; }
-.article-content .article-media-size-75 { --article-media-width: 75%; }
-.article-content .article-media-size-80 { --article-media-width: 80%; }
-.article-content .article-media-size-85 { --article-media-width: 85%; }
-.article-content .article-media-size-90 { --article-media-width: 90%; }
-.article-content .article-media-size-95 { --article-media-width: 95%; }
-.article-content .article-media-size-100 { --article-media-width: 100%; }
+.article-content .article-media.article-media-size-30 { --article-media-width: 30%; }
+.article-content .article-media.article-media-size-35 { --article-media-width: 35%; }
+.article-content .article-media.article-media-size-40 { --article-media-width: 40%; }
+.article-content .article-media.article-media-size-45 { --article-media-width: 45%; }
+.article-content .article-media.article-media-size-50 { --article-media-width: 50%; }
+.article-content .article-media.article-media-size-55 { --article-media-width: 55%; }
+.article-content .article-media.article-media-size-60 { --article-media-width: 60%; }
+.article-content .article-media.article-media-size-65 { --article-media-width: 65%; }
+.article-content .article-media.article-media-size-70 { --article-media-width: 70%; }
+.article-content .article-media.article-media-size-75 { --article-media-width: 75%; }
+.article-content .article-media.article-media-size-80 { --article-media-width: 80%; }
+.article-content .article-media.article-media-size-85 { --article-media-width: 85%; }
+.article-content .article-media.article-media-size-90 { --article-media-width: 90%; }
+.article-content .article-media.article-media-size-95 { --article-media-width: 95%; }
+.article-content .article-media.article-media-size-100 { --article-media-width: 100%; }
 
 .article-content .article-media-align-center {
   margin-left: auto;
@@ -525,21 +525,21 @@
   text-decoration: none;
 }
 
-:host ::ng-deep .article-content .article-media-size-30 { --article-media-width: 30%; }
-:host ::ng-deep .article-content .article-media-size-35 { --article-media-width: 35%; }
-:host ::ng-deep .article-content .article-media-size-40 { --article-media-width: 40%; }
-:host ::ng-deep .article-content .article-media-size-45 { --article-media-width: 45%; }
-:host ::ng-deep .article-content .article-media-size-50 { --article-media-width: 50%; }
-:host ::ng-deep .article-content .article-media-size-55 { --article-media-width: 55%; }
-:host ::ng-deep .article-content .article-media-size-60 { --article-media-width: 60%; }
-:host ::ng-deep .article-content .article-media-size-65 { --article-media-width: 65%; }
-:host ::ng-deep .article-content .article-media-size-70 { --article-media-width: 70%; }
-:host ::ng-deep .article-content .article-media-size-75 { --article-media-width: 75%; }
-:host ::ng-deep .article-content .article-media-size-80 { --article-media-width: 80%; }
-:host ::ng-deep .article-content .article-media-size-85 { --article-media-width: 85%; }
-:host ::ng-deep .article-content .article-media-size-90 { --article-media-width: 90%; }
-:host ::ng-deep .article-content .article-media-size-95 { --article-media-width: 95%; }
-:host ::ng-deep .article-content .article-media-size-100 { --article-media-width: 100%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-30 { --article-media-width: 30%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-35 { --article-media-width: 35%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-40 { --article-media-width: 40%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-45 { --article-media-width: 45%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-50 { --article-media-width: 50%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-55 { --article-media-width: 55%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-60 { --article-media-width: 60%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-65 { --article-media-width: 65%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-70 { --article-media-width: 70%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-75 { --article-media-width: 75%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-80 { --article-media-width: 80%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-85 { --article-media-width: 85%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-90 { --article-media-width: 90%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-95 { --article-media-width: 95%; }
+:host ::ng-deep .article-content figure.article-media.article-media-size-100 { --article-media-width: 100%; }
 
 :host ::ng-deep .article-content .article-media-align-center {
   margin-left: auto;
