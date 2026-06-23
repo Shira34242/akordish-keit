@@ -17,9 +17,6 @@ public class UpdateArticleDto
     [StringLength(500)]
     public string? FeaturedImageUrl { get; set; }
 
-    [StringLength(500)]
-    public string? HeroBackgroundImageUrl { get; set; }
-
     [StringLength(100)]
     public string? AuthorName { get; set; }
 

@@ -25,7 +25,6 @@ export interface Article {
     subtitle?: string;
     content: string;
     featuredImageUrl?: string;
-    heroBackgroundImageUrl?: string;
     publishDate: string;
     createdAt: string;
     updatedAt?: string;
@@ -75,7 +74,6 @@ export interface CreateArticleDto {
     subtitle?: string;
     content: string;
     featuredImageUrl?: string;
-    heroBackgroundImageUrl?: string;
     authorName?: string;
     categoryIds: number[];
     contentType: ArticleContentType;

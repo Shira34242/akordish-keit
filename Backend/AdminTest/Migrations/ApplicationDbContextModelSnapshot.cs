@@ -609,10 +609,6 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("HeroBackgroundImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("ImageCredit")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
