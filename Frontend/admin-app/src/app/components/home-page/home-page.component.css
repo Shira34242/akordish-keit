@@ -544,6 +544,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-md);
+  direction: rtl;
 }
 
 /* כרטיס ראשון — featured: תופס שורה מלאה, מידות גדולות יותר */
@@ -817,7 +818,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
-  direction: ltr;
+  direction: rtl;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -830,10 +831,14 @@
 
 .index-showcase-track {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   gap: var(--space-lg);
   width: max-content;
   align-items: stretch;
+}
+
+.index-showcase-track .provider-showcase-card {
+  direction: rtl;
 }
 
 /* ============================================
@@ -1050,7 +1055,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
-  direction: ltr;
+  direction: rtl;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -1063,12 +1068,13 @@
 
 .events-loop-track {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   gap: var(--space-md);
   width: max-content;
 }
 
 .events-loop-track app-event-card {
+  direction: rtl;
   flex: 0 0 11rem;
   width: 11rem;
 }
@@ -1117,6 +1123,7 @@
 
 .podcast-episode-card {
   min-width: 0;
+  direction: rtl;
 }
 
 .podcast-episode-card ::ng-deep .episode-banner {
@@ -1159,20 +1166,32 @@
    PODCASTS HOME
 ============================================ */
 .podcasts-home-panel {
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
   direction: rtl;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.podcasts-home-panel::-webkit-scrollbar {
+  display: none;
 }
 
 .podcasts-home-track {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  display: flex;
   direction: rtl;
   gap: var(--space-lg);
   align-items: stretch;
+  width: max-content;
 }
 
 .home-series-image-card {
-  width: 100%;
+  flex: 0 0 10rem;
+  width: 10rem;
+  direction: rtl;
   color: #000000;
   text-decoration: none;
   border-radius: 24px;
@@ -1356,7 +1375,8 @@
   }
 
   .home-series-image-card {
-    width: 100%;
+    flex-basis: 9rem;
+    width: 9rem;
   }
 }
 
@@ -1504,8 +1524,12 @@
   }
 
   .podcasts-home-track {
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
     gap: var(--space-md);
+  }
+
+  .home-series-image-card {
+    flex-basis: 8.5rem;
+    width: 8.5rem;
   }
 
   .podcast-episode-card ::ng-deep .episode-banner {

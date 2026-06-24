@@ -318,30 +318,22 @@
         <a routerLink="/professionals" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
       <div class="index-showcase-stack">
-        <div class="index-showcase-row" *ngIf="featuredTeachers.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
+        <div class="index-showcase-row">
           <div class="index-showcase-track">
-            <ng-container *ngFor="let copy of [0, 1]">
-              <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]" [attr.aria-hidden]="copy > 0 ? true : null">
-                <div class="person-avatar">
-                  <img [src]="(teacher.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="teacher.displayName" [imgFallbackOriginal]="teacher.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
-                </div>
-                <p class="person-name">{{ teacher.displayName }}</p>
-                <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
-              </a>
-            </ng-container>
-          </div>
-        </div>
-        <div class="index-showcase-row" *ngIf="featuredProviders.length > 0" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="2">
-          <div class="index-showcase-track">
-            <ng-container *ngFor="let copy of [0, 1]">
-              <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''" [attr.aria-hidden]="copy > 0 ? true : null">
-                <div class="person-avatar">
-                  <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
-                </div>
-                <p class="person-name">{{ pro.displayName }}</p>
-                <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
-              </a>
-            </ng-container>
+            <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
+              <div class="person-avatar">
+                <img [src]="(teacher.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="teacher.displayName" [imgFallbackOriginal]="teacher.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+              </div>
+              <p class="person-name">{{ teacher.displayName }}</p>
+              <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
+            </a>
+            <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''">
+              <div class="person-avatar">
+                <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+              </div>
+              <p class="person-name">{{ pro.displayName }}</p>
+              <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
+            </a>
           </div>
         </div>
       </div>
@@ -352,17 +344,14 @@
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="0" [autoScrollCopies]="2" autoScrollDirection="right">
+      <div class="events-loop-row">
         <div class="events-loop-track">
-          <ng-container *ngFor="let copy of [0, 1]">
-            <app-event-card
-              *ngFor="let event of upcomingEvents; trackBy: trackById"
-              [event]="event"
-              [showInfo]="false"
-              (cardClick)="openEventModal($event)"
-              [attr.aria-hidden]="copy > 0 ? true : null">
-            </app-event-card>
-          </ng-container>
+          <app-event-card
+            *ngFor="let event of upcomingEvents; trackBy: trackById"
+            [event]="event"
+            [showInfo]="false"
+            (cardClick)="openEventModal($event)">
+          </app-event-card>
         </div>
       </div>
     </section>
