@@ -85,11 +85,36 @@
       <div class="form-row">
         <div class="form-group full-width">
           <label class="form-label required" for="article-content">הכתבה עצמה</label>
-          <app-rich-article-editor
-            id="article-content"
-            [(value)]="article.content"
-            (contentInput)="onRichArticleContentInput()"
-          />
+          <div class="article-editor-mention-layer">
+            <app-rich-article-editor
+              #richArticleEditor
+              id="article-content"
+              [(value)]="article.content"
+              (contentInput)="onRichArticleContentInput()"
+              (mentionChange)="onRichArticleMentionChange($event)"
+            />
+            <div
+              class="mention-menu"
+              *ngIf="mentionOpen"
+              [class.mention-menu-above]="mentionMenuPlacement === 'above'"
+              [style.left.px]="mentionMenuPosition.x"
+              [style.top.px]="mentionMenuPosition.y">
+              <div class="mention-menu-loading" *ngIf="mentionLoading">מחפש...</div>
+              <button
+                type="button"
+                class="mention-menu-item"
+                *ngFor="let profile of mentionResults"
+                (click)="insertMention(profile)">
+                <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.displayName">
+                <span *ngIf="!profile.imageUrl" class="mention-menu-initial">{{ profile.displayName.charAt(0) }}</span>
+                <span class="mention-menu-copy">
+                  <strong>{{ profile.displayName }}</strong>
+                  <small>{{ getMentionProfileLabel(profile) }}</small>
+                </span>
+              </button>
+              <div class="mention-menu-empty" *ngIf="!mentionLoading && mentionResults.length === 0">אין תוצאות</div>
+            </div>
+          </div>
           <div class="field-hint" *ngIf="article.readTimeMinutes">
             זמן קריאה משוער: {{ article.readTimeMinutes }} דקות
           </div>

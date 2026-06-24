@@ -815,16 +815,29 @@
   font-size: 16px;
 }
 
+.article-editor-mention-layer {
+  position: relative;
+  overflow: visible;
+}
+
 .mention-menu {
-  width: min(100%, 24rem);
+  position: absolute;
+  z-index: 80;
+  width: min(24rem, calc(100% - (var(--space-lg) * 2)));
+  max-height: min(18rem, 60vh);
   display: grid;
   gap: var(--space-xs);
-  margin-top: var(--space-sm);
   border-radius: 16px;
   background: #ffffff;
   border: 1px solid #F2F2F2;
   padding: var(--space-sm);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  overflow: auto;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.mention-menu-above {
+  transform: translateY(-100%);
 }
 
 .mention-menu-item {

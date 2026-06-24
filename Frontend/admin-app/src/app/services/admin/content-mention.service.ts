@@ -30,7 +30,7 @@ export class ContentMentionService {
   }
 
   insertMention(value: string, mention: ActiveMention, profile: UserWithProfileDto): MentionInsertResult {
-    const anchor = this.buildAnchor(profile);
+    const anchor = this.buildMentionAnchor(profile);
     const suffix = value.slice(mention.end);
     const needsSpace = suffix.length === 0 || !/^\s/.test(suffix);
     const inserted = `${anchor}${needsSpace ? ' ' : ''}`;
@@ -42,7 +42,7 @@ export class ContentMentionService {
     };
   }
 
-  private buildAnchor(profile: UserWithProfileDto): string {
+  buildMentionAnchor(profile: UserWithProfileDto): string {
     const href = this.escapeAttribute(profile.profileUrl || '#');
     const type = this.escapeAttribute(profile.profileType);
     const id = String(profile.profileId);

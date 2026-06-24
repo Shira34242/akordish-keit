@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   ArticleNewsCleanupSettingsDto,
   ArticleService,
@@ -32,6 +32,7 @@ export class ArticlesListComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
@@ -97,6 +98,7 @@ export class ArticlesListComponent implements OnInit {
   ArticleContentType = ArticleContentType;
 
   ngOnInit(): void {
+    this.applyTabFromRoute();
     this.loadCategories();
     this.loadArtists();
     this.loadArticles();
@@ -162,6 +164,19 @@ export class ArticlesListComponent implements OnInit {
     this.clearSelection();
     if (this.isArticleListTab) {
       this.loadArticles();
+    }
+  }
+
+  private applyTabFromRoute(): void {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'news' || tab === 'blog') {
+      this.activeTab = tab;
+      return;
+    }
+
+    const type = this.route.snapshot.queryParamMap.get('type');
+    if (type === 'news' || type === 'blog') {
+      this.activeTab = type;
     }
   }
 

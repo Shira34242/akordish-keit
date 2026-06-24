@@ -27,6 +27,33 @@
   margin: 0 0 var(--space-base);
 }
 
+:host ::ng-deep .rich-editor-surface ul,
+:host ::ng-deep .rich-editor-surface ol {
+  margin: 0 0 var(--space-base);
+  padding-inline-start: var(--space-xl);
+}
+
+:host ::ng-deep .rich-editor-surface li {
+  margin: 0 0 var(--space-xs);
+  padding-inline-start: var(--space-xs);
+}
+
+:host ::ng-deep .rich-editor-surface li p {
+  margin: 0;
+}
+
+:host ::ng-deep .rich-editor-surface [data-indent="1"] {
+  margin-inline-start: var(--space-xl);
+}
+
+:host ::ng-deep .rich-editor-surface [data-indent="2"] {
+  margin-inline-start: var(--space-2xl);
+}
+
+:host ::ng-deep .rich-editor-surface [data-indent="3"] {
+  margin-inline-start: var(--space-3xl);
+}
+
 :host ::ng-deep .rich-editor-surface h2,
 :host ::ng-deep .rich-editor-surface h3 {
   font-family: 'Open Sans', sans-serif;

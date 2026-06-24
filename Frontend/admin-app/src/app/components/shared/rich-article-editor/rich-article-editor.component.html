@@ -111,6 +111,18 @@
       <button type="button" [class.active]="isActive('heading', { level: 3 })" (click)="setHeading(3)" title="כותרת משנה">
         <span class="menu-label">H3</span>
       </button>
+      <button type="button" [class.active]="isActive('bulletList')" (click)="toggleBulletList()" title="רשימת נקודות">
+        <span class="material-icons">format_list_bulleted</span>
+      </button>
+      <button type="button" [class.active]="isActive('orderedList')" (click)="toggleOrderedList()" title="רשימה ממוספרת">
+        <span class="material-icons">format_list_numbered</span>
+      </button>
+      <button type="button" (click)="indentText()" title="הזחה פנימה">
+        <span class="material-icons">format_indent_increase</span>
+      </button>
+      <button type="button" (click)="outdentText()" title="הזחה החוצה">
+        <span class="material-icons">format_indent_decrease</span>
+      </button>
       <button type="button" [class.active]="isActive({ textAlign: 'right' })" (click)="setTextAlign('right')" title="יישור ימין">
         <span class="material-icons">format_align_right</span>
       </button>

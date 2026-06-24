@@ -62,6 +62,7 @@ public class ArticleService : IArticleService
         foreach (var tag in new[]
         {
             "p", "br", "strong", "b", "em", "i", "u", "a", "h2", "h3", "span",
+            "ul", "ol", "li",
             "figure", "figcaption", "img", "iframe"
         })
         {
@@ -73,6 +74,7 @@ public class ArticleService : IArticleService
         {
             "href", "src", "alt", "title", "target", "rel", "class",
             "width", "height", "frameborder", "allow", "allowfullscreen", "style", "data-align",
+            "data-indent", "data-mention-type", "data-mention-id",
             "loading", "decoding"
         })
         {

@@ -28,6 +28,20 @@ type MediaAlign = 'right' | 'center' | 'left';
 type ButtonSize = 'small' | 'regular' | 'large';
 type ButtonVariant = 'primary' | 'dark' | 'soft';
 
+export interface RichArticleMentionRequest {
+  active: boolean;
+  query: string;
+  x?: number;
+  y?: number;
+  placement?: 'above' | 'below';
+}
+
+interface ActiveEditorMention {
+  from: number;
+  to: number;
+  query: string;
+}
+
 const clampPercent = (value: unknown, fallback: number) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return fallback;
@@ -227,6 +241,33 @@ const ArticleAccent = Mark.create({
   }
 });
 
+const ArticleIndent = Extension.create({
+  name: 'articleIndent',
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['paragraph', 'heading'],
+        attributes: {
+          indent: {
+            default: 0,
+            parseHTML: element => {
+              const value = Number(element.getAttribute('data-indent'));
+              return Number.isFinite(value) ? Math.min(3, Math.max(0, value)) : 0;
+            },
+            renderHTML: attributes => {
+              const indent = Number(attributes['indent'] || 0);
+              return indent > 0
+                ? { 'data-indent': String(indent), class: `article-indent-${indent}` }
+                : {};
+            }
+          }
+        }
+      }
+    ];
+  }
+});
+
 @Component({
   selector: 'app-rich-article-editor',
   standalone: true,
@@ -238,6 +279,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   @Input() value = '';
   @Output() valueChange = new EventEmitter<string>();
   @Output() contentInput = new EventEmitter<void>();
+  @Output() mentionChange = new EventEmitter<RichArticleMentionRequest>();
 
   @ViewChild('editorHost', { static: true }) editorHost!: ElementRef<HTMLElement>;
   @ViewChild('bubbleMenu', { static: true }) bubbleMenu!: ElementRef<HTMLElement>;
@@ -259,6 +301,9 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   buttonSize: ButtonSize = 'regular';
   buttonAlign: MediaAlign = 'right';
   private updatingFromEditor = false;
+  private activeMention: ActiveEditorMention | null = null;
+  private menuResizeObserver?: ResizeObserver;
+  private menuPositionUpdateQueued = false;
 
   ngAfterViewInit(): void {
     this.editor = new Editor({
@@ -266,7 +311,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
       content: this.value || '<p></p>',
       editorProps: {
         attributes: {
-          class: 'rich-editor-surface',
+          class: 'rich-editor-surface article-rich-content',
           dir: 'rtl'
         },
         handleClick: (view, pos, event) => {
@@ -288,8 +333,6 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
         StarterKit.configure({
           heading: { levels: [2, 3] },
           codeBlock: false,
-          bulletList: false,
-          orderedList: false,
           blockquote: false,
           horizontalRule: false
         }),
@@ -324,6 +367,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
         TextAlign.configure({
           types: ['heading', 'paragraph']
         }),
+        ArticleIndent,
         ArticleFigure,
         ArticleButton,
         ArticleAccent,
@@ -333,7 +377,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
           options: {
             placement: 'top',
             offset: 8,
-            flip: { fallbackPlacements: ['bottom'] },
+            flip: { fallbackPlacements: ['bottom', 'top-start', 'bottom-start'] },
             shift: { padding: 8 },
             size: {
               padding: 8,
@@ -357,9 +401,9 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
           element: this.floatingMenu.nativeElement,
           updateDelay: 80,
           options: {
-            placement: 'top',
+            placement: 'bottom-start',
             offset: 8,
-            flip: { fallbackPlacements: ['bottom'] },
+            flip: { fallbackPlacements: ['bottom-end', 'top-start', 'top-end'] },
             shift: { padding: 8 },
             size: {
               padding: 8,
@@ -392,9 +436,15 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
         this.updatingFromEditor = true;
         this.valueChange.emit(editor.getHTML());
         this.contentInput.emit();
+        this.updateMentionState();
         this.updatingFromEditor = false;
+      },
+      onSelectionUpdate: () => {
+        this.updateMentionState();
       }
     });
+
+    this.watchFloatingMenuSize();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -409,6 +459,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   }
 
   ngOnDestroy(): void {
+    this.menuResizeObserver?.disconnect();
     this.editor?.destroy();
   }
 
@@ -436,6 +487,38 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
     }
 
     this.editor?.chain().focus().setTextAlign(align).run();
+  }
+
+  toggleBulletList(): void {
+    this.editor?.chain().focus().toggleBulletList().run();
+  }
+
+  toggleOrderedList(): void {
+    this.editor?.chain().focus().toggleOrderedList().run();
+  }
+
+  indentText(): void {
+    if (!this.editor) return;
+
+    if (this.editor.isActive('listItem')) {
+      this.editor.chain().focus().sinkListItem('listItem').run();
+      return;
+    }
+
+    const indent = Math.min(3, this.currentIndent() + 1);
+    this.updateCurrentBlockIndent(indent);
+  }
+
+  outdentText(): void {
+    if (!this.editor) return;
+
+    if (this.editor.isActive('listItem')) {
+      this.editor.chain().focus().liftListItem('listItem').run();
+      return;
+    }
+
+    const indent = Math.max(0, this.currentIndent() - 1);
+    this.updateCurrentBlockIndent(indent);
   }
 
   setLink(): void {
@@ -483,6 +566,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   openPanel(panel: 'image' | 'video' | 'button'): void {
     this.mediaPanel = this.mediaPanel === panel ? null : panel;
     this.insertMenuOpen = false;
+    this.refreshFloatingMenus();
   }
 
   hasTextSelection(): boolean {
@@ -492,6 +576,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
 
   onImageUploaded(url: string): void {
     this.imageUrl = url;
+    this.refreshFloatingMenus();
   }
 
   insertImage(): void {
@@ -627,6 +712,22 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
     this.editor?.chain().focus().deleteSelection().run();
   }
 
+  insertMention(html: string): void {
+    if (!this.editor || !this.activeMention) return;
+
+    this.editor
+      .chain()
+      .focus()
+      .insertContentAt(
+        { from: this.activeMention.from, to: this.activeMention.to },
+        `${html} `
+      )
+      .run();
+
+    this.activeMention = null;
+    this.mentionChange.emit({ active: false, query: '' });
+  }
+
   updateVideoWidth(size: 70 | 85 | 100): void {
     const current = Number(this.editor?.getAttributes('youtube')['width'] || 100);
     this.editor?.chain().focus().updateAttributes('youtube', { width: current === size ? 100 : size }).run();
@@ -654,5 +755,120 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
     }
 
     return !!this.editor?.isActive(nameOrAttrs);
+  }
+
+  private updateMentionState(): void {
+    const mention = this.findActiveMention();
+    const wasActive = !!this.activeMention;
+    const queryChanged = mention?.query !== this.activeMention?.query;
+    this.activeMention = mention;
+
+    if (mention || wasActive || queryChanged) {
+      const position = mention ? this.getMentionMenuPosition(mention) : undefined;
+      this.mentionChange.emit({
+        active: !!mention,
+        query: mention?.query || '',
+        x: position?.x,
+        y: position?.y,
+        placement: position?.placement
+      });
+    }
+  }
+
+  private refreshFloatingMenus(): void {
+    if (!this.editor || this.menuPositionUpdateQueued) return;
+    this.menuPositionUpdateQueued = true;
+
+    requestAnimationFrame(() => {
+      this.menuPositionUpdateQueued = false;
+      if (!this.editor) return;
+
+      const transaction = this.editor.state.tr
+        .setMeta('floatingMenu', 'updatePosition')
+        .setMeta('bubbleMenu', 'updatePosition');
+      this.editor.view.dispatch(transaction);
+
+      window.setTimeout(() => {
+        if (!this.editor) return;
+
+        const delayedTransaction = this.editor.state.tr
+          .setMeta('floatingMenu', 'updatePosition')
+          .setMeta('bubbleMenu', 'updatePosition');
+        this.editor.view.dispatch(delayedTransaction);
+      }, 80);
+    });
+  }
+
+  private watchFloatingMenuSize(): void {
+    this.menuResizeObserver?.disconnect();
+    this.menuResizeObserver = new ResizeObserver(() => this.refreshFloatingMenus());
+    this.menuResizeObserver.observe(this.floatingMenu.nativeElement);
+    this.menuResizeObserver.observe(this.bubbleMenu.nativeElement);
+  }
+
+  private getMentionMenuPosition(mention: ActiveEditorMention): { x: number; y: number; placement: 'above' | 'below' } | undefined {
+    if (!this.editor) return undefined;
+
+    const shell = this.editorHost.nativeElement.closest('.rich-editor-shell') as HTMLElement | null;
+    const anchor = shell || this.editorHost.nativeElement;
+    const anchorRect = anchor.getBoundingClientRect();
+    const coords = this.editor.view.coordsAtPos(mention.to);
+    const menuWidth = 360;
+    const estimatedMenuHeight = 260;
+    const shouldOpenAbove = window.innerHeight - coords.bottom < estimatedMenuHeight && coords.top > estimatedMenuHeight;
+    const y = shouldOpenAbove
+      ? coords.top - anchorRect.top - 8
+      : coords.bottom - anchorRect.top + 8;
+
+    return {
+      x: Math.max(12, Math.min(coords.left - anchorRect.left, anchorRect.width - menuWidth)),
+      y: Math.max(12, y),
+      placement: shouldOpenAbove ? 'above' : 'below'
+    };
+  }
+
+  private findActiveMention(): ActiveEditorMention | null {
+    if (!this.editor) return null;
+
+    const { selection } = this.editor.state;
+    if (!selection.empty) return null;
+
+    const $from = selection.$from;
+    const textBeforeCursor = $from.parent.textBetween(0, $from.parentOffset, '\n', '\n');
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+    if (atIndex < 0) return null;
+
+    const charBefore = atIndex > 0 ? textBeforeCursor.charAt(atIndex - 1) : '';
+    if (charBefore && !/\s|[\(\[\{>]/.test(charBefore)) return null;
+
+    const query = textBeforeCursor.slice(atIndex + 1);
+    if (/[\n\r\t<>]/.test(query) || query.length > 40) return null;
+
+    return {
+      from: $from.start() + atIndex,
+      to: $from.pos,
+      query: query.trim()
+    };
+  }
+
+  private currentIndent(): number {
+    const attrs = this.editor?.getAttributes('heading') || {};
+    const headingIndent = Number(attrs['indent']);
+    if (Number.isFinite(headingIndent) && headingIndent > 0) return headingIndent;
+
+    const paragraphIndent = Number(this.editor?.getAttributes('paragraph')['indent']);
+    return Number.isFinite(paragraphIndent) ? paragraphIndent : 0;
+  }
+
+  private updateCurrentBlockIndent(indent: number): void {
+    const chain = this.editor?.chain().focus();
+    if (!chain) return;
+
+    if (this.editor?.isActive('heading')) {
+      chain.updateAttributes('heading', { indent }).run();
+      return;
+    }
+
+    chain.updateAttributes('paragraph', { indent }).run();
   }
 }

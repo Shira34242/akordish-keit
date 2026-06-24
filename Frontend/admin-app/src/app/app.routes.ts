@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
 import { pendingArtistDraftGuard } from './guards/pending-artist-draft.guard';
+import { pendingArticleDraftGuard } from './guards/pending-article-draft.guard';
 
 export const routes: Routes = [
     {
@@ -372,11 +373,13 @@ export const routes: Routes = [
                     {
                         path: 'articles/new',
                         loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        canDeactivate: [pendingArticleDraftGuard],
                         title: 'כתבה חדשה - אקורדישקייט'
                     },
                     {
                         path: 'articles/edit/:id',
                         loadComponent: () => import('./components/admin/content/articles/article-form.component').then(m => m.ArticleFormComponent),
+                        canDeactivate: [pendingArticleDraftGuard],
                         title: 'עריכת כתבה - אקורדישקייט'
                     },
                     {

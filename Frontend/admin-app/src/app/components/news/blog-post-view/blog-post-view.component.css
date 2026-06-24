@@ -363,6 +363,33 @@
   margin-bottom: var(--space-base);
 }
 
+.article-content ul,
+.article-content ol {
+  margin: 0 0 var(--space-base);
+  padding-inline-start: var(--space-xl);
+}
+
+.article-content li {
+  margin: 0 0 var(--space-xs);
+  padding-inline-start: var(--space-xs);
+}
+
+.article-content li p {
+  margin: 0;
+}
+
+.article-content [data-indent="1"] {
+  margin-inline-start: var(--space-xl);
+}
+
+.article-content [data-indent="2"] {
+  margin-inline-start: var(--space-2xl);
+}
+
+.article-content [data-indent="3"] {
+  margin-inline-start: var(--space-3xl);
+}
+
 .article-content h2 {
   font-size: var(--font-2xl);
   font-weight: 800;

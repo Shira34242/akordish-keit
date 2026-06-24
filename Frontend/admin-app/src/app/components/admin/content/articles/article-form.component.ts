@@ -1,11 +1,14 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Observable, Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { FileUploadInputComponent } from '../../../shared/file-upload-input/file-upload-input.component';
-import { RichArticleEditorComponent } from '../../../shared/rich-article-editor/rich-article-editor.component';
+import {
+  RichArticleEditorComponent,
+  RichArticleMentionRequest
+} from '../../../shared/rich-article-editor/rich-article-editor.component';
 import { ArticleService } from '../../../../services/admin/article.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
 import { ArtistService } from '../../../../services/artist.service';
@@ -44,6 +47,8 @@ interface SelectedTag {
   styleUrls: ['./article-form.component.css']
 })
 export class ArticleFormComponent implements OnInit {
+  @ViewChild('richArticleEditor') richArticleEditor?: RichArticleEditorComponent;
+
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
@@ -132,9 +137,14 @@ export class ArticleFormComponent implements OnInit {
   mentionResults: UserWithProfileDto[] = [];
   mentionLoading = false;
   mentionOpen = false;
+  mentionMenuPosition = { x: 12, y: 12 };
+  mentionMenuPlacement: 'above' | 'below' = 'below';
   private activeMention: ActiveMention | null = null;
   private mentionTextarea: HTMLTextAreaElement | null = null;
   private readonly mentionSearch$ = new Subject<string>();
+  private submitted = false;
+  private draftSaved = false;
+  private closeWithoutDraftSave = false;
 
   // Enums for template
   ArticleCategory = ArticleCategory;
@@ -604,6 +614,22 @@ export class ArticleFormComponent implements OnInit {
     this.calculateReadTime();
   }
 
+  onRichArticleMentionChange(event: RichArticleMentionRequest): void {
+    if (!event.active) {
+      this.closeMentionMenu();
+      return;
+    }
+
+    this.activeMention = { start: 0, end: 0, query: event.query };
+    this.mentionMenuPosition = {
+      x: event.x ?? 12,
+      y: event.y ?? 12
+    };
+    this.mentionMenuPlacement = event.placement || 'below';
+    this.mentionOpen = true;
+    this.mentionSearch$.next(event.query);
+  }
+
   onArticleContentInput(event: Event): void {
     this.calculateReadTime();
     this.handleMentionInput(event);
@@ -623,6 +649,7 @@ export class ArticleFormComponent implements OnInit {
       // Update existing article
       this.articleService.updateArticle(this.articleId, this.article).subscribe({
         next: () => {
+          this.submitted = true;
           this.goBack();
         },
         error: (error) => {
@@ -636,6 +663,7 @@ export class ArticleFormComponent implements OnInit {
       // Create new article
       this.articleService.createArticle(this.article).subscribe({
         next: () => {
+          this.submitted = true;
           this.goBack();
         },
         error: (error) => {
@@ -705,7 +733,32 @@ export class ArticleFormComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/admin/content/articles']);
+    this.closeWithoutDraftSave = true;
+    this.router.navigate(['/admin/content/articles'], {
+      queryParams: { tab: this.article.contentType === ArticleContentType.Blog ? 'blog' : 'news' }
+    });
+  }
+
+  canDeactivate(): boolean | Observable<boolean> {
+    if (!this.shouldSaveDraftOnExit()) {
+      return true;
+    }
+
+    this.saving = true;
+    this.saveError = '';
+
+    return this.articleService.createArticle(this.buildDraftArticle()).pipe(
+      map(() => {
+        this.draftSaved = true;
+        this.saving = false;
+        return true;
+      }),
+      catchError((error) => {
+        this.saving = false;
+        console.error('Error saving article draft:', error);
+        return of(true);
+      })
+    );
   }
 
   // Category selection methods
@@ -778,6 +831,52 @@ export class ArticleFormComponent implements OnInit {
       this.article.categoryIds = [category.id];
       this.syncContentTypeFromCategories();
     }
+  }
+
+  private shouldSaveDraftOnExit(): boolean {
+    return !this.isEditMode
+      && !this.saving
+      && !this.submitted
+      && !this.draftSaved
+      && !this.closeWithoutDraftSave
+      && this.hasMeaningfulDraftContent();
+  }
+
+  private hasMeaningfulDraftContent(): boolean {
+    return [
+      this.article.title,
+      this.article.subtitle,
+      this.article.shortDescription,
+      this.article.featuredImageUrl,
+      this.article.videoEmbedUrl,
+      this.article.audioEmbedUrl,
+      this.article.content?.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ')
+    ].some(value => !!value?.trim());
+  }
+
+  private buildDraftArticle(): CreateArticleDto {
+    const title = this.article.title?.trim() || 'טיוטה ללא כותרת';
+    const categoryIds = this.article.categoryIds?.length
+      ? [...this.article.categoryIds]
+      : this.getFallbackDraftCategoryIds();
+
+    return {
+      ...this.article,
+      title,
+      slug: this.article.slug?.trim() || this.generateSlug(title),
+      content: this.article.content?.trim() || '<p></p>',
+      categoryIds,
+      contentType: this.article.contentType,
+      status: ArticleStatus.Draft,
+      scheduledDate: undefined
+    };
+  }
+
+  private getFallbackDraftCategoryIds(): number[] {
+    const wantedSection = this.article.contentType === ArticleContentType.Blog ? 1 : 0;
+    const category = this.categories.find(item => (item.section ?? 0) === wantedSection)
+      || this.categories[0];
+    return category ? [category.id] : [];
   }
 
   // Artist selection methods
@@ -881,22 +980,19 @@ export class ArticleFormComponent implements OnInit {
   insertMention(profile: UserWithProfileDto): void {
     if (!this.activeMention) return;
 
-    const result = this.contentMentionService.insertMention(this.article.content || '', this.activeMention, profile);
-    this.article.content = result.value;
+    const mentionHtml = this.contentMentionService.buildMentionAnchor(profile);
+    this.richArticleEditor?.insertMention(mentionHtml);
     this.closeMentionMenu();
     this.calculateReadTime();
     this.queueArtistSuggestionScan();
-
-    setTimeout(() => {
-      this.mentionTextarea?.focus();
-      this.mentionTextarea?.setSelectionRange(result.cursor, result.cursor);
-    });
   }
 
   closeMentionMenu(): void {
     this.mentionOpen = false;
     this.mentionLoading = false;
     this.mentionResults = [];
+    this.mentionMenuPosition = { x: 12, y: 12 };
+    this.mentionMenuPlacement = 'below';
     this.activeMention = null;
   }
 
