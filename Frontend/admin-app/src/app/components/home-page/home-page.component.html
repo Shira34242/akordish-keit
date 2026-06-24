@@ -100,6 +100,50 @@
             </div>
           </div>
 
+          <div *ngIf="searchResults.podcasts && searchResults.podcasts.length > 0" class="search-group">
+            <span class="search-group-label">פודקאסטים</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.podcasts; trackBy: trackById" (click)="navigateToResult(item)">
+              <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'פודקאסט באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="searchResults.podcastEpisodes && searchResults.podcastEpisodes.length > 0" class="search-group">
+            <span class="search-group-label">פרקי פודקאסט</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.podcastEpisodes; trackBy: trackById" (click)="navigateToResult(item)">
+              <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'פרק פודקאסט באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="searchResults.events && searchResults.events.length > 0" class="search-group">
+            <span class="search-group-label">הופעות</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.events; trackBy: trackById" (click)="navigateToResult(item)">
+              <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'הופעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="searchResults.agencies && searchResults.agencies.length > 0" class="search-group">
+            <span class="search-group-label">סוכנויות</span>
+            <div class="search-result-item" *ngFor="let item of searchResults.agencies; trackBy: trackById" (click)="navigateToResult(item)">
+              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'סוכנות באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
+              <div class="result-info">
+                <span class="result-title">{{ item.title }}</span>
+                <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
+              </div>
+            </div>
+          </div>
+
           <div *ngIf="lyricsMatches.length > 0" class="search-group">
             <span class="search-group-label">
               {{ 'home.search_by_lyrics' | translate }}

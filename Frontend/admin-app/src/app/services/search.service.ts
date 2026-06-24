@@ -8,7 +8,9 @@ export interface SearchItem {
   title: string;
   subtitle?: string;
   imageUrl?: string;
-  type: 'song' | 'artist' | 'article' | 'teacher' | 'professional' | 'playlist';
+  slug?: string;
+  parentSlug?: string;
+  type: 'song' | 'artist' | 'article' | 'teacher' | 'professional' | 'playlist' | 'podcast' | 'podcastEpisode' | 'event' | 'agency';
 }
 
 export interface SearchResults {
@@ -18,6 +20,10 @@ export interface SearchResults {
   teachers: SearchItem[];
   professionals: SearchItem[];
   playlists: SearchItem[];
+  podcasts: SearchItem[];
+  podcastEpisodes: SearchItem[];
+  events: SearchItem[];
+  agencies: SearchItem[];
   totalCount: number;
 }
 

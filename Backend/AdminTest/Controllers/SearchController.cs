@@ -175,6 +175,82 @@ public class SearchController : ControllerBase
             })
             .ToListAsync();
 
+        var podcasts = await _context.Podcasts
+            .Where(p => !p.IsDeleted && p.IsActive &&
+                (p.Name.Contains(term) || (p.Description != null && p.Description.Contains(term))))
+            .OrderBy(p => p.DisplayOrder)
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(resultLimit)
+            .Select(p => new SearchItemDto
+            {
+                Id = p.Id,
+                Title = p.Name,
+                Subtitle = p.Description,
+                ImageUrl = p.ImageUrl,
+                Slug = p.Slug,
+                Type = "podcast"
+            })
+            .ToListAsync();
+
+        var podcastEpisodes = await _context.PodcastEpisodes
+            .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive &&
+                (e.Title.Contains(term) ||
+                 (e.Description != null && e.Description.Contains(term)) ||
+                 e.Podcast.Name.Contains(term)))
+            .OrderByDescending(e => e.PublishedAt)
+            .ThenByDescending(e => e.ViewCount)
+            .Take(resultLimit)
+            .Select(e => new SearchItemDto
+            {
+                Id = e.Id,
+                Title = e.Title,
+                Subtitle = e.Podcast.Name,
+                ImageUrl = e.ThumbnailUrl ?? e.Podcast.ImageUrl,
+                Slug = e.Slug,
+                ParentSlug = e.Podcast.Slug,
+                Type = "podcastEpisode"
+            })
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var events = await _context.Events
+            .Where(e => !e.IsDeleted && e.IsActive &&
+                (e.Name.Contains(term) ||
+                 (e.ArtistName != null && e.ArtistName.Contains(term)) ||
+                 (e.Location != null && e.Location.Contains(term)) ||
+                 (e.Description != null && e.Description.Contains(term))))
+            .OrderBy(e => e.EventDate < now)
+            .ThenBy(e => e.EventDate)
+            .Take(resultLimit)
+            .Select(e => new SearchItemDto
+            {
+                Id = e.Id,
+                Title = e.Name,
+                Subtitle = e.ArtistName ?? e.Location,
+                ImageUrl = e.ImageUrl,
+                Type = "event"
+            })
+            .ToListAsync();
+
+        var agencies = await _context.Agencies
+            .Where(a => !a.IsDeleted && a.IsActive &&
+                (a.Name.Contains(term) ||
+                 (a.ShortDescription != null && a.ShortDescription.Contains(term)) ||
+                 (a.FullDescription != null && a.FullDescription.Contains(term))))
+            .OrderBy(a => a.DisplayOrder)
+            .ThenBy(a => a.Name)
+            .Take(resultLimit)
+            .Select(a => new SearchItemDto
+            {
+                Id = a.Id,
+                Title = a.Name,
+                Subtitle = a.ShortDescription,
+                ImageUrl = a.LogoUrl ?? a.BannerImageUrl,
+                Slug = a.Slug,
+                Type = "agency"
+            })
+            .ToListAsync();
+
         return Ok(new SearchResultsDto
         {
             Songs = songs,
@@ -182,7 +258,11 @@ public class SearchController : ControllerBase
             Articles = articles,
             Teachers = teachers,
             Professionals = professionals,
-            Playlists = playlists
+            Playlists = playlists,
+            Podcasts = podcasts,
+            PodcastEpisodes = podcastEpisodes,
+            Events = events,
+            Agencies = agencies
         });
     }
 

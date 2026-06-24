@@ -502,8 +502,30 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       artist: '/artist',
       teacher: '/teacher',
       professional: '/professional',
-      playlist: '/playlist'
+      playlist: '/playlist',
+      event: '/events'
     };
+
+    if (item.type === 'podcast') {
+      this.router.navigate(['/podcasts'], item.slug ? { queryParams: { series: item.slug } } : undefined);
+      return;
+    }
+
+    if (item.type === 'podcastEpisode') {
+      this.router.navigate(['/podcasts'], item.parentSlug && item.slug ? { queryParams: { series: item.parentSlug, episode: item.slug } } : undefined);
+      return;
+    }
+
+    if (item.type === 'agency' && item.slug) {
+      this.router.navigate(['/agency', item.slug]);
+      return;
+    }
+
+    if (item.type === 'event') {
+      this.router.navigate(['/events']);
+      return;
+    }
+
     const base = routes[item.type];
     if (base) {
       if (item.type === 'song' && item.title) {
