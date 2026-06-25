@@ -110,7 +110,7 @@ export class ClientsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error updating client:', error);
-          alert('שגיאה בעדכון הלקוח');
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     } else {
@@ -123,7 +123,7 @@ export class ClientsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error creating client:', error);
-          alert('שגיאה ביצירת הלקוח');
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     }
@@ -145,7 +145,7 @@ export class ClientsListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error deleting client:', error);
-        alert('שגיאה במחיקת הלקוח. ייתכן שיש לו קמפיינים פעילים.');
+        this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
       }
     });
   }

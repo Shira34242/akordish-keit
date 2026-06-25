@@ -136,7 +136,7 @@ export class AdSpotsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error updating ad spot:', error);
-          alert('שגיאה בעדכון שטח הפרסום');
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     } else {
@@ -149,7 +149,7 @@ export class AdSpotsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error creating ad spot:', error);
-          alert('שגיאה ביצירת שטח פרסום');
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     }
@@ -171,7 +171,7 @@ export class AdSpotsListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error deleting spot:', error);
-        alert('שגיאה במחיקת המיקום. ייתכן שיש לו קמפיינים פעילים.');
+        this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
       }
     });
   }

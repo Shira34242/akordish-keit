@@ -32,7 +32,7 @@ public interface IArticleService
 
     Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12);
 
-    Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40);
+    Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 80);
     Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
         int contentType,
         int pageNumber = 1,

@@ -84,8 +84,9 @@ export class PodcastService {
     return this.http.get<PodcastEpisode[]>(`${this.apiUrl}/popular-episodes`, { params });
   }
 
-  getHomePodcastCards(): Observable<PodcastHomeCard[]> {
-    return this.http.get<PodcastHomeCard[]>(`${this.apiUrl}/home-cards`);
+  getHomePodcastCards(limit = 10): Observable<PodcastHomeCard[]> {
+    const params = new HttpParams().set('limit', limit);
+    return this.http.get<PodcastHomeCard[]>(`${this.apiUrl}/home-cards`, { params });
   }
 
   getHomePopularEpisodeBanners(): Observable<PodcastEpisodeBanner[]> {

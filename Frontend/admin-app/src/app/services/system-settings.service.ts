@@ -18,6 +18,7 @@ export interface UpdateSystemSettingDto {
 export interface SiteAccessGateStatusDto {
   enabled: boolean;
   passwordConfigured: boolean;
+  hasAccess: boolean;
   accessVersion: string;
 }
 

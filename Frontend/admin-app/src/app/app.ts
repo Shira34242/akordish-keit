@@ -25,7 +25,6 @@ import { SiteAccessGateStatusDto, SystemSettingsService } from './services/syste
 export class AppComponent implements OnInit {
   title = 'אקורדישקייט';
 
-  private readonly GATE_KEY = 'akordishkayt_beta_access';
   showGate = false;
   gateChecking = true;
   gateSubmitting = false;
@@ -40,7 +39,6 @@ export class AppComponent implements OnInit {
 
     this.settingsService.verifyAccessGate(this.gateInput).subscribe({
       next: (status) => {
-        localStorage.setItem(this.GATE_KEY, status.accessVersion || 'open');
         this.showGate = false;
         this.gateSubmitting = false;
         this.gateInput = '';
@@ -92,11 +90,8 @@ export class AppComponent implements OnInit {
   }
 
   private applyAccessGateStatus(status: SiteAccessGateStatusDto): void {
-    const savedVersion = localStorage.getItem(this.GATE_KEY);
-    const accessVersion = status.accessVersion || 'open';
-
     this.gateChecking = false;
-    this.showGate = status.enabled && savedVersion !== accessVersion;
+    this.showGate = status.enabled && !status.hasAccess;
 
     if (!this.showGate) {
       this.startAppServices();

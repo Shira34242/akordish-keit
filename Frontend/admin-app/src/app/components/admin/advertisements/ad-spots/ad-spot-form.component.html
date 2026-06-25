@@ -54,6 +54,16 @@
               maxlength="50"
               placeholder="למשל: 728x90"
             />
+            <div class="ad-size-preview" *ngIf="previewDimensions as preview">
+              <div class="ad-size-preview__canvas">
+                <div
+                  class="ad-size-preview__box"
+                  [style.aspect-ratio]="preview.ratio">
+                  {{ preview.width }}×{{ preview.height }}
+                </div>
+              </div>
+              <small class="help-text">הפרסומת תקטן במסכים צרים, אבל תשמור על היחס הזה.</small>
+            </div>
             <small class="help-text">שטח זה תומך בכל סוגי המדיה: תמונות, וידאו וגיפים</small>
           </div>
         </div>

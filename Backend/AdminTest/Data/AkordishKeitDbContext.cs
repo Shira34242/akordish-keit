@@ -69,6 +69,7 @@ public class AkordishKeitDbContext : DbContext
     // Podcasts
     public DbSet<Podcast> Podcasts { get; set; }
     public DbSet<PodcastEpisode> PodcastEpisodes { get; set; }
+    public DbSet<PodcastEpisodeView> PodcastEpisodeViews { get; set; }
 
     // News Page Dynamic Sections
     public DbSet<NewsPageSection> NewsPageSections { get; set; }
@@ -182,6 +183,7 @@ public class AkordishKeitDbContext : DbContext
         // Podcast Configurations
         modelBuilder.ApplyConfiguration(new PodcastConfiguration());
         modelBuilder.ApplyConfiguration(new PodcastEpisodeConfiguration());
+        modelBuilder.ApplyConfiguration(new PodcastEpisodeViewConfiguration());
 
         // View Tracking Configurations
         modelBuilder.ApplyConfiguration(new SongViewConfiguration());

@@ -33,7 +33,7 @@ interface AdSpotResponse {
   template: `
     @if (currentAd) {
       <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
-        <a [attr.href]="currentAd.knownUrl || null" target="_blank" (click)="handleAdClick($event)" class="media-link" [class.media-link--disabled]="!currentAd.knownUrl">
+        <a [attr.href]="currentAd.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event)" class="media-link" [class.media-link--disabled]="!currentAd.knownUrl">
           @if (getMediaType(activeMediaUrl) === 'image') {
             <img
               [src]="activeMediaUrl | cfImage:imagePreset"
@@ -63,6 +63,7 @@ interface AdSpotResponse {
       display: block;
       overflow: hidden;
       margin: 0 auto;
+      background: #F2F2F2;
     }
 
     .media-link {
@@ -76,7 +77,7 @@ interface AdSpotResponse {
       display: block;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center;
     }
 
@@ -160,7 +161,12 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.loading = false;
-          this.campaigns = response.campaigns;
+          this.campaigns = response.campaigns.filter(campaign => {
+            const mediaUrl = this.isMobile && campaign.mobileMediaUrl
+              ? campaign.mobileMediaUrl
+              : campaign.mediaUrl;
+            return !!mediaUrl;
+          });
 
           if (response.rotationIntervalMs) {
             this.rotationInterval = response.rotationIntervalMs;
@@ -174,9 +180,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
               const h = Number(parts[1].trim());
               if (w > 0 && h > 0) {
                 this.maxWidth = w + 'px';
-                // cap: אם הרוחב גדול מ-5x הגובה — הצג כ-5:1 כדי לא להיות שטוח מדי
-                const ratio = w / h;
-                this.aspectRatio = ratio > 5 ? `5 / 1` : `${w} / ${h}`;
+                this.aspectRatio = `${w} / ${h}`;
               }
             }
           }
@@ -196,6 +200,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   setupRotation() {
     // Rotate ads based on interval from AdSpot configuration
+    this.rotationSubscription?.unsubscribe();
     this.rotationSubscription = interval(this.rotationInterval)
       .subscribe(() => {
         this.rotateToNextAd();

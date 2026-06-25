@@ -24,6 +24,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns
         [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<PagedResult<AdCampaignDto>>> GetAdCampaigns(
             [FromQuery] string? status = null,
             [FromQuery] int pageNumber = 1,
@@ -71,6 +72,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/active
         [HttpGet("active")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<IEnumerable<AdCampaignDto>>> GetActiveCampaigns()
         {
             var now = DateTime.UtcNow;
@@ -108,6 +110,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<AdCampaignDto>> GetAdCampaign(int id)
         {
             var now = DateTime.UtcNow;
@@ -149,6 +152,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/spot/5
         [HttpGet("spot/{spotId}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<IEnumerable<AdCampaignDto>>> GetCampaignsBySpot(int spotId)
         {
             var now = DateTime.UtcNow;
@@ -186,6 +190,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/client/5
         [HttpGet("client/{clientId}")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<PagedResult<AdCampaignDto>>> GetCampaignsByClient(
             int clientId,
             [FromQuery] int pageNumber = 1,
@@ -226,6 +231,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/stats
         [HttpGet("stats")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<AdCampaignStatsDto>> GetStats()
         {
             var now = DateTime.UtcNow;
@@ -249,6 +255,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/CheckAvailability
         [HttpGet("CheckAvailability")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<object>> CheckAdSpotAvailability(
             [FromQuery] int adSpotId,
             [FromQuery] DateTime startDate,
@@ -492,6 +499,7 @@ namespace AkordishKeit.Controllers
         // POST: api/AdCampaigns/5/track-view
         [HttpPost("{id}/track-view")]
         [HttpPost("/api/media/{id}/log-view")]
+        [AllowAnonymous]
         public async Task<IActionResult> TrackView(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
@@ -531,6 +539,7 @@ namespace AkordishKeit.Controllers
         // POST: api/AdCampaigns/5/track-click
         [HttpPost("{id}/track-click")]
         [HttpPost("/api/media/{id}/log-click")]
+        [AllowAnonymous]
         public async Task<IActionResult> TrackClick(int id)
         {
             var campaign = await _context.AdCampaigns.FindAsync(id);
@@ -588,6 +597,7 @@ namespace AkordishKeit.Controllers
         // GET: api/AdCampaigns/Public/GetAd?spotTechnicalId=header-banner
         [HttpGet("Public/GetAd")]
         [HttpGet("/api/media/item")]
+        [AllowAnonymous]
         public async Task<ActionResult<object>> GetAdForSpot([FromQuery] string spotTechnicalId)
         {
             if (string.IsNullOrEmpty(spotTechnicalId))
@@ -646,6 +656,7 @@ namespace AkordishKeit.Controllers
 
         // GET: api/AdCampaigns/Public/GetAdByPriority?spotTechnicalId=header-banner&priority=1
         [HttpGet("Public/GetAdByPriority")]
+        [AllowAnonymous]
         public async Task<ActionResult<object>> GetAdByPriority(
             [FromQuery] string spotTechnicalId,
             [FromQuery] int priority = 1)

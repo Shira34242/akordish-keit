@@ -14,6 +14,7 @@ public class SystemSettingsController : ControllerBase
     private const string SiteGateEnabledKey = "site_access_gate_enabled";
     private const string SiteGatePasswordHashKey = "site_access_gate_password_hash";
     private const string SiteGatePasswordVersionKey = "site_access_gate_password_version";
+    private const string SiteGateCookieName = "site-access-gate";
     private const string SiteGateEnabledDescription = "דרישת סיסמה בכניסה לאתר";
     private const string SiteGatePasswordHashDescription = "סיסמת כניסה לאתר - שמורה מוצפנת";
     private const string SiteGatePasswordVersionDescription = "גרסת סיסמת כניסה לאתר";
@@ -59,6 +60,8 @@ public class SystemSettingsController : ControllerBase
         if (string.IsNullOrWhiteSpace(passwordHash) || !BCrypt.Net.BCrypt.Verify(dto.Password, passwordHash))
             return Unauthorized(new { message = "סיסמה שגויה" });
 
+        IssueAccessGateCookie(status.AccessVersion);
+        status.HasAccess = true;
         return Ok(status);
     }
 
@@ -132,8 +135,27 @@ public class SystemSettingsController : ControllerBase
         {
             Enabled = enabled,
             PasswordConfigured = !string.IsNullOrWhiteSpace(passwordHash),
-            AccessVersion = version ?? string.Empty
+            AccessVersion = version ?? string.Empty,
+            HasAccess = HasValidAccessGateCookie(version)
         };
+    }
+
+    private bool HasValidAccessGateCookie(string? version)
+    {
+        return !string.IsNullOrWhiteSpace(version)
+            && Request.Cookies.TryGetValue(SiteGateCookieName, out var cookieValue)
+            && cookieValue == version;
+    }
+
+    private void IssueAccessGateCookie(string version)
+    {
+        Response.Cookies.Append(SiteGateCookieName, version, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
+        });
     }
 
     private async Task EnsureAccessGateDefaultsAsync()

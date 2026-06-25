@@ -957,7 +957,7 @@
 ============================================ */
 .promo-box {
   margin: var(--space-xl) 0;
-  min-height: 46vh;
+  min-height: 23vh;
   background: #ddff53;
   border-radius: 28px;
   display: flex;
@@ -985,6 +985,19 @@
   );
   background-size: auto 100%;
   background-position: right center;
+}
+
+#promo-podcasts {
+  background-image: image-set(
+    url('/concert-overlay.avif') type('image/avif'),
+    url('/concert-overlay.webp') type('image/webp'),
+    url('/concert-overlay.png') type('image/png')
+  );
+  background-position: center center;
+}
+
+.promo-box--compact {
+  min-height: 23vh;
 }
 .promo-content {
   width: 100%;
@@ -1055,7 +1068,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
-  direction: rtl;
+  direction: ltr;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;

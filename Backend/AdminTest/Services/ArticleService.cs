@@ -360,11 +360,11 @@ public class ArticleService : IArticleService
             .ToListAsync();
     }
 
-    public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 40)
+    public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 80)
     {
         var now = DateTime.UtcNow;
-        var monthAgo = now.AddDays(-30);
-        var take = Math.Clamp(limit, 1, 40);
+        var weekAgo = now.AddDays(-7);
+        var take = Math.Clamp(limit, 1, 80);
 
         var candidates = await _context.Articles
             .AsNoTracking()
@@ -388,35 +388,26 @@ public class ArticleService : IArticleService
                     DisplayOrder = a.DisplayOrder,
                     PublishDate = a.PublishDate
                 },
-                MonthlyViews = _context.ArticleViews.Count(av =>
+                WeeklyViews = _context.ArticleViews.Count(av =>
                     av.ArticleId == a.Id
-                    && av.ViewedAt >= monthAgo
+                    && av.ViewedAt >= weekAgo
                     && av.ViewedAt <= now),
                 TotalViews = a.ViewCount
             })
             .ToListAsync();
 
-        var popularityOrder = candidates
-            .OrderByDescending(a => a.MonthlyViews)
-            .ThenByDescending(a => a.TotalViews)
+        return candidates
+            .Select(a => new
+            {
+                a.Article,
+                Score =
+                    (a.Article.IsFeatured ? 1000 : 0)
+                    + (a.WeeklyViews * 20)
+                    + Math.Min(a.TotalViews, 1000)
+                    + (Random.Shared.NextDouble() * 700)
+            })
+            .OrderByDescending(a => a.Score)
             .ThenByDescending(a => a.Article.PublishDate)
-            .ThenBy(a => a.Article.DisplayOrder)
-            .ToList();
-
-        var firstTen = popularityOrder
-            .Where(a => a.Article.IsFeatured)
-            .Take(10)
-            .ToList();
-
-        var firstTenIds = firstTen.Select(a => a.Article.Id).ToHashSet();
-        firstTen.AddRange(popularityOrder
-            .Where(a => !firstTenIds.Contains(a.Article.Id))
-            .Take(10 - firstTen.Count));
-
-        var prioritizedIds = firstTen.Select(a => a.Article.Id).ToHashSet();
-
-        return firstTen
-            .Concat(popularityOrder.Where(a => !prioritizedIds.Contains(a.Article.Id)))
             .Take(take)
             .Select(a => a.Article)
             .ToList();

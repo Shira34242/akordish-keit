@@ -296,6 +296,22 @@ using (var scope = app.Services.CreateScope())
             );
         END
 
+        IF OBJECT_ID(N'[PodcastEpisodeViews]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [PodcastEpisodeViews] (
+                [Id] int NOT NULL IDENTITY,
+                [PodcastEpisodeId] int NOT NULL,
+                [UserId] int NULL,
+                [IpAddress] nvarchar(45) NULL,
+                [UserAgent] nvarchar(500) NULL,
+                [ViewedAt] datetime2 NOT NULL CONSTRAINT [DF_PodcastEpisodeViews_ViewedAt] DEFAULT (GETUTCDATE()),
+                [Referrer] nvarchar(500) NULL,
+                CONSTRAINT [PK_PodcastEpisodeViews] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_PodcastEpisodeViews_PodcastEpisodes_PodcastEpisodeId] FOREIGN KEY ([PodcastEpisodeId]) REFERENCES [PodcastEpisodes] ([Id]) ON DELETE CASCADE,
+                CONSTRAINT [FK_PodcastEpisodeViews_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE SET NULL
+            );
+        END
+
         IF OBJECT_ID(N'[Podcasts]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Podcasts_Slug' AND object_id = OBJECT_ID(N'[Podcasts]'))
             CREATE UNIQUE INDEX [IX_Podcasts_Slug] ON [Podcasts] ([Slug]) WHERE [IsDeleted] = 0;
@@ -323,6 +339,18 @@ using (var scope = app.Services.CreateScope())
         IF OBJECT_ID(N'[PodcastEpisodeArtists]', N'U') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeArtists_ArtistId' AND object_id = OBJECT_ID(N'[PodcastEpisodeArtists]'))
             CREATE INDEX [IX_PodcastEpisodeArtists_ArtistId] ON [PodcastEpisodeArtists] ([ArtistId]);
+
+        IF OBJECT_ID(N'[PodcastEpisodeViews]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeViews_Episode_ViewedAt' AND object_id = OBJECT_ID(N'[PodcastEpisodeViews]'))
+            CREATE INDEX [IX_PodcastEpisodeViews_Episode_ViewedAt] ON [PodcastEpisodeViews] ([PodcastEpisodeId], [ViewedAt]);
+
+        IF OBJECT_ID(N'[PodcastEpisodeViews]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeViews_Episode_User_ViewedAt' AND object_id = OBJECT_ID(N'[PodcastEpisodeViews]'))
+            CREATE INDEX [IX_PodcastEpisodeViews_Episode_User_ViewedAt] ON [PodcastEpisodeViews] ([PodcastEpisodeId], [UserId], [ViewedAt]);
+
+        IF OBJECT_ID(N'[PodcastEpisodeViews]', N'U') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PodcastEpisodeViews_Episode_Guest_ViewedAt' AND object_id = OBJECT_ID(N'[PodcastEpisodeViews]'))
+            CREATE INDEX [IX_PodcastEpisodeViews_Episode_Guest_ViewedAt] ON [PodcastEpisodeViews] ([PodcastEpisodeId], [IpAddress], [UserAgent], [ViewedAt]);
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
@@ -790,6 +818,7 @@ app.UseCors("AllowAngular");
 // Enable static files for uploaded media
 app.UseStaticFiles();
 app.UseRateLimiter();
+app.UseMiddleware<SiteAccessGateMiddleware>();
 
 // חשוב! Authentication לפני Authorization
 app.UseAuthentication();

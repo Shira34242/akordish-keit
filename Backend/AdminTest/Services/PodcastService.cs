@@ -128,19 +128,34 @@ namespace AkordishKeit.Services
         public async Task<List<PodcastHomeCardDto>> GetHomePodcastCardsAsync(int limit = 6)
         {
             limit = Math.Clamp(limit, 1, 12);
+            var now = DateTime.UtcNow;
+            var monthAgo = now.AddDays(-30);
 
             return await _context.Podcasts
                 .AsNoTracking()
                 .Where(p => !p.IsDeleted && p.IsActive)
-                .OrderBy(p => p.DisplayOrder)
-                .ThenBy(p => p.Name)
+                .Select(p => new
+                {
+                    Podcast = p,
+                    MonthlyViews = _context.PodcastEpisodeViews.Count(v =>
+                        v.PodcastEpisode.PodcastId == p.Id
+                        && v.ViewedAt >= monthAgo
+                        && v.ViewedAt <= now),
+                    TotalViews = p.Episodes
+                        .Where(e => !e.IsDeleted && e.IsActive)
+                        .Sum(e => e.ViewCount)
+                })
+                .OrderByDescending(p => p.MonthlyViews)
+                .ThenByDescending(p => p.TotalViews)
+                .ThenBy(p => p.Podcast.DisplayOrder)
+                .ThenBy(p => p.Podcast.Name)
                 .Take(limit)
                 .Select(p => new PodcastHomeCardDto
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Slug = p.Slug,
-                    ImageUrl = p.ImageUrl
+                    Id = p.Podcast.Id,
+                    Name = p.Podcast.Name,
+                    Slug = p.Podcast.Slug,
+                    ImageUrl = p.Podcast.ImageUrl
                 })
                 .ToListAsync();
         }
@@ -148,22 +163,33 @@ namespace AkordishKeit.Services
         public async Task<List<PodcastEpisodeBannerDto>> GetHomePopularEpisodeBannersAsync(int limit = 8)
         {
             limit = Math.Clamp(limit, 1, 24);
+            var now = DateTime.UtcNow;
+            var weekAgo = now.AddDays(-7);
 
             return await _context.PodcastEpisodes
                 .AsNoTracking()
                 .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
-                .OrderByDescending(e => e.ViewCount)
-                .ThenByDescending(e => e.PublishedAt)
-                .ThenByDescending(e => e.Id)
+                .Select(e => new
+                {
+                    Episode = e,
+                    WeeklyViews = _context.PodcastEpisodeViews.Count(v =>
+                        v.PodcastEpisodeId == e.Id
+                        && v.ViewedAt >= weekAgo
+                        && v.ViewedAt <= now)
+                })
+                .OrderByDescending(e => e.WeeklyViews)
+                .ThenByDescending(e => e.Episode.ViewCount)
+                .ThenByDescending(e => e.Episode.PublishedAt)
+                .ThenByDescending(e => e.Episode.Id)
                 .Take(limit)
                 .Select(e => new PodcastEpisodeBannerDto
                 {
-                    Id = e.Id,
-                    PodcastName = e.Podcast.Name,
-                    PodcastSlug = e.Podcast.Slug,
-                    Title = e.Title,
-                    Slug = e.Slug,
-                    ThumbnailUrl = e.ThumbnailUrl
+                    Id = e.Episode.Id,
+                    PodcastName = e.Episode.Podcast.Name,
+                    PodcastSlug = e.Episode.Podcast.Slug,
+                    Title = e.Episode.Title,
+                    Slug = e.Episode.Slug,
+                    ThumbnailUrl = e.Episode.ThumbnailUrl
                 })
                 .ToListAsync();
         }
@@ -395,7 +421,14 @@ namespace AkordishKeit.Services
             return episodes.Select(e => MapEpisode(e, e.Podcast));
         }
 
-        public async Task<PodcastEpisodeDetailDto?> GetEpisodeBySlugAsync(string podcastSlug, string episodeSlug, bool includeInactive = false)
+        public async Task<PodcastEpisodeDetailDto?> GetEpisodeBySlugAsync(
+            string podcastSlug,
+            string episodeSlug,
+            bool includeInactive = false,
+            int? userId = null,
+            string? ipAddress = null,
+            string? userAgent = null,
+            string? referrer = null)
         {
             var podcast = await _context.Podcasts
                 .Include(p => p.Episodes.Where(e => !e.IsDeleted))
@@ -417,9 +450,7 @@ namespace AkordishKeit.Services
 
             if (!includeInactive)
             {
-                episode.ViewCount += 1;
-                episode.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+                await TrackEpisodeViewAsync(episode, userId, ipAddress, userAgent, referrer);
             }
 
             var index = orderedEpisodes.FindIndex(e => e.Id == episode.Id);
@@ -450,6 +481,48 @@ namespace AkordishKeit.Services
             };
 
             return dto;
+        }
+
+        private async Task TrackEpisodeViewAsync(PodcastEpisode episode, int? userId, string? ipAddress, string? userAgent, string? referrer)
+        {
+            var cutoffTime = DateTime.UtcNow.AddHours(-24);
+            bool isUniqueView;
+
+            if (userId.HasValue)
+            {
+                isUniqueView = !await _context.PodcastEpisodeViews
+                    .AnyAsync(v => v.PodcastEpisodeId == episode.Id
+                        && v.UserId == userId
+                        && v.ViewedAt >= cutoffTime);
+            }
+            else if (!string.IsNullOrEmpty(ipAddress))
+            {
+                isUniqueView = !await _context.PodcastEpisodeViews
+                    .AnyAsync(v => v.PodcastEpisodeId == episode.Id
+                        && v.IpAddress == ipAddress
+                        && v.UserAgent == userAgent
+                        && v.ViewedAt >= cutoffTime);
+            }
+            else
+            {
+                isUniqueView = true;
+            }
+
+            if (!isUniqueView) return;
+
+            _context.PodcastEpisodeViews.Add(new PodcastEpisodeView
+            {
+                PodcastEpisodeId = episode.Id,
+                UserId = userId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Referrer = referrer,
+                ViewedAt = DateTime.UtcNow
+            });
+
+            episode.ViewCount += 1;
+            episode.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<PodcastEpisodeDto?> GetEpisodeByIdAsync(int id)

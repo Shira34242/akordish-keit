@@ -344,21 +344,34 @@
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row">
+      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="left" [autoScrollCopies]="3">
         <div class="events-loop-track">
-          <app-event-card
-            *ngFor="let event of upcomingEvents; trackBy: trackById"
-            [event]="event"
-            [showInfo]="false"
-            (cardClick)="openEventModal($event)">
-          </app-event-card>
+          <ng-container *ngFor="let copy of [0, 1, 2]">
+            <app-event-card
+              *ngFor="let event of upcomingEvents; trackBy: trackById"
+              [event]="event"
+              [showInfo]="false"
+              [attr.aria-hidden]="copy !== 1 ? true : null"
+              (cardClick)="openEventModal($event)">
+            </app-event-card>
+          </ng-container>
         </div>
       </div>
     </section>
 
+    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts">
+      <div class="promo-content">
+        <h2 class="promo-title">פודקאסטים</h2>
+        <p class="promo-subtitle">השיחות, הראיונות והפרקים החמים בעולם המוזיקה היהודית</p>
+        <div class="promo-actions">
+          <a routerLink="/podcasts" class="promo-btn">לכל הפודקאסטים ‹</a>
+        </div>
+      </div>
+    </div>
+
     <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0">
       <div class="section-header">
-        <h2 class="section-title">פודקאסטים</h2>
+        <h2 class="section-title">פודקאסטים מובילים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
       <div class="podcasts-home-panel">

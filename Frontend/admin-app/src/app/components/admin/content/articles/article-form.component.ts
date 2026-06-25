@@ -734,8 +734,11 @@ export class ArticleFormComponent implements OnInit {
 
   goBack(): void {
     this.closeWithoutDraftSave = true;
+    const categoryId = this.article.categoryIds?.[0];
+    const queryParams = categoryId ? { categoryId } : undefined;
+
     this.router.navigate(['/admin/content/articles'], {
-      queryParams: { tab: this.article.contentType === ArticleContentType.Blog ? 'blog' : 'news' }
+      queryParams
     });
   }
 

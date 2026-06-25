@@ -46,12 +46,13 @@ namespace AkordishKeit.Controllers
         }
 
         [HttpGet("home-cards")]
-        public async Task<ActionResult<List<PodcastHomeCardDto>>> GetHomePodcastCards()
+        public async Task<ActionResult<List<PodcastHomeCardDto>>> GetHomePodcastCards([FromQuery] int limit = 10)
         {
-            var cards = await _cache.GetOrCreateAsync("home_podcast_cards_v1", async entry =>
+            var cacheKey = $"home_podcast_cards_v2_{Math.Clamp(limit, 1, 12)}";
+            var cards = await _cache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-                return await _podcastService.GetHomePodcastCardsAsync();
+                return await _podcastService.GetHomePodcastCardsAsync(limit);
             });
 
             return HttpCacheRevalidation.Revalidate(this, cards!);
@@ -104,7 +105,23 @@ namespace AkordishKeit.Controllers
         [HttpGet("episode/{podcastSlug}/{episodeSlug}")]
         public async Task<ActionResult<PodcastEpisodeDetailDto>> GetEpisodeBySlug(string podcastSlug, string episodeSlug)
         {
-            var episode = await _podcastService.GetEpisodeBySlugAsync(podcastSlug, episodeSlug);
+            int? userId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var parsedUserId))
+                {
+                    userId = parsedUserId;
+                }
+            }
+
+            var episode = await _podcastService.GetEpisodeBySlugAsync(
+                podcastSlug,
+                episodeSlug,
+                userId: userId,
+                ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                userAgent: Request.Headers["User-Agent"].ToString(),
+                referrer: Request.Headers["Referer"].ToString());
             return episode == null ? NotFound(new { message = "הפרק לא נמצא" }) : Ok(episode);
         }
 
@@ -305,6 +322,10 @@ namespace AkordishKeit.Controllers
         {
             _cache.Remove("home_podcast_cards_v1");
             _cache.Remove("home_popular_episode_banners_v1");
+            for (var limit = 1; limit <= 12; limit++)
+            {
+                _cache.Remove($"home_podcast_cards_v2_{limit}");
+            }
         }
     }
 }

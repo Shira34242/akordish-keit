@@ -59,4 +59,20 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
   get f() {
     return this.adSpotForm.controls;
   }
+
+  get previewDimensions(): { width: number; height: number; ratio: string } | null {
+    const value = String(this.adSpotForm?.get('dimensions')?.value || '').trim();
+    const match = value.match(/^(\d+)\s*[xX*]\s*(\d+)$/);
+    if (!match) return null;
+
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (width <= 0 || height <= 0) return null;
+
+    return {
+      width,
+      height,
+      ratio: `${width} / ${height}`
+    };
+  }
 }

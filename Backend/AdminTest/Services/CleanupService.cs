@@ -114,6 +114,15 @@ public class CleanupService : BackgroundService
                 "Deleted {Count} old SongView records.",
                 deletedSongViewsCount);
 
+            // Delete old PodcastEpisodeViews
+            var deletedPodcastEpisodeViewsCount = await context.PodcastEpisodeViews
+                .Where(pv => pv.ViewedAt < cutoffDate)
+                .ExecuteDeleteAsync(stoppingToken);
+
+            _logger.LogInformation(
+                "Deleted {Count} old PodcastEpisodeView records.",
+                deletedPodcastEpisodeViewsCount);
+
             // Delete old AdCampaignViews
             var deletedAdViewsCount = await context.AdCampaignViews
                 .Where(av => av.ViewedAt < cutoffDate)
@@ -132,13 +141,14 @@ public class CleanupService : BackgroundService
                 "Deleted {Count} old AdCampaignClick records.",
                 deletedAdClicksCount);
 
-            var totalDeleted = deletedArticleViewsCount + deletedSongViewsCount + deletedAdViewsCount + deletedAdClicksCount;
+            var totalDeleted = deletedArticleViewsCount + deletedSongViewsCount + deletedPodcastEpisodeViewsCount + deletedAdViewsCount + deletedAdClicksCount;
 
             _logger.LogInformation(
-                "Cleanup completed. Total deleted: {Total} records ({Articles} ArticleViews + {Songs} SongViews + {AdViews} AdCampaignViews + {AdClicks} AdCampaignClicks).",
+                "Cleanup completed. Total deleted: {Total} records ({Articles} ArticleViews + {Songs} SongViews + {PodcastEpisodes} PodcastEpisodeViews + {AdViews} AdCampaignViews + {AdClicks} AdCampaignClicks).",
                 totalDeleted,
                 deletedArticleViewsCount,
                 deletedSongViewsCount,
+                deletedPodcastEpisodeViewsCount,
                 deletedAdViewsCount,
                 deletedAdClicksCount);
         }

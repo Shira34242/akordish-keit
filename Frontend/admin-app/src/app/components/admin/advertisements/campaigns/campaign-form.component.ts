@@ -205,6 +205,31 @@ export class CampaignFormComponent implements OnInit, OnChanges {
     return spot ? `פרסומת - ${spot.name}` : 'פרסומת חדשה';
   }
 
+  get selectedAdSpot(): AdSpot | undefined {
+    const adSpotId = Number(this.campaignForm?.get('adSpotId')?.value || 0);
+    return this.adSpots.find(spot => spot.id === adSpotId);
+  }
+
+  get previewDimensions(): { width: number; height: number; ratio: string } | null {
+    const value = String(this.selectedAdSpot?.dimensions || '').trim();
+    const match = value.match(/^(\d+)\s*[xX*]\s*(\d+)$/);
+    if (!match) return null;
+
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (width <= 0 || height <= 0) return null;
+
+    return {
+      width,
+      height,
+      ratio: `${width} / ${height}`
+    };
+  }
+
+  get previewMediaUrl(): string {
+    return this.campaignForm?.get('mediaUrl')?.value || '';
+  }
+
   onSubmit() {
     if (this.campaignForm.invalid) {
       this.campaignForm.markAllAsTouched();

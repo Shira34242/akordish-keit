@@ -6,6 +6,7 @@ public class SiteAccessGateStatusDto
 {
     public bool Enabled { get; set; }
     public bool PasswordConfigured { get; set; }
+    public bool HasAccess { get; set; }
     public string AccessVersion { get; set; } = string.Empty;
 }
 

@@ -87,6 +87,21 @@
           />
         </div>
 
+        <div class="ad-preview" *ngIf="previewDimensions as preview">
+          <div class="ad-preview__header">
+            <span>תצוגה מקדימה</span>
+            <small>{{ selectedAdSpot?.name }} · {{ preview.width }}×{{ preview.height }}</small>
+          </div>
+          <div class="ad-preview__canvas">
+            <div
+              class="ad-preview__box"
+              [style.aspect-ratio]="preview.ratio">
+              <img *ngIf="previewMediaUrl" [src]="previewMediaUrl" alt="תצוגה מקדימה של פרסומת">
+              <span *ngIf="!previewMediaUrl">בחר תמונה כדי לראות את הפרסומת בגודל השטח</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Target URL -->
         <div class="form-group">
           <label for="knownUrl">כתובת יעד (לינק)</label>

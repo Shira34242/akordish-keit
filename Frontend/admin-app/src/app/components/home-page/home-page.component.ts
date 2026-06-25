@@ -439,7 +439,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (completedLoads === 3) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getPublicPodcasts().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getHomePodcastCards(10).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
@@ -448,7 +448,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const onLatestDone = this.trackPendingLoad();
-    this.podcastService.getLatestEpisodes(16).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getLatestEpisodes(48).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onLatestDone();
       completeLoad();
     })).subscribe({
@@ -743,7 +743,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setViralArticles(articles: ArticleBanner[]): void {
-    this.viralArticles = articles.slice(0, 40);
+    this.viralArticles = articles.slice(0, 80);
     this.visibleViralCount = this.floorToFullRows(4, this.viralArticles.length);
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;

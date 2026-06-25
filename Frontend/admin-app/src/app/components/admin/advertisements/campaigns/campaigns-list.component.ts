@@ -136,7 +136,7 @@ export class CampaignsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error updating campaign:', error);
-          alert('שגיאה בעדכון הקמפיין');
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     } else {
@@ -149,14 +149,7 @@ export class CampaignsListComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           console.error('Error creating campaign:', error);
-          if (error.error?.errors) {
-            const errorMessages = Object.entries(error.error.errors)
-              .map(([field, messages]: [string, any]) => `${field}: ${messages.join(', ')}`)
-              .join('\n');
-            alert(`שגיאה ביצירת הקמפיין:\n${errorMessages}`);
-          } else {
-            alert('שגיאה ביצירת הקמפיין');
-          }
+          this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
         }
       });
     }
@@ -178,7 +171,7 @@ export class CampaignsListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error deleting campaign:', error);
-        alert('שגיאה במחיקת הקמפיין');
+        this.siteAlerts.show('שגיאה בפעולה. בדוק את הפרטים ונסה שוב.');
       }
     });
   }

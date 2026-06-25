@@ -168,6 +168,11 @@ export class ArticlesListComponent implements OnInit {
   }
 
   private applyTabFromRoute(): void {
+    const categoryId = Number(this.route.snapshot.queryParamMap.get('categoryId'));
+    if (Number.isFinite(categoryId) && categoryId > 0) {
+      this.selectedCategory = categoryId;
+    }
+
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (tab === 'news' || tab === 'blog') {
       this.activeTab = tab;
