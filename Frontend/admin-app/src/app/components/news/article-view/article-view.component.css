@@ -195,8 +195,8 @@
   position: relative;
   z-index: 11; /* creates explicit stacking context above article-hero (z-index: 10) */
   --article-content-width: 720px;
-  --article-ad-gap: var(--space-lg);
-  --article-side-ad-width: clamp(140px, calc((min(100vw, 1400px) - var(--article-content-width) - (var(--article-ad-gap) * 4)) / 2), 190px);
+  --article-ad-gap: var(--space-xl);
+  --article-side-ad-width: 170px;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--space-lg);
@@ -209,7 +209,7 @@
 
 .sidebar {
   position: absolute;
-  top: var(--space-3xl);
+  top: var(--space-4xl);
   width: var(--article-side-ad-width);
   display: flex;
   justify-content: center;
@@ -1114,10 +1114,6 @@
   overflow: hidden;
 }
 
-.mid-content-area:not(:has(app-media-item.media-item--ready)) {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .mid-content-area {
     width: 100%;
@@ -1219,10 +1215,11 @@
 @media (max-width: 1200px) {
   .content-with-sidebars {
     --article-ad-gap: var(--space-base);
+    --article-side-ad-width: 150px;
   }
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1060px) {
   .sidebar {
     display: none;
   }
