@@ -196,7 +196,8 @@
   z-index: 11; /* creates explicit stacking context above article-hero (z-index: 10) */
   --article-content-width: 720px;
   --article-ad-gap: var(--space-lg);
-  --article-side-ad-width: calc((100vw - var(--article-content-width) - (var(--article-ad-gap) * 2)) / 2);
+  --article-screen-edge: var(--space-base);
+  --article-side-ad-width: calc((100vw - var(--article-content-width) - (var(--article-ad-gap) * 2) - (var(--article-screen-edge) * 2)) / 2);
   width: 100%;
   max-width: none;
   margin: 0 auto;
@@ -210,7 +211,7 @@
 
 .sidebar {
   position: absolute;
-  top: 0;
+  top: 180px;
   width: var(--article-side-ad-width);
   box-sizing: border-box;
   display: flex;
@@ -234,13 +235,13 @@
 
 .sidebar-right {
   /* RTL: פרסומת — נמצאת בצד שמאל ויזואלי */
-  left: 0;
+  left: var(--article-screen-edge);
   padding-right: var(--article-ad-gap);
 }
 
 .sidebar-left {
   /* RTL: פרסומת — נמצאת בצד ימין ויזואלי */
-  right: 0;
+  right: var(--article-screen-edge);
   padding-left: var(--article-ad-gap);
 }
 
