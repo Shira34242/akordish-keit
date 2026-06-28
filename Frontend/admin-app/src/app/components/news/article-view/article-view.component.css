@@ -198,6 +198,7 @@
   --article-ad-gap: var(--space-lg);
   --article-screen-edge: var(--space-base);
   --article-side-ad-width: calc((100vw - var(--article-content-width) - (var(--article-ad-gap) * 2) - (var(--article-screen-edge) * 2)) / 2);
+  --article-side-ad-top: 220px;
   --article-side-ad-height: 440px;
   width: 100%;
   max-width: none;
@@ -212,7 +213,7 @@
 
 .sidebar {
   position: absolute;
-  top: 220px;
+  top: var(--article-side-ad-top);
   width: var(--article-side-ad-width);
   box-sizing: border-box;
   display: flex;
@@ -231,8 +232,7 @@
 }
 
 :host ::ng-deep .sidebar app-media-item .media-wrapper {
-  aspect-ratio: auto !important;
-  height: var(--article-side-ad-height);
+  max-height: var(--article-side-ad-height);
   max-width: none !important;
 }
 

@@ -88,6 +88,7 @@ interface AdSpotResponse {
 })
 export class AdDisplayComponent implements OnInit, OnDestroy {
   @Input() spotTechnicalId!: string;
+  @Input() fallbackSpotTechnicalId?: string;
   @Input() isMobile: boolean = false;
 
   private readonly http = inject(HttpClient);
@@ -151,12 +152,15 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.loadAds();
   }
 
-  loadAds() {
+  loadAds(fallbackAttempted = false) {
     if (!this.spotTechnicalId) return;
 
     this.loading = true;
 
-    const params = new HttpParams().set('spotTechnicalId', this.spotTechnicalId);
+    const technicalId = fallbackAttempted && this.fallbackSpotTechnicalId
+      ? this.fallbackSpotTechnicalId
+      : this.spotTechnicalId;
+    const params = new HttpParams().set('spotTechnicalId', technicalId);
     this.http.get<AdSpotResponse>(`${this.apiUrl}/item`, { params })
       .subscribe({
         next: (response) => {
@@ -190,10 +194,18 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
             this.currentAd = this.campaigns[0];
             this.hasTrackedView = false;
             this.setupRotation();
+            return;
+          }
+
+          if (!fallbackAttempted && this.fallbackSpotTechnicalId && this.fallbackSpotTechnicalId !== this.spotTechnicalId) {
+            this.loadAds(true);
           }
         },
         error: () => {
           this.loading = false;
+          if (!fallbackAttempted && this.fallbackSpotTechnicalId && this.fallbackSpotTechnicalId !== this.spotTechnicalId) {
+            this.loadAds(true);
+          }
         }
       });
   }

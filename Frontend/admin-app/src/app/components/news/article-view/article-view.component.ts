@@ -46,10 +46,32 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     this.destroyRef.onDestroy(() => {
       this.contentPageService.clearCurrentArticle();
       this.relatedObserver?.disconnect();
+      this.sideAdResizeObserver?.disconnect();
+      if (this.sideAdMeasureFrame !== null) {
+        window.cancelAnimationFrame(this.sideAdMeasureFrame);
+      }
     });
   }
 
   private relatedObserver: IntersectionObserver | null = null;
+  private sideAdResizeObserver: ResizeObserver | null = null;
+  private sideAdMeasureFrame: number | null = null;
+  private _contentWithSidebarsEl: ElementRef<HTMLElement> | undefined;
+  private _feedbackSectionEl: ElementRef<HTMLElement> | undefined;
+
+  @ViewChild('contentWithSidebars')
+  set contentWithSidebarsEl(el: ElementRef<HTMLElement> | undefined) {
+    this._contentWithSidebarsEl = el;
+    this.reconnectSideAdResizeObserver();
+    this.scheduleSideAdMeasurement();
+  }
+
+  @ViewChild('feedbackSection')
+  set feedbackSectionEl(el: ElementRef<HTMLElement> | undefined) {
+    this._feedbackSectionEl = el;
+    this.reconnectSideAdResizeObserver();
+    this.scheduleSideAdMeasurement();
+  }
 
   @ViewChild('relatedSentinel')
   set relatedSentinelEl(el: ElementRef<HTMLElement> | undefined) {
@@ -150,6 +172,48 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   onResize(): void {
     this.fullHeroHeight = window.innerHeight - 16;
     this.shrinkHero();
+    this.scheduleSideAdMeasurement();
+  }
+
+  private reconnectSideAdResizeObserver(): void {
+    if (typeof ResizeObserver === 'undefined') return;
+
+    this.sideAdResizeObserver?.disconnect();
+    this.sideAdResizeObserver = new ResizeObserver(() => this.scheduleSideAdMeasurement());
+
+    if (this._contentWithSidebarsEl) {
+      this.sideAdResizeObserver.observe(this._contentWithSidebarsEl.nativeElement);
+    }
+
+    if (this._feedbackSectionEl) {
+      this.sideAdResizeObserver.observe(this._feedbackSectionEl.nativeElement);
+    }
+  }
+
+  private scheduleSideAdMeasurement(): void {
+    if (this.sideAdMeasureFrame !== null) {
+      window.cancelAnimationFrame(this.sideAdMeasureFrame);
+    }
+
+    this.sideAdMeasureFrame = window.requestAnimationFrame(() => {
+      this.sideAdMeasureFrame = null;
+      this.updateSideAdHeight();
+    });
+  }
+
+  private updateSideAdHeight(): void {
+    const wrapper = this._contentWithSidebarsEl?.nativeElement;
+    const feedback = this._feedbackSectionEl?.nativeElement;
+    if (!wrapper || !feedback) return;
+
+    const styles = window.getComputedStyle(wrapper);
+    const sideAdTop = parseFloat(styles.getPropertyValue('--article-side-ad-top')) || 220;
+    const bottomGap = 14;
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    const feedbackTop = feedback.getBoundingClientRect().top;
+    const height = Math.max(0, Math.floor(feedbackTop - wrapperTop - sideAdTop - bottomGap));
+
+    wrapper.style.setProperty('--article-side-ad-height', `${height}px`);
   }
 
   shrinkHero(): void {

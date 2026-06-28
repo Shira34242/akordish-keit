@@ -166,6 +166,7 @@
   color: #000000;
   font-size: var(--font-sm);
   font-weight: 800;
+  white-space: pre-line;
 }
 
 .mini-badge,
@@ -339,6 +340,18 @@
   color: #606060;
   font-size: var(--font-sm);
   margin-top: -4px;
+}
+
+.other-field {
+  display: block;
+  margin-top: var(--space-sm);
+}
+
+.dropdown-other {
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 14px;
+  background: #F2F2F2;
 }
 
 .social-svg {
@@ -525,14 +538,35 @@
   cursor: pointer;
 }
 
-.whatsapp-check input {
-  position: absolute;
-  opacity: 0;
+.whatsapp-check.checked {
+  background: #ffffff;
+  color: #000000;
 }
 
-.whatsapp-check:has(input:checked) {
-  background: #ddff53;
+.checkbox-mark,
+.inline-checkbox-mark {
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #000000;
+  flex: 0 0 auto;
+}
+
+.checkbox-mark .material-icons,
+.inline-checkbox-mark .material-icons {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.whatsapp-check.checked .checkbox-mark,
+.check-option.selected .inline-checkbox-mark {
+  border-color: #ddff53;
+  background: #ddff53;
 }
 
 .social-row {
@@ -555,6 +589,9 @@
 .social-button {
   background: rgba(255, 255, 255, 0.58);
   color: rgba(0, 0, 0, 0.34);
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  touch-action: manipulation;
+  will-change: transform;
 }
 
 .social-button.filled {
@@ -565,6 +602,7 @@
 .social-button.active {
   background: #ddff53;
   color: #000000;
+  transform: translateY(-1px);
 }
 
 .horizontal-strip {
@@ -689,13 +727,38 @@
 }
 
 .video-item {
+  position: relative;
   place-items: center;
   text-align: center;
-  background: #ddff53;
+  background: #ffffff;
+  overflow: hidden;
 }
 
 .video-item .material-icons {
   font-size: 34px;
+}
+
+.video-item img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #F2F2F2;
+}
+
+.video-play-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ddff53;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
 }
 
 .remove-button {

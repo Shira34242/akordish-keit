@@ -83,6 +83,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   priceList: string = '';
   selectedLanguages: number[] = [];
   selectedAudiences: number[] = [];
+  otherInstrument = '';
+  otherLanguage = '';
+  otherAudience = '';
+  showOtherInstrument = false;
+  showOtherLanguage = false;
+  showOtherAudience = false;
   availability: string = '';
   education: string = '';
   lessonTypes: string = '';
@@ -113,17 +119,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   // Options
   languageOptions = getTeachingLanguageOptions();
   audienceOptions = getTargetAudienceOptions();
-  get socialPlatformOptions(): PlatformLinkOption[] {
-    return [
-      { platform: SocialPlatform.Instagram, label: 'Instagram', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Instagram]), placeholder: this.langService.translate('create.link_instagram') },
-      { platform: SocialPlatform.Facebook, label: 'Facebook', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Facebook]), placeholder: this.langService.translate('create.link_facebook') },
-      { platform: SocialPlatform.YouTube, label: 'YouTube', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.YouTube]), placeholder: this.langService.translate('create.link_youtube') },
-      { platform: SocialPlatform.TikTok, label: 'TikTok', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.TikTok]), placeholder: this.langService.translate('create.link_tiktok') },
-      { platform: SocialPlatform.Twitter, label: 'Twitter / X', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Twitter]), placeholder: this.langService.translate('create.link_x') },
-      { platform: SocialPlatform.Spotify, label: 'Spotify', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Spotify]), placeholder: this.langService.translate('create.link_spotify') },
-      { platform: SocialPlatform.Zing, label: 'Zing', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Zing]), placeholder: this.langService.translate('create.link_zing') },
-    ];
-  }
+  socialPlatformOptions: PlatformLinkOption[] = [];
 
   // UI state
   cityDropdownOpen = false;
@@ -152,11 +148,28 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.socialPlatformOptions = this.buildSocialPlatformOptions();
     this.loadSubscriptionStatus();
     this.loadInstruments();
     this.loadCities();
     this.prefillUserData();
     setTimeout(() => this.scrollToTop(false));
+  }
+
+  private buildSocialPlatformOptions(): PlatformLinkOption[] {
+    return [
+      { platform: SocialPlatform.Instagram, label: 'Instagram', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Instagram]), placeholder: this.langService.translate('create.link_instagram') },
+      { platform: SocialPlatform.Facebook, label: 'Facebook', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Facebook]), placeholder: this.langService.translate('create.link_facebook') },
+      { platform: SocialPlatform.YouTube, label: 'YouTube', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.YouTube]), placeholder: this.langService.translate('create.link_youtube') },
+      { platform: SocialPlatform.TikTok, label: 'TikTok', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.TikTok]), placeholder: this.langService.translate('create.link_tiktok') },
+      { platform: SocialPlatform.Twitter, label: 'Twitter / X', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Twitter]), placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Spotify, label: 'Spotify', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Spotify]), placeholder: this.langService.translate('create.link_spotify') },
+      { platform: SocialPlatform.Zing, label: 'Zing', svg: this.sanitizer.bypassSecurityTrustHtml(SOCIAL_SVG_ICONS[SocialPlatform.Zing]), placeholder: this.langService.translate('create.link_zing') },
+    ];
+  }
+
+  get displayInstruments(): SystemItem[] {
+    return this.availableInstruments.filter(instrument => !this.isOrganInstrument(instrument));
   }
 
   ngOnDestroy(): void {
@@ -253,11 +266,49 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   loadInstruments() {
     this.systemTablesService.getItems('instruments', 1, 100).subscribe({
       next: (result) => {
-        this.availableInstruments = result.items;
+        this.availableInstruments = (result.items || []).filter(item => !this.isOrganInstrument(item));
         this.filteredInstruments = this.availableInstruments;
       },
       error: (error) => console.error('Error loading instruments:', error)
     });
+  }
+
+  private isOrganInstrument(instrument: SystemItem): boolean {
+    return (instrument.name || '').trim().toLowerCase().includes('עוגב');
+  }
+
+  limitOtherField(field: 'otherInstrument' | 'otherLanguage' | 'otherAudience'): void {
+    let rawValue = '';
+    if (field === 'otherInstrument') rawValue = this.otherInstrument;
+    if (field === 'otherLanguage') rawValue = this.otherLanguage;
+    if (field === 'otherAudience') rawValue = this.otherAudience;
+
+    const cleanValue = rawValue.trimStart().slice(0, 10);
+
+    if (field === 'otherInstrument') this.otherInstrument = cleanValue;
+    if (field === 'otherLanguage') this.otherLanguage = cleanValue;
+    if (field === 'otherAudience') this.otherAudience = cleanValue;
+
+    if (field === 'otherInstrument' && this.otherInstrument.trim()) {
+      this.requiredFieldFeedback.clearFeedback(this.host.nativeElement.querySelector('.instrument-picker'));
+    }
+  }
+
+  toggleOtherField(field: 'instrument' | 'language' | 'audience'): void {
+    if (field === 'instrument') {
+      this.showOtherInstrument = !this.showOtherInstrument;
+      if (!this.showOtherInstrument) this.otherInstrument = '';
+    }
+
+    if (field === 'language') {
+      this.showOtherLanguage = !this.showOtherLanguage;
+      if (!this.showOtherLanguage) this.otherLanguage = '';
+    }
+
+    if (field === 'audience') {
+      this.showOtherAudience = !this.showOtherAudience;
+      if (!this.showOtherAudience) this.otherAudience = '';
+    }
   }
 
   // City dropdown methods
@@ -305,12 +356,14 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   }
 
   getSelectedInstrumentsText(): string {
-    if (this.selectedInstrumentIds.length === 0) {
+    const other = this.otherInstrument.trim();
+    if (this.selectedInstrumentIds.length === 0 && !other) {
       return this.langService.translate('common.select_instrument');
     }
     const names = this.selectedInstrumentIds
       .map(id => this.availableInstruments.find(inst => inst.id === id)?.name)
       .filter(name => name);
+    if (other) names.push(other);
     if (names.length === 1) return names[0] ?? '';
     if (names.length === 2) return names.join(', ');
     return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
@@ -364,10 +417,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   }
 
   getSelectedLanguagesText(): string {
-    if (this.selectedLanguages.length === 0) return this.langService.translate('common.select_language');
+    const other = this.otherLanguage.trim();
+    if (this.selectedLanguages.length === 0 && !other) return this.langService.translate('common.select_language');
     const names = this.selectedLanguages
       .map(val => this.languageOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
+    if (other) names.push(other);
     if (names.length <= 2) return names.join(', ');
     return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
   }
@@ -393,10 +448,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   }
 
   getSelectedAudiencesText(): string {
-    if (this.selectedAudiences.length === 0) return this.langService.translate('common.select_audience');
+    const other = this.otherAudience.trim();
+    if (this.selectedAudiences.length === 0 && !other) return this.langService.translate('common.select_audience');
     const names = this.selectedAudiences
       .map(val => this.audienceOptions.find(opt => opt.value === val)?.label)
       .filter(label => label);
+    if (other) names.push(other);
     if (names.length <= 2) return names.join(', ');
     return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
   }
@@ -644,6 +701,10 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
     this.activeSocialPlatform = this.activeSocialPlatform === platform ? null : platform;
   }
 
+  onSocialPlatformPointerDown(event: Event): void {
+    event.preventDefault();
+  }
+
   hasPlatformLink(platform: SocialPlatform): boolean {
     return !!this.getPlatformLink(platform).trim();
   }
@@ -659,6 +720,26 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   private arrayToFlags(selectedValues: number[]): number {
     if (!selectedValues || selectedValues.length === 0) return 0;
     return selectedValues.reduce((acc, val) => acc | val, 0);
+  }
+
+  getVideoThumbnail(url: string): string {
+    const videoId = this.getYouTubeVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  private getYouTubeVideoId(url: string): string {
+    return url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1] || '';
+  }
+
+  private withOtherDetails(description: string | undefined): string | undefined {
+    const details = [
+      this.otherInstrument.trim() ? `כלי נוסף: ${this.otherInstrument.trim()}` : '',
+      this.otherLanguage.trim() ? `שפה נוספת: ${this.otherLanguage.trim()}` : '',
+      this.otherAudience.trim() ? `קהל יעד נוסף: ${this.otherAudience.trim()}` : ''
+    ].filter(Boolean);
+
+    if (!details.length) return description;
+    return [description?.trim(), details.join(' | ')].filter(Boolean).join('\n');
   }
 
   onSubmit() {
@@ -689,7 +770,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       userId: currentUser?.id,
       displayName: this.displayName.trim(),
       shortBio: this.shortBio?.trim() || undefined,
-      fullDescription: this.fullDescription?.trim() || undefined,
+      fullDescription: this.withOtherDetails(this.fullDescription?.trim()) || undefined,
       isTeacher: true,
       cityId: this.cityId,
       location: this.location?.trim() || undefined,
@@ -711,6 +792,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       education: this.education?.trim() || undefined,
       lessonTypes: this.lessonTypes?.trim() || undefined,
       specializations: this.specializations?.trim() || undefined,
+      otherInstrument: this.otherInstrument.trim() || undefined,
       instruments: this.selectedInstrumentIds.map(id => ({
         instrumentId: id,
         isPrimary: false
@@ -740,7 +822,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error creating teacher profile:', err);
-        this.error = err.error?.message || this.langService.translate('teacher_create.error_save');
+        this.error = this.getSaveErrorMessage(err);
         this.saving = false;
 
         // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage ׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ§׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ
@@ -749,6 +831,37 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
         localStorage.removeItem('pendingProfessionalType');
       }
     });
+  }
+
+  private getSaveErrorMessage(err: any): string {
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error.trim();
+    }
+
+    if (err?.error?.errors && typeof err.error.errors === 'object') {
+      const validationMessages = Object.values(err.error.errors)
+        .flat()
+        .filter(message => typeof message === 'string' && message.trim())
+        .map(message => String(message).trim());
+
+      if (validationMessages.length) {
+        return validationMessages.join('\n');
+      }
+    }
+
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+
+    if (err?.error?.title) {
+      return err.error.title;
+    }
+
+    if (err?.message) {
+      return err.message;
+    }
+
+    return this.langService.translate('teacher_create.error_save');
   }
 
   validateForm(): boolean {
@@ -770,7 +883,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    if (this.selectedInstrumentIds.length === 0) {
+    if (this.selectedInstrumentIds.length === 0 && !this.otherInstrument.trim()) {
       this.error = this.langService.translate('teacher_create.select_instrument_min');
       this.showRequiredStep(1, '.instrument-picker');
       return false;

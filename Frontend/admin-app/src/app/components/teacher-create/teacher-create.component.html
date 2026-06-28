@@ -83,10 +83,14 @@
             <div class="soft-block instrument-picker" data-required-anchor tabindex="-1">
               <div class="soft-label">כלי נגינה *</div>
               <p class="field-note soft-note">סמן את הכלים שאתה מלמד</p>
-              <div class="pill-grid" *ngIf="availableInstruments.length; else instrumentsLoading">
-                <button type="button" *ngFor="let instrument of availableInstruments" class="choice-pill" [class.selected]="isInstrumentSelected(instrument.id)" (click)="toggleInstrument(instrument.id)">
+              <div class="pill-grid" *ngIf="displayInstruments.length; else instrumentsLoading">
+                <button type="button" *ngFor="let instrument of displayInstruments" class="choice-pill" [class.selected]="isInstrumentSelected(instrument.id)" (click)="toggleInstrument(instrument.id)">
                   {{ instrument.name }}
                 </button>
+                <button type="button" class="choice-pill" [class.selected]="showOtherInstrument" (click)="toggleOtherField('instrument')">אחר</button>
+              </div>
+              <div class="other-field" *ngIf="showOtherInstrument">
+                <input type="text" [(ngModel)]="otherInstrument" [ngModelOptions]="{standalone: true}" (ngModelChange)="limitOtherField('otherInstrument')" maxlength="10" class="text-input compact" placeholder="עד 10 תווים" />
               </div>
               <ng-template #instrumentsLoading>
                 <p class="field-note">טוען כלי נגינה...</p>
@@ -97,11 +101,12 @@
 
             <div class="phone-line">
               <input id="phoneNumber" type="tel" [(ngModel)]="phoneNumber" name="phoneNumber" class="text-input" required placeholder="טלפון *" />
-              <label class="whatsapp-check" for="hasWhatsAppOnPhone">
-                <input id="hasWhatsAppOnPhone" type="checkbox" [(ngModel)]="hasWhatsAppOnPhone" name="hasWhatsAppOnPhone" />
-                <span class="material-icons">forum</span>
-                <span>יש וואטסאפ?</span>
-              </label>
+              <button type="button" class="whatsapp-check" [class.checked]="hasWhatsAppOnPhone" [attr.aria-pressed]="hasWhatsAppOnPhone" (click)="hasWhatsAppOnPhone = !hasWhatsAppOnPhone">
+                <span class="checkbox-mark">
+                  <span class="material-icons" *ngIf="hasWhatsAppOnPhone">check</span>
+                </span>
+                <span>וואטסאפ</span>
+              </button>
             </div>
 
             <input id="websiteUrl" type="url" [(ngModel)]="websiteUrl" name="websiteUrl" class="text-input" placeholder="אתר אישי" />
@@ -110,7 +115,7 @@
               <div class="soft-label">רשתות חברתיות</div>
               <p class="field-note soft-note">לחץ על סמל הרשת להדבקת קישור</p>
               <div class="social-row">
-                <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (click)="selectSocialPlatform(option.platform)">
+                <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (pointerdown)="onSocialPlatformPointerDown($event)" (click)="selectSocialPlatform(option.platform)">
                   <span class="social-svg" [innerHTML]="option.svg"></span>
                 </button>
               </div>
@@ -167,9 +172,18 @@
                 <div *ngIf="languageDropdownOpen" class="dropdown-menu">
                   <div class="dropdown-options">
                     <button type="button" *ngFor="let option of languageOptions" class="check-option" (click)="toggleLanguage(option.value)">
-                      <input type="checkbox" [checked]="isLanguageChecked(option.value)" (click)="$event.stopPropagation()" />
+                      <input type="checkbox" [checked]="isLanguageChecked(option.value)" (change)="toggleLanguage(option.value)" (click)="$event.stopPropagation()" />
                       <span>{{ option.label }}</span>
                     </button>
+                    <button type="button" class="check-option" [class.selected]="showOtherLanguage" (click)="toggleOtherField('language')">
+                      <span class="inline-checkbox-mark">
+                        <span class="material-icons" *ngIf="showOtherLanguage">check</span>
+                      </span>
+                      <span>אחר</span>
+                    </button>
+                    <div class="other-field dropdown-other" *ngIf="showOtherLanguage">
+                      <input type="text" [(ngModel)]="otherLanguage" [ngModelOptions]="{standalone: true}" (ngModelChange)="limitOtherField('otherLanguage')" maxlength="10" class="text-input compact" placeholder="עד 10 תווים" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -179,9 +193,18 @@
                 <div *ngIf="audienceDropdownOpen" class="dropdown-menu">
                   <div class="dropdown-options">
                     <button type="button" *ngFor="let option of audienceOptions" class="check-option" (click)="toggleAudience(option.value)">
-                      <input type="checkbox" [checked]="isAudienceChecked(option.value)" (click)="$event.stopPropagation()" />
+                      <input type="checkbox" [checked]="isAudienceChecked(option.value)" (change)="toggleAudience(option.value)" (click)="$event.stopPropagation()" />
                       <span>{{ option.label }}</span>
                     </button>
+                    <button type="button" class="check-option" [class.selected]="showOtherAudience" (click)="toggleOtherField('audience')">
+                      <span class="inline-checkbox-mark">
+                        <span class="material-icons" *ngIf="showOtherAudience">check</span>
+                      </span>
+                      <span>אחר</span>
+                    </button>
+                    <div class="other-field dropdown-other" *ngIf="showOtherAudience">
+                      <input type="text" [(ngModel)]="otherAudience" [ngModelOptions]="{standalone: true}" (ngModelChange)="limitOtherField('otherAudience')" maxlength="10" class="text-input compact" placeholder="עד 10 תווים" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -253,7 +276,11 @@
                 <button type="button" class="remove-button" (click)="removeVideoLink(videoIndex)" aria-label="מחיקת סרטון">
                   <span class="material-icons">close</span>
                 </button>
-                <span class="material-icons">smart_display</span>
+                <img *ngIf="getVideoThumbnail(link); else videoFallbackIcon" [src]="getVideoThumbnail(link)" [alt]="link" />
+                <ng-template #videoFallbackIcon>
+                  <span class="material-icons">smart_display</span>
+                </ng-template>
+                <span class="material-icons video-play-badge">play_arrow</span>
                 <p>{{ link }}</p>
               </article>
 

@@ -34,7 +34,7 @@
   <div class="hero-spacer"></div>
 
   <!-- Content Container with Video and Text - WITH SIDEBARS -->
-  <div class="content-with-sidebars">
+  <div class="content-with-sidebars" #contentWithSidebars>
 
     <!-- Main Content Box -->
     <div class="content-container">
@@ -156,7 +156,7 @@
       </div>
 
       <!-- Feedback Section -->
-      <div class="feedback-section-outside">
+      <div class="feedback-section-outside" #feedbackSection>
         <p class="feedback-title">האם הכתבה עניינה אותך?</p>
         <div class="feedback-circles">
 
@@ -219,12 +219,12 @@
 
     <!-- Right Sidebar - Advertisement -->
     <aside class="sidebar sidebar-right">
-      <app-media-item spotTechnicalId="view-article-right"></app-media-item>
+      <app-media-item spotTechnicalId="view-article-right" fallbackSpotTechnicalId="view-article-left"></app-media-item>
     </aside>
 
     <!-- Left Sidebar - Advertisement -->
     <aside class="sidebar sidebar-left">
-      <app-media-item spotTechnicalId="view-article-left"></app-media-item>
+      <app-media-item spotTechnicalId="view-article-left" fallbackSpotTechnicalId="view-article-right"></app-media-item>
     </aside>
   </div>
 </div>

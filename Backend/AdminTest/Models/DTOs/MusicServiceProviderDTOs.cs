@@ -234,8 +234,9 @@ public class CreateTeacherDto : CreateMusicServiceProviderDto
     [StringLength(1000)]
     public string? Specializations { get; set; }
 
-    [Required]
-    [MinLength(1, ErrorMessage = "חובה לבחור לפחות כלי אחד")]
+    [StringLength(10)]
+    public string? OtherInstrument { get; set; }
+
     public List<CreateTeacherInstrumentDto> Instruments { get; set; } = new();
 
     public List<CreateTeacherTestimonialDto>? Testimonials { get; set; }
@@ -387,8 +388,9 @@ public class UpdateTeacherDto : UpdateMusicServiceProviderDto
     [StringLength(1000)]
     public string? Specializations { get; set; }
 
-    [Required]
-    [MinLength(1, ErrorMessage = "חובה לבחור לפחות כלי אחד")]
+    [StringLength(10)]
+    public string? OtherInstrument { get; set; }
+
     public List<CreateTeacherInstrumentDto> Instruments { get; set; } = new();
 
     public List<CreateTeacherTestimonialDto>? Testimonials { get; set; }

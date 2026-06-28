@@ -171,7 +171,9 @@ public class TeachersController : ControllerBase
             if (string.IsNullOrWhiteSpace(dto.DisplayName))
                 return BadRequest("שם התצוגה הוא שדה חובה");
 
-            if (dto.Instruments == null || !dto.Instruments.Any())
+            var hasInstrument = dto.Instruments != null && dto.Instruments.Any();
+            var hasOtherInstrument = !string.IsNullOrWhiteSpace(dto.OtherInstrument);
+            if (!hasInstrument && !hasOtherInstrument)
                 return BadRequest("חובה לבחור לפחות כלי נגינה אחד");
 
             // בדיקה אם המשתמש כבר יצר פרופיל מורה

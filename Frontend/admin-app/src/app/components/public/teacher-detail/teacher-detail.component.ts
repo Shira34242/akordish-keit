@@ -451,23 +451,47 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private rebuildGalleryMedia(): void {
     const media: Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string }> = [];
+    const seenVideoUrls = new Set<string>();
+    const addVideo = (videoUrl: string, caption = this.langService.translate('teacher.video_caption')) => {
+      const normalizedUrl = videoUrl.trim();
+      if (!normalizedUrl || seenVideoUrls.has(normalizedUrl)) return;
 
-    if (this.teacher?.videoUrl) {
+      seenVideoUrls.add(normalizedUrl);
       media.push({
         type: 'video',
-        videoUrl: this.teacher.videoUrl,
-        imageUrl: this.getVideoThumbnailUrl(this.teacher.videoUrl) || this.heroBannerSrc || this.teacher.profileImageUrl || '/logo.png',
-        caption: this.langService.translate('teacher.video_caption')
+        videoUrl: normalizedUrl,
+        imageUrl: this.getVideoThumbnailUrl(normalizedUrl) || this.heroBannerSrc || this.teacher?.profileImageUrl || '/logo.png',
+        caption
       });
-    }
+    };
 
-    this.galleryItems.forEach(item => media.push({ type: 'image', ...item }));
+    this.extractVideoLinks(this.teacher?.videoUrl || '').forEach(url => addVideo(url));
+    this.galleryItems.forEach(item => {
+      if (this.isVideoUrl(item.imageUrl)) {
+        addVideo(item.imageUrl, item.caption || this.langService.translate('teacher.video_caption'));
+        return;
+      }
+
+      media.push({ type: 'image', ...item });
+    });
     this.galleryMediaItems = media;
   }
 
   private getVideoThumbnailUrl(url: string): string {
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
     return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  private extractVideoLinks(value: string): string[] {
+    return (value || '')
+      .split(/[\n,]+/)
+      .map(url => url.trim())
+      .filter(url => this.isVideoUrl(url));
+  }
+
+  private isVideoUrl(url?: string): boolean {
+    if (!url) return false;
+    return /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url);
   }
 
   get teacherTestimonials(): Array<{ text: string; studentName?: string }> {

@@ -42,6 +42,7 @@ export interface CreateTeacherDto extends CreateMusicServiceProviderDto {
   education?: string;
   lessonTypes?: string;
   specializations?: string;
+  otherInstrument?: string;
   instruments: CreateTeacherInstrumentDto[];
   testimonials?: CreateTeacherTestimonialDto[];
 }
@@ -54,6 +55,7 @@ export interface UpdateTeacherDto extends UpdateMusicServiceProviderDto {
   education?: string;
   lessonTypes?: string;
   specializations?: string;
+  otherInstrument?: string;
   instruments: CreateTeacherInstrumentDto[];
   testimonials?: CreateTeacherTestimonialDto[];
 }
