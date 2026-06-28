@@ -195,11 +195,12 @@
   position: relative;
   z-index: 11; /* creates explicit stacking context above article-hero (z-index: 10) */
   --article-content-width: 720px;
-  --article-ad-gap: var(--space-xl);
-  --article-side-ad-width: 170px;
-  max-width: 1400px;
+  --article-ad-gap: var(--space-lg);
+  --article-side-ad-width: calc((100vw - var(--article-content-width) - (var(--article-ad-gap) * 2)) / 2);
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 0 var(--space-lg);
+  padding: 0;
   direction: rtl;
 }
 
@@ -209,10 +210,12 @@
 
 .sidebar {
   position: absolute;
-  top: var(--space-4xl);
+  top: 0;
   width: var(--article-side-ad-width);
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .sidebar:has(app-media-item.media-item--ready) {
@@ -221,14 +224,24 @@
   background: #F2F2F2;
 }
 
+.sidebar app-media-item {
+  width: 100%;
+}
+
+:host ::ng-deep .sidebar app-media-item .media-wrapper {
+  max-width: none !important;
+}
+
 .sidebar-right {
   /* RTL: פרסומת — נמצאת בצד שמאל ויזואלי */
-  left: calc(50% + (var(--article-content-width) / 2) + var(--article-ad-gap));
+  left: 0;
+  padding-right: var(--article-ad-gap);
 }
 
 .sidebar-left {
   /* RTL: פרסומת — נמצאת בצד ימין ויזואלי */
-  right: calc(50% + (var(--article-content-width) / 2) + var(--article-ad-gap));
+  right: 0;
+  padding-left: var(--article-ad-gap);
 }
 
 /* ============================================
@@ -1114,6 +1127,10 @@
   overflow: hidden;
 }
 
+:host ::ng-deep .mid-content-area app-media-item .media-wrapper {
+  aspect-ratio: 728 / 125 !important;
+}
+
 @media (max-width: 768px) {
   .mid-content-area {
     width: 100%;
@@ -1215,7 +1232,6 @@
 @media (max-width: 1200px) {
   .content-with-sidebars {
     --article-ad-gap: var(--space-base);
-    --article-side-ad-width: 150px;
   }
 }
 
