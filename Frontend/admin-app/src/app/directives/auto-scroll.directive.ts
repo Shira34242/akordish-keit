@@ -21,6 +21,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
   private cleanups: Array<() => void> = [];
   private initialized = false;
   private isVisible = false;
+  private recomputePending = false;
 
   constructor(private el: ElementRef<HTMLElement>, private zone: NgZone) {}
 
@@ -60,10 +61,10 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
       () => host.removeEventListener('scroll', onScroll)
     );
 
-    this.resizeObserver = new ResizeObserver(() => this.recompute());
+    this.resizeObserver = new ResizeObserver(() => this.scheduleRecompute());
     this.resizeObserver.observe(host);
 
-    this.mutationObserver = new MutationObserver(() => this.recompute());
+    this.mutationObserver = new MutationObserver(() => this.scheduleRecompute());
     this.mutationObserver.observe(host, { childList: true, subtree: true });
 
     this.intersectionObserver = new IntersectionObserver(
@@ -74,7 +75,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
     );
     this.intersectionObserver.observe(host);
 
-    requestAnimationFrame(() => this.recompute());
+    requestAnimationFrame(() => this.scheduleRecompute());
 
     if (this.autoScrollSpeed <= 0) return;
 
@@ -110,6 +111,15 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
     });
   }
 
+  private scheduleRecompute(): void {
+    if (this.recomputePending || this.destroyed) return;
+    this.recomputePending = true;
+    requestAnimationFrame(() => {
+      this.recomputePending = false;
+      if (!this.destroyed) this.recompute();
+    });
+  }
+
   private recompute(): void {
     const host = this.el.nativeElement;
     const copies = Math.max(2, this.autoScrollCopies);
@@ -130,6 +140,9 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
       host.scrollLeft = copies >= 3
         ? this.cycleWidth
         : this.autoScrollDirection === 'right' ? this.cycleWidth - 1 : 0;
+      // once initialized, DOM mutations no longer need to trigger recompute
+      this.mutationObserver?.disconnect();
+      this.mutationObserver = undefined;
     }
   }
 

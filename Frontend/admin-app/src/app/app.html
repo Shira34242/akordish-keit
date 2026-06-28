@@ -14,22 +14,25 @@
   <router-outlet></router-outlet>
   <app-site-alerts></app-site-alerts>
 
-  <!-- Add Song Modal (Global) -->
-  <app-add-song-modal
-    *ngIf="isAddSongModalOpen"
-    [editMode]="editMode"
-    [songToEdit]="songToEdit"
-    [songPrefill]="songPrefill"
-    [flowMode]="songModalFlowMode"
-    (close)="closeAddSongModal()"
-    (songAdded)="onSongAdded()">
-  </app-add-song-modal>
+  @defer (when isAddSongModalOpen) {
+    <app-add-song-modal
+      *ngIf="isAddSongModalOpen"
+      [editMode]="editMode"
+      [songToEdit]="songToEdit"
+      [songPrefill]="songPrefill"
+      [flowMode]="songModalFlowMode"
+      (close)="closeAddSongModal()"
+      (songAdded)="onSongAdded()">
+    </app-add-song-modal>
+  }
 
-  <app-report-modal
-    [isOpen]="reportModal.isOpen"
-    [contentType]="reportModal.contentType"
-    [contentId]="reportModal.contentId"
-    [contentTitle]="reportModal.contentTitle"
-    (close)="closeReportModal()">
-  </app-report-modal>
+  @defer (when reportModal.isOpen) {
+    <app-report-modal
+      [isOpen]="reportModal.isOpen"
+      [contentType]="reportModal.contentType"
+      [contentId]="reportModal.contentId"
+      [contentTitle]="reportModal.contentTitle"
+      (close)="closeReportModal()">
+    </app-report-modal>
+  }
 </div>
