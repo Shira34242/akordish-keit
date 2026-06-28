@@ -1,5 +1,6 @@
-import { ApplicationConfig, importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, importProvidersFrom, LOCALE_ID } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { ChunkErrorHandler } from './services/chunk-error.handler';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
@@ -13,6 +14,7 @@ registerLocaleData(localeHe, 'he-IL');
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: LOCALE_ID, useValue: 'he-IL' },
+    { provide: ErrorHandler, useClass: ChunkErrorHandler },
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
     // 🔒 Interceptors: authInterceptor מוסיף טוקן, errorInterceptor מטפל בשגיאות
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
