@@ -194,6 +194,9 @@
 .content-with-sidebars {
   position: relative;
   z-index: 11; /* creates explicit stacking context above article-hero (z-index: 10) */
+  --article-content-width: 720px;
+  --article-ad-gap: var(--space-lg);
+  --article-side-ad-width: clamp(140px, calc((min(100vw, 1400px) - var(--article-content-width) - (var(--article-ad-gap) * 4)) / 2), 190px);
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--space-lg);
@@ -206,18 +209,26 @@
 
 .sidebar {
   position: absolute;
-  top: 180px;
-  width: 250px;
+  top: var(--space-3xl);
+  width: var(--article-side-ad-width);
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar:has(app-media-item.media-item--ready) {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F2F2F2;
 }
 
 .sidebar-right {
   /* RTL: פרסומת — נמצאת בצד שמאל ויזואלי */
-  left: var(--space-lg);
+  left: calc(50% + (var(--article-content-width) / 2) + var(--article-ad-gap));
 }
 
 .sidebar-left {
   /* RTL: פרסומת — נמצאת בצד ימין ויזואלי */
-  right: var(--space-lg);
+  right: calc(50% + (var(--article-content-width) / 2) + var(--article-ad-gap));
 }
 
 /* ============================================
@@ -225,7 +236,7 @@
 ============================================ */
 
 .content-container {
-  max-width: 720px;
+  max-width: var(--article-content-width);
   margin: -180px auto var(--space-3xl);
   position: relative;
   z-index: 11; /* מעל ה-hero (z-index: 10) */
@@ -1097,13 +1108,20 @@
 ============================================ */
 
 .mid-content-area {
-  width: 70%;
-  margin: var(--space-lg) auto 0;
+  width: 100%;
+  margin: var(--space-xl) auto 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.mid-content-area:not(:has(app-media-item.media-item--ready)) {
+  display: none;
 }
 
 @media (max-width: 768px) {
   .mid-content-area {
-    width: 90%;
+    width: 100%;
+    margin-top: var(--space-lg);
   }
 }
 
@@ -1199,12 +1217,12 @@
 ============================================ */
 
 @media (max-width: 1200px) {
-  .sidebar {
-    width: 200px;
+  .content-with-sidebars {
+    --article-ad-gap: var(--space-base);
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1120px) {
   .sidebar {
     display: none;
   }
