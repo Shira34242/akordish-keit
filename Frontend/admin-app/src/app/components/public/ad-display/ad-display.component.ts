@@ -63,7 +63,6 @@ interface AdSpotResponse {
       display: block;
       overflow: hidden;
       margin: 0 auto;
-      background: #F2F2F2;
     }
 
     .media-link {
