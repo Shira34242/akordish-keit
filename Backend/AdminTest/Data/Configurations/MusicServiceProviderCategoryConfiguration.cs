@@ -39,6 +39,9 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(c => c.ShowInQuickCategories)
                 .HasDefaultValue(false);
 
+            builder.Property(c => c.QuickCategoryType)
+                .HasDefaultValue(0);
+
             builder.Property(c => c.QuickCategoryOrder)
                 .HasDefaultValue(0);
 
@@ -53,11 +56,18 @@ namespace AkordishKeit.Data.Configurations
                 .HasForeignKey(m => m.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.HasOne<Instrument>()
+                .WithMany()
+                .HasForeignKey(c => c.QuickCategoryInstrumentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Indexes
             builder.HasIndex(c => c.Name)
                 .IsUnique();
 
             builder.HasIndex(c => c.IsActive);
+
+            builder.HasIndex(c => c.QuickCategoryInstrumentId);
         }
     }
 }

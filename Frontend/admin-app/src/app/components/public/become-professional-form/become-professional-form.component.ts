@@ -118,7 +118,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   loadCategories(): void {
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
       next: (result) => {
-        this.availableCategories = result.items;
+        this.availableCategories = (result.items || []).filter(item => this.isServiceProviderCategory(item));
         this.filteredCategories = this.availableCategories;
       },
       error: (error: any) => console.error('Error loading categories:', error)
@@ -463,6 +463,19 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   private closeAllDropdowns(): void {
     this.cityDropdownOpen = false;
     this.categoriesDropdownOpen = false;
+  }
+
+  private isServiceProviderCategory(item: SystemItem): boolean {
+    const label = `${item.name || ''} ${item['quickCategoryLabel'] || ''}`.toLowerCase();
+    const looksLikeTeacherCategory =
+      label.includes('מורה') ||
+      label.includes('מורים') ||
+      label.includes('teacher');
+
+    return item['isActive'] !== false
+      && Number(item['quickCategoryType'] ?? 0) !== 1
+      && !item['quickCategoryInstrumentId']
+      && !looksLikeTeacherCategory;
   }
 
   ngOnDestroy(): void {

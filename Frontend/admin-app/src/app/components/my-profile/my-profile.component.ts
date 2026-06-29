@@ -103,8 +103,8 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private levelParticles: LevelParticle[] = [];
   animatedDisplayPoints = 0;
 
-  readonly accountWarningTitle = '\u05e9\u05d9\u05e0\u05d5\u05d9 \u05e1\u05d5\u05d2 \u05d7\u05e9\u05d1\u05d5\u05df';
-  readonly accountWarningSubtitle = '\u05dc\u05d0 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc \u05d9\u05d5\u05ea\u05e8 \u05de\u05d3\u05e3 \u05d0\u05d7\u05d3. \u05d1\u05dc\u05d7\u05d9\u05e6\u05d4 \u05e2\u05dc \u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3 \u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d5\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05ea\u05e0\u05ea\u05e7.';
+  readonly accountWarningTitle = '\u05e2\u05d6\u05d9\u05d1\u05ea \u05d3\u05e3';
+  readonly accountWarningSubtitle = '\u05d4\u05d3\u05e3 \u05d9\u05d9\u05e9\u05d0\u05e8 \u05d1\u05de\u05e6\u05d1\u05d5 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9, \u05d0\u05da \u05d9\u05ea\u05e0\u05ea\u05e7 \u05de\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da. \u05d0\u05dd \u05d6\u05d4 \u05d4\u05d3\u05e3 \u05d4\u05d0\u05d7\u05e8\u05d5\u05df \u05e9\u05dc\u05da, \u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d9\u05d7\u05d6\u05d5\u05e8 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05dc\u05de\u05e9\u05ea\u05de\u05e9 \u05e8\u05d2\u05d9\u05dc.';
   readonly accountWarningContinueLabel = '\u05e2\u05d6\u05d5\u05d1 \u05d3\u05e3';
   readonly accountWarningCancelLabel = '\u05d1\u05d9\u05d8\u05d5\u05dc';
   readonly accountWarningErrorLabel = '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05e0\u05d5 \u05dc\u05e0\u05ea\u05e7 \u05d0\u05ea \u05d4\u05d3\u05e3 \u05db\u05e8\u05d2\u05e2. \u05e0\u05e1\u05d5 \u05e9\u05d5\u05d1.';
@@ -158,6 +158,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   showAccountTypeModal = false;
   leavingCurrentPage = false;
+  private pagePendingLeave: UserWithProfileDto | null = null;
 
   readonly MAX_LEVEL = 3;
   readonly levelSteps = [0, 1, 2, 3];
@@ -647,12 +648,13 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadMyAllPages();
   }
 
-  openManageAccountFlow(): void {
+  openManageAccountFlow(page?: UserWithProfileDto): void {
     if (this.myPages.length === 0) {
       this.openIndexProfileFlow();
       return;
     }
 
+    this.pagePendingLeave = page ?? this.getManagedPage();
     this.showAccountTypeModal = true;
   }
 
@@ -661,6 +663,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.pagePendingLeave = null;
     this.showAccountTypeModal = false;
   }
 
@@ -733,7 +736,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getManagedPage(): UserWithProfileDto | null {
-    return this.myPageInfo ?? this.myPages[0] ?? null;
+    return this.pagePendingLeave ?? this.myPageInfo ?? this.myPages[0] ?? null;
   }
 
   leaveCurrentPage(): void {
@@ -765,8 +768,13 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.showAccountTypeModal = false;
-        this.authService.logout();
-        void this.router.navigate(['/']);
+        this.pagePendingLeave = null;
+        this.authService.refreshSession().subscribe({
+          next: () => {
+            this.user = this.authService.currentUserValue;
+          },
+          error: () => {}
+        });
       },
       error: () => {
         this.leavingCurrentPage = false;

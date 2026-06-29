@@ -2364,11 +2364,19 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("QuickCategoryInstrumentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("QuickCategoryLabel")
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
                     b.Property<int>("QuickCategoryOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("QuickCategoryType")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
@@ -2387,6 +2395,13 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("Name")
                         .IsUnique();
+
+                    b.HasIndex("QuickCategoryInstrumentId");
+
+                    b.HasOne("AkordishKeit.Models.Entities.Instrument", null)
+                        .WithMany()
+                        .HasForeignKey("QuickCategoryInstrumentId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.ToTable("MusicServiceProviderCategories", (string)null);
                 });

@@ -110,6 +110,12 @@ export class GenericTableComponent implements OnInit, OnChanges {
     }
 
     save() {
+        for (const col of this.extraColumns) {
+            if (col.type === 'select' && this.currentItem[col.key] === '') {
+                this.currentItem[col.key] = null;
+            }
+        }
+
         if (this.isEditing) {
             this.edit.emit(this.currentItem);
         } else {

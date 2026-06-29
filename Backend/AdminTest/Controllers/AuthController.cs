@@ -74,7 +74,8 @@ namespace AkordishKeit.Controllers
                 return Unauthorized(new { message = "משתמש לא פעיל" });
             }
 
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(BuildAuthResponse(user, hasProfessionalProfile, isNewRegistration: false));
         }
 
@@ -191,7 +192,8 @@ namespace AkordishKeit.Controllers
 
             // 4. 🔐 שימוש באימות מאובטח עם Cookies
             // הרשמה חדשה = הצג שאלות onboarding; כניסה חוזרת = אל תציג
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(HandleSecureAuthentication(user, hasProfessionalProfile, isNewRegistration: isNewGoogleUser));
         }
 
@@ -481,7 +483,8 @@ namespace AkordishKeit.Controllers
                 user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
 
             // 6. 🔐 שימוש באימות מאובטח עם Cookies - כניסה חוזרת, אל תציג שאלות onboarding
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(HandleSecureAuthentication(user, hasProfessionalProfile, isNewRegistration: false));
         }
 
@@ -579,7 +582,8 @@ namespace AkordishKeit.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(BuildUserDto(user, hasProfessionalProfile));
         }
 
@@ -640,7 +644,8 @@ namespace AkordishKeit.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(BuildUserDto(user, hasProfessionalProfile));
         }
 
@@ -685,7 +690,8 @@ namespace AkordishKeit.Controllers
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            var hasProfessionalProfile = user.ServiceProviderProfiles.Any() || user.ManagedArtist != null;
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
             return Ok(BuildUserDto(user, hasProfessionalProfile));
         }
 

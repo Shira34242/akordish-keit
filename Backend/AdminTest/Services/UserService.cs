@@ -324,12 +324,14 @@ public class UserService : IUserService
     {
         var results = new List<UserWithProfileDto>();
 
-        // --- אמן ---
-        var artist = await _context.Artists
+        // --- אמנים ---
+        var artists = await _context.Artists
             .Where(a => !a.IsDeleted && a.UserId == userId)
-            .FirstOrDefaultAsync();
+            .OrderByDescending(a => a.IsPrimaryProfile)
+            .ThenBy(a => a.Name)
+            .ToListAsync();
 
-        if (artist != null)
+        foreach (var artist in artists)
         {
             results.Add(new UserWithProfileDto
             {
@@ -393,8 +395,43 @@ public class UserService : IUserService
             return false;
         }
 
+        await NormalizeUserRoleAfterPageChangeAsync(userId);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task NormalizeUserRoleAfterPageChangeAsync(int userId)
+    {
+        var hasArtist = await _context.Artists
+            .AnyAsync(a => a.UserId == userId && !a.IsDeleted);
+
+        var hasProvider = await _context.ServiceProviders
+            .AnyAsync(p => p.UserId == userId && !p.IsDeleted);
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user == null || user.Role >= UserRole.Manager)
+        {
+            return;
+        }
+
+        if (!hasArtist && !hasProvider)
+        {
+            user.Role = UserRole.Regular;
+            user.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        if (hasArtist)
+        {
+            user.Role = UserRole.Artist;
+            user.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        user.Role = UserRole.Teacher;
+        user.UpdatedAt = DateTime.UtcNow;
     }
 
     // ═══════════════════════════════════════════════════════════

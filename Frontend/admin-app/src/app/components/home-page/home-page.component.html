@@ -206,9 +206,9 @@
       </div>
 
       <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
-        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of newsArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
@@ -222,9 +222,9 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of newsArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"
@@ -282,9 +282,9 @@
         <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
         <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
       </div>
-      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
         <div class="artists-loop-track">
-          <ng-container *ngFor="let copy of [0, 1, 2]">
+          <ng-container *ngFor="let copy of [0, 1]">
             <app-artist-circle
               *ngFor="let artist of topArtists; trackBy: trackById"
               [artist]="artist"
@@ -344,9 +344,9 @@
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="left" [autoScrollCopies]="3">
+      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="left" [autoScrollCopies]="2">
         <div class="events-loop-track">
-          <ng-container *ngFor="let copy of [0, 1, 2]">
+          <ng-container *ngFor="let copy of [0, 1]">
             <app-event-card
               *ngFor="let event of upcomingEvents; trackBy: trackById"
               [event]="event"
@@ -422,9 +422,9 @@
       </div>
 
       <div *ngIf="useScrollingBlogBanner" class="news-banner-stack content-blog-stack">
-        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of blogArticlesFirstRow; trackBy: trackById"
                 class="news-banner-card"
@@ -436,9 +436,9 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="3">
+        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="news-banner-track">
-            <ng-container *ngFor="let copy of [0, 1, 2]">
+            <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
                 *ngFor="let article of blogArticlesSecondRow; trackBy: trackById"
                 class="news-banner-card"
@@ -467,24 +467,6 @@
         <div class="podcast-episodes-track">
           <app-podcast-episode-banner
             *ngFor="let episode of popularPodcastEpisodes; trackBy: trackById"
-            class="podcast-episode-card"
-            [episode]="episode"
-            [showDescription]="true">
-          </app-podcast-episode-banner>
-        </div>
-      </div>
-    </section>
-
-    <section class="home-section popular-episodes-section" *ngIf="latestPodcastEpisodes.length > 0">
-      <div class="section-header">
-        <h2 class="section-title">פרקים אחרונים</h2>
-        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
-      </div>
-
-      <div class="podcast-episodes-row">
-        <div class="podcast-episodes-track">
-          <app-podcast-episode-banner
-            *ngFor="let episode of latestPodcastEpisodes; trackBy: trackById"
             class="podcast-episode-card"
             [episode]="episode"
             [showDescription]="true">

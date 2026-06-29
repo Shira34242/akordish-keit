@@ -331,7 +331,10 @@
 @defer (when showTeacherCreateModal) {
 <div class="guided-profile-modal-overlay" *ngIf="showTeacherCreateModal" (click)="closeTeacherCreateModal()">
     <div class="guided-profile-modal-shell" (click)="$event.stopPropagation()">
-        <app-teacher-create [embedded]="true" (close)="closeTeacherCreateModal()" (backToChat)="backTeacherCreateModalToChat()"></app-teacher-create>
+        <app-teacher-create
+            [embedded]="true"
+            (close)="closeTeacherCreateModal()"
+            (backToChat)="backTeacherCreateModalToChat()"></app-teacher-create>
     </div>
 </div>
 }

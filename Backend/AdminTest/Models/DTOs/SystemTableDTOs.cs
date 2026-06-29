@@ -47,6 +47,8 @@ public class MusicServiceProviderCategoryDto
     public string? IconUrl { get; set; }
     public bool IsActive { get; set; }
     public bool ShowInQuickCategories { get; set; }
+    public int QuickCategoryType { get; set; }
+    public int? QuickCategoryInstrumentId { get; set; }
     public string? QuickCategoryLabel { get; set; }
     public string? QuickCategoryImageUrl { get; set; }
     public int QuickCategoryOrder { get; set; }
@@ -60,6 +62,8 @@ public class CreateMusicServiceProviderCategoryDto
     public string? IconUrl { get; set; }
     public bool IsActive { get; set; }
     public bool ShowInQuickCategories { get; set; }
+    public int QuickCategoryType { get; set; }
+    public int? QuickCategoryInstrumentId { get; set; }
     public string? QuickCategoryLabel { get; set; }
     public string? QuickCategoryImageUrl { get; set; }
     public int QuickCategoryOrder { get; set; }

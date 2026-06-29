@@ -46,6 +46,8 @@ public class MusicServiceProviderCategoriesController : ControllerBase
                 IconUrl = c.IconUrl,
                 IsActive = c.IsActive,
                 ShowInQuickCategories = c.ShowInQuickCategories,
+                QuickCategoryType = c.QuickCategoryType,
+                QuickCategoryInstrumentId = c.QuickCategoryInstrumentId,
                 QuickCategoryLabel = c.QuickCategoryLabel,
                 QuickCategoryImageUrl = c.QuickCategoryImageUrl,
                 QuickCategoryOrder = c.QuickCategoryOrder
@@ -76,6 +78,8 @@ public class MusicServiceProviderCategoriesController : ControllerBase
                 IconUrl = c.IconUrl,
                 IsActive = c.IsActive,
                 ShowInQuickCategories = c.ShowInQuickCategories,
+                QuickCategoryType = c.QuickCategoryType,
+                QuickCategoryInstrumentId = c.QuickCategoryInstrumentId,
                 QuickCategoryLabel = c.QuickCategoryLabel,
                 QuickCategoryImageUrl = c.QuickCategoryImageUrl,
                 QuickCategoryOrder = c.QuickCategoryOrder
@@ -94,6 +98,12 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<MusicServiceProviderCategoryDto>> PostCategory(CreateMusicServiceProviderCategoryDto dto)
     {
+        var quickCategoryValidation = await NormalizeQuickCategoryFieldsAsync(dto);
+        if (quickCategoryValidation != null)
+        {
+            return quickCategoryValidation;
+        }
+
         var category = new MusicServiceProviderCategory
         {
             Name = dto.Name,
@@ -101,6 +111,8 @@ public class MusicServiceProviderCategoriesController : ControllerBase
             IconUrl = dto.IconUrl,
             IsActive = dto.IsActive,
             ShowInQuickCategories = dto.ShowInQuickCategories,
+            QuickCategoryType = dto.QuickCategoryType,
+            QuickCategoryInstrumentId = dto.QuickCategoryInstrumentId,
             QuickCategoryLabel = dto.QuickCategoryLabel,
             QuickCategoryImageUrl = dto.QuickCategoryImageUrl,
             QuickCategoryOrder = dto.QuickCategoryOrder
@@ -117,6 +129,8 @@ public class MusicServiceProviderCategoriesController : ControllerBase
             IconUrl = category.IconUrl,
             IsActive = category.IsActive,
             ShowInQuickCategories = category.ShowInQuickCategories,
+            QuickCategoryType = category.QuickCategoryType,
+            QuickCategoryInstrumentId = category.QuickCategoryInstrumentId,
             QuickCategoryLabel = category.QuickCategoryLabel,
             QuickCategoryImageUrl = category.QuickCategoryImageUrl,
             QuickCategoryOrder = category.QuickCategoryOrder
@@ -129,6 +143,12 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutCategory(int id, CreateMusicServiceProviderCategoryDto dto)
     {
+        var quickCategoryValidation = await NormalizeQuickCategoryFieldsAsync(dto);
+        if (quickCategoryValidation != null)
+        {
+            return quickCategoryValidation;
+        }
+
         var category = await _context.ServiceProviderCategories.FindAsync(id);
 
         if (category == null)
@@ -141,6 +161,8 @@ public class MusicServiceProviderCategoriesController : ControllerBase
         category.IconUrl = dto.IconUrl;
         category.IsActive = dto.IsActive;
         category.ShowInQuickCategories = dto.ShowInQuickCategories;
+        category.QuickCategoryType = dto.QuickCategoryType;
+        category.QuickCategoryInstrumentId = dto.QuickCategoryInstrumentId;
         category.QuickCategoryLabel = dto.QuickCategoryLabel;
         category.QuickCategoryImageUrl = dto.QuickCategoryImageUrl;
         category.QuickCategoryOrder = dto.QuickCategoryOrder;
@@ -211,5 +233,24 @@ public class MusicServiceProviderCategoriesController : ControllerBase
     private bool CategoryExists(int id)
     {
         return _context.ServiceProviderCategories.Any(e => e.Id == id);
+    }
+
+    private async Task<BadRequestObjectResult?> NormalizeQuickCategoryFieldsAsync(CreateMusicServiceProviderCategoryDto dto)
+    {
+        dto.QuickCategoryType = dto.QuickCategoryType == 1 ? 1 : 0;
+
+        if (dto.QuickCategoryType != 1)
+        {
+            dto.QuickCategoryInstrumentId = null;
+            return null;
+        }
+
+        if (!dto.QuickCategoryInstrumentId.HasValue)
+        {
+            return null;
+        }
+
+        var instrumentExists = await _context.Instruments.AnyAsync(i => i.Id == dto.QuickCategoryInstrumentId.Value);
+        return instrumentExists ? null : BadRequest("Instrument does not exist.");
     }
 }

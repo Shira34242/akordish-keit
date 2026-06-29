@@ -168,7 +168,7 @@ export class ServiceProviderFormComponent implements OnInit {
   loadCategories(): void {
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
       next: (result) => {
-        this.availableCategories = result.items.filter((item: any) => item.isActive);
+        this.availableCategories = result.items.filter((item: any) => item.isActive && Number(item.quickCategoryType ?? 0) !== 1);
         this.filteredCategories = this.availableCategories;
       },
       error: (error: any) => {

@@ -9,6 +9,7 @@ namespace AkordishKeit.Services;
 
 public class TeacherService : ITeacherService
 {
+    private const int MaxManagedPagesPerUser = 5;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
 
@@ -144,16 +145,9 @@ public class TeacherService : ITeacherService
 
     public async Task<TeacherDto> CreateTeacherAsync(CreateTeacherDto dto)
     {
-        // Check if user already has a service provider profile
         if (dto.UserId != null)
         {
-            var existingProfile = await _context.ServiceProviders
-                .FirstOrDefaultAsync(sp => sp.UserId == dto.UserId && !sp.IsDeleted);
-
-            if (existingProfile != null)
-            {
-                throw new InvalidOperationException("המשתמש כבר ה irshירשם כבעל מקצוע או מורה");
-            }
+            await EnsureManagedPageLimitAsync(dto.UserId.Value);
         }
         // Create MusicServiceProvider
         var serviceProvider = new MusicServiceProvider
@@ -454,12 +448,7 @@ public class TeacherService : ITeacherService
             throw new InvalidOperationException("המשתמש לא נמצא");
         }
 
-        var userHasProfile = await _context.ServiceProviders
-            .AnyAsync(sp => sp.UserId == userId && !sp.IsDeleted);
-        if (userHasProfile)
-        {
-            throw new InvalidOperationException("למשתמש כבר יש פרופיל בעל מקצוע");
-        }
+        await EnsureManagedPageLimitAsync(userId);
 
         teacher.ServiceProvider.UserId = userId;
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
@@ -485,6 +474,26 @@ public class TeacherService : ITeacherService
         teacher.ServiceProvider.UserId = null;
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+    }
+
+    private async Task EnsureManagedPageLimitAsync(int userId)
+    {
+        var managedPagesCount = await CountManagedPagesAsync(userId);
+        if (managedPagesCount >= MaxManagedPagesPerUser)
+        {
+            throw new InvalidOperationException($"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד");
+        }
+    }
+
+    private async Task<int> CountManagedPagesAsync(int userId)
+    {
+        var artistsCount = await _context.Artists
+            .CountAsync(a => a.UserId == userId && !a.IsDeleted);
+
+        var providersCount = await _context.ServiceProviders
+            .CountAsync(sp => sp.UserId == userId && !sp.IsDeleted);
+
+        return artistsCount + providersCount;
     }
 
     public async Task<TeacherDto> DuplicateTeacherAsync(int id)

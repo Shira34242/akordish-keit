@@ -177,7 +177,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
 
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
       next: (result) => {
-        this.serviceProviderCategories = result.items ?? [];
+        this.serviceProviderCategories = (result.items ?? []).filter(item => this.isServiceProviderCategory(item));
         this.categoriesLoading = false;
       },
       error: () => {
@@ -221,5 +221,18 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     textarea.select();
     document.execCommand('copy');
     document.body.removeChild(textarea);
+  }
+
+  private isServiceProviderCategory(item: SystemItem): boolean {
+    const label = `${item.name || ''} ${item['quickCategoryLabel'] || ''}`.toLowerCase();
+    const looksLikeTeacherCategory =
+      label.includes('מורה') ||
+      label.includes('מורים') ||
+      label.includes('teacher');
+
+    return item['isActive'] !== false
+      && Number(item['quickCategoryType'] ?? 0) !== 1
+      && !item['quickCategoryInstrumentId']
+      && !looksLikeTeacherCategory;
   }
 }
