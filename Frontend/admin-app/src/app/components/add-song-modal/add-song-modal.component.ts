@@ -91,6 +91,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() embedded: boolean = false;
     @Input() initialSongRequest: InitialSongRequest | null = null;
     @Input() flowMode: 'smart' | 'legacy' = 'smart';
+    @Input() standaloneContributionMode: boolean = false;
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -1974,7 +1975,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.songForm.valid && !this.isSubmitting) {
             this.isSubmitting = true;
             const formValue = this.songForm.value;
-            const isApproved = saveAsDraft ? false : (formValue.isApproved ?? false);
+            const isApproved = saveAsDraft ? false : (this.isAdminUser ? (formValue.isApproved ?? false) : false);
 
             const request: AddSongRequest = {
                 title: formValue.title,

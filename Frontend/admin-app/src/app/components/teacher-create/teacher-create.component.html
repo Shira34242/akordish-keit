@@ -1,4 +1,4 @@
-<div class="quick-create-page" [class.embedded-mode]="embedded" (click)="closeDropdowns($event)">
+<div class="quick-create-page" [class.embedded-mode]="embedded" [class.single-page-mode]="singlePage" (click)="closeDropdowns($event)">
   <div class="quick-create-card">
     <div *ngIf="loading" class="quiet-state">
       <div class="spinner"></div>
@@ -6,7 +6,7 @@
     </div>
 
     <div *ngIf="!loading" class="quick-create-flow">
-      <div class="floating-nav floating-nav--top" *ngIf="!submitted">
+      <div class="floating-nav floating-nav--top" *ngIf="!submitted && !singlePage">
         <div class="step-dots-nav" aria-label="שלבי ההוספה">
           <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" aria-label="פרופיל">
             <span class="step-dot-core"></span>
@@ -36,7 +36,7 @@
 
         <form *ngIf="!submitted" (ngSubmit)="onSubmit()" id="teacherCreateForm" class="quick-form">
           <!-- ===== STEP 1: PROFILE ===== -->
-          <section class="flow-step" *ngIf="currentStep === 1">
+          <section class="flow-step" *ngIf="currentStep === 1 || singlePage">
             <p class="step-intro">מלא את פרטי הדף הציבורי שלך שיוצג באתר</p>
 
             <button type="button" class="profile-upload" [class.has-image]="profileImageUrl" (click)="profileImageInput.click()" aria-label="העלאת תמונת פרופיל">
@@ -127,7 +127,7 @@
           </section>
 
           <!-- ===== STEP 2: DETAILS ===== -->
-          <section class="flow-step" *ngIf="currentStep === 2">
+          <section class="flow-step" *ngIf="currentStep === 2 || singlePage">
             <p class="step-intro">עוד כמה פרטים קטנים... (לא חובה)</p>
 
             <div class="soft-block">
@@ -218,7 +218,7 @@
           </section>
 
           <!-- ===== STEP 3: GALLERY & TESTIMONIALS ===== -->
-          <section class="flow-step" *ngIf="currentStep === 3">
+          <section class="flow-step" *ngIf="currentStep === 3 || singlePage">
             <div class="soft-block">
               <div class="soft-label">המלצות תלמידים</div>
               <div class="horizontal-strip">
@@ -298,22 +298,22 @@
 
       <div class="floating-nav floating-nav--bottom" *ngIf="!submitted">
         <div class="form-actions">
-        <button type="button" class="btn-secondary btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
+        <button type="button" class="btn-secondary btn-action btn-back-chat" *ngIf="embedded && !singlePage && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
           <span class="material-icons">arrow_forward</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="embedded" (click)="cancelFlow()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="embedded && !singlePage" (click)="cancelFlow()" [disabled]="saving">
           <span class="material-icons">close</span>
           <span>סגירה</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="!singlePage && currentStep > 1" (click)="prevStep()" [disabled]="saving">
           <span class="material-icons">arrow_forward</span>
           <span>חזרה</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="!singlePage && currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
           <span class="material-icons">arrow_back</span>
           <span>המשך</span>
         </button>
-        <button type="submit" class="btn-primary btn-action" *ngIf="currentStep === totalSteps" [disabled]="saving" form="teacherCreateForm">
+        <button type="submit" class="btn-primary btn-action" *ngIf="singlePage || currentStep === totalSteps" [disabled]="saving" form="teacherCreateForm">
           <span class="material-icons" *ngIf="!saving">north_east</span>
           <span>{{ saving ? 'שולח...' : 'שליחה' }}</span>
         </button>

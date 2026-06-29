@@ -1,0 +1,139 @@
+.chords-panel {
+  width: min(100%, 900px);
+}
+
+.chords-hero p {
+  width: min(100%, 720px);
+}
+
+.inline-email-copy {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #000000;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  direction: ltr;
+  cursor: pointer;
+}
+
+.email-fallback {
+  width: fit-content;
+  margin: 0;
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 18px;
+  background: #ffffff;
+  color: #404040;
+  font-size: var(--font-sm);
+  line-height: var(--lh-body);
+}
+
+.contribution-head {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.contribution-head p {
+  margin: 0;
+  width: fit-content;
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 18px;
+  background: #ffffff;
+  color: #000000;
+  font-size: var(--font-sm);
+  line-height: var(--lh-body);
+  font-weight: 800;
+}
+
+.chord-smart-shell {
+  gap: var(--space-base);
+  overflow: visible;
+  background: #F2F2F2;
+}
+
+.chord-smart-shell ::ng-deep .modal-overlay {
+  background: transparent !important;
+  padding: 0 !important;
+  display: block !important;
+  position: static !important;
+}
+
+.chord-smart-shell ::ng-deep .modal-container {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.chord-smart-shell ::ng-deep .modal-content {
+  max-height: none !important;
+  padding-bottom: 0;
+  background: transparent !important;
+}
+
+.chord-smart-shell ::ng-deep .modal-header,
+.chord-smart-shell ::ng-deep .stepper {
+  display: none !important;
+}
+
+.chord-smart-shell ::ng-deep .step-content {
+  display: grid;
+  gap: var(--space-base);
+  padding-block: 0;
+  background: transparent !important;
+}
+
+.chord-smart-shell ::ng-deep .smart-step-panel {
+  padding: 0;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.chord-smart-shell ::ng-deep .smart-bubble-question,
+.chord-smart-shell ::ng-deep .smart-bubble-answer,
+.chord-smart-shell ::ng-deep .smart-result-item,
+.chord-smart-shell ::ng-deep .smart-summary-card,
+.chord-smart-shell ::ng-deep .empty {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.chord-smart-shell ::ng-deep .smart-composer,
+.chord-smart-shell ::ng-deep .smart-composer-sticky {
+  padding: var(--space-sm);
+  border-radius: 18px;
+  background: #F2F2F2 !important;
+}
+
+.chord-smart-shell ::ng-deep .smart-send-button {
+  background: #000000 !important;
+  color: #ddff53 !important;
+}
+
+.chord-smart-shell ::ng-deep .smart-send-button:hover:not(:disabled) {
+  background: #404040 !important;
+}
+
+.chord-smart-shell ::ng-deep .modal-footer {
+  position: sticky;
+  bottom: var(--space-base);
+  padding: var(--space-base);
+  border-radius: 999px;
+  background: #F2F2F2;
+}
+
+@media (max-width: 768px) {
+  .email-fallback,
+  .contribution-head p {
+    width: auto;
+  }
+
+  .chord-smart-shell ::ng-deep .modal-footer {
+    border-radius: 20px;
+  }
+}

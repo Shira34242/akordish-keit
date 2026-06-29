@@ -26,6 +26,14 @@
   min-height: 0;
 }
 
+.single-page-mode .quick-create-card,
+.single-page-mode .quick-create-flow {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+}
+
 .quick-create-flow {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -42,6 +50,23 @@
   padding: var(--space-lg);
   border-radius: 24px;
   background: #F2F2F2;
+}
+
+.single-page-mode .guided-scroll-region {
+  overflow: visible;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.single-page-mode .quick-create-flow {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.single-page-mode .floating-nav--bottom {
+  position: sticky;
+  bottom: var(--space-base);
+  z-index: 5;
 }
 
 .floating-nav,

@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LanguageService } from '../../services/language.service';
@@ -47,11 +47,12 @@ interface PlatformLinkOption {
   templateUrl: './service-provider-create.component.html',
   styleUrls: ['./service-provider-create.component.css']
 })
-export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
+export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDestroy {
   private readonly langService = inject(LanguageService);
   private readonly sanitizer = inject(DomSanitizer);
 
   @Input() embedded = false;
+  @Input() singlePage = false;
   @Input() presetCategoryId?: number;
   @Input() allowUncategorized = false;
   @Output() close = new EventEmitter<void>();
@@ -158,6 +159,13 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     setTimeout(() => this.scrollToTop(false));
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['presetCategoryId'] || changes['allowUncategorized']) {
+      this.initializeIncomingCategoryState();
+      this.applyInitialCategoryIfAvailable();
+    }
+  }
+
   ngOnDestroy(): void {
     this.cancelProfileImageUpload();
     this.cancelBannerImageUpload();
@@ -255,10 +263,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
       next: (result) => {
         this.availableCategories = result.items;
         this.filteredCategories = this.availableCategories;
-        if (this.initialCategoryId) {
-          const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
-          this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
-        }
+        this.applyInitialCategoryIfAvailable();
       },
       error: (error) => console.error('Error loading categories:', error)
     });
@@ -877,6 +882,22 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     this.initialCategoryId = this.presetCategoryId ?? (Number.isFinite(categoryIdFromQuery) && categoryIdFromQuery > 0 ? categoryIdFromQuery : undefined);
     this.initialAllowUncategorized = !this.initialCategoryId && (this.allowUncategorized || allowUncategorizedFromQuery);
     this.allowUncategorized = this.initialAllowUncategorized;
+  }
+
+  private applyInitialCategoryIfAvailable(): void {
+    if (!this.initialCategoryId) {
+      if (this.initialAllowUncategorized) {
+        this.selectedCategoryId = undefined;
+      }
+      return;
+    }
+
+    if (!this.availableCategories.length) {
+      return;
+    }
+
+    const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
+    this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
   }
 
   private scrollToTop(smooth = true): void {

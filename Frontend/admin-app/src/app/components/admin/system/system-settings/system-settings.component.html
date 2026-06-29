@@ -15,6 +15,54 @@
   </div>
 
   <div *ngIf="!loading" class="settings-list">
+    <div class="setting-card join-index-card">
+      <div class="setting-info">
+        <div class="setting-label">דף הצטרפות לאינדקס</div>
+        <div class="setting-description">
+          לינק נקי לשליחה למורים ולנותני שירות כדי שיצטרפו לאינדקס לפני ההשקה.
+        </div>
+        <div class="setting-meta">
+          <span class="setting-key">/join-index</span>
+          <span class="setting-updated">{{ joinIndexUrl }}</span>
+        </div>
+      </div>
+
+      <div class="setting-control join-index-control">
+        <a class="link-action secondary" routerLink="/join-index">
+          <span class="material-symbols-outlined">open_in_new</span>
+          <span>פתח</span>
+        </a>
+        <button type="button" class="link-action primary" (click)="copyJoinIndexLink()">
+          <span class="material-symbols-outlined">{{ joinIndexCopied ? 'check' : 'content_copy' }}</span>
+          <span>{{ joinIndexCopied ? 'הועתק' : 'העתק לינק' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="setting-card join-index-card">
+      <div class="setting-info">
+        <div class="setting-label">דף שליחת אקורדים</div>
+        <div class="setting-description">
+          לינק נקי לשליחה למשתמשים כדי לאסוף אקורדים למאגר לפני ההשקה, בהעלאה חכמה או בשליחה למייל.
+        </div>
+        <div class="setting-meta">
+          <span class="setting-key">/join-chords</span>
+          <span class="setting-updated">{{ joinChordsUrl }}</span>
+        </div>
+      </div>
+
+      <div class="setting-control join-index-control">
+        <a class="link-action secondary" routerLink="/join-chords">
+          <span class="material-symbols-outlined">open_in_new</span>
+          <span>פתח</span>
+        </a>
+        <button type="button" class="link-action primary" (click)="copyJoinChordsLink()">
+          <span class="material-symbols-outlined">{{ joinChordsCopied ? 'check' : 'content_copy' }}</span>
+          <span>{{ joinChordsCopied ? 'הועתק' : 'העתק לינק' }}</span>
+        </button>
+      </div>
+    </div>
+
     <div class="setting-card access-gate-card">
       <div class="setting-info">
         <div class="setting-label">סיסמה בכניסה לאתר</div>

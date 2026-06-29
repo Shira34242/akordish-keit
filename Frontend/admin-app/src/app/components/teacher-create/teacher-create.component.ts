@@ -54,6 +54,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
 
   @Input() embedded = false;
+  @Input() singlePage = false;
   @Output() close = new EventEmitter<void>();
   @Output() backToChat = new EventEmitter<void>();
 
