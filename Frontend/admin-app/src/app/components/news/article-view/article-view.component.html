@@ -194,11 +194,6 @@
         <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
       </div>
 
-      <!-- Mid-article Banner Ad -->
-      <div class="mid-content-area">
-        <app-media-item spotTechnicalId="view-article-mid-banner"></app-media-item>
-      </div>
-
       <!-- More content banner -->
       <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
         <div class="related-content-header">
@@ -227,6 +222,12 @@
       <app-media-item spotTechnicalId="view-article-left" fallbackSpotTechnicalId="view-article-right"></app-media-item>
     </aside>
   </div>
+
+  <!-- Mid-article Banner Ad — full width outside content container -->
+  <div class="mid-banner-area">
+    <app-media-item spotTechnicalId="view-article-mid-banner"></app-media-item>
+  </div>
+
 </div>
 
 <!-- Loading State -->

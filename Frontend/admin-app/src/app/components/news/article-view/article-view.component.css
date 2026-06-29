@@ -224,7 +224,6 @@
 .sidebar:has(app-media-item.media-item--ready) {
   border-radius: 16px;
   overflow: hidden;
-  background: #F2F2F2;
 }
 
 .sidebar app-media-item {
@@ -1124,21 +1123,16 @@
    MID-ARTICLE BANNER AD — 70% width centered
 ============================================ */
 
-.mid-content-area {
+.mid-banner-area {
   width: 100%;
-  margin: var(--space-xl) auto 0;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-:host ::ng-deep .mid-content-area app-media-item .media-wrapper {
-  aspect-ratio: 728 / 125 !important;
+  max-width: 1200px;
+  margin: 0 auto var(--space-xl);
+  padding: 0 var(--space-lg);
 }
 
 @media (max-width: 768px) {
-  .mid-content-area {
-    width: 100%;
-    margin-top: var(--space-lg);
+  .mid-banner-area {
+    padding: 0 var(--space-sm);
   }
 }
 

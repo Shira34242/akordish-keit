@@ -1253,8 +1253,6 @@
 
 .content-slot:has(app-media-item.media-item--ready) {
   margin: var(--space-lg) 0;
-  border-radius: var(--radius-md, 16px);
-  background: #F2F2F2;
   overflow: hidden;
   display: flex;
   flex-direction: column;
