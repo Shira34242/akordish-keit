@@ -127,7 +127,7 @@
         <span class="hero-actions-divider" *ngIf="socialLinks.length > 0 && quickWhatsAppNumber"></span>
         <div class="hero-social-icons" *ngIf="socialLinks.length > 0">
           <a *ngFor="let link of socialLinks"
-             [href]="link.url"
+             [href]="getSocialLinkHref(link.url)"
              target="_blank"
              rel="noopener"
              class="hero-social-btn"

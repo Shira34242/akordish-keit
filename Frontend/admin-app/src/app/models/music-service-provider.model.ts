@@ -64,6 +64,7 @@ export interface MusicServiceProviderListDto {
 
 export interface CreateMusicServiceProviderDto {
   userId?: number;
+  agencyId?: number;
   displayName: string;
   profileImageUrl?: string;
   shortBio?: string;

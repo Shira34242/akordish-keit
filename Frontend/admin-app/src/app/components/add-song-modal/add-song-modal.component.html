@@ -90,7 +90,12 @@
                                 </div>
                             </div>
                             <div class="smart-footer-actions">
-                                <a class="btn-secondary btn-secondary-compact" [routerLink]="['/song', primarySimilarSong.id]" (click)="closeModal()">{{ 'song_modal.go_to_song' | translate }}</a>
+                                <a
+                                    class="btn-secondary btn-secondary-compact"
+                                    *ngIf="!standaloneContributionMode"
+                                    [routerLink]="['/song', primarySimilarSong.id]"
+                                    (click)="closeModal()">{{ 'song_modal.go_to_song' | translate }}</a>
+                                <span class="btn-secondary btn-secondary-compact" *ngIf="standaloneContributionMode">השיר כבר קיים במאגר</span>
                                 <button type="button" class="btn-secondary btn-secondary-compact" (click)="continueAfterDuplicatePrompt()">{{ 'song_modal.wrong_song' | translate }}</button>
                             </div>
                         </div>
@@ -627,7 +632,7 @@
             <!-- STEP 2: Content -->
             <div *ngIf="currentStep === 2 || isAdminLongForm" class="step-content">
                 <div class="step-header">
-                    <h2>{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
+                    <h2 *ngIf="!standaloneContributionMode">{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
                     <p class="step-subtitle">{{ 'song_modal.content_header' | translate }}</p>
                 </div>
 
@@ -702,7 +707,7 @@
             <!-- STEP 3: Preview & Submit -->
             <div *ngIf="currentStep === 3 || isAdminLongForm" class="step-content preview-step">
            <div class="preview-header">
-                <h2>{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
+                <h2 *ngIf="!standaloneContributionMode">{{ (editMode ? 'song_modal.edit_title' : 'song_modal.add_short') | translate }}</h2>
                 <p class="preview-subtitle">{{ 'song_modal.preview_title' | translate }}</p>
                 <p class="preview-description" *ngIf="!isAdminLongForm">{{ (editMode ? 'song_modal.preview_check_edit' : 'song_modal.preview_check_new') | translate }}</p>
             </div>
@@ -810,7 +815,7 @@
                     </div>
                 </div>
 
-                <div class="form-group checkbox-group">
+                <div class="form-group checkbox-group" *ngIf="isAdminUser">
                     <label>
                         <input type="checkbox" formControlName="isApproved">
                         {{ 'song_modal.approved_label' | translate }}

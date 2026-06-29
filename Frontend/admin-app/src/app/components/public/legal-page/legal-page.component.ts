@@ -5,13 +5,13 @@ import { SeoService } from '../../../services/seo.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { LanguageService } from '../../../services/language.service';
 
-interface LegalPageContent {
+export interface LegalPageContent {
   title: string;
   description: string;
   sections: Array<{ title: string; body: string }>;
 }
 
-const PAGES: Record<string, LegalPageContent> = {
+export const PAGES: Record<string, LegalPageContent> = {
   about: {
     title: 'אודות אקורדישקייט',
     description: 'אקורדישקייט נבנה כדי לרכז במקום אחד את עולם המוזיקה היהודית: אקורדים, שירים, אמנים, כתבות, הופעות, רשימות וכלים לנגנים.',

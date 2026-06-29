@@ -1,0 +1,168 @@
+<main class="join-index-page">
+  <section class="join-panel">
+    <div class="hero-copy">
+      <div class="agency-join-brand" *ngIf="agency as currentAgency">
+        <div
+          class="agency-join-banner"
+          *ngIf="currentAgency.bannerImageUrl"
+          [style.backgroundImage]="'url(' + currentAgency.bannerImageUrl + ')'">
+        </div>
+        <div class="agency-join-identity">
+          <img *ngIf="currentAgency.logoUrl" [src]="currentAgency.logoUrl" [alt]="currentAgency.name" />
+          <span>{{ currentAgency.name }}</span>
+        </div>
+      </div>
+      <p class="index-category-state" *ngIf="agencyLoading">טוען את פרטי הסוכנות...</p>
+      <p class="inline-error" *ngIf="agencyError">{{ agencyError }}</p>
+      <h1>הצטרפות לאינדקס עולם המוזיקה</h1>
+      <p>מלאו עכשיו את פרטי הדף שלכם, וכשהאתר יעלה לאוויר נעדכן במייל ותוכלו לנהל את הדף בעצמכם.</p>
+    </div>
+
+    <section class="join-step auth-step" [class.done]="user">
+      <div class="step-head">
+        <span class="step-check">
+          <span class="material-icons">{{ user ? 'check' : 'login' }}</span>
+        </span>
+        <div>
+          <h2>התחברות עם Google</h2>
+          <p>{{ user ? 'התחברת בהצלחה. אפשר להמשיך לבחירת סוג הדף.' : 'כדי לשייך את הדף אליך, מתחברים קודם עם חשבון Google.' }}</p>
+        </div>
+      </div>
+
+      <div class="signed-user" *ngIf="user">
+        <span>{{ user.username }}</span>
+        <small>{{ user.email }}</small>
+      </div>
+
+      <div class="google-area" *ngIf="!user">
+        <div class="consent-box">
+          <label>
+            <input type="checkbox" [(ngModel)]="termsApproved" />
+            <span>
+              בהרשמה לאתר אני מאשר/ת שקראתי ואני מסכים/ה ל
+              <button type="button" class="inline-legal-link" (click)="openLegal('terms')">תקנון ותנאי שימוש</button>
+              ו
+              <button type="button" class="inline-legal-link" (click)="openLegal('privacy')">מדיניות פרטיות</button>.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" [(ngModel)]="marketingConsent" />
+            <span>אני מאשר/ת קבלת דיוור שיווקי, עדכונים והצעות מאקורדישקייט בדוא"ל.</span>
+          </label>
+        </div>
+
+        <div class="google-btn-stack">
+          <button type="button" class="btn-google" [disabled]="loadingGoogle || !termsApproved || !marketingConsent">
+            <span class="material-icons">account_circle</span>
+            <span>{{ loadingGoogle ? 'מתחבר...' : 'התחברות עם Google' }}</span>
+          </button>
+          <div class="google-signin-overlay" [class.google-signin-overlay--disabled]="loadingGoogle || !termsApproved || !marketingConsent">
+            <asl-google-signin-button
+              type="standard"
+              size="large"
+              shape="pill"
+              theme="outline"
+              [width]="300">
+            </asl-google-signin-button>
+          </div>
+        </div>
+
+        <p class="inline-error" *ngIf="googleError">{{ googleError }}</p>
+      </div>
+    </section>
+
+    <section class="join-step type-step" [class.disabled]="!user || !agencyReady">
+      <div class="step-head">
+        <span class="step-check">
+          <span class="material-icons">{{ selectedType ? 'check' : 'tune' }}</span>
+        </span>
+        <div>
+          <h2>מה תרצו להוסיף לאינדקס?</h2>
+          <p>בחרו את הכיוון שמתאים לכם. אפשר לדייק את הפרטים והקטגוריות בתוך הטופס שייפתח מתחת.</p>
+        </div>
+      </div>
+
+      <div class="index-choice-list" aria-label="בחירת סוג דף">
+        <div class="index-chip-row">
+          <button
+            type="button"
+            class="index-chip"
+            [class.selected]="selectedType === 'teacher'"
+            [disabled]="!user || !agencyReady"
+            (click)="start('teacher')">
+            מורה למוזיקה
+          </button>
+
+          <button
+            type="button"
+            class="index-chip"
+            *ngFor="let category of serviceProviderCategories; trackBy: trackByCategory"
+            [class.selected]="selectedServiceProviderCategoryId === category.id"
+            [disabled]="!user || !agencyReady"
+            (click)="selectServiceProviderCategory(category.id)">
+            {{ category.name }}
+          </button>
+
+          <button
+            type="button"
+            class="index-chip"
+            [class.selected]="isGeneralServiceSelected()"
+            [disabled]="!user || !agencyReady"
+            (click)="start('service-provider')">
+            אחר
+          </button>
+        </div>
+
+        <p class="index-category-state" *ngIf="categoriesLoading">טוען קטגוריות...</p>
+        <p class="index-category-state" *ngIf="!categoriesLoading && categoriesError">{{ categoriesError }}</p>
+      </div>
+    </section>
+
+    <section class="form-shell" *ngIf="selectedType === 'teacher' && user && agencyReady">
+      <app-teacher-create [embedded]="true" [singlePage]="true" [agencyId]="agencyId"></app-teacher-create>
+    </section>
+
+    <section class="form-shell" *ngIf="selectedType === 'service-provider' && user && agencyReady">
+      <app-service-provider-create
+        [embedded]="true"
+        [singlePage]="true"
+        [agencyId]="agencyId"
+        [presetCategoryId]="selectedServiceProviderCategoryId"
+        [allowUncategorized]="!selectedServiceProviderCategoryId">
+      </app-service-provider-create>
+    </section>
+
+    <button type="button" class="share-strip" [class.copied]="linkCopied" (click)="copyPageLink()">
+      <span class="material-icons">ios_share</span>
+      <span>{{ linkCopied ? 'הקישור הועתק' : 'שתפו את הקישור עם חברים והפיצו.' }}</span>
+    </button>
+  </section>
+
+  <section
+    class="legal-overlay"
+    *ngIf="activeLegalPage as legalPage"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="legalPage.title"
+    (click)="closeLegal()">
+    <article class="legal-dialog" (click)="$event.stopPropagation()">
+      <header class="legal-dialog__header">
+        <div>
+          <h2>{{ legalPage.title }}</h2>
+        </div>
+        <button type="button" class="legal-close" aria-label="סגירה" (click)="closeLegal()">
+          <span class="material-icons">close</span>
+        </button>
+      </header>
+
+      <p class="legal-description">{{ legalPage.description }}</p>
+
+      <div class="legal-dialog__body">
+        <section class="legal-section" *ngFor="let section of legalPage.sections">
+          <h3>{{ section.title }}</h3>
+          <p>{{ section.body }}</p>
+        </section>
+      </div>
+    </article>
+  </section>
+</main>

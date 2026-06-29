@@ -54,6 +54,8 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
 
   @Input() embedded = false;
+  @Input() singlePage = false;
+  @Input() agencyId?: number;
   @Output() close = new EventEmitter<void>();
   @Output() backToChat = new EventEmitter<void>();
 
@@ -768,6 +770,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
 
     const dto: CreateTeacherDto = {
       userId: currentUser?.id,
+      agencyId: this.agencyId,
       displayName: this.displayName.trim(),
       shortBio: this.shortBio?.trim() || undefined,
       fullDescription: this.withOtherDetails(this.fullDescription?.trim()) || undefined,

@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LanguageService } from '../../services/language.service';
@@ -36,7 +36,7 @@ interface Category {
 interface PlatformLinkOption {
   platform: SocialPlatform;
   label: string;
-  icon: string;
+  svg: SafeHtml;
   placeholder: string;
 }
 
@@ -47,18 +47,20 @@ interface PlatformLinkOption {
   templateUrl: './service-provider-create.component.html',
   styleUrls: ['./service-provider-create.component.css']
 })
-export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
+export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDestroy {
   private readonly langService = inject(LanguageService);
   private readonly sanitizer = inject(DomSanitizer);
 
   @Input() embedded = false;
+  @Input() singlePage = false;
+  @Input() agencyId?: number;
   @Input() presetCategoryId?: number;
   @Input() allowUncategorized = false;
   @Output() close = new EventEmitter<void>();
   @Output() backToChat = new EventEmitter<void>();
 
   currentStep = 1;
-  readonly totalSteps = 3;
+  readonly totalSteps = 2;
   subscription?: SubscriptionDto;
   isPremium = false;
   loading = true;
@@ -97,6 +99,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   galleryUploadingCount = 0;
   galleryUploadProgress = 0;
   profileImageUploadProgress = 0;
+  bannerImageUploadProgress = 0;
   showVideoLinkInput = false;
   showTestimonialDraft = false;
   newVideoUrl = '';
@@ -117,17 +120,20 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   private initialCategoryId?: number;
   private initialAllowUncategorized = false;
   private profileImageUploadSub?: Subscription;
+  private bannerImageUploadSub?: Subscription;
   private branchImageUploadSub?: Subscription;
   private galleryUploadSubs: Subscription[] = [];
-  get socialPlatformOptions(): PlatformLinkOption[] {
+  socialPlatformOptions: PlatformLinkOption[] = [];
+
+  private buildSocialPlatformOptions(): PlatformLinkOption[] {
     return [
-      { platform: SocialPlatform.Instagram, label: 'Instagram', icon: 'instagram', placeholder: this.langService.translate('create.link_instagram') },
-      { platform: SocialPlatform.Facebook, label: 'Facebook', icon: 'facebook', placeholder: this.langService.translate('create.link_facebook') },
-      { platform: SocialPlatform.YouTube, label: 'YouTube', icon: 'youtube', placeholder: this.langService.translate('create.link_youtube') },
-      { platform: SocialPlatform.TikTok, label: 'TikTok', icon: 'tiktok', placeholder: this.langService.translate('create.link_tiktok') },
-      { platform: SocialPlatform.Twitter, label: 'Twitter / X', icon: 'x', placeholder: this.langService.translate('create.link_x') },
-      { platform: SocialPlatform.Spotify, label: 'Spotify', icon: 'spotify', placeholder: 'קישור לספוטיפיי' },
-      { platform: SocialPlatform.Website, label: 'Website', icon: 'website', placeholder: this.langService.translate('create.link_profile') },
+      { platform: SocialPlatform.Instagram, label: 'Instagram', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.Instagram)), placeholder: this.langService.translate('create.link_instagram') },
+      { platform: SocialPlatform.Facebook, label: 'Facebook', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.Facebook)), placeholder: this.langService.translate('create.link_facebook') },
+      { platform: SocialPlatform.YouTube, label: 'YouTube', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.YouTube)), placeholder: this.langService.translate('create.link_youtube') },
+      { platform: SocialPlatform.TikTok, label: 'TikTok', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.TikTok)), placeholder: this.langService.translate('create.link_tiktok') },
+      { platform: SocialPlatform.Twitter, label: 'Twitter / X', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.Twitter)), placeholder: this.langService.translate('create.link_x') },
+      { platform: SocialPlatform.Spotify, label: 'Spotify', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.Spotify)), placeholder: 'קישור לספוטיפיי' },
+      { platform: SocialPlatform.Website, label: 'Website', svg: this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(SocialPlatform.Website)), placeholder: this.langService.translate('create.link_profile') },
     ];
   }
 
@@ -145,6 +151,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.socialPlatformOptions = this.buildSocialPlatformOptions();
     this.initializeIncomingCategoryState();
     this.loadSubscriptionStatus();
     this.loadCategories();
@@ -153,8 +160,16 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     setTimeout(() => this.scrollToTop(false));
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['presetCategoryId'] || changes['allowUncategorized']) {
+      this.initializeIncomingCategoryState();
+      this.applyInitialCategoryIfAvailable();
+    }
+  }
+
   ngOnDestroy(): void {
     this.cancelProfileImageUpload();
+    this.cancelBannerImageUpload();
     this.cancelBranchImageUpload();
     this.cancelGalleryUpload();
   }
@@ -249,10 +264,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
       next: (result) => {
         this.availableCategories = result.items;
         this.filteredCategories = this.availableCategories;
-        if (this.initialCategoryId) {
-          const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
-          this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
-        }
+        this.applyInitialCategoryIfAvailable();
       },
       error: (error) => console.error('Error loading categories:', error)
     });
@@ -378,15 +390,26 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     if (!file || this.bannerImageUploading) return;
 
     this.bannerImageUploading = true;
-    this.mediaService.uploadMedia(file).subscribe({
-      next: (response) => {
-        this.bannerImageUrl = response.url;
+    this.bannerImageUploadProgress = 0;
+    this.bannerImageUploadSub?.unsubscribe();
+    this.bannerImageUploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.bannerImageUploadProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          return;
+        }
+
+        if (event.type !== HttpEventType.Response || !event.body?.url) return;
+
+        this.bannerImageUrl = event.body.url;
+        this.bannerImageUploadProgress = 100;
         this.bannerImageUploading = false;
       },
       error: (error) => {
         console.error('Error uploading banner image:', error);
         this.error = this.langService.translate('common.error_profile_image');
         this.bannerImageUploading = false;
+        this.bannerImageUploadProgress = 0;
       }
     });
   }
@@ -477,6 +500,12 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     this.profileImageUploadSub?.unsubscribe();
     this.profileImageUploading = false;
     this.profileImageUploadProgress = 0;
+  }
+
+  cancelBannerImageUpload(): void {
+    this.bannerImageUploadSub?.unsubscribe();
+    this.bannerImageUploading = false;
+    this.bannerImageUploadProgress = 0;
   }
 
   cancelBranchImageUpload(): void {
@@ -607,6 +636,10 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     this.activeSocialPlatform = this.activeSocialPlatform === platform ? null : platform;
   }
 
+  onSocialPlatformPointerDown(event: Event): void {
+    event.preventDefault();
+  }
+
   hasPlatformLink(platform: SocialPlatform): boolean {
     return !!this.getPlatformLink(platform).trim();
   }
@@ -619,8 +652,13 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     return option.platform;
   }
 
-  getSocialIconSvg(platform: SocialPlatform): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(getSocialPlatformIconSvg(platform));
+  getVideoThumbnail(url: string): string {
+    const videoId = this.getYouTubeVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  private getYouTubeVideoId(url: string): string {
+    return url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1] || '';
   }
 
   onSubmit() {
@@ -649,6 +687,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
 
     const dto: CreateMusicServiceProviderDto = {
       userId: currentUser?.id,
+      agencyId: this.agencyId,
       displayName: this.displayName.trim(),
       shortBio: this.shortBio?.trim() || undefined,
       fullDescription: this.fullDescription?.trim() || undefined,
@@ -700,7 +739,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error creating service provider profile:', err);
-        this.error = err.error?.message || this.langService.translate('service_create.error_save');
+        this.error = this.getSaveErrorMessage(err);
         this.saving = false;
 
         // ׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ§׳³ֲ³׳’ג‚¬ֲ¢׳³ֲ³׳’ג€ֲ¢ localStorage ׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ§׳³ֲ³ײ²ֲ¨׳³ֲ³׳’ג‚¬ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ ׳³ֲ³ײ²ֲ©׳³ֲ³׳’ג‚¬ג„¢׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ
@@ -709,6 +748,37 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
         localStorage.removeItem('pendingProfessionalType');
       }
     });
+  }
+
+  private getSaveErrorMessage(err: any): string {
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error.trim();
+    }
+
+    if (err?.error?.errors && typeof err.error.errors === 'object') {
+      const validationMessages = Object.values(err.error.errors)
+        .flat()
+        .filter(message => typeof message === 'string' && message.trim())
+        .map(message => String(message).trim());
+
+      if (validationMessages.length) {
+        return validationMessages.join('\n');
+      }
+    }
+
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+
+    if (err?.error?.title) {
+      return err.error.title;
+    }
+
+    if (err?.message) {
+      return err.message;
+    }
+
+    return this.langService.translate('service_create.error_save');
   }
 
   validateForm(): boolean {
@@ -720,13 +790,13 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
 
     if (!this.email || !this.email.trim()) {
       this.error = this.langService.translate('common.enter_email');
-      this.showRequiredStep(2, '#email');
+      this.showRequiredStep(1, '#email');
       return false;
     }
 
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = this.langService.translate('common.enter_phone');
-      this.showRequiredStep(2, '#phoneNumber');
+      this.showRequiredStep(1, '#phoneNumber');
       return false;
     }
 
@@ -814,6 +884,22 @@ export class ServiceProviderCreateComponent implements OnInit, OnDestroy {
     this.initialCategoryId = this.presetCategoryId ?? (Number.isFinite(categoryIdFromQuery) && categoryIdFromQuery > 0 ? categoryIdFromQuery : undefined);
     this.initialAllowUncategorized = !this.initialCategoryId && (this.allowUncategorized || allowUncategorizedFromQuery);
     this.allowUncategorized = this.initialAllowUncategorized;
+  }
+
+  private applyInitialCategoryIfAvailable(): void {
+    if (!this.initialCategoryId) {
+      if (this.initialAllowUncategorized) {
+        this.selectedCategoryId = undefined;
+      }
+      return;
+    }
+
+    if (!this.availableCategories.length) {
+      return;
+    }
+
+    const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
+    this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
   }
 
   private scrollToTop(smooth = true): void {

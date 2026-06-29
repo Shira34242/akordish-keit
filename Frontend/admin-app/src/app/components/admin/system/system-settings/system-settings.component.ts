@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { AgencyListDto } from '../../../../models/agency.model';
+import { AgencyService } from '../../../../services/agency.service';
 import {
   SiteAccessGateStatusDto,
   SystemSettingsService,
@@ -10,7 +13,7 @@ import {
 @Component({
   selector: 'app-system-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './system-settings.component.html',
   styleUrls: ['./system-settings.component.css']
 })
@@ -27,12 +30,22 @@ export class SystemSettingsComponent implements OnInit {
   };
   accessGateSaving = false;
   accessGateSuccess = false;
+  joinIndexCopied = false;
+  joinChordsCopied = false;
+  agencyJoinCopied = false;
+  agencies: AgencyListDto[] = [];
+  agenciesLoading = false;
+  selectedAgencyId: number | null = null;
 
-  constructor(private settingsService: SystemSettingsService) {}
+  constructor(
+    private settingsService: SystemSettingsService,
+    private agencyService: AgencyService
+  ) {}
 
   ngOnInit(): void {
     this.loadSettings();
     this.loadAccessGate();
+    this.loadAgencies();
   }
 
   loadSettings(): void {
@@ -136,5 +149,103 @@ export class SystemSettingsComponent implements OnInit {
       regular_user_subscriptions_enabled: 'מנויים למשתמשים רגילים (BASIC/PLUS+/PRO)'
     };
     return labels[key] ?? key;
+  }
+
+  get joinIndexUrl(): string {
+    return this.buildPublicUrl('/join-index');
+  }
+
+  get joinChordsUrl(): string {
+    return this.buildPublicUrl('/join-chords');
+  }
+
+  get selectedAgency(): AgencyListDto | null {
+    return this.agencies.find(agency => agency.id === Number(this.selectedAgencyId)) ?? null;
+  }
+
+  get agencyJoinIndexUrl(): string {
+    const agency = this.selectedAgency;
+    return agency ? this.buildPublicUrl(`/join-index/agency/${agency.slug}`) : '';
+  }
+
+  async copyJoinIndexLink(): Promise<void> {
+    await this.copyLink(this.joinIndexUrl, () => this.showJoinIndexCopiedState());
+  }
+
+  async copyJoinChordsLink(): Promise<void> {
+    await this.copyLink(this.joinChordsUrl, () => this.showJoinChordsCopiedState());
+  }
+
+  async copyAgencyJoinIndexLink(): Promise<void> {
+    if (!this.agencyJoinIndexUrl) return;
+
+    await this.copyLink(this.agencyJoinIndexUrl, () => this.showAgencyJoinCopiedState());
+  }
+
+  private loadAgencies(): void {
+    this.agenciesLoading = true;
+
+    this.agencyService.getAgencies(undefined, true, 1, 100).subscribe({
+      next: (result) => {
+        this.agencies = result.items ?? [];
+        this.selectedAgencyId = this.selectedAgencyId ?? this.agencies[0]?.id ?? null;
+        this.agenciesLoading = false;
+      },
+      error: () => {
+        this.error = 'שגיאה בטעינת הסוכנויות';
+        this.agenciesLoading = false;
+      }
+    });
+  }
+
+  private buildPublicUrl(path: string): string {
+    if (typeof window === 'undefined') {
+      return path;
+    }
+
+    return `${window.location.origin}${path}`;
+  }
+
+  private async copyLink(link: string, onCopied: () => void): Promise<void> {
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        this.copyWithTextarea(link);
+      }
+
+      onCopied();
+    } catch {
+      this.copyWithTextarea(link);
+      onCopied();
+    }
+  }
+
+  private showJoinIndexCopiedState(): void {
+    this.joinIndexCopied = true;
+    setTimeout(() => this.joinIndexCopied = false, 1800);
+  }
+
+  private showJoinChordsCopiedState(): void {
+    this.joinChordsCopied = true;
+    setTimeout(() => this.joinChordsCopied = false, 1800);
+  }
+
+  private showAgencyJoinCopiedState(): void {
+    this.agencyJoinCopied = true;
+    setTimeout(() => this.agencyJoinCopied = false, 1800);
+  }
+
+  private copyWithTextarea(text: string): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
   }
 }

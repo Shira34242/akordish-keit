@@ -1,4 +1,4 @@
-<div class="quick-create-page" [class.embedded-mode]="embedded" (click)="closeDropdowns($event)">
+<div class="quick-create-page" [class.embedded-mode]="embedded" [class.single-page-mode]="singlePage" (click)="closeDropdowns($event)">
   <div class="quick-create-card">
     <div *ngIf="loading" class="quiet-state">
       <div class="spinner"></div>
@@ -6,7 +6,7 @@
     </div>
 
     <div *ngIf="!loading" class="quick-create-flow">
-      <div class="floating-nav floating-nav--top" *ngIf="!submitted">
+      <div class="floating-nav floating-nav--top" *ngIf="!submitted && !singlePage">
         <div class="step-dots-nav" aria-label="שלבי ההוספה">
           <button type="button" class="step-dot" [class.active]="currentStep === 1" (click)="goToStep(1)" aria-label="פרופיל">
             <span class="step-dot-core"></span>
@@ -15,10 +15,6 @@
           <button type="button" class="step-dot" [class.active]="currentStep === 2" (click)="goToStep(2)" aria-label="פרטים">
             <span class="step-dot-core"></span>
             <span class="step-dot-label" *ngIf="currentStep === 2">פרטים</span>
-          </button>
-          <button type="button" class="step-dot" [class.active]="currentStep === 3" (click)="goToStep(3)" aria-label="גלריה">
-            <span class="step-dot-core"></span>
-            <span class="step-dot-label" *ngIf="currentStep === 3">גלריה</span>
           </button>
         </div>
       </div>
@@ -35,53 +31,41 @@
         </div>
 
         <form *ngIf="!submitted" (ngSubmit)="onSubmit()" id="serviceProviderCreateForm" class="quick-form">
-          <section class="flow-step" *ngIf="currentStep === 1">
+          <section class="flow-step" *ngIf="currentStep === 1 || singlePage">
+            <p class="step-intro">מלא את פרטי הדף הציבורי שלך שיוצג באתר</p>
+
             <button type="button" class="profile-upload" [class.has-image]="profileImageUrl" (click)="profileImageInput.click()" aria-label="העלאת תמונת פרופיל">
               <img *ngIf="profileImageUrl" [src]="profileImageUrl" alt="תמונת פרופיל" />
               <span class="material-icons">{{ profileImageUrl ? 'edit' : 'add_photo_alternate' }}</span>
               <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
             </button>
             <input #profileImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
-            <div class="profile-image-link-field">
-              <label class="field-label" for="service-provider-profile-image-url">קישור לתמונת פרופיל</label>
-              <input
-                id="service-provider-profile-image-url"
-                type="url"
-                [(ngModel)]="profileImageUrl"
-                name="profileImageUrl"
-                class="text-input"
-                placeholder="https://..."
-              />
-            </div>
-            <div class="profile-image-link-field">
-              <label class="field-label" for="service-provider-banner-image-url">תמונת באנר</label>
-              <div class="media-link-row">
-                <input
-                  id="service-provider-banner-image-url"
-                  type="url"
-                  [(ngModel)]="bannerImageUrl"
-                  name="bannerImageUrl"
-                  class="text-input"
-                  placeholder="https://..."
-                />
-                <button type="button" class="media-upload-btn" (click)="bannerImageInput.click()" [disabled]="bannerImageUploading">
-                  <span class="material-icons">{{ bannerImageUploading ? 'hourglass_empty' : 'attach_file' }}</span>
-                </button>
-                <input #bannerImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
-              </div>
-            </div>
             <div class="upload-progress" *ngIf="profileImageUploading">
               <div><span [style.width.%]="profileImageUploadProgress"></span></div>
               <strong>{{ profileImageUploadProgress }}%</strong>
               <button type="button" (click)="cancelProfileImageUpload()">ביטול</button>
             </div>
 
+            <button type="button" class="banner-upload" [class.has-image]="bannerImageUrl" (click)="bannerImageInput.click()" aria-label="העלאת תמונת באנר">
+              <img *ngIf="bannerImageUrl" [src]="bannerImageUrl" alt="תמונת באנר" />
+              <span class="material-icons">{{ bannerImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+              <strong>{{ bannerImageUploading ? 'מעלה באנר...' : 'תמונת באנר (רשות)' }}</strong>
+            </button>
+            <input #bannerImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
+            <div class="upload-progress" *ngIf="bannerImageUploading">
+              <div><span [style.width.%]="bannerImageUploadProgress"></span></div>
+              <strong>{{ bannerImageUploadProgress }}%</strong>
+              <button type="button" (click)="cancelBannerImageUpload()">ביטול</button>
+            </div>
+
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם העסק או נותן השירות *" />
 
             <label class="choice-toggle">
               <input type="checkbox" [(ngModel)]="hasBranches" name="hasBranches" />
-              <span class="material-icons">storefront</span>
-              <strong>לעסק יש כמה סניפים</strong>
+              <span class="checkbox-mark">
+                <span class="material-icons" *ngIf="hasBranches">check</span>
+              </span>
+              <span>לעסק יש כמה סניפים</span>
             </label>
 
             <div class="two-fields" *ngIf="!hasBranches">
@@ -109,20 +93,16 @@
               <p class="field-note" *ngIf="allowUncategorized && !selectedCategoryId">הדף ייפתח כנותן שירות כללי.</p>
             </div>
 
-            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" class="text-area" rows="3" placeholder="משפט קצר על השירות"></textarea>
-            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="text-area large" rows="4" placeholder="תיאור נוסף למי שרוצה להבין איך אתה עובד"></textarea>
-          </section>
-
-          <section class="flow-step" *ngIf="currentStep === 2">
             <input id="email" type="email" [(ngModel)]="email" name="email" class="text-input" required placeholder="אימייל *" />
 
             <div class="phone-line">
               <input id="phoneNumber" type="tel" [(ngModel)]="phoneNumber" name="phoneNumber" class="text-input" required placeholder="טלפון *" />
-              <label class="whatsapp-check" for="hasWhatsAppOnPhone">
-                <input id="hasWhatsAppOnPhone" type="checkbox" [(ngModel)]="hasWhatsAppOnPhone" name="hasWhatsAppOnPhone" />
-                <span class="material-icons">forum</span>
-                <span>יש וואטסאפ?</span>
-              </label>
+              <button type="button" class="whatsapp-check" [class.checked]="hasWhatsAppOnPhone" [attr.aria-pressed]="hasWhatsAppOnPhone" (click)="hasWhatsAppOnPhone = !hasWhatsAppOnPhone">
+                <span class="checkbox-mark">
+                  <span class="material-icons" *ngIf="hasWhatsAppOnPhone">check</span>
+                </span>
+                <span>וואטסאפ</span>
+              </button>
             </div>
 
             <input id="websiteUrl" type="url" [(ngModel)]="websiteUrl" name="websiteUrl" class="text-input" placeholder="אתר אישי" />
@@ -130,15 +110,26 @@
             <div class="soft-block">
               <div class="soft-label">רשתות חברתיות</div>
               <div class="social-row">
-                <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (click)="selectSocialPlatform(option.platform)">
-                  <span class="social-platform-icon" [innerHTML]="getSocialIconSvg(option.platform)"></span>
+                <button type="button" *ngFor="let option of socialPlatformOptions; trackBy: trackByPlatform" class="social-button" [class.active]="activeSocialPlatform === option.platform" [class.filled]="hasPlatformLink(option.platform)" [title]="option.label" (pointerdown)="onSocialPlatformPointerDown($event)" (click)="selectSocialPlatform(option.platform)">
+                  <span class="social-platform-icon" [innerHTML]="option.svg"></span>
                 </button>
               </div>
               <input *ngIf="activeSocialPlatform" type="url" class="text-input" name="activeSocialLink" [placeholder]="getActiveSocialPlaceholder()" [ngModel]="getPlatformLink(activeSocialPlatform)" (ngModelChange)="setPlatformLink(activeSocialPlatform, $event)" />
             </div>
 
+            <textarea id="shortBio" [(ngModel)]="shortBio" name="shortBio" class="text-area" rows="3" placeholder="משפט קצר על השירות"></textarea>
+            <textarea id="fullDescription" [(ngModel)]="fullDescription" name="fullDescription" class="text-area large" rows="4" placeholder="תיאור נוסף למי שרוצה להבין איך אתה עובד"></textarea>
+          </section>
+
+          <section class="flow-step" *ngIf="currentStep === 2 || singlePage">
+            <p class="step-intro">עוד כמה פרטים קטנים, המלצות וגלריה לדף שלך</p>
+
             <div class="two-fields">
-              <input id="yearsOfExperience" type="number" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="text-input" placeholder="שנות ניסיון" />
+              <div class="soft-block">
+                <label for="yearsOfExperience" class="soft-label">שנות ניסיון</label>
+                <p class="field-note soft-note">וותק מקצועי בתחום השירות</p>
+                <input id="yearsOfExperience" type="number" [(ngModel)]="yearsOfExperience" name="yearsOfExperience" min="0" class="text-input" placeholder="למשל 5" />
+              </div>
               <input *ngIf="!hasBranches" id="workingHours" type="text" [(ngModel)]="workingHours" name="workingHours" class="text-input" placeholder="שעות פעילות" />
             </div>
 
@@ -203,7 +194,7 @@
             </div>
           </section>
 
-          <section class="flow-step" *ngIf="currentStep === 3">
+          <section class="flow-step" *ngIf="currentStep === 2 || singlePage">
             <div class="gallery-head">
               <h2>גלריה</h2>
               <p>אפשר להוסיף כמה תמונות יחד, וגם כמה קישורי וידאו שרוצים.</p>
@@ -237,7 +228,11 @@
                 <button type="button" class="remove-button" (click)="removeVideoLink(videoIndex)" aria-label="מחיקת סרטון">
                   <span class="material-icons">close</span>
                 </button>
-                <span class="material-icons">smart_display</span>
+                <img *ngIf="getVideoThumbnail(link); else videoFallbackIcon" [src]="getVideoThumbnail(link)" [alt]="link" />
+                <ng-template #videoFallbackIcon>
+                  <span class="material-icons">smart_display</span>
+                </ng-template>
+                <span class="material-icons video-play-badge">play_arrow</span>
                 <p>{{ link }}</p>
               </article>
 
@@ -255,22 +250,22 @@
 
       <div class="floating-nav floating-nav--bottom" *ngIf="!submitted">
         <div class="form-actions">
-        <button type="button" class="btn-secondary btn-action btn-back-chat" *ngIf="embedded && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
+        <button type="button" class="btn-secondary btn-action btn-back-chat" *ngIf="embedded && !singlePage && currentStep === 1" (click)="returnToChat()" [disabled]="saving" aria-label="חזרה לצ'אט">
           <span class="material-icons">arrow_forward</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="embedded" (click)="cancelFlow()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="embedded && !singlePage" (click)="cancelFlow()" [disabled]="saving">
           <span class="material-icons">close</span>
           <span>סגירה</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="currentStep > 1" (click)="prevStep()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="!singlePage && currentStep > 1" (click)="prevStep()" [disabled]="saving">
           <span class="material-icons">arrow_forward</span>
           <span>חזרה</span>
         </button>
-        <button type="button" class="btn-secondary btn-action" *ngIf="currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
+        <button type="button" class="btn-secondary btn-action" *ngIf="!singlePage && currentStep < totalSteps" (click)="nextStep()" [disabled]="saving">
           <span class="material-icons">arrow_back</span>
           <span>המשך</span>
         </button>
-        <button type="submit" class="btn-primary btn-action" *ngIf="currentStep === totalSteps" [disabled]="saving" form="serviceProviderCreateForm">
+        <button type="submit" class="btn-primary btn-action" *ngIf="singlePage || currentStep === totalSteps" [disabled]="saving" form="serviceProviderCreateForm">
           <span class="material-icons" *ngIf="!saving">north_east</span>
           <span>{{ saving ? 'שולח...' : 'שליחה' }}</span>
         </button>
