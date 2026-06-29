@@ -222,12 +222,18 @@ export class ArticleService {
     return this.http.get<HomeNewsBannersDto>(`${this.apiUrl}/home-news-banners`);
   }
 
-  getHomeContentBanners(): Observable<ArticleBanner[]> {
-    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-content-banners`);
+  getHomeContentBanners(limit = 12): Observable<ArticleBanner[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-content-banners`, { params });
   }
 
-  getHomeViralBanners(): Observable<ArticleBanner[]> {
-    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-viral-banners`);
+  getHomeViralBanners(limit = 10, offset = 0): Observable<ArticleBanner[]> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('offset', offset.toString());
+
+    return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-viral-banners`, { params });
   }
 
   getPublishedArticleBanners(

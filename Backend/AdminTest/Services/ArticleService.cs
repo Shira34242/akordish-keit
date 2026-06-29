@@ -360,11 +360,13 @@ public class ArticleService : IArticleService
             .ToListAsync();
     }
 
-    public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 80)
+    public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 10, int offset = 0)
     {
         var now = DateTime.UtcNow;
         var weekAgo = now.AddDays(-7);
-        var take = Math.Clamp(limit, 1, 80);
+        var take = Math.Clamp(limit, 1, 10);
+        var skip = Math.Clamp(offset, 0, 200);
+        var dailySeed = now.Date.DayOfYear;
 
         var candidates = await _context.Articles
             .AsNoTracking()
@@ -404,10 +406,11 @@ public class ArticleService : IArticleService
                     (a.Article.IsFeatured ? 1000 : 0)
                     + (a.WeeklyViews * 20)
                     + Math.Min(a.TotalViews, 1000)
-                    + (Random.Shared.NextDouble() * 700)
+                    + (((a.Article.Id * 1103515245L + dailySeed * 12345L) & 0x7fffffff) % 700)
             })
             .OrderByDescending(a => a.Score)
             .ThenByDescending(a => a.Article.PublishDate)
+            .Skip(skip)
             .Take(take)
             .Select(a => a.Article)
             .ToList();

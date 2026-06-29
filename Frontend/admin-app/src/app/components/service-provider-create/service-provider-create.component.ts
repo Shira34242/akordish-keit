@@ -262,7 +262,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
   loadCategories() {
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
       next: (result) => {
-        this.availableCategories = result.items;
+        this.availableCategories = (result.items || []).filter((item: any) => this.isServiceProviderCategory(item));
         this.filteredCategories = this.availableCategories;
         this.applyInitialCategoryIfAvailable();
       },
@@ -900,6 +900,19 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
 
     const categoryExists = this.availableCategories.some(category => category.id === this.initialCategoryId);
     this.selectedCategoryId = categoryExists ? this.initialCategoryId : undefined;
+  }
+
+  private isServiceProviderCategory(item: SystemItem): boolean {
+    const label = `${item.name || ''} ${item['quickCategoryLabel'] || ''}`.toLowerCase();
+    const looksLikeTeacherCategory =
+      label.includes('מורה') ||
+      label.includes('מורים') ||
+      label.includes('teacher');
+
+    return item['isActive'] !== false
+      && Number(item['quickCategoryType'] ?? 0) !== 1
+      && !item['quickCategoryInstrumentId']
+      && !looksLikeTeacherCategory;
   }
 
   private scrollToTop(smooth = true): void {

@@ -127,13 +127,14 @@ public class ArticlesController : ControllerBase
 
     // GET: api/Articles/home-content-banners
     [HttpGet("home-content-banners")]
-    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners()
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners([FromQuery] int limit = 12)
     {
-        const string cacheKey = "home_content_banners_v1";
+        var normalizedLimit = Math.Clamp(limit, 1, 20);
+        var cacheKey = $"home_content_banners_v2_{normalizedLimit}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await _articleService.GetHomeContentBannersAsync();
+            return await _articleService.GetHomeContentBannersAsync(normalizedLimit);
         });
 
         return HttpCacheRevalidation.Revalidate(this, banners!);
@@ -141,13 +142,17 @@ public class ArticlesController : ControllerBase
 
     // GET: api/Articles/home-viral-banners
     [HttpGet("home-viral-banners")]
-    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners()
+    public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners(
+        [FromQuery] int limit = 10,
+        [FromQuery] int offset = 0)
     {
-        const string cacheKey = "home_viral_banners_v2";
+        var normalizedLimit = Math.Clamp(limit, 1, 10);
+        var normalizedOffset = Math.Clamp(offset, 0, 200);
+        var cacheKey = $"home_viral_banners_v3_{normalizedLimit}_{normalizedOffset}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await _articleService.GetHomeViralBannersAsync();
+            return await _articleService.GetHomeViralBannersAsync(normalizedLimit, normalizedOffset);
         });
 
         return HttpCacheRevalidation.Revalidate(this, banners!);

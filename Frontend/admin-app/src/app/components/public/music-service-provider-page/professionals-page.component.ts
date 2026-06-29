@@ -373,7 +373,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     this.loading = true;
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).pipe(
       switchMap((response: any) => {
-        this.categories = response.items || response;
+        this.categories = (response.items || response).filter((item: any) => Number(item.quickCategoryType ?? 0) !== 1);
         this.quickSearchCategories.forEach(quick => {
           const category = this.categories.find(c => c.name.toLowerCase().includes(quick.name.toLowerCase()));
           if (category) quick.id = category.id;

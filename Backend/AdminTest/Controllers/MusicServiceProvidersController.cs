@@ -1,4 +1,4 @@
-using AkordishKeit.Models.DTOs;
+﻿using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
@@ -13,6 +13,7 @@ namespace AkordishKeit.Controllers;
 [ApiController]
 public class MusicServiceProvidersController : ControllerBase
 {
+    private const int MaxManagedPagesPerUser = 5;
     private readonly IMusicServiceProviderService _service;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
@@ -63,7 +64,7 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (serviceProvider == null)
         {
-            return NotFound(new { message = "בעל המקצוע לא נמצא" });
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
         }
 
         return Ok(serviceProvider);
@@ -77,7 +78,7 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (serviceProvider == null)
         {
-            return NotFound(new { message = "בעל המקצוע לא נמצא" });
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
         }
 
         return Ok(serviceProvider);
@@ -92,7 +93,7 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (!exists)
         {
-            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
+            return NotFound(new { message = "׳³ג€˜׳³ֲ¢׳³ֲ ׳³ג€׳³ֲ׳³ֲ§׳³ֲ¦׳³ג€¢׳³ֲ¢ ׳³ֲ׳³ֲ ׳³ֲ ׳³ֲ׳³ֲ¦׳³ֲ" });
         }
 
         var songs = await _songService.GetApprovedSongsByUploaderProfileAsync("serviceProvider", id, limit);
@@ -108,7 +109,7 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (!exists)
         {
-            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
+            return NotFound(new { message = "׳³ג€˜׳³ֲ¢׳³ֲ ׳³ג€׳³ֲ׳³ֲ§׳³ֲ¦׳³ג€¢׳³ֲ¢ ׳³ֲ׳³ֲ ׳³ֲ ׳³ֲ׳³ֲ¦׳³ֲ" });
         }
 
         var articles = await _articleService.GetPublishedArticlesByUploaderProfileAsync("serviceProvider", id, limit);
@@ -154,11 +155,11 @@ public class MusicServiceProvidersController : ControllerBase
     }
 
     // ========================================
-    // יצירת פרופיל בעל מקצוע - לציבור
+    // ׳™׳¦׳™׳¨׳× ׳₪׳¨׳•׳₪׳™׳ ׳‘׳¢׳ ׳׳§׳¦׳•׳¢ - ׳׳¦׳™׳‘׳•׳¨
     // ========================================
 
     /// <summary>
-    /// יצירת פרופיל בעל מקצוע חדש (משתמש מחובר עם מנוי פעיל)
+    /// ׳™׳¦׳™׳¨׳× ׳₪׳¨׳•׳₪׳™׳ ׳‘׳¢׳ ׳׳§׳¦׳•׳¢ ׳—׳“׳© (׳׳©׳×׳׳© ׳׳—׳•׳‘׳¨ ׳¢׳ ׳׳ ׳•׳™ ׳₪׳¢׳™׳)
     /// </summary>
     [HttpPost("create-profile")]
     [Authorize]
@@ -166,24 +167,47 @@ public class MusicServiceProvidersController : ControllerBase
     {
         try
         {
-            // קבלת המשתמש המחובר
+            // ׳§׳‘׳׳× ׳”׳׳©׳×׳׳© ׳”׳׳—׳•׳‘׳¨
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized("משתמש לא מזוהה");
+                return Unauthorized("׳׳©׳×׳׳© ׳׳ ׳׳–׳•׳”׳”");
 
-            // וולידציה
+            // ׳•׳•׳׳™׳“׳¦׳™׳”
             if (string.IsNullOrWhiteSpace(dto.DisplayName))
-                return BadRequest("שם התצוגה הוא שדה חובה");
+                return BadRequest("׳©׳ ׳”׳×׳¦׳•׳’׳” ׳”׳•׳ ׳©׳“׳” ׳—׳•׳‘׳”");
 
             if (dto.Categories == null || !dto.Categories.Any())
                 return BadRequest("חובה לבחור לפחות קטגוריה אחת");
 
-            // בדיקה אם המשתמש כבר יצר פרופיל של בעל מקצוע (לא מורה)
+            var managedPagesCount = await CountManagedPagesAsync(userId);
+            if (managedPagesCount >= MaxManagedPagesPerUser)
+                return BadRequest($"׳׳₪׳©׳¨ ׳׳ ׳”׳ ׳¢׳“ {MaxManagedPagesPerUser} ׳“׳₪׳™׳ ׳‘׳׳‘׳“");
+
             var existingProvider = await _context.ServiceProviders
-                .FirstOrDefaultAsync(sp => sp.UserId == userId && !sp.IsTeacher && !sp.IsDeleted);
+                .FirstOrDefaultAsync(sp => sp.UserId == userId
+                    && !sp.IsTeacher
+                    && !sp.IsDeleted
+                    && sp.DisplayName == dto.DisplayName);
 
             if (existingProvider != null)
-                return BadRequest("כבר יצרת פרופיל של בעל מקצוע");
+            {
+                if (dto.AgencyId.HasValue)
+                {
+                    var existingAgency = await _context.Agencies
+                        .FirstOrDefaultAsync(a => a.Id == dto.AgencyId.Value && !a.IsDeleted && a.IsActive);
+
+                    if (existingAgency == null)
+                        return BadRequest("׳”׳¡׳•׳›׳ ׳•׳× ׳׳ ׳ ׳׳¦׳׳” ׳׳• ׳׳™׳ ׳” ׳₪׳¢׳™׳׳”");
+
+                    await LinkServiceProviderToAgencyAsync(existingAgency.Id, existingProvider.Id);
+                    await _context.SaveChangesAsync();
+
+                    var existingResult = await _service.GetServiceProviderByIdAsync(existingProvider.Id);
+                    return Ok(existingResult);
+                }
+
+                return BadRequest("׳›׳‘׳¨ ׳™׳¦׳¨׳× ׳₪׳¨׳•׳₪׳™׳ ׳‘׳¢׳ ׳׳§׳¦׳•׳¢ ׳‘׳©׳ ׳”׳–׳”");
+            }
 
             Agency? agency = null;
             if (dto.AgencyId.HasValue)
@@ -192,24 +216,20 @@ public class MusicServiceProvidersController : ControllerBase
                     .FirstOrDefaultAsync(a => a.Id == dto.AgencyId.Value && !a.IsDeleted && a.IsActive);
 
                 if (agency == null)
-                    return BadRequest("הסוכנות לא נמצאה או אינה פעילה");
+                    return BadRequest("׳”׳¡׳•׳›׳ ׳•׳× ׳׳ ׳ ׳׳¦׳׳” ׳׳• ׳׳™׳ ׳” ׳₪׳¢׳™׳׳”");
             }
 
-            // בדיקת מנוי פעיל (אופציונלי - לקביעת Premium)
+            // ׳‘׳“׳™׳§׳× ׳׳ ׳•׳™ ׳₪׳¢׳™׳ (׳׳•׳₪׳¦׳™׳•׳ ׳׳™ - ׳׳§׳‘׳™׳¢׳× Premium)
             var activeSubscription = await _context.Subscriptions
                 .Where(s => s.UserId == userId)
                 .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial)
                 .OrderByDescending(s => s.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            // קביעת האם זה הפרופיל הראשי (הראשון למשתמש)
-            var existingProfilesByUser = await _context.ServiceProviders
-                .Where(sp => sp.UserId == userId && !sp.IsDeleted)
-                .CountAsync();
+            // ׳§׳‘׳™׳¢׳× ׳”׳׳ ׳–׳” ׳”׳₪׳¨׳•׳₪׳™׳ ׳”׳¨׳׳©׳™ (׳”׳¨׳׳©׳•׳ ׳׳׳©׳×׳׳©)
+            bool isPrimaryProfile = managedPagesCount == 0;
 
-            bool isPrimaryProfile = existingProfilesByUser == 0;
-
-            // יצירת Service Provider
+            // ׳™׳¦׳™׳¨׳× Service Provider
             var serviceProvider = new MusicServiceProvider
             {
                 UserId = userId,
@@ -238,7 +258,7 @@ public class MusicServiceProvidersController : ControllerBase
                 IsDeleted = false
             };
 
-            // קישור למנוי אם קיים
+            // ׳§׳™׳©׳•׳¨ ׳׳׳ ׳•׳™ ׳׳ ׳§׳™׳™׳
             if (activeSubscription != null)
             {
                 serviceProvider.SubscriptionId = activeSubscription.Id;
@@ -252,7 +272,7 @@ public class MusicServiceProvidersController : ControllerBase
             _context.ServiceProviders.Add(serviceProvider);
             await _context.SaveChangesAsync();
 
-            // הוספת קטגוריות
+            // ׳”׳•׳¡׳₪׳× ׳§׳˜׳’׳•׳¨׳™׳•׳×
             if (dto.Categories != null && dto.Categories.Any())
             {
                 foreach (var category in dto.Categories)
@@ -266,7 +286,7 @@ public class MusicServiceProvidersController : ControllerBase
                 }
             }
 
-            // הוספת גלריה - תמיד מותר להוסיף גלריה
+            // ׳”׳•׳¡׳₪׳× ׳’׳׳¨׳™׳” - ׳×׳׳™׳“ ׳׳•׳×׳¨ ׳׳”׳•׳¡׳™׳£ ׳’׳׳¨׳™׳”
             if (dto.GalleryImages != null && dto.GalleryImages.Any())
             {
                 foreach (var img in dto.GalleryImages)
@@ -330,22 +350,12 @@ public class MusicServiceProvidersController : ControllerBase
 
             if (agency != null)
             {
-                _context.AgencyProfiles.Add(new AgencyProfile
-                {
-                    AgencyId = agency.Id,
-                    ProfileType = "serviceProvider",
-                    ProfileId = serviceProvider.Id,
-                    ContactMode = AgencyContactMode.Agency,
-                    ShowBadge = true,
-                    IsFeaturedByAgency = false,
-                    DisplayOrder = 0,
-                    CreatedAt = DateTime.UtcNow
-                });
+                await LinkServiceProviderToAgencyAsync(agency.Id, serviceProvider.Id);
             }
 
             await _context.SaveChangesAsync();
 
-            // החזרת פרטי בעל המקצוע המלאים
+            // ׳”׳—׳–׳¨׳× ׳₪׳¨׳˜׳™ ׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳”׳׳׳׳™׳
             var result = await _service.GetServiceProviderByIdAsync(serviceProvider.Id);
 
             await _notificationService.NotifyServiceProviderSubmittedAsync(userId, serviceProvider.Id, serviceProvider.DisplayName);
@@ -357,8 +367,31 @@ public class MusicServiceProvidersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Create service provider profile failed");
-            return StatusCode(500, $"שגיאה ביצירת פרופיל בעל מקצוע: {ex.Message}");
+            return StatusCode(500, $"׳©׳’׳™׳׳” ׳‘׳™׳¦׳™׳¨׳× ׳₪׳¨׳•׳₪׳™׳ ׳‘׳¢׳ ׳׳§׳¦׳•׳¢: {ex.Message}");
         }
+    }
+
+    private async Task LinkServiceProviderToAgencyAsync(int agencyId, int serviceProviderId)
+    {
+        var link = await _context.AgencyProfiles
+            .FirstOrDefaultAsync(p => p.ProfileType == "serviceProvider" && p.ProfileId == serviceProviderId);
+
+        if (link == null)
+        {
+            link = new AgencyProfile
+            {
+                ProfileType = "serviceProvider",
+                ProfileId = serviceProviderId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.AgencyProfiles.Add(link);
+        }
+
+        link.AgencyId = agencyId;
+        link.ContactMode = AgencyContactMode.Agency;
+        link.ShowBadge = true;
+        link.IsFeaturedByAgency = false;
+        link.DisplayOrder = 0;
     }
 
     // DELETE: api/MusicServiceProviders/5
@@ -369,7 +402,7 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = "בעל המקצוע לא נמצא" });
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
         }
 
         return NoContent();
@@ -384,11 +417,11 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = "בעל המקצוע לא נמצא" });
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
         }
 
         _logger.LogInformation("Service provider approved: ProviderId={ProviderId}", id);
-        return Ok(new { message = "בעל המקצוע אושר בהצלחה" });
+        return Ok(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳•׳©׳¨ ׳‘׳”׳¦׳׳—׳”" });
     }
 
     // POST: api/MusicServiceProviders/5/reject
@@ -400,11 +433,11 @@ public class MusicServiceProvidersController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = "בעל המקצוע לא נמצא" });
+            return NotFound(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳׳ ׳ ׳׳¦׳" });
         }
 
         _logger.LogInformation("Service provider rejected: ProviderId={ProviderId}", id);
-        return Ok(new { message = "בעל המקצוע נדחה" });
+        return Ok(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳ ׳“׳—׳”" });
     }
 
     // GET: api/MusicServiceProviders/check-user/5
@@ -423,7 +456,7 @@ public class MusicServiceProvidersController : ControllerBase
         try
         {
             await _service.LinkToUserAsync(id, userId);
-            return Ok(new { message = "בעל המקצוע קושר למשתמש בהצלחה" });
+            return Ok(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳§׳•׳©׳¨ ׳׳׳©׳×׳׳© ׳‘׳”׳¦׳׳—׳”" });
         }
         catch (InvalidOperationException ex)
         {
@@ -438,7 +471,7 @@ public class MusicServiceProvidersController : ControllerBase
         try
         {
             await _service.UnlinkFromUserAsync(id);
-            return Ok(new { message = "בעל המקצוע נותק מהמשתמש בהצלחה" });
+            return Ok(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳ ׳•׳×׳§ ׳׳”׳׳©׳×׳׳© ׳‘׳”׳¦׳׳—׳”" });
         }
         catch (InvalidOperationException ex)
         {
@@ -459,5 +492,16 @@ public class MusicServiceProvidersController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    private async Task<int> CountManagedPagesAsync(int userId)
+    {
+        var artistsCount = await _context.Artists
+            .CountAsync(a => a.UserId == userId && !a.IsDeleted);
+
+        var providersCount = await _context.ServiceProviders
+            .CountAsync(sp => sp.UserId == userId && !sp.IsDeleted);
+
+        return artistsCount + providersCount;
     }
 }

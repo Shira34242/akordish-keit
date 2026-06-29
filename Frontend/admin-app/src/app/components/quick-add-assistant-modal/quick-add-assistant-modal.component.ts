@@ -1202,11 +1202,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         };
       }
       case 'index': {
-        const professionalOptions: AssistantOption[] = this.professionalCategories.map(category => ({
-          id: `index-service-provider-category-${category.id}`,
-          label: category.name,
-          action: `index-service-provider-category:${category.id}`
-        }));
+        const visibleQuickCategories = this.professionalCategories
+          .filter(category => category['showInQuickCategories'])
+          .filter(category => category['isActive'] !== false)
+          .sort((a, b) => (a['quickCategoryOrder'] ?? 0) - (b['quickCategoryOrder'] ?? 0));
+
+        const professionalOptions: AssistantOption[] = visibleQuickCategories
+          .filter(category => this.isServiceProviderQuickCategory(category))
+          .map(category => ({
+            id: `index-service-provider-category-${category.id}`,
+            label: category['quickCategoryLabel'] || category.name,
+            action: `index-service-provider-category:${category.id}`
+          }));
 
         return {
           question: t('fab.index_question'),
@@ -1268,6 +1275,18 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         };
       }
     }
+  }
+
+  private isServiceProviderQuickCategory(category: SystemItem): boolean {
+    const label = `${category.name || ''} ${category['quickCategoryLabel'] || ''}`.toLowerCase();
+    const looksLikeTeacherCategory =
+      label.includes('מורה') ||
+      label.includes('מורים') ||
+      label.includes('teacher');
+
+    return Number(category['quickCategoryType'] ?? 0) !== 1
+      && !category['quickCategoryInstrumentId']
+      && !looksLikeTeacherCategory;
   }
 
   private createEmptyArticle(contentType: ArticleContentType, categoryIds: number[] = []): CreateArticleDto {

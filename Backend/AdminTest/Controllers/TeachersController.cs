@@ -13,6 +13,7 @@ namespace AkordishKeit.Controllers;
 [ApiController]
 public class TeachersController : ControllerBase
 {
+    private const int MaxManagedPagesPerUser = 5;
     private readonly ITeacherService _service;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
@@ -176,12 +177,35 @@ public class TeachersController : ControllerBase
             if (!hasInstrument && !hasOtherInstrument)
                 return BadRequest("חובה לבחור לפחות כלי נגינה אחד");
 
-            // בדיקה אם המשתמש כבר יצר פרופיל מורה
+            var managedPagesCount = await CountManagedPagesAsync(userId);
+            if (managedPagesCount >= MaxManagedPagesPerUser)
+                return BadRequest($"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד");
+
             var existingTeacher = await _context.ServiceProviders
-                .FirstOrDefaultAsync(sp => sp.UserId == userId && sp.IsTeacher && !sp.IsDeleted);
+                .FirstOrDefaultAsync(sp => sp.UserId == userId
+                    && sp.IsTeacher
+                    && !sp.IsDeleted
+                    && sp.DisplayName == dto.DisplayName);
 
             if (existingTeacher != null)
-                return BadRequest("כבר יצרת פרופיל מורה");
+            {
+                if (dto.AgencyId.HasValue)
+                {
+                    var existingAgency = await _context.Agencies
+                        .FirstOrDefaultAsync(a => a.Id == dto.AgencyId.Value && !a.IsDeleted && a.IsActive);
+
+                    if (existingAgency == null)
+                        return BadRequest("הסוכנות לא נמצאה או אינה פעילה");
+
+                    await LinkTeacherToAgencyAsync(existingAgency.Id, existingTeacher.Id);
+                    await _context.SaveChangesAsync();
+
+                    var existingResult = await _service.GetTeacherByIdAsync(existingTeacher.Id);
+                    return Ok(existingResult);
+                }
+
+                return BadRequest("כבר יצרת פרופיל מורה בשם הזה");
+            }
 
             Agency? agency = null;
             if (dto.AgencyId.HasValue)
@@ -201,11 +225,7 @@ public class TeachersController : ControllerBase
                 .FirstOrDefaultAsync();
 
             // קביעת האם זה הפרופיל הראשי (הראשון למשתמש)
-            var existingProfilesByUser = await _context.ServiceProviders
-                .Where(sp => sp.UserId == userId && !sp.IsDeleted)
-                .CountAsync();
-
-            bool isPrimaryProfile = existingProfilesByUser == 0;
+            bool isPrimaryProfile = managedPagesCount == 0;
 
             // יצירת Service Provider (הבסיס)
             var serviceProvider = new MusicServiceProvider
@@ -320,17 +340,7 @@ public class TeachersController : ControllerBase
 
             if (agency != null)
             {
-                _context.AgencyProfiles.Add(new AgencyProfile
-                {
-                    AgencyId = agency.Id,
-                    ProfileType = "serviceProvider",
-                    ProfileId = serviceProvider.Id,
-                    ContactMode = AgencyContactMode.Agency,
-                    ShowBadge = true,
-                    IsFeaturedByAgency = false,
-                    DisplayOrder = 0,
-                    CreatedAt = DateTime.UtcNow
-                });
+                await LinkTeacherToAgencyAsync(agency.Id, serviceProvider.Id);
             }
 
             await _context.SaveChangesAsync();
@@ -349,6 +359,29 @@ public class TeachersController : ControllerBase
             _logger.LogError(ex, "Create teacher profile failed: UserId={UserId}", GetCurrentUserId());
             return StatusCode(500, $"שגיאה ביצירת פרופיל מורה: {ex.Message}");
         }
+    }
+
+    private async Task LinkTeacherToAgencyAsync(int agencyId, int serviceProviderId)
+    {
+        var link = await _context.AgencyProfiles
+            .FirstOrDefaultAsync(p => p.ProfileType == "serviceProvider" && p.ProfileId == serviceProviderId);
+
+        if (link == null)
+        {
+            link = new AgencyProfile
+            {
+                ProfileType = "serviceProvider",
+                ProfileId = serviceProviderId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.AgencyProfiles.Add(link);
+        }
+
+        link.AgencyId = agencyId;
+        link.ContactMode = AgencyContactMode.Agency;
+        link.ShowBadge = true;
+        link.IsFeaturedByAgency = false;
+        link.DisplayOrder = 0;
     }
 
     // DELETE: api/Teachers/5
@@ -447,5 +480,16 @@ public class TeachersController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    private async Task<int> CountManagedPagesAsync(int userId)
+    {
+        var artistsCount = await _context.Artists
+            .CountAsync(a => a.UserId == userId && !a.IsDeleted);
+
+        var providersCount = await _context.ServiceProviders
+            .CountAsync(sp => sp.UserId == userId && !sp.IsDeleted);
+
+        return artistsCount + providersCount;
     }
 }

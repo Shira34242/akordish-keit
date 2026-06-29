@@ -9,6 +9,7 @@ namespace AkordishKeit.Services;
 
 public class MusicServiceProviderService : IMusicServiceProviderService
 {
+    private const int MaxManagedPagesPerUser = 5;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
 
@@ -178,18 +179,10 @@ public class MusicServiceProviderService : IMusicServiceProviderService
 
     public async Task<MusicServiceProviderDto> CreateServiceProviderAsync(CreateMusicServiceProviderDto dto)
     {
-        // Only check for duplicate TEACHER profile - users can have multiple professional profiles
-        if (dto.IsTeacher && dto.UserId.HasValue)
+        if (dto.UserId.HasValue)
         {
-            var existingTeacher = await _context.ServiceProviders
-                .FirstOrDefaultAsync(sp => sp.UserId == dto.UserId && sp.IsTeacher == true && !sp.IsDeleted);
-
-            if (existingTeacher != null)
-            {
-                throw new InvalidOperationException("למשתמש כבר יש פרופיל מורה");
-            }
+            await EnsureManagedPageLimitAsync(dto.UserId.Value);
         }
-        // Allow multiple professional profiles (isTeacher=false) - no additional check needed
 
         var serviceProvider = new MusicServiceProvider
         {
@@ -453,17 +446,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             throw new InvalidOperationException("המשתמש לא נמצא");
         }
 
-        // Only prevent linking if trying to create duplicate TEACHER
-        if (provider.IsTeacher)
-        {
-            var userHasTeacher = await _context.ServiceProviders
-                .AnyAsync(sp => sp.UserId == userId && sp.IsTeacher == true && !sp.IsDeleted);
-            if (userHasTeacher)
-            {
-                throw new InvalidOperationException("למשתמש כבר יש פרופיל מורה");
-            }
-        }
-        // Allow linking multiple professional profiles to same user
+        await EnsureManagedPageLimitAsync(userId);
 
         provider.UserId = userId;
         provider.UpdatedAt = DateTime.UtcNow;
@@ -488,6 +471,26 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         provider.UserId = null;
         provider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+    }
+
+    private async Task EnsureManagedPageLimitAsync(int userId)
+    {
+        var managedPagesCount = await CountManagedPagesAsync(userId);
+        if (managedPagesCount >= MaxManagedPagesPerUser)
+        {
+            throw new InvalidOperationException($"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד");
+        }
+    }
+
+    private async Task<int> CountManagedPagesAsync(int userId)
+    {
+        var artistsCount = await _context.Artists
+            .CountAsync(a => a.UserId == userId && !a.IsDeleted);
+
+        var providersCount = await _context.ServiceProviders
+            .CountAsync(sp => sp.UserId == userId && !sp.IsDeleted);
+
+        return artistsCount + providersCount;
     }
 
     public async Task<MusicServiceProviderDto> DuplicateServiceProviderAsync(int id)

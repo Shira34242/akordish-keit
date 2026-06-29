@@ -59,6 +59,17 @@ export class ValueTablesComponent implements OnInit {
                 { key: 'description', label: 'תיאור', type: 'textarea' },
                 { key: 'isActive', label: 'פעיל', type: 'boolean' },
                 { key: 'showInQuickCategories', label: 'הצג ככפתור מהיר', type: 'boolean' },
+                {
+                    key: 'quickCategoryType',
+                    label: 'סוג כפתור',
+                    type: 'select',
+                    defaultValue: 0,
+                    options: [
+                        { value: 0, label: 'נותן שירות' },
+                        { value: 1, label: 'מורה לפי כלי' }
+                    ]
+                },
+                { key: 'quickCategoryInstrumentId', label: 'כלי למורים', type: 'select', options: [] },
                 { key: 'quickCategoryLabel', label: 'שם בכפתור' },
                 { key: 'quickCategoryImageUrl', label: 'תמונת רקע', type: 'image' },
                 { key: 'quickCategoryOrder', label: 'סדר', type: 'number' }
@@ -88,6 +99,25 @@ export class ValueTablesComponent implements OnInit {
         // But also "When I click value tables... it brings all table types...".
         // Maybe default to select none, or first.
         // Let's select none as implemented above.
+        this.loadInstrumentOptions();
+    }
+
+    private loadInstrumentOptions(): void {
+        this.systemService.getItems('instruments', 1, 200).subscribe({
+            next: data => {
+                const options = [
+                    { value: '', label: 'ללא כלי' },
+                    ...(data.items || []).map(item => ({ value: item.id, label: item.name }))
+                ];
+
+                const table = this.tables.find(t => t.id === 'music-service-provider-categories');
+                const column = table?.extraColumns?.find(col => col.key === 'quickCategoryInstrumentId');
+                if (column) {
+                    column.options = options;
+                }
+            },
+            error: err => console.error('Failed to load instrument options', err)
+        });
     }
 
     selectTable(table: TableDefinition) {

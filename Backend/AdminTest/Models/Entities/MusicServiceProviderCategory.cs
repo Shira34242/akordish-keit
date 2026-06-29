@@ -41,6 +41,10 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public bool ShowInQuickCategories { get; set; }
 
+        public int QuickCategoryType { get; set; }
+
+        public int? QuickCategoryInstrumentId { get; set; }
+
         /// <summary>
         /// שם תצוגה קצר לכפתור המהיר. אם ריק, יוצג שם הקטגוריה.
         /// </summary>

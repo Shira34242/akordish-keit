@@ -96,7 +96,7 @@
       </div>
     }
 
-    @for (page of myPages; track page.profileId) {
+    @for (page of myPages; track page.profileType + '-' + page.profileId) {
       <div class="manage-card manage-card--page">
         <div class="manage-card-col">
           <div>
@@ -146,7 +146,7 @@
                 </span>
               </label>
             </div>
-            <button class="manage-account-link" (click)="openManageAccountFlow()">{{ 'profile.change_account_type' | translate }}</button>
+            <button class="manage-account-link" (click)="openManageAccountFlow(page)">{{ 'profile.change_account_type' | translate }}</button>
           </div>
         </div>
       </div>

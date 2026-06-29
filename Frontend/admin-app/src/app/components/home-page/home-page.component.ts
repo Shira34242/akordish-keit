@@ -93,12 +93,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   visibleViralCount = 4;
   loadingViralArticles = false;
   viralArticlesLoaded = false;
+  viralArticlesHasMore = true;
   upcomingEvents: UpcomingEventDto[] = [];
   selectedEventModal: EventCardData | null = null;
   featuredTeachers: TeacherListDto[] = [];
   featuredProviders: MusicServiceProviderListDto[] = [];
   homePodcasts: PodcastHomeCard[] = [];
-  latestPodcastEpisodes: PodcastEpisodeBanner[] = [];
   popularPodcastEpisodes: PodcastEpisodeBanner[] = [];
 
 
@@ -119,6 +119,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroSurfaceEl?: HTMLElement | null;
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
+  private viralOffset = 0;
+  private readonly viralPageSize = 10;
   newsContentFinished = false;
   restContentStarted = false;
   private chordsContentStarted = false;
@@ -339,12 +341,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       () => this.loadFeaturedPeople(),
       () => this.loadUpcomingEvents(),
       () => this.loadHomePodcasts(),
-      () => this.loadBlogArticles(),
-      () => this.loadViralArticles()
+      () => this.loadBlogArticles()
     ];
 
     orderedLoads.forEach((load, index) => {
       setTimeout(load, index * 60);
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this.initViralObserver());
     });
   }
 
@@ -383,9 +388,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadTopArtists(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.artistService.getFeaturedArtists(12).pipe(
-      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(12)),
-      catchError(() => this.artistService.getTopArtists(12)),
+    this.artistService.getFeaturedArtists(9).pipe(
+      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(9)),
+      catchError(() => this.artistService.getTopArtists(9)),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => {
       onDone();
@@ -398,7 +403,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadUpcomingEvents(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.eventService.getUpcomingEvents(15).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.eventService.getUpcomingEvents(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({
@@ -414,7 +419,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (completedLoads === 2) afterLoad?.();
     };
     const onTeachersDone = this.trackPendingLoad();
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onTeachersDone();
       completeLoad();
     })).subscribe({
@@ -423,7 +428,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const onProvidersDone = this.trackPendingLoad();
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 12).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onProvidersDone();
       completeLoad();
     })).subscribe({
@@ -436,24 +441,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     let completedLoads = 0;
     const completeLoad = () => {
       completedLoads++;
-      if (completedLoads === 3) afterLoad?.();
+      if (completedLoads === 2) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getHomePodcastCards(10).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getHomePodcastCards(9).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts.slice(0, 10); },
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 9); },
       error: err => console.error('loadContent: podcast series', err)
-    });
-
-    const onLatestDone = this.trackPendingLoad();
-    this.podcastService.getLatestEpisodes(48).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-      onLatestDone();
-      completeLoad();
-    })).subscribe({
-      next: episodes => { this.latestPodcastEpisodes = this.uniquePodcastEpisodesBySeries(episodes).slice(0, 8); },
-      error: err => console.error('loadContent: latest podcast episodes', err)
     });
 
     const onPopularDone = this.trackPendingLoad();
@@ -642,7 +638,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get canRevealMoreViralArticles(): boolean {
-    return this.visibleViralCount < this.viralArticles.length;
+    return this.viralArticlesHasMore && !this.loadingViralArticles;
   }
 
   private initViralObserver(): void {
@@ -674,13 +670,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadViralArticles(): void {
-    if (this.viralArticlesLoaded || this.loadingViralArticles) return;
+    if (this.loadingViralArticles || !this.viralArticlesHasMore) return;
 
     this.loadingViralArticles = true;
-    this.articleService.getHomeViralBanners()
+    this.articleService.getHomeViralBanners(this.viralPageSize, this.viralOffset)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (articles) => {
-          this.setViralArticles(this.uniqueArticles(articles || []));
+          this.appendViralArticles(articles || []);
         },
         error: (err) => {
           console.error('loadContent: viral articles', err);
@@ -710,7 +706,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadBlogArticles(afterLoad?: () => void): void {
     const onBlogDone = this.trackPendingLoad();
-    this.articleService.getHomeContentBanners()
+    this.articleService.getHomeContentBanners(8)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.blogArticlesLoaded = true;
         onBlogDone();
@@ -729,22 +725,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private getViralColumns(): number {
-    const w = window.innerWidth;
-    if (w <= 480) return 1;
-    if (w <= 768) return 2;
-    return 4;
-  }
-
-  private floorToFullRows(count: number, total: number): number {
-    const cols = this.getViralColumns();
-    const full = Math.floor(Math.min(count, total) / cols) * cols;
-    return Math.max(0, full);
-  }
-
-  private setViralArticles(articles: ArticleBanner[]): void {
-    this.viralArticles = articles.slice(0, 80);
-    this.visibleViralCount = this.floorToFullRows(4, this.viralArticles.length);
+  private appendViralArticles(articles: ArticleBanner[]): void {
+    const nextArticles = this.uniqueArticles([...this.viralArticles, ...articles]);
+    this.viralArticles = nextArticles;
+    this.viralOffset += articles.length;
+    this.viralArticlesHasMore = articles.length === this.viralPageSize;
+    this.visibleViralCount = this.viralArticles.length;
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
     setTimeout(() => this.initViralObserver(), 0);
@@ -759,20 +745,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private uniquePodcastEpisodesBySeries<T extends { podcastSlug: string }>(episodes: T[]): T[] {
-    const seen = new Set<string>();
-    return episodes.filter(episode => {
-      if (seen.has(episode.podcastSlug)) return false;
-      seen.add(episode.podcastSlug);
-      return true;
-    });
-  }
-
   private revealMoreViralArticles(): void {
     if (!this.viralArticlesLoaded || !this.canRevealMoreViralArticles) return;
-    const cols = this.getViralColumns();
-    const next = this.visibleViralCount + cols;
-    this.visibleViralCount = this.floorToFullRows(next, this.viralArticles.length);
+    this.loadViralArticles();
   }
 
   private initParticleEffect(): void {

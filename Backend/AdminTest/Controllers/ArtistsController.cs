@@ -13,6 +13,7 @@ namespace AkordishKeit.Controllers;
 [Route("api/[controller]")]
 public class ArtistsController : ControllerBase
 {
+    private const int MaxManagedPagesPerUser = 5;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly ISongService _songService;
@@ -983,6 +984,10 @@ public class ArtistsController : ControllerBase
             if (existingArtist != null)
                 return BadRequest("כבר יצרת אומן בשם זה");
 
+            var managedPagesCount = await CountManagedPagesAsync(userId);
+            if (managedPagesCount >= MaxManagedPagesPerUser)
+                return BadRequest($"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד");
+
             // בדיקת מנוי פעיל (אופציונלי - לקביעת Premium)
             var activeSubscription = await _context.Subscriptions
                 .Where(s => s.UserId == userId)
@@ -991,11 +996,7 @@ public class ArtistsController : ControllerBase
                 .FirstOrDefaultAsync();
 
             // קביעת האם זה הפרופיל הראשי (הראשון למשתמש)
-            var existingArtistsByUser = await _context.Artists
-                .Where(a => a.UserId == userId && !a.IsDeleted)
-                .CountAsync();
-
-            bool isPrimaryProfile = existingArtistsByUser == 0;
+            bool isPrimaryProfile = managedPagesCount == 0;
 
             // קביעת Premium לפי המנוי (אם קיים)
             bool isPremium = activeSubscription?.Plan == SubscriptionPlan.Premium;
@@ -1946,11 +1947,9 @@ public class ArtistsController : ControllerBase
             if (!userExists)
                 return BadRequest(new { message = "המשתמש לא נמצא" });
 
-            var userHasArtist = await _context.Artists
-                .AnyAsync(a => a.Id != id && a.UserId == userId && !a.IsDeleted);
-
-            if (userHasArtist)
-                return BadRequest(new { message = "למשתמש כבר יש פרופיל אמן" });
+            var managedPagesCount = await CountManagedPagesAsync(userId, id);
+            if (managedPagesCount >= MaxManagedPagesPerUser)
+                return BadRequest(new { message = $"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד" });
 
             artist.UserId = userId;
             await _context.SaveChangesAsync();
@@ -1963,6 +1962,19 @@ public class ArtistsController : ControllerBase
             _logger.LogError(ex, "Error linking artist to user: ArtistId={ArtistId} UserId={UserId}", id, userId);
             return StatusCode(500, new { message = "שגיאה בשיוך האמן למשתמש" });
         }
+    }
+
+    private async Task<int> CountManagedPagesAsync(int userId, int? excludedArtistId = null)
+    {
+        var artistsCount = await _context.Artists
+            .CountAsync(a => a.UserId == userId
+                && !a.IsDeleted
+                && (!excludedArtistId.HasValue || a.Id != excludedArtistId.Value));
+
+        var providersCount = await _context.ServiceProviders
+            .CountAsync(sp => sp.UserId == userId && !sp.IsDeleted);
+
+        return artistsCount + providersCount;
     }
 }
 
