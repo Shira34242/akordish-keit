@@ -148,6 +148,8 @@ public class CreateMusicServiceProviderDto
 {
     public int? UserId { get; set; }
 
+    public int? AgencyId { get; set; }
+
     [Required]
     [StringLength(200)]
     public string DisplayName { get; set; } = string.Empty;

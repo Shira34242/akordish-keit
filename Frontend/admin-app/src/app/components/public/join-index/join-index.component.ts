@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
+import { AgencyPublicDto } from '../../../models/agency.model';
+import { AgencyService } from '../../../services/agency.service';
 import { AuthService, User } from '../../../services/auth.service';
 import { GoogleOneTapService } from '../../../services/google-one-tap.service';
 import { SystemItem, SystemTablesService } from '../../../services/system-tables.service';
@@ -39,18 +42,25 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
   selectedServiceProviderCategoryId?: number;
   categoriesLoading = false;
   categoriesError = '';
+  agency: AgencyPublicDto | null = null;
+  agencyLoading = false;
+  agencyError = '';
+  agencySlug: string | null = null;
   private userSub?: Subscription;
   private googleAuthSub?: Subscription;
 
   constructor(
     private authService: AuthService,
     private socialAuthService: SocialAuthService,
-    private systemTablesService: SystemTablesService
+    private systemTablesService: SystemTablesService,
+    private route: ActivatedRoute,
+    private agencyService: AgencyService
   ) {}
 
   ngOnInit(): void {
     GoogleOneTapService.setModalActive(true);
     this.loadServiceProviderCategories();
+    this.loadAgencyContext();
 
     this.userSub = this.authService.currentUser$.subscribe(user => {
       this.user = user;
@@ -70,7 +80,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
   }
 
   start(type: JoinIndexType, categoryId?: number): void {
-    if (!this.user) return;
+    if (!this.user || !this.agencyReady) return;
     this.selectedType = type;
     this.selectedServiceProviderCategoryId = type === 'service-provider' ? categoryId : undefined;
   }
@@ -85,6 +95,14 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
 
   trackByCategory(_index: number, category: SystemItem): number {
     return category.id;
+  }
+
+  get agencyId(): number | undefined {
+    return this.agency?.id;
+  }
+
+  get agencyReady(): boolean {
+    return !this.agencySlug || !!this.agency;
   }
 
   get activeLegalPage(): LegalPageContent | null {
@@ -165,6 +183,25 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
       error: () => {
         this.categoriesError = 'לא הצלחנו לטעון את קטגוריות נותני השירות';
         this.categoriesLoading = false;
+      }
+    });
+  }
+
+  private loadAgencyContext(): void {
+    this.agencySlug = this.route.snapshot.paramMap.get('slug');
+    if (!this.agencySlug) return;
+
+    this.agencyLoading = true;
+    this.agencyError = '';
+
+    this.agencyService.getAgencyBySlug(this.agencySlug).subscribe({
+      next: (agency) => {
+        this.agency = agency;
+        this.agencyLoading = false;
+      },
+      error: () => {
+        this.agencyError = 'לא הצלחנו לטעון את פרטי הסוכנות';
+        this.agencyLoading = false;
       }
     });
   }

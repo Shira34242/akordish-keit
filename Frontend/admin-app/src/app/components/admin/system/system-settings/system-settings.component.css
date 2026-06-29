@@ -122,6 +122,16 @@
   justify-content: flex-end;
 }
 
+.agency-link-picker {
+  display: flex;
+  margin-bottom: var(--space-xs);
+}
+
+.agency-select {
+  width: min(100%, 260px);
+  background: #ffffff;
+}
+
 .link-action {
   min-height: 34px;
   padding: 0 var(--space-base);
@@ -268,5 +278,10 @@
     flex: 1;
     min-width: 0;
     width: auto;
+  }
+
+  .agency-link-picker,
+  .agency-select {
+    width: 100%;
   }
 }

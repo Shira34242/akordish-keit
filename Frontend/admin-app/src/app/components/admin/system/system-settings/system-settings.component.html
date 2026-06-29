@@ -15,6 +15,41 @@
   </div>
 
   <div *ngIf="!loading" class="settings-list">
+    <div class="setting-card join-index-card agency-join-card">
+      <div class="setting-info">
+        <div class="setting-label">טופס הצטרפות לאינדקס לפי סוכנות</div>
+        <div class="setting-description">
+          בחרו סוכנות והעתיקו קישור לטופס זהה, עם לוגו ובאנר של הסוכנות ושיוך אוטומטי לכל מי שנרשם דרכו.
+        </div>
+
+        <div class="agency-link-picker">
+          <select
+            class="setting-input agency-select"
+            [(ngModel)]="selectedAgencyId"
+            [disabled]="agenciesLoading || agencies.length === 0">
+            <option [ngValue]="null" disabled>{{ agenciesLoading ? 'טוען סוכנויות...' : 'בחר סוכנות' }}</option>
+            <option *ngFor="let agency of agencies" [ngValue]="agency.id">{{ agency.name }}</option>
+          </select>
+        </div>
+
+        <div class="setting-meta" *ngIf="selectedAgency as agency">
+          <span class="setting-key">/join-index/agency/{{ agency.slug }}</span>
+          <span class="setting-updated">{{ agencyJoinIndexUrl }}</span>
+        </div>
+      </div>
+
+      <div class="setting-control join-index-control" *ngIf="selectedAgency as agency">
+        <a class="link-action secondary" [routerLink]="['/join-index/agency', agency.slug]">
+          <span class="material-symbols-outlined">open_in_new</span>
+          <span>פתח</span>
+        </a>
+        <button type="button" class="link-action primary" (click)="copyAgencyJoinIndexLink()">
+          <span class="material-symbols-outlined">{{ agencyJoinCopied ? 'check' : 'content_copy' }}</span>
+          <span>{{ agencyJoinCopied ? 'הועתק' : 'העתק לינק' }}</span>
+        </button>
+      </div>
+    </div>
+
     <div class="setting-card join-index-card">
       <div class="setting-info">
         <div class="setting-label">דף הצטרפות לאינדקס</div>

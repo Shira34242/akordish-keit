@@ -1,6 +1,19 @@
 <main class="join-index-page">
   <section class="join-panel">
     <div class="hero-copy">
+      <div class="agency-join-brand" *ngIf="agency as currentAgency">
+        <div
+          class="agency-join-banner"
+          *ngIf="currentAgency.bannerImageUrl"
+          [style.backgroundImage]="'url(' + currentAgency.bannerImageUrl + ')'">
+        </div>
+        <div class="agency-join-identity">
+          <img *ngIf="currentAgency.logoUrl" [src]="currentAgency.logoUrl" [alt]="currentAgency.name" />
+          <span>{{ currentAgency.name }}</span>
+        </div>
+      </div>
+      <p class="index-category-state" *ngIf="agencyLoading">טוען את פרטי הסוכנות...</p>
+      <p class="inline-error" *ngIf="agencyError">{{ agencyError }}</p>
       <h1>הצטרפות לאינדקס עולם המוזיקה</h1>
       <p>מלאו עכשיו את פרטי הדף שלכם, וכשהאתר יעלה לאוויר נעדכן במייל ותוכלו לנהל את הדף בעצמכם.</p>
     </div>
@@ -58,7 +71,7 @@
       </div>
     </section>
 
-    <section class="join-step type-step" [class.disabled]="!user">
+    <section class="join-step type-step" [class.disabled]="!user || !agencyReady">
       <div class="step-head">
         <span class="step-check">
           <span class="material-icons">{{ selectedType ? 'check' : 'tune' }}</span>
@@ -75,7 +88,7 @@
             type="button"
             class="index-chip"
             [class.selected]="selectedType === 'teacher'"
-            [disabled]="!user"
+            [disabled]="!user || !agencyReady"
             (click)="start('teacher')">
             מורה למוזיקה
           </button>
@@ -85,7 +98,7 @@
             class="index-chip"
             *ngFor="let category of serviceProviderCategories; trackBy: trackByCategory"
             [class.selected]="selectedServiceProviderCategoryId === category.id"
-            [disabled]="!user"
+            [disabled]="!user || !agencyReady"
             (click)="selectServiceProviderCategory(category.id)">
             {{ category.name }}
           </button>
@@ -94,7 +107,7 @@
             type="button"
             class="index-chip"
             [class.selected]="isGeneralServiceSelected()"
-            [disabled]="!user"
+            [disabled]="!user || !agencyReady"
             (click)="start('service-provider')">
             אחר
           </button>
@@ -105,14 +118,15 @@
       </div>
     </section>
 
-    <section class="form-shell" *ngIf="selectedType === 'teacher' && user">
-      <app-teacher-create [embedded]="true" [singlePage]="true"></app-teacher-create>
+    <section class="form-shell" *ngIf="selectedType === 'teacher' && user && agencyReady">
+      <app-teacher-create [embedded]="true" [singlePage]="true" [agencyId]="agencyId"></app-teacher-create>
     </section>
 
-    <section class="form-shell" *ngIf="selectedType === 'service-provider' && user">
+    <section class="form-shell" *ngIf="selectedType === 'service-provider' && user && agencyReady">
       <app-service-provider-create
         [embedded]="true"
         [singlePage]="true"
+        [agencyId]="agencyId"
         [presetCategoryId]="selectedServiceProviderCategoryId"
         [allowUncategorized]="!selectedServiceProviderCategoryId">
       </app-service-provider-create>

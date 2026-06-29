@@ -183,6 +183,16 @@ public class TeachersController : ControllerBase
             if (existingTeacher != null)
                 return BadRequest("כבר יצרת פרופיל מורה");
 
+            Agency? agency = null;
+            if (dto.AgencyId.HasValue)
+            {
+                agency = await _context.Agencies
+                    .FirstOrDefaultAsync(a => a.Id == dto.AgencyId.Value && !a.IsDeleted && a.IsActive);
+
+                if (agency == null)
+                    return BadRequest("הסוכנות לא נמצאה או אינה פעילה");
+            }
+
             // בדיקת מנוי פעיל (אופציונלי - לקביעת Premium)
             var activeSubscription = await _context.Subscriptions
                 .Where(s => s.UserId == userId)
@@ -306,6 +316,21 @@ public class TeachersController : ControllerBase
                         Url = link.Url
                     });
                 }
+            }
+
+            if (agency != null)
+            {
+                _context.AgencyProfiles.Add(new AgencyProfile
+                {
+                    AgencyId = agency.Id,
+                    ProfileType = "serviceProvider",
+                    ProfileId = serviceProvider.Id,
+                    ContactMode = AgencyContactMode.Agency,
+                    ShowBadge = true,
+                    IsFeaturedByAgency = false,
+                    DisplayOrder = 0,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
 
             await _context.SaveChangesAsync();

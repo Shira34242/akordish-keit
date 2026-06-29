@@ -53,6 +53,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
 
   @Input() embedded = false;
   @Input() singlePage = false;
+  @Input() agencyId?: number;
   @Input() presetCategoryId?: number;
   @Input() allowUncategorized = false;
   @Output() close = new EventEmitter<void>();
@@ -686,6 +687,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
 
     const dto: CreateMusicServiceProviderDto = {
       userId: currentUser?.id,
+      agencyId: this.agencyId,
       displayName: this.displayName.trim(),
       shortBio: this.shortBio?.trim() || undefined,
       fullDescription: this.fullDescription?.trim() || undefined,
