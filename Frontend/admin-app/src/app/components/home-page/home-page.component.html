@@ -282,9 +282,9 @@
         <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
         <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
       </div>
-      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="2">
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
         <div class="artists-loop-track">
-          <ng-container *ngFor="let copy of [0, 1]">
+          <ng-container *ngFor="let copy of [0, 1, 2]">
             <app-artist-circle
               *ngFor="let artist of topArtists; trackBy: trackById"
               [artist]="artist"

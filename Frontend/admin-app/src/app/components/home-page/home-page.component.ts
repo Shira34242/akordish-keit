@@ -388,9 +388,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadTopArtists(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.artistService.getFeaturedArtists(8).pipe(
-      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(8)),
-      catchError(() => this.artistService.getTopArtists(8)),
+    this.artistService.getFeaturedArtists(9).pipe(
+      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(9)),
+      catchError(() => this.artistService.getTopArtists(9)),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => {
       onDone();
@@ -444,11 +444,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (completedLoads === 2) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getHomePodcastCards(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getHomePodcastCards(9).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts.slice(0, 8); },
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 9); },
       error: err => console.error('loadContent: podcast series', err)
     });
 
