@@ -22,17 +22,8 @@ import { ChordRequestMatch } from '../../models/report.model';
 import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
-
-export type QuickAddAction =
-  | 'index-teacher'
-  | 'index-service-provider'
-  | 'index-service-provider-general'
-  | `index-service-provider-category:${number}`
-  | 'artist-account'
-  | 'artist-community'
-  | 'contact'
-  | 'chord-requests'
-  | 'admin-edit';
+export type { QuickAddAction } from './quick-add-action.type';
+import type { QuickAddAction } from './quick-add-action.type';
 
 type AssistantStep = 'root' | 'content' | 'index' | 'artist' | 'podcast';
 type AssistantMode = 'choices' | 'song' | 'article' | 'event' | 'podcast-series' | 'podcast-episode' | 'chord-request' | 'contact' | 'success';

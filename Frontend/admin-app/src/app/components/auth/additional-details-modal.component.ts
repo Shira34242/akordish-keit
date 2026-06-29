@@ -3,13 +3,8 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
-
-export enum UserType {
-  Regular = 'regular',
-  Teacher = 'teacher',
-  ServiceProvider = 'service-provider',
-  Artist = 'artist'
-}
+export { UserType } from './user-type.enum';
+import { UserType } from './user-type.enum';
 
 @Component({
   selector: 'app-additional-details-modal',
