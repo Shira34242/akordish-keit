@@ -11,9 +11,8 @@ import { GoogleOneTapService } from './services/google-one-tap.service';
 import { RequiredFieldFeedbackService } from './services/required-field-feedback.service';
 import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
-import { environment } from '../environments/environment';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
-import { SiteAccessGateStatusDto, SystemSettingsService } from './services/system-settings.service';
+import { SystemSettingsService } from './services/system-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -26,7 +25,6 @@ export class AppComponent implements OnInit {
   title = 'אקורדישקייט';
 
   showGate = false;
-  gateChecking = true;
   gateSubmitting = false;
   gateInput = '';
   gateError: string | null = null;
@@ -75,27 +73,19 @@ export class AppComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.loadAccessGate();
+    this.startAppServices();
+    this.checkAccessGate();
   }
 
-  private loadAccessGate(): void {
+  private checkAccessGate(): void {
     this.settingsService.getAccessGate().subscribe({
-      next: (status) => this.applyAccessGateStatus(status),
+      next: (status) => {
+        this.showGate = status.enabled && !status.hasAccess;
+      },
       error: () => {
-        this.gateChecking = false;
-        this.showGate = environment.production;
-        if (!this.showGate) this.startAppServices();
+        // שגיאה בבדיקת ה-gate לא חוסמת את האפליקציה
       }
     });
-  }
-
-  private applyAccessGateStatus(status: SiteAccessGateStatusDto): void {
-    this.gateChecking = false;
-    this.showGate = status.enabled && !status.hasAccess;
-
-    if (!this.showGate) {
-      this.startAppServices();
-    }
   }
 
   private startAppServices(): void {
