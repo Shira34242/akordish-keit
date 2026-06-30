@@ -43,15 +43,16 @@ public class ArtistsController : ControllerBase
         try
         {
             limit = Math.Clamp(limit, 1, 48);
+            var mentionPattern = ArtistMentionPattern(id);
 
-            var episodes = await _context.PodcastEpisodeArtists
+            var episodes = await _context.PodcastEpisodes
                 .AsNoTracking()
-                .Where(pa => pa.ArtistId == id &&
-                             !pa.PodcastEpisode.IsDeleted &&
-                             pa.PodcastEpisode.IsActive &&
-                             !pa.PodcastEpisode.Podcast.IsDeleted &&
-                             pa.PodcastEpisode.Podcast.IsActive)
-                .Select(pa => pa.PodcastEpisode)
+                .Where(e => !e.IsDeleted
+                    && e.IsActive
+                    && !e.Podcast.IsDeleted
+                    && e.Podcast.IsActive
+                    && (e.PodcastEpisodeArtists.Any(pa => pa.ArtistId == id)
+                        || EF.Functions.Like(e.Description, mentionPattern)))
                 .OrderByDescending(e => e.PublishedAt)
                 .ThenByDescending(e => e.Id)
                 .Take(limit)
@@ -276,29 +277,43 @@ public class ArtistsController : ControllerBase
             if (artist.Status == ArtistStatus.Draft && !User.IsInRole("Admin"))
                 return NotFound("אומן לא נמצא");
 
-            var songCount = await _context.SongArtists
-                .Where(sa => sa.ArtistId == id && !sa.Song.IsDeleted && sa.Song.IsApproved)
+            var now = DateTime.UtcNow;
+            var mentionPattern = ArtistMentionPattern(id);
+
+            var songCount = await _context.Songs
+                .Where(s => !s.IsDeleted
+                    && s.IsApproved
+                    && (s.SongArtists.Any(sa => sa.ArtistId == id)
+                        || (s.UploaderProfileType == "artist" && s.UploaderProfileId == id)
+                        || EF.Functions.Like(s.LyricsWithChords, mentionPattern)))
                 .CountAsync();
 
-            var articleCount = await _context.ArticleArtists
-                .Where(aa => aa.ArtistId == id && !aa.Article.IsDeleted)
+            var articleCount = await _context.Articles
+                .Where(a => !a.IsDeleted
+                    && a.Status == (int)ArticleStatus.Published
+                    && a.PublishDate <= now
+                    && (a.ArticleArtists.Any(aa => aa.ArtistId == id)
+                        || (a.UploaderProfileType == "artist" && a.UploaderProfileId == id)
+                        || EF.Functions.Like(a.Content, mentionPattern)))
                 .CountAsync();
 
-            var today = DateTime.UtcNow.Date;
+            var today = now.Date;
 
-            var upcomingEventCount = await _context.EventArtists
-                .Where(ea => ea.ArtistId == id &&
-                             ea.Event.EventDate.Date >= today &&
-                             !ea.Event.IsDeleted &&
-                             ea.Event.IsActive)
+            var upcomingEventCount = await _context.Events
+                .Where(e => e.EventDate.Date >= today
+                    && !e.IsDeleted
+                    && e.IsActive
+                    && (e.EventArtists.Any(ea => ea.ArtistId == id)
+                        || EF.Functions.Like(e.Description, mentionPattern)))
                 .CountAsync();
 
-            var podcastEpisodeCount = await _context.PodcastEpisodeArtists
-                .Where(pa => pa.ArtistId == id &&
-                             !pa.PodcastEpisode.IsDeleted &&
-                             pa.PodcastEpisode.IsActive &&
-                             !pa.PodcastEpisode.Podcast.IsDeleted &&
-                             pa.PodcastEpisode.Podcast.IsActive)
+            var podcastEpisodeCount = await _context.PodcastEpisodes
+                .Where(e => !e.IsDeleted
+                    && e.IsActive
+                    && !e.Podcast.IsDeleted
+                    && e.Podcast.IsActive
+                    && (e.PodcastEpisodeArtists.Any(pa => pa.ArtistId == id)
+                        || EF.Functions.Like(e.Description, mentionPattern)))
                 .CountAsync();
 
             var result = new ArtistDetailDto
@@ -405,9 +420,14 @@ public class ArtistsController : ControllerBase
     {
         try
         {
-            var query = _context.SongArtists
-                .Where(sa => sa.ArtistId == id && !sa.Song.IsDeleted && sa.Song.IsApproved)
-                .Select(sa => sa.Song);
+            var mentionPattern = ArtistMentionPattern(id);
+            var query = _context.Songs
+                .AsNoTracking()
+                .Where(s => !s.IsDeleted
+                    && s.IsApproved
+                    && (s.SongArtists.Any(sa => sa.ArtistId == id)
+                        || (s.UploaderProfileType == "artist" && s.UploaderProfileId == id)
+                        || EF.Functions.Like(s.LyricsWithChords, mentionPattern)));
 
             var totalCount = await query.CountAsync();
 
@@ -457,6 +477,7 @@ public class ArtistsController : ControllerBase
                 .Include(a => a.ArticleCategories)
                     .ThenInclude(ac => ac.Category)
                 .Where(a => (a.ArticleArtists.Any(aa => aa.ArtistId == id)
+                        || (a.UploaderProfileType == "artist" && a.UploaderProfileId == id)
                         || EF.Functions.Like(a.Content, mentionPattern))
                     && a.Status == (int)ArticleStatus.Published
                     && a.PublishDate <= now
@@ -546,13 +567,15 @@ public class ArtistsController : ControllerBase
         try
         {
             var today = DateTime.UtcNow.Date;
+            var mentionPattern = ArtistMentionPattern(id);
 
-            var events = await _context.EventArtists
-                .Where(ea => ea.ArtistId == id &&
-                             ea.Event.EventDate.Date >= today &&
-                             !ea.Event.IsDeleted &&
-                             ea.Event.IsActive)
-                .Select(ea => ea.Event)
+            var events = await _context.Events
+                .AsNoTracking()
+                .Where(e => e.EventDate.Date >= today
+                    && !e.IsDeleted
+                    && e.IsActive
+                    && (e.EventArtists.Any(ea => ea.ArtistId == id)
+                        || EF.Functions.Like(e.Description, mentionPattern)))
                 .OrderBy(e => e.EventDate)
                 .Select(e => new ArtistEventItemDto
                 {
