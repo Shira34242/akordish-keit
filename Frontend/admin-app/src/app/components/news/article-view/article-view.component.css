@@ -1086,6 +1086,10 @@
   animation: feedbackCirclePing 1.4s ease-out infinite;
 }
 
+.feedback-circle.attention-delayed::before {
+  animation-delay: 0.65s;
+}
+
 .feedback-circle:not(:disabled):hover {
   background: #ddff53;
 }

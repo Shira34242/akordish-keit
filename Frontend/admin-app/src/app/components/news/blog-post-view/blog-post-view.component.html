@@ -180,6 +180,8 @@
             <button
               class="feedback-circle"
               [class.chosen-no]="feedbackChoice === 'no'"
+              [class.attention]="!feedbackGiven"
+              [class.attention-delayed]="!feedbackGiven"
               [style.width.px]="feedbackCircleSize('no')"
               [style.height.px]="feedbackCircleSize('no')"
               (click)="giveFeedbackNo()"

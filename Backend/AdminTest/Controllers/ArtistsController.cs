@@ -500,14 +500,14 @@ public class ArtistsController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// קבלת הופעות קרובות של אומן
-    /// </summary>
     private static string ArtistMentionPattern(int artistId)
     {
         return $@"%data-mention-type=""artist""%data-mention-id=""{artistId}""%";
     }
 
+    /// <summary>
+    /// קבלת הופעות קרובות של אומן
+    /// </summary>
     // GET: api/Artists/5/uploaded-songs
     [HttpGet("{id}/uploaded-songs")]
     public async Task<ActionResult<List<ArtistSongItemDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)

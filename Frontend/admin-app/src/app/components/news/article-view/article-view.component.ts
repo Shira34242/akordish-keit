@@ -136,7 +136,13 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   feedbackCircleSize(type: 'yes' | 'no'): number {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
-    return 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+    const size = 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+    if (type === 'no') {
+      const yesPct = this.feedbackGiven ? this.feedbackPct('yes') : 50;
+      const yesSize = 72 + Math.round((yesPct / 100) * 40);
+      return Math.max(64, yesSize - 10);
+    }
+    return size;
   }
 
   get visibleRelatedArticles(): Article[] {
