@@ -24,6 +24,7 @@ import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
+import { ProfileAvatarComponent } from '../shared/profile-avatar/profile-avatar.component';
 import { EventCardData } from '../../utils/event.utils';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -77,6 +78,7 @@ interface LevelParticle {
     NewsBannerComponent,
     EventCardComponent,
     EventModalComponent,
+    ProfileAvatarComponent,
     TranslatePipe
   ],
   templateUrl: './my-profile.component.html',
@@ -159,6 +161,8 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   showAccountTypeModal = false;
   leavingCurrentPage = false;
   private pagePendingLeave: UserWithProfileDto | null = null;
+  activePageMenuKey: string | null = null;
+  requestingDeletePageKey: string | null = null;
 
   readonly MAX_LEVEL = 3;
   readonly levelSteps = [0, 1, 2, 3];
@@ -654,6 +658,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.closePageActionsMenu();
     this.pagePendingLeave = page ?? this.getManagedPage();
     this.showAccountTypeModal = true;
   }
@@ -672,6 +677,19 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     if (page.isTeacher) return this.langService.translate('profile.page_type_teacher');
     if (page.categories?.length > 0) return page.categories[0];
     return this.langService.translate('profile.page_type_provider');
+  }
+
+  getPageMenuKey(page: UserWithProfileDto): string {
+    return `${page.profileType}-${page.profileId}`;
+  }
+
+  togglePageActionsMenu(page: UserWithProfileDto): void {
+    const key = this.getPageMenuKey(page);
+    this.activePageMenuKey = this.activePageMenuKey === key ? null : key;
+  }
+
+  closePageActionsMenu(): void {
+    this.activePageMenuKey = null;
   }
 
   getPageStatusClass(page?: UserWithProfileDto): string {
@@ -735,6 +753,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     return '/service-provider/create';
   }
 
+  canAddManagedPage(): boolean {
+    return this.myPages.length < 5;
+  }
+
   private getManagedPage(): UserWithProfileDto | null {
     return this.pagePendingLeave ?? this.myPageInfo ?? this.myPages[0] ?? null;
   }
@@ -769,18 +791,52 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.showAccountTypeModal = false;
         this.pagePendingLeave = null;
-        this.authService.refreshSession().subscribe({
-          next: () => {
-            this.user = this.authService.currentUserValue;
-          },
-          error: () => {}
-        });
+        this.updateCurrentUserAfterPagesChange();
       },
       error: () => {
         this.leavingCurrentPage = false;
         window.alert(this.accountWarningErrorLabel);
       }
     });
+  }
+
+  requestPageDeletion(page: UserWithProfileDto): void {
+    const key = this.getPageMenuKey(page);
+    if (this.requestingDeletePageKey === key) {
+      return;
+    }
+
+    this.closePageActionsMenu();
+    const confirmed = window.confirm(this.langService.translate('profile.delete_request_confirm'));
+    if (!confirmed) {
+      return;
+    }
+
+    this.requestingDeletePageKey = key;
+    this.userService.requestPageDeletion(page.profileType, page.profileId).subscribe({
+      next: (ok) => {
+        this.requestingDeletePageKey = null;
+        window.alert(ok
+          ? this.langService.translate('profile.delete_request_sent')
+          : this.langService.translate('profile.delete_request_error'));
+      },
+      error: () => {
+        this.requestingDeletePageKey = null;
+        window.alert(this.langService.translate('profile.delete_request_error'));
+      }
+    });
+  }
+
+  private updateCurrentUserAfterPagesChange(): void {
+    if (!this.user) return;
+
+    const updatedUser: User = {
+      ...this.user,
+      hasProfessionalProfile: this.myPages.length > 0
+    };
+
+    this.user = updatedUser;
+    this.authService.updateCurrentUser(updatedUser);
   }
 
   openIndexProfileFlow(): void {

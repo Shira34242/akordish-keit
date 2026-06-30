@@ -1071,7 +1071,19 @@
   transition: width 0.45s ease, height 0.45s ease, background 0.2s, opacity 0.2s;
   background: #F2F2F2;
   color: #000000;
+  position: relative;
+  isolation: isolate;
   /* גודל מוגדר ע"י Angular inline style */
+}
+
+.feedback-circle.attention::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: inherit;
+  background: #ddff53;
+  animation: feedbackCirclePing 1.4s ease-out infinite;
 }
 
 .feedback-circle:not(:disabled):hover {
@@ -1117,6 +1129,23 @@
   font-weight: 300;
   color: rgba(0, 0, 0, 0.45);
   font-family: 'Open Sans', sans-serif;
+}
+
+@keyframes feedbackCirclePing {
+  0% {
+    opacity: 0.68;
+    transform: scale(1);
+  }
+  75%, 100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-circle.attention::before {
+    animation: none;
+  }
 }
 
 /* ============================================

@@ -60,6 +60,13 @@ public class RevokePageDto
     public int ProfileId { get; set; }
 }
 
+public class DeletePageRequestDto
+{
+    /// <summary>"artist" | "serviceProvider"</summary>
+    public string ProfileType { get; set; } = string.Empty;
+    public int ProfileId { get; set; }
+}
+
 /// <summary>
 /// בקשת הצגה / הסתרה של דף ציבורי מהאינדקס בלי מחיקה
 /// </summary>

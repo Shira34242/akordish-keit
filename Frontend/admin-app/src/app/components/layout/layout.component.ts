@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, HostListener, NgZone, OnInit } from '@angular/core';
-import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
@@ -19,6 +18,7 @@ import { ProfileSoftReminderModalComponent } from '../auth/profile-soft-reminder
 import { ProfileReminderService, ReminderKind } from '../../services/profile-reminder.service';
 import { ForgotPasswordModalComponent } from '../auth/forgot-password-modal.component';
 import { ReportModalComponent } from '../shared/report-modal/report-modal.component';
+import { ProfileAvatarComponent } from '../shared/profile-avatar/profile-avatar.component';
 import { TeacherCreateComponent } from '../teacher-create/teacher-create.component';
 import { ServiceProviderCreateComponent } from '../service-provider-create/service-provider-create.component';
 import { ArtistCreateComponent } from '../artist-create/artist-create.component';
@@ -44,7 +44,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
     ServiceProviderCreateComponent,
     ArtistCreateComponent,
     RouterModule,
-    ImgFallbackDirective,
+    ProfileAvatarComponent,
     TranslatePipe
   ],
   templateUrl: './layout.component.html',

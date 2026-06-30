@@ -24,6 +24,7 @@ import { AgencyService } from '../../../services/agency.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 import { artistRoute } from '../../../utils/slug';
+import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 
 interface Category {
   id: number;
@@ -49,7 +50,7 @@ interface AgencyWithProfiles extends AgencyListDto {
 @Component({
   selector: 'app-professionals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe],
+  imports: [CommonModule, FormsModule, RouterModule, BecomeProfessionalFormComponent, ImgFallbackDirective, AdDisplayComponent, CloudflareImagePipe, CloudflareImageSrcsetPipe, ProfileAvatarComponent],
   templateUrl: './professionals-page.component.html',
   styleUrls: ['./professionals-page.component.css']
 })

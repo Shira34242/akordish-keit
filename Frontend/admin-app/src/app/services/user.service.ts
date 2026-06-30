@@ -72,6 +72,13 @@ export class UserService {
     );
   }
 
+  requestPageDeletion(profileType: string, profileId: number): Observable<boolean> {
+    return this.http.post(`${this.apiUrl}/me/pages/delete-request`, { profileType, profileId }, { withCredentials: true }).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
+  }
+
   setPageVisibility(data: SetPageVisibilityDto): Observable<UserWithProfileDto | null> {
     return this.http.post<UserWithProfileDto>(`${this.apiUrl}/me/pages/visibility`, data, { withCredentials: true }).pipe(
       catchError(() => of(null))

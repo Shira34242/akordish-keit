@@ -12,6 +12,8 @@
       [src]="(event.imageUrl | cfImage:360:82) || event.imageUrl"
       [alt]="event.name"
       class="event-card__poster-img"
+      width="360"
+      height="480"
       loading="lazy"
       decoding="async"
       [imgFallbackOriginal]="event.imageUrl"

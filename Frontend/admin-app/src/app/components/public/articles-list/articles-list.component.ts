@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, DestroyRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +18,7 @@ import { NewsPageSectionService } from '../../../services/news-page-section.serv
   templateUrl: './articles-list.component.html',
   styleUrl: './articles-list.component.css'
 })
-export class ArticlesListComponent implements OnInit {
+export class ArticlesListComponent implements OnInit, OnDestroy {
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -26,6 +26,7 @@ export class ArticlesListComponent implements OnInit {
   private readonly langService = inject(LanguageService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly newsPageSectionService = inject(NewsPageSectionService);
+  private readonly ngZone = inject(NgZone);
 
   articles: Article[] = [];
   isLoading = true;
@@ -43,6 +44,17 @@ export class ArticlesListComponent implements OnInit {
   tagName = '';
   sortMode: 'recent' | 'popular' | 'liked' | 'title' = 'recent';
   private visibleCategoryIds: number[] = [];
+  isMobile = false;
+  private mobileMql?: MediaQueryList;
+  private mobileMqlHandler = (e: MediaQueryListEvent) => {
+    this.ngZone.run(() => {
+      this.isMobile = e.matches;
+      this.invalidateCache();
+    });
+  };
+  private cachedManagedRows: { slots: number[]; gridCols: string }[] | null = null;
+  private cachedStreamRows: { articles: Article[]; gridCols: string }[] | null = null;
+  readonly managedSlots = Array.from({ length: 5 }, (_, index) => index);
 
   get categories(): Array<{ id: ArticleCategory; key: string }> {
     return [
@@ -72,6 +84,10 @@ export class ArticlesListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.mobileMql = window.matchMedia('(max-width: 640px)');
+    this.isMobile = this.mobileMql.matches;
+    this.mobileMql.addEventListener('change', this.mobileMqlHandler);
+
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
@@ -117,6 +133,15 @@ export class ArticlesListComponent implements OnInit {
 
         this.loadVisibleCategorySettings();
       });
+  }
+
+  ngOnDestroy(): void {
+    this.mobileMql?.removeEventListener('change', this.mobileMqlHandler);
+  }
+
+  private invalidateCache(): void {
+    this.cachedManagedRows = null;
+    this.cachedStreamRows = null;
   }
 
   private loadVisibleCategorySettings(): void {
@@ -173,12 +198,98 @@ export class ArticlesListComponent implements OnInit {
           this.totalCount = result.totalCount;
           this.totalPages = result.totalPages;
           this.isLoading = false;
+          this.invalidateCache();
         },
         error: (error) => {
           console.error('Error loading articles:', error);
           this.isLoading = false;
         }
       });
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackById(_index: number, article: Article): number {
+    return article.id;
+  }
+
+  getManagedArticle(index: number): Article | null {
+    return this.sortedArticles[index] ?? null;
+  }
+
+  getStreamArticles(): Article[] {
+    return this.sortedArticles.slice(this.managedSlots.length);
+  }
+
+  getManagedRows(): { slots: number[]; gridCols: string }[] {
+    if (this.cachedManagedRows) return this.cachedManagedRows;
+
+    if (this.isMobile) {
+      this.cachedManagedRows = [
+        { slots: [0, 1], gridCols: '1fr 1fr' },
+        { slots: [2], gridCols: '1fr' },
+        { slots: [3, 4], gridCols: '1fr 1fr' }
+      ];
+    } else {
+      this.cachedManagedRows = [
+        { slots: [0, 1], gridCols: '1fr 1fr' },
+        { slots: [2, 3, 4], gridCols: '1fr 1fr 1fr' }
+      ];
+    }
+
+    return this.cachedManagedRows;
+  }
+
+  getStreamRows(): { articles: Article[]; gridCols: string }[] {
+    if (this.cachedStreamRows) return this.cachedStreamRows;
+
+    const articles = this.getStreamArticles();
+    const rows: { articles: Article[]; gridCols: string }[] = [];
+    let i = 0;
+
+    if (this.isMobile) {
+      let rowType = 0;
+      while (i < articles.length) {
+        const count = rowType % 2 === 0 ? 2 : 1;
+        const end = Math.min(i + count, articles.length);
+        rows.push({ articles: articles.slice(i, end), gridCols: count === 2 ? '1fr 1fr' : '1fr' });
+        i = end;
+        rowType++;
+      }
+    } else {
+      const twoColPatterns = ['2fr 1fr', '3fr 2fr', '1fr 2fr', '2fr 3fr'];
+      const threeColPatterns = ['2fr 1fr 1fr', '1fr 2fr 1fr', '1fr 1fr 2fr', '3fr 2fr 1fr', '2fr 3fr 1fr', '1fr 3fr 2fr'];
+
+      let twoIdx = 0;
+      let threeIdx = 0;
+      let rowType = 0;
+
+      while (i < articles.length) {
+        const cols = rowType % 2 === 0 ? 2 : 3;
+        const end = Math.min(i + cols, articles.length);
+        const actualCols = end - i;
+
+        let gridCols: string;
+        if (actualCols === 1) {
+          gridCols = '1fr';
+        } else if (actualCols === 2) {
+          gridCols = twoColPatterns[twoIdx % twoColPatterns.length];
+          twoIdx++;
+        } else {
+          gridCols = threeColPatterns[threeIdx % threeColPatterns.length];
+          threeIdx++;
+        }
+
+        rows.push({ articles: articles.slice(i, end), gridCols });
+        i = end;
+        rowType++;
+      }
+    }
+
+    this.cachedStreamRows = rows;
+    return rows;
   }
 
   get sortedArticles(): Article[] {

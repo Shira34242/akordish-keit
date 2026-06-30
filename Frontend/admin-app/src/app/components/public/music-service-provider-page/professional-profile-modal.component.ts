@@ -7,7 +7,6 @@ import { RouterModule } from '@angular/router';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
-import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import {
   MusicServiceProviderDto,
   ServiceProviderParkingType,
@@ -23,6 +22,7 @@ import { AgencyService } from '../../../services/agency.service';
 import { SeoService } from '../../../services/seo.service';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { getSocialPlatformIconSvg, normalizeExternalLinkUrl, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
@@ -43,7 +43,7 @@ type ProviderDisplayTestimonial = {
 @Component({
   selector: 'app-professional-profile-modal',
   standalone: true,
-  imports: [CommonModule, RouterModule, ImgFallbackDirective, SongCardComponent, NewsBannerComponent, CloudflareImagePipe],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, CloudflareImagePipe, ProfileAvatarComponent],
   templateUrl: './professional-profile-modal.component.html',
   styleUrls: ['./professional-profile-modal.component.css']
 })
@@ -378,7 +378,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   }
 
   get profileImageSrc(): string {
-    return this.readString('profileImageUrl', 'ProfileImageUrl') || '/default-user.svg';
+    return this.readString('profileImageUrl', 'ProfileImageUrl');
   }
 
   get heroBackgroundSrc(): string {

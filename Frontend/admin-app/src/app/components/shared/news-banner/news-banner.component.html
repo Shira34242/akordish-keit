@@ -2,6 +2,8 @@
 
   <img
     class="banner-bg"
+    width="400"
+    height="270"
     [src]="(article.featuredImageUrl | cfImage:imagePreset) || '/assets/default-article.png'"
     [attr.srcset]="imageWidths.length ? (article.featuredImageUrl | cfSrcset:imageWidths:82) : null"
     [attr.sizes]="imageWidths.length ? imageSizes : null"

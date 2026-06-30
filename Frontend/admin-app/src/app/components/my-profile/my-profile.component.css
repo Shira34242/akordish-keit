@@ -970,6 +970,14 @@
   border: none;
 }
 
+.manage-card--add-page {
+  min-height: auto;
+  align-items: center;
+  justify-content: space-between;
+  background: #F2F2F2;
+  border: none;
+}
+
 .manage-card-col {
   flex: 1;
   display: flex;
@@ -1002,6 +1010,7 @@
   display: flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .manage-btn {
@@ -1189,6 +1198,70 @@
 
 .manage-card--page .manage-card-col--info .manage-card-actions {
   margin-top: auto;
+}
+
+.page-actions-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.page-actions-trigger {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.page-actions-trigger:hover {
+  background: #ddff53;
+}
+
+.page-actions-trigger .material-icons {
+  font-size: 20px;
+}
+
+.page-actions-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  left: 0;
+  z-index: 5;
+  min-width: 178px;
+  padding: var(--space-sm);
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.page-actions-dropdown button {
+  width: 100%;
+  min-height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #000000;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  text-align: right;
+  padding: 0 var(--space-md);
+}
+
+.page-actions-dropdown button:hover:not(:disabled) {
+  background: #F2F2F2;
+}
+
+.page-actions-dropdown button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .pending-badge {

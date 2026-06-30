@@ -210,7 +210,7 @@
         <div class="professionals-grid" *ngIf="filteredProfessionals.length > 0">
           <a class="prof-card prof-card--provider" *ngFor="let p of filteredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
-              <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+              <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
               <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -241,7 +241,7 @@
           <div class="professionals-strip">
             <a class="prof-card prof-card--provider" *ngFor="let p of featuredProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
-                <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
                 <span class="prof-badge-featured" *ngIf="p.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -290,7 +290,7 @@
                  [style.--agency-secondary]="agency.brandSecondaryColor || '#000000'"
                  (click)="goToAgencyProfile(profile)">
               <div class="prof-card-img">
-                <img [src]="(profile.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="profile.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="profile.profileName" loading="lazy" decoding="async" imgFallback="/default-user.svg">
+                <app-profile-avatar [name]="profile.profileName" [imageUrl]="profile.profileImageUrl | cfImage:'profile'" [srcset]="profile.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="profile.profileType + '-' + profile.profileId" shape="rounded" size="fill"></app-profile-avatar>
                 <span class="prof-badge-featured" *ngIf="profile.isFeaturedByAgency">★ סוכנות</span>
               </div>
               <div class="prof-card-body">
@@ -318,7 +318,7 @@
           <div class="professionals-strip">
             <a class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
-                <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -342,7 +342,7 @@
           <div class="professionals-strip">
             <a class="prof-card prof-card--provider" *ngFor="let p of musicStores; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
-                <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -365,7 +365,7 @@
           <div class="professionals-strip">
             <a class="prof-card prof-card--provider" *ngFor="let p of recordingStudios; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
-                <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -388,7 +388,7 @@
           <div class="professionals-strip">
             <a class="prof-card prof-card--provider" *ngFor="let p of amplification; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
               <div class="prof-card-img">
-                <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -418,7 +418,7 @@
         <div class="professionals-grid">
           <a class="prof-card prof-card--provider" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
-              <img [src]="(p.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="p.displayName" loading="lazy" decoding="async" imgFallback>
+              <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="p.categoryName">{{ p.categoryName }}</p>
@@ -431,7 +431,7 @@
           </a>
           <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
-              <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+              <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>
@@ -467,7 +467,7 @@
         <div class="professionals-grid" *ngIf="filteredTeachers.length > 0">
           <a class="prof-card" *ngFor="let t of filteredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
-              <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+              <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
               <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
             </div>
             <div class="prof-card-body">
@@ -498,7 +498,7 @@
           <div class="professionals-strip">
             <a class="prof-card" *ngFor="let t of featuredTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
-                <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
                 <span class="prof-badge-featured" *ngIf="t.isFeatured">★ מומלץ</span>
               </div>
               <div class="prof-card-body">
@@ -527,7 +527,7 @@
           <div class="professionals-strip">
             <a class="prof-card" *ngFor="let t of organTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
-                <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לאורגן</p>
@@ -550,7 +550,7 @@
           <div class="professionals-strip">
             <a class="prof-card" *ngFor="let t of soundTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
-                <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לסאונד</p>
@@ -573,7 +573,7 @@
           <div class="professionals-strip">
             <a class="prof-card" *ngFor="let t of vocalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
               <div class="prof-card-img">
-                <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+                <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <div class="prof-card-body">
                 <p class="prof-card-role">מורה לפיתוח קול</p>
@@ -598,7 +598,7 @@
         <div class="professionals-grid">
           <a class="prof-card" *ngFor="let t of additionalTeachers; trackBy: trackByTeacherId" [routerLink]="['/teacher', t.id]">
             <div class="prof-card-img">
-              <img [src]="(t.profileImageUrl | cfImage:'profile') || '/default-user.svg'" [attr.srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [alt]="t.displayName" loading="lazy" decoding="async" imgFallback>
+              <app-profile-avatar [name]="t.displayName" [imageUrl]="t.profileImageUrl | cfImage:'profile'" [srcset]="t.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'teacher-' + t.id" shape="rounded" size="fill"></app-profile-avatar>
             </div>
             <div class="prof-card-body">
               <p class="prof-card-role" *ngIf="getTeacherInstruments(t)">{{ getTeacherInstruments(t) }}</p>

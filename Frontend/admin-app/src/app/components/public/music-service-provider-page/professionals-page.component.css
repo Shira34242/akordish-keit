@@ -620,7 +620,8 @@
   overflow: hidden;
 }
 
-.prof-card-img img {
+.prof-card-img img,
+.prof-card-img app-profile-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -628,7 +629,8 @@
   display: block;
 }
 
-.prof-card--provider .prof-card-img img {
+.prof-card--provider .prof-card-img img,
+.prof-card--provider .prof-card-img app-profile-avatar {
   object-fit: contain;
   object-position: center center;
 }

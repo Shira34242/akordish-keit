@@ -760,6 +760,26 @@ dbContext.Database.ExecuteSqlRaw(@"
            AND COL_LENGTH(N'[MusicServiceProviders]', N'BumpCount') IS NULL
             ALTER TABLE [MusicServiceProviders] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_MusicServiceProviders_BumpCount] DEFAULT 0;
 
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryInstrumentId] int NULL;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryType') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryType] int NOT NULL CONSTRAINT [DF_MusicServiceProviderCategories_QuickCategoryType] DEFAULT 0;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_MusicServiceProviderCategories_QuickCategoryInstrumentId' AND object_id = OBJECT_ID(N'[MusicServiceProviderCategories]'))
+            CREATE INDEX [IX_MusicServiceProviderCategories_QuickCategoryInstrumentId] ON [MusicServiceProviderCategories] ([QuickCategoryInstrumentId]);
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND OBJECT_ID(N'[Instruments]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId')
+            ALTER TABLE [MusicServiceProviderCategories] ADD CONSTRAINT [FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId]
+                FOREIGN KEY ([QuickCategoryInstrumentId]) REFERENCES [Instruments] ([Id]);
+
         IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[Artists]', N'BumpedAt') IS NULL
             ALTER TABLE [Artists] ADD [BumpedAt] datetime2 NULL;

@@ -44,8 +44,8 @@
     </div>
 
     <div class="form-section">
-      <h2 class="section-title">אמן</h2>
-      <p class="section-description">בחר אמן מהרשימה לתיוג. אם לא בוחרים אמן, הטקסט שהוקלד יישמר כשם חופשי.</p>
+      <h2 class="section-title">אמן ההופעה</h2>
+      <p class="section-description">בחר כאן את האמן של ההופעה. אם לא בוחרים אמן מהרשימה, הטקסט שהוקלד יישמר כשם חופשי.</p>
 
       <div *ngIf="loadingArtists" class="loading-small">
         <div class="spinner-small"></div>
@@ -54,7 +54,7 @@
 
       <div *ngIf="!loadingArtists" class="artists-selection">
         <div class="form-group">
-          <label class="form-label" for="event-artist-search">חיפוש או שם אמן</label>
+          <label class="form-label" for="event-artist-search">חיפוש אמן</label>
 
           <div class="custom-dropdown" [class.open]="dropdownOpen">
             <div class="dropdown-input" (click)="toggleDropdown()">
@@ -145,22 +145,24 @@
 
     <div class="form-section">
       <h2 class="section-title">תיוג תוכן</h2>
-      <p class="section-description">בחר משתמש או פרופיל אליו ישוייך התוכן</p>
+      <p class="section-description">בחר משתמש, מורה או נותן שירות אליו ישוייך התוכן. אמנים נבחרים רק בחלק אמן ההופעה.</p>
 
       <div class="profile-search-wrapper">
         <div *ngIf="selectedProfile" class="selected-profile-display">
           <img *ngIf="selectedProfile.imageUrl" [src]="selectedProfile.imageUrl" [alt]="selectedProfile.displayName" class="profile-thumb" />
-          <span>{{ selectedProfile.displayName }}</span>
+          <span class="selected-profile-copy">
+            <strong>{{ selectedProfile.displayName }}</strong>
+            <small>{{ getProfileTypeLabel(selectedProfile) }}</small>
+          </span>
           <button type="button" class="btn-clear-profile" (click)="clearProfile()">✕</button>
         </div>
 
         <div class="form-row" *ngIf="!selectedProfile">
           <div class="form-group">
             <select [(ngModel)]="profileTypeFilter" (change)="onProfileFilterChange()" name="profileTypeFilter" class="form-input">
-              <option value="all">כולם</option>
+              <option value="all">כל הפרופילים ללא אמנים</option>
               <option value="teacher">מורים</option>
               <option value="serviceProvider">נותני שירות</option>
-              <option value="artist">אמנים</option>
               <option value="user">חברים רגילים</option>
             </select>
           </div>

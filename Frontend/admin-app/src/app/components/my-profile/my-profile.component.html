@@ -4,12 +4,14 @@
     <p class="profile-subtitle">{{ 'profile.subtitle' | translate }}</p>
 
     <div class="avatar-wrapper">
-      <img
+      <app-profile-avatar
         class="profile-avatar"
         [class.profile-avatar--uploading]="uploadingAvatar"
-        [src]="user?.profileImageUrl || '/default-avatar.svg'"
-        alt="profile image"
-        onerror="this.src='/default-avatar.svg'"/>
+        [name]="user?.username"
+        [imageUrl]="user?.profileImageUrl"
+        [identity]="user?.id"
+        size="fill">
+      </app-profile-avatar>
       <div class="avatar-upload-overlay" *ngIf="uploadingAvatar">
         <span class="avatar-spinner"></span>
       </div>
@@ -96,6 +98,18 @@
       </div>
     }
 
+    @if (myPages.length > 0 && canAddManagedPage()) {
+      <div class="manage-card manage-card--add-page">
+        <div>
+          <h3 class="manage-card-title">{{ 'profile.add_another_page_title' | translate }}</h3>
+          <p class="manage-card-subtitle">{{ 'profile.add_another_page_sub' | translate }}</p>
+        </div>
+        <button class="manage-account-link" type="button" (click)="openIndexProfileFlow()">
+          {{ 'profile.add_another_page' | translate }}
+        </button>
+      </div>
+    }
+
     @for (page of myPages; track page.profileType + '-' + page.profileId) {
       <div class="manage-card manage-card--page">
         <div class="manage-card-col">
@@ -106,6 +120,29 @@
           <div class="manage-card-actions">
             <button class="manage-btn" (click)="openEditPageModal(page)">{{ 'profile.edit_page' | translate }}</button>
             <a class="manage-btn" [routerLink]="getViewPageUrl(page)">{{ 'profile.view_page' | translate }}</a>
+            <div class="page-actions-menu">
+              <button
+                class="page-actions-trigger"
+                type="button"
+                [attr.aria-label]="'profile.page_actions' | translate"
+                [attr.aria-expanded]="activePageMenuKey === getPageMenuKey(page)"
+                (click)="togglePageActionsMenu(page)">
+                <span class="material-icons">more_horiz</span>
+              </button>
+              @if (activePageMenuKey === getPageMenuKey(page)) {
+                <div class="page-actions-dropdown">
+                  <button type="button" (click)="openManageAccountFlow(page)">
+                    {{ 'profile.leave_page' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="requestPageDeletion(page)"
+                    [disabled]="requestingDeletePageKey === getPageMenuKey(page)">
+                    {{ requestingDeletePageKey === getPageMenuKey(page) ? ('profile.sending_request' | translate) : ('profile.request_delete_page' | translate) }}
+                  </button>
+                </div>
+              }
+            </div>
           </div>
         </div>
         <div class="manage-card-col manage-card-col--info">
@@ -146,7 +183,6 @@
                 </span>
               </label>
             </div>
-            <button class="manage-account-link" (click)="openManageAccountFlow(page)">{{ 'profile.change_account_type' | translate }}</button>
           </div>
         </div>
       </div>

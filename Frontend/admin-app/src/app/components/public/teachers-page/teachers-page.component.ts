@@ -13,10 +13,10 @@ import { TeachingLanguage, getTeachingLanguageOptions } from '../../../models/te
 import { TeacherProfileModalComponent } from '../../admin/teachers/teacher-profile-modal.component';
 import { BecomeTeacherFormComponent } from '../become-teacher-form/become-teacher-form.component';
 import { AuthService } from '../../../services/auth.service';
-import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 
 interface Instrument {
   id: number;
@@ -26,7 +26,7 @@ interface Instrument {
 @Component({
   selector: 'app-teachers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, ImgFallbackDirective, TranslatePipe, CloudflareImagePipe],
+  imports: [CommonModule, FormsModule, TeacherProfileModalComponent, BecomeTeacherFormComponent, TranslatePipe, CloudflareImagePipe, ProfileAvatarComponent],
   templateUrl: './teachers-page.component.html',
   styleUrls: ['./teachers-page.component.css']
 })

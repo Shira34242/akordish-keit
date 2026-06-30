@@ -99,10 +99,13 @@
         class="teacher-card"
         (click)="viewTeacher(teacher.id)">
         <div class="teacher-image">
-          <img
-            [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-            [alt]="teacher.displayName"
-            imgFallback>
+          <app-profile-avatar
+            [name]="teacher.displayName"
+            [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+            [identity]="teacher.id"
+            shape="rounded"
+            size="fill">
+          </app-profile-avatar>
           <span *ngIf="teacher.isFeatured" class="featured-badge">
             <span class="material-icons">star</span>
           </span>
@@ -151,10 +154,13 @@
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
-            <img
-              [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-              [alt]="teacher.displayName"
-              imgFallback>
+            <app-profile-avatar
+              [name]="teacher.displayName"
+              [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+              [identity]="teacher.id"
+              shape="rounded"
+              size="fill">
+            </app-profile-avatar>
             <span class="featured-badge">
               <span class="material-icons">star</span>
             </span>
@@ -191,10 +197,13 @@
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
-            <img
-              [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-              [alt]="teacher.displayName"
-              imgFallback>
+            <app-profile-avatar
+              [name]="teacher.displayName"
+              [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+              [identity]="teacher.id"
+              shape="rounded"
+              size="fill">
+            </app-profile-avatar>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -225,10 +234,13 @@
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
-            <img
-              [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-              [alt]="teacher.displayName"
-              imgFallback>
+            <app-profile-avatar
+              [name]="teacher.displayName"
+              [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+              [identity]="teacher.id"
+              shape="rounded"
+              size="fill">
+            </app-profile-avatar>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -259,10 +271,13 @@
           class="teacher-card"
           (click)="viewTeacher(teacher.id)">
           <div class="teacher-image">
-            <img
-              [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-              [alt]="teacher.displayName"
-              imgFallback>
+            <app-profile-avatar
+              [name]="teacher.displayName"
+              [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+              [identity]="teacher.id"
+              shape="rounded"
+              size="fill">
+            </app-profile-avatar>
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
@@ -287,10 +302,13 @@
           class="teacher-row"
           (click)="viewTeacher(teacher.id)">
           <div class="row-image">
-            <img
-              [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-              [alt]="teacher.displayName"
-              imgFallback>
+            <app-profile-avatar
+              [name]="teacher.displayName"
+              [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+              [identity]="teacher.id"
+              shape="circle"
+              size="fill">
+            </app-profile-avatar>
           </div>
           <div class="row-info">
             <h3 class="row-name">{{ teacher.displayName }}</h3>

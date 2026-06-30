@@ -38,6 +38,11 @@ public interface IUserService
     Task<bool> RevokePageAsync(int userId, RevokePageDto dto);
 
     /// <summary>
+    /// שולח למנהלים בקשה למחיקת דף, בלי למחוק את הדף בפועל
+    /// </summary>
+    Task<bool> RequestPageDeletionAsync(int userId, DeletePageRequestDto dto);
+
+    /// <summary>
     /// מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
     /// </summary>
     Task<UserWithProfileDto?> SetPageVisibilityAsync(int userId, SetPageVisibilityDto dto);

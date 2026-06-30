@@ -2,7 +2,6 @@ import {
   Component, OnInit, AfterViewInit, OnDestroy,
   HostListener, ViewChild, ElementRef, ChangeDetectorRef, inject
 } from '@angular/core';
-import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -17,6 +16,7 @@ import { Article } from '../../../models/article.model';
 import { SongDto } from '../../../models/song.model';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
@@ -28,7 +28,7 @@ import { getSocialPlatformIconSvg, normalizeExternalLinkUrl, normalizeSocialPlat
 @Component({
   selector: 'app-teacher-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, ImgFallbackDirective, TranslatePipe, CloudflareImagePipe],
+  imports: [CommonModule, RouterModule, SongCardComponent, NewsBannerComponent, TranslatePipe, CloudflareImagePipe, ProfileAvatarComponent],
   templateUrl: './teacher-detail.component.html',
   styleUrls: ['./teacher-detail.component.css']
 })

@@ -333,10 +333,12 @@
   background-color: #f5f5f5;
 }
 
-.teacher-image img {
+.teacher-image img,
+.teacher-image app-profile-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .featured-badge {
@@ -428,12 +430,14 @@
   flex-shrink: 0;
 }
 
-.row-image img {
+.row-image img,
+.row-image app-profile-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #f5f5f5;
+  display: block;
 }
 
 .row-info {

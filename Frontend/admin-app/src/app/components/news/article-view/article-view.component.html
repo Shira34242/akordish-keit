@@ -165,6 +165,7 @@
             <button
               class="feedback-circle"
               [class.chosen-yes]="feedbackChoice === 'yes'"
+              [class.attention]="!feedbackGiven"
               [style.width.px]="feedbackCircleSize('yes')"
               [style.height.px]="feedbackCircleSize('yes')"
               (click)="giveFeedbackYes()"

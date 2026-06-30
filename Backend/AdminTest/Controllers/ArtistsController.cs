@@ -451,11 +451,13 @@ public class ArtistsController : ControllerBase
         try
         {
             var now = DateTime.UtcNow;
+            var mentionPattern = ArtistMentionPattern(id);
             var query = _context.Articles
                 .AsNoTracking()
                 .Include(a => a.ArticleCategories)
                     .ThenInclude(ac => ac.Category)
-                .Where(a => a.ArticleArtists.Any(aa => aa.ArtistId == id)
+                .Where(a => (a.ArticleArtists.Any(aa => aa.ArtistId == id)
+                        || EF.Functions.Like(a.Content, mentionPattern))
                     && a.Status == (int)ArticleStatus.Published
                     && a.PublishDate <= now
                     && !a.IsDeleted);
@@ -501,6 +503,11 @@ public class ArtistsController : ControllerBase
     /// <summary>
     /// קבלת הופעות קרובות של אומן
     /// </summary>
+    private static string ArtistMentionPattern(int artistId)
+    {
+        return $@"%data-mention-type=""artist""%data-mention-id=""{artistId}""%";
+    }
+
     // GET: api/Artists/5/uploaded-songs
     [HttpGet("{id}/uploaded-songs")]
     public async Task<ActionResult<List<ArtistSongItemDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)

@@ -400,6 +400,104 @@ public class UserService : IUserService
         return true;
     }
 
+    public async Task<bool> RequestPageDeletionAsync(int userId, DeletePageRequestDto dto)
+    {
+        var page = await GetOwnedPageForRequestAsync(userId, dto.ProfileType, dto.ProfileId);
+        if (page == null) return false;
+
+        var admins = await _context.Users
+            .Where(u => !u.IsDeleted
+                && u.IsActive
+                && (u.Role == UserRole.Admin || u.Role == UserRole.Manager))
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        if (admins.Count == 0) return true;
+
+        var requester = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        var requesterName = requester?.Username ?? $"משתמש #{userId}";
+        var title = "בקשה למחיקת דף";
+        var message = $"{requesterName} ביקש למחוק את הדף \"{page.DisplayName}\". הדף לא נמחק אוטומטית ונדרש טיפול מנהל.";
+
+        foreach (var adminId in admins)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                UserId = adminId,
+                Title = title,
+                Message = message,
+                Type = NotificationType.StatusUpdate,
+                Category = GetPageNotificationCategory(page),
+                RelatedEntityType = "PageDeletionRequest",
+                RelatedEntityId = page.ProfileId,
+                ActionUrl = page.ProfileUrl,
+                CreatedByUserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false,
+                IsDeleted = false
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    private async Task<UserWithProfileDto?> GetOwnedPageForRequestAsync(int userId, string profileType, int profileId)
+    {
+        if (profileType == "artist")
+        {
+            var artist = await _context.Artists
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == profileId && a.UserId == userId && !a.IsDeleted);
+
+            if (artist == null) return null;
+
+            return new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = artist.Name,
+                ImageUrl = artist.ImageUrl,
+                ProfileType = "artist",
+                ProfileId = artist.Id,
+                ProfileUrl = $"/artist/{artist.Id}",
+                IsTeacher = false,
+                Status = artist.Status.ToString()
+            };
+        }
+
+        if (profileType == "serviceProvider")
+        {
+            var provider = await _context.ServiceProviders
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == profileId && p.UserId == userId && !p.IsDeleted);
+
+            if (provider == null) return null;
+
+            return new UserWithProfileDto
+            {
+                UserId = userId,
+                DisplayName = provider.DisplayName,
+                ImageUrl = provider.ProfileImageUrl,
+                ProfileType = "serviceProvider",
+                ProfileId = provider.Id,
+                ProfileUrl = provider.IsTeacher ? $"/teacher/{provider.Id}" : $"/professional/{provider.Id}",
+                IsTeacher = provider.IsTeacher,
+                Status = provider.Status.ToString()
+            };
+        }
+
+        return null;
+    }
+
+    private static NotificationCategory GetPageNotificationCategory(UserWithProfileDto page)
+    {
+        if (page.ProfileType == "artist") return NotificationCategory.Artist;
+        return page.IsTeacher ? NotificationCategory.Teacher : NotificationCategory.ServiceProvider;
+    }
+
     private async Task NormalizeUserRoleAfterPageChangeAsync(int userId)
     {
         var hasArtist = await _context.Artists

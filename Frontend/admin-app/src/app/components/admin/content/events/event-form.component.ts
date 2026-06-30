@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { EventService } from '../../../../services/admin/event.service';
 import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
@@ -70,7 +70,7 @@ export class EventFormComponent implements OnInit {
   profileSearchResults: UserWithProfileDto[] = [];
   profileSearchLoading = false;
   showProfileDropdown = false;
-  profileTypeFilter: 'all' | 'teacher' | 'serviceProvider' | 'artist' | 'user' = 'all';
+  profileTypeFilter: 'all' | 'teacher' | 'serviceProvider' | 'user' = 'all';
   private readonly profileSearch$ = new Subject<string>();
 
   event: CreateEventDto | UpdateEventDto = {
@@ -237,7 +237,9 @@ export class EventFormComponent implements OnInit {
           return of([]);
         }
         this.profileSearchLoading = true;
-        return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter === 'all' ? undefined : this.profileTypeFilter);
+        return this.userService.searchUsersWithProfiles(q, 100, this.profileTypeFilter === 'all' ? undefined : this.profileTypeFilter).pipe(
+          map(results => this.filterContentTagProfiles(results))
+        );
       })
     ).subscribe({
       next: (results) => {
@@ -264,6 +266,8 @@ export class EventFormComponent implements OnInit {
   }
 
   selectProfile(profile: UserWithProfileDto): void {
+    if (profile.profileType === 'artist') return;
+
     this.selectedProfile = profile;
     this.event.uploaderUserId = profile.userId;
     this.event.uploaderProfileType = profile.profileType === 'agency' ? undefined : profile.profileType;
@@ -554,5 +558,15 @@ export class EventFormComponent implements OnInit {
     if (profile.profileType === 'serviceProvider') return profile.isTeacher ? 'מורה' : 'נותן שירות';
     if (profile.profileType === 'agency') return 'סוכנות';
     return 'משתמש';
+  }
+
+  getProfileTypeLabel(profile: UserWithProfileDto): string {
+    if (profile.profileType === 'serviceProvider') return profile.isTeacher ? 'מורה' : 'נותן שירות';
+    if (profile.profileType === 'user') return 'משתמש';
+    return 'פרופיל תוכן';
+  }
+
+  private filterContentTagProfiles(results: UserWithProfileDto[]): UserWithProfileDto[] {
+    return results.filter(profile => profile.profileType !== 'artist');
   }
 }

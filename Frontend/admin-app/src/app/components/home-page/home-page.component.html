@@ -70,7 +70,7 @@
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'מורה באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
+              <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'teacher-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -81,7 +81,7 @@
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
             <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'בעל מקצוע באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
+              <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'professional-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -136,7 +136,7 @@
           <div *ngIf="searchResults.agencies && searchResults.agencies.length > 0" class="search-group">
             <span class="search-group-label">סוכנויות</span>
             <div class="search-result-item" *ngFor="let item of searchResults.agencies; trackBy: trackById" (click)="navigateToResult(item)">
-              <img [src]="(item.imageUrl | cfImage:120:82) || '/default-user.svg'" [alt]="item.title || 'סוכנות באקורדישקייט'" class="result-thumb result-thumb--round" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/default-user.svg">
+              <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'agency-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
                 <span class="result-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</span>
@@ -214,10 +214,9 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="600"
-                [imageLoading]="copy === 1 ? 'eager' : 'lazy'"
-                [imageFetchPriority]="copy === 1 ? 'high' : 'auto'"
-                [showDescription]="false"
-                [attr.aria-hidden]="copy !== 1 ? true : null">
+                imageLoading="lazy"
+                imageFetchPriority="auto"
+                [showDescription]="false">
               </app-news-banner>
             </ng-container>
           </div>
@@ -230,10 +229,9 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
-                [imageLoading]="copy === 1 ? 'eager' : 'lazy'"
-                [imageFetchPriority]="copy === 1 ? 'high' : 'auto'"
-                [showDescription]="false"
-                [attr.aria-hidden]="copy !== 1 ? true : null">
+                imageLoading="lazy"
+                imageFetchPriority="auto"
+                [showDescription]="false">
               </app-news-banner>
             </ng-container>
           </div>
@@ -288,8 +286,7 @@
             <app-artist-circle
               *ngFor="let artist of topArtists; trackBy: trackById"
               [artist]="artist"
-              [showSongCount]="false"
-              [attr.aria-hidden]="copy !== 1 ? true : null">
+              [showSongCount]="false">
             </app-artist-circle>
           </ng-container>
         </div>
@@ -322,14 +319,14 @@
           <div class="index-showcase-track">
             <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
               <div class="person-avatar">
-                <img [src]="(teacher.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="teacher.displayName" [imgFallbackOriginal]="teacher.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+                <app-profile-avatar [name]="teacher.displayName" [imageUrl]="teacher.profileImageUrl | cfImage:240:82" [identity]="'teacher-' + teacher.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <p class="person-name">{{ teacher.displayName }}</p>
               <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
             </a>
             <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''">
               <div class="person-avatar">
-                <img [src]="(pro.profileImageUrl | cfImage:240:82) || '/default-user.svg'" [alt]="pro.displayName" [imgFallbackOriginal]="pro.profileImageUrl" imgFallback="/default-user.svg" loading="lazy" decoding="async">
+                <app-profile-avatar [name]="pro.displayName" [imageUrl]="pro.profileImageUrl | cfImage:240:82" [identity]="'provider-' + pro.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
               <p class="person-name">{{ pro.displayName }}</p>
               <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
@@ -351,7 +348,6 @@
               *ngFor="let event of upcomingEvents; trackBy: trackById"
               [event]="event"
               [showInfo]="false"
-              [attr.aria-hidden]="copy !== 1 ? true : null"
               (cardClick)="openEventModal($event)">
             </app-event-card>
           </ng-container>
@@ -387,6 +383,8 @@
                 *ngIf="podcast.imageUrl; else podcastIcon"
                 [src]="(podcast.imageUrl | cfImage:360:82) || ''"
                 [alt]="podcast.name"
+                width="360"
+                height="203"
                 [imgFallbackOriginal]="podcast.imageUrl"
                 imgFallback="/assets/default-article.png"
                 loading="lazy"
@@ -396,6 +394,24 @@
               </ng-template>
             </span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section popular-episodes-section" *ngIf="popularPodcastEpisodes.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">פרקים מובילים</h2>
+        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
+      </div>
+
+      <div class="podcast-episodes-row">
+        <div class="podcast-episodes-track">
+          <app-podcast-episode-banner
+            *ngFor="let episode of popularPodcastEpisodes; trackBy: trackById"
+            class="podcast-episode-card"
+            [episode]="episode"
+            [showDescription]="true">
+          </app-podcast-episode-banner>
         </div>
       </div>
     </section>
@@ -430,8 +446,7 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
-                [showDescription]="false"
-                [attr.aria-hidden]="copy !== 1 ? true : null">
+                [showDescription]="false">
               </app-news-banner>
             </ng-container>
           </div>
@@ -444,8 +459,7 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
-                [showDescription]="false"
-                [attr.aria-hidden]="copy !== 1 ? true : null">
+                [showDescription]="false">
               </app-news-banner>
             </ng-container>
           </div>
@@ -454,24 +468,6 @@
 
       <div class="content-articles-empty" *ngIf="blogArticles.length === 0">
         {{ 'blog.no_content' | translate }}
-      </div>
-    </section>
-
-    <section class="home-section popular-episodes-section" *ngIf="popularPodcastEpisodes.length > 0">
-      <div class="section-header">
-        <h2 class="section-title">פרקים מובילים</h2>
-        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
-      </div>
-
-      <div class="podcast-episodes-row">
-        <div class="podcast-episodes-track">
-          <app-podcast-episode-banner
-            *ngFor="let episode of popularPodcastEpisodes; trackBy: trackById"
-            class="podcast-episode-card"
-            [episode]="episode"
-            [showDescription]="true">
-          </app-podcast-episode-banner>
-        </div>
       </div>
     </section>
 

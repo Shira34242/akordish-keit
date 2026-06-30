@@ -1,0 +1,21 @@
+<span
+  class="profile-avatar"
+  [class.profile-avatar--circle]="shape === 'circle'"
+  [class.profile-avatar--rounded]="shape === 'rounded'"
+  [class.profile-avatar--fill]="size === 'fill'"
+  [class.profile-avatar--sm]="size === 'sm'"
+  [class.profile-avatar--md]="size === 'md'"
+  [class.profile-avatar--lg]="size === 'lg'"
+  [class.profile-avatar--xl]="size === 'xl'"
+  [style.background-color]="backgroundColor">
+  <img
+    *ngIf="hasImage"
+    [src]="imageUrl"
+    [attr.srcset]="srcset || null"
+    [attr.sizes]="sizes || null"
+    [alt]="resolvedAlt"
+    [loading]="loading"
+    decoding="async"
+    (error)="handleImageError()">
+  <span *ngIf="!hasImage" class="profile-avatar__initial">{{ initial }}</span>
+</span>

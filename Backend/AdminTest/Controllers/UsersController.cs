@@ -117,6 +117,23 @@ public class UsersController : ControllerBase
 
     // ─── Helper ──────────────────────────────────────────────────────────────────
 
+    // POST: api/Users/me/pages/delete-request
+    // שולח למנהלים בקשה למחיקת דף. הדף לא נמחק אוטומטית.
+    [HttpPost("me/pages/delete-request")]
+    [Authorize]
+    public async Task<ActionResult> RequestPageDeletion([FromBody] DeletePageRequestDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var success = await _service.RequestPageDeletionAsync(userId.Value, dto);
+        if (!success) return NotFound();
+
+        _logger.LogInformation("User requested page deletion: UserId={UserId} ProfileType={ProfileType} ProfileId={ProfileId}",
+            userId, dto.ProfileType, dto.ProfileId);
+        return Ok();
+    }
+
     // POST: api/Users/me/pages/visibility
     // מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
     [HttpPost("me/pages/visibility")]

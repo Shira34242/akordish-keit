@@ -23,10 +23,14 @@
 
     <div class="hero-content">
       <div class="hero-profile-side">
-        <img [src]="(teacher.profileImageUrl | cfImage:'profile') || '/default-user.svg'"
-             [alt]="teacher.displayName"
+        <app-profile-avatar
              class="hero-profile-photo"
-             imgFallback />
+             [name]="teacher.displayName"
+             [imageUrl]="teacher.profileImageUrl | cfImage:'profile'"
+             [identity]="'teacher-' + teacher.id"
+             shape="rounded"
+             size="fill">
+        </app-profile-avatar>
       </div>
 
       <div class="hero-text-block">

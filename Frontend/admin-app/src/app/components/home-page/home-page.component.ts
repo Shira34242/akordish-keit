@@ -19,6 +19,7 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { PodcastEpisodeBannerComponent } from '../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
+import { ProfileAvatarComponent } from '../shared/profile-avatar/profile-avatar.component';
 import { AutoScrollDirective } from '../../directives/auto-scroll.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { ArticleBanner } from '../../models/article.model';
@@ -54,6 +55,7 @@ interface HeroParticle {
     PodcastEpisodeBannerComponent,
     EventCardComponent,
     EventModalComponent,
+    ProfileAvatarComponent,
     TranslatePipe,
     AutoScrollDirective,
     ImgFallbackDirective,

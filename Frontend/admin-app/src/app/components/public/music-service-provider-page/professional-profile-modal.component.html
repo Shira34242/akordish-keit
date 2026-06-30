@@ -24,10 +24,14 @@
 
     <div class="hero-content">
       <div class="hero-profile-side">
-        <img [src]="profileImageSrc | cfImage:'profile'"
-             [alt]="professional.displayName"
+        <app-profile-avatar
              class="hero-profile-photo"
-             imgFallback />
+             [name]="professional.displayName"
+             [imageUrl]="profileImageSrc | cfImage:'profile'"
+             [identity]="'provider-' + professional.id"
+             shape="rounded"
+             size="fill">
+        </app-profile-avatar>
       </div>
 
       <div class="hero-text-block">
