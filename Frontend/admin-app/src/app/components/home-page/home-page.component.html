@@ -201,6 +201,8 @@
           class="news-banner-card"
           [article]="article"
           [imagePreset]="900"
+          [imageWidths]="[360, 600, 900]"
+          imageSizes="calc(100vw - 16px)"
           [showDescription]="false">
         </app-news-banner>
       </div>
@@ -214,6 +216,8 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="600"
+                [imageWidths]="[320, 480, 600, 720]"
+                imageSizes="(max-width: 480px) 14.3rem, (max-width: 768px) 16.9rem, 24.7rem"
                 imageLoading="lazy"
                 imageFetchPriority="auto"
                 [showDescription]="false">
@@ -229,6 +233,8 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
+                [imageWidths]="[240, 320, 360, 480]"
+                imageSizes="(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem"
                 imageLoading="lazy"
                 imageFetchPriority="auto"
                 [showDescription]="false">
@@ -460,6 +466,8 @@
           class="news-banner-card"
           [article]="article"
           [imagePreset]="900"
+          [imageWidths]="[360, 600, 900]"
+          imageSizes="calc(100vw - 16px)"
           [showDescription]="false">
         </app-news-banner>
       </div>
@@ -473,6 +481,8 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
+                [imageWidths]="[240, 320, 360, 480]"
+                imageSizes="(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem"
                 [showDescription]="false">
               </app-news-banner>
             </ng-container>
@@ -486,6 +496,8 @@
                 class="news-banner-card"
                 [article]="article"
                 [imagePreset]="360"
+                [imageWidths]="[240, 320, 360, 480]"
+                imageSizes="(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem"
                 [showDescription]="false">
               </app-news-banner>
             </ng-container>
@@ -512,7 +524,7 @@
       <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="stream-grid">
         <div
           class="stream-row"
-          *ngFor="let row of getViralRows(); trackBy: trackByIndex"
+          *ngFor="let row of viralRows; trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
           <div
             class="stream-cell"
@@ -520,6 +532,8 @@
             <app-news-banner
               [article]="article"
               [imagePreset]="360"
+              [imageWidths]="[240, 320, 360, 480]"
+              imageSizes="(max-width: 480px) calc(100vw - 16px), 33vw"
               [showDescription]="false">
             </app-news-banner>
           </div>

@@ -42,6 +42,11 @@ interface HeroParticle {
   size: number;
 }
 
+interface ViralRow {
+  articles: ArticleBanner[];
+  gridCols: string;
+}
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -92,6 +97,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   blogArticles: ArticleBanner[] = [];
   blogArticlesLoaded = false;
   viralArticles: ArticleBanner[] = [];
+  visibleViralArticles: ArticleBanner[] = [];
+  viralRows: ViralRow[] = [];
   visibleViralCount = 4;
   loadingViralArticles = false;
   viralArticlesLoaded = false;
@@ -123,6 +130,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private viralObserver?: IntersectionObserver;
   private viralOffset = 0;
   private readonly viralPageSize = 10;
+  private viralRowsViewport: 'mobile' | 'desktop' = window.innerWidth <= 640 ? 'mobile' : 'desktop';
   newsContentFinished = false;
   restContentStarted = false;
   private chordsContentStarted = false;
@@ -240,6 +248,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.updateViralRowsIfViewportChanged();
     this.initHeroHeight();
   }
 
@@ -273,8 +282,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const scrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - scrollY);
-    const visibleHeight = Math.round(newHeight * 100) / 100;
-    if (Math.abs(visibleHeight - this.lastHeroVisibleHeight) >= 0.25) {
+    const visibleHeight = Math.round(newHeight);
+    if (Math.abs(visibleHeight - this.lastHeroVisibleHeight) >= 1) {
       bg.style.height = visibleHeight + 'px';
       this.lastHeroVisibleHeight = visibleHeight;
     }
@@ -318,6 +327,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   loadContent() {
     this.pendingContentLoads = 0;
     this.loadHomeNewsArticles();
+  }
+
+  private continueAfterNews(): void {
+    this.newsContentFinished = true;
     setTimeout(() => this.loadChords(), 80);
     setTimeout(() => this.loadRemainingContent(), 160);
   }
@@ -325,7 +338,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadChords(): void {
     if (this.chordsContentStarted) return;
     this.chordsContentStarted = true;
-    this.newsContentFinished = true;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         this.loadRecentSongs();
@@ -588,16 +600,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.splitForRows(this.blogArticles).bottom;
   }
 
-  get visibleViralArticles(): ArticleBanner[] {
-    return this.viralArticles.slice(0, this.visibleViralCount);
-  }
-
-  getViralRows(): { articles: ArticleBanner[]; gridCols: string }[] {
+  private buildViralRows(): ViralRow[] {
     const articles = this.visibleViralArticles;
-    const rows: { articles: ArticleBanner[]; gridCols: string }[] = [];
+    const rows: ViralRow[] = [];
     let i = 0;
 
-    if (window.innerWidth <= 640) {
+    if (this.viralRowsViewport === 'mobile') {
       let rowType = 0;
       while (i < articles.length) {
         const count = rowType % 2 === 0 ? 2 : 1;
@@ -637,6 +645,18 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return rows;
+  }
+
+  private refreshVisibleViralArticles(): void {
+    this.visibleViralArticles = this.viralArticles.slice(0, this.visibleViralCount);
+    this.viralRows = this.buildViralRows();
+  }
+
+  private updateViralRowsIfViewportChanged(): void {
+    const nextViewport = window.innerWidth <= 640 ? 'mobile' : 'desktop';
+    if (nextViewport === this.viralRowsViewport) return;
+    this.viralRowsViewport = nextViewport;
+    this.viralRows = this.buildViralRows();
   }
 
   get canRevealMoreViralArticles(): boolean {
@@ -691,7 +711,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadHomeNewsArticles(): void {
     const onNewsDone = this.trackPendingLoad();
     this.articleService.getHomeNewsBanners()
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(onNewsDone)).subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        onNewsDone();
+        this.continueAfterNews();
+      })).subscribe({
         next: (banners) => {
           this.featuredNewsArticles = this.uniqueArticles(banners.featured || []);
           this.regularNewsArticles = this.uniqueArticles(banners.regular || []);
@@ -733,6 +756,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.viralOffset += articles.length;
     this.viralArticlesHasMore = articles.length === this.viralPageSize;
     this.visibleViralCount = this.viralArticles.length;
+    this.refreshVisibleViralArticles();
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
     setTimeout(() => this.initViralObserver(), 0);
