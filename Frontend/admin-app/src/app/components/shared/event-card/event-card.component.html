@@ -8,17 +8,19 @@
   <!-- פוסטר -->
   <div class="event-card__poster">
     <img
-      *ngIf="event.imageUrl"
-      [src]="(event.imageUrl | cfImage:360:82) || event.imageUrl"
+      *ngIf="posterImageUrl"
+      [src]="(posterImageUrl | cfImage:imageWidth:82) || posterImageUrl"
+      [attr.srcset]="posterImageUrl | cfSrcset:[160, 220, 280, 360]:80"
+      [attr.sizes]="imageSizes"
       [alt]="event.name"
       class="event-card__poster-img"
       width="360"
       height="480"
       loading="lazy"
       decoding="async"
-      [imgFallbackOriginal]="event.imageUrl"
+      [imgFallbackOriginal]="suppressBlockedExternalImage ? null : posterImageUrl"
       imgFallback="/logo.png">
-    <div *ngIf="!event.imageUrl" class="event-card__poster-placeholder">
+    <div *ngIf="!posterImageUrl" class="event-card__poster-placeholder">
       <span class="material-icons">music_note</span>
     </div>
     <!-- Badge על גבי התמונה -->

@@ -1303,7 +1303,7 @@
     font-weight: 400;
     font-size: var(--font-xs);
     line-height: var(--lh-small);
-    color: #888;
+    color: #404040;
     margin: 0;
 }
 
@@ -1365,7 +1365,7 @@
     font-weight: 400;
     font-size: var(--font-xs);
     line-height: var(--lh-small);
-    color: #888;
+    color: #404040;
     direction: rtl;
 }
 
@@ -1382,19 +1382,19 @@
 .footer-acum-logo {
     height: 22px;
     width: auto;
-    opacity: 0.6;
+    opacity: 1;
     display: block;
     object-fit: contain;
 }
 
 .footer-acum a {
-    color: #ccc;
+    color: #404040;
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
 .footer-acum a:hover {
-    color: #fff;
+    color: #000000;
 }
 
 .footer-legal-link {
@@ -1404,7 +1404,7 @@
     font-family: inherit;
     font-size: inherit;
     font-weight: inherit;
-    color: #666;
+    color: #404040;
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;

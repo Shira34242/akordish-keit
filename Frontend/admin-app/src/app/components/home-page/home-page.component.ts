@@ -133,7 +133,22 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private viralRowsViewport: 'mobile' | 'desktop' = window.innerWidth <= 640 ? 'mobile' : 'desktop';
   newsContentFinished = false;
   restContentStarted = false;
+  topAdStarted = false;
+  promoChordsStarted = false;
+  chordsSectionStarted = false;
+  artistsSectionStarted = false;
+  midAdStarted = false;
+  promoIndexStarted = false;
+  featuredSectionStarted = false;
+  eventsSectionStarted = false;
+  promoPodcastsStarted = false;
+  podcastsSectionStarted = false;
+  bottomAdStarted = false;
+  blogSectionStarted = false;
+  viralSectionStarted = false;
   private chordsContentStarted = false;
+  private nextHomeStage = 0;
+  private homeStageTimer?: number;
 
   constructor(
     private router: Router,
@@ -216,6 +231,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
     if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
+    if (this.homeStageTimer) window.clearTimeout(this.homeStageTimer);
     this.viralObserver?.disconnect();
   }
 
@@ -331,39 +347,97 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private continueAfterNews(): void {
     this.newsContentFinished = true;
-    setTimeout(() => this.loadChords(), 80);
-    setTimeout(() => this.loadRemainingContent(), 160);
+    this.restContentStarted = true;
+    this.scheduleNextHomeStage(80);
+  }
+
+  private scheduleNextHomeStage(delay = 80): void {
+    if (this.homeStageTimer) window.clearTimeout(this.homeStageTimer);
+    this.homeStageTimer = window.setTimeout(() => {
+      this.homeStageTimer = undefined;
+      this.runNextHomeStage();
+    }, delay);
+  }
+
+  private runNextHomeStage(): void {
+    const stage = this.nextHomeStage++;
+
+    switch (stage) {
+      case 0:
+        this.topAdStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 1:
+        this.promoChordsStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 2:
+        this.loadChords();
+        break;
+      case 3:
+        this.artistsSectionStarted = true;
+        this.loadTopArtists(() => this.scheduleNextHomeStage());
+        break;
+      case 4:
+        this.midAdStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 5:
+        this.promoIndexStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 6:
+        this.featuredSectionStarted = true;
+        this.loadFeaturedPeople(() => this.scheduleNextHomeStage());
+        break;
+      case 7:
+        this.eventsSectionStarted = true;
+        this.loadUpcomingEvents(() => this.scheduleNextHomeStage());
+        break;
+      case 8:
+        this.promoPodcastsStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 9:
+        this.podcastsSectionStarted = true;
+        this.loadHomePodcasts(() => this.scheduleNextHomeStage());
+        break;
+      case 10:
+        this.bottomAdStarted = true;
+        this.scheduleNextHomeStage(90);
+        break;
+      case 11:
+        this.blogSectionStarted = true;
+        this.loadBlogArticles(() => this.scheduleNextHomeStage());
+        break;
+      case 12:
+        this.viralSectionStarted = true;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.initViralObserver();
+            this.loadViralArticles();
+          });
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   private loadChords(): void {
     if (this.chordsContentStarted) return;
     this.chordsContentStarted = true;
+    this.chordsSectionStarted = true;
+    let completedLoads = 0;
+    const completeLoad = () => {
+      completedLoads++;
+      if (completedLoads === 2) this.scheduleNextHomeStage();
+    };
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        this.loadRecentSongs();
-        this.loadPopularSongs();
+        this.loadRecentSongs(completeLoad);
+        this.loadPopularSongs(completeLoad);
       });
-    });
-  }
-
-  private loadRemainingContent(): void {
-    if (this.restContentStarted) return;
-    this.restContentStarted = true;
-
-    const orderedLoads: Array<() => void> = [
-      () => this.loadTopArtists(),
-      () => this.loadFeaturedPeople(),
-      () => this.loadUpcomingEvents(),
-      () => this.loadHomePodcasts(),
-      () => this.loadBlogArticles()
-    ];
-
-    orderedLoads.forEach((load, index) => {
-      setTimeout(load, index * 60);
-    });
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => this.initViralObserver());
     });
   }
 

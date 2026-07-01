@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { EventCardData, getDisplayArtist, hasDisplayEventTitle, isEventPast } from '../../../utils/event.utils';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-event-card',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ImgFallbackDirective, CloudflareImagePipe],
+  imports: [CommonModule, TranslatePipe, ImgFallbackDirective, CloudflareImagePipe, CloudflareImageSrcsetPipe],
   templateUrl: './event-card.component.html',
   styleUrls: ['./event-card.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -16,7 +16,17 @@ import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 export class EventCardComponent {
   @Input({ required: true }) event!: EventCardData;
   @Input() showInfo = true;
+  @Input() imageWidth = 360;
+  @Input() imageSizes = '360px';
+  @Input() suppressBlockedExternalImage = false;
   @Output() cardClick = new EventEmitter<EventCardData>();
+
+  get posterImageUrl(): string | null {
+    const imageUrl = (this.event?.imageUrl || '').trim();
+    if (!imageUrl) return null;
+    if (this.suppressBlockedExternalImage && this.isBlockedExternalImage(imageUrl)) return null;
+    return imageUrl;
+  }
 
   get displayArtist(): string | null {
     return getDisplayArtist(this.event);
@@ -49,5 +59,14 @@ export class EventCardComponent {
     const h = d.getHours().toString().padStart(2, '0');
     const m = d.getMinutes().toString().padStart(2, '0');
     return `${h}:${m}`;
+  }
+
+  private isBlockedExternalImage(imageUrl: string): boolean {
+    try {
+      const host = new URL(imageUrl).hostname.toLowerCase();
+      return host === 'static.tickchak.co.il' || host.endsWith('.tickchak.co.il');
+    } catch {
+      return false;
+    }
   }
 }

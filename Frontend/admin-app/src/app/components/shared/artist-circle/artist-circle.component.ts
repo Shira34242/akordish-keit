@@ -1,14 +1,14 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { artistRoute } from '../../../utils/slug';
 
 @Component({
     selector: 'app-artist-circle',
     standalone: true,
-    imports: [CommonModule, RouterModule, CloudflareImagePipe, ImgFallbackDirective],
+    imports: [CommonModule, RouterModule, CloudflareImagePipe, CloudflareImageSrcsetPipe, ImgFallbackDirective],
     templateUrl: './artist-circle.component.html',
     styleUrls: ['./artist-circle.component.css']
 })

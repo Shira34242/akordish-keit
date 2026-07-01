@@ -247,12 +247,12 @@
 
     <ng-container *ngIf="restContentStarted">
 
-    <div class="content-slot">
+    <div class="content-slot" *ngIf="topAdStarted">
       <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="home-top-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-chords" class="promo-box">
+    <div id="promo-chords" class="promo-box" *ngIf="promoChordsStarted">
       <div class="promo-content">
         <h2 class="promo-title">{{ 'home.promo_chords_title' | translate }}</h2>
         <p class="promo-subtitle">{{ 'home.promo_chords_sub' | translate }}</p>
@@ -273,7 +273,7 @@
       </div>
     </div>
 
-    <section class="home-section" *ngIf="newsContentFinished">
+    <section class="home-section" *ngIf="chordsSectionStarted && recentSongs.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
       </div>
@@ -282,7 +282,7 @@
       </div>
     </section>
 
-    <section class="home-section" *ngIf="newsContentFinished">
+    <section class="home-section" *ngIf="chordsSectionStarted && popularSongs.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
       </div>
@@ -291,7 +291,7 @@
       </div>
     </section>
 
-    <section class="home-section">
+    <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
         <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
@@ -309,12 +309,12 @@
       </div>
     </section>
 
-    <div class="content-slot">
+    <div class="content-slot" *ngIf="midAdStarted">
       <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="home-mid-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-index" class="promo-box promo-box--providers">
+    <div id="promo-index" class="promo-box promo-box--providers" *ngIf="promoIndexStarted">
       <div class="promo-content">
         <h2 class="promo-title">{{ 'home.promo_index_title' | translate }}</h2>
         <p class="promo-subtitle">{{ 'home.promo_index_sub' | translate }}</p>
@@ -335,7 +335,7 @@
       </div>
     </div>
 
-    <section class="home-section index-showcase-section" *ngIf="featuredTeachers.length > 0 || featuredProviders.length > 0">
+    <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && (featuredTeachers.length > 0 || featuredProviders.length > 0)">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
         <a routerLink="/professionals" class="section-link">{{ 'home.teachers_link' | translate }}</a>
@@ -362,7 +362,7 @@
       </div>
     </section>
 
-    <section class="home-section" *ngIf="upcomingEvents.length > 0">
+    <section class="home-section" *ngIf="eventsSectionStarted && upcomingEvents.length > 0">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
@@ -374,6 +374,9 @@
               *ngFor="let event of upcomingEvents; trackBy: trackById"
               [event]="event"
               [showInfo]="false"
+              [imageWidth]="220"
+              imageSizes="(max-width: 768px) 9rem, 11rem"
+              [suppressBlockedExternalImage]="true"
               (cardClick)="openEventModal($event)">
             </app-event-card>
           </ng-container>
@@ -381,7 +384,7 @@
       </div>
     </section>
 
-    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts">
+    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" *ngIf="promoPodcastsStarted">
       <div class="promo-content">
         <h2 class="promo-title">פודקאסטים</h2>
         <p class="promo-subtitle">השיחות, הראיונות והפרקים החמים בעולם המוזיקה היהודית</p>
@@ -398,7 +401,7 @@
       </div>
     </div>
 
-    <section class="home-section podcasts-home-section" *ngIf="homePodcasts.length > 0">
+    <section class="home-section podcasts-home-section" *ngIf="podcastsSectionStarted && homePodcasts.length > 0">
       <div class="section-header">
         <h2 class="section-title">פודקאסטים מובילים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
@@ -431,7 +434,7 @@
       </div>
     </section>
 
-    <section class="home-section popular-episodes-section" *ngIf="popularPodcastEpisodes.length > 0">
+    <section class="home-section popular-episodes-section" *ngIf="podcastsSectionStarted && popularPodcastEpisodes.length > 0">
       <div class="section-header">
         <h2 class="section-title">פרקים מובילים</h2>
         <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
@@ -449,12 +452,12 @@
       </div>
     </section>
 
-    <div class="content-slot">
+    <div class="content-slot" *ngIf="bottomAdStarted">
       <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="home-bottom-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <section class="home-section content-articles-section" *ngIf="blogArticlesLoaded">
+    <section class="home-section content-articles-section" *ngIf="blogSectionStarted && blogArticlesLoaded">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
         <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>
@@ -513,7 +516,7 @@
     <section
       class="home-section viral-section"
       #viralSection
-      *ngIf="!viralArticlesLoaded || loadingViralArticles || viralArticles.length > 0">
+      *ngIf="viralSectionStarted && (!viralArticlesLoaded || loadingViralArticles || viralArticles.length > 0)">
       <div class="section-header">
         <h2 class="section-title">ויראלי</h2>
         <a routerLink="/music-news" class="section-link">לכל חדשות המוזיקה</a>

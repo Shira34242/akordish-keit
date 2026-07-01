@@ -68,7 +68,7 @@
     font-variation-settings: "wdth" 100;
     font-weight: 300;
     font-size: var(--font-xs);
-    color: rgba(0, 0, 0, 0.4);
+    color: #404040;
 }
 
 .song-card-match-badge {
@@ -128,7 +128,7 @@
     font-variation-settings: "wdth" 100;
     font-weight: 300;
     font-size: var(--font-sm);
-    color: rgba(0, 0, 0, 0.45);
+    color: #404040;
 }
 
 .song-card-arrow {
