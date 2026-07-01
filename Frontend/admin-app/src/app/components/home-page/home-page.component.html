@@ -251,8 +251,18 @@
         <h2 class="promo-title">{{ 'home.promo_chords_title' | translate }}</h2>
         <p class="promo-subtitle">{{ 'home.promo_chords_sub' | translate }}</p>
         <div class="promo-actions">
-          <a routerLink="/chords" class="promo-btn">{{ 'home.promo_chords_link' | translate }}</a>
-          <button (click)="handleRandomSongClick()" class="promo-btn promo-btn-secondary">{{ 'home.promo_chords_random' | translate }}</button>
+          <a routerLink="/chords" class="promo-arrow-link" [attr.aria-label]="'home.promo_chords_link' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
+          <button (click)="handleRandomSongClick()" class="promo-btn promo-btn-secondary">
+            <span class="material-icons promo-btn-icon" aria-hidden="true">redeem</span>
+            {{ 'home.promo_chords_random' | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -303,8 +313,18 @@
         <h2 class="promo-title">{{ 'home.promo_index_title' | translate }}</h2>
         <p class="promo-subtitle">{{ 'home.promo_index_sub' | translate }}</p>
         <div class="promo-actions">
-          <a routerLink="/professionals" class="promo-btn">{{ 'home.promo_index_link' | translate }}</a>
-          <button type="button" (click)="handleJoinIndexClick()" class="promo-btn promo-btn-secondary">{{ 'home.promo_index_join' | translate }}</button>
+          <a routerLink="/professionals" class="promo-arrow-link" [attr.aria-label]="'home.promo_index_link' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
+          <button type="button" (click)="handleJoinIndexClick()" class="promo-btn promo-btn-secondary">
+            <span class="material-icons promo-btn-icon" aria-hidden="true">add</span>
+            {{ 'home.promo_index_join' | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -360,7 +380,14 @@
         <h2 class="promo-title">פודקאסטים</h2>
         <p class="promo-subtitle">השיחות, הראיונות והפרקים החמים בעולם המוזיקה היהודית</p>
         <div class="promo-actions">
-          <a routerLink="/podcasts" class="promo-btn">לכל הפודקאסטים ‹</a>
+          <a routerLink="/podcasts" class="promo-arrow-link" aria-label="לכל הפודקאסטים">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </a>
         </div>
       </div>
     </div>

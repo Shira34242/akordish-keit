@@ -43,7 +43,10 @@ public class ArtistsController : ControllerBase
         try
         {
             limit = Math.Clamp(limit, 1, 48);
-            var mentionPattern = ArtistMentionPattern(id);
+            var mentionTypePattern = MentionTypePattern("artist");
+            var mentionIdPattern = MentionIdPattern(id);
+            var artistHrefExactPattern = ArtistHrefExactPattern(id);
+            var artistHrefSlugPattern = ArtistHrefSlugPattern(id);
 
             var episodes = await _context.PodcastEpisodes
                 .AsNoTracking()
@@ -52,7 +55,10 @@ public class ArtistsController : ControllerBase
                     && !e.Podcast.IsDeleted
                     && e.Podcast.IsActive
                     && (e.PodcastEpisodeArtists.Any(pa => pa.ArtistId == id)
-                        || EF.Functions.Like(e.Description, mentionPattern)))
+                        || (EF.Functions.Like(e.Description, mentionTypePattern)
+                            && EF.Functions.Like(e.Description, mentionIdPattern))
+                        || EF.Functions.Like(e.Description, artistHrefExactPattern)
+                        || EF.Functions.Like(e.Description, artistHrefSlugPattern)))
                 .OrderByDescending(e => e.PublishedAt)
                 .ThenByDescending(e => e.Id)
                 .Take(limit)
@@ -278,14 +284,20 @@ public class ArtistsController : ControllerBase
                 return NotFound("אומן לא נמצא");
 
             var now = DateTime.UtcNow;
-            var mentionPattern = ArtistMentionPattern(id);
+            var mentionTypePattern = MentionTypePattern("artist");
+            var mentionIdPattern = MentionIdPattern(id);
+            var artistHrefExactPattern = ArtistHrefExactPattern(id);
+            var artistHrefSlugPattern = ArtistHrefSlugPattern(id);
 
             var songCount = await _context.Songs
                 .Where(s => !s.IsDeleted
                     && s.IsApproved
                     && (s.SongArtists.Any(sa => sa.ArtistId == id)
                         || (s.UploaderProfileType == "artist" && s.UploaderProfileId == id)
-                        || EF.Functions.Like(s.LyricsWithChords, mentionPattern)))
+                        || (EF.Functions.Like(s.LyricsWithChords, mentionTypePattern)
+                            && EF.Functions.Like(s.LyricsWithChords, mentionIdPattern))
+                        || EF.Functions.Like(s.LyricsWithChords, artistHrefExactPattern)
+                        || EF.Functions.Like(s.LyricsWithChords, artistHrefSlugPattern)))
                 .CountAsync();
 
             var articleCount = await _context.Articles
@@ -294,7 +306,10 @@ public class ArtistsController : ControllerBase
                     && a.PublishDate <= now
                     && (a.ArticleArtists.Any(aa => aa.ArtistId == id)
                         || (a.UploaderProfileType == "artist" && a.UploaderProfileId == id)
-                        || EF.Functions.Like(a.Content, mentionPattern)))
+                        || (EF.Functions.Like(a.Content, mentionTypePattern)
+                            && EF.Functions.Like(a.Content, mentionIdPattern))
+                        || EF.Functions.Like(a.Content, artistHrefExactPattern)
+                        || EF.Functions.Like(a.Content, artistHrefSlugPattern)))
                 .CountAsync();
 
             var today = now.Date;
@@ -304,7 +319,10 @@ public class ArtistsController : ControllerBase
                     && !e.IsDeleted
                     && e.IsActive
                     && (e.EventArtists.Any(ea => ea.ArtistId == id)
-                        || EF.Functions.Like(e.Description, mentionPattern)))
+                        || (EF.Functions.Like(e.Description, mentionTypePattern)
+                            && EF.Functions.Like(e.Description, mentionIdPattern))
+                        || EF.Functions.Like(e.Description, artistHrefExactPattern)
+                        || EF.Functions.Like(e.Description, artistHrefSlugPattern)))
                 .CountAsync();
 
             var podcastEpisodeCount = await _context.PodcastEpisodes
@@ -313,7 +331,10 @@ public class ArtistsController : ControllerBase
                     && !e.Podcast.IsDeleted
                     && e.Podcast.IsActive
                     && (e.PodcastEpisodeArtists.Any(pa => pa.ArtistId == id)
-                        || EF.Functions.Like(e.Description, mentionPattern)))
+                        || (EF.Functions.Like(e.Description, mentionTypePattern)
+                            && EF.Functions.Like(e.Description, mentionIdPattern))
+                        || EF.Functions.Like(e.Description, artistHrefExactPattern)
+                        || EF.Functions.Like(e.Description, artistHrefSlugPattern)))
                 .CountAsync();
 
             var result = new ArtistDetailDto
@@ -420,14 +441,20 @@ public class ArtistsController : ControllerBase
     {
         try
         {
-            var mentionPattern = ArtistMentionPattern(id);
+            var mentionTypePattern = MentionTypePattern("artist");
+            var mentionIdPattern = MentionIdPattern(id);
+            var artistHrefExactPattern = ArtistHrefExactPattern(id);
+            var artistHrefSlugPattern = ArtistHrefSlugPattern(id);
             var query = _context.Songs
                 .AsNoTracking()
                 .Where(s => !s.IsDeleted
                     && s.IsApproved
                     && (s.SongArtists.Any(sa => sa.ArtistId == id)
                         || (s.UploaderProfileType == "artist" && s.UploaderProfileId == id)
-                        || EF.Functions.Like(s.LyricsWithChords, mentionPattern)));
+                        || (EF.Functions.Like(s.LyricsWithChords, mentionTypePattern)
+                            && EF.Functions.Like(s.LyricsWithChords, mentionIdPattern))
+                        || EF.Functions.Like(s.LyricsWithChords, artistHrefExactPattern)
+                        || EF.Functions.Like(s.LyricsWithChords, artistHrefSlugPattern)));
 
             var totalCount = await query.CountAsync();
 
@@ -471,14 +498,20 @@ public class ArtistsController : ControllerBase
         try
         {
             var now = DateTime.UtcNow;
-            var mentionPattern = ArtistMentionPattern(id);
+            var mentionTypePattern = MentionTypePattern("artist");
+            var mentionIdPattern = MentionIdPattern(id);
+            var artistHrefExactPattern = ArtistHrefExactPattern(id);
+            var artistHrefSlugPattern = ArtistHrefSlugPattern(id);
             var query = _context.Articles
                 .AsNoTracking()
                 .Include(a => a.ArticleCategories)
                     .ThenInclude(ac => ac.Category)
                 .Where(a => (a.ArticleArtists.Any(aa => aa.ArtistId == id)
                         || (a.UploaderProfileType == "artist" && a.UploaderProfileId == id)
-                        || EF.Functions.Like(a.Content, mentionPattern))
+                        || (EF.Functions.Like(a.Content, mentionTypePattern)
+                            && EF.Functions.Like(a.Content, mentionIdPattern))
+                        || EF.Functions.Like(a.Content, artistHrefExactPattern)
+                        || EF.Functions.Like(a.Content, artistHrefSlugPattern))
                     && a.Status == (int)ArticleStatus.Published
                     && a.PublishDate <= now
                     && !a.IsDeleted);
@@ -521,9 +554,24 @@ public class ArtistsController : ControllerBase
         }
     }
 
-    private static string ArtistMentionPattern(int artistId)
+    private static string MentionTypePattern(string profileType)
     {
-        return $@"%data-mention-type=""artist""%data-mention-id=""{artistId}""%";
+        return $@"%data-mention-type=""{profileType}""%";
+    }
+
+    private static string MentionIdPattern(int profileId)
+    {
+        return $@"%data-mention-id=""{profileId}""%";
+    }
+
+    private static string ArtistHrefExactPattern(int artistId)
+    {
+        return $@"%/artist/{artistId}""%";
+    }
+
+    private static string ArtistHrefSlugPattern(int artistId)
+    {
+        return $@"%/artist/{artistId}/%";
     }
 
     /// <summary>
@@ -567,7 +615,10 @@ public class ArtistsController : ControllerBase
         try
         {
             var today = DateTime.UtcNow.Date;
-            var mentionPattern = ArtistMentionPattern(id);
+            var mentionTypePattern = MentionTypePattern("artist");
+            var mentionIdPattern = MentionIdPattern(id);
+            var artistHrefExactPattern = ArtistHrefExactPattern(id);
+            var artistHrefSlugPattern = ArtistHrefSlugPattern(id);
 
             var events = await _context.Events
                 .AsNoTracking()
@@ -575,7 +626,10 @@ public class ArtistsController : ControllerBase
                     && !e.IsDeleted
                     && e.IsActive
                     && (e.EventArtists.Any(ea => ea.ArtistId == id)
-                        || EF.Functions.Like(e.Description, mentionPattern)))
+                        || (EF.Functions.Like(e.Description, mentionTypePattern)
+                            && EF.Functions.Like(e.Description, mentionIdPattern))
+                        || EF.Functions.Like(e.Description, artistHrefExactPattern)
+                        || EF.Functions.Like(e.Description, artistHrefSlugPattern)))
                 .OrderBy(e => e.EventDate)
                 .Select(e => new ArtistEventItemDto
                 {

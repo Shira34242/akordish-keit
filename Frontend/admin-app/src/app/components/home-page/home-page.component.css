@@ -418,19 +418,42 @@
    SECTION LINK — קישור "לכל ה..." מינימליסטי בצד שמאל
 ============================================ */
 .section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-family: 'Open Sans', sans-serif;
-  font-weight: 400;
+  font-weight: 800;
   font-size: var(--font-sm);
   color: #000;
+  background: #F2F2F2;
   text-decoration: none;
   white-space: nowrap;
   margin-inline-start: auto;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  border-radius: 999px;
+  min-height: 40px;
+  padding: 0 var(--space-base);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.section-link::after {
+  content: '\203A';
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-lg);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s;
 }
 
 .section-link:hover {
-  opacity: 1;
+  background: #ddff53;
+  transform: translateY(-1px);
+}
+
+.section-link:hover::after {
+  transform: translateX(-2px);
 }
 
 /* ============================================
@@ -967,7 +990,7 @@
   border-radius: 28px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1006,8 +1029,11 @@
 }
 .promo-content {
   width: 100%;
-  max-width: 600px;
+  max-width: none;
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .promo-title {
@@ -1015,10 +1041,11 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: var(--font-4xl);
+  font-size: calc(var(--font-4xl) * 1.28);
   color: #000;
-  margin: 0 0 var(--space-md);
-  line-height: 1;
+  margin: 0 0 var(--space-sm);
+  line-height: 0.95;
+  max-width: 34rem;
 }
 
 .promo-subtitle {
@@ -1026,8 +1053,10 @@
   font-weight: 300;
   font-size: var(--font-lg);
   color: #000;
-  margin: 0 0 var(--space-xl);
+  margin: 0 0 var(--space-lg);
   opacity: 0.75;
+  line-height: var(--lh-heading);
+  max-width: 28rem;
 }
 
 .promo-actions {
@@ -1035,34 +1064,75 @@
   gap: var(--space-base);
   flex-wrap: wrap;
   justify-content: flex-start;
+  align-items: center;
+  width: 100%;
 }
 
 .promo-btn {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-sm);
   font-family: 'Open Sans', sans-serif;
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
   font-size: var(--font-sm);
-  height: 34px;
+  height: 42px;
   background: #000;
   color: #ddff53;
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  padding: 0 var(--space-xl);
+  padding: 0 var(--space-lg);
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
 }
 
 .promo-btn:hover {
-  opacity: 0.8;
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.promo-arrow-link {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #000000;
+  color: #ddff53;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.promo-arrow-link:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: scale(1.06);
 }
 
 .promo-btn-secondary {
   background: #fff;
   color: #000;
+  margin-inline-start: auto;
+  min-width: 10rem;
+  justify-content: center;
+  font-size: var(--font-base);
+}
+
+.promo-btn-secondary:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.promo-btn-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -1334,7 +1404,7 @@
   .promo-box {
     border-radius: 20px;
     padding: var(--space-xl) var(--space-xl);
-    justify-content: flex-end;
+    justify-content: flex-start;
     margin: var(--space-xl) 0;
   }
 
@@ -1343,11 +1413,17 @@
   }
 
   .promo-title {
-    font-size: var(--font-3xl);
+    font-size: var(--font-4xl);
   }
 
   .promo-actions {
     justify-content: flex-start;
+  }
+
+  .promo-arrow-link {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
   }
 
   .news-grid {
@@ -1414,6 +1490,10 @@
 
   .promo-box {
     border-radius: 16px;
+  }
+
+  .promo-title {
+    font-size: var(--font-3xl);
   }
 
   .news-banner-stack {

@@ -1,297 +1,220 @@
 <div class="reports-container">
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="header-content">
+  <header class="reports-header">
+    <div>
       <h1 class="page-title">ניהול דיווחים</h1>
-      <p class="page-subtitle">טיפול בדיווחים על תוכן</p>
+      <p class="page-subtitle">{{ totalItems }} דיווחים במערכת</p>
     </div>
-  </div>
 
-  <!-- Actions Bar -->
-  <div class="actions-bar">
-    <!-- Filters -->
-    <div class="filters">
-      <!-- Status Filter -->
-      <select [(ngModel)]="selectedStatus" (change)="onStatusFilter(selectedStatus)" class="filter-select">
-        <option [ngValue]="undefined">כל הסטטוסים</option>
-        <option value="Pending">ממתין</option>
-        <option value="Resolved">טופל</option>
-        <option value="Dismissed">נדחה</option>
-      </select>
-
-      <!-- Content Type Filter -->
-      <select [(ngModel)]="selectedContentType" (change)="onContentTypeFilter(selectedContentType)"
-        class="filter-select">
-        <option [ngValue]="undefined">כל סוגי התוכן</option>
-        <option value="Song">אקורדים</option>
-        <option value="Article">כתבה</option>
-        <option value="BlogPost">בלוג</option>
-        <option value="General">הודעה כללית</option>
-        <option value="NewContent">הוספת מידע חדש למערכת</option>
-      </select>
-
-      <!-- Report Type Filter -->
-      <select [(ngModel)]="selectedReportType" (change)="onReportTypeFilter(selectedReportType)"
-        class="filter-select">
-        <option [ngValue]="undefined">כל סוגי הדיווח</option>
-        <option value="ContentError">טעות בתוכן</option>
-        <option value="InappropriateContent">תוכן לא ראוי</option>
-        <option value="Other">אחר</option>
-        <option value="NewArtist">אמן חדש</option>
-        <option value="NewGenre">ז'אנרים שירים</option>
-        <option value="NewTag">תגיות שירים</option>
-        <option value="NewPerson">מלחין חדש</option>
-      </select>
-
-      <!-- Reset Filters -->
-      <button class="filter-btn btn-reset" (click)="resetFilters()">
-        <span class="material-icons">restart_alt</span> איפוס סינון
+    <div class="header-actions">
+      <button class="icon-btn" type="button" (click)="cleanupArtistDuplicates()" title="ניקוי כפילויות אמנים">
+        <span class="material-icons">auto_fix_high</span>
       </button>
-
+      <button class="pill-btn" type="button" (click)="resetFilters()">
+        איפוס
+      </button>
     </div>
+  </header>
 
-    <!-- Stats -->
-    <div class="stats">
-      <span class="stat-item">סה"כ: {{ totalItems }}</span>
-      <div class="view-controls" *ngIf="!loading">
-        <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
-          <span class="material-icons">view_list</span>
-        </button>
-        <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
-          <span class="material-icons">grid_view</span>
-        </button>
-      </div>
-    </div>
-  </div>
+  <section class="summary-strip" aria-label="סיכום דיווחים">
+    <button
+      class="summary-item"
+      type="button"
+      *ngFor="let metric of dashboardMetrics; trackBy: trackByMetric"
+      (click)="metric.filterStatus ? onStatusFilter(metric.filterStatus) : setActiveGroup('approvals')">
+      <strong>{{ metric.value }}</strong>
+      <span>{{ metric.label }}</span>
+    </button>
+  </section>
 
-  <!-- Grid View -->
-  <div class="reports-grid" *ngIf="!loading && reports.length > 0 && viewMode === 'grid'">
-    <div class="report-card" *ngFor="let report of reports; trackBy: trackByReportId" [class.expanded]="expandedReportId === report.id">
-      <div class="report-card-header">
-        <span class="date-cell">{{ report.reportedAt | date:'d/M/yy HH:mm' }}</span>
-        <span class="status-badge" [ngClass]="getStatusClass(report.status)">
-          {{ statusLabels[report.status] }}
-        </span>
-      </div>
-      <h3>{{ report.contentTitle }}</h3>
-      <div class="report-card-badges">
-        <span class="content-type-badge">{{ contentTypeLabels[report.contentType] }}</span>
-        <span class="report-type-badge">{{ reportTypeLabels[report.reportType] }}</span>
-      </div>
-      <p class="reporter-line">{{ report.reporterUsername || 'אורח' }}</p>
-      <p class="description" *ngIf="expandedReportId === report.id">{{ report.description }}</p>
+  <nav class="group-tabs" aria-label="סוגי דיווחים">
+    <button
+      class="group-tab"
+      type="button"
+      *ngFor="let group of dashboardGroups; trackBy: trackByGroup"
+      [class.active]="activeGroupKey === group.key"
+      (click)="setActiveGroup(group.key)">
+      <span>{{ group.label }}</span>
+      <strong>{{ group.reports.length }}</strong>
+    </button>
+  </nav>
 
-      <div class="report-card-actions">
-        <button class="action-btn btn-expand" type="button" (click)="toggleExpand(report.id)" title="הצג פרטים">
-          <span class="material-icons">{{ expandedReportId === report.id ? 'expand_less' : 'expand_more' }}</span>
-        </button>
-        <button class="action-btn btn-link" type="button" (click)="goToContent(report)" title="עבור לתוכן" *ngIf="!isNewContentReport(report)">
-          <span class="material-icons">open_in_new</span>
-        </button>
-        <ng-container *ngIf="isNewContentReport(report) && report.status === 'Pending'">
-          <button *ngIf="report.reportType === 'NewArtist'" class="action-btn btn-approve" type="button" (click)="approveNewArtist(report)" title="צור פרופיל אמן">
-            <span class="material-icons">person_add</span>
-          </button>
-          <button *ngIf="report.reportType !== 'NewArtist'" class="action-btn btn-approve" type="button" (click)="resolveAsPending(report)" title="אשר">
-            <span class="material-icons">check</span>
-          </button>
-          <button class="action-btn btn-dismiss" type="button" (click)="dismissItem(report)" title="דחה">
-            <span class="material-icons">close</span>
-          </button>
-        </ng-container>
-        <button class="action-btn btn-edit" type="button" (click)="openStatusModal(report)" title="עדכן סטטוס" *ngIf="!isNewContentReport(report) && report.status === 'Pending'">
-          <span class="material-icons">edit</span>
-        </button>
-        <button class="action-btn btn-delete" type="button" (click)="deleteReport(report.id)" title="מחק">
-          <span class="material-icons">delete</span>
-        </button>
-      </div>
-    </div>
-  </div>
+  <section class="filters-row">
+    <select [(ngModel)]="selectedStatus" (change)="onStatusFilter(selectedStatus)" class="filter-select" aria-label="סינון לפי סטטוס">
+      <option [ngValue]="undefined">כל הסטטוסים</option>
+      <option value="Pending">ממתין</option>
+      <option value="Resolved">טופל</option>
+      <option value="Dismissed">נדחה</option>
+    </select>
 
-  <!-- Table -->
-  <div class="table-container" *ngIf="loading || reports.length === 0 || viewMode === 'list'">
-    <div *ngIf="loading" class="loading-state">
+    <select [(ngModel)]="selectedContentType" (change)="onContentTypeFilter(selectedContentType)"
+      class="filter-select" aria-label="סינון לפי סוג תוכן">
+      <option [ngValue]="undefined">כל סוגי התוכן</option>
+      <option value="Song">אקורדים</option>
+      <option value="Article">כתבה</option>
+      <option value="BlogPost">בלוג</option>
+      <option value="General">הודעה כללית</option>
+      <option value="NewContent">מידע חדש</option>
+    </select>
+
+    <select [(ngModel)]="selectedReportType" (change)="onReportTypeFilter(selectedReportType)"
+      class="filter-select" aria-label="סינון לפי סוג דיווח">
+      <option [ngValue]="undefined">כל סוגי הדיווח</option>
+      <option value="ContentError">טעות בתוכן</option>
+      <option value="InappropriateContent">תוכן לא ראוי</option>
+      <option value="Other">אחר</option>
+      <option value="ChordRequest">בקשת אקורדים</option>
+      <option value="NewArtist">אמן חדש</option>
+      <option value="NewGenre">ז׳אנר חדש</option>
+      <option value="NewTag">תגית חדשה</option>
+      <option value="NewPerson">מלחין חדש</option>
+    </select>
+  </section>
+
+  <main class="reports-body">
+    <div *ngIf="loading" class="state-box">
       <div class="spinner"></div>
       <p>טוען דיווחים...</p>
     </div>
 
-    <div *ngIf="!loading && reports.length === 0" class="empty-state">
+    <div *ngIf="!loading && reports.length === 0" class="state-box">
       <span class="material-icons">inbox</span>
       <p>אין דיווחים להצגה</p>
     </div>
 
-    <table *ngIf="!loading && reports.length > 0 && viewMode === 'list'" class="reports-table">
-      <thead>
-        <tr>
-          <th>תאריך</th>
-          <th>סוג תוכן</th>
-          <th>כותרת</th>
-          <th>סוג דיווח</th>
-          <th>מדווח</th>
-          <th>סטטוס</th>
-          <th>פעולות</th>
-        </tr>
-      </thead>
-      <tbody>
-        <ng-container *ngFor="let report of reports; trackBy: trackByReportId">
-          <!-- Main Row -->
-          <tr class="report-row" [class.expanded]="expandedReportId === report.id">
-            <!-- Date -->
-            <td class="date-cell">
-              {{ report.reportedAt | date:'d/M/yy HH:mm' }}
-            </td>
+    <ng-container *ngIf="!loading && reports.length > 0">
+      <section class="report-list" aria-label="רשימת דיווחים">
+        <article
+          class="report-row"
+          *ngFor="let report of selectedReports; trackBy: trackByReportId"
+          [class.active]="selectedReport?.id === report.id"
+          (click)="selectReport(report)">
+          <div class="row-title">
+            <h2>{{ report.contentTitle }}</h2>
+            <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+              {{ statusLabels[report.status] }}
+            </span>
+          </div>
 
-            <!-- Content Type -->
-            <td>
-              <span class="content-type-badge">
-                {{ contentTypeLabels[report.contentType] }}
-              </span>
-            </td>
+          <div class="row-meta">
+            <span>{{ reportTypeLabels[report.reportType] || report.reportType }}</span>
+            <span>{{ contentTypeLabels[report.contentType] || report.contentType }}</span>
+            <span>{{ getReportAgeLabel(report) }}</span>
+          </div>
+        </article>
 
-            <!-- Title -->
-            <td class="title-cell">
-              <div class="content-title">{{ report.contentTitle }}</div>
-            </td>
+        <div *ngIf="selectedReports.length === 0" class="state-box compact">
+          <p>אין פריטים בקטגוריה הזו.</p>
+        </div>
+      </section>
 
-            <!-- Report Type -->
-            <td>
-              <span class="report-type-badge">
-                {{ reportTypeLabels[report.reportType] }}
-              </span>
-            </td>
+      <aside class="details-panel" *ngIf="selectedReport as report">
+        <div class="details-top">
+          <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+            {{ statusLabels[report.status] }}
+          </span>
+          <span class="date-cell">{{ report.reportedAt | date:'d/M/yy HH:mm' }}</span>
+        </div>
 
-            <!-- Reporter -->
-            <td>
-              {{ report.reporterUsername || 'אורח' }}
-            </td>
+        <h2>{{ report.contentTitle }}</h2>
 
-            <!-- Status -->
-            <td>
-              <span class="status-badge" [ngClass]="getStatusClass(report.status)">
-                {{ statusLabels[report.status] }}
-              </span>
-            </td>
+        <div class="detail-tags">
+          <span>{{ reportTypeLabels[report.reportType] || report.reportType }}</span>
+          <span>{{ contentTypeLabels[report.contentType] || report.contentType }}</span>
+          <span>{{ report.reporterUsername || 'אורח' }}</span>
+        </div>
 
-            <!-- Actions -->
-            <td class="actions-cell">
-              <button class="action-btn btn-expand" (click)="toggleExpand(report.id)" title="הצג פרטים">
-                <span class="material-icons">{{ expandedReportId === report.id ? 'expand_less' : 'expand_more' }}</span>
-              </button>
-              <button class="action-btn btn-link" (click)="goToContent(report)" title="עבור לתוכן"
-                *ngIf="!isNewContentReport(report)">
-                <span class="material-icons">open_in_new</span>
-              </button>
+        <p class="description">{{ report.description }}</p>
 
-              <!-- כפתורי אישור ייעודיים לדיווחי תוכן חדש -->
-              <ng-container *ngIf="isNewContentReport(report) && report.status === 'Pending'">
-                <!-- אמן חדש: יצירת פרופיל -->
-                <button *ngIf="report.reportType === 'NewArtist'"
-                  class="action-btn btn-approve" (click)="approveNewArtist(report)" title="צור פרופיל אמן">
-                  <span class="material-icons">person_add</span>
-                </button>
-                <!-- ז'אנר / תגית / מלחין חדש: אשר -->
-                <button *ngIf="report.reportType !== 'NewArtist'"
-                  class="action-btn btn-approve" (click)="resolveAsPending(report)" title="אשר">
-                  <span class="material-icons">check</span>
-                </button>
-                <!-- דחה -->
-                <button class="action-btn btn-dismiss" (click)="dismissItem(report)" title="דחה">
-                  <span class="material-icons">close</span>
-                </button>
-              </ng-container>
+        <div class="quick-note">
+          {{ getQuickSuggestion(report) }}
+        </div>
 
-              <!-- עריכת סטטוס לדיווחים רגילים -->
-              <button class="action-btn btn-edit" (click)="openStatusModal(report)" title="עדכן סטטוס"
-                *ngIf="!isNewContentReport(report) && report.status === 'Pending'">
-                <span class="material-icons">edit</span>
-              </button>
+        <div class="detail-section" *ngIf="report.status !== 'Pending'">
+          <h3>טיפול קודם</h3>
+          <p><strong>טופל על ידי:</strong> {{ report.resolvedByUsername || 'לא ידוע' }}</p>
+          <p><strong>תאריך טיפול:</strong> {{ report.resolvedAt | date:'d/M/yyyy HH:mm' }}</p>
+          <p *ngIf="report.adminNotes"><strong>הערות:</strong> {{ report.adminNotes }}</p>
+        </div>
 
-              <button class="action-btn btn-delete" (click)="deleteReport(report.id)" title="מחק">
-                <span class="material-icons">delete</span>
-              </button>
-            </td>
-          </tr>
+        <div class="detail-actions">
+          <button class="pill-btn" type="button" (click)="goToContent(report)" *ngIf="!isNewContentReport(report)">
+            מעבר לתוכן
+          </button>
 
-          <!-- Expanded Details Row -->
-          <tr *ngIf="expandedReportId === report.id" class="details-row">
-            <td colspan="7">
-              <div class="report-details">
-                <div class="detail-section">
-                  <h4>תיאור הבעיה:</h4>
-                  <p class="description">{{ report.description }}</p>
-                </div>
+          <button class="pill-btn primary" type="button" (click)="approveNewArtist(report)" *ngIf="report.reportType === 'NewArtist' && report.status === 'Pending'">
+            צור אמן
+          </button>
 
-                <div class="detail-section" *ngIf="report.status !== 'Pending'">
-                  <h4>פרטי טיפול:</h4>
-                  <div class="treatment-info">
-                    <p><strong>טופל על ידי:</strong> {{ report.resolvedByUsername || 'לא ידוע' }}</p>
-                    <p><strong>תאריך טיפול:</strong> {{ report.resolvedAt | date:'d/M/yyyy HH:mm' }}</p>
-                    <p *ngIf="report.adminNotes"><strong>הערות מנהל:</strong> {{ report.adminNotes }}</p>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-container>
-      </tbody>
-    </table>
-  </div>
+          <button class="pill-btn primary" type="button" (click)="resolveAsPending(report)" *ngIf="isNewContentReport(report) && report.reportType !== 'NewArtist' && report.status === 'Pending'">
+            אשר
+          </button>
 
-  <!-- Pagination -->
+          <button class="pill-btn" type="button" (click)="openStatusModal(report)" *ngIf="!isNewContentReport(report) && report.status === 'Pending'">
+            עדכן סטטוס
+          </button>
+
+          <button class="icon-btn" type="button" (click)="dismissItem(report)" title="דחה" *ngIf="report.status === 'Pending'">
+            <span class="material-icons">close</span>
+          </button>
+
+          <button class="icon-btn danger" type="button" (click)="deleteReport(report.id)" title="מחק">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </aside>
+    </ng-container>
+  </main>
+
   <div class="pagination" *ngIf="!loading && totalPages > 1">
-    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+    <button class="page-btn" type="button" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
       <span class="material-icons">chevron_right</span>
     </button>
 
-    <button *ngFor="let page of visiblePages; trackBy: trackByPage" class="page-btn" [class.active]="page === currentPage"
+    <button *ngFor="let page of visiblePages; trackBy: trackByPage" class="page-btn" type="button" [class.active]="page === currentPage"
       (click)="goToPage(page)">
       {{ page }}
     </button>
 
-    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+    <button class="page-btn" type="button" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
       <span class="material-icons">chevron_left</span>
     </button>
   </div>
 </div>
 
-<!-- Status Update Modal -->
 <div *ngIf="editingReportId !== null" class="modal-backdrop" (click)="closeStatusModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2 class="modal-title">עדכון סטטוס דיווח</h2>
-      <button class="close-btn" (click)="closeStatusModal()">
+      <h2 class="modal-title">עדכון סטטוס</h2>
+      <button class="icon-btn" type="button" (click)="closeStatusModal()">
         <span class="material-icons">close</span>
       </button>
     </div>
 
     <div class="modal-body">
-      <!-- Status Selection -->
       <div class="form-group">
         <label class="form-label">סטטוס</label>
         <div class="radio-group">
           <label class="radio-option">
             <input type="radio" name="status" value="Resolved" [(ngModel)]="editingStatus" />
-            <span class="radio-label">טופל</span>
+            <span>טופל</span>
           </label>
           <label class="radio-option">
             <input type="radio" name="status" value="Dismissed" [(ngModel)]="editingStatus" />
-            <span class="radio-label">נדחה</span>
+            <span>נדחה</span>
           </label>
         </div>
       </div>
 
-      <!-- Admin Notes -->
       <div class="form-group">
-        <label class="form-label">הערות מנהל (אופציונלי)</label>
+        <label class="form-label">הערות</label>
         <textarea class="form-textarea" [(ngModel)]="adminNotes" rows="4"
-          placeholder="הוסף הערות לגבי הטיפול בדיווח..."></textarea>
+          placeholder="הוסף הערה קצרה..."></textarea>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeStatusModal()">ביטול</button>
-      <button class="btn btn-primary" (click)="updateStatus()">עדכן סטטוס</button>
+      <button class="pill-btn" type="button" (click)="closeStatusModal()">ביטול</button>
+      <button class="pill-btn primary" type="button" (click)="updateStatus()">עדכן</button>
     </div>
   </div>
 </div>

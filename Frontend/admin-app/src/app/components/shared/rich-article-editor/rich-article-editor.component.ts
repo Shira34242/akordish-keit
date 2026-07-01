@@ -241,6 +241,28 @@ const ArticleAccent = Mark.create({
   }
 });
 
+const ArticleLink = Link.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      mentionType: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-mention-type'),
+        renderHTML: attributes => attributes['mentionType']
+          ? { 'data-mention-type': attributes['mentionType'] }
+          : {}
+      },
+      mentionId: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-mention-id'),
+        renderHTML: attributes => attributes['mentionId']
+          ? { 'data-mention-id': attributes['mentionId'] }
+          : {}
+      }
+    };
+  }
+});
+
 const ArticleIndent = Extension.create({
   name: 'articleIndent',
 
@@ -336,7 +358,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
           blockquote: false,
           horizontalRule: false
         }),
-        Link.configure({
+        ArticleLink.configure({
           openOnClick: false,
           autolink: true,
           defaultProtocol: 'https',
