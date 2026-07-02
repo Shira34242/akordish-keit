@@ -5,33 +5,127 @@
   </div>
 
   <div *ngIf="!isLoading && isUniversalSearch" class="search-content">
-    <div class="search-results-header">
-      <h1>תוצאות חיפוש</h1>
-      <p>“{{ searchTerm }}”</p>
-    </div>
+    <section class="search-hero">
+      <div class="search-hero__copy">
+        <span class="search-hero__eyebrow">חיפוש באתר</span>
+        <h1>מה מצאנו בשבילך</h1>
+        <p *ngIf="hasUniversalResults">
+          {{ universalResults?.totalCount }} תוצאות עבור “{{ searchTerm }}”
+        </p>
+        <p *ngIf="!hasUniversalResults">
+          לא מצאנו תוצאות עבור “{{ searchTerm }}”
+        </p>
+      </div>
+
+      <form class="search-page-form" (ngSubmit)="submitSearchPage()">
+        <span class="material-icons" aria-hidden="true">search</span>
+        <input
+          type="text"
+          name="searchDraft"
+          [(ngModel)]="searchDraft"
+          autocomplete="off"
+          aria-label="חיפוש באתר">
+        <button type="submit">חיפוש</button>
+      </form>
+    </section>
 
     <div class="search-results-groups" *ngIf="hasUniversalResults">
-      <section class="search-results-group" *ngFor="let group of searchGroups">
-        <h2>{{ group.label }}</h2>
-        <div class="search-results-grid">
+      <section class="search-results-section" *ngIf="universalResults?.songs?.length">
+        <div class="search-section-header">
+          <span class="section-tag section-tag--accent">אקורדים לשירים</span>
+          <span class="total-badge">{{ universalResults?.songs?.length }}</span>
+        </div>
+        <div class="search-songs-grid">
+          <app-song-card
+            *ngFor="let item of universalResults?.songs; trackBy: trackBySearchItem"
+            [song]="toSongResult(item)">
+          </app-song-card>
+        </div>
+      </section>
+
+      <section class="search-results-section" *ngIf="universalResults?.articles?.length">
+        <div class="search-section-header">
+          <span class="section-tag section-tag--accent">חדשות וכתבות</span>
+          <span class="total-badge">{{ universalResults?.articles?.length }}</span>
+        </div>
+        <div class="search-news-grid">
+          <app-news-banner
+            *ngFor="let item of universalResults?.articles; trackBy: trackBySearchItem"
+            [article]="toArticleBanner(item)"
+            [showDescription]="false"
+            (click)="$event.preventDefault(); navigateToSearchItem(item)">
+          </app-news-banner>
+        </div>
+      </section>
+
+      <section class="search-results-section" *ngIf="universalResults?.artists?.length">
+        <div class="search-section-header">
+          <span class="section-tag section-tag--accent">אמנים</span>
+          <span class="total-badge">{{ universalResults?.artists?.length }}</span>
+        </div>
+        <div class="search-artists-row">
+          <app-artist-circle
+            *ngFor="let item of universalResults?.artists; trackBy: trackBySearchItem"
+            [artist]="toArtistResult(item)"
+            [showSongCount]="false">
+          </app-artist-circle>
+        </div>
+      </section>
+
+      <section class="search-results-section" *ngIf="universalResults?.teachers?.length || universalResults?.professionals?.length">
+        <div class="search-section-header">
+          <span class="section-tag section-tag--accent">מורים ונותני שירות</span>
+          <span class="total-badge">{{ (universalResults?.teachers?.length || 0) + (universalResults?.professionals?.length || 0) }}</span>
+        </div>
+        <div class="search-people-row">
           <button
             type="button"
-            class="search-result-card"
+            class="search-person-card"
+            *ngFor="let item of universalResults?.teachers; trackBy: trackBySearchItem"
+            (click)="navigateToSearchItem(item)">
+            <span class="search-person-card__image">
+              <img [src]="getSearchItemImage(item)" [alt]="item.title" loading="lazy" decoding="async">
+            </span>
+            <span class="search-person-card__name">{{ item.title }}</span>
+            <span class="search-person-card__sub">{{ item.subtitle || 'מורה למוזיקה' }}</span>
+          </button>
+          <button
+            type="button"
+            class="search-person-card search-person-card--provider"
+            *ngFor="let item of universalResults?.professionals; trackBy: trackBySearchItem"
+            (click)="navigateToSearchItem(item)">
+            <span class="search-person-card__image">
+              <img [src]="getSearchItemImage(item)" [alt]="item.title" loading="lazy" decoding="async">
+            </span>
+            <span class="search-person-card__name">{{ item.title }}</span>
+            <span class="search-person-card__sub">{{ item.subtitle || 'נותן שירות' }}</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="search-results-section" *ngFor="let group of otherSearchGroups">
+        <div class="search-section-header">
+          <span class="section-tag section-tag--secondary">{{ group.label }}</span>
+          <span class="total-badge">{{ group.items.length }}</span>
+        </div>
+        <div class="search-compact-row">
+          <button
+            type="button"
+            class="search-compact-card"
             *ngFor="let item of group.items; trackBy: trackBySearchItem"
             (click)="navigateToSearchItem(item)">
             <img [src]="getSearchItemImage(item)" [alt]="item.title" loading="lazy" decoding="async">
-            <span class="search-result-text">
+            <span>
               <strong>{{ item.title }}</strong>
               <small *ngIf="item.subtitle">{{ item.subtitle }}</small>
             </span>
-            <span class="material-icons" aria-hidden="true">arrow_back</span>
           </button>
         </div>
       </section>
     </div>
 
     <div *ngIf="!hasUniversalResults" class="no-results">
-      <p>לא נמצאו תוצאות</p>
+      <p>אפשר לנסות שם קצר יותר, שם אמן, שם שיר או תחום מקצועי.</p>
     </div>
   </div>
 

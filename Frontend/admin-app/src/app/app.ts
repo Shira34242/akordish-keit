@@ -28,6 +28,10 @@ export class AppComponent implements OnInit {
   gateSubmitting = false;
   gateInput = '';
   gateError: string | null = null;
+  gateEmail = '';
+  gateInterestMessage: string | null = null;
+  gateConfettiActive = false;
+  gateConfettiPieces = Array.from({ length: 18 });
 
   submitGate() {
     if (!this.gateInput.trim() || this.gateSubmitting) return;
@@ -47,6 +51,20 @@ export class AppComponent implements OnInit {
         this.gateSubmitting = false;
       }
     });
+  }
+
+  submitGateInterest(): void {
+    const email = this.gateEmail.trim();
+    if (!email) {
+      this.gateInterestMessage = 'אפשר להשאיר מייל ונעדכן כשהאתר יעלה.';
+      return;
+    }
+
+    const subject = encodeURIComponent('הרשמה לעדכון כשהאתר יעלה');
+    const body = encodeURIComponent(`אשמח לקבל עדכון כשהאתר יהיה באוויר.\n\nמייל: ${email}`);
+    this.fireGateConfetti();
+    window.location.href = `mailto:akordishkayt@gmail.com?subject=${subject}&body=${body}`;
+    this.gateInterestMessage = 'פתחנו לכם מייל מוכן לשליחה.';
   }
 
   isAddSongModalOpen = false;
@@ -78,6 +96,11 @@ export class AppComponent implements OnInit {
   }
 
   private checkAccessGate(): void {
+    if (this.isPublicGateBypassPath()) {
+      this.showGate = false;
+      return;
+    }
+
     this.settingsService.getAccessGate().subscribe({
       next: (status) => {
         this.showGate = status.enabled && !status.hasAccess;
@@ -85,6 +108,24 @@ export class AppComponent implements OnInit {
       error: () => {
         // שגיאה בבדיקת ה-gate לא חוסמת את האפליקציה
       }
+    });
+  }
+
+  private isPublicGateBypassPath(): boolean {
+    if (typeof window === 'undefined') return false;
+
+    const path = window.location.pathname.toLowerCase();
+    return path === '/join-index'
+      || path.startsWith('/join-index/')
+      || path === '/join-chords'
+      || path.startsWith('/join-chords/');
+  }
+
+  private fireGateConfetti(): void {
+    this.gateConfettiActive = false;
+    setTimeout(() => {
+      this.gateConfettiActive = true;
+      setTimeout(() => this.gateConfettiActive = false, 1200);
     });
   }
 

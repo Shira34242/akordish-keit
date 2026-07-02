@@ -63,6 +63,46 @@ public class SiteAccessGateMiddleware
         if (request.Path.StartsWithSegments("/api/SystemSettings/access-gate"))
             return false;
 
+        if (IsPublicJoinEndpoint(request))
+            return false;
+
         return true;
+    }
+
+    private static bool IsPublicJoinEndpoint(HttpRequest request)
+    {
+        var path = request.Path;
+        var value = path.Value ?? string.Empty;
+
+        if (path.StartsWithSegments("/api/Auth"))
+            return true;
+
+        if (HttpMethods.IsGet(request.Method)
+            && (path.StartsWithSegments("/api/Cities")
+                || path.StartsWithSegments("/api/Instruments")
+                || path.StartsWithSegments("/api/MusicServiceProviderCategories")
+                || path.StartsWithSegments("/api/Agencies/slug")))
+            return true;
+
+        if (HttpMethods.IsPost(request.Method)
+            && (path.StartsWithSegments("/api/Teachers/create-profile")
+                || path.StartsWithSegments("/api/MusicServiceProviders/create-profile")
+                || path.StartsWithSegments("/api/Media/upload")
+                || string.Equals(value, "/api/Songs", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWithSegments("/api/Songs/youtube-metadata")
+                || path.StartsWithSegments("/api/Songs/detect-key")
+                || path.StartsWithSegments("/api/Songs/import-from-url")))
+            return true;
+
+        if (HttpMethods.IsGet(request.Method)
+            && path.StartsWithSegments("/api/Songs")
+            && (value.Contains("/autocomplete/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWithSegments("/api/Songs/check-duplicate")
+                || path.StartsWithSegments("/api/Songs/youtube-search")
+                || path.StartsWithSegments("/api/Songs/musical-keys")
+                || path.StartsWithSegments("/api/Songs/daily-limit-status")))
+            return true;
+
+        return false;
     }
 }

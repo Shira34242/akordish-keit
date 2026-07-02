@@ -575,6 +575,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/articles'], query ? { queryParams: { search: query } } : undefined);
   }
 
+  selectSearchResult(event: PointerEvent, item: SearchItem): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    this.navigateToResult(item);
+  }
+
   navigateToResult(item: SearchItem): void {
     this.showSearchResults = false;
 

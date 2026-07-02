@@ -1,12 +1,62 @@
 <div *ngIf="showGate" class="gate-overlay">
-  <div class="gate-box" dir="rtl">
-    <h2>אקורדישקייט</h2>
-    <p>האתר בשלב בדיקות - הכנס סיסמה להמשך</p>
-    <input [(ngModel)]="gateInput" type="password" placeholder="סיסמה" (keyup.enter)="submitGate()" autofocus />
-    <p *ngIf="gateError" class="gate-error">{{ gateError }}</p>
-    <button (click)="submitGate()" [disabled]="gateSubmitting">
-      {{ gateSubmitting ? 'בודק...' : 'כניסה' }}
-    </button>
+  <main class="gate-page" dir="rtl" aria-labelledby="gate-title">
+    <section class="gate-hero">
+      <h1 id="gate-title">אוטוטו אנחנו באוויר</h1>
+      <p>
+        אנחנו בשלבים האחרונים של הבדיקות, מוסיפים את התוכן האחרון ומלטשים את הפרטים הקטנים.
+      </p>
+      <p>
+        בעוד זמן קצר נפתח את האתר, ונשמח שתהיו בין הראשונים לגלות מה הכנו.
+      </p>
+    </section>
+
+    <section class="gate-section gate-signup" aria-labelledby="gate-signup-title">
+      <h2 id="gate-signup-title">רוצים לדעת כשהאתר עולה?</h2>
+      <p>השאירו את כתובת המייל שלכם ונשלח לכם עדכון ברגע שהאתר ייפתח.</p>
+
+      <form class="gate-email-form" (ngSubmit)="submitGateInterest()">
+        <label class="sr-only" for="gateEmail">כתובת מייל</label>
+        <input
+          id="gateEmail"
+          [(ngModel)]="gateEmail"
+          name="gateEmail"
+          type="email"
+          placeholder="כתובת מייל"
+          autocomplete="email" />
+        <button type="submit" class="gate-primary-button">עדכנו אותי</button>
+      </form>
+      <p *ngIf="gateInterestMessage" class="gate-note">{{ gateInterestMessage }}</p>
+    </section>
+
+    <section class="gate-section gate-actions" aria-labelledby="gate-actions-title">
+      <h2 id="gate-actions-title">כבר עכשיו אפשר להתחיל</h2>
+      <div class="gate-action-buttons">
+        <a href="/join-index">הצטרפות לאינדקס</a>
+        <a href="/join-chords">שליחת אקורדים</a>
+      </div>
+    </section>
+
+    <section class="gate-team" aria-labelledby="gate-team-title">
+      <h2 id="gate-team-title">כניסה לצוות ולבודקים</h2>
+      <div class="gate-password-row">
+        <label class="sr-only" for="gatePassword">סיסמה</label>
+        <input
+          id="gatePassword"
+          [(ngModel)]="gateInput"
+          type="password"
+          placeholder="סיסמה"
+          (keyup.enter)="submitGate()"
+          autofocus />
+        <button type="button" (click)="submitGate()" [disabled]="gateSubmitting">
+          {{ gateSubmitting ? 'בודק...' : 'כניסה' }}
+        </button>
+      </div>
+      <p *ngIf="gateError" class="gate-error">{{ gateError }}</p>
+    </section>
+  </main>
+
+  <div class="gate-confetti" *ngIf="gateConfettiActive" aria-hidden="true">
+    <span *ngFor="let piece of gateConfettiPieces; let i = index" [style.--i]="i"></span>
   </div>
 </div>
 

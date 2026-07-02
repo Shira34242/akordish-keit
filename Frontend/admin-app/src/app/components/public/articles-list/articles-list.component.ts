@@ -6,6 +6,8 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ArticleService } from '../../../services/admin/article.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
+import { SongCardComponent } from '../../shared/song-card/song-card.component';
+import { ArtistCircleComponent } from '../../shared/artist-circle/artist-circle.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
@@ -17,7 +19,7 @@ import { artistRoute, songSlug } from '../../../utils/slug';
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NewsBannerComponent, TranslatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, NewsBannerComponent, SongCardComponent, ArtistCircleComponent, TranslatePipe],
   templateUrl: './articles-list.component.html',
   styleUrl: './articles-list.component.css'
 })
@@ -45,6 +47,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   contentType?: ArticleContentType;
   categoryName = '';
   searchTerm = '';
+  searchDraft = '';
   tagId?: number;
   tagName = '';
   sortMode: 'recent' | 'popular' | 'liked' | 'title' = 'recent';
@@ -119,6 +122,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
         if (params['search']) {
           this.searchTerm = params['search'];
         }
+        this.searchDraft = this.searchTerm;
 
         // Get tag from query params
         if (params['tagId']) {
@@ -382,6 +386,71 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
       { label: 'הופעות', items: results.events },
       { label: 'סוכנויות', items: results.agencies }
     ].filter(group => group.items.length > 0);
+  }
+
+  get otherSearchGroups(): Array<{ label: string; items: SearchItem[]; kind: string }> {
+    const results = this.universalResults;
+    if (!results) return [];
+
+    return [
+      { label: 'רשימות השמעה', items: results.playlists, kind: 'playlist' },
+      { label: 'פודקאסטים', items: results.podcasts, kind: 'podcast' },
+      { label: 'פרקי פודקאסט', items: results.podcastEpisodes, kind: 'podcastEpisode' },
+      { label: 'הופעות', items: results.events, kind: 'event' },
+      { label: 'סוכנויות', items: results.agencies, kind: 'agency' }
+    ].filter(group => group.items.length > 0);
+  }
+
+  toSongResult(item: SearchItem): any {
+    return {
+      id: item.id,
+      title: item.title,
+      imageUrl: item.imageUrl,
+      artists: item.subtitle ? [{ name: item.subtitle }] : []
+    };
+  }
+
+  toArticleBanner(item: SearchItem): any {
+    return {
+      id: item.id,
+      title: item.title,
+      featuredImageUrl: item.imageUrl,
+      shortDescription: item.subtitle || '',
+      slug: item.slug || '',
+      contentType: ArticleContentType.Blog,
+      isFeatured: false,
+      displayOrder: 0,
+      publishDate: ''
+    };
+  }
+
+  toArtistResult(item: SearchItem): any {
+    return {
+      id: item.id,
+      name: item.title,
+      imageUrl: item.imageUrl
+    };
+  }
+
+  submitSearchPage(): void {
+    const query = this.searchDraft.trim();
+    this.router.navigate(['/articles'], query ? { queryParams: { search: query } } : undefined);
+  }
+
+  getSearchItemTypeLabel(item: SearchItem): string {
+    const labels: Record<SearchItem['type'], string> = {
+      song: 'אקורדים לשיר',
+      artist: 'אמן',
+      article: 'כתבה',
+      teacher: 'מורה',
+      professional: 'נותן שירות',
+      playlist: 'רשימת השמעה',
+      podcast: 'פודקאסט',
+      podcastEpisode: 'פרק פודקאסט',
+      event: 'הופעה',
+      agency: 'סוכנות'
+    };
+    return labels[item.type];
   }
 
   navigateToSearchItem(item: SearchItem): void {
