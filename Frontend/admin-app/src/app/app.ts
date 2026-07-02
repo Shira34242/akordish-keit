@@ -30,6 +30,19 @@ export class AppComponent implements OnInit {
   gateError: string | null = null;
   gateEmail = '';
   gateInterestMessage: string | null = null;
+  gateInterestSubmitting = false;
+  gateButtonConfettiActive = false;
+  gateButtonConfettiPieces = Array.from({ length: 18 }, (_, index) => {
+    const angle = (index / 18) * Math.PI * 2;
+    const distance = 30 + (index % 3) * 10;
+
+    return {
+      x: `${Math.round(Math.cos(angle) * distance)}px`,
+      y: `${Math.round(Math.sin(angle) * distance)}px`,
+      r: `${90 + index * 28}deg`,
+      d: `${(index % 6) * 18}ms`
+    };
+  });
 
   submitGate() {
     if (!this.gateInput.trim() || this.gateSubmitting) return;
@@ -53,15 +66,26 @@ export class AppComponent implements OnInit {
 
   submitGateInterest(): void {
     const email = this.gateEmail.trim();
-    if (!email) {
+    if (!email || this.gateInterestSubmitting) {
       this.gateInterestMessage = 'אפשר להשאיר מייל ונעדכן כשהאתר יעלה.';
       return;
     }
 
-    const subject = encodeURIComponent('הרשמה לעדכון כשהאתר יעלה');
-    const body = encodeURIComponent(`אשמח לקבל עדכון כשהאתר יהיה באוויר.\n\nמייל: ${email}`);
-    window.location.href = `mailto:akordishkayt@gmail.com?subject=${subject}&body=${body}`;
-    this.gateInterestMessage = 'פתחנו לכם מייל מוכן לשליחה.';
+    this.gateInterestSubmitting = true;
+    this.gateInterestMessage = null;
+
+    this.settingsService.subscribeComingSoon(email).subscribe({
+      next: () => {
+        this.gateInterestSubmitting = false;
+        this.gateEmail = '';
+        this.fireGateButtonConfetti();
+        this.gateInterestMessage = 'נרשמת בהצלחה לקבלת עדכון.';
+      },
+      error: () => {
+        this.gateInterestSubmitting = false;
+        this.gateInterestMessage = 'לא הצלחנו לשמור את המייל. נסו שוב בעוד רגע.';
+      }
+    });
   }
 
   isAddSongModalOpen = false;
@@ -116,6 +140,14 @@ export class AppComponent implements OnInit {
       || path.startsWith('/join-index/')
       || path === '/join-chords'
       || path.startsWith('/join-chords/');
+  }
+
+  fireGateButtonConfetti(): void {
+    this.gateButtonConfettiActive = false;
+    setTimeout(() => {
+      this.gateButtonConfettiActive = true;
+      setTimeout(() => this.gateButtonConfettiActive = false, 700);
+    });
   }
 
   private startAppServices(): void {

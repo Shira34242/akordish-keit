@@ -27,9 +27,17 @@ export interface UpdateSiteAccessGateDto {
   password?: string;
 }
 
+export interface ComingSoonSubscriptionDto {
+  id: number;
+  email: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SystemSettingsService {
   private readonly base = `${environment.apiBaseUrl}/api/SystemSettings`;
+  private readonly comingSoonBase = `${environment.apiBaseUrl}/api/ComingSoonSubscriptions`;
 
   constructor(private http: HttpClient) {}
 
@@ -56,5 +64,9 @@ export class SystemSettingsService {
 
   updateAccessGate(body: UpdateSiteAccessGateDto): Observable<SiteAccessGateStatusDto> {
     return this.http.put<SiteAccessGateStatusDto>(`${this.base}/access-gate`, body, { withCredentials: true });
+  }
+
+  subscribeComingSoon(email: string): Observable<ComingSoonSubscriptionDto> {
+    return this.http.post<ComingSoonSubscriptionDto>(this.comingSoonBase, { email });
   }
 }

@@ -28,7 +28,18 @@
             type="email"
             placeholder="כתובת מייל"
             autocomplete="email" />
-          <button type="submit" class="gate-primary-button">עדכנו אותי</button>
+          <button type="submit" class="gate-primary-button" [disabled]="gateInterestSubmitting">
+            <span>{{ gateInterestSubmitting ? 'שומר...' : 'עדכנו אותי' }}</span>
+            <span class="gate-button-confetti" *ngIf="gateButtonConfettiActive" aria-hidden="true">
+              <span
+                *ngFor="let piece of gateButtonConfettiPieces"
+                [style.--x]="piece.x"
+                [style.--y]="piece.y"
+                [style.--r]="piece.r"
+                [style.--d]="piece.d">
+              </span>
+            </span>
+          </button>
         </form>
         <p *ngIf="gateInterestMessage" class="gate-note">{{ gateInterestMessage }}</p>
       </div>
