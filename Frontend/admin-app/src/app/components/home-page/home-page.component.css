@@ -167,9 +167,9 @@
   line-height: 1;
   letter-spacing: 0;
   color: rgba(0, 0, 0, 0.6);
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  padding: var(--space-xs) var(--space-md);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   white-space: nowrap;
 }
 
@@ -185,17 +185,63 @@
 .search-input-wrapper {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #ffffff;
   border-radius: 50px;
   padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-base);
   direction: ltr;
+  position: relative;
+  overflow: visible;
 }
 
 .search-icon-mat {
   color: rgba(0, 0, 0, 0.45);
   font-size: 22px;
+  line-height: 1;
+}
+
+.search-icon-button {
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   margin-left: var(--space-xs);
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s;
+}
+
+.search-icon-button:hover {
+  background: #F2F2F2;
+}
+
+.search-rich-placeholder {
+  position: absolute;
+  inset-inline: calc(36px + var(--space-base)) var(--space-base);
+  top: 50%;
+  transform: translateY(-50%);
+  direction: rtl;
+  text-align: right;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 2;
+}
+
+.search-rich-placeholder strong {
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.62);
 }
 
 .search-input {
@@ -209,6 +255,8 @@
   direction: rtl;
   text-align: right;
   color: #000000;
+  position: relative;
+  z-index: 1;
 }
 
 .search-input::placeholder {
@@ -635,6 +683,8 @@
   height: 310px;
   min-height: 0;
   min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 310px;
 }
 
 .viral-section .stream-cell app-news-banner {
@@ -1254,31 +1304,23 @@
    PODCASTS HOME
 ============================================ */
 .podcasts-home-panel {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 4px;
+  overflow: visible;
+  padding-bottom: 0;
   direction: rtl;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-
-.podcasts-home-panel::-webkit-scrollbar {
-  display: none;
 }
 
 .podcasts-home-track {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   direction: rtl;
-  gap: var(--space-lg);
+  gap: var(--space-base);
   align-items: stretch;
-  width: max-content;
+  width: 100%;
 }
 
 .home-series-image-card {
-  flex: 0 0 10rem;
-  width: 10rem;
+  width: 100%;
+  min-width: 0;
   direction: rtl;
   color: #000000;
   text-decoration: none;
@@ -1467,8 +1509,7 @@
   }
 
   .home-series-image-card {
-    flex-basis: 9rem;
-    width: 9rem;
+    width: 100%;
   }
 }
 
@@ -1620,12 +1661,12 @@
   }
 
   .podcasts-home-track {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-md);
   }
 
   .home-series-image-card {
-    flex-basis: 8.5rem;
-    width: 8.5rem;
+    width: 100%;
   }
 
   .podcast-episode-card ::ng-deep .episode-banner {
@@ -1658,5 +1699,9 @@
   .home-series-image-card {
     width: 100%;
     border-radius: 18px;
+  }
+
+  .podcasts-home-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

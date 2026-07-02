@@ -18,13 +18,11 @@ export class EventCardComponent {
   @Input() showInfo = true;
   @Input() imageWidth = 360;
   @Input() imageSizes = '360px';
-  @Input() suppressBlockedExternalImage = false;
   @Output() cardClick = new EventEmitter<EventCardData>();
 
   get posterImageUrl(): string | null {
     const imageUrl = (this.event?.imageUrl || '').trim();
     if (!imageUrl) return null;
-    if (this.suppressBlockedExternalImage && this.isBlockedExternalImage(imageUrl)) return null;
     return imageUrl;
   }
 
@@ -61,12 +59,4 @@ export class EventCardComponent {
     return `${h}:${m}`;
   }
 
-  private isBlockedExternalImage(imageUrl: string): boolean {
-    try {
-      const host = new URL(imageUrl).hostname.toLowerCase();
-      return host === 'static.tickchak.co.il' || host.endsWith('.tickchak.co.il');
-    } catch {
-      return false;
-    }
-  }
 }

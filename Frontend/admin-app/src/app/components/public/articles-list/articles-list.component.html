@@ -4,7 +4,38 @@
     <div class="spinner"></div>
   </div>
 
-  <div *ngIf="!isLoading" class="news-content">
+  <div *ngIf="!isLoading && isUniversalSearch" class="search-content">
+    <div class="search-results-header">
+      <h1>תוצאות חיפוש</h1>
+      <p>“{{ searchTerm }}”</p>
+    </div>
+
+    <div class="search-results-groups" *ngIf="hasUniversalResults">
+      <section class="search-results-group" *ngFor="let group of searchGroups">
+        <h2>{{ group.label }}</h2>
+        <div class="search-results-grid">
+          <button
+            type="button"
+            class="search-result-card"
+            *ngFor="let item of group.items; trackBy: trackBySearchItem"
+            (click)="navigateToSearchItem(item)">
+            <img [src]="getSearchItemImage(item)" [alt]="item.title" loading="lazy" decoding="async">
+            <span class="search-result-text">
+              <strong>{{ item.title }}</strong>
+              <small *ngIf="item.subtitle">{{ item.subtitle }}</small>
+            </span>
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div *ngIf="!hasUniversalResults" class="no-results">
+      <p>לא נמצאו תוצאות</p>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !isUniversalSearch" class="news-content">
     <div class="managed-grid" *ngIf="sortedArticles.length > 0">
       <div
         class="managed-row"

@@ -23,13 +23,22 @@
 
       <div class="search-container">
         <div class="search-input-wrapper">
-          <span class="material-icons search-icon-mat">search</span>
+          <button
+            type="button"
+            class="search-icon-button"
+            (click)="submitHomeSearch()"
+            aria-label="חיפוש">
+            <span class="material-icons search-icon-mat" aria-hidden="true">search</span>
+          </button>
+          <div class="search-rich-placeholder" *ngIf="!searchQuery">
+            <strong>חדשות המוזיקה</strong>, <strong>אקורדים</strong>, מורים, בעלי מקצוע ועוד ועוד... חיפוש חכם.
+          </div>
           <input
             type="text"
             [(ngModel)]="searchQuery"
             (input)="onSearchInput(searchQuery)"
+            (keydown.enter)="submitHomeSearch()"
             (blur)="onSearchBlur()"
-            [placeholder]="'home.search_placeholder' | translate"
             class="search-input">
         </div>
 
@@ -170,12 +179,6 @@
           </div>
 
         </div>
-      </div>
-
-      <div class="hero-quick-links">
-        <a routerLink="/chords/dictionary" class="quick-link">{{ 'home.quick_dict' | translate }}</a>
-        <a routerLink="/tuner" class="quick-link">{{ 'home.quick_tuner' | translate }}</a>
-        <a routerLink="/artists" class="quick-link">{{ 'home.quick_artists' | translate }}</a>
       </div>
 
     </div>
@@ -367,7 +370,7 @@
         <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
         <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
       </div>
-      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="left" [autoScrollCopies]="2">
+      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="right" [autoScrollCopies]="2">
         <div class="events-loop-track">
           <ng-container *ngFor="let copy of [0, 1]">
             <app-event-card
@@ -376,7 +379,6 @@
               [showInfo]="false"
               [imageWidth]="220"
               imageSizes="(max-width: 768px) 9rem, 11rem"
-              [suppressBlockedExternalImage]="true"
               (cardClick)="openEventModal($event)">
             </app-event-card>
           </ng-container>
@@ -417,10 +419,12 @@
             <span class="home-series-image-card__image">
               <img
                 *ngIf="podcast.imageUrl; else podcastIcon"
-                [src]="(podcast.imageUrl | cfImage:360:82) || ''"
+                [src]="(podcast.imageUrl | cfImage:220:82) || ''"
+                [attr.srcset]="podcast.imageUrl | cfSrcset:[120, 160, 220, 320]:82"
+                sizes="(max-width: 480px) 44vw, (max-width: 768px) 22vw, 11vw"
                 [alt]="podcast.name"
-                width="360"
-                height="203"
+                width="220"
+                height="220"
                 [imgFallbackOriginal]="podcast.imageUrl"
                 imgFallback="/assets/default-article.png"
                 loading="lazy"

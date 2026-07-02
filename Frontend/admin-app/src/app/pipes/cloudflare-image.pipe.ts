@@ -100,9 +100,10 @@ function encodeCloudflareSource(url: string): string {
 function isTransformableImage(url: string): boolean {
   try {
     const path = /^https?:\/\//i.test(url) ? new URL(url).pathname : url;
-    return TRANSFORMABLE_EXTENSIONS.test(path);
+    const normalizedPath = path.replace(/\/+$/, '');
+    return TRANSFORMABLE_EXTENSIONS.test(normalizedPath);
   } catch {
-    return TRANSFORMABLE_EXTENSIONS.test(url);
+    return TRANSFORMABLE_EXTENSIONS.test(url.replace(/\/+$/, ''));
   }
 }
 

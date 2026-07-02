@@ -18,7 +18,7 @@
       height="480"
       loading="lazy"
       decoding="async"
-      [imgFallbackOriginal]="suppressBlockedExternalImage ? null : posterImageUrl"
+      [imgFallbackOriginal]="posterImageUrl"
       imgFallback="/logo.png">
     <div *ngIf="!posterImageUrl" class="event-card__poster-placeholder">
       <span class="material-icons">music_note</span>

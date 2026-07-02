@@ -35,6 +35,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
     let wrapping = false;
     const onScroll = () => {
       if (wrapping || this.cycleWidth <= 0) return;
+
       const lowerBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 0.5 : 0;
       const upperBoundary = this.autoScrollCopies >= 3 ? this.cycleWidth * 1.5 : this.cycleWidth;
 
@@ -42,7 +43,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
         wrapping = true;
         host.scrollLeft -= this.cycleWidth;
         requestAnimationFrame(() => { wrapping = false; });
-      } else if (host.scrollLeft <= lowerBoundary && this.autoScrollCopies >= 3) {
+      } else if (host.scrollLeft <= lowerBoundary) {
         wrapping = true;
         host.scrollLeft += this.cycleWidth;
         requestAnimationFrame(() => { wrapping = false; });
@@ -139,7 +140,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
       this.initialized = true;
       host.scrollLeft = copies >= 3
         ? this.cycleWidth
-        : this.autoScrollDirection === 'right' ? this.cycleWidth - 1 : 0;
+        : this.cycleWidth - 1;
       // once initialized, DOM mutations no longer need to trigger recompute
       this.mutationObserver?.disconnect();
       this.mutationObserver = undefined;

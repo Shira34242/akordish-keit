@@ -10,6 +10,9 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
 import { NewsPageSectionService } from '../../../services/news-page-section.service';
+import { SearchItem, SearchResults, SearchService } from '../../../services/search.service';
+import { getArticleLink } from '../../../utils/article-route.utils';
+import { artistRoute, songSlug } from '../../../utils/slug';
 
 @Component({
   selector: 'app-articles-list',
@@ -26,9 +29,11 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   private readonly langService = inject(LanguageService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly newsPageSectionService = inject(NewsPageSectionService);
+  private readonly searchService = inject(SearchService);
   private readonly ngZone = inject(NgZone);
 
   articles: Article[] = [];
+  universalResults: SearchResults | null = null;
   isLoading = true;
   currentPage = 1;
   pageSize = 20;
@@ -131,7 +136,12 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
           this.currentPage = 1;
         }
 
-        this.loadVisibleCategorySettings();
+        if (this.searchTerm.trim()) {
+          this.loadUniversalSearch();
+        } else {
+          this.universalResults = null;
+          this.loadVisibleCategorySettings();
+        }
       });
   }
 
@@ -174,6 +184,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
 
   private loadArticles(): void {
     this.isLoading = true;
+    this.universalResults = null;
 
     const categoryIds = this.categoryId === undefined && this.tagId === undefined
       ? this.visibleCategoryIds
@@ -207,12 +218,43 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadUniversalSearch(): void {
+    const query = this.searchTerm.trim();
+    if (!query) {
+      this.universalResults = null;
+      this.loadVisibleCategorySettings();
+      return;
+    }
+
+    this.isLoading = true;
+    this.articles = [];
+    this.totalCount = 0;
+    this.totalPages = 0;
+    this.searchService.search(query, 10)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (results) => {
+          this.universalResults = results;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading search results:', error);
+          this.universalResults = null;
+          this.isLoading = false;
+        }
+      });
+  }
+
   trackByIndex(index: number): number {
     return index;
   }
 
   trackById(_index: number, article: Article): number {
     return article.id;
+  }
+
+  trackBySearchItem(_index: number, item: SearchItem): string {
+    return `${item.type}-${item.id}`;
   }
 
   getManagedArticle(index: number): Article | null {
@@ -314,6 +356,92 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
       !!this.searchTerm ||
       this.tagId !== undefined ||
       this.sortMode !== 'recent';
+  }
+
+  get isUniversalSearch(): boolean {
+    return !!this.searchTerm.trim();
+  }
+
+  get hasUniversalResults(): boolean {
+    return !!this.universalResults && this.universalResults.totalCount > 0;
+  }
+
+  get searchGroups(): Array<{ label: string; items: SearchItem[] }> {
+    const results = this.universalResults;
+    if (!results) return [];
+
+    return [
+      { label: 'שירים ואקורדים', items: results.songs },
+      { label: 'אמנים', items: results.artists },
+      { label: 'חדשות וכתבות', items: results.articles },
+      { label: 'מורים', items: results.teachers },
+      { label: 'בעלי מקצוע', items: results.professionals },
+      { label: 'רשימות השמעה', items: results.playlists },
+      { label: 'פודקאסטים', items: results.podcasts },
+      { label: 'פרקי פודקאסט', items: results.podcastEpisodes },
+      { label: 'הופעות', items: results.events },
+      { label: 'סוכנויות', items: results.agencies }
+    ].filter(group => group.items.length > 0);
+  }
+
+  navigateToSearchItem(item: SearchItem): void {
+    if (item.type === 'article') {
+      this.articleService.getArticle(item.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: article => this.router.navigate(getArticleLink(article)),
+        error: () => alert(this.langService.translate('common.article_open_error'))
+      });
+      return;
+    }
+
+    if (item.type === 'song') {
+      const slug = songSlug({ title: item.title, artistName: item.subtitle || '' });
+      this.router.navigate(slug ? ['/song', item.id, slug] : ['/song', item.id]);
+      return;
+    }
+
+    if (item.type === 'artist') {
+      this.router.navigate(artistRoute({ id: item.id, name: item.title }));
+      return;
+    }
+
+    if (item.type === 'podcast') {
+      this.router.navigate(['/podcasts'], item.slug ? { queryParams: { series: item.slug } } : undefined);
+      return;
+    }
+
+    if (item.type === 'podcastEpisode') {
+      this.router.navigate(['/podcasts'], item.parentSlug && item.slug ? { queryParams: { series: item.parentSlug, episode: item.slug } } : undefined);
+      return;
+    }
+
+    if (item.type === 'agency' && item.slug) {
+      this.router.navigate(['/agency', item.slug]);
+      return;
+    }
+
+    if (item.type === 'event') {
+      this.router.navigate(['/events']);
+      return;
+    }
+
+    const routes: Record<string, string> = {
+      teacher: '/teacher',
+      professional: '/professional',
+      playlist: '/playlist'
+    };
+
+    const base = routes[item.type];
+    if (base) {
+      this.router.navigate([base, item.id]);
+    }
+  }
+
+  getSearchItemImage(item: SearchItem): string {
+    if (item.imageUrl) return item.imageUrl;
+    if (item.type === 'artist' || item.type === 'teacher' || item.type === 'professional' || item.type === 'agency') {
+      return 'assets/default-artist.png';
+    }
+    return '/assets/default-article.png';
   }
 
   private getArticleDateValue(article: Article): number {

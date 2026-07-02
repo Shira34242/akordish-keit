@@ -33,7 +33,7 @@ import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { artistRoute, songSlug } from '../../utils/slug';
 import { getArticleLink } from '../../utils/article-route.utils';
-import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
 
 interface HeroParticle {
   x: number; y: number;
@@ -65,6 +65,7 @@ interface ViralRow {
     AutoScrollDirective,
     ImgFallbackDirective,
     CloudflareImagePipe,
+    CloudflareImageSrcsetPipe,
     AdDisplayComponent
   ],
   templateUrl: './home-page.component.html',
@@ -129,7 +130,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
   private viralOffset = 0;
-  private readonly viralPageSize = 10;
+  private readonly viralPageSize = 8;
+  private readonly initialViralVisibleCount = 4;
+  private readonly viralRevealStep = 4;
   private viralRowsViewport: 'mobile' | 'desktop' = window.innerWidth <= 640 ? 'mobile' : 'desktop';
   newsContentFinished = false;
   restContentStarted = false;
@@ -532,11 +535,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (completedLoads === 2) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getHomePodcastCards(9).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getHomePodcastCards(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts.slice(0, 9); },
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 8); },
       error: err => console.error('loadContent: podcast series', err)
     });
 
@@ -564,6 +567,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onSearchInput(query: string) {
     this.searchSubject.next(query);
+  }
+
+  submitHomeSearch(): void {
+    const query = this.searchQuery.trim();
+    this.showSearchResults = false;
+    this.router.navigate(['/articles'], query ? { queryParams: { search: query } } : undefined);
   }
 
   navigateToResult(item: SearchItem): void {
@@ -734,7 +743,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get canRevealMoreViralArticles(): boolean {
-    return this.viralArticlesHasMore && !this.loadingViralArticles;
+    return (this.visibleViralCount < this.viralArticles.length || this.viralArticlesHasMore) && !this.loadingViralArticles;
   }
 
   private initViralObserver(): void {
@@ -825,11 +834,17 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private appendViralArticles(articles: ArticleBanner[]): void {
+    const previousArticleCount = this.viralArticles.length;
+    const wasShowingAllLoadedArticles = this.visibleViralCount >= previousArticleCount;
     const nextArticles = this.uniqueArticles([...this.viralArticles, ...articles]);
     this.viralArticles = nextArticles;
     this.viralOffset += articles.length;
     this.viralArticlesHasMore = articles.length === this.viralPageSize;
-    this.visibleViralCount = this.viralArticles.length;
+    if (previousArticleCount === 0) {
+      this.visibleViralCount = Math.min(this.initialViralVisibleCount, this.viralArticles.length);
+    } else if (wasShowingAllLoadedArticles) {
+      this.visibleViralCount = Math.min(this.visibleViralCount + this.viralRevealStep, this.viralArticles.length);
+    }
     this.refreshVisibleViralArticles();
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
@@ -847,6 +862,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private revealMoreViralArticles(): void {
     if (!this.viralArticlesLoaded || !this.canRevealMoreViralArticles) return;
+    if (this.visibleViralCount < this.viralArticles.length) {
+      this.visibleViralCount = Math.min(this.visibleViralCount + this.viralRevealStep, this.viralArticles.length);
+      this.refreshVisibleViralArticles();
+      setTimeout(() => this.initViralObserver(), 0);
+      return;
+    }
     this.loadViralArticles();
   }
 
