@@ -121,7 +121,7 @@ export class AppComponent implements OnInit {
       || path.startsWith('/join-chords/');
   }
 
-  private fireGateConfetti(): void {
+  fireGateConfetti(): void {
     this.gateConfettiActive = false;
     setTimeout(() => {
       this.gateConfettiActive = true;

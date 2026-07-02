@@ -39,7 +39,7 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3xl, 56px);
+  gap: var(--space-2xl, 40px);
   color: #000000;
   text-align: center;
 }
@@ -87,28 +87,65 @@ html {
 
 .gate-section p {
   margin: 0;
-  max-width: 30rem;
+  max-width: 26rem;
   color: #404040;
-  font-size: var(--font-base, 16px);
+  font-size: var(--font-sm, 14px);
   line-height: var(--lh-body, 1.6);
 }
 
+.gate-signup-card {
+  position: relative;
+  width: min(100%, 25rem);
+  display: grid;
+  justify-items: center;
+  gap: var(--space-base, 14px);
+  padding: var(--space-lg, 20px);
+  border: 1px solid #F2F2F2;
+  border-radius: 20px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.gate-signup-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    conic-gradient(
+      from var(--beam-angle, 0deg),
+      rgba(221,255,83,0),
+      rgba(221,255,83,0.95),
+      rgba(221,255,83,0),
+      rgba(0,0,0,0.08),
+      rgba(221,255,83,0)
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: gate-border-beam 8s linear infinite;
+}
+
 .gate-email-form {
-  width: min(100%, 31rem);
+  width: min(100%, 22rem);
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: var(--space-md, 10px);
+  gap: var(--space-sm, 6px);
   align-items: center;
-  margin-top: var(--space-sm, 6px);
+  margin-top: var(--space-xs, 4px);
 }
 
 .gate-page input {
   width: 100%;
-  min-height: 44px;
-  padding: 0 var(--space-base, 14px);
+  min-height: 36px;
+  padding: 0 var(--space-md, 10px);
   border: 1px solid #F2F2F2;
   border-radius: 999px;
-  font-size: var(--font-base, 16px);
+  font-size: var(--font-sm, 14px);
   box-sizing: border-box;
   text-align: right;
   background: #ffffff;
@@ -117,29 +154,30 @@ html {
 }
 
 .gate-page input:focus {
-  border-color: #ddff53;
+  border-color: rgba(0,0,0,0.2);
 }
 
 .gate-page button,
 .gate-action-buttons a {
-  min-height: 44px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--space-lg, 20px);
-  background: #ddff53;
+  padding: 0 var(--space-base, 14px);
+  background: #ffffff;
   color: #000000;
-  border: none;
+  border: 1px solid #F2F2F2;
   border-radius: 999px;
-  font-size: var(--font-base, 16px);
-  font-weight: 800;
+  font-size: var(--font-sm, 14px);
+  font-weight: 700;
   text-decoration: none;
   cursor: pointer;
 }
 
 .gate-page button:hover,
 .gate-action-buttons a:hover {
-  opacity: 0.82;
+  background: rgba(221,255,83,0.24);
+  border-color: rgba(0,0,0,0.08);
 }
 
 .gate-page button:disabled {
@@ -148,7 +186,7 @@ html {
 }
 
 .gate-primary-button {
-  min-width: 8.75rem;
+  min-width: 7.5rem;
 }
 
 .gate-note,
@@ -171,12 +209,12 @@ html {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md, 10px);
-  width: min(100%, 29rem);
+  width: min(100%, 24rem);
 }
 
 .gate-team {
   gap: var(--space-md, 10px);
-  margin-top: var(--space-2xl, 40px);
+  margin-top: var(--space-xl, 28px);
 }
 
 .gate-password-row {
@@ -201,8 +239,8 @@ html {
 .gate-team button {
   min-height: 34px;
   padding: 0 var(--space-base, 14px);
-  background: #000000;
-  color: #ddff53;
+  background: #ffffff;
+  color: #000000;
   font-size: var(--font-sm, 14px);
 }
 
@@ -269,6 +307,18 @@ html {
 .gate-confetti span:nth-child(16) { --x: 34px; --y: 142px; --r: 114deg; --d: 144ms; }
 .gate-confetti span:nth-child(17) { --x: 82px; --y: 108px; --r: 168deg; --d: 180ms; }
 .gate-confetti span:nth-child(18) { --x: 132px; --y: 130px; --r: 222deg; --d: 216ms; }
+
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes gate-border-beam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
 
 @keyframes gate-confetti {
   0% {

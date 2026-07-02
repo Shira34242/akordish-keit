@@ -11,21 +11,23 @@
     </section>
 
     <section class="gate-section gate-signup" aria-labelledby="gate-signup-title">
-      <h2 id="gate-signup-title">רוצים לדעת כשהאתר עולה?</h2>
-      <p>השאירו את כתובת המייל שלכם ונשלח לכם עדכון ברגע שהאתר ייפתח.</p>
+      <div class="gate-signup-card" (mouseenter)="fireGateConfetti()">
+        <h2 id="gate-signup-title">רוצים לדעת כשהאתר עולה?</h2>
+        <p>השאירו את כתובת המייל שלכם ונשלח לכם עדכון ברגע שהאתר ייפתח.</p>
 
-      <form class="gate-email-form" (ngSubmit)="submitGateInterest()">
-        <label class="sr-only" for="gateEmail">כתובת מייל</label>
-        <input
-          id="gateEmail"
-          [(ngModel)]="gateEmail"
-          name="gateEmail"
-          type="email"
-          placeholder="כתובת מייל"
-          autocomplete="email" />
-        <button type="submit" class="gate-primary-button">עדכנו אותי</button>
-      </form>
-      <p *ngIf="gateInterestMessage" class="gate-note">{{ gateInterestMessage }}</p>
+        <form class="gate-email-form" (ngSubmit)="submitGateInterest()">
+          <label class="sr-only" for="gateEmail">כתובת מייל</label>
+          <input
+            id="gateEmail"
+            [(ngModel)]="gateEmail"
+            name="gateEmail"
+            type="email"
+            placeholder="כתובת מייל"
+            autocomplete="email" />
+          <button type="submit" class="gate-primary-button">עדכנו אותי</button>
+        </form>
+        <p *ngIf="gateInterestMessage" class="gate-note">{{ gateInterestMessage }}</p>
+      </div>
     </section>
 
     <section class="gate-section gate-actions" aria-labelledby="gate-actions-title">
