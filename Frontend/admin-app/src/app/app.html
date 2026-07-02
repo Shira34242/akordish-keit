@@ -1,7 +1,11 @@
 <div *ngIf="showGate" class="gate-overlay">
   <main class="gate-page" dir="rtl" aria-labelledby="gate-title">
     <section class="gate-hero">
-      <h1 id="gate-title">אוטוטו אנחנו באוויר</h1>
+      <h1 id="gate-title" class="gate-kinetic-title" aria-label="אוטוטו אנחנו באוויר">
+        <span aria-hidden="true">אוטוטו</span>
+        <span aria-hidden="true">אנחנו</span>
+        <span aria-hidden="true">באוויר</span>
+      </h1>
       <p>
         אנחנו בשלבים האחרונים של הבדיקות, מוסיפים את התוכן האחרון ומלטשים את הפרטים הקטנים.
       </p>
@@ -11,7 +15,7 @@
     </section>
 
     <section class="gate-section gate-signup" aria-labelledby="gate-signup-title">
-      <div class="gate-signup-card" (mouseenter)="fireGateConfetti()">
+      <div class="gate-signup-card">
         <h2 id="gate-signup-title">רוצים לדעת כשהאתר עולה?</h2>
         <p>השאירו את כתובת המייל שלכם ונשלח לכם עדכון ברגע שהאתר ייפתח.</p>
 
@@ -56,10 +60,6 @@
       <p *ngIf="gateError" class="gate-error">{{ gateError }}</p>
     </section>
   </main>
-
-  <div class="gate-confetti" *ngIf="gateConfettiActive" aria-hidden="true">
-    <span *ngFor="let piece of gateConfettiPieces; let i = index" [style.--i]="i"></span>
-  </div>
 </div>
 
 <div class="app-container" *ngIf="!showGate">

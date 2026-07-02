@@ -28,18 +28,18 @@ html {
   display: grid;
   place-items: center;
   z-index: 9999;
-  padding: var(--space-3xl, 56px) var(--space-xl, 28px);
+  padding: var(--space-xl, 28px) var(--space-4xl, 72px);
   box-sizing: border-box;
   direction: rtl;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .gate-page {
-  width: min(100%, 39rem);
+  width: min(100%, 34rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2xl, 40px);
+  gap: var(--space-lg, 20px);
   color: #000000;
   text-align: center;
 }
@@ -53,27 +53,62 @@ html {
 }
 
 .gate-hero {
-  gap: var(--space-md, 10px);
+  gap: var(--space-sm, 6px);
 }
 
 .gate-hero h1 {
   margin: 0;
-  font-size: var(--font-4xl, 44px);
+  font-size: var(--font-3xl, 36px);
   line-height: var(--lh-heading, 1.2);
   font-weight: 800;
   color: #000000;
 }
 
+.gate-kinetic-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm, 6px) var(--space-md, 10px);
+  direction: rtl;
+  cursor: default;
+  font-optical-sizing: auto;
+}
+
+.gate-kinetic-title span {
+  display: inline-block;
+  transform-origin: 50% 70%;
+  transition:
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gate-kinetic-title:hover span {
+  color: #000000;
+  animation: gate-kinetic-text 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.gate-kinetic-title:hover span:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.gate-kinetic-title:hover span:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.gate-kinetic-title:hover span:nth-child(3) {
+  animation-delay: 140ms;
+}
+
 .gate-hero p {
   margin: 0;
-  max-width: 34rem;
+  max-width: 31rem;
   color: #404040;
-  font-size: var(--font-base, 16px);
+  font-size: var(--font-sm, 14px);
   line-height: var(--lh-body, 1.6);
 }
 
 .gate-section {
-  gap: var(--space-base, 14px);
+  gap: var(--space-md, 10px);
 }
 
 .gate-section h2,
@@ -95,13 +130,13 @@ html {
 
 .gate-signup-card {
   position: relative;
-  width: min(100%, 25rem);
+  width: min(100%, 28rem);
   display: grid;
   justify-items: center;
-  gap: var(--space-base, 14px);
+  gap: var(--space-md, 10px);
   padding: var(--space-lg, 20px);
-  border: 1px solid #F2F2F2;
-  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 24px;
   background: #ffffff;
   overflow: hidden;
 }
@@ -131,7 +166,7 @@ html {
 }
 
 .gate-email-form {
-  width: min(100%, 22rem);
+  width: min(100%, 24rem);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-sm, 6px);
@@ -141,9 +176,9 @@ html {
 
 .gate-page input {
   width: 100%;
-  min-height: 36px;
-  padding: 0 var(--space-md, 10px);
-  border: 1px solid #F2F2F2;
+  min-height: 38px;
+  padding: 0 var(--space-base, 14px);
+  border: 1px solid rgba(0,0,0,0.1);
   border-radius: 999px;
   font-size: var(--font-sm, 14px);
   box-sizing: border-box;
@@ -159,14 +194,14 @@ html {
 
 .gate-page button,
 .gate-action-buttons a {
-  min-height: 36px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--space-base, 14px);
+  padding: 0 var(--space-lg, 20px);
   background: #ffffff;
   color: #000000;
-  border: 1px solid #F2F2F2;
+  border: 1px solid rgba(0,0,0,0.1);
   border-radius: 999px;
   font-size: var(--font-sm, 14px);
   font-weight: 700;
@@ -186,7 +221,9 @@ html {
 }
 
 .gate-primary-button {
-  min-width: 7.5rem;
+  min-width: 8.5rem;
+  background: rgba(221,255,83,0.42);
+  border-color: rgba(0,0,0,0.12);
 }
 
 .gate-note,
@@ -209,12 +246,12 @@ html {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md, 10px);
-  width: min(100%, 24rem);
+  width: min(100%, 22rem);
 }
 
 .gate-team {
-  gap: var(--space-md, 10px);
-  margin-top: var(--space-xl, 28px);
+  gap: var(--space-sm, 6px);
+  margin-top: var(--space-md, 10px);
 }
 
 .gate-password-row {
@@ -256,58 +293,6 @@ html {
   border: 0;
 }
 
-.gate-confetti {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.gate-confetti span {
-  --x: 0px;
-  --y: -120px;
-  --r: 0deg;
-  --d: 0ms;
-  position: absolute;
-  top: 48%;
-  left: 50%;
-  width: 6px;
-  height: 10px;
-  border-radius: 2px;
-  background: #ddff53;
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  animation: gate-confetti 900ms ease-out forwards;
-  animation-delay: var(--d);
-}
-
-.gate-confetti span:nth-child(3n) {
-  background: #000000;
-}
-
-.gate-confetti span:nth-child(3n + 1) {
-  background: #F2F2F2;
-}
-
-.gate-confetti span:nth-child(1) { --x: -140px; --y: -110px; --r: 24deg; --d: 0ms; }
-.gate-confetti span:nth-child(2) { --x: -116px; --y: -152px; --r: 78deg; --d: 18ms; }
-.gate-confetti span:nth-child(3) { --x: -88px; --y: -96px; --r: 132deg; --d: 36ms; }
-.gate-confetti span:nth-child(4) { --x: -64px; --y: -166px; --r: 186deg; --d: 54ms; }
-.gate-confetti span:nth-child(5) { --x: -36px; --y: -124px; --r: 240deg; --d: 72ms; }
-.gate-confetti span:nth-child(6) { --x: -12px; --y: -176px; --r: 294deg; --d: 90ms; }
-.gate-confetti span:nth-child(7) { --x: 16px; --y: -112px; --r: 348deg; --d: 108ms; }
-.gate-confetti span:nth-child(8) { --x: 42px; --y: -158px; --r: 42deg; --d: 126ms; }
-.gate-confetti span:nth-child(9) { --x: 70px; --y: -104px; --r: 96deg; --d: 144ms; }
-.gate-confetti span:nth-child(10) { --x: 98px; --y: -170px; --r: 150deg; --d: 162ms; }
-.gate-confetti span:nth-child(11) { --x: 126px; --y: -128px; --r: 204deg; --d: 180ms; }
-.gate-confetti span:nth-child(12) { --x: 150px; --y: -148px; --r: 258deg; --d: 198ms; }
-.gate-confetti span:nth-child(13) { --x: -126px; --y: 104px; --r: 312deg; --d: 36ms; }
-.gate-confetti span:nth-child(14) { --x: -74px; --y: 132px; --r: 366deg; --d: 72ms; }
-.gate-confetti span:nth-child(15) { --x: -22px; --y: 112px; --r: 60deg; --d: 108ms; }
-.gate-confetti span:nth-child(16) { --x: 34px; --y: 142px; --r: 114deg; --d: 144ms; }
-.gate-confetti span:nth-child(17) { --x: 82px; --y: 108px; --r: 168deg; --d: 180ms; }
-.gate-confetti span:nth-child(18) { --x: 132px; --y: 130px; --r: 222deg; --d: 216ms; }
-
 @property --beam-angle {
   syntax: "<angle>";
   inherits: false;
@@ -320,29 +305,42 @@ html {
   }
 }
 
-@keyframes gate-confetti {
+@keyframes gate-kinetic-text {
   0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(0deg);
+    transform: translateY(0) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-0.18em) rotate(-1.8deg);
+  }
+  70% {
+    transform: translateY(0.08em) rotate(1.2deg);
   }
   100% {
-    opacity: 0;
-    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r));
+    transform: translateY(0) rotate(0deg);
   }
 }
 
 @media (max-width: 600px) {
   .gate-overlay {
-    place-items: start center;
-    padding: var(--space-2xl, 40px) var(--space-lg, 20px);
+    place-items: center;
+    padding: var(--space-lg, 20px);
   }
 
   .gate-page {
-    gap: var(--space-2xl, 40px);
+    gap: var(--space-base, 14px);
   }
 
   .gate-hero h1 {
-    font-size: var(--font-3xl, 36px);
+    font-size: var(--font-2xl, 28px);
+  }
+
+  .gate-hero p {
+    font-size: var(--font-sm, 14px);
+    line-height: var(--lh-small, 1.5);
+  }
+
+  .gate-signup-card {
+    padding: var(--space-base, 14px);
   }
 
   .gate-email-form,
