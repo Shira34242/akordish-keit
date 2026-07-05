@@ -696,7 +696,7 @@ public class ArticlesController : ControllerBase
         if (string.IsNullOrWhiteSpace(guestId)) return null;
 
         guestId = guestId.Trim();
-        return guestId.Length <= 64 ? guestId : guestId[..64];
+        return guestId.Length <= 58 ? guestId : guestId[..58];
     }
 
     private void InvalidatePublicArticleCaches()

@@ -15,9 +15,6 @@ public class ArticleFeedbackConfiguration : IEntityTypeConfiguration<ArticleFeed
         builder.Property(f => f.IpAddress)
             .HasMaxLength(64);
 
-        builder.Property(f => f.GuestId)
-            .HasMaxLength(64);
-
         builder.Property(f => f.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
@@ -28,11 +25,11 @@ public class ArticleFeedbackConfiguration : IEntityTypeConfiguration<ArticleFeed
             .HasFilter("[UserId] IS NOT NULL")
             .HasDatabaseName("IX_ArticleFeedback_Article_User");
 
-        // אנונימי: הצבעה אחת לכתבה לפי מזהה אורח בדפדפן
-        builder.HasIndex(f => new { f.ArticleId, f.GuestId })
+        // אנונימי: הצבעה אחת לכתבה לפי מזהה אורח בדפדפן או IP כגיבוי
+        builder.HasIndex(f => new { f.ArticleId, f.IpAddress })
             .IsUnique()
-            .HasFilter("[UserId] IS NULL AND [GuestId] IS NOT NULL")
-            .HasDatabaseName("IX_ArticleFeedback_Article_Guest");
+            .HasFilter("[UserId] IS NULL AND [IpAddress] IS NOT NULL")
+            .HasDatabaseName("IX_ArticleFeedback_Article_IP");
 
         // FK → Article
         builder.HasOne(f => f.Article)

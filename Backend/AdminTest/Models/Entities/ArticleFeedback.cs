@@ -15,8 +15,6 @@ public class ArticleFeedback
     /// <summary>IP לזיהוי אנונימי</summary>
     public string? IpAddress { get; set; }
 
-    public string? GuestId { get; set; }
-
     /// <summary>true = כן, false = לא</summary>
     public bool IsPositive { get; set; }
 

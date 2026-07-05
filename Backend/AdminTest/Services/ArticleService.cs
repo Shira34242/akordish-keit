@@ -1142,10 +1142,12 @@ public class ArticleService : IArticleService
         ArticleFeedback? userVote = null;
         if (userId.HasValue)
             userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
-        else if (!string.IsNullOrEmpty(guestId))
-            userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.GuestId == guestId);
-        else if (!string.IsNullOrEmpty(ipAddress))
-            userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
+        else
+        {
+            var anonymousId = BuildAnonymousFeedbackId(guestId, ipAddress);
+            if (!string.IsNullOrEmpty(anonymousId))
+                userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == anonymousId);
+        }
 
         return BuildFeedbackResult(yes, no, total, userVote);
     }
@@ -1161,12 +1163,13 @@ public class ArticleService : IArticleService
         if (userId.HasValue)
             existing = await _context.ArticleFeedbacks
                 .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
-        else if (!string.IsNullOrEmpty(guestId))
-            existing = await _context.ArticleFeedbacks
-                .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.GuestId == guestId);
-        else if (!string.IsNullOrEmpty(ipAddress))
-            existing = await _context.ArticleFeedbacks
-                .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
+        else
+        {
+            var anonymousId = BuildAnonymousFeedbackId(guestId, ipAddress);
+            if (!string.IsNullOrEmpty(anonymousId))
+                existing = await _context.ArticleFeedbacks
+                    .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == anonymousId);
+        }
 
         if (existing != null)
             throw new InvalidOperationException("Already voted");
@@ -1175,8 +1178,7 @@ public class ArticleService : IArticleService
         {
             ArticleId = articleId,
             UserId = userId,
-            IpAddress = string.IsNullOrEmpty(ipAddress) ? null : ipAddress,
-            GuestId = string.IsNullOrEmpty(guestId) ? null : guestId,
+            IpAddress = userId.HasValue ? (string.IsNullOrEmpty(ipAddress) ? null : ipAddress) : BuildAnonymousFeedbackId(guestId, ipAddress),
             IsPositive = isPositive,
             CreatedAt = DateTime.UtcNow
         });
@@ -1200,6 +1202,14 @@ public class ArticleService : IArticleService
             HasVoted = userVote != null,
             UserChoice = userVote?.IsPositive
         };
+    }
+
+    private static string? BuildAnonymousFeedbackId(string? guestId, string? ipAddress)
+    {
+        if (!string.IsNullOrWhiteSpace(guestId))
+            return $"guest:{guestId.Trim()}";
+
+        return string.IsNullOrWhiteSpace(ipAddress) ? null : ipAddress;
     }
 
     // ─── My Content ────────────────────────────────────────────────────────────
