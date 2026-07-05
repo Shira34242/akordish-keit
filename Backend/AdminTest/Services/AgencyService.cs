@@ -131,6 +131,7 @@ public class AgencyService : IAgencyService
             Slug = slug,
             LogoUrl = Clean(dto.LogoUrl),
             BannerImageUrl = Clean(dto.BannerImageUrl),
+            BannerBlur = Math.Clamp(dto.BannerBlur, 0, 20),
             ShortDescription = Clean(dto.ShortDescription),
             FullDescription = Clean(dto.FullDescription),
             PhoneNumber = Clean(dto.PhoneNumber),
@@ -160,6 +161,7 @@ public class AgencyService : IAgencyService
         agency.Slug = await EnsureUniqueSlugAsync(dto.Slug, dto.Name, id);
         agency.LogoUrl = Clean(dto.LogoUrl);
         agency.BannerImageUrl = Clean(dto.BannerImageUrl);
+        agency.BannerBlur = Math.Clamp(dto.BannerBlur, 0, 20);
         agency.ShortDescription = Clean(dto.ShortDescription);
         agency.FullDescription = Clean(dto.FullDescription);
         agency.PhoneNumber = Clean(dto.PhoneNumber);
@@ -443,6 +445,7 @@ public class AgencyService : IAgencyService
                 Slug = agency.Slug,
                 LogoUrl = agency.LogoUrl,
                 BannerImageUrl = agency.BannerImageUrl,
+                BannerBlur = agency.BannerBlur,
                 ShortDescription = agency.ShortDescription,
                 FullDescription = agency.FullDescription,
                 PhoneNumber = agency.PhoneNumber,
@@ -499,6 +502,7 @@ public class AgencyService : IAgencyService
             Slug = baseDto.Slug,
             LogoUrl = baseDto.LogoUrl,
             BannerImageUrl = baseDto.BannerImageUrl,
+            BannerBlur = baseDto.BannerBlur,
             ShortDescription = baseDto.ShortDescription,
             FullDescription = baseDto.FullDescription,
             PhoneNumber = baseDto.PhoneNumber,
@@ -754,6 +758,7 @@ public class AgencyService : IAgencyService
             Slug = agency.Slug,
             LogoUrl = agency.LogoUrl,
             BannerImageUrl = agency.BannerImageUrl,
+            BannerBlur = agency.BannerBlur,
             ShortDescription = agency.ShortDescription,
             BrandPrimaryColor = agency.BrandPrimaryColor,
             BrandSecondaryColor = agency.BrandSecondaryColor,

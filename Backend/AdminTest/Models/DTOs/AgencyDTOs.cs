@@ -10,6 +10,7 @@ public class AgencyListDto
     public string Slug { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public string? BannerImageUrl { get; set; }
+    public int BannerBlur { get; set; }
     public string? ShortDescription { get; set; }
     public string? BrandPrimaryColor { get; set; }
     public string? BrandSecondaryColor { get; set; }
@@ -29,6 +30,7 @@ public class AgencyContentBannerDto
     public string Slug { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public string? BannerImageUrl { get; set; }
+    public int BannerBlur { get; set; }
     public string? ShortDescription { get; set; }
     public string? BrandPrimaryColor { get; set; }
     public string? BrandSecondaryColor { get; set; }
@@ -126,6 +128,7 @@ public class CreateAgencyDto
     public string? LogoUrl { get; set; }
     [StringLength(500)]
     public string? BannerImageUrl { get; set; }
+    public int BannerBlur { get; set; }
     [StringLength(500)]
     public string? ShortDescription { get; set; }
     public string? FullDescription { get; set; }

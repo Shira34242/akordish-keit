@@ -299,6 +299,39 @@ input[type="color"] {
   max-width: 120px;
 }
 
+.range-field {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-base);
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 18px;
+  background: #ffffff;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.range-field--banner {
+  grid-column: 2;
+  margin-top: 0;
+}
+
+.settings-row + .range-field {
+  display: none;
+}
+
+.range-field input {
+  min-height: 28px;
+  padding: 0;
+  accent-color: #000000;
+}
+
+.range-field strong {
+  min-width: 2ch;
+  text-align: center;
+}
+
 .mini-number {
   width: 86px;
   flex: 0 0 86px;
@@ -795,6 +828,7 @@ button:disabled {
 
   .media-stage,
   .form-grid,
+  .range-field,
   .color-row,
   .social-link-row {
     grid-template-columns: 1fr;
@@ -820,6 +854,10 @@ button:disabled {
   .primary-action,
   .secondary-action {
     flex: 1 1 auto;
+  }
+
+  .range-field--banner {
+    grid-column: 1;
   }
 
   .mini-number {

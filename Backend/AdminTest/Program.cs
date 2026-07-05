@@ -362,6 +362,7 @@ using (var scope = app.Services.CreateScope())
                 [Slug] nvarchar(220) NOT NULL,
                 [LogoUrl] nvarchar(500) NULL,
                 [BannerImageUrl] nvarchar(500) NULL,
+                [BannerBlur] int NOT NULL CONSTRAINT [DF_Agencies_BannerBlur] DEFAULT 0,
                 [ShortDescription] nvarchar(500) NULL,
                 [FullDescription] nvarchar(4000) NULL,
                 [PhoneNumber] nvarchar(20) NULL,
@@ -379,6 +380,13 @@ using (var scope = app.Services.CreateScope())
                 [IsDeleted] bit NOT NULL CONSTRAINT [DF_Agencies_IsDeleted] DEFAULT CAST(0 AS bit),
                 CONSTRAINT [PK_Agencies] PRIMARY KEY ([Id])
             );
+        END
+
+        IF OBJECT_ID(N'[Agencies]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Agencies]', N'BannerBlur') IS NULL
+        BEGIN
+            ALTER TABLE [Agencies]
+            ADD [BannerBlur] int NOT NULL CONSTRAINT [DF_Agencies_BannerBlur] DEFAULT 0;
         END
 
         IF OBJECT_ID(N'[AgencyProfiles]', N'U') IS NULL

@@ -752,6 +752,7 @@ namespace AkordishKeit.Services
                     Slug = c.Agency.Slug,
                     LogoUrl = c.Agency.LogoUrl,
                     BannerImageUrl = c.Agency.BannerImageUrl,
+                    BannerBlur = c.Agency.BannerBlur,
                     ShortDescription = c.Agency.ShortDescription,
                     BrandPrimaryColor = c.Agency.BrandPrimaryColor,
                     BrandSecondaryColor = c.Agency.BrandSecondaryColor,

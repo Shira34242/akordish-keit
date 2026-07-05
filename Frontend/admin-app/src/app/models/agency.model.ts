@@ -33,6 +33,7 @@ export interface AgencyListDto {
   slug: string;
   logoUrl?: string;
   bannerImageUrl?: string;
+  bannerBlur: number;
   shortDescription?: string;
   brandPrimaryColor?: string;
   brandSecondaryColor?: string;
@@ -125,6 +126,7 @@ export interface CreateAgencyDto {
   slug?: string;
   logoUrl?: string;
   bannerImageUrl?: string;
+  bannerBlur: number;
   shortDescription?: string;
   fullDescription?: string;
   phoneNumber?: string;

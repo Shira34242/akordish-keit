@@ -16,6 +16,7 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
         builder.Property(a => a.Slug).IsRequired().HasMaxLength(220);
         builder.Property(a => a.LogoUrl).HasMaxLength(500);
         builder.Property(a => a.BannerImageUrl).HasMaxLength(500);
+        builder.Property(a => a.BannerBlur).HasDefaultValue(0);
         builder.Property(a => a.ShortDescription).HasMaxLength(500);
         builder.Property(a => a.FullDescription).HasMaxLength(4000);
         builder.Property(a => a.PhoneNumber).HasMaxLength(20);

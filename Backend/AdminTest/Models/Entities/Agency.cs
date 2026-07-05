@@ -9,6 +9,7 @@ public class Agency
     public string Slug { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public string? BannerImageUrl { get; set; }
+    public int BannerBlur { get; set; } = 0;
     public string? ShortDescription { get; set; }
     public string? FullDescription { get; set; }
     public string? PhoneNumber { get; set; }

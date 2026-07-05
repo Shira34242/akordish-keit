@@ -18,7 +18,7 @@ import { SocialIconsService } from '../../../services/social-icons.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { SocialPlatform } from '../../../models/artist.model';
 import { SeoService } from '../../../services/seo.service';
-import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, cloudflareImageUrl } from '../../../pipes/cloudflare-image.pipe';
 import { getArticleLink } from '../../../utils/article-route.utils';
 import { artistRoute } from '../../../utils/slug';
 
@@ -142,6 +142,16 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
 
   get heroImage(): string {
     return this.agency?.bannerImageUrl || this.agency?.logoUrl || '';
+  }
+
+  get heroBannerBlur(): number {
+    const numeric = Number(this.agency?.bannerBlur);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
+  }
+
+  get heroBannerFilter(): string | null {
+    return this.heroBannerBlur > 0 ? `blur(${this.heroBannerBlur}px)` : null;
   }
 
   get logoUrl(): string {
@@ -414,7 +424,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.agencyHeroBg?.nativeElement;
     if (!bg) return;
-    this.fullHeroHeight = window.innerHeight - 16;
+    this.fullHeroHeight = Math.max(360, Math.round(window.innerHeight * 0.6));
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
 
@@ -551,7 +561,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
 
       if (item.type === 'image' && item.imageUrl) {
         const img = document.createElement('img');
-        img.src = item.imageUrl;
+        img.src = cloudflareImageUrl(item.imageUrl, 'card');
         img.alt = item.caption || '';
         img.draggable = false;
         card.appendChild(img);
@@ -569,7 +579,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
         const thumbnailUrl = this.getYouTubeThumbnail(item.videoUrl);
         if (thumbnailUrl) {
           const img = document.createElement('img');
-          img.src = thumbnailUrl;
+          img.src = cloudflareImageUrl(thumbnailUrl, 'card');
           img.alt = item.title || '';
           img.draggable = false;
           card.appendChild(img);

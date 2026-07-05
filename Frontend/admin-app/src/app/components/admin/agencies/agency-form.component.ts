@@ -58,6 +58,7 @@ export class AgencyFormComponent implements OnInit {
     slug: '',
     logoUrl: '',
     bannerImageUrl: '',
+    bannerBlur: 0,
     shortDescription: '',
     fullDescription: '',
     phoneNumber: '',
@@ -148,6 +149,7 @@ export class AgencyFormComponent implements OnInit {
           slug: agency.slug,
           logoUrl: agency.logoUrl || '',
           bannerImageUrl: agency.bannerImageUrl || '',
+          bannerBlur: this.normalizedBannerBlur(agency.bannerBlur),
           shortDescription: agency.shortDescription || '',
           fullDescription: agency.fullDescription || '',
           phoneNumber: agency.phoneNumber || '',
@@ -217,6 +219,7 @@ export class AgencyFormComponent implements OnInit {
       slug: clean(this.form.slug),
       logoUrl: clean(this.form.logoUrl),
       bannerImageUrl: clean(this.form.bannerImageUrl),
+      bannerBlur: this.normalizedBannerBlur(this.form.bannerBlur),
       shortDescription: clean(this.form.shortDescription),
       fullDescription: clean(this.form.fullDescription),
       phoneNumber: clean(this.form.phoneNumber),
@@ -230,6 +233,12 @@ export class AgencyFormComponent implements OnInit {
       showInIndexBanner: this.form.showInIndexBanner,
       displayOrder: Number(this.form.displayOrder) || 0
     };
+  }
+
+  normalizedBannerBlur(value: number | undefined): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
   }
 
   // ============================================================

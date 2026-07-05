@@ -27,10 +27,15 @@
             <app-file-upload-input class="media-upload-control" [(url)]="form.logoUrl" [fileOnly]="true" [showPreview]="false" uploadIcon="add_photo_alternate" uploadButtonText="לוגו"></app-file-upload-input>
           </div>
           <div class="banner-preview" [class.has-image]="form.bannerImageUrl">
-            <img *ngIf="form.bannerImageUrl" [src]="form.bannerImageUrl" alt="באנר הסוכנות">
+            <img *ngIf="form.bannerImageUrl" [src]="form.bannerImageUrl" [style.filter]="normalizedBannerBlur(form.bannerBlur) > 0 ? 'blur(' + normalizedBannerBlur(form.bannerBlur) + 'px)' : null" alt="באנר הסוכנות">
             <span *ngIf="!form.bannerImageUrl" class="material-icons">add_photo_alternate</span>
             <app-file-upload-input class="media-upload-control" [(url)]="form.bannerImageUrl" [fileOnly]="true" [showPreview]="false" uploadIcon="add_photo_alternate" uploadButtonText="באנר"></app-file-upload-input>
           </div>
+          <label class="range-field range-field--banner">
+            <span>טשטוש באנר</span>
+            <input type="range" name="bannerBlur" min="0" max="20" step="1" [(ngModel)]="form.bannerBlur">
+            <strong>{{ normalizedBannerBlur(form.bannerBlur) }}</strong>
+          </label>
         </div>
 
         <div class="form-grid">
@@ -76,6 +81,11 @@
           <label class="toggle-pill"><input type="checkbox" name="showInIndexBanner" [(ngModel)]="form.showInIndexBanner"><span>להציג בבאנר אינדקס</span></label>
           <label class="order-field"><span>סדר</span><input type="number" name="displayOrder" [(ngModel)]="form.displayOrder"></label>
         </div>
+        <label class="range-field">
+          <span>טשטוש באנר</span>
+          <input type="range" name="bannerBlur" min="0" max="20" step="1" [(ngModel)]="form.bannerBlur">
+          <strong>{{ normalizedBannerBlur(form.bannerBlur) }}</strong>
+        </label>
         <div class="color-row">
           <label><span>צבע ראשי</span><input type="color" name="brandPrimaryColor" [(ngModel)]="form.brandPrimaryColor"></label>
           <label><span>צבע משני</span><input type="color" name="brandSecondaryColor" [(ngModel)]="form.brandSecondaryColor"></label>
