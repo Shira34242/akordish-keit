@@ -26,6 +26,7 @@ public interface IUserService
     Task<MyProfileDto?> GetMyProfileAsync(int userId);
     Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto);
     Task<UserListDto?> AdminUpdateUserAsync(int userId, AdminUpdateUserDto dto);
+    Task<bool> AdminDeleteUserAsync(int userId);
 
     /// <summary>
     /// מחזיר את כל הדפים של המשתמש (אמן + כל בעלי המקצוע)

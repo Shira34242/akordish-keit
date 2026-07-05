@@ -231,9 +231,21 @@
   <section class="gallery-section" *ngIf="galleryShouldShow">
     <div class="gallery-section-header">
       <h2 class="section-title">גלריה</h2>
-      <span class="section-count">{{ g3dBaseCount }}</span>
+      <span class="section-count">{{ galleryItems.length }}</span>
     </div>
-    <div class="g3d-wrapper" #g3dWrapper>
+    <div class="simple-gallery-grid" *ngIf="!hasCarouselGallery">
+      <button type="button"
+        class="simple-gallery-item"
+        *ngFor="let item of galleryItems"
+        [class.video-gallery-item]="item.type === 'video'"
+        (click)="item.type === 'video' && item.videoUrl ? openVideoLightbox(item.videoUrl) : item.imageUrl ? openImageLightbox(item.imageUrl, item.caption || null) : null">
+        <img *ngIf="item.type === 'image' && item.imageUrl" [src]="item.imageUrl | cfImage:'card'" [alt]="item.caption || 'גלריה'" loading="lazy" decoding="async">
+        <img *ngIf="item.type === 'video' && item.videoUrl && getYouTubeThumbnail(item.videoUrl)" [src]="getYouTubeThumbnail(item.videoUrl)" [alt]="item.title || 'וידאו'" loading="lazy" decoding="async">
+        <span class="material-icons gallery-play-icon" *ngIf="item.type === 'video'">play_arrow</span>
+        <span class="simple-gallery-caption" *ngIf="item.caption || item.title">{{ item.title || item.caption }}</span>
+      </button>
+    </div>
+    <div class="g3d-wrapper" #g3dWrapper *ngIf="hasCarouselGallery">
       <div class="g3d-section" #g3dSection>
         <div class="g3d-cards" #g3dCardsEl></div>
         <button class="g3d-arrow g3d-arrow-prev" (click)="g3dArrowPrev()" aria-label="הקודם">

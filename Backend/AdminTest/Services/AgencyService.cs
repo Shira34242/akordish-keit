@@ -289,24 +289,45 @@ public class AgencyService : IAgencyService
             {
                 Id = g.Id,
                 AgencyId = g.AgencyId,
+                MediaType = g.MediaType,
                 ImageUrl = g.ImageUrl,
+                VideoUrl = g.VideoUrl,
+                Title = g.Title,
                 Caption = g.Caption,
                 DisplayOrder = g.DisplayOrder
             })
             .ToListAsync();
     }
 
-    public async Task<AgencyGalleryImageDto> AddGalleryImageAsync(int agencyId, string imageUrl, string? caption, int displayOrder)
+    public async Task<AgencyGalleryImageDto> AddGalleryImageAsync(int agencyId, AgencyGalleryImageDto dto)
     {
         var agencyExists = await _context.Agencies.AnyAsync(a => a.Id == agencyId && !a.IsDeleted);
         if (!agencyExists) throw new KeyNotFoundException("הסוכנות לא נמצאה");
 
+        var mediaType = NormalizeGalleryMediaType(dto.MediaType)
+            ?? throw new InvalidOperationException("סוג מדיה לא תקין");
+        var imageUrl = Clean(dto.ImageUrl);
+        var videoUrl = Clean(dto.VideoUrl);
+
+        if (mediaType == "image" && imageUrl == null)
+        {
+            throw new InvalidOperationException("תמונה חייבת קישור תמונה");
+        }
+
+        if (mediaType == "video" && videoUrl == null)
+        {
+            throw new InvalidOperationException("וידאו חייב קישור וידאו");
+        }
+
         var image = new AgencyGalleryImage
         {
             AgencyId = agencyId,
+            MediaType = mediaType,
             ImageUrl = imageUrl,
-            Caption = caption,
-            DisplayOrder = displayOrder,
+            VideoUrl = videoUrl,
+            Title = Clean(dto.Title),
+            Caption = Clean(dto.Caption),
+            DisplayOrder = dto.DisplayOrder,
             CreatedAt = DateTime.UtcNow
         };
         _context.AgencyGalleryImages.Add(image);
@@ -316,7 +337,10 @@ public class AgencyService : IAgencyService
         {
             Id = image.Id,
             AgencyId = image.AgencyId,
+            MediaType = image.MediaType,
             ImageUrl = image.ImageUrl,
+            VideoUrl = image.VideoUrl,
+            Title = image.Title,
             Caption = image.Caption,
             DisplayOrder = image.DisplayOrder
         };
@@ -440,7 +464,10 @@ public class AgencyService : IAgencyService
                 {
                     Id = g.Id,
                     AgencyId = g.AgencyId,
+                    MediaType = g.MediaType,
                     ImageUrl = g.ImageUrl,
+                    VideoUrl = g.VideoUrl,
+                    Title = g.Title,
                     Caption = g.Caption,
                     DisplayOrder = g.DisplayOrder
                 }).ToList(),
@@ -872,6 +899,17 @@ public class AgencyService : IAgencyService
             "article" => "article",
             "song" => "song",
             "podcast" => "podcast",
+            _ => null
+        };
+    }
+
+    private static string? NormalizeGalleryMediaType(string? mediaType)
+    {
+        return mediaType?.Trim() switch
+        {
+            null or "" => "image",
+            "image" => "image",
+            "video" => "video",
             _ => null
         };
     }

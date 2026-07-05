@@ -433,7 +433,10 @@ using (var scope = app.Services.CreateScope())
             CREATE TABLE [AgencyGalleryImages] (
                 [Id] int NOT NULL IDENTITY,
                 [AgencyId] int NOT NULL,
-                [ImageUrl] nvarchar(500) NOT NULL,
+                [MediaType] nvarchar(20) NOT NULL CONSTRAINT [DF_AgencyGalleryImages_MediaType] DEFAULT N'image',
+                [ImageUrl] nvarchar(500) NULL,
+                [VideoUrl] nvarchar(500) NULL,
+                [Title] nvarchar(200) NULL,
                 [Caption] nvarchar(200) NULL,
                 [DisplayOrder] int NOT NULL CONSTRAINT [DF_AgencyGalleryImages_DisplayOrder] DEFAULT 0,
                 [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_AgencyGalleryImages_CreatedAt] DEFAULT (GETUTCDATE()),
@@ -441,6 +444,34 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT [FK_AgencyGalleryImages_Agencies_AgencyId] FOREIGN KEY ([AgencyId]) REFERENCES [Agencies] ([Id]) ON DELETE CASCADE
             );
             CREATE INDEX [IX_AgencyGalleryImages_AgencyId] ON [AgencyGalleryImages] ([AgencyId]);
+        END
+
+        IF OBJECT_ID(N'[AgencyGalleryImages]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[AgencyGalleryImages]', N'MediaType') IS NULL
+        BEGIN
+            ALTER TABLE [AgencyGalleryImages]
+            ADD [MediaType] nvarchar(20) NOT NULL CONSTRAINT [DF_AgencyGalleryImages_MediaType] DEFAULT N'image';
+        END
+
+        IF OBJECT_ID(N'[AgencyGalleryImages]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[AgencyGalleryImages]', N'VideoUrl') IS NULL
+        BEGIN
+            ALTER TABLE [AgencyGalleryImages]
+            ADD [VideoUrl] nvarchar(500) NULL;
+        END
+
+        IF OBJECT_ID(N'[AgencyGalleryImages]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[AgencyGalleryImages]', N'Title') IS NULL
+        BEGIN
+            ALTER TABLE [AgencyGalleryImages]
+            ADD [Title] nvarchar(200) NULL;
+        END
+
+        IF OBJECT_ID(N'[AgencyGalleryImages]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[AgencyGalleryImages]', N'ImageUrl') IS NOT NULL
+        BEGIN
+            ALTER TABLE [AgencyGalleryImages]
+            ALTER COLUMN [ImageUrl] nvarchar(500) NULL;
         END
 
         IF OBJECT_ID(N'[AgencySocialLinks]', N'U') IS NULL

@@ -1135,6 +1135,14 @@
   font-family: 'Open Sans', sans-serif;
 }
 
+.feedback-error {
+  margin-top: var(--space-base);
+  font-size: var(--font-xs);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.65);
+  font-family: 'Open Sans', sans-serif;
+}
+
 @keyframes feedbackCirclePing {
   0% {
     opacity: 0.68;

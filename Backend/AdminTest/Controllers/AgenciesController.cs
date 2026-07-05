@@ -82,9 +82,11 @@ public class AgenciesController : ControllerBase
             _logger.LogInformation("Agency updated: AgencyId={AgencyId}", id);
             return Ok(agency);
         }
-        catch (KeyNotFoundException ex)
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
         {
-            return NotFound(new { message = ex.Message });
+            return ex is KeyNotFoundException
+                ? NotFound(new { message = ex.Message })
+                : BadRequest(new { message = ex.Message });
         }
     }
 
@@ -154,11 +156,13 @@ public class AgenciesController : ControllerBase
     {
         try
         {
-            return Ok(await _service.AddGalleryImageAsync(agencyId, dto.ImageUrl, dto.Caption, dto.DisplayOrder));
+            return Ok(await _service.AddGalleryImageAsync(agencyId, dto));
         }
-        catch (KeyNotFoundException ex)
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
         {
-            return NotFound(new { message = ex.Message });
+            return ex is KeyNotFoundException
+                ? NotFound(new { message = ex.Message })
+                : BadRequest(new { message = ex.Message });
         }
     }
 

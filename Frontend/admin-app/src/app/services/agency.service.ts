@@ -122,7 +122,7 @@ export class AgencyService {
     return this.http.get<AgencyGalleryImageDto[]>(`${this.apiUrl}/${agencyId}/gallery`);
   }
 
-  addGalleryImage(agencyId: number, dto: { imageUrl: string; caption?: string; displayOrder: number }): Observable<AgencyGalleryImageDto> {
+  addGalleryImage(agencyId: number, dto: Partial<AgencyGalleryImageDto> & { mediaType: 'image' | 'video'; displayOrder: number }): Observable<AgencyGalleryImageDto> {
     return this.http.post<AgencyGalleryImageDto>(`${this.apiUrl}/${agencyId}/gallery`, dto);
   }
 

@@ -320,14 +320,22 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
 
   get galleryItems(): Array<{ type: 'image' | 'video'; imageUrl?: string; videoUrl?: string; caption?: string; title?: string }> {
     if (!this.agency) return [];
-    return this.galleryImages.map(img => ({
-      type: 'image' as const,
-      imageUrl: img.imageUrl,
-      caption: img.caption
-    }));
+    return this.galleryImages
+      .map(img => ({
+        type: (img.mediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
+        imageUrl: img.imageUrl,
+        videoUrl: img.videoUrl,
+        caption: img.caption,
+        title: img.title
+      }))
+      .filter(item => item.type === 'video' ? !!item.videoUrl : !!item.imageUrl);
   }
 
   get hasGallery(): boolean {
+    return this.galleryItems.length > 0;
+  }
+
+  get hasCarouselGallery(): boolean {
     return this.galleryItems.length >= this.GALLERY_MIN_ITEMS;
   }
 

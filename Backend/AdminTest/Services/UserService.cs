@@ -320,6 +320,21 @@ public class UserService : IUserService
         return MapToListDto(user);
     }
 
+    public async Task<bool> AdminDeleteUserAsync(int userId)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user == null) return false;
+
+        user.IsDeleted = true;
+        user.IsActive = false;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<List<UserWithProfileDto>> GetMyAllPagesAsync(int userId)
     {
         var results = new List<UserWithProfileDto>();

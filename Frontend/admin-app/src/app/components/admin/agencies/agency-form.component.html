@@ -1,236 +1,266 @@
 <div class="agency-form-page" dir="rtl">
-  <div class="page-header">
-    <div>
-      <h1>{{ agencyId ? 'עריכת סוכנות' : 'סוכנות חדשה' }}</h1>
-      <p>פרטי הסוכנות, באנר האינדקס, תגי פרופילים, תוכן, גלריה ורשתות חברתיות.</p>
-    </div>
-    <button class="btn btn-light" type="button" (click)="back()">חזרה לרשימה</button>
-  </div>
-
-  <div *ngIf="loading" class="panel">טוען...</div>
-  <div *ngIf="error" class="alert">{{ error }}</div>
-
-  <form class="form-panel" (ngSubmit)="save()" *ngIf="!loading">
-    <div class="form-grid">
-      <label for="agency-name">
-        <span>שם סוכנות</span>
-        <input id="agency-name" name="name" [(ngModel)]="form.name" required>
-      </label>
-      <label for="agency-slug">
-        <span>קישור קצר</span>
-        <input id="agency-slug" name="slug" [(ngModel)]="form.slug" placeholder="נוצר אוטומטית אם ריק">
-      </label>
-      <label for="agency-logo">
-        <span>לוגו</span>
-        <app-file-upload-input inputId="agency-logo" [(url)]="form.logoUrl" placeholder="כתובת לוגו או העלאת קובץ"></app-file-upload-input>
-      </label>
-      <label for="agency-banner">
-        <span>תמונת באנר</span>
-        <app-file-upload-input inputId="agency-banner" [(url)]="form.bannerImageUrl" placeholder="כתובת באנר או העלאת קובץ"></app-file-upload-input>
-      </label>
-      <label for="agency-phone">
-        <span>טלפון</span>
-        <input id="agency-phone" name="phoneNumber" [(ngModel)]="form.phoneNumber">
-      </label>
-      <label for="agency-whatsapp">
-        <span>ווטסאפ</span>
-        <input id="agency-whatsapp" name="whatsAppNumber" [(ngModel)]="form.whatsAppNumber">
-      </label>
-      <label for="agency-email">
-        <span>אימייל</span>
-        <input id="agency-email" name="email" type="email" [(ngModel)]="form.email">
-      </label>
-      <label for="agency-website">
-        <span>אתר</span>
-        <input id="agency-website" name="websiteUrl" [(ngModel)]="form.websiteUrl">
-      </label>
-      <div class="brand-colors full">
-        <label>
-          <span>צבע ראשי</span>
-          <input type="color" name="brandPrimaryColor" [(ngModel)]="form.brandPrimaryColor">
-        </label>
-        <label>
-          <span>צבע משני</span>
-          <input type="color" name="brandSecondaryColor" [(ngModel)]="form.brandSecondaryColor">
-        </label>
-        <label>
-          <span>צבע טקסט</span>
-          <input type="color" name="brandTextColor" [(ngModel)]="form.brandTextColor">
-        </label>
+  <div class="agency-create-shell">
+    <header class="agency-flow-header">
+      <button class="icon-back" type="button" (click)="back()" aria-label="חזרה לרשימה" title="חזרה לרשימה">
+        <span class="material-icons">arrow_forward</span>
+      </button>
+      <div>
+        <span class="mini-badge">{{ agencyId ? 'עריכת סוכנות' : 'סוכנות חדשה' }}</span>
+        <h1>{{ agencyId ? 'עריכת דף סוכנות' : 'יצירת דף סוכנות' }}</h1>
+        <p>דף ציבורי עם לוגו, באנר, רשתות, גלריה, פרופילים ותוכן משויך.</p>
       </div>
-      <label class="full">
-        <span>תיאור קצר</span>
-        <input name="shortDescription" [(ngModel)]="form.shortDescription">
-      </label>
-      <label class="full">
-        <span>תיאור מלא</span>
-        <textarea name="fullDescription" rows="5" [(ngModel)]="form.fullDescription"></textarea>
-      </label>
+    </header>
+
+    <div *ngIf="loading" class="quiet-state">
+      <div class="spinner"></div>
+      <p>טוען...</p>
     </div>
 
-    <div class="switch-row">
-      <label class="checkbox-label"><input type="checkbox" name="isActive" [(ngModel)]="form.isActive"> סוכנות פעילה</label>
-      <label class="checkbox-label"><input type="checkbox" name="showInIndexBanner" [(ngModel)]="form.showInIndexBanner"> הצג בבאנר באינדקס</label>
-      <label class="order-label"><span>סדר תצוגה</span><input type="number" name="displayOrder" [(ngModel)]="form.displayOrder"></label>
-    </div>
+    <div *ngIf="error" class="error-message">{{ error }}</div>
 
-    <div class="actions-row">
-      <button class="btn btn-primary" type="submit" [disabled]="saving">{{ saving ? 'שומר...' : 'שמור סוכנות' }}</button>
-    </div>
-  </form>
-
-  <div class="management-grid" *ngIf="agencyId && agency">
-    <!-- Profiles -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>פרופילים משויכים</h2>
-        <span>{{ agency.profiles.length }}</span>
-      </div>
-      <div class="inline-form">
-        <select [(ngModel)]="profileForm.profileType" (change)="profileSearch=''; profileSearchResults=[]">
-          <option value="artist">אמן</option>
-          <option value="serviceProvider">נותן שירות</option>
-          <option value="teacher">מורה</option>
-        </select>
-        <div class="search-wrap">
-          <input type="text" [(ngModel)]="profileSearch" placeholder="חפש פרופיל..."
-            (ngModelChange)="onProfileSearchChange($event)" (focus)="profileSearchResults.length && (profileSearchOpen = true)">
-          <div class="search-dropdown" *ngIf="profileSearchOpen && profileSearchResults.length">
-            <div class="search-result" *ngFor="let r of profileSearchResults" (click)="selectProfile(r)">
-              <span>{{ r.name }}</span>
-              <small>#{{ r.id }}</small>
-            </div>
+    <form class="agency-quick-form" (ngSubmit)="save()" *ngIf="!loading">
+      <section class="flow-card main-card">
+        <div class="media-stage">
+          <div class="logo-preview">
+            <img *ngIf="form.logoUrl" [src]="form.logoUrl" alt="לוגו הסוכנות">
+            <span *ngIf="!form.logoUrl" class="material-icons">business</span>
+            <app-file-upload-input class="media-upload-control" [(url)]="form.logoUrl" [fileOnly]="true" [showPreview]="false" uploadIcon="add_photo_alternate" uploadButtonText="לוגו"></app-file-upload-input>
+          </div>
+          <div class="banner-preview" [class.has-image]="form.bannerImageUrl">
+            <img *ngIf="form.bannerImageUrl" [src]="form.bannerImageUrl" alt="באנר הסוכנות">
+            <span *ngIf="!form.bannerImageUrl" class="material-icons">add_photo_alternate</span>
+            <app-file-upload-input class="media-upload-control" [(url)]="form.bannerImageUrl" [fileOnly]="true" [showPreview]="false" uploadIcon="add_photo_alternate" uploadButtonText="באנר"></app-file-upload-input>
           </div>
         </div>
-        <input type="hidden" [(ngModel)]="profileForm.profileId">
-        <select [(ngModel)]="profileForm.contactMode">
-          <option [ngValue]="AgencyContactMode.Direct">יצירת קשר ישירה</option>
-          <option [ngValue]="AgencyContactMode.Agency">דרך הסוכנות</option>
-          <option [ngValue]="AgencyContactMode.Both">גם וגם</option>
-        </select>
-        <label><input type="checkbox" [(ngModel)]="profileForm.showBadge"> תג</label>
-        <label><input type="checkbox" [(ngModel)]="profileForm.isFeaturedByAgency"> מודגש</label>
-        <input type="number" [(ngModel)]="profileForm.displayOrder" placeholder="סדר" style="width:60px">
-        <button class="btn btn-primary" type="button" (click)="addProfile()">הוסף</button>
+
+        <div class="form-grid">
+          <label class="field full">
+            <span>שם הסוכנות *</span>
+            <input name="name" [(ngModel)]="form.name" required placeholder="שם שיופיע באתר">
+          </label>
+          <label class="field">
+            <span>קישור קצר</span>
+            <input name="slug" [(ngModel)]="form.slug" placeholder="נוצר אוטומטית אם ריק">
+          </label>
+          <label class="field">
+            <span>משפט קצר</span>
+            <input name="shortDescription" [(ngModel)]="form.shortDescription" placeholder="למשל: ייצוג אמנים והפקות מוזיקה">
+          </label>
+          <label class="field full">
+            <span>תיאור מלא</span>
+            <textarea name="fullDescription" rows="4" [(ngModel)]="form.fullDescription" placeholder="כמה מילים על הסוכנות, תחומי פעילות, אנשים וערך לקהל"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="flow-card">
+        <div class="section-head">
+          <span class="soft-label">יצירת קשר</span>
+          <small>הכפתורים יוצגו בדף הציבורי</small>
+        </div>
+        <div class="form-grid compact">
+          <label class="field"><span>טלפון</span><input name="phoneNumber" [(ngModel)]="form.phoneNumber" placeholder="050-0000000"></label>
+          <label class="field"><span>וואטסאפ</span><input name="whatsAppNumber" [(ngModel)]="form.whatsAppNumber" placeholder="050-0000000"></label>
+          <label class="field"><span>אימייל</span><input name="email" type="email" [(ngModel)]="form.email" placeholder="name@example.com"></label>
+          <label class="field"><span>אתר</span><input name="websiteUrl" [(ngModel)]="form.websiteUrl" placeholder="https://..."></label>
+        </div>
+      </section>
+
+      <section class="flow-card">
+        <div class="section-head">
+          <span class="soft-label">נראות באתר</span>
+          <small>הגדרות אדמין קצרות</small>
+        </div>
+        <div class="settings-row">
+          <label class="toggle-pill"><input type="checkbox" name="isActive" [(ngModel)]="form.isActive"><span>פעילה</span></label>
+          <label class="toggle-pill"><input type="checkbox" name="showInIndexBanner" [(ngModel)]="form.showInIndexBanner"><span>להציג בבאנר אינדקס</span></label>
+          <label class="order-field"><span>סדר</span><input type="number" name="displayOrder" [(ngModel)]="form.displayOrder"></label>
+        </div>
+        <div class="color-row">
+          <label><span>צבע ראשי</span><input type="color" name="brandPrimaryColor" [(ngModel)]="form.brandPrimaryColor"></label>
+          <label><span>צבע משני</span><input type="color" name="brandSecondaryColor" [(ngModel)]="form.brandSecondaryColor"></label>
+          <label><span>צבע טקסט</span><input type="color" name="brandTextColor" [(ngModel)]="form.brandTextColor"></label>
+        </div>
+      </section>
+
+      <div class="floating-actions">
+        <button class="secondary-action" type="button" (click)="back()" [disabled]="saving"><span class="material-icons">close</span><span>ביטול</span></button>
+        <button class="primary-action" type="submit" [disabled]="saving"><span class="material-icons" *ngIf="!saving">save</span><span>{{ saving ? 'שומר...' : 'שמור סוכנות' }}</span></button>
       </div>
-      <div class="rows-list">
-        <div class="linked-row" *ngFor="let profile of agency.profiles">
+    </form>
+
+    <ng-template #lockedManagement>
+      <div class="management-stack management-stack--locked" *ngIf="!loading">
+        <section class="flow-card locked-card">
+          <span class="soft-label">פרופילים, רשתות, גלריה ותוכן</span>
+          <p>האזורים מוכנים. צריך שמירה ראשונה כדי ליצור מזהה לסוכנות, ואז אפשר לשייך אליה פרופילים, להוסיף רשתות, גלריה ותוכן.</p>
+        </section>
+      </div>
+    </ng-template>
+
+    <div class="management-stack" *ngIf="agencyId && agency; else lockedManagement">
+      <section class="flow-card profiles-card">
+        <div class="section-head">
           <div>
-            <strong>{{ profile.profileName || ('פרופיל #' + profile.profileId) }}</strong>
-            <span>{{ profile.isTeacher ? 'מורה' : profile.profileType === 'artist' ? 'אמן' : 'נותן שירות' }} · {{ getContactModeLabel(profile.contactMode) }}</span>
+            <span class="soft-label">שיוך פרופילים לסוכנות</span>
+            <small>בחר פרופילים, ואז קבע לכל אחד לאן יצירת הקשר תוביל.</small>
           </div>
-          <button class="btn-action btn-delete" type="button" (click)="removeProfile(profile)"><span class="material-icons">delete</span></button>
         </div>
-        <p class="empty" *ngIf="agency.profiles.length === 0">אין פרופילים משויכים</p>
-      </div>
-    </section>
 
-    <!-- Content -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>תוכן ישיר</h2>
-        <span>{{ agency.contents.length }}</span>
-      </div>
-      <div class="inline-form">
-        <select [(ngModel)]="contentForm.contentType" (change)="contentSearch=''; contentSearchResults=[]">
-          <option value="article">כתבה</option>
-          <option value="song">שיר</option>
-          <option value="podcast">פודקאסט</option>
-        </select>
-        <div class="search-wrap">
-          <input type="text" [(ngModel)]="contentSearch" placeholder="חפש תוכן..."
-            (ngModelChange)="onContentSearchChange($event)" (focus)="contentSearchResults.length && (contentSearchOpen = true)">
-          <div class="search-dropdown" *ngIf="contentSearchOpen && contentSearchResults.length">
-            <div class="search-result" *ngFor="let r of contentSearchResults" (click)="selectContent(r)">
-              <span>{{ r.name }}</span>
-              <small>#{{ r.id }}</small>
-            </div>
+        <div class="profile-tools-bar">
+          <div class="profile-type-tabs">
+            <button type="button" [class.active]="profileForm.profileType === 'artist'" (click)="setProfileType('artist')">אמנים</button>
+            <button type="button" [class.active]="profileForm.profileType === 'teacher'" (click)="setProfileType('teacher')">מורים</button>
+            <button type="button" [class.active]="profileForm.profileType === 'serviceProvider'" (click)="setProfileType('serviceProvider')">נותני שירות</button>
           </div>
+          <label class="sort-control">
+            <span>מיון</span>
+            <select [(ngModel)]="profileSort" [ngModelOptions]="{standalone: true}">
+              <option value="name">שם</option>
+              <option value="id">מזהה</option>
+            </select>
+          </label>
         </div>
-        <input type="hidden" [(ngModel)]="contentForm.contentId">
-        <label><input type="checkbox" [(ngModel)]="contentForm.isFeatured"> מודגש</label>
-        <input type="number" [(ngModel)]="contentForm.displayOrder" placeholder="סדר" style="width:60px">
-        <button class="btn btn-primary" type="button" (click)="addContent()">הוסף</button>
-      </div>
-      <div class="rows-list">
-        <div class="linked-row" *ngFor="let content of agency.contents">
-          <div>
-            <strong>{{ content.title || ('תוכן #' + content.contentId) }}</strong>
-            <span>{{ getContentTypeLabel(content.contentType) }}</span>
-          </div>
-          <button class="btn-action btn-delete" type="button" (click)="removeContent(content)"><span class="material-icons">delete</span></button>
-        </div>
-        <p class="empty" *ngIf="agency.contents.length === 0">אין תוכן משויך</p>
-      </div>
-    </section>
 
-    <!-- Gallery -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>גלריה</h2>
-        <span>{{ (agency.galleryImages || []).length }}</span>
-      </div>
-      <div class="gallery-add-area">
-        <div class="gallery-form-row">
-          <app-file-upload-input [(url)]="galleryForm.imageUrl" placeholder="כתובת תמונה או העלאת קובץ" [showPreview]="false"></app-file-upload-input>
-          <input type="text" [(ngModel)]="galleryForm.caption" placeholder="כיתוב (רשות)" class="form-input-inline">
-          <input type="number" [(ngModel)]="galleryForm.displayOrder" placeholder="סדר" style="width:60px" class="form-input-inline">
-          <button class="btn btn-primary" type="button" (click)="addGalleryImage()" [disabled]="!galleryForm.imageUrl">הוסף תמונה</button>
+        <div class="profile-picker-panel">
+          <div class="picker-copy">
+            <strong>בחירת פרופיל</strong>
+            <span>חפש בתוך הסוג שבחרת. אחרי הבחירה אפשר לקבוע האם הפניות יעברו דרך הסוכנות, דרך הפרופיל עצמו, או בשני המסלולים.</span>
+          </div>
+          <div class="search-wrap profile-search-wrap">
+            <span class="material-icons">search</span>
+            <input type="text" [(ngModel)]="profileSearch" [ngModelOptions]="{standalone: true}"
+              [placeholder]="'חיפוש ' + getProfileFormTypeLabel() + '...'"
+              (ngModelChange)="onProfileSearchChange($event)">
+          </div>
+
+          <div class="profile-candidates-grid" *ngIf="getSortedProfileSearchResults().length > 0">
+            <button type="button"
+              class="profile-candidate-card"
+              *ngFor="let r of getSortedProfileSearchResults()"
+              [class.selected]="profileForm.profileId === r.id"
+              [class.linked]="isProfileCandidateLinked(r)"
+              (click)="!isProfileCandidateLinked(r) && selectProfile(r)">
+              <img *ngIf="r.imageUrl" [src]="r.imageUrl" alt="">
+              <span *ngIf="!r.imageUrl" class="profile-initial">{{ r.name.charAt(0) }}</span>
+              <span class="candidate-copy"><strong>{{ r.name }}</strong><small>{{ isProfileCandidateLinked(r) ? 'כבר משויך לסוכנות' : r.typeLabel }}</small></span>
+              <span class="material-icons candidate-mark">{{ profileForm.profileId === r.id ? 'check' : 'add' }}</span>
+            </button>
+          </div>
+          <p class="empty inline-empty" *ngIf="profileSearch && getSortedProfileSearchResults().length === 0">לא נמצאו פרופילים מתאימים.</p>
+
+          <div class="selected-profile-preview" *ngIf="getSelectedProfileSearchResult() as selectedProfileResult">
+            <span class="material-icons">sell</span>
+            <div><strong>{{ selectedProfileResult.name }}</strong><small>{{ selectedProfileResult.typeLabel }}</small></div>
+            <button type="button" class="round-action" (click)="clearProfileSelection()" title="נקה בחירה">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="profile-options-row">
+            <select [(ngModel)]="profileForm.contactMode" [ngModelOptions]="{standalone: true}">
+              <option [ngValue]="AgencyContactMode.Agency">יצירת קשר דרך הסוכנות</option>
+              <option [ngValue]="AgencyContactMode.Direct">יצירת קשר של הפרופיל עצמו</option>
+              <option [ngValue]="AgencyContactMode.Both">גם סוכנות וגם הפרופיל</option>
+            </select>
+            <label class="toggle-pill small"><input type="checkbox" [(ngModel)]="profileForm.showBadge" [ngModelOptions]="{standalone: true}"><span>תג סוכנות</span></label>
+            <label class="toggle-pill small"><input type="checkbox" [(ngModel)]="profileForm.isFeaturedByAgency" [ngModelOptions]="{standalone: true}"><span>מודגש</span></label>
+            <input type="number" [(ngModel)]="profileForm.displayOrder" [ngModelOptions]="{standalone: true}" placeholder="סדר" class="mini-number">
+            <button class="primary-action compact-action" type="button" (click)="addProfile()" [disabled]="!profileForm.profileId">
+              <span class="material-icons">add</span><span>שייך לסוכנות</span>
+            </button>
+          </div>
         </div>
-        <div class="gallery-form-row">
-          <input type="url" [(ngModel)]="galleryVideoForm.videoUrl" placeholder="קישור YouTube" class="form-input-inline">
-          <input type="text" [(ngModel)]="galleryVideoForm.title" placeholder="כותרת וידאו" class="form-input-inline">
-          <input type="number" [(ngModel)]="galleryVideoForm.displayOrder" placeholder="סדר" style="width:60px" class="form-input-inline">
-          <button class="btn btn-primary" type="button" (click)="addGalleryVideo()" [disabled]="!galleryVideoForm.videoUrl">הוסף וידאו</button>
+
+        <div class="linked-list-head">
+          <strong>פרופילים משויכים</strong>
+          <span>{{ agency.profiles.length }}</span>
         </div>
-      </div>
-      <div class="rows-list" *ngIf="agency.galleryImages">
-        <div class="linked-row" *ngFor="let img of agency.galleryImages">
-          <div class="linked-row-preview">
-            <img *ngIf="img.imageUrl && !isVideoItem(img)" [src]="img.imageUrl" [alt]="img.caption || 'תמונה'" class="gallery-thumb" />
-            <span *ngIf="isVideoItem(img)" class="material-icons gallery-video-icon">smart_display</span>
+        <div class="linked-grid">
+          <article class="linked-chip profile-linked-chip" *ngFor="let profile of agency.profiles">
+            <img *ngIf="profile.profileImageUrl" [src]="profile.profileImageUrl" alt="">
+            <span *ngIf="!profile.profileImageUrl" class="profile-initial">{{ (profile.profileName || '?').charAt(0) }}</span>
             <div>
-              <strong>{{ getGalleryItemLabel(img) }}</strong>
-              <span>{{ getGalleryItemUrl(img) }}</span>
+              <strong>{{ profile.profileName || ('פרופיל #' + profile.profileId) }}</strong>
+              <small>{{ getProfileTypeLabel(profile) }}</small>
             </div>
-          </div>
-          <button class="btn-action btn-delete" type="button" (click)="removeGalleryImage(img)"><span class="material-icons">delete</span></button>
+            <select class="contact-mode-select"
+              [ngModel]="profile.contactMode"
+              [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="updateProfileContactMode(profile, $event)">
+              <option [ngValue]="AgencyContactMode.Agency">דרך הסוכנות</option>
+              <option [ngValue]="AgencyContactMode.Direct">של הפרופיל</option>
+              <option [ngValue]="AgencyContactMode.Both">גם וגם</option>
+            </select>
+            <button class="round-action danger" type="button" (click)="removeProfile(profile)" title="הסר">
+              <span class="material-icons">close</span>
+            </button>
+          </article>
+          <p class="empty" *ngIf="agency.profiles.length === 0">אין עדיין פרופילים משויכים.</p>
         </div>
-        <p class="empty" *ngIf="agency.galleryImages.length === 0">אין תמונות בגלריה</p>
-      </div>
-    </section>
+      </section>
 
-    <!-- Social Links -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>רשתות חברתיות</h2>
-        <span>{{ (agency.socialLinks || []).length }}</span>
-      </div>
-      <div class="social-link-list">
-        <div class="social-link-row" *ngFor="let opt of socialPlatformOptions">
-          <div class="social-link-icon">
-            <span [innerHTML]="getSocialIconSvg(opt.value)" class="social-icon-svg"></span>
-            <span class="social-link-label">{{ opt.label }}</span>
+      <section class="flow-card">
+        <div class="section-head"><div><span class="soft-label">רשתות חברתיות</span><small>כמו בדף אמן: אייקונים, לחיצה וקישור</small></div></div>
+        <div class="social-link-list">
+          <div class="social-link-row" *ngFor="let opt of socialPlatformOptions">
+            <div class="social-link-icon"><span [innerHTML]="getSocialIconSvg(opt.value)" class="social-icon-svg"></span><span class="social-link-label">{{ opt.label }}</span></div>
+            <input type="url" class="form-input-inline" placeholder="https://..." [ngModel]="getSocialLinkUrl(opt.value)" [ngModelOptions]="{standalone: true}" (ngModelChange)="setSocialLinkUrl(opt.value, $event)" />
           </div>
-          <input type="url" class="form-input-inline"
-            [placeholder]="'https://...'"
-            [ngModel]="getSocialLinkUrl(opt.value)"
-            (ngModelChange)="setSocialLinkUrl(opt.value, $event)" />
         </div>
-      </div>
-      <div class="rows-list" *ngIf="agency.socialLinks">
-        <div class="linked-row" *ngFor="let link of agency.socialLinks">
-          <div class="linked-row-preview">
-            <span [innerHTML]="getSocialIconSvg(link.platform)" class="social-icon-svg social-icon-sm"></span>
-            <div>
-              <strong>{{ getPlatformLabel(link.platform) }}</strong>
-              <span>{{ link.url }}</span>
+      </section>
+
+      <section class="flow-card">
+        <div class="section-head"><div><span class="soft-label">גלריה</span><small>{{ (agency.galleryImages || []).length }} פריטים</small></div></div>
+        <div class="gallery-add-area">
+          <div class="gallery-form-row">
+            <app-file-upload-input [(url)]="galleryForm.imageUrl" placeholder="העלאת תמונה לגלריה" [showPreview]="false"></app-file-upload-input>
+            <input type="text" [(ngModel)]="galleryForm.caption" [ngModelOptions]="{standalone: true}" placeholder="כיתוב קצר" class="form-input-inline">
+            <input type="number" [(ngModel)]="galleryForm.displayOrder" [ngModelOptions]="{standalone: true}" placeholder="סדר" class="mini-number">
+            <button class="primary-action compact-action" type="button" (click)="addGalleryImage()" [disabled]="!galleryForm.imageUrl"><span class="material-icons">add_photo_alternate</span><span>תמונה</span></button>
+          </div>
+          <div class="gallery-form-row">
+            <input type="url" [(ngModel)]="galleryVideoForm.videoUrl" [ngModelOptions]="{standalone: true}" placeholder="קישור YouTube / Vimeo" class="form-input-inline">
+            <input type="text" [(ngModel)]="galleryVideoForm.title" [ngModelOptions]="{standalone: true}" placeholder="כותרת וידאו" class="form-input-inline">
+            <input type="number" [(ngModel)]="galleryVideoForm.displayOrder" [ngModelOptions]="{standalone: true}" placeholder="סדר" class="mini-number">
+            <button class="secondary-action compact-action" type="button" (click)="addGalleryVideo()" [disabled]="!galleryVideoForm.videoUrl"><span class="material-icons">smart_display</span><span>וידאו</span></button>
+          </div>
+        </div>
+        <div class="gallery-preview-grid" *ngIf="agency.galleryImages">
+          <article class="gallery-preview-card" *ngFor="let img of agency.galleryImages">
+            <div class="gallery-thumb-wrap"><img *ngIf="img.imageUrl && !isVideoItem(img)" [src]="img.imageUrl" [alt]="img.caption || 'תמונה'"><span *ngIf="isVideoItem(img)" class="material-icons gallery-video-icon">smart_display</span></div>
+            <div><strong>{{ getGalleryItemLabel(img) }}</strong><small>{{ getGalleryItemUrl(img) }}</small></div>
+            <button class="round-action danger" type="button" (click)="removeGalleryImage(img)" title="מחיקה"><span class="material-icons">delete</span></button>
+          </article>
+          <p class="empty" *ngIf="agency.galleryImages.length === 0">אין עדיין פריטים בגלריה.</p>
+        </div>
+      </section>
+
+      <section class="flow-card">
+        <div class="section-head"><div><span class="soft-label">תוכן ישיר</span><small>{{ agency.contents.length }} משויכים</small></div></div>
+        <div class="content-link-row">
+          <select [(ngModel)]="contentForm.contentType" [ngModelOptions]="{standalone: true}" (change)="contentSearch=''; contentSearchResults=[]">
+            <option value="article">כתבה</option><option value="song">שיר</option><option value="podcast">פודקאסט</option>
+          </select>
+          <div class="search-wrap">
+            <input type="text" [(ngModel)]="contentSearch" [ngModelOptions]="{standalone: true}" placeholder="חיפוש תוכן..." (ngModelChange)="onContentSearchChange($event)" (focus)="contentSearchResults.length && (contentSearchOpen = true)">
+            <div class="search-dropdown" *ngIf="contentSearchOpen && contentSearchResults.length">
+              <button type="button" class="search-result" *ngFor="let r of contentSearchResults" (click)="selectContent(r)"><span>{{ r.name }}</span><small>#{{ r.id }}</small></button>
             </div>
           </div>
-          <button class="btn-action btn-delete" type="button" (click)="removeSocialLink(link)"><span class="material-icons">delete</span></button>
+          <label class="toggle-pill small"><input type="checkbox" [(ngModel)]="contentForm.isFeatured" [ngModelOptions]="{standalone: true}"><span>מודגש</span></label>
+          <input type="number" [(ngModel)]="contentForm.displayOrder" [ngModelOptions]="{standalone: true}" placeholder="סדר" class="mini-number">
+          <button class="primary-action compact-action" type="button" (click)="addContent()" [disabled]="!contentForm.contentId"><span class="material-icons">add</span><span>שיוך</span></button>
         </div>
-        <p class="empty" *ngIf="agency.socialLinks.length === 0">אין קישורים</p>
-      </div>
-    </section>
+        <div class="linked-grid">
+          <article class="linked-chip content-chip" *ngFor="let content of agency.contents">
+            <span class="material-icons">article</span>
+            <div><strong>{{ content.title || ('תוכן #' + content.contentId) }}</strong><small>{{ getContentTypeLabel(content.contentType) }}</small></div>
+            <button class="round-action danger" type="button" (click)="removeContent(content)" title="הסר"><span class="material-icons">close</span></button>
+          </article>
+          <p class="empty" *ngIf="agency.contents.length === 0">אין תוכן ישיר משויך.</p>
+        </div>
+      </section>
+    </div>
   </div>
 </div>

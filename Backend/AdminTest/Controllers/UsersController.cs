@@ -73,6 +73,23 @@ public class UsersController : ControllerBase
         return Ok(updated);
     }
 
+    // DELETE: api/Users/{id}
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AdminDeleteUser(int id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == id)
+            return BadRequest(new { message = "לא ניתן למחוק את המשתמש המחובר" });
+
+        var deleted = await _service.AdminDeleteUserAsync(id);
+        if (!deleted)
+            return NotFound();
+
+        _logger.LogInformation("Admin deleted user: UserId={UserId} DeletedByUserId={DeletedByUserId}", id, currentUserId);
+        return NoContent();
+    }
+
     // GET: api/Users/me/uploader-profile
     // מחזיר את פרופיל המעלה של המשתמש המחובר (אמן / מורה / בעל מקצוע) — או 204 אם אין
     [HttpGet("me/uploader-profile")]

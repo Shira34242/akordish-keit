@@ -12,7 +12,10 @@ export enum AgencyContactMode {
 export interface AgencyGalleryImageDto {
   id: number;
   agencyId: number;
-  imageUrl: string;
+  mediaType: 'image' | 'video';
+  imageUrl?: string;
+  videoUrl?: string;
+  title?: string;
   caption?: string;
   displayOrder: number;
 }

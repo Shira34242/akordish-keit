@@ -26,6 +26,8 @@ import { SafeHtml } from '@angular/platform-browser';
 interface SearchResult {
   id: number;
   name: string;
+  imageUrl?: string;
+  typeLabel?: string;
 }
 
 @Component({
@@ -103,6 +105,7 @@ export class AgencyFormComponent implements OnInit {
   profileSearch = '';
   profileSearchResults: SearchResult[] = [];
   profileSearchOpen = false;
+  profileSort: 'name' | 'id' = 'name';
   contentSearch = '';
   contentSearchResults: SearchResult[] = [];
   contentSearchOpen = false;
@@ -117,11 +120,21 @@ export class AgencyFormComponent implements OnInit {
     }
 
     this.profileSearchSubject.pipe(debounceTime(350), distinctUntilChanged()).subscribe(q => {
-      if (q.length >= 2) this.searchProfiles(q);
+      const query = q.trim();
+      if (query.length === 0 || query.length >= 2) this.searchProfiles(query);
     });
     this.contentSearchSubject.pipe(debounceTime(350), distinctUntilChanged()).subscribe(q => {
       if (q.length >= 2) this.searchContent(q);
     });
+  }
+
+  setProfileType(type: 'artist' | 'serviceProvider' | 'teacher'): void {
+    this.profileForm.profileType = type;
+    this.profileForm.profileId = 0;
+    this.profileSearch = '';
+    this.profileSearchResults = [];
+    this.profileSearchOpen = false;
+    this.searchProfiles('');
   }
 
   loadAgency(): void {
@@ -149,6 +162,7 @@ export class AgencyFormComponent implements OnInit {
           displayOrder: agency.displayOrder
         };
         this.loading = false;
+        this.searchProfiles('');
       },
       error: (err) => {
         const detail = err?.error?.detail || '';
@@ -232,6 +246,11 @@ export class AgencyFormComponent implements OnInit {
     this.profileSearchOpen = false;
   }
 
+  clearProfileSelection(): void {
+    this.profileForm.profileId = 0;
+    this.profileSearch = '';
+  }
+
   private searchProfiles(q: string): void {
     let endpoint: Observable<any>;
     switch (this.profileForm.profileType) {
@@ -243,24 +262,32 @@ export class AgencyFormComponent implements OnInit {
       next: (data: any) => {
         this.profileSearchResults = (data?.items || data || []).map((item: any) => ({
           id: item.id,
-          name: item.name || item.displayName || ''
+          name: item.name || item.displayName || '',
+          imageUrl: item.imageUrl || item.profileImageUrl || '',
+          typeLabel: this.getProfileFormTypeLabel()
         })).filter((r: SearchResult) => r.name);
-        this.profileSearchOpen = this.profileSearchResults.length > 0;
+        this.profileSearchOpen = false;
       },
       error: () => this.profileSearchResults = []
     });
   }
 
   private searchArtists(q: string): Observable<any> {
-    return this.http.get(`${environment.apiBaseUrl}/api/Artists`, { params: { search: q, pageSize: 10 } });
+    const params: Record<string, string | number> = { pageSize: 30 };
+    if (q) params['search'] = q;
+    return this.http.get(`${environment.apiBaseUrl}/api/Artists`, { params });
   }
 
   private searchProviders(q: string): Observable<any> {
-    return this.http.get(`${environment.apiBaseUrl}/api/MusicServiceProviders`, { params: { search: q, pageSize: 10 } });
+    const params: Record<string, string | number> = { pageSize: 30 };
+    if (q) params['search'] = q;
+    return this.http.get(`${environment.apiBaseUrl}/api/MusicServiceProviders`, { params });
   }
 
   private searchTeachers(q: string): Observable<any> {
-    return this.http.get(`${environment.apiBaseUrl}/api/Teachers`, { params: { search: q, pageSize: 10 } });
+    const params: Record<string, string | number> = { pageSize: 30 };
+    if (q) params['search'] = q;
+    return this.http.get(`${environment.apiBaseUrl}/api/Teachers`, { params });
   }
 
   // ============================================================
@@ -332,6 +359,61 @@ export class AgencyFormComponent implements OnInit {
     return 'ישיר';
   }
 
+  getProfileFormTypeLabel(): string {
+    if (this.profileForm.profileType === 'artist') return 'אמן';
+    if (this.profileForm.profileType === 'teacher') return 'מורה';
+    return 'נותן שירות';
+  }
+
+  getProfileTypeLabel(profile: AgencyProfileDto): string {
+    if (profile.isTeacher) return 'מורה';
+    if (profile.profileType === 'artist') return 'אמן';
+    return 'נותן שירות';
+  }
+
+  getSelectedProfileSearchResult(): SearchResult | null {
+    if (!this.profileForm.profileId) return null;
+    return this.profileSearchResults.find(r => r.id === this.profileForm.profileId) || {
+      id: this.profileForm.profileId,
+      name: this.profileSearch,
+      typeLabel: this.getProfileFormTypeLabel()
+    };
+  }
+
+  getSortedProfileSearchResults(): SearchResult[] {
+    const items = [...this.profileSearchResults];
+    return items.sort((a, b) => {
+      if (this.profileSort === 'id') return a.id - b.id;
+      return a.name.localeCompare(b.name, 'he');
+    });
+  }
+
+  isProfileCandidateLinked(result: SearchResult): boolean {
+    if (!this.agency) return false;
+    const normalizedType = this.profileForm.profileType === 'teacher' ? 'serviceProvider' : this.profileForm.profileType;
+    return this.agency.profiles.some(profile =>
+      profile.profileId === result.id &&
+      profile.profileType === normalizedType &&
+      (this.profileForm.profileType !== 'teacher' || profile.isTeacher)
+    );
+  }
+
+  updateProfileContactMode(profile: AgencyProfileDto, contactMode: AgencyContactMode): void {
+    if (!this.agencyId) return;
+    const profileType = profile.isTeacher ? 'teacher' : profile.profileType;
+    this.agencyService.addProfile(this.agencyId, {
+      profileType,
+      profileId: profile.profileId,
+      contactMode,
+      showBadge: profile.showBadge,
+      isFeaturedByAgency: profile.isFeaturedByAgency,
+      displayOrder: profile.displayOrder
+    }).subscribe({
+      next: () => this.loadAgency(),
+      error: err => alert(err?.error?.message || 'לא הצלחנו לעדכן את יצירת הקשר')
+    });
+  }
+
   // ============================================================
   // Content
   // ============================================================
@@ -369,6 +451,7 @@ export class AgencyFormComponent implements OnInit {
   addGalleryImage(): void {
     if (!this.agencyId || !this.galleryForm.imageUrl) return;
     this.agencyService.addGalleryImage(this.agencyId, {
+      mediaType: 'image',
       imageUrl: this.galleryForm.imageUrl.trim(),
       caption: this.galleryForm.caption?.trim() || undefined,
       displayOrder: this.galleryForm.displayOrder || 0
@@ -386,6 +469,9 @@ export class AgencyFormComponent implements OnInit {
     const videoUrl = this.galleryVideoForm.videoUrl.trim();
     const title = this.galleryVideoForm.title?.trim() || 'וידאו';
     this.agencyService.addGalleryImage(this.agencyId, {
+      mediaType: 'video',
+      videoUrl,
+      title,
       imageUrl: videoUrl,
       caption: `[VIDEO]${title}`,
       displayOrder: this.galleryVideoForm.displayOrder || 0
@@ -399,18 +485,19 @@ export class AgencyFormComponent implements OnInit {
   }
 
   isVideoItem(img: AgencyGalleryImageDto): boolean {
-    return (img.caption || '').startsWith('[VIDEO]');
+    return img.mediaType === 'video' || (img.caption || '').startsWith('[VIDEO]');
   }
 
   getGalleryItemLabel(img: AgencyGalleryImageDto): string {
     if (this.isVideoItem(img)) {
+      if (img.title) return img.title;
       return (img.caption || 'וידאו').replace('[VIDEO]', '');
     }
     return img.caption || 'תמונה #' + img.id;
   }
 
   getGalleryItemUrl(img: AgencyGalleryImageDto): string {
-    return img.imageUrl || '';
+    return img.videoUrl || img.imageUrl || '';
   }
 
   async removeGalleryImage(image: AgencyGalleryImageDto): Promise<void> {

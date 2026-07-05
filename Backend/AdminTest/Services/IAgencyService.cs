@@ -17,7 +17,7 @@ public interface IAgencyService
     Task<AgencyContentDto> AddContentAsync(int agencyId, UpsertAgencyContentDto dto);
     Task<bool> RemoveContentAsync(int agencyId, int contentLinkId);
     Task<List<AgencyGalleryImageDto>> GetGalleryImagesAsync(int agencyId);
-    Task<AgencyGalleryImageDto> AddGalleryImageAsync(int agencyId, string imageUrl, string? caption, int displayOrder);
+    Task<AgencyGalleryImageDto> AddGalleryImageAsync(int agencyId, AgencyGalleryImageDto dto);
     Task<bool> RemoveGalleryImageAsync(int agencyId, int imageId);
     Task<List<AgencySocialLinkDto>> GetSocialLinksAsync(int agencyId);
     Task<AgencySocialLinkDto> UpsertSocialLinkAsync(int agencyId, AgencySocialLinkDto dto);

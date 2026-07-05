@@ -11,7 +11,10 @@ public class AgencyGalleryImageConfiguration : IEntityTypeConfiguration<AgencyGa
         builder.ToTable("AgencyGalleryImages");
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.ImageUrl).IsRequired().HasMaxLength(500);
+        builder.Property(e => e.MediaType).IsRequired().HasMaxLength(20).HasDefaultValue("image");
+        builder.Property(e => e.ImageUrl).HasMaxLength(500);
+        builder.Property(e => e.VideoUrl).HasMaxLength(500);
+        builder.Property(e => e.Title).HasMaxLength(200);
         builder.Property(e => e.Caption).HasMaxLength(200);
         builder.Property(e => e.DisplayOrder).IsRequired().HasDefaultValue(0);
         builder.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("GETUTCDATE()");

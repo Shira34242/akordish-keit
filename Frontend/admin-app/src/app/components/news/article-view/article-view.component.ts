@@ -121,6 +121,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   feedbackChoice: 'yes' | 'no' | null = null;
   feedbackYesCount = 0;
   feedbackNoCount = 0;
+  feedbackErrorMessage: string | null = null;
   relatedArticles: Article[] = [];
   relatedArticlesVisibleCount = 4;
   isReportModalOpen = false;
@@ -138,9 +139,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
     const size = 72 + Math.round((pct / 100) * 40); /* 72px–112px */
     if (type === 'no') {
-      const yesPct = this.feedbackGiven ? this.feedbackPct('yes') : 50;
-      const yesSize = 72 + Math.round((yesPct / 100) * 40);
-      return Math.max(64, yesSize - 10);
+      return 72 + Math.round((pct / 100) * 40);
     }
     return size;
   }
@@ -609,10 +608,9 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
         next: (result) => {
           this.feedbackYesCount = result.yesCount;
           this.feedbackNoCount = result.noCount;
-          if (result.hasVoted) {
-            this.feedbackGiven = true;
-            this.feedbackChoice = result.userChoice ? 'yes' : 'no';
-          }
+          this.feedbackGiven = result.hasVoted;
+          this.feedbackChoice = result.hasVoted ? (result.userChoice ? 'yes' : 'no') : null;
+          this.feedbackErrorMessage = null;
         },
         error: () => { /* silent — feedback is non-critical */ }
       });
@@ -620,36 +618,52 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   giveFeedbackYes(): void {
     if (this.feedbackGiven || !this.article) return;
+    const previousYesCount = this.feedbackYesCount;
+    const previousNoCount = this.feedbackNoCount;
     this.feedbackGiven = true;
     this.feedbackChoice = 'yes';
+    this.feedbackErrorMessage = null;
+    this.feedbackYesCount++;
     this.feedbackService.submitFeedback(this.article.id, true)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           this.feedbackYesCount = result.yesCount;
           this.feedbackNoCount = result.noCount;
+          this.feedbackErrorMessage = null;
         },
         error: () => {
+          this.feedbackYesCount = previousYesCount;
+          this.feedbackNoCount = previousNoCount;
           this.feedbackGiven = false;
           this.feedbackChoice = null;
+          this.feedbackErrorMessage = 'לא הצלחנו לשמור את המשוב. נסו שוב.';
         }
       });
   }
 
   giveFeedbackNo(): void {
     if (this.feedbackGiven || !this.article) return;
+    const previousYesCount = this.feedbackYesCount;
+    const previousNoCount = this.feedbackNoCount;
     this.feedbackGiven = true;
     this.feedbackChoice = 'no';
+    this.feedbackErrorMessage = null;
+    this.feedbackNoCount++;
     this.feedbackService.submitFeedback(this.article.id, false)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           this.feedbackYesCount = result.yesCount;
           this.feedbackNoCount = result.noCount;
+          this.feedbackErrorMessage = null;
         },
         error: () => {
+          this.feedbackYesCount = previousYesCount;
+          this.feedbackNoCount = previousNoCount;
           this.feedbackGiven = false;
           this.feedbackChoice = null;
+          this.feedbackErrorMessage = 'לא הצלחנו לשמור את המשוב. נסו שוב.';
         }
       });
   }
