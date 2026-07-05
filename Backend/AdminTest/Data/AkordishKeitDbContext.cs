@@ -131,6 +131,11 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<NotificationGroup> NotificationGroups { get; set; }
     public DbSet<NotificationGroupMember> NotificationGroupMembers { get; set; }
 
+    // Email Campaigns
+    public DbSet<EmailGroup> EmailGroups { get; set; }
+    public DbSet<EmailGroupMember> EmailGroupMembers { get; set; }
+    public DbSet<SiteInterestRegistration> SiteInterestRegistrations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -242,6 +247,40 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationGroupConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationGroupMemberConfiguration());
+
+        // Email Campaign Groups
+        modelBuilder.Entity<EmailGroup>(e =>
+        {
+            e.ToTable("EmailGroups");
+            e.HasKey(g => g.Id);
+            e.Property(g => g.Name).HasMaxLength(160).IsRequired();
+            e.Property(g => g.Description).HasMaxLength(500);
+            e.HasOne(g => g.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(g => g.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<EmailGroupMember>(e =>
+        {
+            e.ToTable("EmailGroupMembers");
+            e.HasKey(m => new { m.EmailGroupId, m.UserId });
+            e.HasOne(m => m.EmailGroup)
+                .WithMany(g => g.Members)
+                .HasForeignKey(m => m.EmailGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<SiteInterestRegistration>(e =>
+        {
+            e.ToTable("SiteInterestRegistrations");
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Email).HasMaxLength(320).IsRequired();
+            e.Property(s => s.Source).HasMaxLength(100);
+            e.HasIndex(s => s.Email).IsUnique();
+        });
 
         // Seed Data
         MusicalKeySeed.Seed(modelBuilder);

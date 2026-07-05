@@ -4,56 +4,67 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AkordishKeit.Migrations
 {
-    /// <inheritdoc />
     public partial class AddTeacherQuickCategoryButtons : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories",
-                type: "int",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+                BEGIN
+                    IF COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryType') IS NULL
+                        ALTER TABLE [MusicServiceProviderCategories]
+                        ADD [QuickCategoryType] int NOT NULL CONSTRAINT [DF_MSPC_QuickCategoryType] DEFAULT 0;
 
-            migrationBuilder.AddColumn<int>(
-                name: "QuickCategoryType",
-                table: "MusicServiceProviderCategories",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+                    IF COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NULL
+                        ALTER TABLE [MusicServiceProviderCategories]
+                        ADD [QuickCategoryInstrumentId] int NULL;
 
-            migrationBuilder.CreateIndex(
-                name: "IX_MusicServiceProviderCategories_QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories",
-                column: "QuickCategoryInstrumentId");
+                    IF NOT EXISTS (
+                        SELECT 1 FROM sys.foreign_keys
+                        WHERE name = N'FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId'
+                    ) AND OBJECT_ID(N'[Instruments]', N'U') IS NOT NULL
+                        ALTER TABLE [MusicServiceProviderCategories]
+                        ADD CONSTRAINT [FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId]
+                            FOREIGN KEY ([QuickCategoryInstrumentId]) REFERENCES [Instruments] ([Id]);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories",
-                column: "QuickCategoryInstrumentId",
-                principalTable: "Instruments",
-                principalColumn: "Id");
+                    IF NOT EXISTS (
+                        SELECT 1 FROM sys.indexes
+                        WHERE name = N'IX_MusicServiceProviderCategories_QuickCategoryInstrumentId'
+                          AND object_id = OBJECT_ID(N'[MusicServiceProviderCategories]')
+                    )
+                        CREATE INDEX [IX_MusicServiceProviderCategories_QuickCategoryInstrumentId]
+                            ON [MusicServiceProviderCategories] ([QuickCategoryInstrumentId]);
+                END
+            ");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories");
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM sys.foreign_keys
+                        WHERE name = N'FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId'
+                    )
+                        ALTER TABLE [MusicServiceProviderCategories]
+                        DROP CONSTRAINT [FK_MusicServiceProviderCategories_Instruments_QuickCategoryInstrumentId];
 
-            migrationBuilder.DropIndex(
-                name: "IX_MusicServiceProviderCategories_QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories");
+                    IF EXISTS (
+                        SELECT 1 FROM sys.indexes
+                        WHERE name = N'IX_MusicServiceProviderCategories_QuickCategoryInstrumentId'
+                          AND object_id = OBJECT_ID(N'[MusicServiceProviderCategories]')
+                    )
+                        DROP INDEX [IX_MusicServiceProviderCategories_QuickCategoryInstrumentId]
+                            ON [MusicServiceProviderCategories];
 
-            migrationBuilder.DropColumn(
-                name: "QuickCategoryInstrumentId",
-                table: "MusicServiceProviderCategories");
+                    IF COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NOT NULL
+                        ALTER TABLE [MusicServiceProviderCategories] DROP COLUMN [QuickCategoryInstrumentId];
 
-            migrationBuilder.DropColumn(
-                name: "QuickCategoryType",
-                table: "MusicServiceProviderCategories");
+                    IF COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryType') IS NOT NULL
+                        ALTER TABLE [MusicServiceProviderCategories] DROP COLUMN [QuickCategoryType];
+                END
+            ");
         }
     }
 }

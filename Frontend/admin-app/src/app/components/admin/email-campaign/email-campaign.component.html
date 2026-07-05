@@ -8,191 +8,328 @@
     </div>
   </div>
 
-  <!-- Result Banner -->
-  @if (sendResult) {
-    <div class="result-banner" [class.success]="sendResult.success" [class.error]="!sendResult.success">
-      <span class="material-symbols-outlined">{{ sendResult.success ? 'check_circle' : 'error' }}</span>
-      <div class="result-text">
-        <strong>{{ sendResult.success ? 'נשלח בהצלחה!' : 'שגיאה בשליחה' }}</strong>
-        <span>{{ sendResult.message }}</span>
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'send'" (click)="switchTab('send')">
+      <span class="material-symbols-outlined">send</span>
+      שליחה
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'groups'" (click)="switchTab('groups')">
+      <span class="material-symbols-outlined">group_add</span>
+      קבוצות
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'interested'" (click)="switchTab('interested')">
+      <span class="material-symbols-outlined">star</span>
+      מתעניינים באתר
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       TAB 1: SEND
+  ════════════════════════════════════════════ -->
+  @if (activeTab === 'send') {
+
+    <!-- Result Banner -->
+    @if (sendResult) {
+      <div class="result-banner" [class.success]="sendResult.success" [class.error]="!sendResult.success">
+        <span class="material-symbols-outlined">{{ sendResult.success ? 'check_circle' : 'error' }}</span>
+        <div class="result-text">
+          <strong>{{ sendResult.success ? 'נשלח בהצלחה!' : 'שגיאה בשליחה' }}</strong>
+          <span>{{ sendResult.message }}</span>
+        </div>
+        <button class="btn-close-result" (click)="resetForm()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
-      <button class="btn-close-result" (click)="resetForm()">
-        <span class="material-symbols-outlined">close</span>
-      </button>
+    }
+
+    <div class="email-composer">
+
+      <!-- Left: Settings -->
+      <div class="composer-sidebar">
+
+        <div class="sidebar-section">
+          <label class="field-label">שם השולח</label>
+          <input class="field-input" type="text" [(ngModel)]="fromName" placeholder="אקורדישקייט" />
+        </div>
+
+        <div class="sidebar-section">
+          <label class="field-label">קהל יעד</label>
+          <div class="group-options">
+            @for (group of recipientGroups; track group.value) {
+              <label class="group-option" [class.active]="recipientGroup === group.value">
+                <input type="radio" [value]="group.value" [(ngModel)]="recipientGroup" (ngModelChange)="onGroupChange()" />
+                <span class="material-symbols-outlined">{{ group.icon }}</span>
+                <span>{{ group.label }}</span>
+              </label>
+            }
+          </div>
+
+          <!-- Custom group selector -->
+          @if (recipientGroup === RecipientGroup.CustomGroup) {
+            <div class="custom-group-select">
+              <select class="field-input" [(ngModel)]="selectedEmailGroupId" (ngModelChange)="onCustomGroupChange()">
+                <option [value]="null">— בחרי קבוצה —</option>
+                @for (g of emailGroups; track g.id) {
+                  <option [value]="g.id">{{ g.name }} ({{ g.memberCount }})</option>
+                }
+              </select>
+              @if (emailGroups.length === 0) {
+                <button class="btn-load-groups" (click)="switchTab('groups')">
+                  <span class="material-symbols-outlined">group_add</span>
+                  צרי קבוצה קודם
+                </button>
+              }
+            </div>
+          }
+
+          <div class="recipient-count">
+            @if (loadingCount) {
+              <span class="count-loading">טוען...</span>
+            } @else {
+              <span class="material-symbols-outlined">people</span>
+              <strong>{{ recipientCount | number }}</strong>
+              <span>נמענים</span>
+            }
+          </div>
+        </div>
+
+        <div class="sidebar-section tips">
+          <div class="tip-title">
+            <span class="material-symbols-outlined">lightbulb</span>
+            <span>טיפים</span>
+          </div>
+          <ul>
+            <li>ניתן להדביק תמונות מ-Cloudinary</li>
+            <li>כל לינק נפתח בטאב חדש</li>
+            <li>המייל נשלח עם תבנית עיצוב של האתר</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right: Editor -->
+      <div class="composer-main">
+
+        <!-- Subject -->
+        <div class="subject-row">
+          <label class="field-label">נושא המייל</label>
+          <input
+            class="field-input subject-input"
+            type="text"
+            [(ngModel)]="subject"
+            placeholder="הכנסי נושא למייל..."
+            maxlength="150"
+          />
+        </div>
+
+        <!-- Toolbar -->
+        <div class="editor-toolbar">
+          <div class="toolbar-group">
+            <button class="tb-btn" (click)="format('bold')" title="מודגש"><strong>B</strong></button>
+            <button class="tb-btn italic-btn" (click)="format('italic')" title="נטוי"><em>I</em></button>
+            <button class="tb-btn underline-btn" (click)="format('underline')" title="קו תחתון"><u>U</u></button>
+            <button class="tb-btn" (click)="format('strikeThrough')" title="קו חוצה"><s>S</s></button>
+          </div>
+          <div class="toolbar-group">
+            <button class="tb-btn" (click)="setAlign('justifyRight')" title="יישור ימין">
+              <span class="material-symbols-outlined">format_align_right</span>
+            </button>
+            <button class="tb-btn" (click)="setAlign('justifyCenter')" title="מרכז">
+              <span class="material-symbols-outlined">format_align_center</span>
+            </button>
+            <button class="tb-btn" (click)="setAlign('justifyLeft')" title="יישור שמאל">
+              <span class="material-symbols-outlined">format_align_left</span>
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <button class="tb-btn" (click)="format('insertUnorderedList')" title="רשימה">
+              <span class="material-symbols-outlined">format_list_bulleted</span>
+            </button>
+            <button class="tb-btn" (click)="format('insertOrderedList')" title="רשימה ממוספרת">
+              <span class="material-symbols-outlined">format_list_numbered</span>
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <select class="tb-select" (change)="setFontSize($event)" title="גודל טקסט">
+              <option value="">גודל</option>
+              <option value="1">קטן מאוד</option>
+              <option value="2">קטן</option>
+              <option value="3">רגיל</option>
+              <option value="4">גדול</option>
+              <option value="5">גדול מאוד</option>
+              <option value="6">ענק</option>
+            </select>
+            <div class="color-picker-wrap" title="צבע טקסט">
+              <span class="material-symbols-outlined color-icon">format_color_text</span>
+              <input type="color" class="color-input" (change)="setTextColor($event)" />
+            </div>
+          </div>
+          <div class="toolbar-group">
+            <button class="tb-btn tb-btn--link" (click)="openLinkDialog()" title="הוסף קישור">
+              <span class="material-symbols-outlined">link</span>
+              <span>קישור</span>
+            </button>
+            <button class="tb-btn tb-btn--image" (click)="openImageDialog()" title="הוסף תמונה">
+              <span class="material-symbols-outlined">image</span>
+              <span>תמונה</span>
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <button class="tb-btn" (click)="format('removeFormat')" title="נקה עיצוב">
+              <span class="material-symbols-outlined">format_clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Editor Body -->
+        <div
+          #editorBody
+          class="editor-body"
+          contenteditable="true"
+          dir="rtl"
+          [attr.data-placeholder]="'כתבי את תוכן המייל כאן...'"
+        ></div>
+
+        <!-- Actions -->
+        <div class="editor-actions">
+          <button class="btn-preview" (click)="togglePreview()">
+            <span class="material-symbols-outlined">{{ showPreview ? 'edit' : 'preview' }}</span>
+            {{ showPreview ? 'חזרה לעריכה' : 'תצוגה מקדימה' }}
+          </button>
+          <button
+            class="btn-send"
+            (click)="openConfirmDialog()"
+            [disabled]="!canSend"
+          >
+            <span class="material-symbols-outlined">send</span>
+            שלח ל-{{ recipientCount | number }} נמענים
+          </button>
+        </div>
+
+        <!-- Preview Panel -->
+        @if (showPreview) {
+          <div class="preview-panel">
+            <div class="preview-header">
+              <span class="material-symbols-outlined">preview</span>
+              <span>תצוגה מקדימה</span>
+              <small>כך ייראה המייל (ללא עטיפת העיצוב)</small>
+            </div>
+            <div class="preview-body" [innerHTML]="previewHtml" dir="rtl"></div>
+          </div>
+        }
+      </div>
     </div>
   }
 
-  <div class="email-composer">
-
-    <!-- Left: Settings -->
-    <div class="composer-sidebar">
-
-      <div class="sidebar-section">
-        <label class="field-label">שם השולח</label>
-        <input class="field-input" type="text" [(ngModel)]="fromName" placeholder="אקורדישקייט" />
-      </div>
-
-      <div class="sidebar-section">
-        <label class="field-label">קהל יעד</label>
-        <div class="group-options">
-          @for (group of recipientGroups; track group.value) {
-            <label class="group-option" [class.active]="recipientGroup === group.value">
-              <input type="radio" [value]="group.value" [(ngModel)]="recipientGroup" (ngModelChange)="onGroupChange()" />
-              <span class="material-symbols-outlined">{{ group.icon }}</span>
-              <span>{{ group.label }}</span>
-            </label>
-          }
-        </div>
-        <div class="recipient-count">
-          @if (loadingCount) {
-            <span class="count-loading">טוען...</span>
-          } @else {
-            <span class="material-symbols-outlined">people</span>
-            <strong>{{ recipientCount | number }}</strong>
-            <span>נמענים</span>
-          }
-        </div>
-      </div>
-
-      <div class="sidebar-section tips">
-        <div class="tip-title">
-          <span class="material-symbols-outlined">lightbulb</span>
-          <span>טיפים</span>
-        </div>
-        <ul>
-          <li>ניתן להדביק תמונות מ-Cloudinary</li>
-          <li>כל לינק נפתח בטאב חדש</li>
-          <li>המייל נשלח עם תבנית עיצוב של האתר</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Right: Editor -->
-    <div class="composer-main">
-
-      <!-- Subject -->
-      <div class="subject-row">
-        <label class="field-label">נושא המייל</label>
-        <input
-          class="field-input subject-input"
-          type="text"
-          [(ngModel)]="subject"
-          placeholder="הכנסי נושא למייל..."
-          maxlength="150"
-        />
-      </div>
-
-      <!-- Toolbar -->
-      <div class="editor-toolbar">
-        <div class="toolbar-group">
-          <button class="tb-btn" (click)="format('bold')" title="מודגש">
-            <strong>B</strong>
-          </button>
-          <button class="tb-btn italic-btn" (click)="format('italic')" title="נטוי">
-            <em>I</em>
-          </button>
-          <button class="tb-btn underline-btn" (click)="format('underline')" title="קו תחתון">
-            <u>U</u>
-          </button>
-          <button class="tb-btn" (click)="format('strikeThrough')" title="קו חוצה">
-            <s>S</s>
-          </button>
-        </div>
-
-        <div class="toolbar-group">
-          <button class="tb-btn" (click)="setAlign('justifyRight')" title="יישור ימין">
-            <span class="material-symbols-outlined">format_align_right</span>
-          </button>
-          <button class="tb-btn" (click)="setAlign('justifyCenter')" title="מרכז">
-            <span class="material-symbols-outlined">format_align_center</span>
-          </button>
-          <button class="tb-btn" (click)="setAlign('justifyLeft')" title="יישור שמאל">
-            <span class="material-symbols-outlined">format_align_left</span>
-          </button>
-        </div>
-
-        <div class="toolbar-group">
-          <button class="tb-btn" (click)="format('insertUnorderedList')" title="רשימה">
-            <span class="material-symbols-outlined">format_list_bulleted</span>
-          </button>
-          <button class="tb-btn" (click)="format('insertOrderedList')" title="רשימה ממוספרת">
-            <span class="material-symbols-outlined">format_list_numbered</span>
-          </button>
-        </div>
-
-        <div class="toolbar-group">
-          <select class="tb-select" (change)="setFontSize($event)" title="גודל טקסט">
-            <option value="">גודל</option>
-            <option value="1">קטן מאוד</option>
-            <option value="2">קטן</option>
-            <option value="3">רגיל</option>
-            <option value="4">גדול</option>
-            <option value="5">גדול מאוד</option>
-            <option value="6">ענק</option>
-          </select>
-          <div class="color-picker-wrap" title="צבע טקסט">
-            <span class="material-symbols-outlined color-icon">format_color_text</span>
-            <input type="color" class="color-input" (change)="setTextColor($event)" />
-          </div>
-        </div>
-
-        <div class="toolbar-group">
-          <button class="tb-btn tb-btn--link" (click)="openLinkDialog()" title="הוסף קישור">
-            <span class="material-symbols-outlined">link</span>
-            <span>קישור</span>
-          </button>
-          <button class="tb-btn tb-btn--image" (click)="openImageDialog()" title="הוסף תמונה">
-            <span class="material-symbols-outlined">image</span>
-            <span>תמונה</span>
-          </button>
-        </div>
-
-        <div class="toolbar-group">
-          <button class="tb-btn" (click)="format('removeFormat')" title="נקה עיצוב">
-            <span class="material-symbols-outlined">format_clear</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Editor Body -->
-      <div
-        #editorBody
-        class="editor-body"
-        contenteditable="true"
-        dir="rtl"
-        [attr.data-placeholder]="'כתבי את תוכן המייל כאן...'"
-      ></div>
-
-      <!-- Actions -->
-      <div class="editor-actions">
-        <button class="btn-preview" (click)="togglePreview()">
-          <span class="material-symbols-outlined">{{ showPreview ? 'edit' : 'preview' }}</span>
-          {{ showPreview ? 'חזרה לעריכה' : 'תצוגה מקדימה' }}
-        </button>
-        <button
-          class="btn-send"
-          (click)="openConfirmDialog()"
-          [disabled]="!subject.trim() || !editorBody.innerHTML.trim()"
-        >
-          <span class="material-symbols-outlined">send</span>
-          שלח ל-{{ recipientCount | number }} נמענים
+  <!-- ════════════════════════════════════════════
+       TAB 2: GROUPS
+  ════════════════════════════════════════════ -->
+  @if (activeTab === 'groups') {
+    <div class="tab-content">
+      <div class="tab-content-header">
+        <h2>קבוצות מייל</h2>
+        <button class="btn-primary" (click)="openCreateGroupDialog()">
+          <span class="material-symbols-outlined">add</span>
+          קבוצה חדשה
         </button>
       </div>
 
-      <!-- Preview Panel -->
-      @if (showPreview) {
-        <div class="preview-panel">
-          <div class="preview-header">
-            <span class="material-symbols-outlined">preview</span>
-            <span>תצוגה מקדימה</span>
-            <small>כך ייראה המייל (ללא עטיפת העיצוב)</small>
-          </div>
-          <div class="preview-body" [innerHTML]="previewHtml" dir="rtl"></div>
+      @if (loadingGroups) {
+        <div class="loading-state">טוען קבוצות...</div>
+      } @else if (emailGroups.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">group_add</span>
+          <p>אין קבוצות עדיין — צרי את הראשונה</p>
+        </div>
+      } @else {
+        <div class="group-list">
+          @for (group of emailGroups; track group.id) {
+            <div class="group-card">
+              <div class="group-card-info">
+                <div class="group-card-name">{{ group.name }}</div>
+                @if (group.description) {
+                  <div class="group-card-desc">{{ group.description }}</div>
+                }
+                <div class="group-card-meta">
+                  <span class="material-symbols-outlined">people</span>
+                  {{ group.memberCount }} חברים
+                </div>
+              </div>
+              <div class="group-card-actions">
+                <button class="btn-icon" title="עריכה" (click)="openEditGroupDialog(group)">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                @if (deleteGroupConfirmId === group.id) {
+                  <div class="inline-confirm">
+                    <span>בטוח?</span>
+                    <button class="btn-danger-sm" (click)="deleteGroup(group.id)">מחק</button>
+                    <button class="btn-cancel-sm" (click)="deleteGroupConfirmId = null">ביטול</button>
+                  </div>
+                } @else {
+                  <button class="btn-icon btn-icon--danger" title="מחיקה" (click)="confirmDeleteGroup(group.id)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
         </div>
       }
     </div>
-  </div>
+  }
+
+  <!-- ════════════════════════════════════════════
+       TAB 3: INTERESTED
+  ════════════════════════════════════════════ -->
+  @if (activeTab === 'interested') {
+    <div class="tab-content">
+      <div class="tab-content-header">
+        <h2>מתעניינים באתר</h2>
+        <span class="badge-count">{{ siteInterests.length }} כתובות</span>
+      </div>
+      <p class="tab-desc">אנשים שהשאירו את המייל שלהם בדף הרישום המוקדם לפני פתיחת האתר.</p>
+
+      @if (loadingInterests) {
+        <div class="loading-state">טוען...</div>
+      } @else if (siteInterests.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">inbox</span>
+          <p>אין רישומים עדיין</p>
+        </div>
+      } @else {
+        <div class="interest-list">
+          @for (item of siteInterests; track item.id) {
+            <div class="interest-row">
+              <span class="material-symbols-outlined interest-icon">mail</span>
+              <div class="interest-info">
+                <span class="interest-email">{{ item.email }}</span>
+                @if (item.source) {
+                  <span class="interest-source">{{ item.source }}</span>
+                }
+              </div>
+              <span class="interest-date">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              @if (deleteInterestConfirmId === item.id) {
+                <div class="inline-confirm">
+                  <span>בטוח?</span>
+                  <button class="btn-danger-sm" (click)="deleteInterest(item.id)">מחק</button>
+                  <button class="btn-cancel-sm" (click)="deleteInterestConfirmId = null">ביטול</button>
+                </div>
+              } @else {
+                <button class="btn-icon btn-icon--danger" (click)="confirmDeleteInterest(item.id)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
 
 <!-- Link Dialog -->
 @if (showLinkDialog) {
@@ -277,6 +414,83 @@
           } @else {
             <span class="material-symbols-outlined">send</span>
             שלח עכשיו
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Group Edit/Create Dialog -->
+@if (showGroupDialog) {
+  <div class="dialog-overlay" (click)="closeGroupDialog()">
+    <div class="dialog dialog--group" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">group_add</span>
+        <h3>{{ editingGroupId ? 'עריכת קבוצה' : 'קבוצה חדשה' }}</h3>
+      </div>
+      <div class="dialog-body">
+
+        <label class="field-label">שם הקבוצה *</label>
+        <input class="field-input" type="text" [(ngModel)]="groupName" placeholder="לדוגמה: VIP, בוגרי קורס..." maxlength="160" />
+
+        <label class="field-label">תיאור (אופציונלי)</label>
+        <input class="field-input" type="text" [(ngModel)]="groupDescription" placeholder="תיאור קצר לשימוש פנימי" maxlength="500" />
+
+        <!-- Member search -->
+        <label class="field-label">הוספת חברים</label>
+        <div class="user-search-wrap">
+          <input
+            class="field-input"
+            type="text"
+            [(ngModel)]="userSearchQuery"
+            (input)="onUserSearchInput()"
+            placeholder="חפשי שם משתמש או מייל..."
+          />
+          @if (searchingUsers) {
+            <div class="search-spinner">
+              <span class="material-symbols-outlined spinning">progress_activity</span>
+            </div>
+          }
+          @if (userSearchResults.length > 0) {
+            <div class="user-dropdown">
+              @for (u of userSearchResults; track u.id) {
+                <div class="user-dropdown-item" (click)="addMemberFromSearch(u)">
+                  <span class="material-symbols-outlined">person</span>
+                  <span class="user-name">{{ u.username }}</span>
+                  <span class="user-email">{{ u.email }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Member chips -->
+        @if (groupMembers.length > 0) {
+          <div class="member-chips">
+            @for (m of groupMembers; track m.userId) {
+              <div class="member-chip">
+                <span>{{ m.username }}</span>
+                <button class="chip-remove" (click)="removeMember(m.userId)">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+          <div class="member-count-hint">{{ groupMembers.length }} חברים נבחרו</div>
+        } @else {
+          <div class="member-empty">עדיין לא נבחרו חברים לקבוצה</div>
+        }
+
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="closeGroupDialog()" [disabled]="savingGroup">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="saveGroup()" [disabled]="!groupName.trim() || savingGroup">
+          @if (savingGroup) {
+            <span class="material-symbols-outlined spinning">progress_activity</span>
+            שומר...
+          } @else {
+            {{ editingGroupId ? 'שמור שינויים' : 'צרי קבוצה' }}
           }
         </button>
       </div>

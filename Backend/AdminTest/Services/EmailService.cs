@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
+using AkordishKeit.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Services;
@@ -35,7 +36,7 @@ public class EmailService : IEmailService
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
             return new EmailSendResultDto { Success = false, Message = "Brevo API key לא מוגדר — יש להגדיר אותו ב-appsettings.json" };
 
-        var recipients = await GetRecipientsAsync(request.RecipientGroup);
+        var recipients = await GetRecipientsAsync(request.RecipientGroup, request.EmailGroupId);
         if (recipients.Count == 0)
             return new EmailSendResultDto { Success = false, Message = "לא נמצאו נמענים עם כתובת מייל" };
 
@@ -45,7 +46,6 @@ public class EmailService : IEmailService
 
         int sentCount = 0, failedCount = 0;
 
-        // Send individually (privacy) — 20 concurrent requests at a time
         var semaphore = new SemaphoreSlim(20);
         var tasks = recipients.Select(async r =>
         {
@@ -59,8 +59,8 @@ public class EmailService : IEmailService
         });
 
         var results = await Task.WhenAll(tasks);
-        sentCount    = results.Count(ok => ok);
-        failedCount  = results.Count(ok => !ok);
+        sentCount   = results.Count(ok => ok);
+        failedCount = results.Count(ok => !ok);
 
         return new EmailSendResultDto
         {
@@ -97,21 +97,223 @@ public class EmailService : IEmailService
 
     // ── Recipient count ────────────────────────────────────────────────────────
 
-    public async Task<int> GetRecipientCountAsync(EmailRecipientGroup group)
+    public async Task<int> GetRecipientCountAsync(EmailRecipientGroup group, int? emailGroupId = null)
     {
+        if (group == EmailRecipientGroup.InterestedInSite)
+            return await _context.SiteInterestRegistrations.CountAsync();
+
+        if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
+            return await _context.EmailGroupMembers
+                .Where(m => m.EmailGroupId == emailGroupId.Value)
+                .CountAsync();
+
         var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
-
-        query = group switch
-        {
-            EmailRecipientGroup.ActiveOnly          => query.Where(u => u.IsActive),
-            EmailRecipientGroup.MarketingConsentOnly => query.Where(u => u.IsActive && u.MarketingConsent),
-            _                                        => query
-        };
-
+        query = ApplyGroupFilter(query, group);
         return await query.CountAsync();
     }
 
+    // ── Email Groups ───────────────────────────────────────────────────────────
+
+    public async Task<List<EmailGroupDto>> GetEmailGroupsAsync()
+    {
+        return await _context.EmailGroups
+            .Where(g => !g.IsDeleted)
+            .OrderByDescending(g => g.CreatedAt)
+            .Select(g => new EmailGroupDto
+            {
+                Id          = g.Id,
+                Name        = g.Name,
+                Description = g.Description,
+                MemberCount = g.Members.Count,
+                CreatedAt   = g.CreatedAt,
+                Members     = g.Members.Select(m => new EmailGroupMemberDto
+                {
+                    UserId   = m.UserId,
+                    Username = m.User!.Username,
+                    Email    = m.User!.Email
+                }).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<EmailGroupDto?> CreateEmailGroupAsync(SaveEmailGroupDto dto, int adminUserId)
+    {
+        var group = new EmailGroup
+        {
+            Name            = dto.Name.Trim(),
+            Description     = dto.Description?.Trim(),
+            CreatedByUserId = adminUserId,
+            CreatedAt       = DateTime.UtcNow
+        };
+
+        _context.EmailGroups.Add(group);
+        await _context.SaveChangesAsync();
+
+        if (dto.UserIds.Count > 0)
+        {
+            var members = dto.UserIds.Distinct().Select(uid => new EmailGroupMember
+            {
+                EmailGroupId = group.Id,
+                UserId       = uid,
+                AddedAt      = DateTime.UtcNow
+            });
+            _context.EmailGroupMembers.AddRange(members);
+            await _context.SaveChangesAsync();
+        }
+
+        return await GetEmailGroupByIdAsync(group.Id);
+    }
+
+    public async Task<EmailGroupDto?> UpdateEmailGroupAsync(int id, SaveEmailGroupDto dto)
+    {
+        var group = await _context.EmailGroups
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == id && !g.IsDeleted);
+
+        if (group == null) return null;
+
+        group.Name        = dto.Name.Trim();
+        group.Description = dto.Description?.Trim();
+        group.UpdatedAt   = DateTime.UtcNow;
+
+        // Replace members
+        _context.EmailGroupMembers.RemoveRange(group.Members);
+        var newMembers = dto.UserIds.Distinct().Select(uid => new EmailGroupMember
+        {
+            EmailGroupId = group.Id,
+            UserId       = uid,
+            AddedAt      = DateTime.UtcNow
+        });
+        _context.EmailGroupMembers.AddRange(newMembers);
+        await _context.SaveChangesAsync();
+
+        return await GetEmailGroupByIdAsync(id);
+    }
+
+    public async Task<bool> DeleteEmailGroupAsync(int id)
+    {
+        var group = await _context.EmailGroups.FirstOrDefaultAsync(g => g.Id == id && !g.IsDeleted);
+        if (group == null) return false;
+
+        group.IsDeleted = true;
+        group.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    // ── Site Interest ──────────────────────────────────────────────────────────
+
+    public async Task<List<SiteInterestDto>> GetSiteInterestsAsync()
+    {
+        return await _context.SiteInterestRegistrations
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new SiteInterestDto
+            {
+                Id        = s.Id,
+                Email     = s.Email,
+                Source    = s.Source,
+                CreatedAt = s.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<bool> RegisterSiteInterestAsync(string email, string? source)
+    {
+        email = email.Trim().ToLowerInvariant();
+        if (await _context.SiteInterestRegistrations.AnyAsync(s => s.Email == email))
+            return true; // already registered — silently succeed
+
+        _context.SiteInterestRegistrations.Add(new SiteInterestRegistration
+        {
+            Email     = email,
+            Source    = source,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteSiteInterestAsync(int id)
+    {
+        var entry = await _context.SiteInterestRegistrations.FindAsync(id);
+        if (entry == null) return false;
+
+        _context.SiteInterestRegistrations.Remove(entry);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────────
+
+    private async Task<EmailGroupDto?> GetEmailGroupByIdAsync(int id)
+    {
+        return await _context.EmailGroups
+            .Where(g => g.Id == id && !g.IsDeleted)
+            .Select(g => new EmailGroupDto
+            {
+                Id          = g.Id,
+                Name        = g.Name,
+                Description = g.Description,
+                MemberCount = g.Members.Count,
+                CreatedAt   = g.CreatedAt,
+                Members     = g.Members.Select(m => new EmailGroupMemberDto
+                {
+                    UserId   = m.UserId,
+                    Username = m.User!.Username,
+                    Email    = m.User!.Email
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<List<(string Email, string? Name)>> GetRecipientsAsync(
+        EmailRecipientGroup group, int? emailGroupId = null)
+    {
+        if (group == EmailRecipientGroup.InterestedInSite)
+        {
+            return await _context.SiteInterestRegistrations
+                .Select(s => new { s.Email })
+                .ToListAsync()
+                .ContinueWith(t => t.Result.Select(s => (s.Email, (string?)null)).ToList());
+        }
+
+        if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
+        {
+            return await _context.EmailGroupMembers
+                .Where(m => m.EmailGroupId == emailGroupId.Value)
+                .Select(m => new { m.User!.Email, m.User.Username })
+                .ToListAsync()
+                .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
+        }
+
+        var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
+        query = ApplyGroupFilter(query, group);
+
+        return await query
+            .Select(u => new { u.Email, u.Username })
+            .ToListAsync()
+            .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
+    }
+
+    private IQueryable<Models.Entities.User> ApplyGroupFilter(
+        IQueryable<Models.Entities.User> query, EmailRecipientGroup group)
+    {
+        return group switch
+        {
+            EmailRecipientGroup.ActiveOnly =>
+                query.Where(u => u.IsActive),
+            EmailRecipientGroup.MarketingConsentOnly =>
+                query.Where(u => u.IsActive && u.MarketingConsent),
+            EmailRecipientGroup.AllTeachers =>
+                query.Where(u => _context.ServiceProviders.Any(sp => sp.UserId == u.Id
+                              && _context.Teachers.Any(t => t.Id == sp.Id))),
+            EmailRecipientGroup.AllArtists =>
+                query.Where(u => _context.Artists.Any(a => a.UserId == u.Id)),
+            EmailRecipientGroup.AllServiceProviders =>
+                query.Where(u => _context.ServiceProviders.Any(sp => sp.UserId == u.Id)),
+            _ => query
+        };
+    }
 
     private async Task<bool> SendBrevoEmailAsync(
         string apiKey,
@@ -136,7 +338,10 @@ public class EmailService : IEmailService
             req.Headers.Add("api-key", apiKey);
             req.Headers.Add("accept", "application/json");
             req.Content = new StringContent(
-                JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
+                JsonSerializer.Serialize(payload, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                }),
                 Encoding.UTF8,
                 "application/json");
 
@@ -155,23 +360,6 @@ public class EmailService : IEmailService
             _logger.LogError(ex, "שגיאה בשליחת מייל Brevo ל-{Email}", toEmail);
             return false;
         }
-    }
-
-    private async Task<List<(string Email, string? Name)>> GetRecipientsAsync(EmailRecipientGroup group)
-    {
-        var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
-
-        query = group switch
-        {
-            EmailRecipientGroup.ActiveOnly           => query.Where(u => u.IsActive),
-            EmailRecipientGroup.MarketingConsentOnly => query.Where(u => u.IsActive && u.MarketingConsent),
-            _                                        => query
-        };
-
-        return await query
-            .Select(u => new { u.Email, u.Username })
-            .ToListAsync()
-            .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
     }
 
     // ── Email templates ────────────────────────────────────────────────────────

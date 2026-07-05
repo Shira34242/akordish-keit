@@ -6,15 +6,21 @@ public class SendEmailRequestDto
     public string HtmlBody { get; set; } = string.Empty;
     public string? PlainTextBody { get; set; }
     public EmailRecipientGroup RecipientGroup { get; set; } = EmailRecipientGroup.AllUsers;
+    public int? EmailGroupId { get; set; }
     public string? FromName { get; set; }
     public string? FromEmail { get; set; }
 }
 
 public enum EmailRecipientGroup
 {
-    AllUsers = 0,
-    ActiveOnly = 1,
-    MarketingConsentOnly = 2
+    AllUsers             = 0,
+    ActiveOnly           = 1,
+    MarketingConsentOnly = 2,
+    AllTeachers          = 3,
+    AllArtists           = 4,
+    AllServiceProviders  = 5,
+    InterestedInSite     = 6,
+    CustomGroup          = 7
 }
 
 public class EmailSendResultDto

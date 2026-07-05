@@ -1,11 +1,19 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import {
   EmailCampaignService,
   EmailRecipientGroup,
   EmailSendResult,
+  EmailGroupDto,
+  EmailGroupMemberDto,
+  SiteInterestDto,
 } from '../../../services/email-campaign.service';
+import { UserService } from '../../../services/user.service';
+import { UserListDto } from '../../../models/user.model';
+
+type ActiveTab = 'send' | 'groups' | 'interested';
 
 @Component({
   selector: 'app-email-campaign',
@@ -17,9 +25,14 @@ import {
 export class EmailCampaignComponent implements OnInit {
   @ViewChild('editorBody') editorBody!: ElementRef<HTMLDivElement>;
 
+  // ── Tabs ──────────────────────────────────────────────────────────
+  activeTab: ActiveTab = 'send';
+
+  // ── Send tab ──────────────────────────────────────────────────────
   subject = '';
   fromName = 'אקורדישקייט';
   recipientGroup = EmailRecipientGroup.AllUsers;
+  selectedEmailGroupId: number | null = null;
   recipientCount = 0;
   loadingCount = false;
 
@@ -44,37 +57,87 @@ export class EmailCampaignComponent implements OnInit {
   private savedRange: Range | null = null;
 
   readonly recipientGroups = [
-    { value: EmailRecipientGroup.AllUsers, label: 'כל המשתמשים', icon: 'group' },
-    { value: EmailRecipientGroup.ActiveOnly, label: 'פעילים בלבד', icon: 'person_check' },
-    {
-      value: EmailRecipientGroup.MarketingConsentOnly,
-      label: 'הסכמת שיווק בלבד',
-      icon: 'campaign',
-    },
+    { value: EmailRecipientGroup.AllUsers,            label: 'כל המשתמשים',        icon: 'group' },
+    { value: EmailRecipientGroup.ActiveOnly,          label: 'פעילים בלבד',         icon: 'person_check' },
+    { value: EmailRecipientGroup.MarketingConsentOnly,label: 'הסכמת שיווק בלבד',    icon: 'campaign' },
+    { value: EmailRecipientGroup.AllTeachers,         label: 'כל המורים',           icon: 'school' },
+    { value: EmailRecipientGroup.AllArtists,          label: 'כל האומנים',          icon: 'mic' },
+    { value: EmailRecipientGroup.AllServiceProviders, label: 'כל בעלי המקצוע',      icon: 'work' },
+    { value: EmailRecipientGroup.InterestedInSite,    label: 'מתעניינים באתר',      icon: 'star' },
+    { value: EmailRecipientGroup.CustomGroup,         label: 'קבוצה מותאמת',        icon: 'group_add' },
   ];
 
-  constructor(private emailService: EmailCampaignService) {}
+  // ── Groups tab ────────────────────────────────────────────────────
+  emailGroups: EmailGroupDto[] = [];
+  loadingGroups = false;
+
+  showGroupDialog = false;
+  editingGroupId: number | null = null;
+  groupName = '';
+  groupDescription = '';
+  groupMembers: EmailGroupMemberDto[] = [];
+  savingGroup = false;
+
+  userSearchQuery = '';
+  userSearchResults: UserListDto[] = [];
+  searchingUsers = false;
+  private userSearch$ = new Subject<string>();
+
+  deleteGroupConfirmId: number | null = null;
+
+  // ── Interested tab ────────────────────────────────────────────────
+  siteInterests: SiteInterestDto[] = [];
+  loadingInterests = false;
+  deleteInterestConfirmId: number | null = null;
+
+  constructor(
+    private emailService: EmailCampaignService,
+    private userService: UserService,
+  ) {}
 
   ngOnInit() {
     this.loadCount();
+    this.loadGroups();
+    this.setupUserSearch();
   }
+
+  // ── Tab navigation ────────────────────────────────────────────────
+
+  switchTab(tab: ActiveTab) {
+    this.activeTab = tab;
+    if (tab === 'interested' && this.siteInterests.length === 0) this.loadInterests();
+  }
+
+  // ── Recipient count ───────────────────────────────────────────────
 
   loadCount() {
     this.loadingCount = true;
-    this.emailService.getRecipientCount(this.recipientGroup).subscribe({
-      next: (count) => {
-        this.recipientCount = count;
-        this.loadingCount = false;
-      },
-      error: () => (this.loadingCount = false),
+    const groupId = this.recipientGroup === EmailRecipientGroup.CustomGroup
+      ? this.selectedEmailGroupId ?? undefined
+      : undefined;
+
+    this.emailService.getRecipientCount(this.recipientGroup, groupId).subscribe({
+      next: (count) => { this.recipientCount = count; this.loadingCount = false; },
+      error: ()      => { this.loadingCount = false; },
     });
   }
 
   onGroupChange() {
+    if (this.recipientGroup !== EmailRecipientGroup.CustomGroup) {
+      this.selectedEmailGroupId = null;
+    }
     this.loadCount();
   }
 
-  // ── Editor formatting ──────────────────────────────────────────
+  onCustomGroupChange() {
+    this.loadCount();
+  }
+
+  get availableEmailGroupsForSend() {
+    return this.emailGroups.length > 0 ? this.emailGroups : [];
+  }
+
+  // ── Editor formatting ─────────────────────────────────────────────
 
   format(command: string, value?: string) {
     document.execCommand(command, false, value ?? undefined);
@@ -108,7 +171,7 @@ export class EmailCampaignComponent implements OnInit {
     sel?.addRange(this.savedRange);
   }
 
-  // ── Link dialog ────────────────────────────────────────────────
+  // ── Link dialog ───────────────────────────────────────────────────
 
   openLinkDialog() {
     this.saveSelection();
@@ -122,11 +185,8 @@ export class EmailCampaignComponent implements OnInit {
     if (this.linkUrl) {
       const selectedText = window.getSelection()?.toString();
       if (!selectedText && this.linkText) {
-        document.execCommand(
-          'insertHTML',
-          false,
-          `<a href="${this.linkUrl}" target="_blank">${this.linkText}</a>`
-        );
+        document.execCommand('insertHTML', false,
+          `<a href="${this.linkUrl}" target="_blank">${this.linkText}</a>`);
       } else {
         document.execCommand('createLink', false, this.linkUrl);
         const anchor = window.getSelection()?.anchorNode?.parentElement?.closest('a');
@@ -136,7 +196,7 @@ export class EmailCampaignComponent implements OnInit {
     this.showLinkDialog = false;
   }
 
-  // ── Image dialog ───────────────────────────────────────────────
+  // ── Image dialog ──────────────────────────────────────────────────
 
   openImageDialog() {
     this.saveSelection();
@@ -156,7 +216,7 @@ export class EmailCampaignComponent implements OnInit {
     this.showImageDialog = false;
   }
 
-  // ── Preview & send ─────────────────────────────────────────────
+  // ── Preview & send ────────────────────────────────────────────────
 
   togglePreview() {
     this.previewHtml = this.editorBody.nativeElement.innerHTML;
@@ -172,10 +232,13 @@ export class EmailCampaignComponent implements OnInit {
     this.isSending = true;
     this.emailService
       .sendCampaign({
-        subject: this.subject,
-        htmlBody: this.editorBody.nativeElement.innerHTML,
+        subject:        this.subject,
+        htmlBody:       this.editorBody.nativeElement.innerHTML,
         recipientGroup: this.recipientGroup,
-        fromName: this.fromName,
+        emailGroupId:   this.recipientGroup === EmailRecipientGroup.CustomGroup
+                          ? (this.selectedEmailGroupId ?? undefined)
+                          : undefined,
+        fromName:       this.fromName,
       })
       .subscribe({
         next: (result) => {
@@ -204,6 +267,149 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   get selectedGroupLabel(): string {
-    return this.recipientGroups.find((g) => g.value === this.recipientGroup)?.label ?? '';
+    if (this.recipientGroup === EmailRecipientGroup.CustomGroup) {
+      const g = this.emailGroups.find(g => g.id === this.selectedEmailGroupId);
+      return g ? `קבוצה: ${g.name}` : 'קבוצה מותאמת';
+    }
+    return this.recipientGroups.find(g => g.value === this.recipientGroup)?.label ?? '';
+  }
+
+  get canSend(): boolean {
+    if (!this.subject.trim()) return false;
+    if (!this.editorBody?.nativeElement?.innerHTML.trim()) return false;
+    if (this.recipientGroup === EmailRecipientGroup.CustomGroup && !this.selectedEmailGroupId) return false;
+    return true;
+  }
+
+  // ── Groups tab ────────────────────────────────────────────────────
+
+  loadGroups() {
+    this.loadingGroups = true;
+    this.emailService.getGroups().subscribe({
+      next: (groups) => { this.emailGroups = groups; this.loadingGroups = false; },
+      error: ()       => { this.loadingGroups = false; },
+    });
+  }
+
+  openCreateGroupDialog() {
+    this.editingGroupId = null;
+    this.groupName = '';
+    this.groupDescription = '';
+    this.groupMembers = [];
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+    this.showGroupDialog = true;
+  }
+
+  openEditGroupDialog(group: EmailGroupDto) {
+    this.editingGroupId = group.id;
+    this.groupName = group.name;
+    this.groupDescription = group.description ?? '';
+    this.groupMembers = [...group.members];
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+    this.showGroupDialog = true;
+  }
+
+  closeGroupDialog() {
+    this.showGroupDialog = false;
+  }
+
+  saveGroup() {
+    if (!this.groupName.trim()) return;
+    this.savingGroup = true;
+
+    const dto = {
+      name:        this.groupName.trim(),
+      description: this.groupDescription.trim() || undefined,
+      userIds:     this.groupMembers.map(m => m.userId),
+    };
+
+    const req = this.editingGroupId
+      ? this.emailService.updateGroup(this.editingGroupId, dto)
+      : this.emailService.createGroup(dto);
+
+    req.subscribe({
+      next: (saved) => {
+        if (this.editingGroupId) {
+          const idx = this.emailGroups.findIndex(g => g.id === this.editingGroupId);
+          if (idx !== -1) this.emailGroups[idx] = saved;
+        } else {
+          this.emailGroups.unshift(saved);
+        }
+        this.showGroupDialog = false;
+        this.savingGroup = false;
+      },
+      error: () => { this.savingGroup = false; },
+    });
+  }
+
+  confirmDeleteGroup(id: number) {
+    this.deleteGroupConfirmId = id;
+  }
+
+  deleteGroup(id: number) {
+    this.emailService.deleteGroup(id).subscribe({
+      next: () => {
+        this.emailGroups = this.emailGroups.filter(g => g.id !== id);
+        this.deleteGroupConfirmId = null;
+      },
+    });
+  }
+
+  // ── User search for group ─────────────────────────────────────────
+
+  private setupUserSearch() {
+    this.userSearch$.pipe(debounceTime(300), distinctUntilChanged()).subscribe(query => {
+      if (!query.trim()) { this.userSearchResults = []; return; }
+      this.searchingUsers = true;
+      this.userService.getUsers(query, undefined, undefined, 1, 10).subscribe({
+        next: (result) => {
+          this.userSearchResults = result.items.filter(
+            u => !this.groupMembers.some(m => m.userId === u.id)
+          );
+          this.searchingUsers = false;
+        },
+        error: () => { this.searchingUsers = false; },
+      });
+    });
+  }
+
+  onUserSearchInput() {
+    this.userSearch$.next(this.userSearchQuery);
+  }
+
+  addMemberFromSearch(user: UserListDto) {
+    if (this.groupMembers.some(m => m.userId === user.id)) return;
+    this.groupMembers.push({ userId: user.id, username: user.username, email: user.email });
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+  }
+
+  removeMember(userId: number) {
+    this.groupMembers = this.groupMembers.filter(m => m.userId !== userId);
+  }
+
+  // ── Interested tab ────────────────────────────────────────────────
+
+  loadInterests() {
+    this.loadingInterests = true;
+    this.emailService.getSiteInterests().subscribe({
+      next: (list) => { this.siteInterests = list; this.loadingInterests = false; },
+      error: ()     => { this.loadingInterests = false; },
+    });
+  }
+
+  confirmDeleteInterest(id: number) {
+    this.deleteInterestConfirmId = id;
+  }
+
+  deleteInterest(id: number) {
+    this.emailService.deleteSiteInterest(id).subscribe({
+      next: () => {
+        this.siteInterests = this.siteInterests.filter(s => s.id !== id);
+        this.deleteInterestConfirmId = null;
+      },
+    });
   }
 }
