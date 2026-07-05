@@ -844,6 +844,10 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("GuestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<bool>("IsPositive")
                         .HasColumnType("bit");
 
@@ -854,10 +858,10 @@ namespace AkordishKeit.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("ArticleId", "IpAddress")
+                    b.HasIndex("ArticleId", "GuestId")
                         .IsUnique()
-                        .HasDatabaseName("IX_ArticleFeedback_Article_IP")
-                        .HasFilter("[UserId] IS NULL AND [IpAddress] IS NOT NULL");
+                        .HasDatabaseName("IX_ArticleFeedback_Article_Guest")
+                        .HasFilter("[UserId] IS NULL AND [GuestId] IS NOT NULL");
 
                     b.HasIndex("ArticleId", "UserId")
                         .IsUnique()

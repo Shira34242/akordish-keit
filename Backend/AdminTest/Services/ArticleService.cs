@@ -1133,7 +1133,7 @@ public class ArticleService : IArticleService
 
     // ─── Feedback ─────────────────────────────────────────────────────────────
 
-    public async Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress)
+    public async Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress, string? guestId)
     {
         var yes = await _context.ArticleFeedbacks.CountAsync(f => f.ArticleId == articleId && f.IsPositive);
         var no = await _context.ArticleFeedbacks.CountAsync(f => f.ArticleId == articleId && !f.IsPositive);
@@ -1142,13 +1142,15 @@ public class ArticleService : IArticleService
         ArticleFeedback? userVote = null;
         if (userId.HasValue)
             userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
+        else if (!string.IsNullOrEmpty(guestId))
+            userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.GuestId == guestId);
         else if (!string.IsNullOrEmpty(ipAddress))
             userVote = await _context.ArticleFeedbacks.FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
 
         return BuildFeedbackResult(yes, no, total, userVote);
     }
 
-    public async Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress)
+    public async Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress, string? guestId)
     {
         // בדיקה שהכתבה קיימת
         if (!await _context.Articles.AnyAsync(a => a.Id == articleId))
@@ -1159,6 +1161,9 @@ public class ArticleService : IArticleService
         if (userId.HasValue)
             existing = await _context.ArticleFeedbacks
                 .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == userId);
+        else if (!string.IsNullOrEmpty(guestId))
+            existing = await _context.ArticleFeedbacks
+                .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.GuestId == guestId);
         else if (!string.IsNullOrEmpty(ipAddress))
             existing = await _context.ArticleFeedbacks
                 .FirstOrDefaultAsync(f => f.ArticleId == articleId && f.UserId == null && f.IpAddress == ipAddress);
@@ -1171,13 +1176,14 @@ public class ArticleService : IArticleService
             ArticleId = articleId,
             UserId = userId,
             IpAddress = string.IsNullOrEmpty(ipAddress) ? null : ipAddress,
+            GuestId = string.IsNullOrEmpty(guestId) ? null : guestId,
             IsPositive = isPositive,
             CreatedAt = DateTime.UtcNow
         });
 
         await _context.SaveChangesAsync();
 
-        return await GetFeedbackAsync(articleId, userId, ipAddress);
+        return await GetFeedbackAsync(articleId, userId, ipAddress, guestId);
     }
 
     private static ArticleFeedbackResultDto BuildFeedbackResult(int yes, int no, int total, ArticleFeedback? userVote)

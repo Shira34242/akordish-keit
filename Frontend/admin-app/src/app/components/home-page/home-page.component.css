@@ -651,17 +651,6 @@
   min-height: 18rem;
 }
 
-.viral-loading {
-  background: #F2F2F2;
-  border-radius: 18px;
-  padding: var(--space-lg);
-  font-family: 'Open Sans', sans-serif;
-  font-size: var(--font-sm);
-  font-weight: 300;
-  color: #404040;
-  text-align: center;
-}
-
 .viral-section .stream-grid {
   display: flex;
   flex-direction: column;

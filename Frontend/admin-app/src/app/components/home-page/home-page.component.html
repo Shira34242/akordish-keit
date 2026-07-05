@@ -520,13 +520,11 @@
     <section
       class="home-section viral-section"
       #viralSection
-      *ngIf="viralSectionStarted && (!viralArticlesLoaded || loadingViralArticles || viralArticles.length > 0)">
+      *ngIf="viralSectionStarted && viralArticles.length > 0">
       <div class="section-header">
         <h2 class="section-title">ויראלי</h2>
         <a routerLink="/music-news" class="section-link">לכל חדשות המוזיקה</a>
       </div>
-
-      <div class="viral-loading" *ngIf="loadingViralArticles">טוען כתבות פופולאריות...</div>
 
       <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="stream-grid">
         <div

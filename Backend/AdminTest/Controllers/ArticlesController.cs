@@ -644,7 +644,8 @@ public class ArticlesController : ControllerBase
     {
         int? userId = GetCurrentUserId();
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var result = await _articleService.GetFeedbackAsync(id, userId, ip);
+        var guestId = GetGuestId();
+        var result = await _articleService.GetFeedbackAsync(id, userId, ip, guestId);
         return Ok(result);
     }
 
@@ -654,9 +655,10 @@ public class ArticlesController : ControllerBase
     {
         int? userId = GetCurrentUserId();
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var guestId = GetGuestId();
         try
         {
-            var result = await _articleService.SubmitFeedbackAsync(id, dto.IsPositive, userId, ip);
+            var result = await _articleService.SubmitFeedbackAsync(id, dto.IsPositive, userId, ip, guestId);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -666,7 +668,7 @@ public class ArticlesController : ControllerBase
         catch (InvalidOperationException)
         {
             // כבר הצביע — מחזירים את המצב הנוכחי בלי שגיאה
-            var current = await _articleService.GetFeedbackAsync(id, userId, ip);
+            var current = await _articleService.GetFeedbackAsync(id, userId, ip, guestId);
             return Ok(current);
         }
     }
@@ -686,6 +688,15 @@ public class ArticlesController : ControllerBase
         if (User.Identity?.IsAuthenticated != true) return null;
         var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
         return claim != null && int.TryParse(claim.Value, out var id) ? id : null;
+    }
+
+    private string? GetGuestId()
+    {
+        var guestId = Request.Headers["X-Akordish-Guest-Id"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(guestId)) return null;
+
+        guestId = guestId.Trim();
+        return guestId.Length <= 64 ? guestId : guestId[..64];
     }
 
     private void InvalidatePublicArticleCaches()

@@ -84,8 +84,8 @@ public interface IArticleService
     Task<ArticleDto> DuplicateArticleAsync(int id);
 
     // ─── Feedback ─────────────────────────────────────────────
-    Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress);
-    Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress);
+    Task<ArticleFeedbackResultDto> GetFeedbackAsync(int articleId, int? userId, string? ipAddress, string? guestId);
+    Task<ArticleFeedbackResultDto> SubmitFeedbackAsync(int articleId, bool isPositive, int? userId, string? ipAddress, string? guestId);
 
     // ─── Top Content (Admin) ──────────────────────────────────
     Task<List<ArticleRankDto>> GetTopContentAsync(int limit = 20);
