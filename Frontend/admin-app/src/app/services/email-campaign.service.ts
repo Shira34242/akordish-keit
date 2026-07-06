@@ -58,6 +58,7 @@ export interface SiteInterestDto {
   email: string;
   source?: string;
   createdAt: string;
+  isReadOnly: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

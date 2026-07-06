@@ -303,21 +303,25 @@
               <span class="material-symbols-outlined interest-icon">mail</span>
               <div class="interest-info">
                 <span class="interest-email">{{ item.email }}</span>
-                @if (item.source) {
+                @if (item.source === 'coming_soon') {
+                  <span class="interest-source interest-source--legacy">בקרוב</span>
+                } @else if (item.source) {
                   <span class="interest-source">{{ item.source }}</span>
                 }
               </div>
               <span class="interest-date">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-              @if (deleteInterestConfirmId === item.id) {
-                <div class="inline-confirm">
-                  <span>בטוח?</span>
-                  <button class="btn-danger-sm" (click)="deleteInterest(item.id)">מחק</button>
-                  <button class="btn-cancel-sm" (click)="deleteInterestConfirmId = null">ביטול</button>
-                </div>
-              } @else {
-                <button class="btn-icon btn-icon--danger" (click)="confirmDeleteInterest(item.id)">
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
+              @if (!item.isReadOnly) {
+                @if (deleteInterestConfirmId === item.id) {
+                  <div class="inline-confirm">
+                    <span>בטוח?</span>
+                    <button class="btn-danger-sm" (click)="deleteInterest(item.id)">מחק</button>
+                    <button class="btn-cancel-sm" (click)="deleteInterestConfirmId = null">ביטול</button>
+                  </div>
+                } @else {
+                  <button class="btn-icon btn-icon--danger" (click)="confirmDeleteInterest(item.id)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                }
               }
             </div>
           }

@@ -974,6 +974,13 @@
   color: #999;
 }
 
+.interest-source--legacy {
+  background: #f0f0f0;
+  color: #666;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
 .interest-date {
   font-size: var(--font-xs, 11px);
   color: #888;

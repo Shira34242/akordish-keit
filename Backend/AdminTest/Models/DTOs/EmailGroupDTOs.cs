@@ -30,6 +30,7 @@ public class SiteInterestDto
     public string Email { get; set; } = string.Empty;
     public string? Source { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsReadOnly { get; set; }
 }
 
 public class RegisterSiteInterestDto

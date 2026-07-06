@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -100,7 +101,7 @@ public class EmailService : IEmailService
     public async Task<int> GetRecipientCountAsync(EmailRecipientGroup group, int? emailGroupId = null)
     {
         if (group == EmailRecipientGroup.InterestedInSite)
-            return await _context.SiteInterestRegistrations.CountAsync();
+            return (await GetInterestedInSiteRecipientsAsync()).Count;
 
         if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
             return await _context.EmailGroupMembers
@@ -211,16 +212,33 @@ public class EmailService : IEmailService
 
     public async Task<List<SiteInterestDto>> GetSiteInterestsAsync()
     {
-        return await _context.SiteInterestRegistrations
+        var fromTable = await _context.SiteInterestRegistrations
             .OrderByDescending(s => s.CreatedAt)
             .Select(s => new SiteInterestDto
             {
-                Id        = s.Id,
-                Email     = s.Email,
-                Source    = s.Source,
-                CreatedAt = s.CreatedAt
+                Id         = s.Id,
+                Email      = s.Email,
+                Source     = s.Source,
+                CreatedAt  = s.CreatedAt,
+                IsReadOnly = false
             })
             .ToListAsync();
+
+        var fromComingSoon = (await GetComingSoonSubscribersAsync())
+            .Select((cs, i) => new SiteInterestDto
+            {
+                Id         = -(i + 1),
+                Email      = cs.Email,
+                Source     = "coming_soon",
+                CreatedAt  = cs.CreatedAt,
+                IsReadOnly = true
+            })
+            .Where(cs => !fromTable.Any(t => t.Email.Equals(cs.Email, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        return fromTable.Concat(fromComingSoon)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToList();
     }
 
     public async Task<bool> RegisterSiteInterestAsync(string email, string? source)
@@ -276,12 +294,7 @@ public class EmailService : IEmailService
         EmailRecipientGroup group, int? emailGroupId = null)
     {
         if (group == EmailRecipientGroup.InterestedInSite)
-        {
-            return await _context.SiteInterestRegistrations
-                .Select(s => new { s.Email })
-                .ToListAsync()
-                .ContinueWith(t => t.Result.Select(s => (s.Email, (string?)null)).ToList());
-        }
+            return await GetInterestedInSiteRecipientsAsync();
 
         if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
         {
@@ -337,6 +350,44 @@ public class EmailService : IEmailService
             .GroupBy(e => e.Item1.ToLowerInvariant())
             .Select(g => g.First())
             .ToList();
+    }
+
+    private async Task<List<(string Email, string? Name)>> GetInterestedInSiteRecipientsAsync()
+    {
+        var fromTable = await _context.SiteInterestRegistrations
+            .Select(s => s.Email)
+            .ToListAsync();
+
+        var fromComingSoon = (await GetComingSoonSubscribersAsync())
+            .Select(cs => cs.Email);
+
+        return fromTable.Concat(fromComingSoon)
+            .GroupBy(e => e.ToLowerInvariant())
+            .Select(g => (g.First(), (string?)null))
+            .ToList();
+    }
+
+    private static readonly JsonSerializerOptions _comingSoonJsonOptions = new()
+    {
+        PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
+    };
+
+    private async Task<List<ComingSoonSubscriptionDto>> GetComingSoonSubscribersAsync()
+    {
+        var raw = await _context.SystemSettings
+            .Where(s => s.Key == "coming_soon_subscribers")
+            .Select(s => s.Value)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+
+        try
+        {
+            var list = JsonSerializer.Deserialize<List<ComingSoonSubscriptionDto>>(raw, _comingSoonJsonOptions);
+            return list?.Where(s => s.IsActive).ToList() ?? [];
+        }
+        catch { return []; }
     }
 
     private async Task<List<(string Email, string? Name)>> GetAllArtistsRecipientsAsync()
