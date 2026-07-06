@@ -63,8 +63,9 @@ export class EmailCampaignComponent implements OnInit {
     { value: EmailRecipientGroup.AllTeachers,         label: 'כל המורים',           icon: 'school' },
     { value: EmailRecipientGroup.AllArtists,          label: 'כל האומנים',          icon: 'mic' },
     { value: EmailRecipientGroup.AllServiceProviders, label: 'כל בעלי המקצוע',      icon: 'work' },
-    { value: EmailRecipientGroup.InterestedInSite,    label: 'מתעניינים באתר',      icon: 'star' },
-    { value: EmailRecipientGroup.CustomGroup,         label: 'קבוצה מותאמת',        icon: 'group_add' },
+    { value: EmailRecipientGroup.InterestedInSite,    label: 'מתעניינים באתר',              icon: 'star' },
+    { value: EmailRecipientGroup.AllArtistsAll,       label: 'כל האומנים (כולל ללא חשבון)', icon: 'mic' },
+    { value: EmailRecipientGroup.CustomGroup,         label: 'קבוצה מותאמת',                icon: 'group_add' },
   ];
 
   // ── Groups tab ────────────────────────────────────────────────────

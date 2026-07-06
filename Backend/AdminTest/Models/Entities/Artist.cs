@@ -29,6 +29,7 @@ public class Artist
     public int BannerBlur { get; set; } = 0;
 
     public string? WebsiteUrl { get; set; }
+    public string? Email { get; set; }
     public bool IsVerified { get; set; }
 
     // 🆕 Subscription & Tier

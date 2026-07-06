@@ -107,6 +107,12 @@ public class EmailService : IEmailService
                 .Where(m => m.EmailGroupId == emailGroupId.Value)
                 .CountAsync();
 
+        if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
+            return (await GetProviderRecipientsAsync(group)).Count;
+
+        if (group == EmailRecipientGroup.AllArtistsAll)
+            return (await GetAllArtistsRecipientsAsync()).Count;
+
         var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
         query = ApplyGroupFilter(query, group);
         return await query.CountAsync();
@@ -286,6 +292,12 @@ public class EmailService : IEmailService
                 .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
         }
 
+        if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
+            return await GetProviderRecipientsAsync(group);
+
+        if (group == EmailRecipientGroup.AllArtistsAll)
+            return await GetAllArtistsRecipientsAsync();
+
         var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
         query = ApplyGroupFilter(query, group);
 
@@ -293,6 +305,61 @@ public class EmailService : IEmailService
             .Select(u => new { u.Email, u.Username })
             .ToListAsync()
             .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
+    }
+
+    private async Task<List<(string Email, string? Name)>> GetProviderRecipientsAsync(EmailRecipientGroup group)
+    {
+        bool teachersOnly = group == EmailRecipientGroup.AllTeachers;
+
+        // משתמשים עם פרופיל מקצועי מחובר → email מהמשתמש
+        var fromUsers = await _context.Users
+            .Where(u => !u.IsDeleted && u.Email != string.Empty)
+            .Where(u => _context.ServiceProviders.Any(sp =>
+                sp.UserId == u.Id && !sp.IsDeleted &&
+                (!teachersOnly || _context.Teachers.Any(t => t.Id == sp.Id))))
+            .Select(u => new { u.Email, Name = u.Username })
+            .ToListAsync();
+
+        // פרופילים מקצועיים ללא משתמש מחובר אבל עם email עצמאי
+        var spWithEmailQuery = _context.ServiceProviders
+            .Where(sp => !sp.IsDeleted && sp.UserId == null
+                         && sp.Email != null && sp.Email != string.Empty);
+
+        if (teachersOnly)
+            spWithEmailQuery = spWithEmailQuery.Where(sp => _context.Teachers.Any(t => t.Id == sp.Id));
+
+        var fromProviders = await spWithEmailQuery
+            .Select(sp => new { Email = sp.Email!, sp.DisplayName })
+            .ToListAsync();
+
+        return fromUsers.Select(u => (u.Email, (string?)u.Name))
+            .Concat(fromProviders.Select(p => (p.Email, (string?)p.DisplayName)))
+            .GroupBy(e => e.Item1.ToLowerInvariant())
+            .Select(g => g.First())
+            .ToList();
+    }
+
+    private async Task<List<(string Email, string? Name)>> GetAllArtistsRecipientsAsync()
+    {
+        // אומנים עם משתמש מחובר → email מהמשתמש
+        var fromUsers = await _context.Users
+            .Where(u => !u.IsDeleted && u.Email != string.Empty)
+            .Where(u => _context.Artists.Any(a => a.UserId == u.Id && !a.IsDeleted))
+            .Select(u => new { u.Email, Name = u.Username })
+            .ToListAsync();
+
+        // אומנים ללא משתמש אבל עם email עצמאי
+        var fromArtists = await _context.Artists
+            .Where(a => !a.IsDeleted && a.UserId == null
+                        && a.Email != null && a.Email != string.Empty)
+            .Select(a => new { a.Email, a.Name })
+            .ToListAsync();
+
+        return fromUsers.Select(u => (u.Email, (string?)u.Name))
+            .Concat(fromArtists.Select(a => (a.Email!, (string?)a.Name)))
+            .GroupBy(e => e.Item1.ToLowerInvariant())
+            .Select(g => g.First())
+            .ToList();
     }
 
     private IQueryable<Models.Entities.User> ApplyGroupFilter(
@@ -304,13 +371,8 @@ public class EmailService : IEmailService
                 query.Where(u => u.IsActive),
             EmailRecipientGroup.MarketingConsentOnly =>
                 query.Where(u => u.IsActive && u.MarketingConsent),
-            EmailRecipientGroup.AllTeachers =>
-                query.Where(u => _context.ServiceProviders.Any(sp => sp.UserId == u.Id
-                              && _context.Teachers.Any(t => t.Id == sp.Id))),
             EmailRecipientGroup.AllArtists =>
                 query.Where(u => _context.Artists.Any(a => a.UserId == u.Id)),
-            EmailRecipientGroup.AllServiceProviders =>
-                query.Where(u => _context.ServiceProviders.Any(sp => sp.UserId == u.Id)),
             _ => query
         };
     }

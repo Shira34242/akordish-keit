@@ -12,6 +12,7 @@ export enum EmailRecipientGroup {
   AllServiceProviders  = 5,
   InterestedInSite     = 6,
   CustomGroup          = 7,
+  AllArtistsAll        = 8,
 }
 
 export interface SendEmailRequest {
