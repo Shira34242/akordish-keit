@@ -165,11 +165,11 @@
             </div>
           </div>
           <div class="toolbar-group">
-            <button class="tb-btn tb-btn--link" (click)="openLinkDialog()" title="הוסף קישור">
+            <button class="tb-btn tb-btn--link" (mousedown)="$event.preventDefault()" (click)="openLinkDialog()" title="הוסף קישור">
               <span class="material-symbols-outlined">link</span>
               <span>קישור</span>
             </button>
-            <button class="tb-btn tb-btn--image" (click)="openImageDialog()" title="הוסף תמונה">
+            <button class="tb-btn tb-btn--image" (mousedown)="$event.preventDefault()" (click)="openImageDialog()" title="הוסף תמונה">
               <span class="material-symbols-outlined">image</span>
               <span>תמונה</span>
             </button>

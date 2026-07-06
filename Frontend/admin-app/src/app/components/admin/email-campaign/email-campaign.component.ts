@@ -165,6 +165,7 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   private restoreSelection() {
+    this.editorBody.nativeElement.focus();
     if (!this.savedRange) return;
     const sel = window.getSelection();
     sel?.removeAllRanges();
@@ -181,19 +182,23 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   insertLink() {
-    this.restoreSelection();
-    if (this.linkUrl) {
+    const url  = this.linkUrl;
+    const text = this.linkText;
+    this.showLinkDialog = false;
+    if (!url) return;
+
+    setTimeout(() => {
+      this.restoreSelection();
       const selectedText = window.getSelection()?.toString();
-      if (!selectedText && this.linkText) {
+      if (!selectedText && text) {
         document.execCommand('insertHTML', false,
-          `<a href="${this.linkUrl}" target="_blank">${this.linkText}</a>`);
+          `<a href="${url}" target="_blank">${text}</a>`);
       } else {
-        document.execCommand('createLink', false, this.linkUrl);
+        document.execCommand('createLink', false, url);
         const anchor = window.getSelection()?.anchorNode?.parentElement?.closest('a');
         if (anchor) anchor.target = '_blank';
       }
-    }
-    this.showLinkDialog = false;
+    }, 50);
   }
 
   // ── Image dialog ──────────────────────────────────────────────────
@@ -207,13 +212,18 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   insertImage() {
-    this.restoreSelection();
-    if (this.imageUrl) {
-      const widthStyle = this.imageWidth ? `width:${this.imageWidth};` : '';
-      const html = `<img src="${this.imageUrl}" alt="${this.imageAlt}" style="max-width:100%;${widthStyle}display:block;margin:8px 0;" />`;
-      document.execCommand('insertHTML', false, html);
-    }
+    const url   = this.imageUrl;
+    const alt   = this.imageAlt;
+    const width = this.imageWidth;
     this.showImageDialog = false;
+    if (!url) return;
+
+    setTimeout(() => {
+      this.restoreSelection();
+      const widthStyle = width ? `width:${width};` : '';
+      const html = `<img src="${url}" alt="${alt}" style="max-width:100%;${widthStyle}display:block;margin:8px 0;" />`;
+      document.execCommand('insertHTML', false, html);
+    }, 50);
   }
 
   // ── Preview & send ────────────────────────────────────────────────
