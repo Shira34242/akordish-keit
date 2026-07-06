@@ -9,6 +9,14 @@ export enum AgencyContactMode {
   Both = 2
 }
 
+export type AgencyContactModeValue = AgencyContactMode | keyof typeof AgencyContactMode | number | string | null | undefined;
+
+export function normalizeAgencyContactMode(mode: AgencyContactModeValue): AgencyContactMode {
+  if (mode === AgencyContactMode.Agency || mode === 'Agency' || mode === '1') return AgencyContactMode.Agency;
+  if (mode === AgencyContactMode.Both || mode === 'Both' || mode === '2') return AgencyContactMode.Both;
+  return AgencyContactMode.Direct;
+}
+
 export interface AgencyGalleryImageDto {
   id: number;
   agencyId: number;

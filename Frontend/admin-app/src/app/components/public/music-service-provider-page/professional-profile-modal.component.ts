@@ -17,7 +17,7 @@ import {
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { CitiesService, City } from '../../../services/cities.service';
 import { LanguageService } from '../../../services/language.service';
-import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
+import { AgencyBadgeDto, AgencyContactMode, normalizeAgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { SeoService } from '../../../services/seo.service';
 import { SongCardComponent } from '../../shared/song-card/song-card.component';
@@ -466,15 +466,17 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   }
 
   get showDirectContact(): boolean {
+    const mode = normalizeAgencyContactMode(this.agencyBadge?.contactMode);
     return !this.agencyBadge ||
-      this.agencyBadge.contactMode === AgencyContactMode.Direct ||
-      this.agencyBadge.contactMode === AgencyContactMode.Both;
+      mode === AgencyContactMode.Direct ||
+      mode === AgencyContactMode.Both;
   }
 
   get showAgencyContact(): boolean {
+    const mode = normalizeAgencyContactMode(this.agencyBadge?.contactMode);
     return !!this.agencyBadge &&
-      (this.agencyBadge.contactMode === AgencyContactMode.Agency ||
-       this.agencyBadge.contactMode === AgencyContactMode.Both);
+      (mode === AgencyContactMode.Agency ||
+       mode === AgencyContactMode.Both);
   }
 
   get quickWhatsAppNumber(): string {

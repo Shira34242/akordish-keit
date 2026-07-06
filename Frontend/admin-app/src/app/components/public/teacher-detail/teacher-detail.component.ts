@@ -19,7 +19,7 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { LanguageService } from '../../../services/language.service';
-import { AgencyBadgeDto, AgencyContactMode } from '../../../models/agency.model';
+import { AgencyBadgeDto, AgencyContactMode, normalizeAgencyContactMode } from '../../../models/agency.model';
 import { AgencyService } from '../../../services/agency.service';
 import { SeoService } from '../../../services/seo.service';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
@@ -550,15 +550,17 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   get showDirectContact(): boolean {
+    const mode = normalizeAgencyContactMode(this.agencyBadge?.contactMode);
     return !this.agencyBadge ||
-      this.agencyBadge.contactMode === AgencyContactMode.Direct ||
-      this.agencyBadge.contactMode === AgencyContactMode.Both;
+      mode === AgencyContactMode.Direct ||
+      mode === AgencyContactMode.Both;
   }
 
   get showAgencyContact(): boolean {
+    const mode = normalizeAgencyContactMode(this.agencyBadge?.contactMode);
     return !!this.agencyBadge &&
-      (this.agencyBadge.contactMode === AgencyContactMode.Agency ||
-       this.agencyBadge.contactMode === AgencyContactMode.Both);
+      (mode === AgencyContactMode.Agency ||
+       mode === AgencyContactMode.Both);
   }
 
   get quickWhatsAppNumber(): string {

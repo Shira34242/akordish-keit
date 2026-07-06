@@ -17,7 +17,7 @@ import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { LanguageService } from '../../services/language.service';
 import { SeoService } from '../../services/seo.service';
-import { AgencyBadgeDto, AgencyContactMode } from '../../models/agency.model';
+import { AgencyBadgeDto, AgencyContactMode, normalizeAgencyContactMode } from '../../models/agency.model';
 import { AgencyService } from '../../services/agency.service';
 import { artistPath, songSlug, titleSlug } from '../../utils/slug';
 import { AnalyticsService } from '../../services/analytics.service';
@@ -241,9 +241,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get showAgencyContact(): boolean {
+    const mode = normalizeAgencyContactMode(this.agencyBadge?.contactMode);
     return !!this.agencyBadge &&
-      (this.agencyBadge.contactMode === AgencyContactMode.Agency ||
-       this.agencyBadge.contactMode === AgencyContactMode.Both);
+      (mode === AgencyContactMode.Agency ||
+       mode === AgencyContactMode.Both);
   }
 
   get hasAgencyContactDetails(): boolean {
