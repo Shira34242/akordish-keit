@@ -806,6 +806,24 @@ dbContext.Database.ExecuteSqlRaw(@"
             );
             CREATE UNIQUE INDEX [IX_SiteInterestRegistrations_Email] ON [SiteInterestRegistrations] ([Email]);
         END
+
+        IF OBJECT_ID(N'[AdBlockChecks]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [AdBlockChecks] (
+                [Id]         int            NOT NULL IDENTITY,
+                [Detected]   bit            NOT NULL DEFAULT CAST(0 AS bit),
+                [PagePath]   nvarchar(500)  NULL,
+                [DeviceType] nvarchar(50)   NULL,
+                [UserId]     int            NULL,
+                [IpAddress]  nvarchar(45)   NULL,
+                [UserAgent]  nvarchar(500)  NULL,
+                [CheckedAt]  datetime2      NOT NULL DEFAULT (GETUTCDATE()),
+                CONSTRAINT [PK_AdBlockChecks] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_AdBlockChecks_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE SET NULL
+            );
+            CREATE INDEX [IX_AdBlockChecks_UserId] ON [AdBlockChecks] ([UserId]);
+            CREATE INDEX [IX_AdBlockChecks_CheckedAt] ON [AdBlockChecks] ([CheckedAt]);
+        END
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
