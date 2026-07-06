@@ -806,10 +806,6 @@ dbContext.Database.ExecuteSqlRaw(@"
             );
             CREATE UNIQUE INDEX [IX_SiteInterestRegistrations_Email] ON [SiteInterestRegistrations] ([Email]);
         END
-
-        IF OBJECT_ID(N'[Artists]', N'U') IS NOT NULL
-            AND COL_LENGTH(N'[Artists]', N'Email') IS NULL
-            ALTER TABLE [Artists] ADD [Email] nvarchar(320) NULL;
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"

@@ -111,9 +111,6 @@ public class EmailService : IEmailService
         if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
             return (await GetProviderRecipientsAsync(group)).Count;
 
-        if (group == EmailRecipientGroup.AllArtistsAll)
-            return (await GetAllArtistsRecipientsAsync()).Count;
-
         var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
         query = ApplyGroupFilter(query, group);
         return await query.CountAsync();
@@ -308,9 +305,6 @@ public class EmailService : IEmailService
         if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
             return await GetProviderRecipientsAsync(group);
 
-        if (group == EmailRecipientGroup.AllArtistsAll)
-            return await GetAllArtistsRecipientsAsync();
-
         var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
         query = ApplyGroupFilter(query, group);
 
@@ -388,29 +382,6 @@ public class EmailService : IEmailService
             return list?.Where(s => s.IsActive).ToList() ?? [];
         }
         catch { return []; }
-    }
-
-    private async Task<List<(string Email, string? Name)>> GetAllArtistsRecipientsAsync()
-    {
-        // אומנים עם משתמש מחובר → email מהמשתמש
-        var fromUsers = await _context.Users
-            .Where(u => !u.IsDeleted && u.Email != string.Empty)
-            .Where(u => _context.Artists.Any(a => a.UserId == u.Id && !a.IsDeleted))
-            .Select(u => new { u.Email, Name = u.Username })
-            .ToListAsync();
-
-        // אומנים ללא משתמש אבל עם email עצמאי
-        var fromArtists = await _context.Artists
-            .Where(a => !a.IsDeleted && a.UserId == null
-                        && a.Email != null && a.Email != string.Empty)
-            .Select(a => new { a.Email, a.Name })
-            .ToListAsync();
-
-        return fromUsers.Select(u => (u.Email, (string?)u.Name))
-            .Concat(fromArtists.Select(a => (a.Email!, (string?)a.Name)))
-            .GroupBy(e => e.Item1.ToLowerInvariant())
-            .Select(g => g.First())
-            .ToList();
     }
 
     private IQueryable<Models.Entities.User> ApplyGroupFilter(
