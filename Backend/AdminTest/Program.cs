@@ -859,6 +859,10 @@ dbContext.Database.ExecuteSqlRaw(@"
            AND COL_LENGTH(N'[MusicServiceProviders]', N'BumpCount') IS NULL
             ALTER TABLE [MusicServiceProviders] ADD [BumpCount] int NOT NULL CONSTRAINT [DF_MusicServiceProviders_BumpCount] DEFAULT 0;
 
+        IF OBJECT_ID(N'[MusicServiceProviders]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviders]', N'BannerBlur') IS NULL
+            ALTER TABLE [MusicServiceProviders] ADD [BannerBlur] int NOT NULL CONSTRAINT [DF_MusicServiceProviders_BannerBlur] DEFAULT 0;
+
         IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NULL
             ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryInstrumentId] int NULL;

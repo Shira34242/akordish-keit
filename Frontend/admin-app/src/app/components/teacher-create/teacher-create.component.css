@@ -283,6 +283,29 @@
   color: #ffffff;
 }
 
+.profile-focus-edit {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #ddff53;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: var(--space-sm, 6px) auto var(--space-base, 14px);
+}
+
+.profile-focus-edit:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.profile-focus-edit .material-icons {
+  font-size: 20px;
+}
+
 .banner-upload {
   position: relative;
   width: 100%;
@@ -336,6 +359,30 @@
 .banner-upload.has-image .material-icons,
 .banner-upload.has-image strong {
   color: #ffffff;
+}
+
+.banner-blur-control {
+  width: min(100%, 420px);
+  display: grid;
+  grid-template-columns: auto minmax(150px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.banner-blur-control input {
+  min-height: 28px;
+  padding: 0;
+  accent-color: #000000;
+}
+
+.banner-blur-control strong {
+  min-width: 2ch;
+  text-align: center;
 }
 
 .step-intro {

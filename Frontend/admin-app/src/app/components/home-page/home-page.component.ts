@@ -79,6 +79,17 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
 
   searchQuery = '';
+  readonly searchPlaceholders = [
+    'אקורדים לשירים',
+    'חדשות מוזיקה',
+    'מורים למוזיקה',
+    'נותני שירות למוזיקה',
+    'פודקאסטים',
+    'הופעות ואירועים'
+  ];
+  currentSearchPlaceholderIndex = 0;
+  displayedSearchPlaceholder = '';
+  isSearchInputFocused = false;
   searchResults: SearchResults | null = null;
   lyricsMatches: SearchItem[] = [];
   isSearchingDeep = false;
@@ -152,6 +163,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private chordsContentStarted = false;
   private nextHomeStage = 0;
   private homeStageTimer?: number;
+  private searchPlaceholderTimer?: number;
+  private searchPlaceholderCharIndex = 0;
+  private isDeletingSearchPlaceholder = false;
 
   constructor(
     private router: Router,
@@ -216,6 +230,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.initSearchPlaceholderRotation();
     this.loadContent();
   }
 
@@ -235,7 +250,62 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
     if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     if (this.homeStageTimer) window.clearTimeout(this.homeStageTimer);
+    if (this.searchPlaceholderTimer) window.clearTimeout(this.searchPlaceholderTimer);
     this.viralObserver?.disconnect();
+  }
+
+  get currentSearchPlaceholder(): string {
+    return this.searchPlaceholders[this.currentSearchPlaceholderIndex] || this.searchPlaceholders[0];
+  }
+
+  private initSearchPlaceholderRotation(): void {
+    this.displayedSearchPlaceholder = '';
+    this.searchPlaceholderCharIndex = 0;
+    this.isDeletingSearchPlaceholder = false;
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      this.displayedSearchPlaceholder = `${this.currentSearchPlaceholder}...`;
+      return;
+    }
+
+    this.scheduleSearchPlaceholderTyping(180);
+  }
+
+  private scheduleSearchPlaceholderTyping(delay: number): void {
+    if (this.searchPlaceholderTimer) window.clearTimeout(this.searchPlaceholderTimer);
+    this.ngZone.runOutsideAngular(() => {
+      this.searchPlaceholderTimer = window.setTimeout(() => this.ngZone.run(() => {
+        this.tickSearchPlaceholderTyping();
+      }), delay);
+    });
+  }
+
+  private tickSearchPlaceholderTyping(): void {
+    const fullText = `${this.currentSearchPlaceholder}...`;
+
+    if (!this.isDeletingSearchPlaceholder) {
+      this.searchPlaceholderCharIndex = Math.min(fullText.length, this.searchPlaceholderCharIndex + 1);
+      this.displayedSearchPlaceholder = fullText.slice(0, this.searchPlaceholderCharIndex);
+
+      if (this.searchPlaceholderCharIndex === fullText.length) {
+        this.isDeletingSearchPlaceholder = true;
+        this.scheduleSearchPlaceholderTyping(760);
+      } else {
+        this.scheduleSearchPlaceholderTyping(58);
+      }
+      return;
+    }
+
+    this.searchPlaceholderCharIndex = Math.max(0, this.searchPlaceholderCharIndex - 1);
+    this.displayedSearchPlaceholder = fullText.slice(0, this.searchPlaceholderCharIndex);
+
+    if (this.searchPlaceholderCharIndex === 0) {
+      this.isDeletingSearchPlaceholder = false;
+      this.currentSearchPlaceholderIndex = (this.currentSearchPlaceholderIndex + 1) % this.searchPlaceholders.length;
+      this.scheduleSearchPlaceholderTyping(140);
+    } else {
+      this.scheduleSearchPlaceholderTyping(34);
+    }
   }
 
   private initHeroScrollListeners(): void {
@@ -569,6 +639,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchSubject.next(query);
   }
 
+  onSearchFocus(): void {
+    this.isSearchInputFocused = true;
+  }
+
   submitHomeSearch(): void {
     const query = this.searchQuery.trim();
     this.showSearchResults = false;
@@ -654,6 +728,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearchBlur() {
+    this.isSearchInputFocused = false;
     setTimeout(() => {
       this.showSearchResults = false;
     }, 200);

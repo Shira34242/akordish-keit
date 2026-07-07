@@ -9,7 +9,7 @@
 
 .join-index-page {
   min-height: 100vh;
-  padding: var(--space-2xl) var(--space-lg) var(--space-4xl);
+  padding: var(--space-base) var(--space-base) var(--space-xl);
   box-sizing: border-box;
 }
 
@@ -17,13 +17,13 @@
   width: min(100%, 760px);
   margin-inline: auto;
   display: grid;
-  gap: var(--space-xl);
+  gap: var(--space-base);
 }
 
 .hero-copy {
   display: grid;
   justify-items: center;
-  gap: var(--space-base);
+  gap: var(--space-xs);
   text-align: center;
 }
 
@@ -59,7 +59,7 @@
   width: 100%;
   display: grid;
   justify-items: center;
-  gap: var(--space-base);
+  gap: var(--space-md);
 }
 
 .agency-join-banner {
@@ -94,8 +94,8 @@
 .join-step,
 .form-shell {
   display: grid;
-  gap: var(--space-base);
-  padding: var(--space-lg);
+  gap: var(--space-sm);
+  padding: var(--space-md);
   border-radius: 24px;
   background: #F2F2F2;
 }
@@ -307,7 +307,7 @@
 
 .index-choice-list {
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 }
 
 .index-chip-row {
@@ -350,7 +350,7 @@
 }
 
 .form-shell {
-  padding: var(--space-xl);
+  padding: var(--space-md);
 }
 
 .form-shell .quick-create-page {
@@ -496,7 +496,7 @@
 
 @media (max-width: 768px) {
   .join-index-page {
-    padding: var(--space-lg) var(--space-base) var(--space-3xl);
+    padding: var(--space-sm) var(--space-sm) var(--space-xl);
   }
 
   .hero-copy h1 {
@@ -514,7 +514,7 @@
 
   .join-step,
   .form-shell {
-    padding: var(--space-base);
+    padding: var(--space-md);
   }
 
   .step-head {

@@ -77,6 +77,7 @@ export class ServiceProviderFormComponent implements OnInit {
   email: string = '';
   websiteUrl: string = '';
   bannerImageUrl: string = '';
+  bannerBlur: number = 0;
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -221,6 +222,7 @@ export class ServiceProviderFormComponent implements OnInit {
         this.email = provider.email || '';
         this.websiteUrl = provider.websiteUrl || '';
         this.bannerImageUrl = provider.bannerImageUrl || '';
+        this.bannerBlur = this.normalizedBannerBlur(provider.bannerBlur);
         this.profileImageUrl = provider.profileImageUrl || '';
         this.videoUrl = provider.videoUrl || '';
         this.yearsOfExperience = provider.yearsOfExperience || 0;
@@ -280,6 +282,7 @@ export class ServiceProviderFormComponent implements OnInit {
       email: this.email.trim(),
       websiteUrl: this.optionalText(this.websiteUrl),
       bannerImageUrl: this.optionalText(this.bannerImageUrl),
+      bannerBlur: this.normalizedBannerBlur(this.bannerBlur),
       profileImageUrl: this.optionalText(this.profileImageUrl),
       videoUrl: this.optionalText(this.videoUrl),
       yearsOfExperience: this.yearsOfExperience || undefined,
@@ -667,6 +670,12 @@ export class ServiceProviderFormComponent implements OnInit {
   private optionalText(value: string | undefined): string | undefined {
     const trimmed = value?.trim();
     return trimmed || undefined;
+  }
+
+  normalizedBannerBlur(value: number | undefined): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
   }
 
   private normalizedGalleryImages(): CreateGalleryImageDto[] {

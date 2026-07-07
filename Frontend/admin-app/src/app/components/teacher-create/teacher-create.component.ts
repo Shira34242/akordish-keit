@@ -13,6 +13,7 @@ import { SystemTablesService, SystemItem } from '../../services/system-tables.se
 import { CitiesService, City } from '../../services/cities.service';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { MediaService } from '../../services/admin/media.service';
+import { ProfileImageCropperComponent } from '../shared/profile-image-cropper/profile-image-cropper.component';
 import {
   CreateTeacherDto,
   CreateTeacherInstrumentDto,
@@ -46,7 +47,7 @@ interface PlatformLinkOption {
 @Component({
   selector: 'app-teacher-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfileImageCropperComponent],
   templateUrl: './teacher-create.component.html',
   styleUrls: ['./teacher-create.component.css']
 })
@@ -78,6 +79,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   email: string = '';
   websiteUrl: string = '';
   bannerImageUrl: string = '';
+  bannerBlur: number = 0;
   profileImageUrl: string = '';
   videoUrl: string = '';
   yearsOfExperience: number = 0;
@@ -108,6 +110,9 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   galleryUploadProgress = 0;
   profileImageUploadProgress = 0;
   bannerImageUploadProgress = 0;
+  profileCropFile: File | null = null;
+  profileCropUrl: string | null = null;
+  profileCropFileName = 'profile-image';
   showVideoLinkInput = false;
   showTestimonialDraft = false;
   newVideoUrl = '';
@@ -476,8 +481,38 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   onProfileImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
 
+    if (!this.canCropProfileFile(file)) {
+      this.uploadProfileImageFile(file);
+      return;
+    }
+
+    this.profileCropFileName = file.name;
+    this.profileCropFile = file;
+    this.profileCropUrl = null;
+  }
+
+  openProfileImageCropper(): void {
+    if (!this.profileImageUrl || this.profileImageUploading) return;
+    this.profileCropFile = null;
+    this.profileCropFileName = 'profile-image';
+    this.profileCropUrl = this.profileImageUrl;
+  }
+
+  cancelProfileImageCrop(): void {
+    this.profileCropFile = null;
+    this.profileCropUrl = null;
+  }
+
+  uploadCroppedProfileImage(file: File): void {
+    this.profileCropFile = null;
+    this.profileCropUrl = null;
+    this.uploadProfileImageFile(file);
+  }
+
+  private uploadProfileImageFile(file: File): void {
     this.profileImageUploading = true;
     this.profileImageUploadProgress = 0;
     this.profileImageUploadSub?.unsubscribe();
@@ -493,16 +528,19 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
         this.profileImageUrl = event.body.url;
         this.profileImageUploadProgress = 100;
         this.profileImageUploading = false;
-        input.value = '';
       },
       error: (error) => {
         console.error('Error uploading profile image:', error);
         this.error = this.langService.translate('common.error_profile_image');
         this.profileImageUploading = false;
         this.profileImageUploadProgress = 0;
-        input.value = '';
       }
     });
+  }
+
+  private canCropProfileFile(file: File): boolean {
+    return /(\.jpe?g|\.png|\.webp|\.gif|\.avif|\.bmp)$/i.test(file.name)
+      || ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/bmp'].includes(file.type);
   }
 
   onBannerImageSelected(event: Event): void {
@@ -724,6 +762,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
     return selectedValues.reduce((acc, val) => acc | val, 0);
   }
 
+  normalizedBannerBlur(value: number | undefined): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
+  }
+
   getVideoThumbnail(url: string): string {
     const videoId = this.getYouTubeVideoId(url);
     return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
@@ -782,6 +826,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       email: this.email.trim(),
       websiteUrl: this.websiteUrl?.trim() || undefined,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
+      bannerBlur: this.normalizedBannerBlur(this.bannerBlur),
       profileImageUrl: this.profileImageUrl?.trim() || undefined,
       videoUrl: normalizedVideoLinks[0] || this.videoUrl?.trim() || undefined,
       yearsOfExperience: this.yearsOfExperience,

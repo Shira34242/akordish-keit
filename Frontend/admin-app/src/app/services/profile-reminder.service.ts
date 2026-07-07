@@ -9,8 +9,8 @@ export interface ReminderRequest {
   user: User;
 }
 
-const DAYS_BEFORE_FIRST_REMINDER = 5;
-const COOLDOWN_DAYS = 14;
+const DAYS_BEFORE_FIRST_REMINDER = 7;
+const COOLDOWN_DAYS = 21;
 const MAX_DISMISSALS = 3;
 
 /**

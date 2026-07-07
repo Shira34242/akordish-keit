@@ -12,11 +12,12 @@ import { AuthService } from '../../../services/auth.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
+import { ProfileImageCropperComponent } from '../../shared/profile-image-cropper/profile-image-cropper.component';
 
 @Component({
   selector: 'app-become-teacher-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfileImageCropperComponent],
   templateUrl: './become-teacher-form.component.html',
   styleUrls: ['./become-teacher-form.component.css']
 })
@@ -67,6 +68,9 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   activeSocialPlatform: SocialPlatform | null = null;
   hasWhatsAppForPhone = false;
   profileImageUploading = false;
+  profileCropFile: File | null = null;
+  profileCropUrl: string | null = null;
+  profileCropFileName = 'profile-image';
   galleryUploadingCount = 0;
   showVideoLinkInput = false;
 
@@ -311,6 +315,31 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     input.value = '';
     if (!file || this.profileImageUploading) return;
 
+    if (!this.canCropProfileFile(file)) {
+      this.uploadCroppedProfileImage(file);
+      return;
+    }
+
+    this.profileCropFileName = file.name;
+    this.profileCropFile = file;
+    this.profileCropUrl = null;
+  }
+
+  openProfileImageCropper(): void {
+    if (!this.profileImageUrl || this.profileImageUploading) return;
+    this.profileCropFile = null;
+    this.profileCropFileName = 'profile-image';
+    this.profileCropUrl = this.profileImageUrl;
+  }
+
+  cancelProfileImageCrop(): void {
+    this.profileCropFile = null;
+    this.profileCropUrl = null;
+  }
+
+  uploadCroppedProfileImage(file: File): void {
+    this.profileCropFile = null;
+    this.profileCropUrl = null;
     this.profileImageUploading = true;
     this.mediaService.uploadMedia(file).subscribe({
       next: (response) => {
@@ -322,6 +351,11 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
         alert(this.langService.translate('form.error_profile_image'));
       }
     });
+  }
+
+  private canCropProfileFile(file: File): boolean {
+    return /(\.jpe?g|\.png|\.webp|\.gif|\.avif|\.bmp)$/i.test(file.name)
+      || ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/bmp'].includes(file.type);
   }
 
   onGalleryFilesSelected(event: Event): void {

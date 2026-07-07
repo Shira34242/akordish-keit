@@ -115,7 +115,25 @@
   transition: opacity 0.2s;
 }
 
-.edit-avatar-btn:hover:not(:disabled) {
+.focus-avatar-btn {
+  position: absolute;
+  bottom: calc(-1 * var(--space-xs));
+  left: var(--space-sm);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ddff53;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.edit-avatar-btn:hover:not(:disabled),
+.focus-avatar-btn:hover {
   opacity: 0.82;
 }
 
@@ -153,7 +171,8 @@
   to { transform: rotate(360deg); }
 }
 
-.edit-avatar-btn .material-icons {
+.edit-avatar-btn .material-icons,
+.focus-avatar-btn .material-icons {
   font-size: 20px;
   color: rgba(0,0,0,0.35);
 }

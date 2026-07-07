@@ -385,6 +385,13 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
     return this.heroBannerSrc || this.profileImageSrc;
   }
 
+  get heroBackgroundFilter(): string {
+    const hasBanner = !!this.heroBannerSrc;
+    const blur = hasBanner ? this.normalizedBannerBlur(this.professional?.bannerBlur) : 24;
+    const brightness = hasBanner ? 0.72 : 0.42;
+    return `blur(${blur}px) brightness(${brightness})`;
+  }
+
   get heroRole(): string {
     const categories = this.getCategoriesDisplay();
     return categories || this.langService.translate('pro_modal.default_role');
@@ -690,6 +697,12 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   private toNumber(value: unknown): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
+  }
+
+  private normalizedBannerBlur(value: number | undefined): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
   }
 
   getSocialPlatformName(platform: SocialPlatform): string {

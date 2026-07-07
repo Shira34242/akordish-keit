@@ -14,7 +14,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'user.profile': 'הפרופיל שלי',
     'user.playlists': 'הרשימות שלי',
     'user.logout': 'התנתקות',
-    'user.login': 'כניסה',
+    'user.login': 'התחברות',
     'notif.loading': 'טוען התראות...',
     'notif.empty': 'אין התראות חדשות כרגע.',
     'notif.all': 'לכל ההתראות',
@@ -45,9 +45,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'אקום',
     'footer.acum_suffix': '',
     'footer.copyright': '© אקורדישקייט. כל הזכויות שמורות',
-    'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים — באם זכויותכם נפגעו',
+    'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים - באם זכויותכם נפגעו',
     'footer.rights_resolve': 'להסדרת העניין',
-    'footer.advertising': 'לפרסום ושיתופי פעולה —',
+    'footer.advertising': 'לפרסום ושיתופי פעולה -',
     'footer.contact': 'צרו קשר',
 
     // Song page
@@ -258,7 +258,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'fab.root_greeting_prefix': 'היי',
     'fab.root_helper': 'הוספת תוכן לאתר מתוגמלת בתג מיוחד ואפשרויות בלעדיות באתר לחברים מתקדמים.',
     'fab.content_question': 'מעולה, איזה תוכן תרצה להוסיף?',
-    'fab.index_question': 'הבנתי, איזה פרופיל תרצה לאינדקס?',
+    'fab.index_question': 'הבנתי, איזה פרופיל תרצה להוסיף לאינדקס?',
     'fab.artist_question': 'איך תרצה להוסיף את האמן?',
     'fab.podcast_question': 'מה תרצה להוסיף באזור הפודקאסטים?',
     'fab.song_selected': 'מעולה, נמשיך להוספת אקורדים.',
@@ -418,7 +418,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'paginate.last_page': 'עמוד אחרון',
 
     // Auth modal
-    'auth.login_title': 'כניסה:',
+    'auth.login_title': 'התחברות:',
     'auth.register_title': 'הרשמה:',
     'auth.username': 'שם משתמש',
     'auth.email': 'מייל',
@@ -427,12 +427,12 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.google_register': 'הירשם עם Google',
     'auth.terms': 'בהרשמה לאתר אני מאשר/ת שקראתי ואני מסכים/ה ל',
     'auth.terms_link': 'תקנון האתר',
-    'auth.submit_login': 'היכנס ←',
+    'auth.submit_login': 'התחבר ←',
     'auth.submit_register': 'המשך ←',
     'auth.no_account': 'עדיין אין לך חשבון?',
     'auth.register_link': 'הירשם',
     'auth.has_account': 'כבר יש לך חשבון?',
-    'auth.login_link': 'היכנס',
+    'auth.login_link': 'התחברות',
     'auth.password_hint': '8+ תווים, אות גדולה, ספרה ותו מיוחד (@$!%*?&#)',
 
     // Forgot password
@@ -468,7 +468,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'details.beginner': 'מתחיל/ה',
     'details.intermediate': 'מתקדם/ת',
     'details.professional': 'מקצועי/ת',
-    'details.continue': 'המשך <',
+    'details.continue': 'המשך ›',
     'details.skip': 'דלג לאתר',
     'details.step2_title': 'איך תרצה/י להשתמש באקורדישקייט?',
     'details.step2_sub': 'ניתן לשנות גם אחר כך',
@@ -571,7 +571,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Playlists page
     'playlists.title': 'הרשימות שלי',
-    'playlists.subtitle': 'מקום אחד לכל השמירות — שירים, אקורדים, כתבות ורשימות אישיות.',
+    'playlists.subtitle': 'מקום אחד לכל השמירות - שירים, אקורדים, כתבות ורשימות אישיות.',
     'playlists.community_desc': 'גלה רשימות שמשתמשים אחרים שיתפו עם הקהילה',
     'playlists.community_btn': 'מאגר רשימות קהילתי',
     'playlists.new_name_placeholder': 'שם הרשימה החדשה',
@@ -1400,9 +1400,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'ACUM',
     'footer.acum_suffix': ' license',
     'footer.copyright': '© Acordiskate. All rights reserved.',
-    'footer.rights_notice': 'This site respects copyright — if your rights were infringed,',
+    'footer.rights_notice': 'This site respects copyright - if your rights were infringed,',
     'footer.rights_resolve': 'to resolve the matter',
-    'footer.advertising': 'For advertising and partnerships —',
+    'footer.advertising': 'For advertising and partnerships -',
     'footer.contact': 'contact us',
 
     // Song page
@@ -1823,7 +1823,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'details.beginner': 'Beginner',
     'details.intermediate': 'Intermediate',
     'details.professional': 'Professional',
-    'details.continue': 'Continue <',
+    'details.continue': 'Continue ›',
     'details.skip': 'Skip to site',
     'details.step2_title': 'How would you like to use Acordiskate?',
     'details.step2_sub': 'You can change this later',
@@ -1926,7 +1926,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Playlists page
     'playlists.title': 'My Playlists',
-    'playlists.subtitle': 'One place for all your saves — songs, chords, articles and personal lists.',
+    'playlists.subtitle': 'One place for all your saves - songs, chords, articles and personal lists.',
     'playlists.community_desc': 'Discover lists shared by other users with the community',
     'playlists.community_btn': 'Community Playlist Library',
     'playlists.new_name_placeholder': 'New list name',

@@ -262,6 +262,44 @@
   color: rgba(0, 0, 0, 0.55);
 }
 
+.recommendations-header {
+  align-items: center;
+}
+
+.recommendations-toggle {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-base);
+  border: 0;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.recommendations-toggle:hover {
+  background: #ddff53;
+}
+
+.recommendations-toggle .material-icons {
+  font-size: 20px;
+}
+
+.recommendations-panel {
+  padding: var(--space-base);
+  border-radius: 24px;
+  background: #F2F2F2;
+}
+
+.recommendations-panel .podcast-episodes-row {
+  padding-bottom: 0;
+}
+
 .series-strip {
   display: flex;
   flex-direction: row;

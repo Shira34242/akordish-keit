@@ -61,6 +61,9 @@ namespace AkordishKeit.Data.Configurations
             builder.Property(sp => sp.BannerImageUrl)
                 .HasMaxLength(500);
 
+            builder.Property(sp => sp.BannerBlur)
+                .HasDefaultValue(0);
+
             builder.Property(sp => sp.VideoUrl)
                 .HasMaxLength(500);
 

@@ -30,7 +30,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         switch (error.status) {
           case 401: {
             if (req.url.includes('/api/auth/me')) {
-              authService.clearLocalAuth();
+              if (!authService.isLoggedIn) {
+                authService.clearLocalAuth();
+              }
               break;
             }
 

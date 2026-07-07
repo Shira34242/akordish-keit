@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 76px var(--space-xl); /* פדינג מאוזן כדי שהתוכן יהיה במרכז התיבה הצהובה */
+  padding: 8px var(--space-xl) 12px;
   box-sizing: border-box;
 }
 
@@ -388,10 +388,10 @@
 .professionals-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+  padding: var(--space-base) var(--space-base) var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xl);
+  gap: var(--space-base);
   box-sizing: border-box;
 }
 
@@ -548,7 +548,7 @@
 .sections-area {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xl);
+  gap: var(--space-base);
 }
 
 /* ════════════════════════════════════════
@@ -734,8 +734,8 @@
 
 @media (max-width: 1024px) {
   .professionals-content {
-    padding: var(--space-xl) var(--space-lg) var(--space-3xl);
-    gap: var(--space-2xl);
+    padding: var(--space-sm) var(--space-base) var(--space-xl);
+    gap: var(--space-sm);
   }
 }
 
@@ -758,12 +758,12 @@
   }
 
   .professionals-content {
-    padding: var(--space-xl) var(--space-lg) var(--space-3xl);
-    gap: var(--space-2xl);
+    padding: var(--space-sm) var(--space-base) var(--space-xl);
+    gap: var(--space-sm);
   }
 
   .sections-area {
-    gap: var(--space-2xl);
+    gap: var(--space-sm);
   }
 
   .quick-cat-btn {
@@ -818,7 +818,7 @@
   }
 
   .hero-content-area {
-    padding: 64px var(--space-md); /* פדינג מאוזן גם במובייל לשמירה על מרכוז התוכן */
+    padding: 8px var(--space-md) 12px;
   }
 
   .hero-title {
@@ -831,7 +831,7 @@
   }
 
   .professionals-content {
-    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    padding: var(--space-xs) var(--space-xs) var(--space-lg);
   }
 
   .professionals-grid {

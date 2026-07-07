@@ -169,34 +169,45 @@
 
         <!-- Artists Strip -->
         <div class="artists-section" *ngIf="artists.length > 0">
-            <div class="artists-strip" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
-                <div class="artists-loop-track">
-                    <div class="artist-item"
-                         *ngFor="let artist of artists; trackBy: trackByArtist"
-                         [class.active]="selectedFilterArtistId === artist.id"
-                         (click)="selectFilterArtist(artist)">
-                        <div class="artist-avatar">
-                            <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-                                 [alt]="artist.name"
-                                 class="artist-img"
-                                 loading="lazy">
+            <div class="section-header artists-section-header">
+                <span class="section-tag section-tag--secondary">סינון לפי אמן</span>
+            </div>
+            <div class="strip-wrapper artists-strip-wrapper">
+                <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(artistsStrip, false)" [attr.aria-label]="'chords.prev' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="artists-strip" #artistsStrip appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left">
+                    <div class="artists-loop-track">
+                        <div class="artist-item"
+                             *ngFor="let artist of artists; trackBy: trackByArtist"
+                             [class.active]="selectedFilterArtistId === artist.id"
+                             (click)="selectFilterArtist(artist)">
+                            <div class="artist-avatar">
+                                <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+                                     [alt]="artist.name"
+                                     class="artist-img"
+                                     loading="lazy">
+                            </div>
+                            <span class="artist-name">{{ artist.name }}</span>
                         </div>
-                        <span class="artist-name">{{ artist.name }}</span>
-                    </div>
-                    <div class="artist-item"
-                         *ngFor="let artist of artists; trackBy: trackByArtist"
-                         [class.active]="selectedFilterArtistId === artist.id"
-                         (click)="selectFilterArtist(artist)"
-                         aria-hidden="true">
-                        <div class="artist-avatar">
-                            <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-                                 [alt]="artist.name"
-                                 class="artist-img"
-                                 loading="lazy">
+                        <div class="artist-item"
+                             *ngFor="let artist of artists; trackBy: trackByArtist"
+                             [class.active]="selectedFilterArtistId === artist.id"
+                             (click)="selectFilterArtist(artist)"
+                             aria-hidden="true">
+                            <div class="artist-avatar">
+                                <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+                                     [alt]="artist.name"
+                                     class="artist-img"
+                                     loading="lazy">
+                            </div>
+                            <span class="artist-name">{{ artist.name }}</span>
                         </div>
-                        <span class="artist-name">{{ artist.name }}</span>
                     </div>
                 </div>
+                <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(artistsStrip, true)" [attr.aria-label]="'chords.next' | translate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
             </div>
         </div>
 

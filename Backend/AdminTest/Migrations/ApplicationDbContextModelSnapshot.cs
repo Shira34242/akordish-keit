@@ -2129,6 +2129,11 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int>("BannerBlur")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("BumpCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

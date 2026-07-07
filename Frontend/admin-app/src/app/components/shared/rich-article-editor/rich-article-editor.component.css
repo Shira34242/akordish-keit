@@ -180,6 +180,21 @@
   width: 85%;
 }
 
+:host ::ng-deep .rich-editor-surface .article-video-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:host ::ng-deep .rich-editor-surface .article-video-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+:host ::ng-deep .rich-editor-surface .article-video-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
 :host ::ng-deep .rich-editor-surface .article-action {
   margin: var(--space-xl) 0;
   text-align: right;

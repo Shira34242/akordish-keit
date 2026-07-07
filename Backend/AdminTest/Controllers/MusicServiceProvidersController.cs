@@ -245,6 +245,7 @@ public class MusicServiceProvidersController : ControllerBase
                 Email = dto.Email,
                 WebsiteUrl = dto.WebsiteUrl,
                 BannerImageUrl = dto.BannerImageUrl,
+                BannerBlur = Math.Clamp(dto.BannerBlur, 0, 20),
                 VideoUrl = dto.VideoUrl,
                 YearsOfExperience = dto.YearsOfExperience,
                 WorkingHours = dto.WorkingHours,

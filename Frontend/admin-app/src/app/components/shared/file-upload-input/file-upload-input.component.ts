@@ -4,11 +4,12 @@ import { HttpEventType } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
+import { ProfileImageCropperComponent } from '../profile-image-cropper/profile-image-cropper.component';
 
 @Component({
   selector: 'app-file-upload-input',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProfileImageCropperComponent],
   templateUrl: './file-upload-input.component.html',
   styleUrls: ['./file-upload-input.component.scss']
 })
@@ -24,12 +25,16 @@ export class FileUploadInputComponent implements OnDestroy {
   @Input() uploadButtonText: string = '';
   @Input() uploadIcon: string = 'attach_file';
   @Input() multiple: boolean = false;
+  @Input() enableImageCrop: boolean = false;
   @Output() uploadedUrls = new EventEmitter<string[]>();
 
   uploading = false;
   uploadProgress = 0;
   uploadTotalFiles = 0;
   uploadCompletedFiles = 0;
+  cropFile: File | null = null;
+  cropUrl: string | null = null;
+  cropFileName = 'profile-image';
   private uploadSub?: Subscription;
   private uploadCancelled = false;
   private readonly langService = inject(LanguageService);
@@ -49,6 +54,12 @@ export class FileUploadInputComponent implements OnDestroy {
     const files = Array.from(input.files || []);
     if (files.length === 0) return;
     input.value = '';
+
+    if (this.enableImageCrop && files.length === 1 && this.canCropFile(files[0])) {
+      this.openCropForFile(files[0]);
+      return;
+    }
+
     this.uploading = true;
     this.uploadProgress = 0;
     this.uploadTotalFiles = files.length;
@@ -57,6 +68,41 @@ export class FileUploadInputComponent implements OnDestroy {
     this.uploadSub?.unsubscribe();
 
     this.uploadFiles(files);
+  }
+
+  openCropForCurrentImage(): void {
+    if (!this.url || this.uploading) return;
+    this.cropFile = null;
+    this.cropFileName = 'profile-image';
+    this.cropUrl = this.url;
+  }
+
+  onCropCancel(): void {
+    this.cropFile = null;
+    this.cropUrl = null;
+  }
+
+  onCropSave(file: File): void {
+    this.cropFile = null;
+    this.cropUrl = null;
+    this.uploading = true;
+    this.uploadProgress = 0;
+    this.uploadTotalFiles = 1;
+    this.uploadCompletedFiles = 0;
+    this.uploadCancelled = false;
+    this.uploadSub?.unsubscribe();
+    this.uploadFiles([file]);
+  }
+
+  private openCropForFile(file: File): void {
+    this.cropUrl = null;
+    this.cropFileName = file.name;
+    this.cropFile = file;
+  }
+
+  private canCropFile(file: File): boolean {
+    return /(\.jpe?g|\.png|\.webp|\.gif|\.avif|\.bmp)$/i.test(file.name)
+      || ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/bmp'].includes(file.type);
   }
 
   private uploadFiles(files: File[], index = 0, uploadedUrls: string[] = []): void {

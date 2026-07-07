@@ -32,6 +32,10 @@
 
 .form-hint { font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #404040; margin-top: var(--space-xs); display: block; }
 
+.range-field { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-base); border-radius: 18px; background: #ffffff; font-size: var(--font-xs); font-weight: 800; }
+.range-field input { min-height: 28px; padding: 0; accent-color: #000000; }
+.range-field strong { min-width: 2ch; text-align: center; }
+
 .linked-user-info {
   padding: var(--space-base);
   background: #F2F2F2;
@@ -142,4 +146,4 @@
 .branch-card-detail { display: flex; align-items: flex-start; gap: var(--space-sm); font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #404040; overflow-wrap: anywhere; white-space: pre-line; }
 .branch-card-detail .material-icons { font-size: 14px; color: #000000; flex: 0 0 auto; }
 
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column-reverse; } .btn-primary, .btn-secondary, .btn-submit, .btn-cancel { width: 100%; justify-content: center; } }
+@media (max-width: 768px) { .form-row, .range-field { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column-reverse; } .btn-primary, .btn-secondary, .btn-submit, .btn-cancel { width: 100%; justify-content: center; } }

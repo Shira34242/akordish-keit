@@ -290,6 +290,33 @@ const ArticleIndent = Extension.create({
   }
 });
 
+const ArticleYoutube = Youtube.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      align: {
+        default: 'right',
+        parseHTML: element => normalizeAlign(element.getAttribute('data-align')),
+        renderHTML: attributes => {
+          const align = normalizeAlign(attributes['align']);
+          const style = [
+            align === 'center' ? 'margin-left: auto' : '',
+            align === 'center' ? 'margin-right: auto' : '',
+            align === 'left' ? 'margin-right: auto' : '',
+            align === 'right' ? 'margin-left: auto' : ''
+          ].filter(Boolean).join('; ');
+
+          return {
+            class: `article-video-frame article-video-align-${align}`,
+            style,
+            'data-align': align
+          };
+        }
+      }
+    };
+  }
+});
+
 @Component({
   selector: 'app-rich-article-editor',
   standalone: true,
@@ -317,6 +344,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   imageAlign: MediaAlign = 'right';
   videoUrl = '';
   videoSize = 100;
+  videoAlign: MediaAlign = 'right';
   buttonLabel = 'לקריאה נוספת';
   buttonUrl = '';
   buttonVariant: ButtonVariant = 'primary';
@@ -374,7 +402,7 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
             class: 'article-inline-image'
           }
         }),
-        Youtube.configure({
+        ArticleYoutube.configure({
           controls: true,
           nocookie: true,
           width: 100,
@@ -634,8 +662,10 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
     if (!src || !this.editor) return;
 
     this.editor.commands.setYoutubeVideo({ src, width: this.videoSize, height: 360 });
+    this.editor.chain().focus().updateAttributes('youtube', { align: this.videoAlign }).run();
     this.videoUrl = '';
     this.videoSize = 100;
+    this.videoAlign = 'right';
     this.mediaPanel = null;
   }
 
@@ -753,6 +783,11 @@ export class RichArticleEditorComponent implements AfterViewInit, OnChanges, OnD
   updateVideoWidth(size: 70 | 85 | 100): void {
     const current = Number(this.editor?.getAttributes('youtube')['width'] || 100);
     this.editor?.chain().focus().updateAttributes('youtube', { width: current === size ? 100 : size }).run();
+  }
+
+  updateVideoAlign(align: MediaAlign): void {
+    const current = normalizeAlign(this.editor?.getAttributes('youtube')['align']);
+    this.editor?.chain().focus().updateAttributes('youtube', { align: current === align ? 'right' : align }).run();
   }
 
   activeFigureSize(): number {

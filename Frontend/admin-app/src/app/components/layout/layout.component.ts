@@ -13,7 +13,7 @@ import type { QuickAddAction } from '../quick-add-assistant-modal/quick-add-acti
 import { QuickAddAssistantModalComponent } from '../quick-add-assistant-modal/quick-add-assistant-modal.component';
 import { AuthModalComponent } from '../auth/auth-modal.component';
 import { UserType } from '../auth/user-type.enum';
-import { AdditionalDetailsModalComponent } from '../auth/additional-details-modal.component';
+import { AdditionalDetailsModalComponent, OnboardingProfileChoice } from '../auth/additional-details-modal.component';
 import { ProfileSoftReminderModalComponent } from '../auth/profile-soft-reminder-modal.component';
 import { ProfileReminderService, ReminderKind } from '../../services/profile-reminder.service';
 import { ForgotPasswordModalComponent } from '../auth/forgot-password-modal.component';
@@ -662,6 +662,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   onAuthSuccess(response: AuthResponse): void {
     this.closeAuthModal();
+    this.closeSoftReminderModal();
 
     if (response.requiresProfileCompletion) {
       this.showAdditionalDetailsModal = true;
@@ -687,10 +688,17 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showAdditionalDetailsModal = false;
   }
 
-  onProfileComplete(userType: UserType): void {
+  onProfileComplete(choice: OnboardingProfileChoice): void {
     this.closeAdditionalDetailsModal();
 
+    const userType = choice.userType;
+
     if (userType === UserType.Regular) {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    if (!choice.addPublicPage) {
       this.router.navigate(['/']);
       return;
     }
@@ -702,10 +710,15 @@ export class LayoutComponent implements OnInit, AfterViewInit {
         this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
         break;
       case UserType.Teacher:
-        this.quickAddAssistantService.requestOpen('index');
+        this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
         break;
       case UserType.ServiceProvider:
-        this.quickAddAssistantService.requestOpen('index');
+        this.router.navigate(['/service-provider/create'], {
+          queryParams: {
+            from: 'registration',
+            ...(choice.serviceProviderCategoryId ? { categoryId: choice.serviceProviderCategoryId } : {})
+          }
+        });
         break;
       default:
         this.router.navigate(['/subscription/select'], { queryParams: { from: 'registration' } });

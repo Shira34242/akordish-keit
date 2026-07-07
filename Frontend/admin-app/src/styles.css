@@ -245,6 +245,21 @@ app-root {
 .article-rich-content iframe[width="70"] { width: 70%; }
 .article-rich-content iframe[width="85"] { width: 85%; }
 
+.article-rich-content .article-video-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.article-rich-content .article-video-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.article-rich-content .article-video-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
 .article-rich-content .article-action {
   margin: var(--space-xl) 0;
   text-align: right;

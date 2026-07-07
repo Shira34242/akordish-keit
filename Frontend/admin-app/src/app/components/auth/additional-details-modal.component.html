@@ -1,116 +1,123 @@
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
 
-    <button class="close-btn" (click)="onClose()">✕</button>
+    <button class="close-btn" type="button" (click)="onClose()" aria-label="סגירה">×</button>
+
+    <div class="progress-track" aria-hidden="true">
+      <span class="progress-fill" [style.width.%]="progressPercent"></span>
+    </div>
+
+    <header class="modal-header" *ngIf="currentStep === 'name'">
+      <h2>ברוכים הבאים לאקורדישקייט</h2>
+      <p class="eyebrow">שאלון קצר להתאמת החוויה באתר</p>
+    </header>
 
     <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-    <ng-container *ngIf="currentStep === 'instrument'">
-      <div class="modal-header">
-        <h2>{{ 'details.step1_title' | translate }}</h2>
-        <p class="subtitle">{{ 'details.step1_sub' | translate }}</p>
+    <section class="step-panel" *ngIf="currentStep === 'name'">
+      <h3>מה השם שלך?</h3>
+      <input
+        class="name-input"
+        type="text"
+        name="profileName"
+        [(ngModel)]="profileName"
+        placeholder="השם שלך"
+        autocomplete="name"
+      />
+    </section>
+
+    <section class="step-panel" *ngIf="currentStep === 'instrument'">
+      <h3>מנגן/ת על משהו?</h3>
+
+      <div class="choice-grid instrument-grid">
+        <button
+          type="button"
+          class="choice-tile"
+          *ngFor="let instrument of instrumentOptions"
+          [class.selected]="isInstrumentSelected(instrument.id)"
+          (click)="toggleInstrument(instrument.id)">
+          {{ instrument.label }}
+        </button>
       </div>
 
-      <div class="instrument-cards">
-        <div
-          class="instrument-card has-image piano"
-          [class.selected]="selectedInstrument === 'piano'"
-          (click)="selectedInstrument = 'piano'"
-        >
-          <span class="card-label">{{ 'details.piano' | translate }}</span>
-        </div>
-        <div
-          class="instrument-card has-image guitar"
-          [class.selected]="selectedInstrument === 'guitar'"
-          (click)="selectedInstrument = 'guitar'"
-        >
-          <span class="card-label">{{ 'details.guitar' | translate }}</span>
-        </div>
-        <div
-          class="instrument-card"
-          [class.selected]="selectedInstrument === 'other'"
-          (click)="selectedInstrument = 'other'"
-        >
-          <span class="card-label">{{ 'details.other_instrument' | translate }}</span>
-        </div>
-        <div
-          class="instrument-card"
-          [class.selected]="selectedInstrument === 'none'"
-          (click)="selectedInstrument = 'none'"
-        >
-          <span class="card-label">{{ 'details.no_instrument' | translate }}</span>
-        </div>
+      <div class="level-row" aria-label="רמת נגינה">
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 1" (click)="selectedLevel = 1">מתחיל/ה</button>
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 2" (click)="selectedLevel = 2">מתקדם/ת</button>
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 3" (click)="selectedLevel = 3">מקצועי/ת</button>
       </div>
+    </section>
 
-      <div class="level-pills">
-        <button class="level-pill" [class.selected]="selectedLevel === 'מתחיל/ה'" (click)="selectedLevel = 'מתחיל/ה'">{{ 'details.beginner' | translate }}</button>
-        <button class="level-pill" [class.selected]="selectedLevel === 'מתקדם/ת'" (click)="selectedLevel = 'מתקדם/ת'">{{ 'details.intermediate' | translate }}</button>
-        <button class="level-pill" [class.selected]="selectedLevel === 'מקצועי/ת'" (click)="selectedLevel = 'מקצועי/ת'">{{ 'details.professional' | translate }}</button>
-      </div>
+    <section class="step-panel" *ngIf="currentStep === 'userType'">
+      <h3>מה הכי מתאים לך?</h3>
 
-      <button class="continue-btn" (click)="onContinue()">{{ 'details.continue' | translate }}</button>
-
-      <div class="dots">
-        <span class="dot"></span>
-        <span class="dot active"></span>
-        <span class="dot"></span>
-      </div>
-
-      <a class="skip-link" (click)="onClose()">{{ 'details.skip' | translate }}</a>
-    </ng-container>
-
-    <ng-container *ngIf="currentStep === 'userType'">
-      <div class="modal-header">
-        <h2>{{ 'details.step2_title' | translate }}</h2>
-        <p class="subtitle">{{ 'details.step2_sub' | translate }}</p>
-      </div>
-
-      <div class="user-type-cards">
-        <div
-          class="user-type-card"
+      <div class="choice-grid user-type-grid">
+        <button
+          type="button"
+          class="choice-tile"
           [class.selected]="selectedUserType === UserType.Regular"
-          (click)="selectedUserType = UserType.Regular"
-        >
-          <span class="type-title">{{ 'details.regular_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.regular_desc' | translate }}</span>
-        </div>
-        <div
-          class="user-type-card"
-          [class.selected]="selectedUserType === UserType.ServiceProvider"
-          (click)="selectedUserType = UserType.ServiceProvider"
-        >
-          <span class="type-title">{{ 'details.professional_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.professional_desc' | translate }}</span>
-        </div>
-        <div
-          class="user-type-card"
+          (click)="selectUserType(UserType.Regular)">
+          משתמש רגיל
+        </button>
+        <button
+          type="button"
+          class="choice-tile"
           [class.selected]="selectedUserType === UserType.Teacher"
-          (click)="selectedUserType = UserType.Teacher"
-        >
-          <span class="type-title">{{ 'details.teacher_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.teacher_desc' | translate }}</span>
-        </div>
-        <div
-          class="user-type-card"
+          (click)="selectUserType(UserType.Teacher)">
+          מורה לנגינה
+        </button>
+        <button
+          type="button"
+          class="choice-tile"
           [class.selected]="selectedUserType === UserType.Artist"
-          (click)="selectedUserType = UserType.Artist"
-        >
-          <span class="type-title">{{ 'details.artist_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.artist_desc' | translate }}</span>
-        </div>
+          (click)="selectUserType(UserType.Artist)">
+          אמן
+        </button>
+        <button
+          type="button"
+          class="choice-tile"
+          *ngFor="let category of serviceProviderCategories; trackBy: trackByCategory"
+          [class.selected]="selectedServiceProviderCategoryId === category.id"
+          (click)="selectUserType(UserType.ServiceProvider, category.id)">
+          {{ category.name }}
+        </button>
+        <button
+          type="button"
+          class="choice-tile"
+          [class.selected]="isGeneralServiceSelected()"
+          (click)="selectUserType(UserType.ServiceProvider)">
+          אחר
+        </button>
       </div>
 
-      <button class="continue-btn" (click)="onFinish()" [disabled]="loading">
-        <span *ngIf="!loading">{{ 'details.continue' | translate }}</span>
+      <p class="category-state" *ngIf="categoriesLoading">טוען קטגוריות...</p>
+      <p class="category-state" *ngIf="!categoriesLoading && categoriesError">{{ categoriesError }}</p>
+    </section>
+
+    <section class="step-panel public-page-panel" *ngIf="currentStep === 'publicPage'">
+      <h3>{{ publicPageTitle }}</h3>
+      <p>{{ publicPageText }}</p>
+
+      <div class="public-page-actions">
+        <button type="button" class="add-page-btn" (click)="onAddPublicPage()" [disabled]="loading">
+          <span class="plus-mark">+</span>
+          <span *ngIf="!loading">הוספת דף</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+        <button type="button" class="continue-site-btn" (click)="onSkipPublicPage()" [disabled]="loading">להמשיך לאתר</button>
+      </div>
+    </section>
+
+    <footer class="step-actions" *ngIf="currentStep !== 'publicPage'">
+      <button type="button" class="skip-link" (click)="skipStep()">דלג</button>
+      <button type="button" class="arrow-btn" (click)="goNext()" [disabled]="loading" aria-label="המשך">
+        <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
         <span *ngIf="loading" class="spinner"></span>
       </button>
-
-      <div class="dots">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot active"></span>
-      </div>
-    </ng-container>
+    </footer>
 
   </div>
 </div>

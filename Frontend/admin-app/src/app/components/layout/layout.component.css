@@ -117,6 +117,27 @@
     font-weight: 700;
 }
 
+.site-nav-group .nav-parent {
+    gap: var(--space-xs);
+    direction: rtl;
+    padding-inline-start: var(--space-xs);
+}
+
+.nav-expand-icon {
+    color: #404040;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1;
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+.site-nav-group:hover .nav-expand-icon,
+.desktop-nav:hover .site-nav-group .nav-expand-icon,
+.mobile-nav-scroll:hover .site-nav-group .nav-expand-icon {
+    display: none;
+}
+
 .site-nav-submenu {
     display: inline-flex;
     align-items: center;

@@ -1,0 +1,175 @@
+.profile-crop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: var(--space-lg, 20px);
+}
+
+.profile-crop-dialog {
+  width: min(100%, 380px);
+  border-radius: 24px;
+  background: #ffffff;
+  color: #000000;
+  padding: var(--space-lg, 20px);
+  font-family: 'Open Sans', sans-serif;
+}
+
+.profile-crop-head,
+.profile-crop-actions,
+.profile-crop-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md, 10px);
+}
+
+.profile-crop-head {
+  justify-content: space-between;
+  margin-bottom: var(--space-base, 14px);
+}
+
+.profile-crop-head h2 {
+  margin: 0;
+  font-size: var(--font-lg, 18px);
+  font-weight: 800;
+  line-height: var(--lh-heading, 1.2);
+}
+
+.profile-crop-icon-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.profile-crop-icon-btn:hover:not(:disabled) {
+  background: #ddff53;
+}
+
+.profile-crop-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.profile-crop-icon-btn .material-icons {
+  font-size: 20px;
+}
+
+.profile-crop-stage {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #F2F2F2;
+  touch-action: none;
+  cursor: grab;
+}
+
+.profile-crop-stage:active {
+  cursor: grabbing;
+}
+
+.profile-crop-stage--error {
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+
+.profile-crop-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  max-height: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.profile-crop-mask {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #ddff53;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.profile-crop-error {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: var(--space-base, 14px);
+  text-align: center;
+  font-size: var(--font-sm, 14px);
+  line-height: var(--lh-small, 1.5);
+}
+
+.profile-crop-tools {
+  margin-top: var(--space-base, 14px);
+}
+
+.profile-crop-tools input[type='range'] {
+  width: 100%;
+  accent-color: #000000;
+}
+
+.profile-crop-actions {
+  justify-content: flex-end;
+  margin-top: var(--space-lg, 20px);
+}
+
+.profile-crop-primary,
+.profile-crop-secondary {
+  border: none;
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 0 var(--space-base, 14px);
+  font: inherit;
+  font-size: var(--font-sm, 14px);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-crop-primary {
+  background: #000000;
+  color: #ddff53;
+}
+
+.profile-crop-primary:hover:not(:disabled) {
+  opacity: 0.82;
+}
+
+.profile-crop-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.profile-crop-secondary {
+  background: #F2F2F2;
+  color: #000000;
+}
+
+.profile-crop-secondary:hover {
+  background: #ddff53;
+}
+
+@media (max-width: 420px) {
+  .profile-crop-dialog {
+    padding: var(--space-base, 14px);
+  }
+
+  .profile-crop-stage {
+    width: min(280px, calc(100vw - 68px));
+    height: min(280px, calc(100vw - 68px));
+  }
+}

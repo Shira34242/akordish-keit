@@ -113,7 +113,7 @@ namespace AkordishKeit.Controllers
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)
                     .ThenInclude(ui => ui.Instrument)
-                .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
+                .FirstOrDefaultAsync(u => u.GoogleId == googleUser.Sub || u.Email == googleUser.Email);
 
             bool isNewGoogleUser = user == null;
             if (isNewGoogleUser && !request.TermsApproved)
@@ -126,6 +126,15 @@ namespace AkordishKeit.Controllers
             }
             // שמירת תמונת פרופיל ב-Azure Blob (במקום URL ישיר מ-Google שעלול להשתנות)
             // מבוצע כשאין תמונה שמורה, או כשהתמונה הקיימת היא URL ישיר מ-Google
+            if (isNewGoogleUser && !request.MarketingConsent)
+            {
+                return BadRequest(new
+                {
+                    code = "MARKETING_CONSENT_REQUIRED",
+                    message = "יש לאשר קבלת דיוור כדי להירשם"
+                });
+            }
+
             bool needsImageUpload = user == null
                 || string.IsNullOrEmpty(user.ProfileImageUrl)
                 || user.ProfileImageUrl.Contains("lh3.googleusercontent.com");
@@ -379,6 +388,11 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "יש לאשר את התקנון ומדיניות הפרטיות כדי להירשם" });
             }
 
+            if (!request.MarketingConsent)
+            {
+                return BadRequest(new { message = "יש לאשר קבלת דיוור כדי להירשם" });
+            }
+
             // 1. Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             {
@@ -513,6 +527,18 @@ namespace AkordishKeit.Controllers
             }
 
             // 1. Multi-instrument selection — replace existing
+            if (!string.IsNullOrWhiteSpace(request.Username))
+            {
+                var username = request.Username.Trim();
+                var usernameTaken = await _context.Users.AnyAsync(u => u.Id != user.Id && u.Username == username);
+                if (usernameTaken)
+                {
+                    return BadRequest(new { message = "השם הזה כבר קיים באתר. אפשר לבחור שם אחר או לדלג." });
+                }
+
+                user.Username = username;
+            }
+
             if (request.InstrumentIds != null)
             {
                 // Validate that all instrument IDs exist
@@ -725,7 +751,6 @@ namespace AkordishKeit.Controllers
                 profileReminderDismissCount = user.ProfileReminderDismissCount
             });
         }
-
         [HttpPost("request-password-reset")]
         public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetRequest request)
         {

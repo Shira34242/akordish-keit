@@ -31,6 +31,7 @@ public class MusicServiceProviderDto
     public string? Email { get; set; }
     public string? WebsiteUrl { get; set; }
     public string? BannerImageUrl { get; set; }
+    public int BannerBlur { get; set; }
     public string? VideoUrl { get; set; }
     public bool IsFeatured { get; set; }
     public int Status { get; set; }
@@ -199,6 +200,9 @@ public class CreateMusicServiceProviderDto
     [Url]
     public string? BannerImageUrl { get; set; }
 
+    [Range(0, 20)]
+    public int BannerBlur { get; set; }
+
     [StringLength(500)]
     public string? VideoUrl { get; set; }
 
@@ -352,6 +356,9 @@ public class UpdateMusicServiceProviderDto
     [StringLength(500)]
     [Url]
     public string? BannerImageUrl { get; set; }
+
+    [Range(0, 20)]
+    public int BannerBlur { get; set; }
 
     [StringLength(500)]
     public string? VideoUrl { get; set; }

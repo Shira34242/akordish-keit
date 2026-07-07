@@ -39,6 +39,14 @@
               <span class="material-icons">{{ profileImageUrl ? 'edit' : 'add_photo_alternate' }}</span>
               <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
             </button>
+            <button
+              *ngIf="profileImageUrl && !profileImageUploading"
+              type="button"
+              class="profile-focus-edit"
+              (click)="openProfileImageCropper()"
+              aria-label="עריכת מיקוד תמונת פרופיל">
+              <span class="material-icons">tune</span>
+            </button>
             <input #profileImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onProfileImageSelected($event)" />
             <div class="upload-progress" *ngIf="profileImageUploading">
               <div><span [style.width.%]="profileImageUploadProgress"></span></div>
@@ -46,11 +54,25 @@
               <button type="button" (click)="cancelProfileImageUpload()">ביטול</button>
             </div>
 
+            <app-profile-image-cropper
+              *ngIf="profileCropFile || profileCropUrl"
+              [sourceFile]="profileCropFile"
+              [sourceUrl]="profileCropUrl"
+              [fileName]="profileCropFileName"
+              (cropped)="uploadCroppedProfileImage($event)"
+              (cancel)="cancelProfileImageCrop()">
+            </app-profile-image-cropper>
+
             <button type="button" class="banner-upload" [class.has-image]="bannerImageUrl" (click)="bannerImageInput.click()" aria-label="העלאת תמונת באנר">
               <img *ngIf="bannerImageUrl" [src]="bannerImageUrl" alt="תמונת באנר" />
               <span class="material-icons">{{ bannerImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
               <strong>{{ bannerImageUploading ? 'מעלה באנר...' : 'תמונת באנר (רשות)' }}</strong>
             </button>
+            <label class="banner-blur-control">
+              <span>טשטוש באנר</span>
+              <input type="range" min="0" max="20" step="1" [(ngModel)]="bannerBlur" name="bannerBlur" />
+              <strong>{{ normalizedBannerBlur(bannerBlur) }}</strong>
+            </label>
             <input #bannerImageInput type="file" accept="image/*,.heic,.heif,.jxl" class="hidden-file-input" (change)="onBannerImageSelected($event)" />
             <div class="upload-progress" *ngIf="bannerImageUploading">
               <div><span [style.width.%]="bannerImageUploadProgress"></span></div>

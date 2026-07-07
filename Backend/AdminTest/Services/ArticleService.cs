@@ -92,8 +92,44 @@ public class ArticleService : IArticleService
             sanitizer.AllowedCssProperties.Add(property);
         }
 
-        var sanitized = sanitizer.Sanitize(content);
+        var sanitized = FilterArticleIframes(sanitizer.Sanitize(content));
         return FilterArticleTemplateClasses(sanitized);
+    }
+
+    private static string FilterArticleIframes(string html)
+    {
+        return Regex.Replace(
+            html,
+            @"<iframe\b(?<attrs>[^>]*)>\s*</iframe>",
+            match =>
+            {
+                var srcMatch = Regex.Match(
+                    match.Groups["attrs"].Value,
+                    "\\ssrc\\s*=\\s*([\"'])(?<src>.*?)\\1",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+                return IsAllowedArticleIframeSrc(srcMatch.Groups["src"].Value)
+                    ? match.Value
+                    : string.Empty;
+            },
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    }
+
+    private static bool IsAllowedArticleIframeSrc(string? src)
+    {
+        if (!Uri.TryCreate(src, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        if (uri.Scheme != Uri.UriSchemeHttps)
+        {
+            return false;
+        }
+
+        var host = uri.Host.ToLowerInvariant();
+        return (host is "www.youtube.com" or "youtube.com" or "www.youtube-nocookie.com" or "youtube-nocookie.com")
+            && uri.AbsolutePath.StartsWith("/embed/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string FilterArticleTemplateClasses(string html)
@@ -107,6 +143,9 @@ public class ArticleService : IArticleService
             "article-media-align-left",
             "article-inline-image",
             "article-video-frame",
+            "article-video-align-right",
+            "article-video-align-center",
+            "article-video-align-left",
             "article-action",
             "article-button",
             "article-button-primary",

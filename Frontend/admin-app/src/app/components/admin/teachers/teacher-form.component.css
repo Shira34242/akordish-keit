@@ -162,6 +162,29 @@
   margin-top: var(--space-xs);
 }
 
+.range-field {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 18px;
+  background: #ffffff;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.range-field input {
+  min-height: 28px;
+  padding: 0;
+  accent-color: #000000;
+}
+
+.range-field strong {
+  min-width: 2ch;
+  text-align: center;
+}
+
 /* ── Checkbox ── */
 .checkbox-label {
   display: flex;
@@ -658,7 +681,8 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .form-row { grid-template-columns: 1fr; }
+  .form-row,
+  .range-field { grid-template-columns: 1fr; }
   .form-header { flex-direction: column; align-items: flex-start; }
   .form-actions { flex-direction: column-reverse; }
   .btn-submit, .btn-cancel { width: 100%; justify-content: center; }
