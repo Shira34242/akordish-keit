@@ -79,6 +79,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
 
   searchQuery = '';
+  readonly searchPlaceholders = [
+    'חפש אקורדים לשירים',
+    'חפש חדשות המוזיקה',
+    'חפש מורים למוזיקה',
+    'חפש נותני שירות למוזיקה',
+    'חפש פודקאסטים',
+    'חפש הופעות ואירועים'
+  ];
+  currentSearchPlaceholderIndex = 0;
+  isSearchPlaceholderSwitching = false;
   searchResults: SearchResults | null = null;
   lyricsMatches: SearchItem[] = [];
   isSearchingDeep = false;
@@ -152,6 +162,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private chordsContentStarted = false;
   private nextHomeStage = 0;
   private homeStageTimer?: number;
+  private searchPlaceholderTimer?: number;
+  private searchPlaceholderFadeTimer?: number;
 
   constructor(
     private router: Router,
@@ -216,6 +228,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.initSearchPlaceholderRotation();
     this.loadContent();
   }
 
@@ -235,7 +248,30 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
     if (this.heroResizeHandler) window.removeEventListener('resize', this.heroResizeHandler);
     if (this.homeStageTimer) window.clearTimeout(this.homeStageTimer);
+    if (this.searchPlaceholderTimer) window.clearInterval(this.searchPlaceholderTimer);
+    if (this.searchPlaceholderFadeTimer) window.clearTimeout(this.searchPlaceholderFadeTimer);
     this.viralObserver?.disconnect();
+  }
+
+  get currentSearchPlaceholder(): string {
+    return this.searchPlaceholders[this.currentSearchPlaceholderIndex] || this.searchPlaceholders[0];
+  }
+
+  private initSearchPlaceholderRotation(): void {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    this.ngZone.runOutsideAngular(() => {
+      this.searchPlaceholderTimer = window.setInterval(() => {
+        this.ngZone.run(() => {
+          this.isSearchPlaceholderSwitching = true;
+          if (this.searchPlaceholderFadeTimer) window.clearTimeout(this.searchPlaceholderFadeTimer);
+          this.searchPlaceholderFadeTimer = window.setTimeout(() => {
+            this.currentSearchPlaceholderIndex = (this.currentSearchPlaceholderIndex + 1) % this.searchPlaceholders.length;
+            this.isSearchPlaceholderSwitching = false;
+          }, 160);
+        });
+      }, 2400);
+    });
   }
 
   private initHeroScrollListeners(): void {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService, User } from './auth.service';
 
-export type ReminderKind = 'profile' | 'public-page';
+export type ReminderKind = 'profile';
 
 export interface ReminderRequest {
   kind: ReminderKind;
@@ -12,7 +12,6 @@ export interface ReminderRequest {
 const DAYS_BEFORE_FIRST_REMINDER = 5;
 const COOLDOWN_DAYS = 14;
 const MAX_DISMISSALS = 3;
-const PUBLIC_PAGE_DAYS_BEFORE_FIRST_REMINDER = 5;
 
 /**
  * שירות תזכורת רך — בודק האם להציג חלון "עוד כמה פרטים להשלמת החוויה באתר".
@@ -60,9 +59,6 @@ export class ProfileReminderService {
   }
 
   private computeKindToShow(user: User): ReminderKind | null {
-    const publicPageKind = this.computePublicPageKind(user);
-    if (publicPageKind) return publicPageKind;
-
     if ((user.profileReminderDismissCount ?? 0) >= MAX_DISMISSALS) return null;
 
     const daysSinceRegister = this.daysSince(user.createdAt);
@@ -78,20 +74,6 @@ export class ProfileReminderService {
     }
 
     return null;
-  }
-
-  private computePublicPageKind(user: User): ReminderKind | null {
-    if (!user.pendingPublicPageType || user.hasProfessionalProfile) return null;
-    if ((user.publicPageReminderDismissCount ?? 0) >= MAX_DISMISSALS) return null;
-
-    const daysSinceLastReminder = this.daysSince(user.lastPublicPageReminderAt);
-    if (daysSinceLastReminder === null) return null;
-
-    const daysRequired = (user.publicPageReminderDismissCount ?? 0) > 0
-      ? COOLDOWN_DAYS
-      : PUBLIC_PAGE_DAYS_BEFORE_FIRST_REMINDER;
-
-    return daysSinceLastReminder >= daysRequired ? 'public-page' : null;
   }
 
   private daysSince(isoDate: string | null | undefined): number | null {

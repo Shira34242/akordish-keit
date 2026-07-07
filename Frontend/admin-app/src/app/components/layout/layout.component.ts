@@ -725,31 +725,6 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onSoftReminderSaved(): void {
-    const user = this.softReminderUser;
-    const kind = this.softReminderKind;
-    this.closeSoftReminderModal();
-
-    if (kind !== 'public-page' || !user?.pendingPublicPageType) return;
-
-    switch (user.pendingPublicPageType) {
-      case UserType.Artist:
-        this.router.navigate(['/artist/create'], { queryParams: { from: 'reminder' } });
-        break;
-      case UserType.Teacher:
-        this.router.navigate(['/teacher/create'], { queryParams: { from: 'reminder' } });
-        break;
-      case UserType.ServiceProvider:
-        this.router.navigate(['/service-provider/create'], {
-          queryParams: {
-            from: 'reminder',
-            ...(user.pendingPublicPageCategoryId ? { categoryId: user.pendingPublicPageCategoryId } : {})
-          }
-        });
-        break;
-    }
-  }
-
   onForgotPassword(): void {
     this.closeAuthModal();
     this.showForgotPasswordModal = true;

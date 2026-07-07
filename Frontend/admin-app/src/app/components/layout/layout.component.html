@@ -443,7 +443,7 @@
     *ngIf="showSoftReminderModal"
     [kind]="softReminderKind"
     [user]="softReminderUser"
-    (saved)="onSoftReminderSaved()"
+    (saved)="closeSoftReminderModal()"
     (dismissed)="closeSoftReminderModal()">
 </app-profile-soft-reminder-modal>
 }

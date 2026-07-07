@@ -244,6 +244,16 @@
   color: rgba(0, 0, 0, 0.62);
 }
 
+.search-placeholder-term {
+  display: inline-block;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.search-placeholder-term.is-switching {
+  opacity: 0;
+  transform: translateY(0.35rem);
+}
+
 .search-input {
   flex: 1;
   border: none;

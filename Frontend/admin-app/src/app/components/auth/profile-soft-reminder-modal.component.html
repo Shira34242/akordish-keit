@@ -6,16 +6,9 @@
 
     <div class="soft-reminder-header">
       <h2>{{ title }}</h2>
-      <p class="soft-reminder-subtitle" *ngIf="kind === 'public-page'">{{ publicPageText }}</p>
     </div>
 
-    <div class="public-page-reminder" *ngIf="kind === 'public-page'">
-      <button type="button" class="btn-primary" (click)="onAddPublicPage()">להוסיף עכשיו</button>
-      <button type="button" class="btn-secondary" (click)="onDismiss()">אזכיר לי אחר כך</button>
-      <button type="button" class="btn-secondary" (click)="onDismissPermanently()">לא להציג שוב</button>
-    </div>
-
-    <form class="soft-reminder-form" *ngIf="kind === 'profile'" (ngSubmit)="onSave()">
+    <form class="soft-reminder-form" (ngSubmit)="onSave()">
       <label>
         <span>טלפון</span>
         <input type="tel" name="phone" [(ngModel)]="phone" placeholder="מספר טלפון">

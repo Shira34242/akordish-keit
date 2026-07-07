@@ -30,8 +30,10 @@
             aria-label="חיפוש">
             <span class="material-icons search-icon-mat" aria-hidden="true">search</span>
           </button>
-          <div class="search-rich-placeholder" *ngIf="!searchQuery">
-            <strong>אקורדים לשירים</strong>, <strong>חדשות המוזיקה</strong>, מורים ונותני שירות ועוד...
+          <div class="search-rich-placeholder" *ngIf="!searchQuery" aria-hidden="true">
+            <strong class="search-placeholder-term" [class.is-switching]="isSearchPlaceholderSwitching">
+              {{ currentSearchPlaceholder }}
+            </strong>
           </div>
           <input
             type="text"

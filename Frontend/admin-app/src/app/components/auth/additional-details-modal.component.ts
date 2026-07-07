@@ -98,23 +98,6 @@ export class AdditionalDetailsModalComponent {
     this.authService.completeProfile(payload).subscribe({
       next: () => {
         const userType = this.selectedUserType ?? UserType.Regular;
-        if (!addPublicPage && userType !== UserType.Regular) {
-          this.authService.deferPublicPageReminder({
-            userType,
-            categoryId: this.selectedServiceProviderCategoryId ?? null
-          }).subscribe({
-            next: () => {
-              this.loading = false;
-              this.complete.emit({ userType, addPublicPage, serviceProviderCategoryId: this.selectedServiceProviderCategoryId });
-            },
-            error: () => {
-              this.loading = false;
-              this.complete.emit({ userType, addPublicPage, serviceProviderCategoryId: this.selectedServiceProviderCategoryId });
-            }
-          });
-          return;
-        }
-
         this.loading = false;
         this.complete.emit({ userType, addPublicPage, serviceProviderCategoryId: this.selectedServiceProviderCategoryId });
       },

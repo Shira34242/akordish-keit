@@ -99,16 +99,6 @@ namespace AkordishKeit.Models.DTOs
         public int? BirthYear { get; set; }
     }
 
-    public class PublicPageReminderRequest
-    {
-        [StringLength(40)]
-        public string? UserType { get; set; }
-
-        public int? CategoryId { get; set; }
-
-        public bool Permanently { get; set; }
-    }
-
     // ═══════════════════════════════════════════════════════════
     //                    Password Reset
     // ═══════════════════════════════════════════════════════════
@@ -221,18 +211,6 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("profileReminderDismissCount")]
         public int ProfileReminderDismissCount { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("pendingPublicPageType")]
-        public string? PendingPublicPageType { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("pendingPublicPageCategoryId")]
-        public int? PendingPublicPageCategoryId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("lastPublicPageReminderAt")]
-        public DateTime? LastPublicPageReminderAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("publicPageReminderDismissCount")]
-        public int PublicPageReminderDismissCount { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("visitCount")]
         public int VisitCount { get; set; }

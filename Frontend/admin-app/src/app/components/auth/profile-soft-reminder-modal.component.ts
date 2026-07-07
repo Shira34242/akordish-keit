@@ -77,15 +77,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   }
 
   get title(): string {
-    if (this.kind === 'public-page') {
-      return 'רוצה להשלים את הדף הציבורי שלך?';
-    }
-
     return this.langService.translate('profile_reminder.unified_title');
-  }
-
-  get publicPageText(): string {
-    return 'אפשר להוסיף עכשיו את הכרטיס הציבורי שלך באתר, כדי שאנשים יוכלו למצוא אותך, להבין מה אתה עושה וליצור איתך קשר. את הדף תוכל לנהל ולעדכן בעצמך.';
   }
 
   get filteredCities(): City[] {
@@ -151,29 +143,10 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   }
 
   onDismiss(): void {
-    if (this.kind === 'public-page') {
-      this.authService.dismissPublicPageReminder().subscribe({
-        next: () => this.dismissed.emit(),
-        error: () => this.dismissed.emit()
-      });
-      return;
-    }
-
     this.authService.dismissProfileReminder().subscribe({
       next: () => this.dismissed.emit(),
       error: () => this.dismissed.emit()
     });
-  }
-
-  onDismissPermanently(): void {
-    this.authService.dismissPublicPageReminder({ permanently: true }).subscribe({
-      next: () => this.dismissed.emit(),
-      error: () => this.dismissed.emit()
-    });
-  }
-
-  onAddPublicPage(): void {
-    this.saved.emit();
   }
 
   onBackdropClick(event: MouseEvent): void {

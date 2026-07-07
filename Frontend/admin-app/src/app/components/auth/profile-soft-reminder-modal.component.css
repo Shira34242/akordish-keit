@@ -201,13 +201,6 @@
   padding: var(--space-sm) var(--space-lg);
 }
 
-.public-page-reminder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-base);
-}
-
 /* Mobile */
 @media (max-width: 600px) {
   .soft-reminder-modal {

@@ -71,14 +71,6 @@ public class User
     /// <summary>כמה פעמים המשתמש דחה תזכורת. אחרי 3 — לא נציג שוב</summary>
     public int ProfileReminderDismissCount { get; set; } = 0;
 
-    public string? PendingPublicPageType { get; set; }
-
-    public int? PendingPublicPageCategoryId { get; set; }
-
-    public DateTime? LastPublicPageReminderAt { get; set; }
-
-    public int PublicPageReminderDismissCount { get; set; } = 0;
-
     /// <summary>ספירת ביקורים (login) — משמש לקביעת מתי להציג תזכורת</summary>
     public int VisitCount { get; set; } = 0;
 
