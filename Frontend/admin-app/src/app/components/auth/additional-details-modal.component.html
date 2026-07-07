@@ -61,51 +61,90 @@
 
     <ng-container *ngIf="currentStep === 'userType'">
       <div class="modal-header">
-        <h2>{{ 'details.step2_title' | translate }}</h2>
-        <p class="subtitle">{{ 'details.step2_sub' | translate }}</p>
+        <h2>מה הכי מתאים לך?</h2>
+        <p class="subtitle">זה עוזר לנו להתאים לך את החוויה באתר.</p>
       </div>
 
       <div class="user-type-cards">
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.Regular"
-          (click)="selectedUserType = UserType.Regular"
+          (click)="selectUserType(UserType.Regular)"
         >
-          <span class="type-title">{{ 'details.regular_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.regular_desc' | translate }}</span>
-        </div>
-        <div
-          class="user-type-card"
-          [class.selected]="selectedUserType === UserType.ServiceProvider"
-          (click)="selectedUserType = UserType.ServiceProvider"
-        >
-          <span class="type-title">{{ 'details.professional_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.professional_desc' | translate }}</span>
-        </div>
-        <div
-          class="user-type-card"
-          [class.selected]="selectedUserType === UserType.Teacher"
-          (click)="selectedUserType = UserType.Teacher"
-        >
-          <span class="type-title">{{ 'details.teacher_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.teacher_desc' | translate }}</span>
+          <span class="type-title">משתמש רגיל</span>
         </div>
         <div
           class="user-type-card"
           [class.selected]="selectedUserType === UserType.Artist"
-          (click)="selectedUserType = UserType.Artist"
+          (click)="selectUserType(UserType.Artist)"
         >
-          <span class="type-title">{{ 'details.artist_user' | translate }}</span>
-          <span class="type-desc">{{ 'details.artist_desc' | translate }}</span>
+          <span class="type-title">אמן</span>
+        </div>
+        <div
+          class="user-type-card"
+          [class.selected]="selectedUserType === UserType.Teacher"
+          (click)="selectUserType(UserType.Teacher)"
+        >
+          <span class="type-title">מורה</span>
         </div>
       </div>
 
-      <button class="continue-btn" (click)="onFinish()" [disabled]="loading">
+      <div class="service-category-block">
+        <p class="service-category-title">נותן שירות</p>
+        <div class="service-category-list">
+          <button
+            type="button"
+            class="service-category-chip"
+            *ngFor="let category of serviceProviderCategories; trackBy: trackByCategory"
+            [class.selected]="selectedServiceProviderCategoryId === category.id"
+            (click)="selectUserType(UserType.ServiceProvider, category.id)">
+            {{ category.name }}
+          </button>
+
+          <button
+            type="button"
+            class="service-category-chip"
+            [class.selected]="isGeneralServiceSelected()"
+            (click)="selectUserType(UserType.ServiceProvider)">
+            אחר
+          </button>
+        </div>
+
+        <p class="category-state" *ngIf="categoriesLoading">טוען קטגוריות...</p>
+        <p class="category-state" *ngIf="!categoriesLoading && categoriesError">{{ categoriesError }}</p>
+      </div>
+
+      <button class="continue-btn" (click)="onUserTypeContinue()" [disabled]="loading">
         <span *ngIf="!loading">{{ 'details.continue' | translate }}</span>
         <span *ngIf="loading" class="spinner"></span>
       </button>
 
       <div class="dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="currentStep === 'publicPage'">
+      <div class="modal-header">
+        <h2>{{ publicPageTitle }}</h2>
+        <p class="subtitle public-page-copy">{{ publicPageText }}</p>
+        <p class="subtitle public-page-note">אפשר גם להוסיף את הדף אחר כך.</p>
+      </div>
+
+      <div class="public-page-actions">
+        <button class="continue-btn" (click)="onAddPublicPage()" [disabled]="loading">
+          <span *ngIf="!loading">כן, להוסיף עכשיו</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+        <button type="button" class="light-btn" (click)="onSkipPublicPage()" [disabled]="loading">
+          לא עכשיו
+        </button>
+      </div>
+
+      <div class="dots">
+        <span class="dot"></span>
         <span class="dot"></span>
         <span class="dot"></span>
         <span class="dot active"></span>

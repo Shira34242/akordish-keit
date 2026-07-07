@@ -147,8 +147,7 @@
           class="reaction-button"
           [class.selected]="selectedReaction === reaction.id"
           (click)="reactToArticle(reaction.id)"
-          [attr.aria-label]="reaction.label"
-          [attr.title]="reaction.label">
+          [attr.aria-label]="reaction.label">
           <img class="reaction-icon" [src]="reaction.icon" alt="" aria-hidden="true">
           <span class="reaction-count" *ngIf="reactionCounts[reaction.id]">{{ reactionCounts[reaction.id] }}</span>
         </button>

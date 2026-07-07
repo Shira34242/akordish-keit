@@ -174,8 +174,8 @@
   height: 48px;
   border: none;
   border-radius: 999px;
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-base);
   font-weight: 800;
@@ -190,14 +190,22 @@
 }
 
 .btn-secondary {
-  background: transparent;
+  background: #F2F2F2;
   border: none;
   color: #000;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-sm);
   cursor: pointer;
-  text-decoration: underline;
-  padding: var(--space-xs) var(--space-md);
+  text-decoration: none;
+  border-radius: 999px;
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.public-page-reminder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-base);
 }
 
 /* Mobile */

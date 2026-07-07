@@ -18,7 +18,7 @@ import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
 import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
-import { attachArticleContentImageFallbacks, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
+import { attachArticleContentImageFallbacks, attachArticleContentMentionRouting, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
 import { artistRoute } from '../../../utils/slug';
 
 @Component({
@@ -295,7 +295,10 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private handleLoadedArticle(article: Article): void {
     this.article = article;
     this.articleContentHtml = this.sanitizer.bypassSecurityTrustHtml(prepareArticleContentHtml(article.content));
-    setTimeout(() => attachArticleContentImageFallbacks(this.host.nativeElement));
+    setTimeout(() => {
+      attachArticleContentImageFallbacks(this.host.nativeElement);
+      attachArticleContentMentionRouting(this.host.nativeElement, url => this.router.navigateByUrl(url));
+    });
     this.selectedReaction = null;
     this.reactionCounts = {};
     this.contentPageService.setCurrentArticle(article.id);

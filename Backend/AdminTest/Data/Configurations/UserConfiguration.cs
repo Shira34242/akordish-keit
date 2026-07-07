@@ -49,6 +49,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .IsRequired()
                .HasDefaultValue(0);
 
+        builder.Property(e => e.PendingPublicPageType)
+               .HasMaxLength(40);
+
+        builder.Property(e => e.PublicPageReminderDismissCount)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.VisitCount)
                .IsRequired()
                .HasDefaultValue(0);

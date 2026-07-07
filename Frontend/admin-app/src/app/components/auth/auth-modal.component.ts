@@ -96,7 +96,7 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   get googleRequiresTermsApproval(): boolean {
-    return !this.isLogin || this.googleTermsRequired;
+    return this.googleTermsRequired;
   }
 
   onPasswordChange() {
@@ -240,7 +240,7 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleGoogleLogin(idToken: string) {
-    const isRegistrationConsentFlow = this.googleRequiresTermsApproval;
+    const isRegistrationConsentFlow = this.googleTermsRequired;
 
     if (isRegistrationConsentFlow && !this.termsApproved) {
       this.errorMessage = this.langService.translate('auth.approve_terms');

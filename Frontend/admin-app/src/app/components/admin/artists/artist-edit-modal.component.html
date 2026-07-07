@@ -90,6 +90,7 @@
           <label class="form-label">תמונת פרופיל</label>
           <app-file-upload-input
             [(url)]="editForm.imageUrl"
+            [enableImageCrop]="true"
             placeholder="https://example.com/image.jpg"
           />
           <small class="form-hint">העלה קובץ או הזן קישור</small>

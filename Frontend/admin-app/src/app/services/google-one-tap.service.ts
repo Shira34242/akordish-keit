@@ -18,6 +18,30 @@ export class GoogleOneTapService {
         if (this.initialized) return;
         this.initialized = true;
 
+        this.socialAuthService.authState.subscribe(user => {
+            if (!user?.idToken
+                || this.authService.currentUserValue
+                || GoogleOneTapService.modalActive
+                || GoogleOneTapService.processing) {
+                return;
+            }
+
+            GoogleOneTapService.setProcessing(true);
+            this.authService.googleLogin(user.idToken).subscribe({
+                next: () => {
+                    GoogleOneTapService.setProcessing(false);
+                    this.cancelOneTapPrompt();
+                },
+                error: error => {
+                    GoogleOneTapService.setProcessing(false);
+                    if (this.isTermsRequiredError(error)) {
+                        const returnUrl = window.location.pathname + window.location.search;
+                        this.authService.requestLogin(returnUrl || '/');
+                    }
+                }
+            });
+        });
+
         // אם המשתמש כבר מחובר באתר (או מתחבר במהלך הסשן) — לבטל את החלונית של גוגל
         this.authService.currentUser$.subscribe(user => {
             if (user) this.cancelOneTapPrompt();
@@ -49,6 +73,14 @@ export class GoogleOneTapService {
         // ניסיונות חוזרים — לפעמים סקריפט גוגל עדיין לא נטען בזמן הקריאה הראשונה
         setTimeout(tryCancel, 500);
         setTimeout(tryCancel, 1500);
+    }
+
+    private isTermsRequiredError(error: any): boolean {
+        const body = error?.error;
+        const message = typeof body === 'string' ? body : body?.message;
+
+        return body?.code === 'TERMS_REQUIRED'
+            || (typeof message === 'string' && message.includes('תקנון'));
     }
 
     static isProcessing(): boolean {

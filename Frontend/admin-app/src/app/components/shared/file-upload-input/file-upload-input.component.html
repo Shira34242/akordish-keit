@@ -49,6 +49,14 @@
     <button type="button" class="fui-clear-inline" (click)="clear()" title="הסר">
       <span class="material-icons">close</span>
     </button>
+    <button
+      *ngIf="enableImageCrop && isImage(url)"
+      type="button"
+      class="fui-clear-inline"
+      (click)="openCropForCurrentImage()"
+      title="עריכת מיקוד">
+      <span class="material-icons">tune</span>
+    </button>
   </div>
 
   <div *ngIf="url && isImage(url) && showPreview && !uploading" class="fui-preview">

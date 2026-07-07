@@ -33,6 +33,10 @@ export interface User {
     createdAt?: string;
     lastProfileReminderAt?: string | null;
     profileReminderDismissCount?: number;
+    pendingPublicPageType?: string | null;
+    pendingPublicPageCategoryId?: number | null;
+    lastPublicPageReminderAt?: string | null;
+    publicPageReminderDismissCount?: number;
     visitCount?: number;
     marketingConsent?: boolean;
     marketingConsentAt?: string | null;
@@ -53,6 +57,12 @@ export interface UpdateSoftProfilePayload {
     address?: string | null;
     birthMonth?: number | null;
     birthYear?: number | null;
+}
+
+export interface PublicPageReminderPayload {
+    userType?: string | null;
+    categoryId?: number | null;
+    permanently?: boolean;
 }
 
 export interface AuthResponse {
@@ -202,6 +212,28 @@ export class AuthService {
                     localStorage.setItem('currentUser', JSON.stringify(updated));
                     this.currentUserSubject.next(updated);
                 }
+            })
+        );
+    }
+
+    deferPublicPageReminder(payload: PublicPageReminderPayload): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/defer-public-page-reminder`, payload, {
+            withCredentials: true
+        }).pipe(
+            tap(user => {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.currentUserSubject.next(user);
+            })
+        );
+    }
+
+    dismissPublicPageReminder(payload: PublicPageReminderPayload = {}): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/dismiss-public-page-reminder`, payload, {
+            withCredentials: true
+        }).pipe(
+            tap(user => {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.currentUserSubject.next(user);
             })
         );
     }

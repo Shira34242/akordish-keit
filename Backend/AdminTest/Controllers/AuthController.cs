@@ -113,7 +113,7 @@ namespace AkordishKeit.Controllers
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)
                     .ThenInclude(ui => ui.Instrument)
-                .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
+                .FirstOrDefaultAsync(u => u.GoogleId == googleUser.Sub || u.Email == googleUser.Email);
 
             bool isNewGoogleUser = user == null;
             if (isNewGoogleUser && !request.TermsApproved)
@@ -348,6 +348,10 @@ namespace AkordishKeit.Controllers
                 CreatedAt = user.CreatedAt,
                 LastProfileReminderAt = user.LastProfileReminderAt,
                 ProfileReminderDismissCount = user.ProfileReminderDismissCount,
+                PendingPublicPageType = user.PendingPublicPageType,
+                PendingPublicPageCategoryId = user.PendingPublicPageCategoryId,
+                LastPublicPageReminderAt = user.LastPublicPageReminderAt,
+                PublicPageReminderDismissCount = user.PublicPageReminderDismissCount,
                 VisitCount = user.VisitCount,
                 MarketingConsent = user.MarketingConsent,
                 MarketingConsentAt = user.MarketingConsentAt,
@@ -724,6 +728,76 @@ namespace AkordishKeit.Controllers
                 lastProfileReminderAt = user.LastProfileReminderAt,
                 profileReminderDismissCount = user.ProfileReminderDismissCount
             });
+        }
+
+        [Authorize]
+        [HttpPost("defer-public-page-reminder")]
+        public async Task<ActionResult<UserDto>> DeferPublicPageReminder([FromBody] PublicPageReminderRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "׳׳©׳×׳׳© ׳׳ ׳׳–׳•׳”׳”" });
+            }
+
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "׳׳©׳×׳׳© ׳׳ ׳ ׳׳¦׳" });
+            }
+
+            user.PendingPublicPageType = string.IsNullOrWhiteSpace(request.UserType) ? null : request.UserType.Trim();
+            user.PendingPublicPageCategoryId = request.CategoryId;
+            user.LastPublicPageReminderAt = DateTime.UtcNow;
+            user.PublicPageReminderDismissCount = 0;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
+            return Ok(BuildUserDto(user, hasProfessionalProfile));
+        }
+
+        [Authorize]
+        [HttpPost("dismiss-public-page-reminder")]
+        public async Task<ActionResult<UserDto>> DismissPublicPageReminder([FromBody] PublicPageReminderRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "׳׳©׳×׳׳© ׳׳ ׳׳–׳•׳”׳”" });
+            }
+
+            var user = await _context.Users
+                .Include(u => u.ServiceProviderProfiles)
+                .Include(u => u.ManagedArtist)
+                .Include(u => u.Instruments)
+                    .ThenInclude(ui => ui.Instrument)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "׳׳©׳×׳׳© ׳׳ ׳ ׳׳¦׳" });
+            }
+
+            user.LastPublicPageReminderAt = DateTime.UtcNow;
+            user.PublicPageReminderDismissCount = request.Permanently
+                ? 3
+                : user.PublicPageReminderDismissCount + 1;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
+                || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);
+            return Ok(BuildUserDto(user, hasProfessionalProfile));
         }
 
         [HttpPost("request-password-reset")]
