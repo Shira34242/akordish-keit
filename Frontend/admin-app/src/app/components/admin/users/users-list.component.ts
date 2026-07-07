@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -18,8 +18,12 @@ import { ServiceProviderFormComponent } from '../service-providers/service-provi
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.css']
 })
-export class UsersListComponent implements OnInit {
+export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
   users: UserListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -44,11 +48,12 @@ export class UsersListComponent implements OnInit {
     isActive: true
   };
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
   pageSize = 25;
   totalCount = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
+  currentPage = 0;
 
   // Filters
   searchTerm = '';
@@ -88,9 +93,51 @@ export class UsersListComponent implements OnInit {
     this.loadUsers();
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      // Retry after a short delay (sentinel might not be rendered yet)
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreUsers();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadUsers(): void {
     this.loading = true;
     this.error = null;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.userService.getUsers(
       this.searchTerm || undefined,
@@ -103,9 +150,11 @@ export class UsersListComponent implements OnInit {
       next: (result: PagedResult<UserListDto>) => {
         this.users = result.items;
         this.totalCount = result.totalCount;
-        this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        // Re-observe sentinel after data changes
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err: any) => {
         console.error('שגיאה בטעינת משתמשים:', err);
@@ -115,13 +164,93 @@ export class UsersListComponent implements OnInit {
     });
   }
 
+  loadMoreUsers(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.userService.getUsers(
+      this.searchTerm || undefined,
+      this.filterRole ?? undefined,
+      this.filterIsActive ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      this.filterContentTag ?? undefined
+    ).subscribe({
+      next: (result: PagedResult<UserListDto>) => {
+        this.users = [...this.users, ...result.items];
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.users.length >= result.totalCount;
+        this.loadingMore = false;
+        // Re-observe sentinel after data changes
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err: any) => {
+        console.error('שגיאה בטעינת משתמשים נוספים:', err);
+        this.loadingMore = false;
+        this.currentPage--; // Rollback page on error
+      }
+    });
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
+  }
+
+  getPaginationRange(): number[] {
+    const total = this.totalPages;
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(total, start + 4);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }
+
+  goToPage(page: number): void {
+    const targetPage = Math.min(Math.max(page, 1), this.totalPages);
+    if (targetPage === this.currentPage || this.loading || this.loadingMore) return;
+
+    this.loading = true;
+    this.error = null;
+    this.currentPage = targetPage;
+    this.allLoaded = false;
+    this.loadingMore = false;
+
+    this.userService.getUsers(
+      this.searchTerm || undefined,
+      this.filterRole ?? undefined,
+      this.filterIsActive ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      this.filterContentTag ?? undefined
+    ).subscribe({
+      next: (result: PagedResult<UserListDto>) => {
+        this.users = result.items;
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.currentPage >= this.totalPages;
+        this.clearSelection();
+        this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err: any) => {
+        console.error('׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳¢׳׳•׳“ ׳׳©׳×׳׳©׳™׳:', err);
+        this.error = '׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳ ׳×׳•׳ ׳™ ׳”׳׳©׳×׳׳©׳™׳';
+        this.loading = false;
+      }
+    });
+  }
+
+
   onSearch(): void {
-    this.currentPage = 1;
     this.loadUsers();
   }
 
   onFilterChange(): void {
-    this.currentPage = 1;
     this.loadUsers();
   }
 
@@ -130,15 +259,7 @@ export class UsersListComponent implements OnInit {
     this.filterRole = null;
     this.filterIsActive = null;
     this.filterContentTag = null;
-    this.currentPage = 1;
     this.loadUsers();
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadUsers();
-    }
   }
 
   viewUser(id: number): void {
@@ -481,14 +602,4 @@ export class UsersListComponent implements OnInit {
     return `/agency/${agency.slug}`;
   }
 
-  getPaginationRange(): number[] {
-    const range: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-
-    for (let i = start; i <= end; i++) {
-      range.push(i);
-    }
-    return range;
-  }
 }

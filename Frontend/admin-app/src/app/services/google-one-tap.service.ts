@@ -34,7 +34,7 @@ export class GoogleOneTapService {
                 },
                 error: error => {
                     GoogleOneTapService.setProcessing(false);
-                    if (this.isTermsRequiredError(error)) {
+                    if (this.isGoogleConsentRequiredError(error)) {
                         const returnUrl = window.location.pathname + window.location.search;
                         this.authService.requestLogin(returnUrl || '/');
                     }
@@ -75,11 +75,12 @@ export class GoogleOneTapService {
         setTimeout(tryCancel, 1500);
     }
 
-    private isTermsRequiredError(error: any): boolean {
+    private isGoogleConsentRequiredError(error: any): boolean {
         const body = error?.error;
         const message = typeof body === 'string' ? body : body?.message;
 
         return body?.code === 'TERMS_REQUIRED'
+            || body?.code === 'MARKETING_CONSENT_REQUIRED'
             || (typeof message === 'string' && message.includes('תקנון'));
     }
 

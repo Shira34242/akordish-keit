@@ -168,6 +168,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
+      || body?.code === 'MARKETING_CONSENT_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

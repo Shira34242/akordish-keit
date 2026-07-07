@@ -201,36 +201,16 @@
     </div>
   </div>
 
-  <!-- Pagination -->
-  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
-    <button
-      class="btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="goToPage(currentPage - 1)"
-    >
-      קודם
-    </button>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading && !error">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד לקוחות...</span>
+    </div>
 
-    <button
-      *ngFor="let page of getPaginationRange()"
-      class="btn-pagination"
-      [class.active]="page === currentPage"
-      (click)="goToPage(page)"
-    >
-      {{ page }}
-    </button>
-
-    <button
-      class="btn-pagination"
-      [disabled]="currentPage === totalPages"
-      (click)="goToPage(currentPage + 1)"
-    >
-      הבא
-    </button>
-
-    <span class="pagination-info">
-      עמוד {{ currentPage }} מתוך {{ totalPages }}
-    </span>
+    <div class="scroll-complete" *ngIf="allLoaded && users.length > 0">
+      כל הלקוחות מוצגים
+    </div>
   </div>
 </div>
 
