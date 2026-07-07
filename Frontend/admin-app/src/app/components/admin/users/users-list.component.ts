@@ -153,7 +153,15 @@ export class UsersListComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('שגיאה בטעינת פרטי משתמש:', err);
-        this.userDetailError = 'לא הצלחנו לטעון את פרטי המשתמש';
+        if (err?.status === 0) {
+          this.userDetailError = 'השרת לא זמין כרגע. צריך לוודא שה-Backend רץ.';
+        } else if (err?.status === 404) {
+          this.userDetailError = 'השרת שרץ עדיין לא מכיר את פרטי המשתמש החדשים. צריך להפעיל את ה-Backend מחדש.';
+        } else if (err?.error?.detail) {
+          this.userDetailError = `שגיאה בטעינת פרטי המשתמש: ${err.error.detail}`;
+        } else {
+          this.userDetailError = 'לא הצלחנו לטעון את פרטי המשתמש';
+        }
         this.loadingUserDetail = false;
       }
     });

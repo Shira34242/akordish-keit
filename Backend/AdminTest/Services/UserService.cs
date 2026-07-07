@@ -276,33 +276,42 @@ public class UserService : IUserService
             .Include(u => u.PreferredInstrument)
             .Include(u => u.Instruments)
                 .ThenInclude(ui => ui.Instrument)
-            .Include(u => u.ManagedArtist)
-            .Include(u => u.ServiceProviderProfiles)
-                .ThenInclude(p => p.Categories)
-                    .ThenInclude(c => c.Category)
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user == null) return null;
 
         var pages = new List<AdminUserPageDto>();
 
-        if (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted)
-        {
-            pages.Add(new AdminUserPageDto
+        var artistPages = await _context.Artists
+            .AsNoTracking()
+            .Where(a => a.UserId == userId && !a.IsDeleted)
+            .OrderByDescending(a => a.IsPrimaryProfile)
+            .ThenBy(a => a.Name)
+            .Select(a => new AdminUserPageDto
             {
                 ProfileType = "artist",
-                ProfileId = user.ManagedArtist.Id,
-                DisplayName = user.ManagedArtist.Name,
-                ImageUrl = user.ManagedArtist.ImageUrl,
-                ProfileUrl = $"/artist/{user.ManagedArtist.Id}",
+                ProfileId = a.Id,
+                DisplayName = a.Name,
+                ImageUrl = a.ImageUrl,
+                ProfileUrl = $"/artist/{a.Id}",
                 IsTeacher = false,
-                Status = user.ManagedArtist.Status.ToString(),
-                IsPrimary = user.ManagedArtist.IsPrimaryProfile
-            });
-        }
+                Status = a.Status.ToString(),
+                IsPrimary = a.IsPrimaryProfile,
+                Categories = new List<string>()
+            })
+            .ToListAsync();
 
-        pages.AddRange(user.ServiceProviderProfiles
+        var serviceProviderEntities = await _context.ServiceProviders
+            .AsNoTracking()
+            .Include(p => p.Categories)
+                .ThenInclude(c => c.Category)
+            .Where(p => p.UserId == userId)
             .Where(p => !p.IsDeleted)
+            .OrderByDescending(p => p.IsPrimaryProfile)
+            .ThenBy(p => p.DisplayName)
+            .ToListAsync();
+
+        var serviceProviderPages = serviceProviderEntities
             .Select(p => new AdminUserPageDto
             {
                 ProfileType = "serviceProvider",
@@ -313,8 +322,15 @@ public class UserService : IUserService
                 IsTeacher = p.IsTeacher,
                 Status = p.Status.ToString(),
                 IsPrimary = p.IsPrimaryProfile,
-                Categories = p.Categories.Select(c => c.Category.Name).ToList()
-            }));
+                Categories = p.Categories
+                    .Where(c => c.Category != null)
+                    .Select(c => c.Category.Name)
+                    .ToList()
+            })
+            .ToList();
+
+        pages.AddRange(artistPages);
+        pages.AddRange(serviceProviderPages);
 
         var artistPageIds = pages
             .Where(p => p.ProfileType == "artist")
