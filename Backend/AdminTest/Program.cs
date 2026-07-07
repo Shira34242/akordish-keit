@@ -580,6 +580,34 @@ dbContext.Database.ExecuteSqlRaw(@"
             ALTER TABLE [Users]
             ADD [MarketingConsentSource] nvarchar(100) NULL;
         END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'PendingPublicPageType') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [PendingPublicPageType] nvarchar(40) NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'PendingPublicPageCategoryId') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [PendingPublicPageCategoryId] int NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'LastPublicPageReminderAt') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [LastPublicPageReminderAt] datetime2 NULL;
+        END
+
+        IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[Users]', N'PublicPageReminderDismissCount') IS NULL
+        BEGIN
+            ALTER TABLE [Users]
+            ADD [PublicPageReminderDismissCount] int NOT NULL CONSTRAINT [DF_Users_PublicPageReminderDismissCount] DEFAULT 0;
+        END
     ");
 
     dbContext.Database.ExecuteSqlRaw(@"
