@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostBinding, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ElementRef, HostBinding, HostListener, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
@@ -88,7 +88,18 @@ interface AdSpotResponse {
 export class AdDisplayComponent implements OnInit, OnDestroy {
   @Input() spotTechnicalId!: string;
   @Input() fallbackSpotTechnicalId?: string;
-  @Input() isMobile: boolean = false;
+  @Input() isMobile?: boolean;
+
+  private _isMobileAuto = typeof window !== 'undefined' && window.innerWidth <= 768;
+
+  get effectiveMobile(): boolean {
+    return this.isMobile !== undefined ? this.isMobile : this._isMobileAuto;
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this._isMobileAuto = window.innerWidth <= 768;
+  }
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
@@ -165,7 +176,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.loading = false;
           this.campaigns = response.campaigns.filter(campaign => {
-            const mediaUrl = this.isMobile && campaign.mobileMediaUrl
+            const mediaUrl = this.effectiveMobile && campaign.mobileMediaUrl
               ? campaign.mobileMediaUrl
               : campaign.mediaUrl;
             return !!mediaUrl;
@@ -240,13 +251,13 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   get activeMediaUrl(): string {
     if (!this.currentAd) return '';
-    return this.isMobile && this.currentAd.mobileMediaUrl
+    return this.effectiveMobile && this.currentAd.mobileMediaUrl
       ? this.currentAd.mobileMediaUrl
       : this.currentAd.mediaUrl;
   }
 
   get imagePreset(): 'card' | 'hero' {
-    return this.isMobile ? 'card' : 'hero';
+    return this.effectiveMobile ? 'card' : 'hero';
   }
 
   get imageSizes(): string {
