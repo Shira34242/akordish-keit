@@ -269,6 +269,163 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<AdminUserDetailDto?> GetAdminUserDetailAsync(int userId)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .Include(u => u.PreferredInstrument)
+            .Include(u => u.Instruments)
+                .ThenInclude(ui => ui.Instrument)
+            .Include(u => u.ManagedArtist)
+            .Include(u => u.ServiceProviderProfiles)
+                .ThenInclude(p => p.Categories)
+                    .ThenInclude(c => c.Category)
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user == null) return null;
+
+        var pages = new List<AdminUserPageDto>();
+
+        if (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted)
+        {
+            pages.Add(new AdminUserPageDto
+            {
+                ProfileType = "artist",
+                ProfileId = user.ManagedArtist.Id,
+                DisplayName = user.ManagedArtist.Name,
+                ImageUrl = user.ManagedArtist.ImageUrl,
+                ProfileUrl = $"/artist/{user.ManagedArtist.Id}",
+                IsTeacher = false,
+                Status = user.ManagedArtist.Status.ToString(),
+                IsPrimary = user.ManagedArtist.IsPrimaryProfile
+            });
+        }
+
+        pages.AddRange(user.ServiceProviderProfiles
+            .Where(p => !p.IsDeleted)
+            .Select(p => new AdminUserPageDto
+            {
+                ProfileType = "serviceProvider",
+                ProfileId = p.Id,
+                DisplayName = p.DisplayName,
+                ImageUrl = p.ProfileImageUrl,
+                ProfileUrl = p.IsTeacher ? $"/teacher/{p.Id}" : $"/professional/{p.Id}",
+                IsTeacher = p.IsTeacher,
+                Status = p.Status.ToString(),
+                IsPrimary = p.IsPrimaryProfile,
+                Categories = p.Categories.Select(c => c.Category.Name).ToList()
+            }));
+
+        var artistPageIds = pages
+            .Where(p => p.ProfileType == "artist")
+            .Select(p => p.ProfileId)
+            .ToList();
+        var serviceProviderPageIds = pages
+            .Where(p => p.ProfileType == "serviceProvider")
+            .Select(p => p.ProfileId)
+            .ToList();
+
+        var agencies = pages.Count == 0
+            ? new List<AdminUserAgencyDto>()
+            : await _context.AgencyProfiles
+                .AsNoTracking()
+                .Include(ap => ap.Agency)
+                .Where(ap => !ap.Agency.IsDeleted
+                    && ((ap.ProfileType == "artist" && artistPageIds.Contains(ap.ProfileId))
+                        || (ap.ProfileType == "serviceProvider" && serviceProviderPageIds.Contains(ap.ProfileId))))
+                .OrderBy(ap => ap.Agency.Name)
+                .Select(ap => new AdminUserAgencyDto
+                {
+                    Id = ap.Agency.Id,
+                    Name = ap.Agency.Name,
+                    Slug = ap.Agency.Slug,
+                    LogoUrl = ap.Agency.LogoUrl,
+                    ProfileType = ap.ProfileType,
+                    ProfileId = ap.ProfileId,
+                    ContactMode = ap.ContactMode.ToString(),
+                    ShowBadge = ap.ShowBadge,
+                    IsFeaturedByAgency = ap.IsFeaturedByAgency
+                })
+                .ToListAsync();
+
+        var songsCount = await _context.Songs.CountAsync(s =>
+            !s.IsDeleted && (s.UploadedByUserId == userId || s.UploaderUserId == userId));
+        var articlesCount = await _context.Articles.CountAsync(a =>
+            !a.IsDeleted && (a.SubmittedByUserId == userId || a.UploaderUserId == userId));
+        var eventsCount = await _context.Events.CountAsync(e =>
+            !e.IsDeleted && e.SubmittedByUserId == userId);
+        var playlistsCount = await _context.Playlists.CountAsync(p => p.UserId == userId);
+        var favoritesCount = await _context.Favorites.CountAsync(f => f.UserId == userId);
+        var ratingsCount = await _context.SongRatings.CountAsync(r => r.UserId == userId);
+        var knownChordsCount = await _context.UserKnownChords.CountAsync(kc => kc.UserId == userId);
+        var notificationsCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsDeleted);
+
+        return new AdminUserDetailDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            ProfileImageUrl = user.ProfileImageUrl,
+            Phone = user.Phone,
+            Role = (int)user.Role,
+            RoleName = user.Role.ToString(),
+            Level = (int)user.ContentTag,
+            Points = user.UploadCount,
+            IsActive = user.IsActive,
+            EmailConfirmed = user.EmailConfirmed,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+            PreferredInstrumentId = user.PreferredInstrumentId,
+            PreferredInstrumentName = user.PreferredInstrument?.Name,
+            ContentTag = (int)user.ContentTag,
+            UploadCount = user.UploadCount,
+            GoogleId = user.GoogleId,
+            Address = user.Address,
+            BirthDate = user.BirthDate,
+            CityId = user.CityId,
+            OtherInstrumentName = user.OtherInstrumentName,
+            InstrumentLevel = user.InstrumentLevel.HasValue ? (int)user.InstrumentLevel.Value : null,
+            InstrumentLevelName = user.InstrumentLevel?.ToString(),
+            MarketingConsent = user.MarketingConsent,
+            MarketingConsentAt = user.MarketingConsentAt,
+            MarketingConsentRevokedAt = user.MarketingConsentRevokedAt,
+            UpdatedAt = user.UpdatedAt,
+            VisitCount = user.VisitCount,
+            LastProfileReminderAt = user.LastProfileReminderAt,
+            ProfileReminderDismissCount = user.ProfileReminderDismissCount,
+            LastUploadDate = user.LastUploadDate,
+            ChordBookExportCount = user.ChordBookExportCount,
+            Instruments = user.Instruments
+                .Where(ui => ui.Instrument != null)
+                .OrderByDescending(ui => ui.IsPrimary)
+                .ThenBy(ui => ui.Instrument.Name)
+                .Select(ui => new AdminUserInstrumentDto
+                {
+                    Id = ui.InstrumentId,
+                    Name = ui.Instrument.Name,
+                    EnglishName = ui.Instrument.EnglishName,
+                    IsPrimary = ui.IsPrimary
+                })
+                .ToList(),
+            Pages = pages
+                .OrderByDescending(p => p.IsPrimary)
+                .ThenBy(p => p.DisplayName)
+                .ToList(),
+            Agencies = agencies,
+            ContentSummary = new AdminUserContentSummaryDto
+            {
+                Songs = songsCount,
+                Articles = articlesCount,
+                Events = eventsCount,
+                Playlists = playlistsCount,
+                Favorites = favoritesCount,
+                Ratings = ratingsCount,
+                KnownChords = knownChordsCount,
+                Notifications = notificationsCount
+            }
+        };
+    }
+
     public async Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto)
     {
         var user = await _context.Users.FindAsync(userId);

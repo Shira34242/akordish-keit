@@ -783,7 +783,7 @@
   overflow-y: hidden;
   padding-top: var(--space-sm);
   padding-bottom: var(--space-md);
-  direction: ltr;
+  direction: rtl;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -796,7 +796,7 @@
 
 .artists-loop-track {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   gap: var(--space-base);
   width: max-content;
 }
@@ -1214,7 +1214,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
-  direction: ltr;
+  direction: rtl;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;

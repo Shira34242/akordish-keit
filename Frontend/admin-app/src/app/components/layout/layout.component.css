@@ -1285,7 +1285,7 @@
     background: #F2F2F2;
     border: none;
     border-radius: 999px;
-    padding: var(--space-sm) var(--space-base);
+    padding: var(--space-xs) var(--space-md);
     text-decoration: none;
     cursor: pointer;
     transition: background 0.15s;

@@ -348,7 +348,6 @@
     <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && (featuredTeachers.length > 0 || featuredProviders.length > 0)">
       <div class="section-header">
         <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
-        <a routerLink="/professionals" class="section-link">{{ 'home.teachers_link' | translate }}</a>
       </div>
       <div class="index-showcase-stack">
         <div class="index-showcase-row">
@@ -413,7 +412,6 @@
     <section class="home-section podcasts-home-section" *ngIf="podcastsSectionStarted && homePodcasts.length > 0">
       <div class="section-header">
         <h2 class="section-title">פודקאסטים מובילים</h2>
-        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
       <div class="podcasts-home-panel">
         <div class="podcasts-home-track">
@@ -448,7 +446,6 @@
     <section class="home-section popular-episodes-section" *ngIf="podcastsSectionStarted && popularPodcastEpisodes.length > 0">
       <div class="section-header">
         <h2 class="section-title">פרקים מובילים</h2>
-        <a routerLink="/podcasts" class="section-link">לכל הפודקאסטים</a>
       </div>
 
       <div class="podcast-episodes-row">

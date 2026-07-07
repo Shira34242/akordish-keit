@@ -234,6 +234,150 @@
   </div>
 </div>
 
+<div class="profile-form-backdrop" *ngIf="loadingUserDetail || userDetailError || selectedUserDetail" (click)="closeUserDetailModal()">
+  <div class="user-detail-modal" (click)="$event.stopPropagation()">
+    <div class="detail-loading" *ngIf="loadingUserDetail">
+      <div class="spinner"></div>
+      <p>טוען פרטי משתמש...</p>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="!loadingUserDetail && userDetailError">{{ userDetailError }}</div>
+
+    <ng-container *ngIf="!loadingUserDetail && selectedUserDetail as detail">
+      <div class="detail-head">
+        <div class="detail-identity">
+          <div class="detail-avatar">
+            <img *ngIf="detail.profileImageUrl" [src]="detail.profileImageUrl" [alt]="detail.username">
+            <span *ngIf="!detail.profileImageUrl">{{ detail.username.charAt(0) }}</span>
+          </div>
+          <div>
+            <h2>{{ detail.username }}</h2>
+            <p>{{ detail.email }}</p>
+            <div class="detail-badges">
+              <span class="badge" [ngClass]="getRoleBadgeClass(detail.role)">{{ getRoleLabel(detail.role) }}</span>
+              <span class="badge" [class.badge-success]="detail.isActive" [class.badge-danger]="!detail.isActive">
+                {{ detail.isActive ? 'פעיל' : 'לא פעיל' }}
+              </span>
+              <span class="badge badge-secondary">{{ detail.googleId ? 'Google' : 'סיסמה' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button type="button" class="btn btn-primary" (click)="openNotificationForUser(detail)">
+            <span class="material-icons">notifications</span>
+            שלח התראה
+          </button>
+          <button type="button" class="modal-close" (click)="closeUserDetailModal()" title="סגירה">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-metrics">
+        <div class="metric">
+          <span>{{ detail.createdAt | date: 'dd/MM/yyyy' }}</span>
+          <small>תאריך הצטרפות</small>
+        </div>
+        <div class="metric">
+          <span>{{ detail.contentSummary.songs + detail.contentSummary.articles + detail.contentSummary.events }}</span>
+          <small>תוכן שהעלה</small>
+        </div>
+        <div class="metric">
+          <span>{{ detail.pages.length }}</span>
+          <small>דפים באתר</small>
+        </div>
+        <div class="metric">
+          <span>{{ detail.agencies.length }}</span>
+          <small>שיוכי סוכנות</small>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <section class="detail-section">
+          <h3>פרטים אישיים</h3>
+          <dl class="detail-list">
+            <div><dt>טלפון</dt><dd>{{ detail.phone || 'לא הוגדר' }}</dd></div>
+            <div><dt>כתובת</dt><dd>{{ detail.address || 'לא הוגדר' }}</dd></div>
+            <div><dt>עיר</dt><dd>{{ detail.cityId || 'לא הוגדר' }}</dd></div>
+            <div><dt>לידה</dt><dd>{{ detail.birthDate ? (detail.birthDate | date: 'MM/yyyy') : 'לא הוגדר' }}</dd></div>
+            <div><dt>אימייל מאומת</dt><dd>{{ detail.emailConfirmed ? 'כן' : 'לא' }}</dd></div>
+            <div><dt>ביקורים</dt><dd>{{ detail.visitCount }}</dd></div>
+            <div><dt>כניסה אחרונה</dt><dd>{{ detail.lastLoginAt ? (detail.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : 'אין' }}</dd></div>
+            <div><dt>עדכון אחרון</dt><dd>{{ detail.updatedAt ? (detail.updatedAt | date: 'dd/MM/yyyy') : 'אין' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="detail-section">
+          <h3>הרשמה וכלי נגינה</h3>
+          <dl class="detail-list">
+            <div><dt>כלי מועדף</dt><dd>{{ detail.preferredInstrumentName || detail.otherInstrumentName || 'לא הוגדר' }}</dd></div>
+            <div><dt>רמת נגינה</dt><dd>{{ getInstrumentLevelLabel(detail.instrumentLevel) }}</dd></div>
+            <div><dt>דיוור</dt><dd>{{ detail.marketingConsent ? 'מאושר' : 'לא מאושר' }}</dd></div>
+            <div><dt>אושר בתאריך</dt><dd>{{ detail.marketingConsentAt ? (detail.marketingConsentAt | date: 'dd/MM/yyyy') : 'אין' }}</dd></div>
+            <div><dt>ייצוא ספר אקורדים</dt><dd>{{ detail.chordBookExportCount }}</dd></div>
+            <div><dt>תזכורות פרופיל</dt><dd>{{ detail.profileReminderDismissCount }}</dd></div>
+          </dl>
+
+          <div class="chip-list" *ngIf="detail.instruments.length > 0">
+            <span class="soft-chip" *ngFor="let instrument of detail.instruments">
+              {{ instrument.name }}{{ instrument.isPrimary ? ' · ראשי' : '' }}
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <section class="detail-section">
+        <div class="section-line">
+          <h3>דפים באתר</h3>
+          <span>{{ detail.pages.length }}</span>
+        </div>
+        <div class="mini-cards" *ngIf="detail.pages.length > 0; else noPages">
+          <a class="mini-card" *ngFor="let page of detail.pages" [routerLink]="getPagePublicUrl(page)">
+            <strong>{{ page.displayName }}</strong>
+            <span>{{ getProfileTypeLabel(page) }} · {{ getStatusLabel(page.status) }}</span>
+            <small *ngIf="page.categories.length">{{ page.categories.join(', ') }}</small>
+          </a>
+        </div>
+        <ng-template #noPages>
+          <p class="muted-line">אין למשתמש דף ציבורי כרגע.</p>
+        </ng-template>
+      </section>
+
+      <section class="detail-section">
+        <div class="section-line">
+          <h3>סוכנויות</h3>
+          <span>{{ detail.agencies.length }}</span>
+        </div>
+        <div class="mini-cards" *ngIf="detail.agencies.length > 0; else noAgencies">
+          <a class="mini-card" *ngFor="let agency of detail.agencies" [routerLink]="getAgencyUrl(agency)">
+            <strong>{{ agency.name }}</strong>
+            <span>{{ agency.contactMode }} · {{ agency.showBadge ? 'תג מוצג' : 'ללא תג' }}</span>
+            <small>{{ agency.isFeaturedByAgency ? 'מומלץ בסוכנות' : 'שיוך רגיל' }}</small>
+          </a>
+        </div>
+        <ng-template #noAgencies>
+          <p class="muted-line">לא משויך לסוכנות.</p>
+        </ng-template>
+      </section>
+
+      <section class="detail-section">
+        <h3>סיכום פעילות</h3>
+        <div class="content-counts">
+          <div><span>{{ detail.contentSummary.songs }}</span><small>שירים</small></div>
+          <div><span>{{ detail.contentSummary.articles }}</span><small>כתבות</small></div>
+          <div><span>{{ detail.contentSummary.events }}</span><small>אירועים</small></div>
+          <div><span>{{ detail.contentSummary.playlists }}</span><small>פלייליסטים</small></div>
+          <div><span>{{ detail.contentSummary.favorites }}</span><small>מועדפים</small></div>
+          <div><span>{{ detail.contentSummary.ratings }}</span><small>דירוגים</small></div>
+          <div><span>{{ detail.contentSummary.knownChords }}</span><small>אקורדים מוכרים</small></div>
+          <div><span>{{ detail.contentSummary.notifications }}</span><small>התראות</small></div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>
+
 <div class="profile-form-backdrop" *ngIf="editingUser" (click)="closeEditUserModal()">
   <form class="user-edit-modal" (click)="$event.stopPropagation()" (ngSubmit)="saveUser()">
     <div class="modal-head">

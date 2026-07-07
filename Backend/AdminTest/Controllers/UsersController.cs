@@ -57,6 +57,18 @@ public class UsersController : ControllerBase
         return Ok(profile);
     }
 
+    // GET: api/Users/{id}/details
+    [HttpGet("{id:int}/details")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<AdminUserDetailDto>> GetAdminUserDetail(int id)
+    {
+        var detail = await _service.GetAdminUserDetailAsync(id);
+        if (detail == null)
+            return NotFound();
+
+        return Ok(detail);
+    }
+
     // PUT: api/Users/{id}
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]

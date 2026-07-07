@@ -1,10 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user.service';
-import { AdminUpdateUserDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
+import { AdminUpdateUserDto, AdminUserDetailDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { TeacherFormComponent } from '../teachers/teacher-form.component';
@@ -14,7 +14,7 @@ import { ServiceProviderFormComponent } from '../service-providers/service-provi
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherFormComponent, ServiceProviderFormComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TeacherFormComponent, ServiceProviderFormComponent],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.css']
 })
@@ -29,6 +29,9 @@ export class UsersListComponent implements OnInit {
   showProviderFormModal = false;
   selectedProfileUserId: number | undefined = undefined;
   editingUser: UserListDto | null = null;
+  selectedUserDetail: AdminUserDetailDto | null = null;
+  loadingUserDetail = false;
+  userDetailError: string | null = null;
   savingUser = false;
   editUserError: string | null = null;
   selectedUserIds = new Set<number>();
@@ -139,7 +142,36 @@ export class UsersListComponent implements OnInit {
   }
 
   viewUser(id: number): void {
-    this.router.navigate(['/admin/users/view', id]);
+    this.loadingUserDetail = true;
+    this.userDetailError = null;
+    this.selectedUserDetail = null;
+
+    this.userService.getUserDetail(id).subscribe({
+      next: (detail) => {
+        this.selectedUserDetail = detail;
+        this.loadingUserDetail = false;
+      },
+      error: (err: any) => {
+        console.error('שגיאה בטעינת פרטי משתמש:', err);
+        this.userDetailError = 'לא הצלחנו לטעון את פרטי המשתמש';
+        this.loadingUserDetail = false;
+      }
+    });
+  }
+
+  closeUserDetailModal(): void {
+    this.selectedUserDetail = null;
+    this.userDetailError = null;
+    this.loadingUserDetail = false;
+  }
+
+  openNotificationForUser(user: AdminUserDetailDto): void {
+    this.router.navigate(['/admin/notifications/messages'], {
+      queryParams: {
+        userId: user.id,
+        userName: user.username
+      }
+    });
   }
 
   get selectedCount(): number {
@@ -405,6 +437,40 @@ export class UsersListComponent implements OnInit {
       case UserContentTag.LeadingContributor: return 'tag-leading';
       default: return '';
     }
+  }
+
+  getInstrumentLevelLabel(level?: number | null): string {
+    switch (level) {
+      case 1: return 'מתחיל';
+      case 2: return 'מתקדם';
+      case 3: return 'מקצועי';
+      default: return 'לא הוגדר';
+    }
+  }
+
+  getProfileTypeLabel(page: { profileType: string; isTeacher?: boolean }): string {
+    if (page.profileType === 'artist') return 'אמן';
+    if (page.isTeacher) return 'מורה';
+    return 'נותן שירות';
+  }
+
+  getStatusLabel(status?: string | null): string {
+    switch (status) {
+      case 'Active': return 'פעיל';
+      case 'Pending': return 'ממתין';
+      case 'Suspended': return 'מושהה';
+      case 'Hidden': return 'מוסתר';
+      case 'Inactive': return 'לא פעיל';
+      default: return status || 'לא ידוע';
+    }
+  }
+
+  getPagePublicUrl(page: { profileUrl: string }): string {
+    return page.profileUrl || '';
+  }
+
+  getAgencyUrl(agency: { slug: string }): string {
+    return `/agency/${agency.slug}`;
   }
 
   getPaginationRange(): number[] {

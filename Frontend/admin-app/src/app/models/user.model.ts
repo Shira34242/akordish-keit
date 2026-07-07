@@ -43,6 +43,71 @@ export interface UserListDto {
   uploadCount: number;
 }
 
+export interface AdminUserDetailDto extends UserListDto {
+  googleId?: string | null;
+  address?: string | null;
+  birthDate?: string | null;
+  cityId?: number | null;
+  otherInstrumentName?: string | null;
+  instrumentLevel?: number | null;
+  instrumentLevelName?: string | null;
+  marketingConsent: boolean;
+  marketingConsentAt?: string | null;
+  marketingConsentRevokedAt?: string | null;
+  updatedAt?: string | null;
+  visitCount: number;
+  lastProfileReminderAt?: string | null;
+  profileReminderDismissCount: number;
+  lastUploadDate?: string | null;
+  chordBookExportCount: number;
+  instruments: AdminUserInstrumentDto[];
+  pages: AdminUserPageDto[];
+  agencies: AdminUserAgencyDto[];
+  contentSummary: AdminUserContentSummaryDto;
+}
+
+export interface AdminUserInstrumentDto {
+  id: number;
+  name: string;
+  englishName?: string | null;
+  isPrimary: boolean;
+}
+
+export interface AdminUserPageDto {
+  profileType: 'artist' | 'serviceProvider';
+  profileId: number;
+  displayName: string;
+  imageUrl?: string | null;
+  profileUrl: string;
+  isTeacher: boolean;
+  status: string;
+  isPrimary: boolean;
+  categories: string[];
+}
+
+export interface AdminUserAgencyDto {
+  id: number;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  profileType: string;
+  profileId: number;
+  contactMode: string;
+  showBadge: boolean;
+  isFeaturedByAgency: boolean;
+}
+
+export interface AdminUserContentSummaryDto {
+  songs: number;
+  articles: number;
+  events: number;
+  playlists: number;
+  favorites: number;
+  ratings: number;
+  knownChords: number;
+  notifications: number;
+}
+
 export interface AdminUpdateUserDto {
   username: string;
   email: string;

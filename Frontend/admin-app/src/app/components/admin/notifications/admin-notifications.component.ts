@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpEventType } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NotificationAttachmentDto, NotificationDto, NotificationGroupDto, SaveNotificationGroupDto } from '../../../models/notification.model';
 import { UserListDto } from '../../../models/user.model';
@@ -92,14 +93,25 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   private drafts: Record<string, MessageDraft> = {};
+  private pendingQuickUserId: number | null = null;
 
   constructor(
     private userService: UserService,
     private notificationService: NotificationService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    const userId = Number(this.route.snapshot.queryParamMap.get('userId'));
+    const userName = this.route.snapshot.queryParamMap.get('userName');
+    if (Number.isFinite(userId) && userId > 0) {
+      this.pendingQuickUserId = userId;
+      if (userName) {
+        this.searchTerm = userName;
+      }
+    }
+
     this.loadUsers();
     this.loadGroups();
   }
@@ -196,12 +208,23 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
         this.users = result.items;
         this.totalUsers = result.totalCount;
         this.isLoadingUsers = false;
+        this.selectPendingQuickUser();
       },
       error: () => {
         this.errorMessage = 'לא הצלחנו לטעון משתמשים. בדוק שהבקאנד רץ ושהמשתמש מחובר כמנהל.';
         this.isLoadingUsers = false;
       }
     });
+  }
+
+  private selectPendingQuickUser(): void {
+    if (!this.pendingQuickUserId) return;
+
+    const user = this.users.find(item => item.id === this.pendingQuickUserId);
+    if (!user) return;
+
+    this.pendingQuickUserId = null;
+    this.selectUser(user);
   }
 
   loadGroups(): void {

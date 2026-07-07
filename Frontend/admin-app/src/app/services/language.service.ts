@@ -45,8 +45,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'אקום',
     'footer.acum_suffix': '',
     'footer.copyright': '© אקורדישקייט. כל הזכויות שמורות',
-    'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים - באם זכויותכם נפגעו',
-    'footer.rights_resolve': 'להסדרת העניין',
+'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים, לדיווח ולבירורים ',
+    'footer.rights_resolve': '',
     'footer.advertising': 'לפרסום ושיתופי פעולה -',
     'footer.contact': 'צרו קשר',
 
@@ -1400,8 +1400,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'ACUM',
     'footer.acum_suffix': ' license',
     'footer.copyright': '© Acordiskate. All rights reserved.',
-    'footer.rights_notice': 'This site respects copyright - if your rights were infringed,',
-    'footer.rights_resolve': 'to resolve the matter',
+'footer.rights_notice': 'This site respects copyright, for reporting and inquiries ',
+'footer.rights_resolve': '',
     'footer.advertising': 'For advertising and partnerships -',
     'footer.contact': 'contact us',
 

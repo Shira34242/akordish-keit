@@ -24,6 +24,7 @@ public interface IUserService
     Task<UserWithProfileDto?> GetUploaderProfileByUserIdAsync(int userId);
 
     Task<MyProfileDto?> GetMyProfileAsync(int userId);
+    Task<AdminUserDetailDto?> GetAdminUserDetailAsync(int userId);
     Task<MyProfileDto?> UpdateMyProfileAsync(int userId, UpdateMyProfileDto dto);
     Task<UserListDto?> AdminUpdateUserAsync(int userId, AdminUpdateUserDto dto);
     Task<bool> AdminDeleteUserAsync(int userId);

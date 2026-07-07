@@ -980,7 +980,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private spawnHeroParticles(x: number, y: number, dx: number, dy: number): void {
     const moveSpeed = Math.sqrt(dx * dx + dy * dy);
-    const count = Math.min(6, 3 + Math.floor(moveSpeed * 0.22));
+      const count = Math.min(8, 3 + Math.floor(moveSpeed * 0.30));
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;

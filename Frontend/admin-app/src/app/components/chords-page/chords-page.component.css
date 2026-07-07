@@ -509,7 +509,7 @@
     overflow-y: hidden;
     padding-top: var(--space-sm);
     padding-bottom: var(--space-sm);
-    direction: ltr;
+    direction: rtl;
     scrollbar-width: none;
     -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
