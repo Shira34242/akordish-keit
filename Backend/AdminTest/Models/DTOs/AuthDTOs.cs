@@ -54,6 +54,9 @@ namespace AkordishKeit.Models.DTOs
 
     public class CompleteProfileRequest
     {
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "שם ארוך או קצר מדי")]
+        public string? Username { get; set; }
+
         /// <summary>מערך מזהי כלי הנגינה שבחר המשתמש</summary>
         public List<int>? InstrumentIds { get; set; }
 

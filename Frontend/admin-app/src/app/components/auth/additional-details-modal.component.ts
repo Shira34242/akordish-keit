@@ -1,8 +1,7 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { TranslatePipe } from '../../pipes/translate.pipe';
-import { LanguageService } from '../../services/language.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 export { UserType } from './user-type.enum';
 import { UserType } from './user-type.enum';
@@ -13,10 +12,15 @@ export interface OnboardingProfileChoice {
   serviceProviderCategoryId?: number;
 }
 
+interface InstrumentOption {
+  id: number;
+  label: string;
+}
+
 @Component({
   selector: 'app-additional-details-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './additional-details-modal.component.html',
   styleUrls: ['./additional-details-modal.component.css']
 })
@@ -27,29 +31,95 @@ export class AdditionalDetailsModalComponent {
   loading = false;
   errorMessage = '';
 
-  currentStep: 'instrument' | 'userType' | 'publicPage' = 'instrument';
+  currentStep: 'name' | 'instrument' | 'userType' | 'publicPage' = 'name';
 
-  selectedInstrument: string = '';
-  selectedLevel: string = '';
+  profileName = '';
+  selectedInstrumentIds: number[] = [];
+  selectedLevel: 1 | 2 | 3 | null = null;
   selectedUserType: UserType | null = null;
   selectedServiceProviderCategoryId?: number;
   serviceProviderCategories: SystemItem[] = [];
   categoriesLoading = false;
   categoriesError = '';
 
-  UserType = UserType;
-  private readonly langService = inject(LanguageService);
+  readonly instrumentOptions: InstrumentOption[] = [
+    { id: 3, label: 'קלידים' },
+    { id: 1, label: 'גיטרה' },
+    { id: 6, label: 'כינור' },
+    { id: 9, label: 'יוקלילי' }
+  ];
 
-  constructor(
-    private authService: AuthService,
-    private systemTablesService: SystemTablesService
-  ) {
+  UserType = UserType;
+  private readonly authService = inject(AuthService);
+  private readonly systemTablesService = inject(SystemTablesService);
+
+  constructor() {
     this.loadServiceProviderCategories();
   }
 
-  onContinue(): void {
+  get progressPercent(): number {
+    if (this.currentStep === 'name') return 33;
+    if (this.currentStep === 'instrument') return 66;
+    return 100;
+  }
+
+  get isPublicPageCandidate(): boolean {
+    return (this.selectedUserType ?? UserType.Regular) !== UserType.Regular;
+  }
+
+  goNext(): void {
     this.errorMessage = '';
-    this.currentStep = 'userType';
+
+    if (this.currentStep === 'name') {
+      this.currentStep = 'instrument';
+      return;
+    }
+
+    if (this.currentStep === 'instrument') {
+      this.currentStep = 'userType';
+      return;
+    }
+
+    if (this.currentStep === 'userType') {
+      const userType = this.selectedUserType ?? UserType.Regular;
+      if (userType === UserType.Regular) {
+        this.finish(false);
+        return;
+      }
+
+      this.currentStep = 'publicPage';
+    }
+  }
+
+  skipStep(): void {
+    if (this.currentStep === 'name') {
+      this.profileName = '';
+      this.currentStep = 'instrument';
+      return;
+    }
+
+    if (this.currentStep === 'instrument') {
+      this.selectedInstrumentIds = [];
+      this.selectedLevel = null;
+      this.currentStep = 'userType';
+      return;
+    }
+
+    if (this.currentStep === 'userType') {
+      this.selectedUserType = UserType.Regular;
+      this.selectedServiceProviderCategoryId = undefined;
+      this.finish(false);
+    }
+  }
+
+  toggleInstrument(id: number): void {
+    this.selectedInstrumentIds = this.isInstrumentSelected(id)
+      ? this.selectedInstrumentIds.filter(existingId => existingId !== id)
+      : [...this.selectedInstrumentIds, id];
+  }
+
+  isInstrumentSelected(id: number): boolean {
+    return this.selectedInstrumentIds.includes(id);
   }
 
   selectUserType(userType: UserType, categoryId?: number): void {
@@ -65,16 +135,6 @@ export class AdditionalDetailsModalComponent {
     return category.id;
   }
 
-  onUserTypeContinue(): void {
-    const userType = this.selectedUserType ?? UserType.Regular;
-    if (userType === UserType.Regular) {
-      this.finish(false);
-      return;
-    }
-
-    this.currentStep = 'publicPage';
-  }
-
   onAddPublicPage(): void {
     this.finish(true);
   }
@@ -87,11 +147,10 @@ export class AdditionalDetailsModalComponent {
     this.errorMessage = '';
     this.loading = true;
 
-    const levelMap: Record<string, 1 | 2 | 3> = { 'מתחיל/ה': 1, 'מתקדם/ת': 2, 'מקצועי/ת': 3 };
-    const instrumentName = this.selectedInstrument !== 'none' ? this.selectedInstrument : null;
     const payload = {
-      otherInstrumentName: instrumentName !== 'other' ? instrumentName : null,
-      instrumentLevel: this.selectedInstrument !== 'none' ? (levelMap[this.selectedLevel] ?? null) : null,
+      username: this.profileName.trim() || null,
+      instrumentIds: this.selectedInstrumentIds,
+      instrumentLevel: this.selectedLevel,
       userType: this.selectedUserType ?? UserType.Regular
     };
 
@@ -103,7 +162,7 @@ export class AdditionalDetailsModalComponent {
       },
       error: (error: any) => {
         this.loading = false;
-        this.errorMessage = error?.error?.message || this.langService.translate('auth.error_update_details');
+        this.errorMessage = error?.error?.message || 'לא הצלחנו לשמור את הפרטים. אפשר לנסות שוב או לדלג.';
       }
     });
   }
@@ -119,21 +178,13 @@ export class AdditionalDetailsModalComponent {
   }
 
   get publicPageTitle(): string {
-    if (this.selectedUserType === UserType.Artist) return 'רוצה להוסיף דף אמן ציבורי?';
-    if (this.selectedUserType === UserType.Teacher) return 'רוצה להוסיף דף מורה ציבורי?';
-    return 'רוצה להוסיף דף ציבורי לשירות שלך?';
+    if (this.selectedUserType === UserType.Artist) return 'רוצה לפתוח דף אמן ציבורי באתר?';
+    if (this.selectedUserType === UserType.Teacher) return 'רוצה לפתוח דף מורה ציבורי באתר?';
+    return 'רוצה לפתוח דף ציבורי לשירות שלך באתר?';
   }
 
   get publicPageText(): string {
-    if (this.selectedUserType === UserType.Artist) {
-      return 'דף אמן הוא כרטיס אישי שלך באתר. אנשים יוכלו להיכנס, להכיר אותך, לראות שירים, הופעות, תמונות וקישורים, ואתה תוכל לנהל ולעדכן אותו בעצמך.';
-    }
-
-    if (this.selectedUserType === UserType.Teacher) {
-      return 'דף מורה עוזר לתלמידים למצוא אותך באתר, להבין מה אתה מלמד, באיזה אזור, ואיך אפשר ליצור איתך קשר. את הדף תוכל לנהל ולעדכן בעצמך.';
-    }
-
-    return 'זה יהיה כרטיס מקצועי שלך באתר, עם פרטים על השירות, אזור פעילות ודרכי יצירת קשר. הדף יכול להגדיל חשיפה ללקוחות רלוונטיים, ואתה תוכל לנהל אותו בעצמך.';
+    return 'זה יהיה כרטיס אישי שלך באתר, שאנשים יוכלו להיכנס אליו, להכיר אותך, לראות מה אתה מציע וליצור איתך קשר. הדף יכול להגדיל חשיפה ללקוחות רלוונטיים, ותוכל לנהל ולעדכן אותו בעצמך.';
   }
 
   private loadServiceProviderCategories(): void {

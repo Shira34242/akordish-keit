@@ -40,6 +40,7 @@ export interface User {
 }
 
 export interface CompleteProfilePayload {
+    username?: string | null;
     instrumentIds?: number[];
     otherInstrumentName?: string | null;
     instrumentLevel?: number | null;
@@ -137,6 +138,9 @@ export class AuthService {
 
     completeProfile(payload: CompleteProfilePayload): Observable<User> {
         const body: Record<string, unknown> = {};
+        if (payload.username !== undefined && payload.username !== null) {
+            body['username'] = payload.username;
+        }
         if (payload.instrumentIds && payload.instrumentIds.length > 0) {
             body['instrumentIds'] = payload.instrumentIds;
         }

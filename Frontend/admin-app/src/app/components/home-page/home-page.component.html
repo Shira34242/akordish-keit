@@ -30,16 +30,21 @@
             aria-label="חיפוש">
             <span class="material-icons search-icon-mat" aria-hidden="true">search</span>
           </button>
-          <div class="search-rich-placeholder" *ngIf="!searchQuery" aria-hidden="true">
-            <strong class="search-placeholder-term" [class.is-switching]="isSearchPlaceholderSwitching">
-              {{ currentSearchPlaceholder }}
-            </strong>
+          <div class="search-rich-placeholder" *ngIf="!searchQuery && !isSearchInputFocused" aria-hidden="true">
+            <span class="search-placeholder-line">
+              <span class="search-placeholder-static">חיפוש חכם באתר</span>
+              <strong class="search-placeholder-highlight">
+                {{ displayedSearchPlaceholder }}
+              </strong>
+              <span class="search-placeholder-caret"></span>
+            </span>
           </div>
           <input
             type="text"
             [(ngModel)]="searchQuery"
             (input)="onSearchInput(searchQuery)"
             (keydown.enter)="submitHomeSearch()"
+            (focus)="onSearchFocus()"
             (blur)="onSearchBlur()"
             class="search-input">
         </div>

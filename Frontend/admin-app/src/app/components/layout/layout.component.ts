@@ -662,6 +662,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   onAuthSuccess(response: AuthResponse): void {
     this.closeAuthModal();
+    this.closeSoftReminderModal();
 
     if (response.requiresProfileCompletion) {
       this.showAdditionalDetailsModal = true;

@@ -1,6 +1,6 @@
 <section class="legal-page">
   <div class="legal-page__inner">
-    <a class="legal-page__back" routerLink="/">חזרה לאתר</a>
+    <a *ngIf="isContactPage" class="legal-page__back" routerLink="/">חזרה לאתר</a>
 
     <header class="legal-page__header">
       <span class="legal-page__eyebrow">מידע רשמי</span>

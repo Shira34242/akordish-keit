@@ -45,9 +45,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'אקום',
     'footer.acum_suffix': '',
     'footer.copyright': '© אקורדישקייט. כל הזכויות שמורות',
-    'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים — באם זכויותכם נפגעו',
+    'footer.rights_notice': 'אתר זה מכבד זכויות יוצרים - באם זכויותכם נפגעו',
     'footer.rights_resolve': 'להסדרת העניין',
-    'footer.advertising': 'לפרסום ושיתופי פעולה —',
+    'footer.advertising': 'לפרסום ושיתופי פעולה -',
     'footer.contact': 'צרו קשר',
 
     // Song page
@@ -571,7 +571,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Playlists page
     'playlists.title': 'הרשימות שלי',
-    'playlists.subtitle': 'מקום אחד לכל השמירות — שירים, אקורדים, כתבות ורשימות אישיות.',
+    'playlists.subtitle': 'מקום אחד לכל השמירות - שירים, אקורדים, כתבות ורשימות אישיות.',
     'playlists.community_desc': 'גלה רשימות שמשתמשים אחרים שיתפו עם הקהילה',
     'playlists.community_btn': 'מאגר רשימות קהילתי',
     'playlists.new_name_placeholder': 'שם הרשימה החדשה',
@@ -1400,9 +1400,9 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'footer.acum_name': 'ACUM',
     'footer.acum_suffix': ' license',
     'footer.copyright': '© Acordiskate. All rights reserved.',
-    'footer.rights_notice': 'This site respects copyright — if your rights were infringed,',
+    'footer.rights_notice': 'This site respects copyright - if your rights were infringed,',
     'footer.rights_resolve': 'to resolve the matter',
-    'footer.advertising': 'For advertising and partnerships —',
+    'footer.advertising': 'For advertising and partnerships -',
     'footer.contact': 'contact us',
 
     // Song page
@@ -1926,7 +1926,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Playlists page
     'playlists.title': 'My Playlists',
-    'playlists.subtitle': 'One place for all your saves — songs, chords, articles and personal lists.',
+    'playlists.subtitle': 'One place for all your saves - songs, chords, articles and personal lists.',
     'playlists.community_desc': 'Discover lists shared by other users with the community',
     'playlists.community_btn': 'Community Playlist Library',
     'playlists.new_name_placeholder': 'New list name',

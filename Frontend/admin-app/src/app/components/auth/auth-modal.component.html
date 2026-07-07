@@ -1,17 +1,65 @@
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container" (click)="$event.stopPropagation()">
 
-    <button class="close-btn" (click)="onClose()">✕</button>
+    <button class="close-btn" type="button" (click)="onClose()" aria-label="סגירה">×</button>
 
     <div class="modal-header">
-      <h2>{{ isLogin ? ('auth.login_title' | translate) : ('auth.register_title' | translate) }}</h2>
+      <h2>{{ isLogin ? ('auth.login_title' | translate) : 'הרשמה לאתר' }}</h2>
     </div>
 
     <div class="error-message" *ngIf="errorMessage">
       <span>{{ errorMessage }}</span>
     </div>
 
-    <form class="auth-form" (ngSubmit)="onSubmit()">
+    <ng-container *ngIf="!isLogin && registerStep === 'choice'">
+      <div class="consent-stack">
+        <label class="terms-row">
+          <input id="termsApproval" name="termsApproval" type="checkbox" class="terms-checkbox" [(ngModel)]="termsApproved" />
+          <span class="terms-text">
+            בהרשמה לאתר אני מאשר/ת שקראתי ואני מסכים/ה ל
+            <a routerLink="/terms" target="_blank" rel="noopener">תקנון ותנאי שימוש</a>
+            <span> ו</span>
+            <a routerLink="/privacy" target="_blank" rel="noopener">מדיניות פרטיות</a>.
+          </span>
+        </label>
+
+        <label class="terms-row">
+          <input id="marketingConsent" name="marketingConsent" type="checkbox" class="terms-checkbox" [(ngModel)]="marketingConsent" />
+          <span class="terms-text">אני מאשר/ת קבלת דיוור שיווקי, עדכונים והצעות מאקורדישקייט בדוא"ל.</span>
+        </label>
+      </div>
+
+      <div class="google-btn-wrapper">
+        <div class="google-btn-stack">
+          <button type="button" class="btn-google" [disabled]="loading || !canRegister">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span>הרשמה עם Google</span>
+          </button>
+          <div class="google-signin-overlay" [class.google-signin-overlay--disabled]="loading || !canRegister">
+            <asl-google-signin-button
+              type="standard"
+              size="large"
+              shape="pill"
+              theme="outline"
+              [width]="300">
+            </asl-google-signin-button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="subtle-link" (click)="openManualRegister()">הרשמה ללא חשבון Google</button>
+
+      <div class="toggle-mode">
+        <span>כבר יש לך חשבון? <a (click)="toggleMode()">התחברות</a></span>
+      </div>
+    </ng-container>
+
+    <form class="auth-form" *ngIf="isLogin || registerStep === 'manual'" (ngSubmit)="onSubmit()">
 
       <div class="form-group" *ngIf="!isLogin">
         <input
@@ -40,6 +88,7 @@
         />
         <span class="field-error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'] }}</span>
       </div>
+
       <div class="form-group" *ngIf="isLogin">
         <input
           type="text"
@@ -75,64 +124,23 @@
         </div>
         <span class="field-error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'] }}</span>
       </div>
+
       <p class="password-hint" *ngIf="!isLogin">{{ 'auth.password_hint' | translate }}</p>
-
-      <div class="google-btn-wrapper">
-        <div class="google-btn-stack">
-          <button type="button" class="btn-google" [disabled]="loading || (googleRequiresTermsApproval && !termsApproved)">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span>{{ isLogin && !googleTermsRequired ? ('auth.google_login' | translate) : ('auth.google_register' | translate) }}</span>
-          </button>
-          <div class="google-signin-overlay" [class.google-signin-overlay--disabled]="loading || (googleRequiresTermsApproval && !termsApproved)">
-            <asl-google-signin-button
-              type="standard"
-              size="large"
-              shape="pill"
-              theme="outline"
-              [width]="300">
-            </asl-google-signin-button>
-          </div>
-        </div>
-      </div>
-
-      <div class="terms-row" *ngIf="shouldShowConsentRows">
-        <input id="termsApproval" name="termsApproval" type="checkbox" class="terms-checkbox" [(ngModel)]="termsApproved" required />
-        <span class="terms-text">
-          {{ 'auth.terms' | translate }}
-          <a routerLink="/terms" target="_blank" rel="noopener">תקנון ותנאי שימוש</a>
-          <span> ו</span>
-          <a routerLink="/privacy" target="_blank" rel="noopener">מדיניות פרטיות</a>
-          <span>.</span>
-        </span>
-      </div>
-
-      <div class="terms-row" *ngIf="shouldShowConsentRows">
-        <input id="marketingConsent" name="marketingConsent" type="checkbox" class="terms-checkbox" [(ngModel)]="marketingConsent" />
-        <span class="terms-text">אני מאשר/ת קבלת דיוור שיווקי, עדכונים והצעות מאקורדישקייט בדוא"ל.</span>
-      </div>
 
       <div class="forgot-password-row" *ngIf="isLogin">
         <a class="forgot-password-link" (click)="onForgotPassword()">{{ 'auth.forgot_password' | translate }}</a>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="loading || (!isLogin && !termsApproved)">
+      <button type="submit" class="btn-submit" [disabled]="loading || (!isLogin && !canRegister)">
         <span *ngIf="!loading">{{ isLogin ? ('auth.submit_login' | translate) : ('auth.submit_register' | translate) }}</span>
         <span *ngIf="loading" class="spinner"></span>
       </button>
+
+      <button type="button" class="subtle-link" *ngIf="!isLogin" (click)="backToRegisterChoice()">חזרה להרשמה עם Google</button>
     </form>
 
-    <div class="toggle-mode">
-      <span *ngIf="isLogin">
-        {{ 'auth.no_account' | translate }} <a (click)="toggleMode()">{{ 'auth.register_link' | translate }}</a>
-      </span>
-      <span *ngIf="!isLogin">
-        {{ 'auth.has_account' | translate }} <a (click)="toggleMode()">{{ 'auth.login_link' | translate }}</a>
-      </span>
+    <div class="toggle-mode" *ngIf="isLogin">
+      <span>{{ 'auth.no_account' | translate }} <a (click)="toggleMode()">{{ 'auth.register_link' | translate }}</a></span>
     </div>
 
   </div>

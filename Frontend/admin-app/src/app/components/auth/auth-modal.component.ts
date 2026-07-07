@@ -22,6 +22,7 @@ export class AuthModalComponent implements OnDestroy {
   @Output() forgotPassword = new EventEmitter<void>();
 
   isLogin = false; // true = login mode, false = register mode
+  registerStep: 'choice' | 'manual' = 'choice';
   loading = false;
   errorMessage = '';
   showPassword = false; // Password visibility toggle
@@ -65,9 +66,32 @@ export class AuthModalComponent implements OnDestroy {
 
   toggleMode() {
     this.isLogin = !this.isLogin;
+    this.registerStep = 'choice';
     this.errorMessage = '';
     this.fieldErrors = {};
     this.clearForm();
+  }
+
+  openManualRegister(): void {
+    this.errorMessage = '';
+    if (!this.canRegister) {
+      this.errorMessage = 'כדי להירשם יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
+      return;
+    }
+
+    this.registerStep = 'manual';
+  }
+
+  backToRegisterChoice(): void {
+    this.errorMessage = '';
+    this.fieldErrors = {};
+    this.registerStep = 'choice';
+    this.username = '';
+    this.email = '';
+    this.password = '';
+    this.showPassword = false;
+    this.passwordStrength = null;
+    this.passwordErrors = [];
   }
 
   togglePasswordVisibility() {
@@ -97,6 +121,10 @@ export class AuthModalComponent implements OnDestroy {
 
   get googleRequiresTermsApproval(): boolean {
     return this.googleTermsRequired;
+  }
+
+  get canRegister(): boolean {
+    return this.termsApproved && this.marketingConsent;
   }
 
   onPasswordChange() {
@@ -215,8 +243,8 @@ export class AuthModalComponent implements OnDestroy {
       return;
     }
 
-    if (!this.termsApproved) {
-      this.errorMessage = this.langService.translate('auth.approve_terms');
+    if (!this.canRegister) {
+      this.errorMessage = 'כדי להירשם יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
       this.loading = false;
       return;
     }
@@ -240,10 +268,16 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   private handleGoogleLogin(idToken: string) {
-    const isRegistrationConsentFlow = this.googleTermsRequired;
+    const isRegistrationFlow = !this.isLogin;
+    const isRegistrationConsentFlow = isRegistrationFlow || this.googleTermsRequired;
 
-    if (isRegistrationConsentFlow && !this.termsApproved) {
-      this.errorMessage = this.langService.translate('auth.approve_terms');
+    if (isRegistrationFlow && !this.canRegister) {
+      this.errorMessage = 'כדי להירשם יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
+      return;
+    }
+
+    if (!isRegistrationFlow && this.googleTermsRequired && !this.canRegister) {
+      this.errorMessage = 'כדי להירשם יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
       return;
     }
 
@@ -253,16 +287,18 @@ export class AuthModalComponent implements OnDestroy {
       next: (response) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
-        this.authSuccess.emit(response);
+        this.authSuccess.emit(isRegistrationFlow ? { ...response, requiresProfileCompletion: true } : response);
       },
       error: (error) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
         if (this.isGoogleTermsRequiredError(error)) {
+          this.isLogin = false;
+          this.registerStep = 'choice';
           this.googleTermsRequired = true;
           this.termsApproved = false;
           this.marketingConsent = false;
-          this.errorMessage = this.langService.translate('auth.google_terms_required');
+          this.errorMessage = 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
           return;
         }
         this.errorMessage = error.error?.message || this.langService.translate('auth.error_google');

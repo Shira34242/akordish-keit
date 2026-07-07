@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { ModalService, ReportModalState } from './services/modal.service';
 import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts.component';
 import { SiteAlertService } from './services/site-alert.service';
-import { GoogleOneTapService } from './services/google-one-tap.service';
 import { RequiredFieldFeedbackService } from './services/required-field-feedback.service';
 import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
@@ -99,11 +98,11 @@ export class AppComponent implements OnInit {
     contentId: 0,
     contentTitle: undefined
   };
+  private appServicesStarted = false;
 
   constructor(
     private modalService: ModalService,
     private siteAlertService: SiteAlertService,
-    private googleOneTapService: GoogleOneTapService,
     private requiredFieldFeedback: RequiredFieldFeedbackService,
     private authService: AuthService,
     private seoRouteService: SeoRouteService,
@@ -112,21 +111,26 @@ export class AppComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.startAppServices();
     this.checkAccessGate();
   }
 
   private checkAccessGate(): void {
     if (this.isPublicGateBypassPath()) {
       this.showGate = false;
+      this.startAppServices();
       return;
     }
 
     this.settingsService.getAccessGate().subscribe({
       next: (status) => {
         this.showGate = status.enabled && !status.hasAccess;
+        if (!this.showGate) {
+          this.startAppServices();
+        }
       },
       error: () => {
+        this.showGate = false;
+        this.startAppServices();
         // שגיאה בבדיקת ה-gate לא חוסמת את האפליקציה
       }
     });
@@ -151,14 +155,14 @@ export class AppComponent implements OnInit {
   }
 
   private startAppServices(): void {
+    if (this.appServicesStarted) return;
+    this.appServicesStarted = true;
+
     this.seoRouteService.start();
     this.adBlockDetectionService.start();
     this.siteAlertService.patchBrowserAlerts();
     this.requiredFieldFeedback.initGlobalValidation();
-    this.googleOneTapService.init();
-    this.authService.refreshSession().subscribe({
-      error: () => this.googleOneTapService.promptForGuest()
-    });
+    this.authService.refreshSession().subscribe();
 
     // Subscribe to modal state changes
     this.modalService.modalState$.subscribe(state => {

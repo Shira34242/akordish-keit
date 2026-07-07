@@ -223,13 +223,14 @@
 
 .search-rich-placeholder {
   position: absolute;
-  inset-inline: calc(36px + var(--space-base)) var(--space-base);
+  right: var(--space-lg);
+  left: calc(36px + var(--space-base));
   top: 50%;
   transform: translateY(-50%);
   direction: rtl;
   text-align: right;
   font-family: 'Open Sans', sans-serif;
-  font-size: var(--font-sm);
+  font-size: var(--font-base);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.45);
   pointer-events: none;
@@ -241,17 +242,38 @@
 
 .search-rich-placeholder strong {
   font-weight: 400;
-  color: rgba(0, 0, 0, 0.62);
+  color: #000000;
 }
 
-.search-placeholder-term {
+.search-placeholder-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: 100%;
+}
+
+.search-placeholder-highlight {
   display: inline-block;
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  min-width: 1ch;
 }
 
-.search-placeholder-term.is-switching {
-  opacity: 0;
-  transform: translateY(0.35rem);
+.search-placeholder-static {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-placeholder-caret {
+  width: 1px;
+  height: 1em;
+  background: #000000;
+  opacity: 0.65;
+  animation: searchCaretBlink 0.85s steps(1, end) infinite;
+}
+
+@keyframes searchCaretBlink {
+  0%, 48% { opacity: 0.65; }
+  49%, 100% { opacity: 0; }
 }
 
 .search-input {
@@ -436,7 +458,7 @@
 ============================================ */
 .content-section {
   width: 100%;
-  padding: var(--space-xl) 0 var(--space-2xl);
+  padding: var(--space-base) 0 var(--space-xl);
 }
 
 .page-content {
@@ -450,7 +472,7 @@
    HOME SECTIONS
 ============================================ */
 .home-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-base);
   direction: rtl;
 }
 
@@ -1033,8 +1055,8 @@
    PROMO BOX (תיבה צהובה)
 ============================================ */
 .promo-box {
-  margin: var(--space-xl) 0;
-  min-height: 23vh;
+  margin: var(--space-base) 0;
+  min-height: 18vh;
   background: #ddff53;
   border-radius: 28px;
   display: flex;
@@ -1043,7 +1065,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: var(--space-2xl) var(--space-3xl);
+  padding: var(--space-lg) var(--space-2xl);
   direction: rtl;
 }
 
@@ -1074,7 +1096,7 @@
 }
 
 .promo-box--compact {
-  min-height: 23vh;
+  min-height: 16vh;
 }
 .promo-content {
   width: 100%;
@@ -1367,7 +1389,7 @@
 }
 
 .content-slot:has(app-media-item.media-item--ready) {
-  margin: var(--space-lg) 0;
+  margin: var(--space-base) 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1431,7 +1453,7 @@
   }
 
   .content-section {
-    padding: var(--space-lg) 0 var(--space-2xl);
+    padding: var(--space-sm) 0 var(--space-lg);
   }
 
   .page-content {
@@ -1439,14 +1461,14 @@
   }
 
   .home-section {
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-sm);
   }
 
   .promo-box {
     border-radius: 20px;
-    padding: var(--space-xl) var(--space-xl);
+    padding: var(--space-sm) var(--space-sm);
     justify-content: flex-start;
-    margin: var(--space-xl) 0;
+    margin: var(--space-sm) 0;
   }
 
   .promo-content {
