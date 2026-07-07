@@ -605,6 +605,13 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     return this.teacher?.bannerImageUrl || '';
   }
 
+  get heroBackgroundFilter(): string {
+    const hasBanner = !!this.heroBannerSrc;
+    const blur = hasBanner ? this.normalizedBannerBlur(this.teacher?.bannerBlur) : 24;
+    const brightness = hasBanner ? 0.72 : 0.42;
+    return `blur(${blur}px) brightness(${brightness})`;
+  }
+
   get socialLinks(): SocialLinkDto[] {
     return (this.teacher?.socialLinks || [])
       .filter(link => !!link?.url?.trim())
@@ -807,6 +814,12 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   getSocialLinkHref(url: string): string {
     return normalizeExternalLinkUrl(url);
+  }
+
+  private normalizedBannerBlur(value: number | undefined): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(20, Math.round(numeric)));
   }
 
   private applySeo(teacher: TeacherDto): void {

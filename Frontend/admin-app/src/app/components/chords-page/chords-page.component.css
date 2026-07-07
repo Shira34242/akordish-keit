@@ -478,10 +478,10 @@
 .chords-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+    padding: var(--space-xl) var(--space-xl) var(--space-2xl);
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xl);
+    gap: var(--space-xl);
     box-sizing: border-box;
 }
 
@@ -489,11 +489,26 @@
 /* ═══════════════════════════════════════════════════════════════
    ARTISTS STRIP — פס אמנים בלולאה אוטומטית
 ═══════════════════════════════════════════════════════════════ */
+.artists-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.artists-section-header {
+    margin-bottom: var(--space-xs);
+}
+
+.artists-strip-wrapper {
+    align-items: flex-start;
+}
+
 .artists-strip {
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
     padding-top: var(--space-sm);
-    padding-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
     direction: ltr;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -506,7 +521,7 @@
 .artists-loop-track {
     display: flex;
     direction: rtl;
-    gap: var(--space-xl);
+    gap: var(--space-lg);
     width: max-content;
 }
 
@@ -568,7 +583,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-base);
+    margin-bottom: var(--space-md);
 }
 
 .section-tag {
@@ -609,7 +624,7 @@
 .sections-area {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xl);
+    gap: var(--space-xl);
 }
 
 
@@ -702,7 +717,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: var(--space-4xl) 0;
+    padding: var(--space-2xl) 0;
     color: rgba(0, 0, 0, 0.38);
     font-size: var(--font-sm);
     font-weight: 300;
@@ -722,7 +737,7 @@
 
 .no-results {
     text-align: center;
-    padding: var(--space-4xl) 0;
+    padding: var(--space-2xl) 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -761,8 +776,8 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-base);
-    margin-top: var(--space-2xl);
-    padding-bottom: var(--space-xl);
+    margin-top: var(--space-lg);
+    padding-bottom: var(--space-md);
 }
 
 .page-btn {
@@ -802,13 +817,13 @@
 .load-more-indicator {
     display: flex;
     justify-content: center;
-    padding: var(--space-2xl) 0;
+    padding: var(--space-lg) 0;
 }
 
 .catalog-load-more {
     display: flex;
     justify-content: center;
-    margin-top: var(--space-2xl);
+    margin-top: var(--space-lg);
 }
 
 
@@ -818,17 +833,17 @@
 .news-section {
     width: 100%;
     border-top: 1px solid #F2F2F2;
-    padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+    padding: var(--space-xl) var(--space-xl) var(--space-2xl);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-base);
 }
 
 .news-section-inner {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-base);
 }
 
 .news-section-link {
@@ -886,7 +901,7 @@
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     .news-strip-card { width: calc(33.33% - 6px); min-width: 160px; }
-    .news-section { padding: var(--space-xl) var(--space-lg) var(--space-3xl); }
+    .news-section { padding: var(--space-lg) var(--space-lg) var(--space-2xl); }
 
     .hero-bg { border-radius: 20px; }
 
@@ -908,11 +923,11 @@
     .songs-strip { flex: 1; }
 
     .chords-content {
-        padding: var(--space-xl) var(--space-lg) var(--space-3xl);
-        gap: var(--space-xl);
+        padding: var(--space-lg) var(--space-lg) var(--space-2xl);
+        gap: var(--space-lg);
     }
 
-    .sections-area { gap: var(--space-xl); }
+    .sections-area { gap: var(--space-lg); }
 
     /* כותרות קטגוריה — קטנות יותר */
     .section-tag { font-size: var(--font-sm); }
@@ -931,7 +946,7 @@
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
     .news-strip-card { width: calc(50% - 4px); min-width: 140px; }
-    .news-section { padding: var(--space-lg) var(--space-md) var(--space-3xl); }
+    .news-section { padding: var(--space-base) var(--space-md) var(--space-2xl); }
 
     .hero-bg { border-radius: 16px; }
 
@@ -952,7 +967,7 @@
     .search-input { font-size: var(--font-sm); }
 
     .chords-content {
-        padding: var(--space-lg) var(--space-md) var(--space-3xl);
+        padding: var(--space-base) var(--space-md) var(--space-2xl);
     }
 
     .strip-card { width: 220px; }

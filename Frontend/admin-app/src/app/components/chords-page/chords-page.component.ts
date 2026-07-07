@@ -394,8 +394,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     loadFilterData(): void {
         // Artists load immediately — visible in the strip
         this.songService.getAllArtists().subscribe(artists => {
-            this.artists = artists;
-            this.filteredArtists = artists.slice(0, 10);
+            this.artists = artists.filter(artist => Number(artist?.songCount || 0) > 0);
+            this.filteredArtists = this.artists.slice(0, 10);
         });
         // Keys and genres are only needed when the user opens a filter — defer them
         const loadSecondary = () => {

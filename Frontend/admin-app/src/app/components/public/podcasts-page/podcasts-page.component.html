@@ -113,6 +113,37 @@
           </div>
         </div>
       </section>
+
+      <section class="podcasts-section recommendations-section" *ngIf="recommendedEpisodes.length > 0">
+        <div class="section-header recommendations-header">
+          <h2>יעניין אותך גם...</h2>
+          <button
+            type="button"
+            class="recommendations-toggle"
+            (click)="toggleRecommendations()"
+            [attr.aria-expanded]="recommendationsExpanded">
+            <span>{{ recommendationsExpanded ? 'סגור' : 'פתח' }}</span>
+            <span
+              class="material-icons"
+              aria-hidden="true"
+              [textContent]="recommendationsExpanded ? 'expand_less' : 'expand_more'">
+            </span>
+          </button>
+        </div>
+
+        <div class="recommendations-panel" *ngIf="recommendationsExpanded">
+          <div class="podcast-episodes-row">
+            <div class="podcast-episodes-track">
+              <app-podcast-episode-banner
+                *ngFor="let episode of recommendedEpisodes; trackBy: trackById"
+                class="podcast-episode-card"
+                [episode]="episode"
+                [showDescription]="true">
+              </app-podcast-episode-banner>
+            </div>
+          </div>
+        </div>
+      </section>
     </ng-container>
 
     <section class="podcasts-viewer" *ngIf="isViewingSeries || seriesLoading || episodeLoading">

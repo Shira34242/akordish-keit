@@ -20,7 +20,23 @@
             <span class="material-icons">{{ profileImageUploading ? 'hourglass_top' : 'add_photo_alternate' }}</span>
             <strong>{{ profileImageUploading ? 'מעלה תמונה...' : 'העלאת תמונת פרופיל' }}</strong>
           </button>
+          <button
+            *ngIf="profileImageUrl && !profileImageUploading"
+            type="button"
+            class="profile-focus-edit"
+            (click)="openProfileImageCropper()"
+            aria-label="עריכת מיקוד תמונת פרופיל">
+            <span class="material-icons">tune</span>
+          </button>
           <input #profileInput type="file" accept="image/*,.heic,.heif,.jxl" hidden (change)="onProfileImageSelected($event)">
+          <app-profile-image-cropper
+            *ngIf="profileCropFile || profileCropUrl"
+            [sourceFile]="profileCropFile"
+            [sourceUrl]="profileCropUrl"
+            [fileName]="profileCropFileName"
+            (cropped)="uploadCroppedProfileImage($event)"
+            (cancel)="cancelProfileImageCrop()">
+          </app-profile-image-cropper>
           <div class="profile-image-link-field">
             <label class="field-label" for="become-professional-profile-image-url">קישור לתמונת פרופיל</label>
             <input

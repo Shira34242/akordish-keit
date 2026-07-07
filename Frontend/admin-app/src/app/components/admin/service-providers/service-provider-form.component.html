@@ -380,6 +380,7 @@
           inputId="provider-profile-image"
           [(url)]="profileImageUrl"
           accept="image/*,.heic,.heif,.jxl"
+          [enableImageCrop]="true"
           placeholder="https://..."
         />
         <small class="form-hint">העלה קובץ או הזן קישור</small>
@@ -392,6 +393,18 @@
           accept="image/*,.heic,.heif,.jxl"
           placeholder="https://..."
         />
+        <label class="range-field">
+          <span>טשטוש באנר</span>
+          <input
+            type="range"
+            name="bannerBlur"
+            min="0"
+            max="20"
+            step="1"
+            [(ngModel)]="bannerBlur"
+          />
+          <strong>{{ normalizedBannerBlur(bannerBlur) }}</strong>
+        </label>
         <small class="form-hint">תמונה רחבה לראש דף נותן השירות</small>
       </div>
 

@@ -18,6 +18,14 @@
       <button class="edit-avatar-btn" (click)="triggerAvatarUpload()" [disabled]="uploadingAvatar">
         <span class="material-icons">{{ uploadingAvatar ? 'hourglass_empty' : 'add_a_photo' }}</span>
       </button>
+      <button
+        class="focus-avatar-btn"
+        *ngIf="user?.profileImageUrl && !uploadingAvatar"
+        type="button"
+        (click)="openAvatarCropper()"
+        aria-label="עריכת מיקוד תמונת פרופיל">
+        <span class="material-icons">tune</span>
+      </button>
       <input
         #avatarInput
         type="file"
@@ -25,6 +33,15 @@
         style="display:none"
         (change)="onAvatarFileSelected($event)"/>
     </div>
+
+    <app-profile-image-cropper
+      *ngIf="avatarCropFile || avatarCropUrl"
+      [sourceFile]="avatarCropFile"
+      [sourceUrl]="avatarCropUrl"
+      [fileName]="avatarCropFileName"
+      (cropped)="uploadCroppedAvatar($event)"
+      (cancel)="cancelAvatarCrop()">
+    </app-profile-image-cropper>
 
   </div>
   <div class="profile-hero-spacer" aria-hidden="true"></div>

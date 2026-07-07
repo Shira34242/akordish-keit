@@ -204,6 +204,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Email = dto.Email,
             WebsiteUrl = dto.WebsiteUrl,
             BannerImageUrl = dto.BannerImageUrl,
+            BannerBlur = NormalizeBannerBlur(dto.BannerBlur),
             VideoUrl = dto.VideoUrl,
             IsFeatured = dto.IsFeatured,
             Status = (ProfileStatus)dto.Status,
@@ -291,6 +292,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         serviceProvider.Email = dto.Email;
         serviceProvider.WebsiteUrl = dto.WebsiteUrl;
         serviceProvider.BannerImageUrl = dto.BannerImageUrl;
+        serviceProvider.BannerBlur = NormalizeBannerBlur(dto.BannerBlur);
         serviceProvider.VideoUrl = dto.VideoUrl;
         serviceProvider.IsFeatured = dto.IsFeatured;
         serviceProvider.Status = (ProfileStatus)dto.Status;
@@ -526,6 +528,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Email = original.Email,
             WebsiteUrl = original.WebsiteUrl,
             BannerImageUrl = original.BannerImageUrl,
+            BannerBlur = original.BannerBlur,
             VideoUrl = original.VideoUrl,
             IsFeatured = false,
             Status = ProfileStatus.Pending,
@@ -628,6 +631,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             Email = entity.Email,
             WebsiteUrl = entity.WebsiteUrl,
             BannerImageUrl = entity.BannerImageUrl,
+            BannerBlur = entity.BannerBlur,
             VideoUrl = entity.VideoUrl,
             IsFeatured = entity.IsFeatured,
             Status = (int)entity.Status,
@@ -697,6 +701,11 @@ public class MusicServiceProviderService : IMusicServiceProviderService
                 CreatedAt = DateTime.UtcNow
             });
         }
+    }
+
+    private static int NormalizeBannerBlur(int value)
+    {
+        return Math.Clamp(value, 0, 20);
     }
 
     private static void AddCustomerTestimonials(

@@ -138,6 +138,28 @@
   line-height: var(--lh-small);
 }
 
+.profile-focus-edit {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #ddff53;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.profile-focus-edit:hover {
+  background: #000000;
+  color: #ddff53;
+}
+
+.profile-focus-edit .material-icons {
+  font-size: 20px;
+}
+
 .profile-image-link-field {
   width: min(100%, 420px);
   display: grid;

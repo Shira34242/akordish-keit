@@ -21,6 +21,7 @@ export interface MusicServiceProviderDto {
   email?: string;
   websiteUrl?: string;
   bannerImageUrl?: string;
+  bannerBlur: number;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;
@@ -82,6 +83,7 @@ export interface CreateMusicServiceProviderDto {
   email?: string;
   websiteUrl?: string;
   bannerImageUrl?: string;
+  bannerBlur?: number;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;
@@ -109,6 +111,7 @@ export interface UpdateMusicServiceProviderDto {
   email?: string;
   websiteUrl?: string;
   bannerImageUrl?: string;
+  bannerBlur?: number;
   videoUrl?: string;
   isFeatured: boolean;
   status: ProfileStatus;

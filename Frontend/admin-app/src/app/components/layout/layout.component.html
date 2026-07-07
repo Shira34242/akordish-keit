@@ -109,7 +109,10 @@
                     <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
                     <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
                     <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-                        <a class="nav-link nav-parent" routerLink="/music-news">{{ 'nav.news' | translate }}</a>
+                        <a class="nav-link nav-parent" routerLink="/music-news">
+                            <span class="material-icons nav-expand-icon" aria-hidden="true">chevron_right</span>
+                            <span>{{ 'nav.news' | translate }}</span>
+                        </a>
                         <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
                             <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
                             <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
@@ -177,7 +180,10 @@
                         <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
                         <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
                         <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-                            <a class="nav-link nav-parent" routerLink="/music-news">{{ 'nav.news' | translate }}</a>
+                            <a class="nav-link nav-parent" routerLink="/music-news">
+                                <span class="material-icons nav-expand-icon" aria-hidden="true">chevron_right</span>
+                                <span>{{ 'nav.news' | translate }}</span>
+                            </a>
                             <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
                                 <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
                                 <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>

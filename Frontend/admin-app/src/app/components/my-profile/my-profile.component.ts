@@ -25,6 +25,7 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { EventCardComponent } from '../shared/event-card/event-card.component';
 import { EventModalComponent } from '../shared/event-modal/event-modal.component';
 import { ProfileAvatarComponent } from '../shared/profile-avatar/profile-avatar.component';
+import { ProfileImageCropperComponent } from '../shared/profile-image-cropper/profile-image-cropper.component';
 import { EventCardData } from '../../utils/event.utils';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -79,6 +80,7 @@ interface LevelParticle {
     EventCardComponent,
     EventModalComponent,
     ProfileAvatarComponent,
+    ProfileImageCropperComponent,
     TranslatePipe
   ],
   templateUrl: './my-profile.component.html',
@@ -113,6 +115,9 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   user: User | null = null;
   uploadingAvatar = false;
+  avatarCropFile: File | null = null;
+  avatarCropUrl: string | null = null;
+  avatarCropFileName = 'profile-image';
   myPageInfo: UserWithProfileDto | null = null;
   myPages: UserWithProfileDto[] = [];
 
@@ -307,9 +312,35 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onAvatarFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
 
+    this.avatarCropFileName = file.name;
+    this.avatarCropFile = file;
+    this.avatarCropUrl = null;
+  }
+
+  openAvatarCropper(): void {
+    if (!this.user?.profileImageUrl || this.uploadingAvatar) return;
+    this.avatarCropFile = null;
+    this.avatarCropFileName = 'profile-image';
+    this.avatarCropUrl = this.user.profileImageUrl;
+  }
+
+  cancelAvatarCrop(): void {
+    this.avatarCropFile = null;
+    this.avatarCropUrl = null;
+  }
+
+  uploadCroppedAvatar(file: File): void {
+    this.avatarCropFile = null;
+    this.avatarCropUrl = null;
+    this.uploadAvatarFile(file);
+  }
+
+  private uploadAvatarFile(file: File): void {
     this.uploadingAvatar = true;
     this.userService.uploadProfileImage(file).subscribe({
       next: (url) => {
@@ -326,8 +357,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => { this.uploadingAvatar = false; }
     });
-
-    (event.target as HTMLInputElement).value = '';
   }
 
   private loadMyProfileDetails() {

@@ -21,7 +21,7 @@ export class AuthModalComponent implements OnDestroy {
   @Output() authSuccess = new EventEmitter<any>();
   @Output() forgotPassword = new EventEmitter<void>();
 
-  isLogin = true; // true = login mode, false = register mode
+  isLogin = false; // true = login mode, false = register mode
   loading = false;
   errorMessage = '';
   showPassword = false; // Password visibility toggle

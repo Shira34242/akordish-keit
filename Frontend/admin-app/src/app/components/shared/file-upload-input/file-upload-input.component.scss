@@ -218,4 +218,29 @@
       font-size: 13px;
     }
   }
+
+  .fui-edit-btn {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ddff53;
+    color: #000000;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: #000000;
+      color: #ddff53;
+    }
+
+    .material-icons {
+      font-size: 15px;
+    }
+  }
 }

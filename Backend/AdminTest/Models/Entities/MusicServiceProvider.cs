@@ -117,6 +117,8 @@ namespace AkordishKeit.Models.Entities
         /// </summary>
         public string? BannerImageUrl { get; set; }
 
+        public int BannerBlur { get; set; } = 0;
+
         // ════════════════════════════════════
         //          מדיה
         // ════════════════════════════════════

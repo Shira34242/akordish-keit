@@ -157,7 +157,7 @@ export class AppComponent implements OnInit {
     this.requiredFieldFeedback.initGlobalValidation();
     this.googleOneTapService.init();
     this.authService.refreshSession().subscribe({
-      error: () => {}
+      error: () => this.googleOneTapService.promptForGuest()
     });
 
     // Subscribe to modal state changes

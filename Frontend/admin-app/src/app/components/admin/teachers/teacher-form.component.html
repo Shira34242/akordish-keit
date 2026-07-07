@@ -219,6 +219,18 @@
           [(url)]="bannerImageUrl"
           placeholder="https://..."
         />
+        <label class="range-field">
+          <span>טשטוש באנר</span>
+          <input
+            type="range"
+            name="bannerBlur"
+            min="0"
+            max="20"
+            step="1"
+            [(ngModel)]="bannerBlur"
+          />
+          <strong>{{ normalizedBannerBlur(bannerBlur) }}</strong>
+        </label>
         <small class="form-hint">אם קיים, יוצג כרקע הראשי בדף המורה.</small>
       </div>
     </div>
@@ -520,6 +532,7 @@
         <app-file-upload-input
           inputId="teacher-profile-image"
           [(url)]="profileImageUrl"
+          [enableImageCrop]="true"
           placeholder="https://..."
         />
         <small class="form-hint">העלה קובץ או הזן קישור</small>

@@ -167,6 +167,7 @@ public class TeacherService : ITeacherService
             Email = dto.Email,
             WebsiteUrl = dto.WebsiteUrl,
             BannerImageUrl = dto.BannerImageUrl,
+            BannerBlur = NormalizeBannerBlur(dto.BannerBlur),
             VideoUrl = dto.VideoUrl,
             IsFeatured = dto.IsFeatured,
             Status = (ProfileStatus)dto.Status,
@@ -277,6 +278,7 @@ public class TeacherService : ITeacherService
         teacher.ServiceProvider.Email = dto.Email;
         teacher.ServiceProvider.WebsiteUrl = dto.WebsiteUrl;
         teacher.ServiceProvider.BannerImageUrl = dto.BannerImageUrl;
+        teacher.ServiceProvider.BannerBlur = NormalizeBannerBlur(dto.BannerBlur);
         teacher.ServiceProvider.VideoUrl = dto.VideoUrl;
         teacher.ServiceProvider.IsFeatured = dto.IsFeatured;
         teacher.ServiceProvider.Status = (ProfileStatus)dto.Status;
@@ -528,6 +530,7 @@ public class TeacherService : ITeacherService
             Email = original.ServiceProvider.Email,
             WebsiteUrl = original.ServiceProvider.WebsiteUrl,
             BannerImageUrl = original.ServiceProvider.BannerImageUrl,
+            BannerBlur = original.ServiceProvider.BannerBlur,
             VideoUrl = original.ServiceProvider.VideoUrl,
             IsFeatured = false,
             Status = ProfileStatus.Pending,
@@ -637,6 +640,7 @@ public class TeacherService : ITeacherService
             Email = entity.ServiceProvider.Email,
             WebsiteUrl = entity.ServiceProvider.WebsiteUrl,
             BannerImageUrl = entity.ServiceProvider.BannerImageUrl,
+            BannerBlur = entity.ServiceProvider.BannerBlur,
             VideoUrl = entity.ServiceProvider.VideoUrl,
             IsFeatured = entity.ServiceProvider.IsFeatured,
             Status = (int)entity.ServiceProvider.Status,
@@ -700,6 +704,11 @@ public class TeacherService : ITeacherService
                 Order = item.Order
             });
         }
+    }
+
+    private static int NormalizeBannerBlur(int value)
+    {
+        return Math.Clamp(value, 0, 20);
     }
 
     private static TeacherListDto MapToListDto(Teacher entity)

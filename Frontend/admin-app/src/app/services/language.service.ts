@@ -14,7 +14,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'user.profile': 'הפרופיל שלי',
     'user.playlists': 'הרשימות שלי',
     'user.logout': 'התנתקות',
-    'user.login': 'כניסה',
+    'user.login': 'התחברות',
     'notif.loading': 'טוען התראות...',
     'notif.empty': 'אין התראות חדשות כרגע.',
     'notif.all': 'לכל ההתראות',
@@ -258,7 +258,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'fab.root_greeting_prefix': 'היי',
     'fab.root_helper': 'הוספת תוכן לאתר מתוגמלת בתג מיוחד ואפשרויות בלעדיות באתר לחברים מתקדמים.',
     'fab.content_question': 'מעולה, איזה תוכן תרצה להוסיף?',
-    'fab.index_question': 'הבנתי, איזה פרופיל תרצה לאינדקס?',
+    'fab.index_question': 'הבנתי, איזה פרופיל תרצה להוסיף לאינדקס?',
     'fab.artist_question': 'איך תרצה להוסיף את האמן?',
     'fab.podcast_question': 'מה תרצה להוסיף באזור הפודקאסטים?',
     'fab.song_selected': 'מעולה, נמשיך להוספת אקורדים.',
@@ -418,7 +418,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'paginate.last_page': 'עמוד אחרון',
 
     // Auth modal
-    'auth.login_title': 'כניסה:',
+    'auth.login_title': 'התחברות:',
     'auth.register_title': 'הרשמה:',
     'auth.username': 'שם משתמש',
     'auth.email': 'מייל',
@@ -427,12 +427,12 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'auth.google_register': 'הירשם עם Google',
     'auth.terms': 'בהרשמה לאתר אני מאשר/ת שקראתי ואני מסכים/ה ל',
     'auth.terms_link': 'תקנון האתר',
-    'auth.submit_login': 'היכנס ←',
+    'auth.submit_login': 'התחבר ←',
     'auth.submit_register': 'המשך ←',
     'auth.no_account': 'עדיין אין לך חשבון?',
     'auth.register_link': 'הירשם',
     'auth.has_account': 'כבר יש לך חשבון?',
-    'auth.login_link': 'היכנס',
+    'auth.login_link': 'התחברות',
     'auth.password_hint': '8+ תווים, אות גדולה, ספרה ותו מיוחד (@$!%*?&#)',
 
     // Forgot password

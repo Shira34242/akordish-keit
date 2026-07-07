@@ -53,8 +53,24 @@
 
   <div *ngIf="url && isImage(url) && showPreview && !uploading" class="fui-preview">
     <img [src]="url" alt="preview" />
+    <button
+      *ngIf="enableImageCrop"
+      type="button"
+      class="fui-edit-btn"
+      (click)="openCropForCurrentImage()"
+      title="עריכת מיקוד">
+      <span class="material-icons">tune</span>
+    </button>
     <button type="button" class="fui-clear-btn" (click)="clear()" title="הסר">
       <span class="material-icons">close</span>
     </button>
   </div>
+  <app-profile-image-cropper
+    *ngIf="cropFile || cropUrl"
+    [sourceFile]="cropFile"
+    [sourceUrl]="cropUrl"
+    [fileName]="cropFileName"
+    (cropped)="onCropSave($event)"
+    (cancel)="onCropCancel()">
+  </app-profile-image-cropper>
 </div>

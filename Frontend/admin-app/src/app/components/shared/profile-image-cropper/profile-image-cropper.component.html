@@ -1,0 +1,56 @@
+<div class="profile-crop-backdrop" role="dialog" aria-modal="true" aria-label="עריכת תמונת פרופיל">
+  <section class="profile-crop-dialog" dir="rtl">
+    <header class="profile-crop-head">
+      <h2>מיקוד תמונת פרופיל</h2>
+      <button type="button" class="profile-crop-icon-btn" aria-label="סגירה" (click)="close()">
+        <span class="material-icons">close</span>
+      </button>
+    </header>
+
+    <div
+      class="profile-crop-stage"
+      [class.profile-crop-stage--error]="loadError"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerUp($event)">
+      <img
+        #imageEl
+        *ngIf="imageSrc"
+        class="profile-crop-image"
+        [src]="imageSrc"
+        crossorigin="anonymous"
+        [style.width.px]="imageWidth || null"
+        [style.height.px]="imageHeight || null"
+        [style.transform]="imageTransform"
+        (load)="onImageLoad(imageEl)"
+        (error)="onImageError()"
+        alt="תצוגת חיתוך" />
+      <div class="profile-crop-mask" aria-hidden="true"></div>
+      <p class="profile-crop-error" *ngIf="loadError">{{ loadError }}</p>
+    </div>
+
+    <div class="profile-crop-tools">
+      <button type="button" class="profile-crop-icon-btn" aria-label="הקטנה" (click)="zoomOut()" [disabled]="!!loadError">
+        <span class="material-icons">remove</span>
+      </button>
+      <input
+        type="range"
+        [min]="minScale"
+        [max]="minScale * 3"
+        step="0.01"
+        [(ngModel)]="scale"
+        (ngModelChange)="onScaleChange()"
+        [disabled]="!!loadError"
+        aria-label="גודל תמונה" />
+      <button type="button" class="profile-crop-icon-btn" aria-label="הגדלה" (click)="zoomIn()" [disabled]="!!loadError">
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+
+    <footer class="profile-crop-actions">
+      <button type="button" class="profile-crop-secondary" (click)="close()">ביטול</button>
+      <button type="button" class="profile-crop-primary" (click)="save()" [disabled]="!!loadError">שמירת מיקוד</button>
+    </footer>
+  </section>
+</div>
