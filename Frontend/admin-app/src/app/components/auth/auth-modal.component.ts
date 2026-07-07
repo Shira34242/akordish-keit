@@ -287,7 +287,7 @@ export class AuthModalComponent implements OnDestroy {
       next: (response) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
-        this.authSuccess.emit(isRegistrationFlow ? { ...response, requiresProfileCompletion: true } : response);
+        this.authSuccess.emit(response);
       },
       error: (error) => {
         GoogleOneTapService.setProcessing(false);
