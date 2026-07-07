@@ -8,8 +8,8 @@
     </div>
 
     <header class="modal-header" *ngIf="currentStep === 'name'">
-      <p class="eyebrow">שאלון קצר להתאמת החוויה באתר</p>
       <h2>ברוכים הבאים לאקורדישקייט</h2>
+      <p class="eyebrow">שאלון קצר להתאמת החוויה באתר</p>
     </header>
 
     <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
@@ -112,8 +112,8 @@
       <button type="button" class="arrow-btn" (click)="goNext()" [disabled]="loading" aria-label="המשך">
         <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
         <span *ngIf="loading" class="spinner"></span>
       </button>
