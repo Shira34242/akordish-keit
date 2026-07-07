@@ -19,12 +19,14 @@ export class ClientService {
   /**
    * Get all clients with pagination
    */
-  getClients(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<Client>> {
+  getClients(pageNumber: number = 1, pageSize: number = 10, sortBy?: string): Observable<PagedResult<Client>> {
     const params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
 
-    return this.http.get<PagedResult<Client>>(this.apiUrl, { params });
+    const requestParams = sortBy ? params.set('sortBy', sortBy) : params;
+
+    return this.http.get<PagedResult<Client>>(this.apiUrl, { params: requestParams });
   }
 
   /**

@@ -19,6 +19,9 @@
       <div class="signed-user" *ngIf="user">
         <span>{{ user.username }}</span>
         <small>{{ user.email }}</small>
+        <button type="button" class="switch-account-btn" (click)="switchAccount()">
+          החלף חשבון / התנתק
+        </button>
       </div>
 
       <div class="google-area" *ngIf="!user">

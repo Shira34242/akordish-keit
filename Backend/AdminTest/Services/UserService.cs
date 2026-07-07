@@ -23,7 +23,8 @@ public class UserService : IUserService
         int? contentTag,
         int? preferredInstrumentId,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        string? sortBy = null)
     {
         var query = _context.Users
             .Include(u => u.PreferredInstrument)
@@ -59,8 +60,7 @@ public class UserService : IUserService
             query = query.Where(u => u.PreferredInstrumentId == preferredInstrumentId.Value);
         }
 
-        // Order by CreatedAt
-        query = query.OrderByDescending(u => u.CreatedAt);
+        query = ApplyUserSorting(query, sortBy);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -780,6 +780,17 @@ public class UserService : IUserService
             PreferredInstrumentName = entity.PreferredInstrument?.Name,
             ContentTag = (int)entity.ContentTag,
             UploadCount = entity.UploadCount
+        };
+    }
+
+    private static IQueryable<User> ApplyUserSorting(IQueryable<User> query, string? sortBy)
+    {
+        return sortBy?.Trim().ToLowerInvariant() switch
+        {
+            "created_asc" => query.OrderBy(u => u.CreatedAt).ThenBy(u => u.Username),
+            "name_asc" => query.OrderBy(u => u.Username).ThenByDescending(u => u.CreatedAt),
+            "name_desc" => query.OrderByDescending(u => u.Username).ThenByDescending(u => u.CreatedAt),
+            _ => query.OrderByDescending(u => u.CreatedAt).ThenBy(u => u.Username)
         };
     }
 }

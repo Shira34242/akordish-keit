@@ -60,6 +60,14 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
   filterRole: number | null = null;
   filterIsActive: boolean | null = null;
   filterContentTag: number | null = null;
+  sortBy = 'created_desc';
+
+  sortOptions = [
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' }
+  ];
 
   tagOptions = [
     { value: null, label: 'כל התגים' },
@@ -145,7 +153,9 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.filterIsActive ?? undefined,
       this.currentPage,
       this.pageSize,
-      this.filterContentTag ?? undefined
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<UserListDto>) => {
         this.users = result.items;
@@ -176,7 +186,9 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.filterIsActive ?? undefined,
       this.currentPage,
       this.pageSize,
-      this.filterContentTag ?? undefined
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<UserListDto>) => {
         this.users = [...this.users, ...result.items];
@@ -227,7 +239,9 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.filterIsActive ?? undefined,
       this.currentPage,
       this.pageSize,
-      this.filterContentTag ?? undefined
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<UserListDto>) => {
         this.users = result.items;
@@ -259,6 +273,7 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.filterRole = null;
     this.filterIsActive = null;
     this.filterContentTag = null;
+    this.sortBy = 'created_desc';
     this.loadUsers();
   }
 

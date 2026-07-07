@@ -48,10 +48,11 @@ public class MusicServiceProvidersController : ControllerBase
         [FromQuery] bool? isFeatured = null,
         [FromQuery] bool? isTeacher = null,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null)
     {
         var result = await _service.GetServiceProvidersAsync(
-            search, categoryId, cityId, cityName, status, isFeatured, isTeacher, pageNumber, pageSize);
+            search, categoryId, cityId, cityName, status, isFeatured, isTeacher, pageNumber, pageSize, sortBy);
 
         return Ok(result);
     }

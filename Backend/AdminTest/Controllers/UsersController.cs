@@ -197,10 +197,11 @@ public class UsersController : ControllerBase
         [FromQuery] int? contentTag = null,
         [FromQuery] int? preferredInstrumentId = null,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null)
     {
         var result = await _service.GetUsersAsync(
-            search, role, isActive, contentTag, preferredInstrumentId, pageNumber, pageSize);
+            search, role, isActive, contentTag, preferredInstrumentId, pageNumber, pageSize, sortBy);
 
         return Ok(result);
     }

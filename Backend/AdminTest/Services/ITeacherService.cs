@@ -13,7 +13,8 @@ public interface ITeacherService
         int? status,
         bool? isFeatured,
         int pageNumber,
-        int pageSize);
+        int pageSize,
+        string? sortBy = null);
 
     Task<TeacherDto?> GetTeacherByIdAsync(int id);
 

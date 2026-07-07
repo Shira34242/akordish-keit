@@ -61,6 +61,11 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
     GoogleOneTapService.setModalActive(false);
   }
 
+  switchAccount(): void {
+    this.authService.logout();
+    this.socialAuthService.signOut().catch(() => {});
+  }
+
   get activeLegalPage(): LegalPageContent | null {
     return this.activeLegalKey ? PAGES[this.activeLegalKey] : null;
   }

@@ -11,7 +11,8 @@ public interface IUserService
         int? contentTag,
         int? preferredInstrumentId,
         int pageNumber,
-        int pageSize);
+        int pageSize,
+        string? sortBy = null);
 
     /// <summary>
     /// מחפש משתמשים בעלי פרופיל ציבורי פעיל (אמן / מורה / בעל מקצוע)

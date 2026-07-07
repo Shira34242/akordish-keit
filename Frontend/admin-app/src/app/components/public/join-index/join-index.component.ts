@@ -79,6 +79,12 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     GoogleOneTapService.setModalActive(false);
   }
 
+  switchAccount(): void {
+    this.selectedType = null;
+    this.authService.logout();
+    this.socialAuthService.signOut().catch(() => {});
+  }
+
   start(type: JoinIndexType, categoryId?: number): void {
     if (!this.user || !this.agencyReady) return;
     this.selectedType = type;

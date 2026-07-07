@@ -37,6 +37,14 @@
       </div>
 
       <div class="filter-group">
+        <select class="form-control" [(ngModel)]="sortBy" (change)="onFilterChange()">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
         <select class="form-control" [(ngModel)]="filterIsTeacher" (change)="onFilterChange()">
           <option [ngValue]="null">כל הסוגים</option>
           <option [ngValue]="true">מורים בלבד</option>
