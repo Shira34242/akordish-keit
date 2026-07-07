@@ -593,41 +593,25 @@ public class UserService : IUserService
         var page = await GetOwnedPageForRequestAsync(userId, dto.ProfileType, dto.ProfileId);
         if (page == null) return false;
 
-        var admins = await _context.Users
-            .Where(u => !u.IsDeleted
-                && u.IsActive
-                && (u.Role == UserRole.Admin || u.Role == UserRole.Manager))
-            .Select(u => u.Id)
-            .ToListAsync();
-
-        if (admins.Count == 0) return true;
-
         var requester = await _context.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         var requesterName = requester?.Username ?? $"משתמש #{userId}";
-        var title = "בקשה למחיקת דף";
-        var message = $"{requesterName} ביקש למחוק את הדף \"{page.DisplayName}\". הדף לא נמחק אוטומטית ונדרש טיפול מנהל.";
+        var pageType = page.ProfileType == "artist"
+            ? "אמן"
+            : page.IsTeacher ? "מורה" : "בעל מקצוע";
 
-        foreach (var adminId in admins)
+        _context.ContentReports.Add(new ContentReport
         {
-            _context.Notifications.Add(new Notification
-            {
-                UserId = adminId,
-                Title = title,
-                Message = message,
-                Type = NotificationType.StatusUpdate,
-                Category = GetPageNotificationCategory(page),
-                RelatedEntityType = "PageDeletionRequest",
-                RelatedEntityId = page.ProfileId,
-                ActionUrl = page.ProfileUrl,
-                CreatedByUserId = userId,
-                CreatedAt = DateTime.UtcNow,
-                IsRead = false,
-                IsDeleted = false
-            });
-        }
+            UserId = userId,
+            ContentType = "General",
+            ContentId = 0,
+            ReportType = "Other",
+            Description = $"{requesterName} ביקש למחוק את הדף \"{page.DisplayName}\". סוג הדף: {pageType}. מזהה דף: {page.ProfileId}. קישור: {page.ProfileUrl}. הדף לא נמחק אוטומטית ונדרש טיפול מנהל.",
+            ReportedAt = DateTime.UtcNow,
+            Status = "Pending"
+        });
 
         await _context.SaveChangesAsync();
         return true;
@@ -678,12 +662,6 @@ public class UserService : IUserService
         }
 
         return null;
-    }
-
-    private static NotificationCategory GetPageNotificationCategory(UserWithProfileDto page)
-    {
-        if (page.ProfileType == "artist") return NotificationCategory.Artist;
-        return page.IsTeacher ? NotificationCategory.Teacher : NotificationCategory.ServiceProvider;
     }
 
     private async Task NormalizeUserRoleAfterPageChangeAsync(int userId)

@@ -11,7 +11,18 @@ import { TeacherService } from '../../../services/teacher.service';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { ArtistService } from '../../../services/artist.service';
 import { SongService } from '../../../services/song.service';
-import { ArtistStatus } from '../../../models/artist.model';
+import { ArtistListDto, ArtistStatus } from '../../../models/artist.model';
+import { TeacherListDto } from '../../../models/teacher.model';
+import { MusicServiceProviderListDto } from '../../../models/music-service-provider.model';
+import { SongDto } from '../../../models/song.model';
+import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { ArticleService as AdminArticleService } from '../../../services/admin/article.service';
+import { EventService as AdminEventService } from '../../../services/admin/event.service';
+import { PodcastService } from '../../../services/podcast.service';
+import { Event } from '../../../models/event.model';
+import { PodcastEpisode } from '../../../models/podcast.model';
+
+type PeriodKey = 'day' | 'week' | 'month';
 
 @Component({
     selector: 'app-admin-dashboard-placeholder',
@@ -23,6 +34,8 @@ import { ArtistStatus } from '../../../models/artist.model';
 export class AdminDashboardPlaceholderComponent implements OnInit {
     loading = true;
     today = new Date();
+    selectedUserPeriod: PeriodKey = 'day';
+    selectedAnalyticsPeriod: PeriodKey = 'day';
 
     userStats: UserStats | null = null;
     recentJoins: RecentJoin[] = [];
@@ -32,15 +45,73 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     pendingReports: Report[] = [];
     chordRequestsCount = 0;
     pendingTeachersCount = 0;
+    pendingTeachers: TeacherListDto[] = [];
     pendingServiceProvidersCount = 0;
+    pendingServiceProviders: MusicServiceProviderListDto[] = [];
     pendingArtistsCount = 0;
+    pendingArtists: ArtistListDto[] = [];
     pendingSongsCount = 0;
+    pendingSongs: SongDto[] = [];
+    draftArticles: Article[] = [];
+    draftNews: Article[] = [];
+    draftPodcastEpisodes: PodcastEpisode[] = [];
+    draftEvents: Event[] = [];
 
     get totalPendingApprovals(): number {
         return this.pendingTeachersCount +
                this.pendingServiceProvidersCount +
-               this.pendingArtistsCount +
+               this.pendingArtistsCount;
+    }
+
+    get totalDraftContent(): number {
+        return this.draftArticles.length +
+               this.draftNews.length +
+               this.draftPodcastEpisodes.length +
+               this.draftEvents.length +
                this.pendingSongsCount;
+    }
+
+    get periodOptions(): { key: PeriodKey; label: string }[] {
+        return [
+            { key: 'day', label: '24 שעות' },
+            { key: 'week', label: 'שבוע' },
+            { key: 'month', label: 'חודש' }
+        ];
+    }
+
+    get filteredRecentJoins(): RecentJoin[] {
+        const cutoff = this.periodCutoff(this.selectedUserPeriod);
+        return this.recentJoins
+            .filter(join => new Date(join.date).getTime() >= cutoff.getTime())
+            .slice(0, 6);
+    }
+
+    get recentJoinCount(): number {
+        return this.filteredRecentJoins.length;
+    }
+
+    get analyticsViews(): number {
+        if (!this.dashboard) return 0;
+        return (this.dashboard.events?.listPageViews?.last30Days ?? 0) +
+               (this.dashboard.articles?.viewsLast30Days ?? 0);
+    }
+
+    get topArticles(): { title: string; views: number }[] {
+        return [
+            { title: 'כתבות תוכן', views: this.dashboard?.articles?.viewsLast30Days ?? 0 },
+            ...((this.dashboard?.events?.topEvents ?? [])
+                .slice(0, 2)
+                .map(event => ({ title: event.eventName, views: event.viewsLast30 })))
+        ].filter(item => item.views > 0).slice(0, 3);
+    }
+
+    get popularPages(): { title: string; value: number }[] {
+        return [
+            { title: 'עמוד הופעות', value: this.dashboard?.events?.listPageViews?.last30Days ?? 0 },
+            ...((this.dashboard?.adBlock?.topPages ?? [])
+                .slice(0, 3)
+                .map(page => ({ title: page.pagePath, value: page.checks })))
+        ].filter(item => item.value > 0).slice(0, 4);
     }
 
     constructor(
@@ -50,7 +121,10 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         private teacherService: TeacherService,
         private serviceProviderService: MusicServiceProviderService,
         private artistService: ArtistService,
-        private songService: SongService
+        private songService: SongService,
+        private articleService: AdminArticleService,
+        private eventService: AdminEventService,
+        private podcastService: PodcastService
     ) {}
 
     ngOnInit(): void {
@@ -59,25 +133,39 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     loadAll(): void {
         this.loading = true;
+        const analyticsFrom = this.isoDate(this.periodCutoff(this.selectedAnalyticsPeriod));
+        const analyticsTo = this.isoDate(new Date());
         forkJoin({
             stats: this.adminService.getUserStats().pipe(catchError(() => of(null))),
             joins: this.adminService.getRecentJoins().pipe(catchError(() => of([]))),
-            dash: this.analyticsService.getDashboard().pipe(catchError(() => of(null))),
+            dash: this.analyticsService.getDashboard(analyticsFrom, analyticsTo).pipe(catchError(() => of(null))),
             reports: this.reportService.getReports(1, 6, 'Pending').pipe(catchError(() => of(null))),
             chordReqs: this.reportService.getChordRequests(1, 1).pipe(catchError(() => of(null))),
             teachers: this.teacherService
-                .getTeachers(undefined, undefined, 0, undefined, 1, 1)
+                .getTeachers(undefined, undefined, 0, undefined, 1, 4)
                 .pipe(catchError(() => of(null))),
             providers: this.serviceProviderService
-                .getServiceProviders(undefined, undefined, undefined, 0, undefined, undefined, 1, 1)
+                .getServiceProviders(undefined, undefined, undefined, 0, undefined, undefined, 1, 4)
                 .pipe(catchError(() => of(null))),
             artists: this.artistService
-                .getArtists(undefined, ArtistStatus.Pending, 1, 1)
+                .getArtists(undefined, ArtistStatus.Pending, 1, 4)
                 .pipe(catchError(() => of(null))),
             songs: this.songService
                 .getSongs(undefined, 1, 50, undefined, undefined, undefined, 'date')
+                .pipe(catchError(() => of(null))),
+            draftArticles: this.articleService
+                .getArticles(1, 4, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Draft, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'date')
+                .pipe(catchError(() => of(null))),
+            draftNews: this.articleService
+                .getArticles(1, 4, undefined, undefined, ArticleContentType.News, ArticleStatus.Draft, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'date')
+                .pipe(catchError(() => of(null))),
+            draftEvents: this.eventService
+                .getEvents(1, 4, undefined, false, undefined, undefined, undefined, undefined, undefined, undefined, 'date')
+                .pipe(catchError(() => of(null))),
+            draftEpisodes: this.podcastService
+                .getEpisodes(1, 4, undefined, undefined, false, undefined, undefined, 'date')
                 .pipe(catchError(() => of(null)))
-        }).subscribe(({ stats, joins, dash, reports, chordReqs, teachers, providers, artists, songs }) => {
+        }).subscribe(({ stats, joins, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
             this.userStats = stats;
             this.recentJoins = joins as RecentJoin[];
             this.dashboard = dash;
@@ -86,13 +174,30 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             this.pendingReports = reports?.items?.slice(0, 6) ?? [];
             this.chordRequestsCount = chordReqs?.totalCount ?? 0;
             this.pendingTeachersCount = teachers?.totalCount ?? 0;
+            this.pendingTeachers = teachers?.items?.slice(0, 4) ?? [];
             this.pendingServiceProvidersCount = providers?.totalCount ?? 0;
+            this.pendingServiceProviders = providers?.items?.slice(0, 4) ?? [];
             this.pendingArtistsCount = artists?.totalCount ?? 0;
-            this.pendingSongsCount = (songs?.items ?? []).filter((s: any) => !s.isApproved).length;
+            this.pendingArtists = artists?.items?.slice(0, 4) ?? [];
+            this.pendingSongs = (songs?.items ?? []).filter((s: any) => !s.isApproved).slice(0, 4);
+            this.pendingSongsCount = this.pendingSongs.length;
+            this.draftArticles = draftArticles?.items?.slice(0, 4) ?? [];
+            this.draftNews = draftNews?.items?.slice(0, 4) ?? [];
+            this.draftEvents = draftEvents?.items?.slice(0, 4) ?? [];
+            this.draftPodcastEpisodes = draftEpisodes?.items?.slice(0, 4) ?? [];
 
             this.loading = false;
             this.today = new Date();
         });
+    }
+
+    setUserPeriod(period: PeriodKey): void {
+        this.selectedUserPeriod = period;
+    }
+
+    setAnalyticsPeriod(period: PeriodKey): void {
+        this.selectedAnalyticsPeriod = period;
+        this.loadAll();
     }
 
     fmt(n: number): string {
@@ -113,6 +218,25 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     fmtDate(d: Date | string): string {
         return new Date(d).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+    }
+
+    profileName(item: any): string {
+        return item?.fullName || item?.name || item?.stageName || item?.artistName || item?.displayName || 'פרופיל ללא שם';
+    }
+
+    contentDate(item: any): string {
+        return item?.createdAt || item?.publishDate || item?.publishedAt || item?.eventDate || this.today;
+    }
+
+    private periodCutoff(period: PeriodKey): Date {
+        const date = new Date();
+        const days = period === 'day' ? 1 : period === 'week' ? 7 : 30;
+        date.setDate(date.getDate() - days);
+        return date;
+    }
+
+    private isoDate(date: Date): string {
+        return date.toISOString().slice(0, 10);
     }
 
     reportTypeLabel(t: string): string {
