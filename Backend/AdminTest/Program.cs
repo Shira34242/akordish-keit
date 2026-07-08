@@ -10,12 +10,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, config) =>
+{
     config
         .MinimumLevel.Information()
         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -29,8 +31,14 @@ builder.Host.UseSerilog((context, config) =>
             rollingInterval: RollingInterval.Day,
             retainedFileCountLimit: 31,
             outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}"
-        )
-);
+        );
+
+    var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+    if (!string.IsNullOrEmpty(aiConnectionString))
+    {
+        config.WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
+    }
+});
 
 // Add services to the container.
 builder.Services.AddControllers()
