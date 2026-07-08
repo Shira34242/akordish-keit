@@ -13,7 +13,8 @@ public interface IMusicServiceProviderService
         bool? isFeatured,
         bool? isTeacher,
         int pageNumber,
-        int pageSize);
+        int pageSize,
+        string? sortBy = null);
 
     Task<MusicServiceProviderDto?> GetServiceProviderByIdAsync(int id);
 

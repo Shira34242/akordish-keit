@@ -45,6 +45,14 @@ export class TeachersListComponent implements OnInit {
   searchTerm = '';
   filterStatus: number | null = null;
   filterFeatured: boolean | null = null;
+  sortBy = 'created_desc';
+
+  sortOptions = [
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' }
+  ];
 
   // Status enum for dropdown
   statusOptions = [
@@ -87,7 +95,11 @@ export class TeachersListComponent implements OnInit {
       this.filterStatus ?? undefined,
       this.filterFeatured ?? undefined,
       this.currentPage,
-      this.pageSize
+      this.pageSize,
+      undefined,
+      undefined,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<TeacherListDto>) => {
         this.teachers = result.items;
@@ -129,6 +141,7 @@ export class TeachersListComponent implements OnInit {
     this.searchTerm = '';
     this.filterStatus = null;
     this.filterFeatured = null;
+    this.sortBy = 'created_desc';
     this.currentPage = 1;
     this.loadTeachers();
   }

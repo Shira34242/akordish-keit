@@ -149,18 +149,18 @@
         <h2 class="section-title">להיטים גדולים</h2>
       </div>
       <div class="artist-horizontal-row artist-horizontal-row--hits">
-        <a
+        <button
           *ngFor="let hit of artist.hits"
+          type="button"
           class="artist-hit-card"
-          [href]="hit.youTubeUrl || hit.youtubeUrl"
-          target="_blank"
-          rel="noopener">
+          [disabled]="!getHitVideoUrl(hit)"
+          (click)="openHitVideo(hit)">
           <div class="artist-hit-image">
             <img *ngIf="hit.imageUrl" [src]="hit.imageUrl" [alt]="hit.title || 'להיט גדול'" loading="lazy" decoding="async" imgFallback="/logo.png">
             <span *ngIf="!hit.imageUrl" class="material-icons">smart_display</span>
           </div>
           <span class="artist-hit-title">{{ hit.title || 'להיט גדול' }}</span>
-        </a>
+        </button>
       </div>
     </div>
 

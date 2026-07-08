@@ -29,7 +29,8 @@ export class TeacherService {
     pageSize: number = 10,
     cityId?: number,
     targetAudience?: number,
-    language?: number
+    language?: number,
+    sortBy?: string
   ): Observable<PagedResult<TeacherListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -55,6 +56,9 @@ export class TeacherService {
     }
     if (isFeatured !== undefined && isFeatured !== null) {
       params = params.set('isFeatured', isFeatured.toString());
+    }
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
     }
 
     return this.http.get<PagedResult<TeacherListDto>>(this.apiUrl, { params });

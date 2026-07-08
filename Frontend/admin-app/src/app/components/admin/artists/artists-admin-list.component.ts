@@ -47,7 +47,7 @@ export class ArtistsAdminListComponent implements OnInit {
   searchTerm = '';
   filterStatus: ArtistStatus | null = null;
   filterPremium: boolean | null = null;
-  sortBy = 'name';
+  sortBy = 'created_desc';
 
   // Status enum for dropdown
   ArtistStatus = ArtistStatus;
@@ -66,9 +66,11 @@ export class ArtistsAdminListComponent implements OnInit {
   ];
 
   sortOptions = [
-    { value: 'name', label: 'שם (א-ב)' },
-    { value: 'songcount', label: 'לפי מספר שירים' },
-    { value: 'created', label: 'חדשים ביותר' }
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' },
+    { value: 'songcount', label: 'לפי מספר שירים' }
   ];
 
   constructor(
@@ -136,7 +138,7 @@ export class ArtistsAdminListComponent implements OnInit {
     this.searchTerm = '';
     this.filterStatus = null;
     this.filterPremium = null;
-    this.sortBy = 'name';
+    this.sortBy = 'created_desc';
     this.currentPage = 1;
     this.loadArtists();
   }

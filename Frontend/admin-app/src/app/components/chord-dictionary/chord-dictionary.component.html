@@ -268,10 +268,10 @@
                                             fill="none" stroke="#000" stroke-width="1.5"/>
                                     <circle *ngIf="fret > 0" [attr.cx]="gX(si)" [attr.cy]="gY(fret)-6"
                                             r="10" fill="#000"/>
-                                    <text *ngIf="fret > 0 && gc.fingers && gc.fingers[si] > 0"
+                                    <text *ngIf="fret > 0 && getGuitarFinger(gc, si) > 0"
                                           [attr.x]="gX(si)" [attr.y]="gY(fret)-2"
                                           text-anchor="middle" font-size="11" font-weight="700"
-                                          font-family="Arial" fill="#ddff53">{{ gc.fingers[si] }}</text>
+                                          font-family="Arial" fill="#ddff53">{{ getGuitarFinger(gc, si) }}</text>
                                 </ng-container>
                                 <!-- Position label -->
                                 <text *ngIf="gMinFret() > 1"

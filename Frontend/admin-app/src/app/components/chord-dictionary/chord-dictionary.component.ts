@@ -658,6 +658,12 @@ export class ChordDictionaryComponent implements OnInit, AfterViewInit, OnDestro
     }
     gBarreX(b: any) { return this.gX(Math.min(b.fromString, b.toString)) - 9; }
     gBarreW(b: any) { return Math.abs(b.fromString - b.toString) * 24 + 18; }
+    getGuitarFinger(chord: GuitarChord, stringIndex: number): number {
+        const fingers = chord.fingers?.length
+            ? chord.fingers
+            : this.autoAssignFingers(chord.frets);
+        return fingers[stringIndex] ?? 0;
+    }
 
     // ─── Large Ukulele SVG helpers ────────────────────────────────────────────
 

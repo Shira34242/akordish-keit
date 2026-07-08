@@ -79,6 +79,12 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     GoogleOneTapService.setModalActive(false);
   }
 
+  switchAccount(): void {
+    this.selectedType = null;
+    this.authService.logout();
+    this.socialAuthService.signOut().catch(() => {});
+  }
+
   start(type: JoinIndexType, categoryId?: number): void {
     if (!this.user || !this.agencyReady) return;
     this.selectedType = type;
@@ -168,6 +174,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
+      || body?.code === 'MARKETING_CONSENT_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

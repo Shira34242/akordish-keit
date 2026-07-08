@@ -61,6 +61,11 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
     GoogleOneTapService.setModalActive(false);
   }
 
+  switchAccount(): void {
+    this.authService.logout();
+    this.socialAuthService.signOut().catch(() => {});
+  }
+
   get activeLegalPage(): LegalPageContent | null {
     return this.activeLegalKey ? PAGES[this.activeLegalKey] : null;
   }
@@ -150,6 +155,7 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
+      || body?.code === 'MARKETING_CONSENT_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

@@ -281,7 +281,7 @@
   font-optical-sizing: auto;
   font-variation-settings: "wdth" 100;
   font-weight: 300;
-  font-size: var(--font-sm);
+  font-size: var(--font-base);
   transition: opacity 0.15s;
   margin-top: var(--space-xs);
   color: rgba(255, 255, 255, 0.7);
@@ -856,16 +856,28 @@
   flex: 0 0 min(78%, 300px);
   border-radius: 16px;
   aspect-ratio: 4 / 2;
+  border: 0;
+  padding: 0;
   text-decoration: none;
   color: #000000;
   overflow: hidden;
   scroll-snap-align: start;
   position: relative;
   transition: transform 0.15s;
+  cursor: pointer;
+  font: inherit;
 }
 
 .artist-hit-card:hover {
   transform: scale(1.02);
+}
+
+.artist-hit-card:disabled {
+  cursor: default;
+}
+
+.artist-hit-card:disabled:hover {
+  transform: none;
 }
 
 .artist-hit-card::after {

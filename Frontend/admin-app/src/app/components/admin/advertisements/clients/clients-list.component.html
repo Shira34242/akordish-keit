@@ -44,6 +44,14 @@
         class="search-input">
     </div>
 
+    <div class="search-box">
+      <select class="search-input" [(ngModel)]="sortBy" (change)="onSortChange()">
+        <option *ngFor="let option of sortOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+
         <button class="btn-new-client" (click)="createNewClient()">
       <span class="material-icons">add</span>
       לקוח חדש

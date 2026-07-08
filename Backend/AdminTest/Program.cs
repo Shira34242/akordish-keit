@@ -124,7 +124,9 @@ builder.Services.AddHostedService<BumpSchedulerService>();
 
 // Add DbContext
 builder.Services.AddDbContext<AkordishKeitDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
         .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // Add JWT Authentication

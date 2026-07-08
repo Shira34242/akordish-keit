@@ -98,7 +98,7 @@
 .instrument-group {
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.88);
     border-radius: 100px;
     padding: 6px 8px;
     gap: 2px;
@@ -123,16 +123,16 @@
     flex-shrink: 0;
 }
 
-.toolbar-btn:hover { background: rgba(0, 0, 0, 0.1); color: #000; }
+.toolbar-btn:hover { background: rgba(0, 0, 0, 0.06); color: #000; }
 .toolbar-btn svg   { pointer-events: none; }
 .instrument-btn    { color: rgba(0, 0, 0, 0.55); }
-.instrument-btn.active { background: #ffffff; color: #000; }
+.instrument-btn.active { background: #000000; color: #ddff53; }
 
 /* Filter controls group — same height as instrument-group */
 .filter-controls-group {
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.88);
     border-radius: 100px;
     padding: 6px 8px;
     gap: 0;
@@ -171,7 +171,7 @@
 
 .filter-btn:hover,
 .filter-drop.open .filter-btn {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.06);
     color: #000;
 }
 
@@ -231,7 +231,7 @@
     width: 130px;
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.88);
     border-radius: 100px;
     box-sizing: border-box;
     flex-shrink: 0;
@@ -270,7 +270,7 @@
     height: 22px;
     border-radius: 50%;
     border: none;
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.08);
     color: #000;
     cursor: pointer;
     display: flex;
@@ -279,7 +279,7 @@
     transition: background 0.15s;
     flex-shrink: 0;
 }
-.chord-search-clear:hover { background: rgba(0, 0, 0, 0.22); }
+.chord-search-clear:hover { background: rgba(0, 0, 0, 0.14); }
 
 /* ─── PAGE CONTENT ─── */
 

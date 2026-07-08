@@ -25,7 +25,8 @@ namespace AkordishKeit.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<ClientDto>>> GetClients(
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortBy = null)
         {
             var clientsQuery = _context.Clients
                 .Select(c => new ClientDto
@@ -42,8 +43,15 @@ namespace AkordishKeit.Controllers
                     TotalCampaigns = c.Campaigns.Count,
                     ActiveCampaigns = c.Campaigns.Count(camp => camp.Status == AdCampaignStatus.Active),
                     TotalBudget = c.Campaigns.Sum(camp => camp.Budget)
-                })
-                .OrderByDescending(c => c.CreatedAt);
+                });
+
+            clientsQuery = sortBy?.Trim().ToLowerInvariant() switch
+            {
+                "created_asc" => clientsQuery.OrderBy(c => c.CreatedAt).ThenBy(c => c.BusinessName),
+                "name_asc" => clientsQuery.OrderBy(c => c.BusinessName).ThenByDescending(c => c.CreatedAt),
+                "name_desc" => clientsQuery.OrderByDescending(c => c.BusinessName).ThenByDescending(c => c.CreatedAt),
+                _ => clientsQuery.OrderByDescending(c => c.CreatedAt).ThenBy(c => c.BusinessName)
+            };
 
             var pagedResult = await clientsQuery.ToPagedResultAsync(pageNumber, pageSize);
 

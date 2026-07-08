@@ -3,7 +3,7 @@ import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { AdminUpdateUserDto, UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } from '../models/user.model';
+import { AdminUpdateUserDto, AdminUserDetailDto, UserListDto, UserWithProfileDto, PagedResult, SetPageVisibilityDto } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +20,8 @@ export class UserService {
     pageNumber: number = 1,
     pageSize: number = 10,
     contentTag?: number,
-    preferredInstrumentId?: number
+    preferredInstrumentId?: number,
+    sortBy?: string
   ): Observable<PagedResult<UserListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -41,6 +42,9 @@ export class UserService {
     if (preferredInstrumentId !== undefined && preferredInstrumentId !== null) {
       params = params.set('preferredInstrumentId', preferredInstrumentId.toString());
     }
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
+    }
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params, withCredentials: true });
   }
@@ -50,6 +54,10 @@ export class UserService {
     if (profileKind) params = params.set('profileKind', profileKind);
     if (includeAgencies) params = params.set('includeAgencies', 'true');
     return this.http.get<UserWithProfileDto[]>(`${this.apiUrl}/with-profiles`, { params, withCredentials: true });
+  }
+
+  getUserDetail(id: number): Observable<AdminUserDetailDto> {
+    return this.http.get<AdminUserDetailDto>(`${this.apiUrl}/${id}/details`, { withCredentials: true });
   }
 
   getMyUploaderProfile(): Observable<UserWithProfileDto | null> {

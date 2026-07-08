@@ -1,10 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user.service';
-import { AdminUpdateUserDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
+import { AdminUpdateUserDto, AdminUserDetailDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
 import { PagedResult } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { TeacherFormComponent } from '../teachers/teacher-form.component';
@@ -14,12 +14,16 @@ import { ServiceProviderFormComponent } from '../service-providers/service-provi
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TeacherFormComponent, ServiceProviderFormComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TeacherFormComponent, ServiceProviderFormComponent],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.css']
 })
-export class UsersListComponent implements OnInit {
+export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
   users: UserListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -29,6 +33,9 @@ export class UsersListComponent implements OnInit {
   showProviderFormModal = false;
   selectedProfileUserId: number | undefined = undefined;
   editingUser: UserListDto | null = null;
+  selectedUserDetail: AdminUserDetailDto | null = null;
+  loadingUserDetail = false;
+  userDetailError: string | null = null;
   savingUser = false;
   editUserError: string | null = null;
   selectedUserIds = new Set<number>();
@@ -41,17 +48,26 @@ export class UsersListComponent implements OnInit {
     isActive: true
   };
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
   pageSize = 25;
   totalCount = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
+  currentPage = 0;
 
   // Filters
   searchTerm = '';
   filterRole: number | null = null;
   filterIsActive: boolean | null = null;
   filterContentTag: number | null = null;
+  sortBy = 'created_desc';
+
+  sortOptions = [
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' }
+  ];
 
   tagOptions = [
     { value: null, label: 'כל התגים' },
@@ -85,9 +101,51 @@ export class UsersListComponent implements OnInit {
     this.loadUsers();
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      // Retry after a short delay (sentinel might not be rendered yet)
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreUsers();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadUsers(): void {
     this.loading = true;
     this.error = null;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.userService.getUsers(
       this.searchTerm || undefined,
@@ -95,14 +153,18 @@ export class UsersListComponent implements OnInit {
       this.filterIsActive ?? undefined,
       this.currentPage,
       this.pageSize,
-      this.filterContentTag ?? undefined
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<UserListDto>) => {
         this.users = result.items;
         this.totalCount = result.totalCount;
-        this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        // Re-observe sentinel after data changes
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err: any) => {
         console.error('שגיאה בטעינת משתמשים:', err);
@@ -112,13 +174,97 @@ export class UsersListComponent implements OnInit {
     });
   }
 
+  loadMoreUsers(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.userService.getUsers(
+      this.searchTerm || undefined,
+      this.filterRole ?? undefined,
+      this.filterIsActive ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<UserListDto>) => {
+        this.users = [...this.users, ...result.items];
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.users.length >= result.totalCount;
+        this.loadingMore = false;
+        // Re-observe sentinel after data changes
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err: any) => {
+        console.error('שגיאה בטעינת משתמשים נוספים:', err);
+        this.loadingMore = false;
+        this.currentPage--; // Rollback page on error
+      }
+    });
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
+  }
+
+  getPaginationRange(): number[] {
+    const total = this.totalPages;
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(total, start + 4);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }
+
+  goToPage(page: number): void {
+    const targetPage = Math.min(Math.max(page, 1), this.totalPages);
+    if (targetPage === this.currentPage || this.loading || this.loadingMore) return;
+
+    this.loading = true;
+    this.error = null;
+    this.currentPage = targetPage;
+    this.allLoaded = false;
+    this.loadingMore = false;
+
+    this.userService.getUsers(
+      this.searchTerm || undefined,
+      this.filterRole ?? undefined,
+      this.filterIsActive ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      this.filterContentTag ?? undefined,
+      undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<UserListDto>) => {
+        this.users = result.items;
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.currentPage >= this.totalPages;
+        this.clearSelection();
+        this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err: any) => {
+        console.error('׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳¢׳׳•׳“ ׳׳©׳×׳׳©׳™׳:', err);
+        this.error = '׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳ ׳×׳•׳ ׳™ ׳”׳׳©׳×׳׳©׳™׳';
+        this.loading = false;
+      }
+    });
+  }
+
+
   onSearch(): void {
-    this.currentPage = 1;
     this.loadUsers();
   }
 
   onFilterChange(): void {
-    this.currentPage = 1;
     this.loadUsers();
   }
 
@@ -127,19 +273,49 @@ export class UsersListComponent implements OnInit {
     this.filterRole = null;
     this.filterIsActive = null;
     this.filterContentTag = null;
-    this.currentPage = 1;
+    this.sortBy = 'created_desc';
     this.loadUsers();
   }
 
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadUsers();
-    }
+  viewUser(id: number): void {
+    this.loadingUserDetail = true;
+    this.userDetailError = null;
+    this.selectedUserDetail = null;
+
+    this.userService.getUserDetail(id).subscribe({
+      next: (detail) => {
+        this.selectedUserDetail = detail;
+        this.loadingUserDetail = false;
+      },
+      error: (err: any) => {
+        console.error('שגיאה בטעינת פרטי משתמש:', err);
+        if (err?.status === 0) {
+          this.userDetailError = 'השרת לא זמין כרגע. צריך לוודא שה-Backend רץ.';
+        } else if (err?.status === 404) {
+          this.userDetailError = 'השרת שרץ עדיין לא מכיר את פרטי המשתמש החדשים. צריך להפעיל את ה-Backend מחדש.';
+        } else if (err?.error?.detail) {
+          this.userDetailError = `שגיאה בטעינת פרטי המשתמש: ${err.error.detail}`;
+        } else {
+          this.userDetailError = 'לא הצלחנו לטעון את פרטי המשתמש';
+        }
+        this.loadingUserDetail = false;
+      }
+    });
   }
 
-  viewUser(id: number): void {
-    this.router.navigate(['/admin/users/view', id]);
+  closeUserDetailModal(): void {
+    this.selectedUserDetail = null;
+    this.userDetailError = null;
+    this.loadingUserDetail = false;
+  }
+
+  openNotificationForUser(user: AdminUserDetailDto): void {
+    this.router.navigate(['/admin/notifications/messages'], {
+      queryParams: {
+        userId: user.id,
+        userName: user.username
+      }
+    });
   }
 
   get selectedCount(): number {
@@ -407,14 +583,38 @@ export class UsersListComponent implements OnInit {
     }
   }
 
-  getPaginationRange(): number[] {
-    const range: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-
-    for (let i = start; i <= end; i++) {
-      range.push(i);
+  getInstrumentLevelLabel(level?: number | null): string {
+    switch (level) {
+      case 1: return 'מתחיל';
+      case 2: return 'מתקדם';
+      case 3: return 'מקצועי';
+      default: return 'לא הוגדר';
     }
-    return range;
   }
+
+  getProfileTypeLabel(page: { profileType: string; isTeacher?: boolean }): string {
+    if (page.profileType === 'artist') return 'אמן';
+    if (page.isTeacher) return 'מורה';
+    return 'נותן שירות';
+  }
+
+  getStatusLabel(status?: string | null): string {
+    switch (status) {
+      case 'Active': return 'פעיל';
+      case 'Pending': return 'ממתין';
+      case 'Suspended': return 'מושהה';
+      case 'Hidden': return 'מוסתר';
+      case 'Inactive': return 'לא פעיל';
+      default: return status || 'לא ידוע';
+    }
+  }
+
+  getPagePublicUrl(page: { profileUrl: string }): string {
+    return page.profileUrl || '';
+  }
+
+  getAgencyUrl(agency: { slug: string }): string {
+    return `/agency/${agency.slug}`;
+  }
+
 }

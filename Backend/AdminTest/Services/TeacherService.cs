@@ -28,7 +28,8 @@ public class TeacherService : ITeacherService
         int? status,
         bool? isFeatured,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        string? sortBy = null)
     {
         var query = _context.Teachers
             .AsNoTracking()
@@ -85,10 +86,7 @@ public class TeacherService : ITeacherService
 
         // Order by: Featured > Tier (Subscribed) > CreatedAt
         // קדימות לפי האיפיון: מומלצים ראשון, מנויים משלמים לפני חינמיים, ואז לפי תאריך
-        query = query
-            .OrderByDescending(t => t.ServiceProvider.IsFeatured)      // מומלצים ראשון
-            .ThenByDescending(t => t.ServiceProvider.Tier)             // מנויים משלמים (Subscribed=1) לפני חינמיים (Free=0)
-            .ThenByDescending(t => t.ServiceProvider.BumpedAt ?? t.ServiceProvider.CreatedAt);       // החדשים לפני
+        query = ApplyTeacherSorting(query, sortBy);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -739,6 +737,21 @@ public class TeacherService : ITeacherService
             InstrumentIds = entity.Instruments.Select(i => i.InstrumentId).ToList(),
             Languages = entity.Languages,
             TargetAudience = entity.TargetAudience
+        };
+    }
+
+    private static IQueryable<Teacher> ApplyTeacherSorting(IQueryable<Teacher> query, string? sortBy)
+    {
+        return sortBy?.Trim().ToLowerInvariant() switch
+        {
+            "created_desc" => query.OrderByDescending(t => t.ServiceProvider.CreatedAt).ThenBy(t => t.ServiceProvider.DisplayName),
+            "created_asc" => query.OrderBy(t => t.ServiceProvider.CreatedAt).ThenBy(t => t.ServiceProvider.DisplayName),
+            "name_asc" => query.OrderBy(t => t.ServiceProvider.DisplayName).ThenByDescending(t => t.ServiceProvider.CreatedAt),
+            "name_desc" => query.OrderByDescending(t => t.ServiceProvider.DisplayName).ThenByDescending(t => t.ServiceProvider.CreatedAt),
+            _ => query
+                .OrderByDescending(t => t.ServiceProvider.IsFeatured)
+                .ThenByDescending(t => t.ServiceProvider.Tier)
+                .ThenByDescending(t => t.ServiceProvider.BumpedAt ?? t.ServiceProvider.CreatedAt)
         };
     }
 }

@@ -63,7 +63,7 @@ public class ArticleService : IArticleService
         {
             "p", "br", "strong", "b", "em", "i", "u", "a", "h2", "h3", "span",
             "ul", "ol", "li",
-            "figure", "figcaption", "img", "iframe"
+            "figure", "figcaption", "img", "iframe", "div"
         })
         {
             sanitizer.AllowedTags.Add(tag);
@@ -74,7 +74,7 @@ public class ArticleService : IArticleService
         {
             "href", "src", "alt", "title", "target", "rel", "class",
             "width", "height", "frameborder", "allow", "allowfullscreen", "style", "data-align",
-            "data-indent", "data-mention-type", "data-mention-id",
+            "data-indent", "data-mention-type", "data-mention-id", "data-youtube-video",
             "loading", "decoding"
         })
         {

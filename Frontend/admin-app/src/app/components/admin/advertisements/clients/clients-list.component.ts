@@ -29,7 +29,15 @@ export class ClientsListComponent implements OnInit {
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-clients-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-clients-view', mode); }
   searchTerm = '';
+  sortBy = 'created_desc';
   activeTab: 'campaigns' | 'spots' | 'clients' = 'clients';
+
+  sortOptions = [
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' }
+  ];
 
   // Pagination
   totalCount = 0;
@@ -48,7 +56,7 @@ export class ClientsListComponent implements OnInit {
 
   loadClients() {
     this.loading = true;
-    this.clientService.getClients(this.pageNumber, this.pageSize).subscribe({
+    this.clientService.getClients(this.pageNumber, this.pageSize, this.sortBy).subscribe({
       next: (data: PagedResult<Client>) => {
         this.clients = data.items;
         this.filteredClients = data.items;
@@ -82,6 +90,11 @@ export class ClientsListComponent implements OnInit {
       client.contactPerson.toLowerCase().includes(term) ||
       client.email.toLowerCase().includes(term)
     );
+  }
+
+  onSortChange() {
+    this.pageNumber = 1;
+    this.loadClients();
   }
 
   formatCurrency(amount: number): string {

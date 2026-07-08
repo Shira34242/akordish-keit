@@ -57,6 +57,18 @@ public class UsersController : ControllerBase
         return Ok(profile);
     }
 
+    // GET: api/Users/{id}/details
+    [HttpGet("{id:int}/details")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<AdminUserDetailDto>> GetAdminUserDetail(int id)
+    {
+        var detail = await _service.GetAdminUserDetailAsync(id);
+        if (detail == null)
+            return NotFound();
+
+        return Ok(detail);
+    }
+
     // PUT: api/Users/{id}
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
@@ -185,10 +197,11 @@ public class UsersController : ControllerBase
         [FromQuery] int? contentTag = null,
         [FromQuery] int? preferredInstrumentId = null,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null)
     {
         var result = await _service.GetUsersAsync(
-            search, role, isActive, contentTag, preferredInstrumentId, pageNumber, pageSize);
+            search, role, isActive, contentTag, preferredInstrumentId, pageNumber, pageSize, sortBy);
 
         return Ok(result);
     }

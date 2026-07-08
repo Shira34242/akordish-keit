@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { ArtistService } from '../../services/artist.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistPageService } from '../../services/artist-page.service';
-import { Artist, ArtistAlbum, SocialPlatform } from '../../models/artist.model';
+import { Artist, ArtistAlbum, ArtistHit, SocialPlatform } from '../../models/artist.model';
 import { SongDto } from '../../models/song.model';
 import { Article } from '../../models/article.model';
 import { Event as EventModel, UpcomingEventDto } from '../../models/event.model';
@@ -584,6 +584,16 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openVideoLightbox(videoUrl: string): void {
     this.videoLightboxUrl = videoUrl;
+  }
+
+  getHitVideoUrl(hit: ArtistHit): string {
+    return hit.youTubeUrl || hit.youtubeUrl || '';
+  }
+
+  openHitVideo(hit: ArtistHit): void {
+    const videoUrl = this.getHitVideoUrl(hit);
+    if (!videoUrl) return;
+    this.openVideoLightbox(videoUrl);
   }
 
   closeVideoLightbox(): void {

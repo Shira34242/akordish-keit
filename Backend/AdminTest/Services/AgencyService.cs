@@ -495,6 +495,15 @@ public class AgencyService : IAgencyService
     private async Task<AgencyPublicDto> MapToPublicDtoAsync(Agency agency)
     {
         var baseDto = await MapToDtoAsync(agency);
+        var publicProfiles = new List<AgencyProfileDto>();
+        foreach (var profile in baseDto.Profiles)
+        {
+            if (await IsPublicProfileActiveAsync(profile))
+            {
+                publicProfiles.Add(profile);
+            }
+        }
+
         var publicDto = new AgencyPublicDto
         {
             Id = baseDto.Id,
@@ -515,16 +524,16 @@ public class AgencyService : IAgencyService
             IsActive = baseDto.IsActive,
             ShowInIndexBanner = baseDto.ShowInIndexBanner,
             DisplayOrder = baseDto.DisplayOrder,
-            ProfilesCount = baseDto.ProfilesCount,
+            ProfilesCount = publicProfiles.Count,
             ContentsCount = baseDto.ContentsCount,
             CreatedAt = baseDto.CreatedAt,
-            Profiles = baseDto.Profiles,
+            Profiles = publicProfiles,
             Contents = baseDto.Contents,
             GalleryImages = baseDto.GalleryImages,
             SocialLinks = baseDto.SocialLinks
         };
 
-        foreach (var profile in baseDto.Profiles)
+        foreach (var profile in publicProfiles)
         {
             var card = new AgencyProfileCardDto
             {
@@ -567,7 +576,7 @@ public class AgencyService : IAgencyService
             dto.DirectSongs = await GetSongsByIdsAsync(directSongIds);
             dto.DirectPodcasts = await GetPodcastsByIdsAsync(directPodcastIds);
 
-            var memberProfiles = agency.Profiles.Select(p => new { p.ProfileType, p.ProfileId }).ToList();
+            var memberProfiles = dto.Profiles.Select(p => new { p.ProfileType, p.ProfileId }).ToList();
             var artistIds = memberProfiles.Where(p => p.ProfileType == "artist").Select(p => p.ProfileId).ToList();
             var providerIds = memberProfiles.Where(p => p.ProfileType == "serviceProvider").Select(p => p.ProfileId).ToList();
 
@@ -603,6 +612,20 @@ public class AgencyService : IAgencyService
                 agency.Id, agency.Name, agency.Profiles?.Count ?? -1, agency.Contents?.Count ?? -1);
             throw;
         }
+    }
+
+    private async Task<bool> IsPublicProfileActiveAsync(AgencyProfileDto profile)
+    {
+        if (profile.ProfileType == "artist")
+        {
+            return await _context.Artists
+                .AsNoTracking()
+                .AnyAsync(a => a.Id == profile.ProfileId && !a.IsDeleted && a.Status == ArtistStatus.Active);
+        }
+
+        return await _context.ServiceProviders
+            .AsNoTracking()
+            .AnyAsync(p => p.Id == profile.ProfileId && !p.IsDeleted && p.Status == ProfileStatus.Active);
     }
 
     private async Task<List<ArticleDto>> GetArticlesByIdsAsync(List<int> ids)

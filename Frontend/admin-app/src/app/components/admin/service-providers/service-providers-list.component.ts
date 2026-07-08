@@ -44,6 +44,14 @@ export class ServiceProvidersListComponent implements OnInit {
   filterFeatured: boolean | null = null;
   filterIsTeacher: boolean | null = null;
   filterCityId: number | null = null;
+  sortBy = 'created_desc';
+
+  sortOptions = [
+    { value: 'created_desc', label: 'חדש לישן' },
+    { value: 'created_asc', label: 'ישן לחדש' },
+    { value: 'name_asc', label: 'א-ת' },
+    { value: 'name_desc', label: 'ת-א' }
+  ];
 
   cities: City[] = [];
 
@@ -100,7 +108,9 @@ export class ServiceProvidersListComponent implements OnInit {
       this.filterFeatured ?? undefined,
       this.filterIsTeacher ?? false, // Default to showing only professionals (isTeacher=false)
       this.currentPage,
-      this.pageSize
+      this.pageSize,
+      undefined,
+      this.sortBy
     ).subscribe({
       next: (result: PagedResult<MusicServiceProviderListDto>) => {
         this.providers = result.items;
@@ -133,6 +143,7 @@ export class ServiceProvidersListComponent implements OnInit {
     this.filterFeatured = null;
     this.filterIsTeacher = null;
     this.filterCityId = null;
+    this.sortBy = 'created_desc';
     this.currentPage = 1;
     this.loadProviders();
   }
