@@ -187,6 +187,11 @@ namespace AkordishKeit.Controllers
                     user.MarketingConsentRevokedAt = null;
                     user.MarketingConsentSource = "google-login";
                 }
+                if (user.IsDeleted)
+                {
+                    user.IsDeleted = false;
+                    user.IsActive = true;
+                }
                 user.LastLoginAt = DateTime.UtcNow;
                 user.VisitCount++;
                 await _context.SaveChangesAsync();
@@ -885,7 +890,8 @@ namespace AkordishKeit.Controllers
         {
             try
             {
-                var imageBytes = await _httpClient.GetByteArrayAsync(googleImageUrl);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                var imageBytes = await _httpClient.GetByteArrayAsync(googleImageUrl, cts.Token);
                 using var stream = new MemoryStream(imageBytes);
                 return await _blobService.UploadAsync(stream, "profile.jpg", "image/jpeg", "profile-images");
             }

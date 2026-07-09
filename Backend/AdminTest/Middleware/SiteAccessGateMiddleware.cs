@@ -111,6 +111,10 @@ public class SiteAccessGateMiddleware
                 || path.StartsWithSegments("/api/Songs/daily-limit-status")))
             return true;
 
+        if (HttpMethods.IsGet(request.Method)
+            && path.StartsWithSegments("/api/Subscriptions/user"))
+            return true;
+
         return false;
     }
 }
