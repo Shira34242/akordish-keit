@@ -73,6 +73,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   bannerImageUploading = false;
   galleryUploadingCount = 0;
   showVideoLinkInput = false;
+  videoUrlError = '';
 
   // Available data
   availableCategories: Category[] = [];
@@ -416,6 +417,11 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.videoUrlError) {
+      alert(this.videoUrlError);
+      return;
+    }
+
     this.saving = true;
     const currentUser = this.authService.currentUserValue;
 
@@ -497,6 +503,14 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   private closeAllDropdowns(): void {
     this.cityDropdownOpen = false;
     this.categoriesDropdownOpen = false;
+  }
+
+  validateVideoUrl(url: string): void {
+    if (!url || !url.trim()) {
+      this.videoUrlError = '';
+      return;
+    }
+    this.videoUrlError = /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url) ? '' : 'קישורי יוטיוב בלבד';
   }
 
   private isServiceProviderCategory(item: SystemItem): boolean {

@@ -556,3 +556,17 @@
     flex-direction: column;
   }
 }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}

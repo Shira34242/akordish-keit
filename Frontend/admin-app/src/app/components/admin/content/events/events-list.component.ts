@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,11 +20,15 @@ import { ArtistListDto } from '../../../../models/artist.model';
   templateUrl: './events-list.component.html',
   styleUrls: ['./events-list.component.css']
 })
-export class EventsListComponent implements OnInit {
+export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
   private readonly artistService = inject(ArtistService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
   // State
   events: Event[] = [];
@@ -37,11 +41,12 @@ export class EventsListComponent implements OnInit {
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view-v2') as 'list' | 'grid') || 'grid';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view-v2', mode); }
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalItems = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
 
   // Filters
   searchTerm = '';
@@ -57,6 +62,50 @@ export class EventsListComponent implements OnInit {
     this.loadEvents();
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreEvents();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadArtists(): void {
     this.artistService.getArtists(undefined, undefined, 1, 200, 'name').subscribe({
       next: (result) => this.artists = result.items,
@@ -66,6 +115,9 @@ export class EventsListComponent implements OnInit {
 
   loadEvents(): void {
     this.loading = true;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.eventService.getEvents(
       this.currentPage,
@@ -83,13 +135,48 @@ export class EventsListComponent implements OnInit {
       next: (result: PagedResult<Event>) => {
         this.events = result.items;
         this.totalItems = result.totalCount;
-        this.totalPages = result.totalPages;
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
         console.error('Error loading events:', error);
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreEvents(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.eventService.getEvents(
+      this.currentPage,
+      this.pageSize,
+      this.searchTerm || undefined,
+      this.getActiveFilter(),
+      undefined,
+      undefined,
+      this.selectedArtistId,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<Event>) => {
+        this.events = [...this.events, ...result.items];
+        this.totalItems = result.totalCount;
+        this.allLoaded = this.events.length >= result.totalCount;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (error) => {
+        console.error('Error loading more events:', error);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -182,11 +269,6 @@ export class EventsListComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedEventIds.clear();
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadEvents();
   }
 
   createNewEvent(): void {

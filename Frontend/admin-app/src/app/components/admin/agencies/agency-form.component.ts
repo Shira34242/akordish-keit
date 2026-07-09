@@ -91,6 +91,7 @@ export class AgencyFormComponent implements OnInit {
 
   galleryForm = { imageUrl: '', caption: '', displayOrder: 0 };
   galleryVideoForm = { videoUrl: '', title: '', displayOrder: 0 };
+  galleryVideoUrlError = '';
   socialLinkForm: AgencySocialLinkDto = { id: 0, agencyId: 0, platform: SocialPlatform.Facebook, url: '' };
   socialPlatformOptions = [
     { value: SocialPlatform.Facebook, label: 'Facebook' },
@@ -476,6 +477,13 @@ export class AgencyFormComponent implements OnInit {
   addGalleryVideo(): void {
     if (!this.agencyId || !this.galleryVideoForm.videoUrl) return;
     const videoUrl = this.galleryVideoForm.videoUrl.trim();
+
+    if (!/(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(videoUrl)) {
+      this.galleryVideoUrlError = 'קישורי יוטיוב בלבד';
+      return;
+    }
+    this.galleryVideoUrlError = '';
+
     const title = this.galleryVideoForm.title?.trim() || 'וידאו';
     this.agencyService.addGalleryImage(this.agencyId, {
       mediaType: 'video',
@@ -486,8 +494,9 @@ export class AgencyFormComponent implements OnInit {
       displayOrder: this.galleryVideoForm.displayOrder || 0
     }).subscribe({
       next: () => {
-        this.galleryVideoForm = { videoUrl: '', title: '', displayOrder: 0 };
-        this.loadAgency();
+    this.galleryVideoForm = { videoUrl: '', title: '', displayOrder: 0 };
+    this.galleryVideoUrlError = '';
+    this.loadAgency();
       },
       error: err => alert(err?.error?.message || 'לא הצלחנו להוסיף וידאו')
     });

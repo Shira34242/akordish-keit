@@ -80,6 +80,7 @@ export class ServiceProviderFormComponent implements OnInit {
   bannerBlur: number = 0;
   profileImageUrl: string = '';
   videoUrl: string = '';
+  videoUrlError: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
   parkingType: ServiceProviderParkingType = ServiceProviderParkingType.None;
@@ -380,6 +381,11 @@ export class ServiceProviderFormComponent implements OnInit {
       return false;
     }
 
+    if (this.videoUrlError) {
+      alert(this.videoUrlError);
+      return false;
+    }
+
     if (!this.selectedCategoryId) {
       this.categoryDropdownOpen = true;
       this.categorySearchText = '';
@@ -670,6 +676,14 @@ export class ServiceProviderFormComponent implements OnInit {
   private optionalText(value: string | undefined): string | undefined {
     const trimmed = value?.trim();
     return trimmed || undefined;
+  }
+
+  validateVideoUrl(url: string): void {
+    if (!url || !url.trim()) {
+      this.videoUrlError = '';
+      return;
+    }
+    this.videoUrlError = /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url) ? '' : 'קישורי יוטיוב בלבד';
   }
 
   normalizedBannerBlur(value: number | undefined): number {

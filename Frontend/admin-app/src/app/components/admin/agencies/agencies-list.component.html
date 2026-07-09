@@ -74,10 +74,15 @@
     </table>
   </div>
 
-  <div class="pagination-container" *ngIf="!loading && totalPages > 1">
-    <button class="btn-pagination" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">הקודם</button>
-    <button class="btn-pagination" *ngFor="let page of getPaginationRange()" [class.active]="page === currentPage" (click)="goToPage(page)">{{ page }}</button>
-    <button class="btn-pagination" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">הבא</button>
-    <span class="pagination-info">עמוד {{ currentPage }} מתוך {{ totalPages }}</span>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading && !error">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד סוכנויות...</span>
+    </div>
+
+    <div class="scroll-complete" *ngIf="allLoaded && agencies.length > 0">
+      כל הסוכנויות מוצגות
+    </div>
   </div>
 </div>

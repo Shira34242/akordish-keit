@@ -243,16 +243,16 @@
     </table>
   </div>
 
-  <div *ngIf="!loading && totalPages > 1" class="pagination-container">
-    <button class="btn-pagination" type="button" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
-      <span class="material-icons">chevron_right</span>
-    </button>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד הופעות...</span>
+    </div>
 
-    <span class="pagination-info">עמוד {{ currentPage }} מתוך {{ totalPages }} ({{ totalItems }} הופעות)</span>
-
-    <button class="btn-pagination" type="button" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
-      <span class="material-icons">chevron_left</span>
-    </button>
+    <div class="scroll-complete" *ngIf="allLoaded && events.length > 0">
+      כל ההופעות מוצגות
+    </div>
   </div>
 </div>
 

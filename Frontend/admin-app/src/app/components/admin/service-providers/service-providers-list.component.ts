@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,8 +24,12 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
-export class ServiceProvidersListComponent implements OnInit {
+export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
   providers: MusicServiceProviderListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -34,10 +38,12 @@ export class ServiceProvidersListComponent implements OnInit {
   showProviderFormModal = false;
   selectedProviderId: number | undefined = undefined;
 
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalCount = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
 
   searchTerm = '';
   filterStatus: number | null = null;
@@ -85,6 +91,50 @@ export class ServiceProvidersListComponent implements OnInit {
     this.layoutActions.addServiceProviderRequest$.subscribe(() => this.addNewProvider());
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreProviders();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadCities(): void {
     this.citiesService.getCities().subscribe({
       next: (cities) => {
@@ -99,6 +149,9 @@ export class ServiceProvidersListComponent implements OnInit {
   loadProviders(): void {
     this.loading = true;
     this.error = null;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.providerService.getServiceProviders(
       this.searchTerm || undefined,
@@ -115,14 +168,48 @@ export class ServiceProvidersListComponent implements OnInit {
       next: (result: PagedResult<MusicServiceProviderListDto>) => {
         this.providers = result.items;
         this.totalCount = result.totalCount;
-        this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err) => {
         console.error('שגיאה בטעינת בעלי מקצוע:', err);
         this.error = 'שגיאה בטעינת נתוני בעלי המקצוע';
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreProviders(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.providerService.getServiceProviders(
+      this.searchTerm || undefined,
+      undefined,
+      this.filterCityId ?? undefined,
+      this.filterStatus ?? undefined,
+      this.filterFeatured ?? undefined,
+      this.filterIsTeacher ?? false,
+      this.currentPage,
+      this.pageSize,
+      undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<MusicServiceProviderListDto>) => {
+        this.providers = [...this.providers, ...result.items];
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.providers.length >= result.totalCount;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת בעלי מקצוע נוספים:', err);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -146,13 +233,6 @@ export class ServiceProvidersListComponent implements OnInit {
     this.sortBy = 'created_desc';
     this.currentPage = 1;
     this.loadProviders();
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadProviders();
-    }
   }
 
   editProvider(id: number): void {
@@ -286,16 +366,6 @@ export class ServiceProvidersListComponent implements OnInit {
       case 2: return 'badge-danger';
       default: return 'badge-secondary';
     }
-  }
-
-  getPaginationRange(): number[] {
-    const range: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-    for (let i = start; i <= end; i++) {
-      range.push(i);
-    }
-    return range;
   }
 
   getCityName(cityId: number | null | undefined): string | null {

@@ -319,16 +319,17 @@
     </div>
   </div>
 
-  <app-pagination
-    *ngIf="!loading && songs.length > 0"
-    [totalCount]="totalCount"
-    [pageNumber]="pageNumber"
-    [pageSize]="pageSize"
-    [totalPages]="totalPages"
-    [hasPreviousPage]="hasPreviousPage"
-    [hasNextPage]="hasNextPage"
-    (pageChange)="onPageChange($event)">
-  </app-pagination>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading && songs.length > 0">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד שירים...</span>
+    </div>
+
+    <div class="scroll-complete" *ngIf="allLoaded && songs.length > 0">
+      כל השירים מוצגים
+    </div>
+  </div>
 
   <!-- Artists Modal -->
   <div class="category-modal-backdrop" *ngIf="artistModalOpen" (click)="closeArtistModal()">

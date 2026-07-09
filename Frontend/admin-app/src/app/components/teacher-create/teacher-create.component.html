@@ -289,9 +289,11 @@
             </div>
 
             <div class="video-row" *ngIf="showVideoLinkInput || videoLinks.length">
-              <input id="videoUrl" type="url" [(ngModel)]="newVideoUrl" name="newVideoUrl" class="text-input" placeholder="קישור לסרטון" />
+              <input id="videoUrl" type="url" [(ngModel)]="newVideoUrl" name="newVideoUrl" class="text-input" placeholder="קישור לסרטון"
+                     (input)="videoLinkError = ''" />
               <button type="button" class="primary-action" (click)="addVideoLink()">הוספה</button>
             </div>
+            <small class="field-error" *ngIf="videoLinkError">{{ videoLinkError }}</small>
 
             <div class="gallery-grid" *ngIf="galleryImages.length || videoLinks.length">
               <article class="gallery-item video-item" *ngFor="let link of videoLinks; let videoIndex = index">

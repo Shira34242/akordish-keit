@@ -218,50 +218,16 @@
     </table>
   </div>
 
-  <!-- Pagination -->
-  <div class="pagination-container" *ngIf="!loading && !error && totalPages > 1">
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="goToPage(1)"
-    >
-      ראשון
-    </button>
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="goToPage(currentPage - 1)"
-    >
-      הקודם
-    </button>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading && !error">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד אומנים...</span>
+    </div>
 
-    <button
-      *ngFor="let page of getPaginationRange()"
-      class="btn btn-pagination"
-      [class.active]="page === currentPage"
-      (click)="goToPage(page)"
-    >
-      {{ page }}
-    </button>
-
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === totalPages"
-      (click)="goToPage(currentPage + 1)"
-    >
-      הבא
-    </button>
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === totalPages"
-      (click)="goToPage(totalPages)"
-    >
-      אחרון
-    </button>
-
-    <span class="pagination-info">
-      עמוד {{ currentPage }} מתוך {{ totalPages }}
-    </span>
+    <div class="scroll-complete" *ngIf="allLoaded && artists.length > 0">
+      כל האומנים מוצגים
+    </div>
   </div>
 </div>
 

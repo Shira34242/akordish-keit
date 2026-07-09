@@ -939,3 +939,10 @@ button:disabled {
     grid-auto-columns: minmax(210px, 82vw);
   }
 }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}

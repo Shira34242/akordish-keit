@@ -204,7 +204,9 @@
               <span>קישור וידאו</span>
             </button>
           </div>
-          <input *ngIf="showVideoLinkInput" type="url" class="form-input" [(ngModel)]="videoUrl" placeholder="YouTube / Vimeo">
+          <input *ngIf="showVideoLinkInput" type="url" class="form-input" [(ngModel)]="videoUrl" placeholder="YouTube / Vimeo"
+                 (blur)="validateVideoUrl(videoUrl)" (input)="validateVideoUrl(videoUrl)">
+          <small class="field-error" *ngIf="videoUrlError">{{ videoUrlError }}</small>
 
           <div class="gallery-preview" *ngIf="galleryImages.length > 0 || videoUrl">
             <div class="gallery-item" *ngIf="videoUrl">

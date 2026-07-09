@@ -488,7 +488,10 @@
 
             <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'video'">
               <label class="form-label">קישור לסרטון</label>
-              <input type="url" [(ngModel)]="item.videoUrl" [name]="'gallery_videoUrl_' + i" class="form-input" placeholder="https://youtube.com/..." />
+              <input type="url" [(ngModel)]="item.videoUrl" [name]="'gallery_videoUrl_' + i" class="form-input" placeholder="https://youtube.com/..."
+                     (blur)="validateGalleryVideo(i, item.videoUrl)"
+                     (input)="validateGalleryVideo(i, item.videoUrl)" />
+              <small class="field-error" *ngIf="galleryVideoErrors[i]">{{ galleryVideoErrors[i] }}</small>
             </div>
 
             <div class="form-group" style="flex: 2;" *ngIf="item.kind === 'video'">

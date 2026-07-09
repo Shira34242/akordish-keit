@@ -117,6 +117,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   showTestimonialDraft = false;
   newVideoUrl = '';
   videoLinks: string[] = [];
+  videoLinkError = '';
 
   // Available data
   availableInstruments: SystemItem[] = [];
@@ -647,6 +648,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
     const url = this.newVideoUrl.trim();
     if (!url) return;
 
+    if (!/(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url)) {
+      this.videoLinkError = 'קישורי יוטיוב בלבד';
+      return;
+    }
+    this.videoLinkError = '';
+
     if (!this.videoLinks.includes(url)) {
       this.videoLinks.push(url);
     }
@@ -928,6 +935,11 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = this.langService.translate('common.enter_phone');
       this.showRequiredStep(1, '#phoneNumber');
+      return false;
+    }
+
+    if (this.videoLinkError) {
+      this.error = this.videoLinkError;
       return false;
     }
 

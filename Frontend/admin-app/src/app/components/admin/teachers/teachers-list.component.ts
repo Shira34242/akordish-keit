@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,8 +24,12 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './teachers-list.component.html',
   styleUrls: ['./teachers-list.component.css']
 })
-export class TeachersListComponent implements OnInit {
+export class TeachersListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
   teachers: TeacherListDto[] = [];
   loading = false;
   error: string | null = null;
@@ -35,11 +39,12 @@ export class TeachersListComponent implements OnInit {
   showTeacherFormModal = false;
   selectedTeacherId: number | undefined = undefined;
  
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalCount = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
 
   // Filters
   searchTerm = '';
@@ -85,9 +90,56 @@ export class TeachersListComponent implements OnInit {
     this.layoutActions.addTeacherRequest$.subscribe(() => this.addNewTeacher());
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreTeachers();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadTeachers(): void {
     this.loading = true;
     this.error = null;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.teacherService.getTeachers(
       this.searchTerm || undefined,
@@ -104,14 +156,48 @@ export class TeachersListComponent implements OnInit {
       next: (result: PagedResult<TeacherListDto>) => {
         this.teachers = result.items;
         this.totalCount = result.totalCount;
-        this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err) => {
         console.error('שגיאה בטעינת מורים:', err);
         this.error = 'שגיאה בטעינת נתוני המורים';
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreTeachers(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.teacherService.getTeachers(
+      this.searchTerm || undefined,
+      undefined,
+      this.filterStatus ?? undefined,
+      this.filterFeatured ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      undefined,
+      undefined,
+      undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<TeacherListDto>) => {
+        this.teachers = [...this.teachers, ...result.items];
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.teachers.length >= result.totalCount;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת מורים נוספים:', err);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -146,12 +232,9 @@ export class TeachersListComponent implements OnInit {
     this.loadTeachers();
   }
 
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadTeachers();
-    }
-  }
+  // ============================================================
+  // Batch selection
+  // ============================================================
 
   editTeacher(id: number): void {
     this.selectedTeacherId = id;
@@ -304,17 +387,6 @@ export class TeachersListComponent implements OnInit {
       case 2: return 'מושעה';
       default: return 'לא ידוע';
     }
-  }
-
-  getPaginationRange(): number[] {
-    const range: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-
-    for (let i = start; i <= end; i++) {
-      range.push(i);
-    }
-    return range;
   }
 
   // ============================================================

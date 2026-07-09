@@ -687,3 +687,10 @@
   .form-actions { flex-direction: column-reverse; }
   .btn-submit, .btn-cancel { width: 100%; justify-content: center; }
 }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}

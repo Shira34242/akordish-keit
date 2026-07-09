@@ -333,3 +333,10 @@
   .form-actions { flex-direction: column-reverse; padding: var(--space-base) var(--space-lg); border-radius: 0; }
   .btn-cancel, .btn-submit { width: 100%; justify-content: center; }
 }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}

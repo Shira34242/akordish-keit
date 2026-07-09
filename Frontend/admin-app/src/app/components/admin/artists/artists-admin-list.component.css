@@ -202,41 +202,36 @@
 .btn-delete:hover { background: #404040; }
 .btn-delete:hover .material-icons { color: #ffffff; }
 
-/* Pagination */
-.pagination-container {
+/* Infinite Scroll */
+.infinite-scroll-sentinel {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--space-sm);
+  min-height: 72px;
   margin-top: var(--space-base);
   padding: var(--space-lg) 0;
 }
 
-.btn-pagination {
-  min-width: 40px;
-  height: 40px;
-  padding: 0 14px;
-  border: none;
-  background: #F2F2F2;
+.loading-more,
+.scroll-complete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 34px;
+  padding: 0 var(--space-base);
   border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  font-family: 'Open Sans', sans-serif;
+  background: #F2F2F2;
+  color: #404040;
+  font-size: var(--font-xs);
   font-weight: 300;
-  font-size: var(--font-sm);
-  color: #000000;
 }
 
-.btn-pagination:hover:not(:disabled) { background: #ddff53; }
-.btn-pagination.active { background: #ddff53; font-weight: 800; }
-.btn-pagination:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.pagination-info {
-  margin: 0 var(--space-sm);
-  color: #000000;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  font-size: var(--font-xs);
+.loading-more .spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+  margin: 0;
 }
 
 /* Loading & States */

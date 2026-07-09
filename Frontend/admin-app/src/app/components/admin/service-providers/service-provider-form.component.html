@@ -416,8 +416,11 @@
           name="videoUrl"
           class="form-input"
           placeholder="https://youtube.com/..."
+          (blur)="validateVideoUrl(videoUrl)"
+          (input)="validateVideoUrl(videoUrl)"
         />
         <small class="form-hint">קישור לסרטון YouTube או Vimeo</small>
+        <small class="field-error" *ngIf="videoUrlError">{{ videoUrlError }}</small>
       </div>
 
       <div class="gallery-editor">

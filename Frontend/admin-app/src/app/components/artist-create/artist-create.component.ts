@@ -90,6 +90,8 @@ export class ArtistCreateComponent implements OnInit {
 
   readonly GALLERY_MIN_ITEMS = 5;
 
+  galleryVideoErrors: Record<number, string> = {};
+
   private readonly langService = inject(LanguageService);
 
   get socialPlatformOptions(): PlatformLinkOption[] {
@@ -272,6 +274,19 @@ export class ArtistCreateComponent implements OnInit {
   removeGalleryItem(index: number) {
     this.artistForm.galleryItems?.splice(index, 1);
     this.artistForm.galleryItems?.forEach((it, order) => it.displayOrder = order);
+    delete this.galleryVideoErrors[index];
+  }
+
+  validateGalleryVideo(index: number, url?: string): void {
+    if (!url || !url.trim()) {
+      delete this.galleryVideoErrors[index];
+      return;
+    }
+    if (/(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url)) {
+      delete this.galleryVideoErrors[index];
+    } else {
+      this.galleryVideoErrors[index] = 'קישורי יוטיוב בלבד';
+    }
   }
 
   addHit(): void {
@@ -473,6 +488,12 @@ export class ArtistCreateComponent implements OnInit {
     const richContentError = this.validateRichContent();
     if (richContentError) {
       this.showValidationError(richContentError, this.getRichContentValidationTarget());
+      return;
+    }
+
+    const videoErrors = Object.values(this.galleryVideoErrors).filter(Boolean);
+    if (videoErrors.length) {
+      this.showValidationError(videoErrors[0], '[data-validation-target="gallery-video"]');
       return;
     }
 

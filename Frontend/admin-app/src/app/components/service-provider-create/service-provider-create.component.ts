@@ -109,6 +109,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
   showTestimonialDraft = false;
   newVideoUrl = '';
   videoLinks: string[] = [];
+  videoLinkError = '';
 
   // Available data
   availableCategories: Category[] = [];
@@ -587,6 +588,12 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     const url = this.newVideoUrl.trim();
     if (!url) return;
 
+    if (!/(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url)) {
+      this.videoLinkError = 'קישורי יוטיוב בלבד';
+      return;
+    }
+    this.videoLinkError = '';
+
     if (!this.videoLinks.includes(url)) {
       this.videoLinks.push(url);
     }
@@ -842,6 +849,11 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     if (!this.phoneNumber || !this.phoneNumber.trim()) {
       this.error = this.langService.translate('common.enter_phone');
       this.showRequiredStep(1, '#phoneNumber');
+      return false;
+    }
+
+    if (this.videoLinkError) {
+      this.error = this.videoLinkError;
       return false;
     }
 

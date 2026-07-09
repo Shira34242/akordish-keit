@@ -61,6 +61,7 @@ export class TeacherFormComponent implements OnInit {
   bannerBlur: number = 0;
   profileImageUrl: string = '';
   videoUrl: string = '';
+  videoUrlError: string = '';
   yearsOfExperience: number = 0;
   workingHours: string = '';
   isFeatured: boolean = false;
@@ -516,6 +517,11 @@ export class TeacherFormComponent implements OnInit {
       return false;
     }
 
+    if (this.videoUrlError) {
+      alert(this.videoUrlError);
+      return false;
+    }
+
     if (this.selectedInstrumentIds.length === 0) {
       this.instrumentsDropdownOpen = true;
       this.instrumentSearchText = '';
@@ -728,6 +734,14 @@ export class TeacherFormComponent implements OnInit {
 
   removeSocialLink(index: number): void {
     this.socialLinks.splice(index, 1);
+  }
+
+  validateVideoUrl(url: string): void {
+    if (!url || !url.trim()) {
+      this.videoUrlError = '';
+      return;
+    }
+    this.videoUrlError = /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url) ? '' : 'קישורי יוטיוב בלבד';
   }
 
   private optionalText(value: string | undefined): string | undefined {

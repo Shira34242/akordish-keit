@@ -420,23 +420,15 @@
     </div>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!loading && totalPages > 1 && isArticleListTab" class="pagination">
-    <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
-      ←
-    </button>
+  <!-- Infinite Scroll -->
+  <div class="infinite-scroll-sentinel" #scrollSentinel *ngIf="!loading && isArticleListTab">
+    <div class="loading-more" *ngIf="loadingMore">
+      <div class="spinner"></div>
+      <span>טוען עוד כתבות...</span>
+    </div>
 
-    <button *ngFor="let page of pages" class="page-btn" [class.active]="page === currentPage"
-      (click)="onPageChange(page)">
-      {{ page }}
-    </button>
-
-    <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
-      →
-    </button>
-
-    <div class="pagination-info">
-      {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalItems) }} מתוך {{ totalItems }}
+    <div class="scroll-complete" *ngIf="allLoaded && articles.length > 0">
+      כל הכתבות מוצגות
     </div>
   </div>
 

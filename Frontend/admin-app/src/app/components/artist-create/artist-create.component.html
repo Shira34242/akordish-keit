@@ -409,7 +409,10 @@
                   [name]="'gallery_videoUrl_' + i"
                   class="form-input"
                   [placeholder]="'artist_create.paste_video_url' | translate"
+                  (blur)="validateGalleryVideo(i, item.videoUrl)"
+                  (input)="validateGalleryVideo(i, item.videoUrl)"
                 />
+                <small class="field-error" *ngIf="galleryVideoErrors[i]">{{ galleryVideoErrors[i] }}</small>
               </ng-container>
             </div>
           </div>

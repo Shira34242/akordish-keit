@@ -73,6 +73,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   profileCropFileName = 'profile-image';
   galleryUploadingCount = 0;
   showVideoLinkInput = false;
+  videoUrlError = '';
 
   // Available data
   availableInstruments: SystemItem[] = [];
@@ -509,6 +510,11 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.videoUrlError) {
+      alert(this.videoUrlError);
+      return;
+    }
+
     this.saving = true;
     const currentUser = this.authService.currentUserValue;
 
@@ -602,6 +608,14 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
     this.instrumentsDropdownOpen = false;
     this.languageDropdownOpen = false;
     this.audienceDropdownOpen = false;
+  }
+
+  validateVideoUrl(url: string): void {
+    if (!url || !url.trim()) {
+      this.videoUrlError = '';
+      return;
+    }
+    this.videoUrlError = /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url) ? '' : 'קישורי יוטיוב בלבד';
   }
 
   ngOnDestroy(): void {

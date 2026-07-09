@@ -147,3 +147,10 @@
 .branch-card-detail .material-icons { font-size: 14px; color: #000000; flex: 0 0 auto; }
 
 @media (max-width: 768px) { .form-row, .range-field { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; } .form-actions { flex-direction: column-reverse; } .btn-primary, .btn-secondary, .btn-submit, .btn-cancel { width: 100%; justify-content: center; } }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}

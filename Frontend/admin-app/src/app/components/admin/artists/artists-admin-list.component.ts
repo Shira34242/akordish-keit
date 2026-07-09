@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,23 +25,27 @@ import { artistRoute } from '../../../utils/slug';
   templateUrl: './artists-admin-list.component.html',
   styleUrls: ['./artists-admin-list.component.css']
 })
-export class ArtistsAdminListComponent implements OnInit {
+export class ArtistsAdminListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
   artists: ArtistListDto[] = [];
   loading = false;
   error: string | null = null;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-artists-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-artists-view', mode); }
 
-  // Modal state
   showEditModal = false;
   selectedArtistId: number | null = null;
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalCount = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
 
   // Filters
   searchTerm = '';
@@ -101,9 +105,56 @@ export class ArtistsAdminListComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreArtists();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadArtists(): void {
     this.loading = true;
     this.error = null;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     this.artistService.getArtists(
       this.filterPremium ?? undefined,
@@ -117,14 +168,45 @@ export class ArtistsAdminListComponent implements OnInit {
       next: (result: PagedResult<ArtistListDto>) => {
         this.artists = result.items;
         this.totalCount = result.totalCount;
-        this.totalPages = Math.ceil(result.totalCount / result.pageSize);
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err) => {
         console.error('שגיאה בטעינת אומנים:', err);
         this.error = 'שגיאה בטעינת נתוני האומנים';
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreArtists(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.artistService.getArtists(
+      this.filterPremium ?? undefined,
+      this.filterStatus ?? undefined,
+      this.currentPage,
+      this.pageSize,
+      this.sortBy,
+      this.searchTerm,
+      true
+    ).subscribe({
+      next: (result: PagedResult<ArtistListDto>) => {
+        this.artists = [...this.artists, ...result.items];
+        this.totalCount = result.totalCount;
+        this.allLoaded = this.artists.length >= result.totalCount;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (err) => {
+        console.error('שגיאה בטעינת אומנים נוספים:', err);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -141,13 +223,6 @@ export class ArtistsAdminListComponent implements OnInit {
     this.sortBy = 'created_desc';
     this.currentPage = 1;
     this.loadArtists();
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadArtists();
-    }
   }
 
   editArtist(id: number): void {
@@ -263,17 +338,6 @@ export class ArtistsAdminListComponent implements OnInit {
       case ArtistStatus.Draft: return 'טיוטה';
       default: return 'לא ידוע';
     }
-  }
-
-  getPaginationRange(): number[] {
-    const range: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-
-    for (let i = start; i <= end; i++) {
-      range.push(i);
-    }
-    return range;
   }
 
   // ============================================================

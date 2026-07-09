@@ -230,11 +230,14 @@
             <button class="primary-action compact-action" type="button" (click)="addGalleryImage()" [disabled]="!galleryForm.imageUrl"><span class="material-icons">add_photo_alternate</span><span>תמונה</span></button>
           </div>
           <div class="gallery-form-row">
-            <input type="url" [(ngModel)]="galleryVideoForm.videoUrl" [ngModelOptions]="{standalone: true}" placeholder="קישור YouTube / Vimeo" class="form-input-inline">
+            <input type="url" [(ngModel)]="galleryVideoForm.videoUrl" [ngModelOptions]="{standalone: true}"
+                   placeholder="קישור YouTube / Vimeo" class="form-input-inline"
+                   (input)="galleryVideoUrlError = ''">
             <input type="text" [(ngModel)]="galleryVideoForm.title" [ngModelOptions]="{standalone: true}" placeholder="כותרת וידאו" class="form-input-inline">
             <input type="number" [(ngModel)]="galleryVideoForm.displayOrder" [ngModelOptions]="{standalone: true}" placeholder="סדר" class="mini-number">
             <button class="secondary-action compact-action" type="button" (click)="addGalleryVideo()" [disabled]="!galleryVideoForm.videoUrl"><span class="material-icons">smart_display</span><span>וידאו</span></button>
           </div>
+          <small class="field-error" *ngIf="galleryVideoUrlError" style="margin-top: 4px;">{{ galleryVideoUrlError }}</small>
         </div>
         <div class="gallery-preview-grid" *ngIf="agency.galleryImages">
           <article class="gallery-preview-card" *ngFor="let img of agency.galleryImages">

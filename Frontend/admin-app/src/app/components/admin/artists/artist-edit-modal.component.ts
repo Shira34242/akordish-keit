@@ -92,6 +92,8 @@ export class ArtistEditModalComponent implements OnInit {
 
   readonly GALLERY_MIN_ITEMS = 5;
 
+  galleryVideoErrors: Record<number, string> = {};
+
   // Edit form
   editForm = {
     name: '',
@@ -270,6 +272,12 @@ export class ArtistEditModalComponent implements OnInit {
       return;
     }
 
+    const videoErrors = Object.values(this.galleryVideoErrors).filter(Boolean);
+    if (videoErrors.length) {
+      this.showValidationError(videoErrors[0], '[data-validation-target="gallery-video"]');
+      return;
+    }
+
     this.saving = true;
     this.error = null;
 
@@ -357,6 +365,19 @@ export class ArtistEditModalComponent implements OnInit {
 
   removeGalleryItem(index: number): void {
     this.editForm.galleryItems.splice(index, 1);
+    delete this.galleryVideoErrors[index];
+  }
+
+  validateGalleryVideo(index: number, url?: string): void {
+    if (!url || !url.trim()) {
+      delete this.galleryVideoErrors[index];
+      return;
+    }
+    if (/(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url)) {
+      delete this.galleryVideoErrors[index];
+    } else {
+      this.galleryVideoErrors[index] = 'קישורי יוטיוב בלבד';
+    }
   }
 
   addHit(): void {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,6 @@ import { forkJoin, Subscription } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
 import { ArtistBasicDto, SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
-import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
@@ -17,11 +16,11 @@ import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.compon
 @Component({
   selector: 'app-songs-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, BumpModalComponent],
+  imports: [CommonModule, FormsModule, BumpModalComponent],
   templateUrl: './songs-list.component.html',
   styleUrls: ['./songs-list.component.css']
 })
-export class SongsListComponent implements OnInit, OnDestroy {
+export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private songUpdatedSub?: Subscription;
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
@@ -29,6 +28,10 @@ export class SongsListComponent implements OnInit, OnDestroy {
   private readonly modalService = inject(ModalService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
   // State
   songs: SongDto[] = [];
@@ -55,15 +58,13 @@ export class SongsListComponent implements OnInit, OnDestroy {
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalItems = 0;
-  totalPages = 0;
   totalCount = 0;
-  pageNumber = 1;
-  hasPreviousPage = false;
-  hasNextPage = false;
+  allLoaded = false;
+  loadingMore = false;
 
   // Filters
   searchTerm = '';
@@ -86,13 +87,57 @@ export class SongsListComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
   ngOnDestroy(): void {
+    this.isDestroyed = true;
     this.songUpdatedSub?.unsubscribe();
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreSongs();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
   }
   
   loadSongs(): void {
     this.loading = true;
     this.loadError = '';
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
 
     const search = this.searchTerm || undefined;
     const page = Number(this.currentPage);
@@ -115,13 +160,11 @@ export class SongsListComponent implements OnInit, OnDestroy {
       next: (result: any) => {
         this.songs = result.songs || result.items || result.data || [];
         this.totalItems = result.totalCount || result.total || 0;
-        this.totalPages = result.totalPages || Math.ceil(this.totalItems / this.pageSize);
         this.totalCount = this.totalItems;
-        this.pageNumber = this.currentPage;
-        this.hasPreviousPage = result.hasPreviousPage ?? (this.currentPage > 1);
-        this.hasNextPage = result.hasNextPage ?? (this.currentPage < this.totalPages);
+        this.allLoaded = this.songs.length >= this.totalItems;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
         console.error('Error loading songs:', error);
@@ -131,6 +174,43 @@ export class SongsListComponent implements OnInit, OnDestroy {
           ? 'אין לך הרשאה לצפות במסך ניהול האקורדים. אם זו הרשאה שאמורה להיות פתוחה עבורך, צריך לעדכן את התפקיד או ההרשאה במערכת.'
           : (error?.message || 'לא הצלחנו לטעון את רשימת האקורדים.');
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreSongs(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.songService.getSongsForAdmin(
+      this.searchTerm || undefined,
+      this.currentPage,
+      this.pageSize,
+      this.selectedArtistId,
+      this.selectedGenreId,
+      this.selectedKeyId,
+      this.sortBy,
+      undefined,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+    ).subscribe({
+      next: (result: any) => {
+        const items = result.songs || result.items || result.data || [];
+        this.songs = [...this.songs, ...items];
+        this.totalItems = result.totalCount || result.total || 0;
+        this.totalCount = this.totalItems;
+        this.allLoaded = this.songs.length >= this.totalItems;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (error) => {
+        console.error('Error loading more songs:', error);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -645,11 +725,4 @@ export class SongsListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Pagination methods
-  onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadSongs();
-    }
-  }
 }

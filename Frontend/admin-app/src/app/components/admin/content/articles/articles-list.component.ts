@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,7 +28,7 @@ import { getArticleLink } from '../../../../utils/article-route.utils';
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
-export class ArticlesListComponent implements OnInit {
+export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
@@ -36,6 +36,10 @@ export class ArticlesListComponent implements OnInit {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private isDestroyed = false;
+  private scrollObserver?: IntersectionObserver;
+
+  @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
   // State
   articles: Article[] = [];
@@ -75,11 +79,12 @@ export class ArticlesListComponent implements OnInit {
   cleanupLoading = false;
   cleanupSettingsLoading = false;
 
-  // Pagination
-  currentPage = 1;
+  // Infinite scroll
+  currentPage = 0;
   pageSize = 25;
   totalItems = 0;
-  totalPages = 0;
+  allLoaded = false;
+  loadingMore = false;
 
   // Filters
   searchTerm = '';
@@ -104,6 +109,50 @@ export class ArticlesListComponent implements OnInit {
     this.loadArticles();
   }
 
+  ngAfterViewInit(): void {
+    this.setupScrollObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
+    this.destroyScrollObserver();
+  }
+
+  private destroyScrollObserver(): void {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = undefined;
+    }
+  }
+
+  private setupScrollObserver(): void {
+    if (this.isDestroyed) return;
+
+    this.destroyScrollObserver();
+
+    if (!this.scrollSentinelRef?.nativeElement) {
+      setTimeout(() => this.setupScrollObserver(), 100);
+      return;
+    }
+
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.loading && !this.loadingMore && !this.allLoaded) {
+          this.loadMoreArticles();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    this.scrollObserver.observe(this.scrollSentinelRef.nativeElement);
+  }
+
+  private reattachScrollObserver(): void {
+    if (!this.scrollSentinelRef?.nativeElement) return;
+    this.scrollObserver?.disconnect();
+    this.scrollObserver?.observe(this.scrollSentinelRef.nativeElement);
+  }
+
   loadCategories(): void {
     this.systemTablesService.getItems('article-categories', 1, 100).subscribe({
       next: (result) => this.categories = result.items,
@@ -120,6 +169,9 @@ export class ArticlesListComponent implements OnInit {
 
   loadArticles(): void {
     this.loading = true;
+    this.currentPage = 1;
+    this.allLoaded = false;
+    this.loadingMore = false;
     const contentType = this.activeTab === 'all'
       ? undefined
       : this.activeTab === 'news'
@@ -130,7 +182,7 @@ export class ArticlesListComponent implements OnInit {
       this.currentPage,
       this.pageSize,
       this.searchTerm || undefined,
-      this.selectedCategory, // This variable name might be confusing now, it holds ID
+      this.selectedCategory,
       contentType,
       this.selectedStatus,
       this.showFeaturedOnly ? true : undefined,
@@ -147,13 +199,59 @@ export class ArticlesListComponent implements OnInit {
       next: (result: PagedResult<Article>) => {
         this.articles = result.items;
         this.totalItems = result.totalCount;
-        this.totalPages = result.totalPages;
+        this.allLoaded = result.items.length >= result.totalCount;
         this.clearSelection();
         this.loading = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
         console.error('Error loading articles:', error);
         this.loading = false;
+      }
+    });
+  }
+
+  loadMoreArticles(): void {
+    if (this.loading || this.loadingMore || this.allLoaded) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    const contentType = this.activeTab === 'all'
+      ? undefined
+      : this.activeTab === 'news'
+        ? ArticleContentType.News
+        : ArticleContentType.Blog;
+
+    this.articleService.getArticles(
+      this.currentPage,
+      this.pageSize,
+      this.searchTerm || undefined,
+      this.selectedCategory,
+      contentType,
+      this.selectedStatus,
+      this.showFeaturedOnly ? true : undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.selectedArtistId,
+      this.uploaderSearch || undefined,
+      this.dateFrom || undefined,
+      this.dateTo || undefined,
+      this.sortBy
+    ).subscribe({
+      next: (result: PagedResult<Article>) => {
+        this.articles = [...this.articles, ...result.items];
+        this.totalItems = result.totalCount;
+        this.allLoaded = this.articles.length >= result.totalCount;
+        this.loadingMore = false;
+        setTimeout(() => this.reattachScrollObserver(), 0);
+      },
+      error: (error) => {
+        console.error('Error loading more articles:', error);
+        this.loadingMore = false;
+        this.currentPage--;
       }
     });
   }
@@ -828,33 +926,6 @@ export class ArticlesListComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     });
-  }
-
-  // Pagination methods
-  onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadArticles();
-    }
-  }
-
-  get pages(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfWindow = Math.floor(maxPagesToShow / 2);
-
-    let startPage = Math.max(1, this.currentPage - halfWindow);
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
   }
 
   // Expose Math to template

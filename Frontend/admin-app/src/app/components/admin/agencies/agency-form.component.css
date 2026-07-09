@@ -865,3 +865,10 @@ button:disabled {
     flex-basis: 100%;
   }
 }
+
+.field-error {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: #000000;
+}
