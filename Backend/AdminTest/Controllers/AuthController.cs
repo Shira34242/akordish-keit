@@ -147,10 +147,25 @@ namespace AkordishKeit.Controllers
 
             if (user == null)
             {
+                var baseUsername = googleUser.Name?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(baseUsername))
+                    baseUsername = googleUser.Email.Split('@')[0];
+                if (baseUsername.Length > 100) baseUsername = baseUsername[..100];
+
+                var username = baseUsername;
+                int suffix = 2;
+                while (await _context.Users.AnyAsync(u => u.Username == username))
+                {
+                    var suffixStr = suffix.ToString();
+                    var maxBase = 100 - suffixStr.Length;
+                    username = (baseUsername.Length > maxBase ? baseUsername[..maxBase] : baseUsername) + suffixStr;
+                    suffix++;
+                }
+
                 // 3. Create new user
                 user = new User
                 {
-                    Username = googleUser.Name,
+                    Username = username,
                     Email = googleUser.Email,
                     GoogleId = googleUser.Sub,
                     ProfileImageUrl = profileImageUrl,
