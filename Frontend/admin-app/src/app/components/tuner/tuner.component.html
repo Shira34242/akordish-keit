@@ -53,109 +53,8 @@
             </p>
         </div>
 
-        <!-- ─── Microphone Card ─── -->
-        <div class="mic-card">
-
-            <!-- Toggle button -->
-            <button class="mic-toggle-btn"
-                    [class.active]="micActive"
-                    [class.loading]="micLoading"
-                    (click)="toggleMic()"
-                    [disabled]="micLoading">
-
-                <!-- Mic-on icon -->
-                <svg *ngIf="!micActive && !micLoading" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="22"/>
-                </svg>
-
-                <!-- Stop icon -->
-                <svg *ngIf="micActive && !micLoading" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="6" y="4" width="4" height="16"/>
-                    <rect x="14" y="4" width="4" height="16"/>
-                </svg>
-
-                <!-- Loading spinner -->
-                <svg *ngIf="micLoading" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" class="spin-icon">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                </svg>
-
-                <span>{{ micLoading ? ('tuner.connecting' | translate) : (micActive ? ('tuner.stop_mic' | translate) : ('tuner.start_mic' | translate)) }}</span>
-            </button>
-
-            <!-- Error -->
-            <div class="mic-error" *ngIf="micError">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
-                    <path d="M12 9v4"/><path d="M12 17h.01"/>
-                </svg>
-                {{ micError }}
-            </div>
-
-            <!-- Tuning meter — visible while mic is active -->
-            <div class="tuner-meter" *ngIf="micActive" [class.in-tune]="inTuneClass">
-
-                <!-- Target string hint -->
-                <p class="meter-hint" *ngIf="activeStringInfo">
-                    {{ 'tuner.tuning_string' | translate }} {{ activeStringInfo.number }} — <span dir="ltr">{{ activeStringInfo.note }}</span>
-                </p>
-                <p class="meter-hint" *ngIf="!activeStringInfo">
-                    {{ 'tuner.pick_string' | translate }}
-                </p>
-
-                <!-- Note display -->
-                <div class="detected-note-block">
-                    <div class="det-note" dir="ltr" [class.in-tune]="inTuneClass">
-                        {{ detectedNote ?? '—' }}
-                    </div>
-                    <div class="det-status">
-                        <span *ngIf="!micListening" class="listening-dot-label">
-                            <span class="listening-dot"></span>{{ 'tuner.listening' | translate }}
-                        </span>
-                        <span *ngIf="micListening && inTuneClass" class="in-tune-label">{{ 'tuner.in_tune' | translate }}</span>
-                        <span *ngIf="micListening && !inTuneClass && detectedNote" class="cents-label" dir="ltr">
-                            {{ detectedCents > 0 ? '+' : '' }}{{ detectedCents }} cents
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Cents meter -->
-                <div class="meter-row" dir="ltr" *ngIf="micListening && detectedNote">
-                    <span class="meter-edge-label">♭</span>
-
-                    <div class="meter-track">
-                        <!-- Center marker -->
-                        <div class="meter-center-line"></div>
-                        <!-- Fill bar -->
-                        <div class="meter-fill"
-                             [class.in-tune]="inTuneClass"
-                             [style.left]="meterFillLeft"
-                             [style.width]="meterFillWidth">
-                        </div>
-                        <!-- Needle -->
-                        <div class="meter-needle"
-                             [class.in-tune]="inTuneClass"
-                             [style.left]="needleLeftPct + '%'">
-                        </div>
-                        <!-- Zone labels -->
-                        <span class="zone-label flat-zone">Flat</span>
-                        <span class="zone-label sharp-zone">Sharp</span>
-                    </div>
-
-                    <span class="meter-edge-label">♯</span>
-                </div>
-
-            </div><!-- /tuner-meter -->
-
-        </div><!-- /mic-card -->
+        <!-- ─── Microphone Tuner (professional, pitchy-powered) ─── -->
+        <app-microphone-tuner [instrument]="instrument"></app-microphone-tuner>
 
         <!-- ─── Strings Card ─── -->
         <div class="tuner-card">
@@ -165,7 +64,6 @@
                 <div *ngFor="let str of currentStrings; let i = index"
                      class="string-row"
                      [class.is-active]="activeStringIndex === i"
-                     [class.is-target]="micActive && activeStringIndex === i && activeStringIndex !== null"
                      (click)="playString(i)"
                      [attr.aria-label]="'נגן מיתר ' + str.number + ' — ' + str.note">
 

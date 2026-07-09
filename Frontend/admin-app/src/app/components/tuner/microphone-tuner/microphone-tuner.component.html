@@ -1,0 +1,137 @@
+<!-- ════════════════════════════════════════════
+     Microphone Tuner — Professional UI
+     Premium feel · Minimal · RTL
+     ════════════════════════════════════════════ -->
+<div class="mic-tuner" [class.is-active]="micActive" [class.is-stopped]="micStopped">
+
+  <!-- ═══ Toggle Button ═══ -->
+  <button class="mic-btn"
+          [class.on]="micActive"
+          [class.loading]="micLoading"
+          (click)="toggleMic()"
+          [disabled]="micLoading"
+          [attr.aria-label]="micActive ? ('tuner_mic.stop' | translate) : ('tuner_mic.start' | translate)">
+
+    <span class="btn-icon">
+      <!-- Mic off -->
+      <svg *ngIf="!micActive && !micLoading" width="22" height="22" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+      </svg>
+      <!-- Mic on -->
+      <svg *ngIf="micActive && !micLoading" width="22" height="22" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="4" width="4" height="16" rx="1"/>
+        <rect x="14" y="4" width="4" height="16" rx="1"/>
+      </svg>
+      <!-- Spinner -->
+      <svg *ngIf="micLoading" width="22" height="22" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" class="spin-icon">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+    </span>
+
+    <span class="btn-label">
+      {{ micLoading ? ('tuner_mic.connecting' | translate) : (micActive ? ('tuner_mic.stop' | translate) : ('tuner_mic.start' | translate)) }}
+    </span>
+  </button>
+
+  <!-- ═══ Error ═══ -->
+  <div class="mic-error" *ngIf="micError && !micLoading">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ micError | translate }}
+  </div>
+
+  <!-- ═══ Tuning Display ═══ -->
+  <div class="tuner-display" *ngIf="showMeter">
+
+    <!-- ─── Note Hero ─── -->
+    <div class="note-hero">
+      <div class="note-letter"
+           dir="ltr"
+           [class.in-tune]="isInTune && micListening"
+           [class.has-signal]="micListening">
+        {{ detectedNote ?? '—' }}
+      </div>
+
+      <div class="string-label" *ngIf="closestString">
+        {{ 'tuner_mic.string' | translate }} {{ closestString.number }}<span class="dot-sep">·</span>{{ closestString.labelHe }}
+      </div>
+
+      <div class="string-label muted" *ngIf="!closestString && micListening">
+        {{ 'tuner_mic.no_signal' | translate }}
+      </div>
+    </div>
+
+    <!-- ─── Scale ─── -->
+    <div class="tuner-scale" dir="ltr" *ngIf="(micListening || micStopped) && detectedNote">
+      <span class="scale-edge">{{ 'tuner_mic.low' | translate }}</span>
+
+      <div class="scale-track">
+        <div class="scale-center-line"></div>
+        <div class="scale-fill"
+             [class.in-tune]="isInTune && micListening"
+             [style.left]="meterFillLeft"
+             [style.width]="meterFillWidth">
+        </div>
+        <div class="scale-needle"
+             [class.in-tune]="isInTune && micListening"
+             [style.left]="needlePct + '%'">
+        </div>
+      </div>
+
+      <span class="scale-edge">{{ 'tuner_mic.high' | translate }}</span>
+    </div>
+
+    <!-- ─── Readings (secondary) ─── -->
+    <div class="readings" *ngIf="(micListening || micStopped) && detectedNote" dir="ltr">
+      <span class="read-cents" [class.in-tune]="isInTune && micListening">
+        {{ detectedCents > 0 ? '+' : '' }}{{ detectedCents }}¢
+      </span>
+      <span class="read-sep">·</span>
+      <span class="read-freq" *ngIf="detectedFreq > 0">
+        {{ detectedFreq | number:'1.1-1' }} Hz
+      </span>
+    </div>
+
+    <!-- ─── Status Line ─── -->
+    <div class="status-line">
+      <!-- Listening for signal -->
+      <span *ngIf="!micStopped && !micListening" class="status status-listening">
+        <span class="pulse"></span>{{ 'tuner_mic.listening' | translate }}
+      </span>
+
+      <!-- Mic stopped, last result frozen -->
+      <span *ngIf="micStopped" class="status status-stopped">
+        {{ 'tuner_mic.mic_off' | translate }}
+      </span>
+
+      <!-- In tune -->
+      <span *ngIf="micListening && isInTune" class="status status-ok">
+        <span class="ok-dot"></span>{{ 'tuner_mic.in_tune' | translate }}
+      </span>
+
+      <!-- Flat -->
+      <span *ngIf="micListening && !isInTune && detectedCents < 0" class="status status-flat" dir="rtl">
+        {{ 'tuner_mic.too_low' | translate }}
+      </span>
+
+      <!-- Sharp -->
+      <span *ngIf="micListening && !isInTune && detectedCents > 0" class="status status-sharp" dir="rtl">
+        {{ 'tuner_mic.too_high' | translate }}
+      </span>
+    </div>
+
+  </div><!-- /tuner-display -->
+
+</div>

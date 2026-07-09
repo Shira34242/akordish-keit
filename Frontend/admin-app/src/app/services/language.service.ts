@@ -710,6 +710,24 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'tuner.ukulele_guide': 'מיתר 4 הוא העבה ביותר (G4), מיתר 1 הוא הדק ביותר (A4).',
     'tuner.mic_denied': 'הגישה למיקרופון נדחתה. אפשרו גישה בהגדרות הדפדפן ונסו שוב.',
     'tuner.mic_error': 'לא ניתן לגשת למיקרופון. בדקו שהמכשיר מחובר ונסו שוב.',
+    'tuner.mic_stopped': 'המיקרופון כבוי — מוצגת תוצאה אחרונה',
+
+    // Professional tuner (pitchy-powered)
+    'tuner_mic.start': 'הפעל מיקרופון',
+    'tuner_mic.stop': 'עצור מיקרופון',
+    'tuner_mic.connecting': 'מתחבר למיקרופון...',
+    'tuner_mic.denied': 'הגישה למיקרופון נדחתה. אפשרו גישה בהגדרות הדפדפן.',
+    'tuner_mic.error': 'לא ניתן לגשת למיקרופון. בדקו שהמכשיר מחובר.',
+    'tuner_mic.listening': 'האזנה...',
+    'tuner_mic.stopped': 'המיקרופון כבוי — מוצגת תוצאה אחרונה',
+    'tuner_mic.in_tune': 'מכוון',
+    'tuner_mic.too_low': 'נמוך מדי — מתח מעט את המיתר',
+    'tuner_mic.too_high': 'גבוה מדי — שחרר מעט את המיתר',
+    'tuner_mic.string': 'מיתר',
+    'tuner_mic.no_signal': 'אין אות',
+    'tuner_mic.low': 'נמוך',
+    'tuner_mic.high': 'גבוה',
+    'tuner_mic.mic_off': 'מיקרופון כבוי',
 
     // Teachers page
     'teachers.upgrade_btn': 'השתדרג למורה',
@@ -2158,6 +2176,24 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     // Tuner mic errors
     'tuner.mic_denied': 'Microphone access denied. Enable access in browser settings and try again.',
     'tuner.mic_error': 'Cannot access microphone. Check it is connected and try again.',
+    'tuner.mic_stopped': 'Microphone off — showing last result',
+
+    // Professional tuner (pitchy-powered)
+    'tuner_mic.start': 'Start Microphone',
+    'tuner_mic.stop': 'Stop Microphone',
+    'tuner_mic.connecting': 'Connecting to microphone...',
+    'tuner_mic.denied': 'Microphone access denied. Allow access in browser settings.',
+    'tuner_mic.error': 'Cannot access microphone. Check that it is connected.',
+    'tuner_mic.listening': 'Listening...',
+    'tuner_mic.stopped': 'Microphone off — showing last result',
+    'tuner_mic.in_tune': 'In Tune',
+    'tuner_mic.too_low': 'Too Low — tighten the string',
+    'tuner_mic.too_high': 'Too High — loosen the string',
+    'tuner_mic.string': 'String',
+    'tuner_mic.no_signal': 'No signal',
+    'tuner_mic.low': 'Low',
+    'tuner_mic.high': 'High',
+    'tuner_mic.mic_off': 'Mic off',
 
     // Chord dictionary extras
     'dict.no_bass': 'No Bass',

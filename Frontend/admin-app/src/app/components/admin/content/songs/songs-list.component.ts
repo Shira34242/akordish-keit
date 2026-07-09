@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild, AfterViewI
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, Subscription } from 'rxjs';
+import { forkJoin, Subscription, Observable } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
 import { ArtistBasicDto, SongDto } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
@@ -21,6 +21,7 @@ import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.compon
   styleUrls: ['./songs-list.component.css']
 })
 export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
+  private static readonly STATE_KEY = 'admin-songs-filters';
   private songUpdatedSub?: Subscription;
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
@@ -30,6 +31,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly userService = inject(UserService);
   private isDestroyed = false;
   private scrollObserver?: IntersectionObserver;
+  private _pendingScrollY = 0;
+  private _pendingPage = 0;
 
   @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
@@ -79,11 +82,15 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.loadArtists();
-    this.loadSongs();
-
-    // האזנה לעדכוני שירים (הוספה/עריכה)
-    this.songUpdatedSub = this.modalService.songUpdated$.subscribe(() => {
+    const hadState = this._restoreState();
+    if (hadState) {
+      this._loadFromSavedState();
+    } else {
       this.loadSongs();
+    }
+
+    this.songUpdatedSub = this.modalService.songUpdated$.subscribe(() => {
+      this._reloadPreservingState();
     });
   }
 
@@ -205,6 +212,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.totalCount = this.totalItems;
         this.allLoaded = this.songs.length >= this.totalItems;
         this.loadingMore = false;
+        this._persistState();
         setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
@@ -217,17 +225,151 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onSearch(): void {
     this.currentPage = 1;
+    this._persistState();
     this.loadSongs();
   }
 
   onSortChange(): void {
     this.currentPage = 1;
+    this._persistState();
     this.loadSongs();
   }
 
   onFilterChange(): void {
     this.currentPage = 1;
+    this._persistState();
     this.loadSongs();
+  }
+
+  private _persistState(): void {
+    sessionStorage.setItem(SongsListComponent.STATE_KEY, JSON.stringify({
+      searchTerm: this.searchTerm,
+      selectedArtistId: this.selectedArtistId,
+      sortBy: this.sortBy,
+      approvalFilter: this.approvalFilter,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+      uploaderSearch: this.uploaderSearch,
+      currentPage: this.currentPage,
+      scrollY: window.scrollY,
+    }));
+  }
+
+  private _restoreState(): boolean {
+    const raw = sessionStorage.getItem(SongsListComponent.STATE_KEY);
+    if (!raw) return false;
+    try {
+      const s = JSON.parse(raw);
+      this.searchTerm = s.searchTerm ?? '';
+      this.selectedArtistId = s.selectedArtistId ?? undefined;
+      this.sortBy = s.sortBy ?? 'date';
+      this.approvalFilter = s.approvalFilter ?? 'all';
+      this.dateFrom = s.dateFrom ?? '';
+      this.dateTo = s.dateTo ?? '';
+      this.uploaderSearch = s.uploaderSearch ?? '';
+      this._pendingScrollY = s.scrollY ?? 0;
+      this._pendingPage = s.currentPage ?? 0;
+      return true;
+    } catch { return false; }
+  }
+
+  private _loadFromSavedState(): void {
+    const pagesToLoad = this._pendingPage || 1;
+    const targetScrollY = this._pendingScrollY;
+    this._pendingScrollY = 0;
+    this._pendingPage = 0;
+
+    this.loading = true;
+    this.loadError = '';
+    this.currentPage = 1;
+    this.allLoaded = false;
+
+    const requests: Observable<any>[] = [];
+    for (let p = 1; p <= pagesToLoad; p++) {
+      requests.push(this.songService.getSongsForAdmin(
+        this.searchTerm || undefined, p, this.pageSize,
+        this.selectedArtistId, this.selectedGenreId, this.selectedKeyId,
+        this.sortBy, undefined,
+        this.uploaderSearch || undefined,
+        this.dateFrom || undefined, this.dateTo || undefined,
+        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+      ));
+    }
+
+    forkJoin(requests).subscribe({
+      next: (results: any[]) => {
+        const allSongs: SongDto[] = [];
+        for (const r of results) {
+          allSongs.push(...(r.songs || r.items || r.data || []));
+        }
+        this.songs = allSongs;
+        const total = results[0]?.totalCount || results[0]?.total || 0;
+        this.totalItems = total;
+        this.totalCount = total;
+        this.currentPage = pagesToLoad;
+        this.allLoaded = allSongs.length >= total;
+        this.clearSelection();
+        this.loading = false;
+        setTimeout(() => {
+          this.reattachScrollObserver();
+          if (targetScrollY > 0) {
+            window.scrollTo(0, targetScrollY);
+          }
+        }, 150);
+      },
+      error: (error) => {
+        console.error('Error loading songs from saved state:', error);
+        this.songs = [];
+        this.totalItems = 0;
+        this.loadError = error?.message || 'שגיאה בטעינת שירים';
+        this.loading = false;
+      }
+    });
+  }
+
+  private _reloadPreservingState(): void {
+    const savedScrollY = window.scrollY;
+    const pagesToLoad = this.currentPage || 1;
+    this.loading = true;
+    this.loadError = '';
+
+    const requests: Observable<any>[] = [];
+    for (let p = 1; p <= pagesToLoad; p++) {
+      requests.push(this.songService.getSongsForAdmin(
+        this.searchTerm || undefined, p, this.pageSize,
+        this.selectedArtistId, this.selectedGenreId, this.selectedKeyId,
+        this.sortBy, undefined,
+        this.uploaderSearch || undefined,
+        this.dateFrom || undefined, this.dateTo || undefined,
+        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+      ));
+    }
+
+    forkJoin(requests).subscribe({
+      next: (results: any[]) => {
+        const allSongs: SongDto[] = [];
+        for (const r of results) {
+          allSongs.push(...(r.songs || r.items || r.data || []));
+        }
+        this.songs = allSongs;
+        const total = results[0]?.totalCount || results[0]?.total || 0;
+        this.totalItems = total;
+        this.totalCount = total;
+        this.currentPage = pagesToLoad;
+        this.allLoaded = allSongs.length >= total;
+        this.clearSelection();
+        this.loading = false;
+        setTimeout(() => {
+          this.reattachScrollObserver();
+          window.scrollTo(0, savedScrollY);
+        }, 100);
+      },
+      error: (error) => {
+        console.error('Error reloading songs:', error);
+        this.loading = false;
+        this.loadSongs();
+      }
+    });
   }
 
   loadArtists(): void {
@@ -268,6 +410,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.dateTo = '';
     this.approvalFilter = 'all';
     this.sortBy = 'date';
+    sessionStorage.removeItem(SongsListComponent.STATE_KEY);
     this.onFilterChange();
   }
 
@@ -691,6 +834,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   viewSong(song: SongDto): void {
+    this._persistState();
     if (!song.isApproved) {
       this.router.navigate(['/song', song.id], { queryParams: { preview: 'true' } });
     } else {

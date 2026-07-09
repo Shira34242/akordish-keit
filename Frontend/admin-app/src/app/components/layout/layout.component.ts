@@ -692,14 +692,23 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.closeAdditionalDetailsModal();
 
     const userType = choice.userType;
+    const returnUrl = this.authService.getAndClearReturnUrl();
 
     if (userType === UserType.Regular) {
-      this.router.navigate(['/']);
+      if (returnUrl && returnUrl !== '/') {
+        this.router.navigate([returnUrl]);
+      } else {
+        this.router.navigate(['/']);
+      }
       return;
     }
 
     if (!choice.addPublicPage) {
-      this.router.navigate(['/']);
+      if (returnUrl && returnUrl !== '/') {
+        this.router.navigate([returnUrl]);
+      } else {
+        this.router.navigate(['/']);
+      }
       return;
     }
 
