@@ -851,12 +851,6 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
       return false;
     }
 
-    if (this.hasBranches && this.branches.length === 0) {
-      this.error = this.langService.translate('service_create.add_branch');
-      this.showRequiredStep(2, '[data-required-branches]');
-      return false;
-    }
-
     return true;
   }
 
