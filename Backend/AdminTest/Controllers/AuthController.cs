@@ -104,7 +104,7 @@ namespace AkordishKeit.Controllers
             {
                 _logger.LogWarning("Google login failed — invalid token IP={IP}",
                     HttpContext.Connection.RemoteIpAddress);
-                return Unauthorized("Invalid Google Token");
+                return Unauthorized(new { message = "אימות Google נכשל. אנא סגור ופתח מחדש ונסה שוב." });
             }
 
             // 2. Check if user exists (including professional profiles for onboarding check)
@@ -233,7 +233,11 @@ namespace AkordishKeit.Controllers
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 var response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", cts.Token);
                 if (!response.IsSuccessStatusCode)
+                {
+                    var errBody = await response.Content.ReadAsStringAsync(cts.Token);
+                    _logger.LogWarning("Google tokeninfo failed — Status={Status} Body={Body}", response.StatusCode, errBody);
                     return null;
+                }
 
                 var content = await response.Content.ReadAsStringAsync(cts.Token);
                 return JsonSerializer.Deserialize<GoogleTokenInfo>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
