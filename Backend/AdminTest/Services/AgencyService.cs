@@ -820,10 +820,15 @@ public class AgencyService : IAgencyService
             }
             else
             {
-                var provider = await _context.ServiceProviders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == profile.ProfileId && !p.IsDeleted);
+                var provider = await _context.ServiceProviders
+                    .AsNoTracking()
+                    .Include(p => p.Categories)
+                        .ThenInclude(c => c.Category)
+                    .FirstOrDefaultAsync(p => p.Id == profile.ProfileId && !p.IsDeleted);
                 dto.ProfileName = provider?.DisplayName;
                 dto.ProfileImageUrl = provider?.ProfileImageUrl;
                 dto.IsTeacher = provider?.IsTeacher ?? false;
+                dto.Subtitle = provider?.Categories.FirstOrDefault()?.Category?.Name;
                 dto.ProfileUrl = provider == null ? null : (provider.IsTeacher ? $"/teacher/{provider.Id}" : $"/professional/{provider.Id}");
             }
 

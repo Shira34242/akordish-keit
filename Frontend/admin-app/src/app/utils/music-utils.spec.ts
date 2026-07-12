@@ -64,6 +64,15 @@ describe('music-utils bidi controls', () => {
         }
     });
 
+    it('keeps slash-bass chords intact but accepts slash-separated chord pairs', () => {
+        const line = 'Bbm  Fm  Ebm/Ab  Ebm/Fm  Ebm';
+
+        expect(isChord('Ebm/Ab')).toBeTrue();
+        expect(isChord('Ebm/Fm')).toBeFalse();
+        expect(isChordLine(line)).toBeTrue();
+        expect(extractChords(line)).toEqual(['Bbm', 'Fm', 'Ebm/Ab', 'Ebm', 'Fm', 'Ebm']);
+    });
+
     it('keeps parsing, transposition and simplification consistent after copied bidi controls', () => {
         expect(parseChord('\u200eC7+\u200f')?.normalizedName).toBe('Cmaj7');
         expect(transposeChord('\u200eF#m7b5\u200f', 2)).toBe('G#m7b5');

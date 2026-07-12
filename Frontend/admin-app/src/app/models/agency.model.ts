@@ -88,6 +88,7 @@ export interface AgencyProfileDto {
   displayOrder: number;
   profileName?: string;
   profileImageUrl?: string;
+  subtitle?: string;
   isTeacher: boolean;
   profileUrl?: string;
 }

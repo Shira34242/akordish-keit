@@ -17,7 +17,8 @@ import {
     isChordLine,
     parseChord,
     enharmonicRoot,
-    splitGluedChordSequence
+    splitGluedChordSequence,
+    expandChordToken
 } from '../../utils/music-utils';
 
 import { GUITAR_CHORDS, UKULELE_CHORDS, PIANO_CHORDS } from '../../utils/chord-data';
@@ -843,6 +844,18 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             }
 
             if (!isChord(token)) {
+                const expanded = expandChordToken(token);
+                if (expanded.length > 1 && expanded.every(t => t === '/' || isChord(t))) {
+                    return expanded.map(t => {
+                        if (t === '/') return this.escapeHtmlValue(t);
+                        let chord = this.transposeStep !== 0
+                            ? transposeChord(t, this.transposeStep, { preferFlat: this.activePreferFlat })
+                            : t;
+                        if (this.isEasyMode) chord = simplifyChord(chord);
+                        return `<span class="chord-block">${this.escapeHtmlValue(chord)}</span>`;
+                    }).join('');
+                }
+
                 const glued = splitGluedChordSequence(token);
                 if (glued && glued.length > 1) {
                     return glued.map(t => {

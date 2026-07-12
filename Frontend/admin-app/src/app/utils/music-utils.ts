@@ -389,7 +389,7 @@ function isChordLineSeparator(token: string): boolean {
     return token === '→' || token === '->' || token === '←' || token === '<-' || token === '/';
 }
 
-function expandChordToken(token: string): string[] {
+export function expandChordToken(token: string): string[] {
     const trimmed = token.trim();
     if (!trimmed) return [];
     if (isChord(trimmed)) return [trimmed];
@@ -404,6 +404,7 @@ function expandChordToken(token: string): string[] {
     const left = trimmed.slice(0, slashIdx);
     const right = trimmed.slice(slashIdx + 1);
     if (!isChord(left)) return [trimmed];
+    if (isChord(right)) return [left, '/', right];
 
     const bassMatch = right.match(/^[A-G][#b]?/);
     if (!bassMatch) return [trimmed];

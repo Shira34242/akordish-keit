@@ -74,6 +74,7 @@ public class AgencyProfileDto
     public int DisplayOrder { get; set; }
     public string? ProfileName { get; set; }
     public string? ProfileImageUrl { get; set; }
+    public string? Subtitle { get; set; }
     public bool IsTeacher { get; set; }
     public string? ProfileUrl { get; set; }
 }

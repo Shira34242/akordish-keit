@@ -1020,7 +1020,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   agencyProfileSubtitle(profile: AgencyProfileDto): string {
     if (profile.isTeacher) return 'מורה';
     if (profile.profileType === 'artist') return 'אמן';
-    if (profile.profileType === 'serviceProvider') return 'נותן שירות';
+    if (profile.profileType === 'serviceProvider') return profile.subtitle?.trim() || 'נותן שירות';
     return '';
   }
 

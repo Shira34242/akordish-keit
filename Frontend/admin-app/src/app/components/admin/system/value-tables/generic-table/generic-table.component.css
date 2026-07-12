@@ -176,14 +176,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-lg);
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .modal-content {
   background: #ffffff;
   border-radius: 24px;
   width: 100%;
-  max-width: 440px;
+  max-width: 560px;
+  max-height: calc(100dvh - (var(--space-lg) * 2));
   padding: var(--space-xl);
+  box-sizing: border-box;
+  overflow-y: auto;
   animation: popIn 0.15s ease-out;
 }
 
@@ -245,3 +251,25 @@
 }
 
 .btn-secondary:hover { background: #ddff53; }
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: var(--space-base);
+  }
+
+  .modal-content {
+    max-height: calc(100dvh - (var(--space-base) * 2));
+    padding: var(--space-lg);
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions .btn-primary,
+  .modal-actions .btn-secondary {
+    justify-content: center;
+    width: 100%;
+  }
+}
