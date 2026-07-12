@@ -385,11 +385,12 @@ public class TeacherService : ITeacherService
             return false;
         }
 
+        var previousStatus = teacher.ServiceProvider.Status;
         teacher.ServiceProvider.Status = ProfileStatus.Active;
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        if (teacher.ServiceProvider.UserId.HasValue)
+        if (previousStatus != ProfileStatus.Active && teacher.ServiceProvider.UserId.HasValue)
         {
             await _notificationService.NotifyTeacherApprovedAsync(
                 teacher.ServiceProvider.UserId.Value,
@@ -411,11 +412,12 @@ public class TeacherService : ITeacherService
             return false;
         }
 
+        var previousStatus = teacher.ServiceProvider.Status;
         teacher.ServiceProvider.Status = ProfileStatus.Suspended;
         teacher.ServiceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        if (teacher.ServiceProvider.UserId.HasValue)
+        if (previousStatus != ProfileStatus.Suspended && teacher.ServiceProvider.UserId.HasValue)
         {
             await _notificationService.NotifyTeacherRejectedAsync(
                 teacher.ServiceProvider.UserId.Value,

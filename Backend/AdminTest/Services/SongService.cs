@@ -16,6 +16,31 @@ public class SongService : ISongService
     private readonly INotificationService _notificationService;
     private readonly IChordIndexService _chordIndexService;
     private readonly IMemoryCache _cache;
+    private const int DuplicateScanThreshold = 70;
+
+    private sealed record DuplicateScanSong(
+        int Id,
+        string Title,
+        string ArtistNames,
+        List<string> ArtistNamesList,
+        string LyricsWithChords,
+        string YouTubeUrl,
+        string? ImageUrl,
+        bool IsApproved,
+        int ViewCount,
+        DateTime CreatedAt)
+    {
+        public string NormalizedTitle { get; init; } = string.Empty;
+        public string NormalizedLyrics { get; init; } = string.Empty;
+        public string NormalizedYoutubeUrl { get; init; } = string.Empty;
+        public List<string> NormalizedArtists { get; init; } = new();
+    }
+
+    private sealed record DuplicateScanEdge(
+        int FirstSongId,
+        int SecondSongId,
+        int Score,
+        List<string> Reasons);
 
     public SongService(
         AkordishKeitDbContext context,
@@ -1618,6 +1643,74 @@ public class SongService : ISongService
         }
     }
 
+    public async Task<SongDuplicateScanResponseDto> ScanDuplicateSongsAsync()
+    {
+        var songs = await _context.Songs
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted)
+            .Include(s => s.SongArtists)
+                .ThenInclude(sa => sa.Artist)
+            .Select(s => new DuplicateScanSong(
+                s.Id,
+                s.Title,
+                string.Join(", ", s.SongArtists
+                    .OrderBy(sa => sa.Order)
+                    .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? "Unknown")),
+                s.SongArtists
+                    .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName ?? string.Empty)
+                    .Where(name => name != string.Empty)
+                    .ToList(),
+                s.LyricsWithChords,
+                s.YouTubeUrl,
+                s.ImageUrl,
+                s.IsApproved,
+                s.ViewCount,
+                s.CreatedAt))
+            .ToListAsync();
+
+        var comparableSongs = songs
+            .Select(song => song with
+            {
+                NormalizedTitle = NormalizeDuplicateTitle(song.Title),
+                NormalizedLyrics = NormalizeSongText(song.LyricsWithChords),
+                NormalizedYoutubeUrl = NormalizeUrl(song.YouTubeUrl),
+                NormalizedArtists = song.ArtistNamesList
+                    .Select(NormalizeDuplicateTitle)
+                    .Where(name => name.Length > 0)
+                    .Distinct()
+                    .ToList()
+            })
+            .Where(song => song.NormalizedTitle.Length > 0)
+            .ToList();
+
+        var edges = new List<DuplicateScanEdge>();
+
+        for (var i = 0; i < comparableSongs.Count; i++)
+        {
+            for (var j = i + 1; j < comparableSongs.Count; j++)
+            {
+                var comparison = CompareDuplicateScanSongs(comparableSongs[i], comparableSongs[j]);
+                if (comparison.Score >= DuplicateScanThreshold)
+                {
+                    edges.Add(new DuplicateScanEdge(
+                        comparableSongs[i].Id,
+                        comparableSongs[j].Id,
+                        comparison.Score,
+                        comparison.Reasons));
+                }
+            }
+        }
+
+        var groups = BuildDuplicateScanGroups(comparableSongs, edges);
+
+        return new SongDuplicateScanResponseDto
+        {
+            ScannedCount = comparableSongs.Count,
+            GroupCount = groups.Count,
+            Groups = groups
+        };
+    }
+
     private static string NormalizeDuplicateTitle(string value)
     {
         var cleanedChars = value
@@ -1636,6 +1729,220 @@ public class SongService : ISongService
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Where(token => token.Length >= 2)
             .Distinct()
+            .ToList();
+    }
+
+    private static string NormalizeSongText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var withoutChords = Regex.Replace(value, @"\[[^\]]+\]", " ");
+        return NormalizeDuplicateTitle(withoutChords);
+    }
+
+    private static string NormalizeUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Trim().ToLowerInvariant()
+            .Replace("https://", string.Empty)
+            .Replace("http://", string.Empty)
+            .Replace("www.", string.Empty)
+            .TrimEnd('/');
+    }
+
+    private static (int Score, List<string> Reasons) CompareDuplicateScanSongs(DuplicateScanSong first, DuplicateScanSong second)
+    {
+        var reasons = new List<string>();
+        var score = 0;
+
+        var titleScore = ScoreDuplicateTitle(first.NormalizedTitle, second.NormalizedTitle);
+        if (titleScore >= 88)
+        {
+            score += 48;
+            reasons.Add("שם כמעט זהה");
+        }
+        else if (titleScore >= 70)
+        {
+            score += 34;
+            reasons.Add("שם דומה");
+        }
+        else if (titleScore >= 45)
+        {
+            score += 18;
+            reasons.Add("יש חפיפה בשם");
+        }
+
+        var sharedArtist = first.NormalizedArtists.Count > 0 &&
+            first.NormalizedArtists.Intersect(second.NormalizedArtists).Any();
+        if (sharedArtist)
+        {
+            score += 28;
+            reasons.Add("אותו אמן");
+        }
+        else if (HasSimilarArtist(first.NormalizedArtists, second.NormalizedArtists))
+        {
+            score += 18;
+            reasons.Add("אמן דומה");
+        }
+
+        if (!string.IsNullOrEmpty(first.NormalizedYoutubeUrl) && first.NormalizedYoutubeUrl == second.NormalizedYoutubeUrl)
+        {
+            score += 45;
+            reasons.Add("קישור YouTube זהה");
+        }
+
+        var lyricSimilarity = ScoreTextSimilarity(first.NormalizedLyrics, second.NormalizedLyrics);
+        if (lyricSimilarity >= 82)
+        {
+            score += 42;
+            reasons.Add("תוכן דף כמעט זהה");
+        }
+        else if (lyricSimilarity >= 62)
+        {
+            score += 28;
+            reasons.Add("תוכן דף דומה");
+        }
+
+        return (Math.Min(score, 100), reasons.Distinct().ToList());
+    }
+
+    private static bool HasSimilarArtist(List<string> firstArtists, List<string> secondArtists)
+    {
+        return firstArtists.Any(first => secondArtists.Any(second => ScoreDuplicateTitle(first, second) >= 76));
+    }
+
+    private static int ScoreTextSimilarity(string first, string second)
+    {
+        if (first.Length < 40 || second.Length < 40)
+        {
+            return 0;
+        }
+
+        if (first == second)
+        {
+            return 100;
+        }
+
+        var firstTokens = ExtractDuplicateTokens(first).Where(token => token.Length >= 3).Distinct().ToHashSet();
+        var secondTokens = ExtractDuplicateTokens(second).Where(token => token.Length >= 3).Distinct().ToHashSet();
+        if (firstTokens.Count == 0 || secondTokens.Count == 0)
+        {
+            return 0;
+        }
+
+        var intersection = firstTokens.Intersect(secondTokens).Count();
+        var union = firstTokens.Union(secondTokens).Count();
+
+        return (int)Math.Round((double)intersection / union * 100);
+    }
+
+    private static List<SongDuplicateGroupDto> BuildDuplicateScanGroups(
+        List<DuplicateScanSong> songs,
+        List<DuplicateScanEdge> edges)
+    {
+        var songById = songs.ToDictionary(song => song.Id);
+        var adjacency = edges
+            .SelectMany(edge => new[]
+            {
+                (From: edge.FirstSongId, To: edge.SecondSongId),
+                (From: edge.SecondSongId, To: edge.FirstSongId)
+            })
+            .GroupBy(edge => edge.From)
+            .ToDictionary(group => group.Key, group => group.Select(edge => edge.To).ToList());
+
+        var visited = new HashSet<int>();
+        var groups = new List<SongDuplicateGroupDto>();
+
+        foreach (var songId in adjacency.Keys.OrderBy(id => id))
+        {
+            if (!visited.Add(songId))
+            {
+                continue;
+            }
+
+            var component = new List<int>();
+            var stack = new Stack<int>();
+            stack.Push(songId);
+
+            while (stack.Count > 0)
+            {
+                var currentId = stack.Pop();
+                component.Add(currentId);
+
+                if (!adjacency.TryGetValue(currentId, out var neighbors))
+                {
+                    continue;
+                }
+
+                foreach (var neighborId in neighbors)
+                {
+                    if (visited.Add(neighborId))
+                    {
+                        stack.Push(neighborId);
+                    }
+                }
+            }
+
+            if (component.Count < 2)
+            {
+                continue;
+            }
+
+            var componentEdges = edges
+                .Where(edge => component.Contains(edge.FirstSongId) && component.Contains(edge.SecondSongId))
+                .ToList();
+            var highestScore = componentEdges.Max(edge => edge.Score);
+            var groupReasons = componentEdges
+                .SelectMany(edge => edge.Reasons)
+                .Distinct()
+                .Take(4)
+                .ToList();
+
+            groups.Add(new SongDuplicateGroupDto
+            {
+                GroupId = groups.Count + 1,
+                HighestScore = highestScore,
+                Summary = string.Join(" · ", groupReasons),
+                Reasons = groupReasons,
+                Songs = component
+                    .Select(id =>
+                    {
+                        var song = songById[id];
+                        var relatedEdges = componentEdges
+                            .Where(edge => edge.FirstSongId == id || edge.SecondSongId == id)
+                            .ToList();
+
+                        return new SongDuplicateCandidateDto
+                        {
+                            Id = song.Id,
+                            Title = song.Title,
+                            ArtistNames = song.ArtistNames,
+                            ImageUrl = song.ImageUrl,
+                            IsApproved = song.IsApproved,
+                            ViewCount = song.ViewCount,
+                            CreatedAt = song.CreatedAt,
+                            Score = relatedEdges.Count == 0 ? highestScore : relatedEdges.Max(edge => edge.Score),
+                            Reasons = relatedEdges.SelectMany(edge => edge.Reasons).Distinct().Take(4).ToList()
+                        };
+                    })
+                    .OrderByDescending(song => song.IsApproved)
+                    .ThenByDescending(song => song.ViewCount)
+                    .ThenBy(song => song.CreatedAt)
+                    .ToList()
+            });
+        }
+
+        return groups
+            .OrderByDescending(group => group.HighestScore)
+            .ThenByDescending(group => group.Songs.Count)
+            .Take(50)
             .ToList();
     }
 
@@ -1752,6 +2059,7 @@ public class SongService : ISongService
                 throw new KeyNotFoundException("השיר לא נמצא");
             }
 
+            var wasApproved = song.IsApproved;
             song.IsApproved = isApproved;
             song.UpdatedAt = DateTime.UtcNow;
 
@@ -1760,17 +2068,27 @@ public class SongService : ISongService
                 .OrderByDescending(cs => cs.SubmittedAt)
                 .FirstOrDefaultAsync();
 
+            var previousSubmissionStatus = submission?.Status;
             if (submission != null)
             {
-                submission.Status = isApproved ? SubmissionStatus.Approved : SubmissionStatus.Pending;
+                submission.Status = isApproved ? SubmissionStatus.Approved : SubmissionStatus.Rejected;
                 submission.ReviewedAt = DateTime.UtcNow;
             }
 
             await _context.SaveChangesAsync();
 
-            if (isApproved && song.UploadedByUserId.HasValue)
+            if (song.UploadedByUserId.HasValue && isApproved && !wasApproved)
             {
                 await _notificationService.NotifySongApprovedAsync(
+                    song.UploadedByUserId.Value,
+                    song.Id,
+                    song.Title);
+            }
+            else if (song.UploadedByUserId.HasValue
+                && !isApproved
+                && (wasApproved || previousSubmissionStatus != SubmissionStatus.Rejected))
+            {
+                await _notificationService.NotifySongRejectedAsync(
                     song.UploadedByUserId.Value,
                     song.Id,
                     song.Title);

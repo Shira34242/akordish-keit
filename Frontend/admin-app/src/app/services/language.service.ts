@@ -1114,7 +1114,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
 
     // Become-teacher / become-professional forms
     'form.error_profile_image': 'שגיאה בהעלאת תמונת הפרופיל.',
-    'form.error_gallery_file': 'שגיאה בהעלאת אחד הקבצים לגלריה.',
+    'form.error_gallery_file': 'שגיאה בהעלאת אחת התמונות לגלריה.',
     'form.enter_image_url': 'נא להזין URL לתמונה',
     'form.confirm_delete_image': 'האם למחוק תמונה זו מהגלריה?',
     'form.enter_testimonial': 'נא להזין טקסט המלצה',

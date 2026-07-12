@@ -693,7 +693,8 @@ public class ArtistsController : ControllerBase
 
             if (!isAdmin && artist.UserId != currentUserId)
                 return Forbid();
-            var wasActive = artist.Status == ArtistStatus.Active;
+            var previousStatus = artist.Status;
+            var wasActive = previousStatus == ArtistStatus.Active;
 
             var richMediaError = ValidateArtistRichMedia(dto, isAdmin && dto.Status == ArtistStatus.Draft);
             if (richMediaError != null)
@@ -823,6 +824,10 @@ public class ArtistsController : ControllerBase
             if (isAdmin && !wasActive && artist.Status == ArtistStatus.Active && artist.UserId.HasValue)
             {
                 await _notificationService.NotifyArtistApprovedAsync(artist.UserId.Value, artist.Id, artist.Name);
+            }
+            else if (isAdmin && previousStatus != ArtistStatus.Hidden && artist.Status == ArtistStatus.Hidden && artist.UserId.HasValue)
+            {
+                await _notificationService.NotifyArtistRejectedAsync(artist.UserId.Value, artist.Id, artist.Name);
             }
 
             return NoContent();
@@ -2001,13 +2006,17 @@ public class ArtistsController : ControllerBase
             if (artist == null)
                 return NotFound("אומן לא נמצא");
 
-            var wasActive = artist.Status == ArtistStatus.Active;
+            var previousStatus = artist.Status;
             artist.Status = status;
             await _context.SaveChangesAsync();
 
-            if (!wasActive && status == ArtistStatus.Active && artist.UserId.HasValue)
+            if (previousStatus != ArtistStatus.Active && status == ArtistStatus.Active && artist.UserId.HasValue)
             {
                 await _notificationService.NotifyArtistApprovedAsync(artist.UserId.Value, artist.Id, artist.Name);
+            }
+            else if (previousStatus != ArtistStatus.Hidden && status == ArtistStatus.Hidden && artist.UserId.HasValue)
+            {
+                await _notificationService.NotifyArtistRejectedAsync(artist.UserId.Value, artist.Id, artist.Name);
             }
 
             _logger.LogInformation("Artist status updated: ArtistId={ArtistId} Name={Name} NewStatus={Status}",

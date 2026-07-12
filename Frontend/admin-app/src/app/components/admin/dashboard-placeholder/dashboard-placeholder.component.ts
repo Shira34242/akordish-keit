@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { AdminService, UserStats, RecentJoin } from '../../../services/admin.service';
+import { EMPTY, forkJoin, of } from 'rxjs';
+import { catchError, expand, map, reduce } from 'rxjs/operators';
+import { AdminService, UserStats } from '../../../services/admin.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../services/analytics.service';
 import { ReportService } from '../../../services/report.service';
 import { Report } from '../../../models/report.model';
+import { UserService } from '../../../services/user.service';
+import { UserListDto } from '../../../models/user.model';
 import { TeacherService } from '../../../services/teacher.service';
 import { MusicServiceProviderService } from '../../../services/music-service-provider.service';
 import { ArtistService } from '../../../services/artist.service';
@@ -38,7 +40,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     selectedAnalyticsPeriod: PeriodKey = 'day';
 
     userStats: UserStats | null = null;
-    recentJoins: RecentJoin[] = [];
+    recentUsers: UserListDto[] = [];
     dashboard: AnalyticsDashboard | null = null;
 
     pendingReportsCount = 0;
@@ -52,9 +54,13 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     pendingArtists: ArtistListDto[] = [];
     pendingSongsCount = 0;
     pendingSongs: SongDto[] = [];
+    draftArticlesCount = 0;
     draftArticles: Article[] = [];
+    draftNewsCount = 0;
     draftNews: Article[] = [];
+    draftPodcastEpisodesCount = 0;
     draftPodcastEpisodes: PodcastEpisode[] = [];
+    draftEventsCount = 0;
     draftEvents: Event[] = [];
 
     get totalPendingApprovals(): number {
@@ -64,10 +70,10 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     }
 
     get totalDraftContent(): number {
-        return this.draftArticles.length +
-               this.draftNews.length +
-               this.draftPodcastEpisodes.length +
-               this.draftEvents.length +
+        return this.draftArticlesCount +
+               this.draftNewsCount +
+               this.draftPodcastEpisodesCount +
+               this.draftEventsCount +
                this.pendingSongsCount;
     }
 
@@ -79,15 +85,26 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         ];
     }
 
-    get filteredRecentJoins(): RecentJoin[] {
+    get filteredRecentUsers(): UserListDto[] {
         const cutoff = this.periodCutoff(this.selectedUserPeriod);
-        return this.recentJoins
-            .filter(join => new Date(join.date).getTime() >= cutoff.getTime())
-            .slice(0, 6);
+        return this.recentUsers
+            .filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime());
     }
 
     get recentJoinCount(): number {
-        return this.filteredRecentJoins.length;
+        return this.filteredRecentUsers.length;
+    }
+
+    get displayedRecentUsers(): UserListDto[] {
+        return this.filteredRecentUsers.slice(0, 12);
+    }
+
+    get recentActiveUsersCount(): number {
+        return this.filteredRecentUsers.filter(user => user.isActive).length;
+    }
+
+    get recentProfileUsersCount(): number {
+        return this.filteredRecentUsers.filter(user => user.roleName === 'Teacher' || user.roleName === 'Artist').length;
     }
 
     get analyticsViews(): number {
@@ -118,6 +135,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         private adminService: AdminService,
         private analyticsService: AnalyticsService,
         private reportService: ReportService,
+        private userService: UserService,
         private teacherService: TeacherService,
         private serviceProviderService: MusicServiceProviderService,
         private artistService: ArtistService,
@@ -137,7 +155,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         const analyticsTo = this.isoDate(new Date());
         forkJoin({
             stats: this.adminService.getUserStats().pipe(catchError(() => of(null))),
-            joins: this.adminService.getRecentJoins().pipe(catchError(() => of([]))),
+            users: this.loadRecentUsersWindow().pipe(catchError(() => of([]))),
             dash: this.analyticsService.getDashboard(analyticsFrom, analyticsTo).pipe(catchError(() => of(null))),
             reports: this.reportService.getReports(1, 6, 'Pending').pipe(catchError(() => of(null))),
             chordReqs: this.reportService.getChordRequests(1, 1).pipe(catchError(() => of(null))),
@@ -151,7 +169,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
                 .getArtists(undefined, ArtistStatus.Pending, 1, 4)
                 .pipe(catchError(() => of(null))),
             songs: this.songService
-                .getSongs(undefined, 1, 50, undefined, undefined, undefined, 'date')
+                .getSongsForAdmin(undefined, 1, 4, undefined, undefined, undefined, 'date', undefined, undefined, undefined, undefined, false)
                 .pipe(catchError(() => of(null))),
             draftArticles: this.articleService
                 .getArticles(1, 4, undefined, undefined, ArticleContentType.Blog, ArticleStatus.Draft, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'date')
@@ -165,9 +183,9 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             draftEpisodes: this.podcastService
                 .getEpisodes(1, 4, undefined, undefined, false, undefined, undefined, 'date')
                 .pipe(catchError(() => of(null)))
-        }).subscribe(({ stats, joins, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
+        }).subscribe(({ stats, users, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
             this.userStats = stats;
-            this.recentJoins = joins as RecentJoin[];
+            this.recentUsers = users as UserListDto[];
             this.dashboard = dash;
 
             this.pendingReportsCount = reports?.totalCount ?? 0;
@@ -179,11 +197,15 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             this.pendingServiceProviders = providers?.items?.slice(0, 4) ?? [];
             this.pendingArtistsCount = artists?.totalCount ?? 0;
             this.pendingArtists = artists?.items?.slice(0, 4) ?? [];
-            this.pendingSongs = (songs?.items ?? []).filter((s: any) => !s.isApproved).slice(0, 4);
-            this.pendingSongsCount = this.pendingSongs.length;
+            this.pendingSongs = (songs?.songs ?? songs?.items ?? songs?.data ?? []).slice(0, 4);
+            this.pendingSongsCount = songs?.totalCount ?? songs?.total ?? this.pendingSongs.length;
+            this.draftArticlesCount = draftArticles?.totalCount ?? 0;
             this.draftArticles = draftArticles?.items?.slice(0, 4) ?? [];
+            this.draftNewsCount = draftNews?.totalCount ?? 0;
             this.draftNews = draftNews?.items?.slice(0, 4) ?? [];
+            this.draftEventsCount = draftEvents?.totalCount ?? 0;
             this.draftEvents = draftEvents?.items?.slice(0, 4) ?? [];
+            this.draftPodcastEpisodesCount = draftEpisodes?.totalCount ?? 0;
             this.draftPodcastEpisodes = draftEpisodes?.items?.slice(0, 4) ?? [];
 
             this.loading = false;
@@ -198,6 +220,37 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     setAnalyticsPeriod(period: PeriodKey): void {
         this.selectedAnalyticsPeriod = period;
         this.loadAll();
+    }
+
+    private loadRecentUsersWindow() {
+        const cutoff = this.periodCutoff('month');
+        const pageSize = 100;
+
+        return this.userService.getUsers(undefined, undefined, undefined, 1, pageSize, undefined, undefined, 'created_desc').pipe(
+            expand(result => {
+                const items = result.items ?? [];
+                const lastUser = items[items.length - 1];
+                const loadedCount = result.pageNumber * result.pageSize;
+                const shouldLoadMore = !!lastUser &&
+                    loadedCount < result.totalCount &&
+                    new Date(lastUser.createdAt).getTime() >= cutoff.getTime();
+
+                if (!shouldLoadMore) return EMPTY;
+
+                return this.userService.getUsers(
+                    undefined,
+                    undefined,
+                    undefined,
+                    result.pageNumber + 1,
+                    pageSize,
+                    undefined,
+                    undefined,
+                    'created_desc'
+                );
+            }),
+            reduce((users, result) => users.concat(result.items ?? []), [] as UserListDto[]),
+            map(users => users.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime()))
+        );
     }
 
     fmt(n: number): string {

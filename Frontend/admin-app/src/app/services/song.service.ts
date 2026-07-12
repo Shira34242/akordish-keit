@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
-import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, ImportSongFromUrlResponse, MusicalKey, SongBasicDto, SongDto, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
+import { AddSongRequest, AutocompleteResult, DetectKeyResponse, DuplicateCheckResponse, ImportSongFromUrlResponse, MusicalKey, SongBasicDto, SongDto, SongDuplicateScanResponse, YouTubeMetadata, YouTubeSearchResult } from '../models/song.model';
 import { PagedResult } from '../models/pagination.model';
 
 export interface UpdateSongArtistsDto {
@@ -46,6 +46,10 @@ export class SongService {
     checkDuplicate(title: string): Observable<DuplicateCheckResponse> {
         const params = new HttpParams().set('title', title);
         return this.http.get<DuplicateCheckResponse>(`${this.apiUrl}/check-duplicate`, { params });
+    }
+
+    scanDuplicateSongs(): Observable<SongDuplicateScanResponse> {
+        return this.http.get<SongDuplicateScanResponse>(`${this.apiUrl}/admin/duplicate-scan`);
     }
 
     autocompleteArtists(query: string): Observable<AutocompleteResult[]> {

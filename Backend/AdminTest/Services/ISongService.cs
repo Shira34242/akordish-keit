@@ -68,6 +68,11 @@ public interface ISongService
     Task<DuplicateCheckResponseDto> CheckDuplicateAsync(string title);
 
     /// <summary>
+    /// Scan all active songs, including unapproved songs, and return suspected duplicate groups.
+    /// </summary>
+    Task<SongDuplicateScanResponseDto> ScanDuplicateSongsAsync();
+
+    /// <summary>
     /// Generic autocomplete for artists, genres, people, tags
     /// </summary>
     Task<List<AutocompleteResultDto>> AutocompleteAsync(string entityType, string query, int maxResults = 10);

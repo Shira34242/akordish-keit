@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, Subscription, Observable } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
-import { ArtistBasicDto, SongDto } from '../../../../models/song.model';
+import { ArtistBasicDto, SongDto, SongDuplicateCandidate, SongDuplicateGroup, SongDuplicateScanResponse } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { ArtistService } from '../../../../services/artist.service';
@@ -58,6 +58,10 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedUploaderProfile: UserWithProfileDto | null = null;
   artistKeepModalOpen = false;
   artistKeepChoices: { song: SongDto; artists: ArtistBasicDto[]; selectedArtistId: number }[] = [];
+  duplicateScanLoading = false;
+  duplicateScanModalOpen = false;
+  duplicateScanResult: SongDuplicateScanResponse | null = null;
+  duplicateDecisions = new Map<number, 'keep' | 'delete'>();
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-songs-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-songs-view', mode); }
 
@@ -754,6 +758,70 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
+  }
+
+  scanDuplicateSongs(): void {
+    this.duplicateScanLoading = true;
+    this.duplicateScanResult = null;
+    this.duplicateDecisions.clear();
+
+    this.songService.scanDuplicateSongs().subscribe({
+      next: (result) => {
+        this.duplicateScanResult = result;
+        this.duplicateScanModalOpen = true;
+        this.duplicateScanLoading = false;
+      },
+      error: (error) => {
+        console.error('Error scanning duplicate songs:', error);
+        alert(error?.error?.message || 'שגיאה בסריקת כפילויות');
+        this.duplicateScanLoading = false;
+      }
+    });
+  }
+
+  closeDuplicateScanModal(): void {
+    if (this.bulkActionLoading) {
+      return;
+    }
+
+    this.duplicateScanModalOpen = false;
+  }
+
+  getDuplicateDecision(songId: number): 'keep' | 'delete' | undefined {
+    return this.duplicateDecisions.get(songId);
+  }
+
+  keepDuplicateCandidate(candidate: SongDuplicateCandidate): void {
+    this.duplicateDecisions.set(candidate.id, 'keep');
+  }
+
+  async deleteDuplicateCandidate(candidate: SongDuplicateCandidate): Promise<void> {
+    if (!await this.siteAlerts.confirm(`למחוק את "${candidate.title}"?`)) {
+      return;
+    }
+
+    this.bulkActionLoading = true;
+    this.songService.deleteSong(candidate.id).subscribe({
+      next: () => {
+        this.duplicateDecisions.set(candidate.id, 'delete');
+        this.songs = this.songs.filter(song => song.id !== candidate.id);
+        this.selectedSongIds.delete(candidate.id);
+        this.bulkActionLoading = false;
+      },
+      error: (error) => {
+        console.error('Error deleting duplicate candidate:', error);
+        alert('שגיאה במחיקת האקורד');
+        this.bulkActionLoading = false;
+      }
+    });
+  }
+
+  get hasDuplicateScanGroups(): boolean {
+    return !!this.duplicateScanResult?.groups?.length;
+  }
+
+  getVisibleDuplicateGroups(): SongDuplicateGroup[] {
+    return this.duplicateScanResult?.groups ?? [];
   }
 
   async toggleApproval(song: SongDto): Promise<void> {

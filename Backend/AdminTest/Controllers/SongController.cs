@@ -477,6 +477,26 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
+    // GET: api/Songs/admin/duplicate-scan
+    // Scan all songs for suspected duplicates (Admin only)
+    // ============================================
+    [HttpGet("admin/duplicate-scan")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SongDuplicateScanResponseDto>> ScanDuplicateSongs()
+    {
+        try
+        {
+            var result = await _songService.ScanDuplicateSongsAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error scanning duplicate songs");
+            return StatusCode(500, new { message = "שגיאה בסריקת כפילויות" });
+        }
+    }
+
+    // ============================================
     // POST: api/Songs/youtube-metadata
     // Fetch YouTube metadata
     // ============================================

@@ -322,6 +322,35 @@ public class DuplicateCheckResponseDto
     public string Message { get; set; } = string.Empty;
 }
 
+public class SongDuplicateScanResponseDto
+{
+    public int ScannedCount { get; set; }
+    public int GroupCount { get; set; }
+    public List<SongDuplicateGroupDto> Groups { get; set; } = new();
+}
+
+public class SongDuplicateGroupDto
+{
+    public int GroupId { get; set; }
+    public int HighestScore { get; set; }
+    public string Summary { get; set; } = string.Empty;
+    public List<string> Reasons { get; set; } = new();
+    public List<SongDuplicateCandidateDto> Songs { get; set; } = new();
+}
+
+public class SongDuplicateCandidateDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string ArtistNames { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public bool IsApproved { get; set; }
+    public int ViewCount { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int Score { get; set; }
+    public List<string> Reasons { get; set; } = new();
+}
+
 /// <summary>
 /// שיר בסיסי (לבדיקת כפילויות)
 /// </summary>

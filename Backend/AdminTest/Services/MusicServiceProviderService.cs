@@ -379,11 +379,12 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             return false;
         }
 
+        var previousStatus = serviceProvider.Status;
         serviceProvider.Status = ProfileStatus.Active;
         serviceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        if (serviceProvider.UserId.HasValue)
+        if (previousStatus != ProfileStatus.Active && serviceProvider.UserId.HasValue)
         {
             await _notificationService.NotifyServiceProviderApprovedAsync(
                 serviceProvider.UserId.Value,
@@ -404,11 +405,12 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             return false;
         }
 
+        var previousStatus = serviceProvider.Status;
         serviceProvider.Status = ProfileStatus.Suspended;
         serviceProvider.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        if (serviceProvider.UserId.HasValue)
+        if (previousStatus != ProfileStatus.Suspended && serviceProvider.UserId.HasValue)
         {
             await _notificationService.NotifyServiceProviderRejectedAsync(
                 serviceProvider.UserId.Value,

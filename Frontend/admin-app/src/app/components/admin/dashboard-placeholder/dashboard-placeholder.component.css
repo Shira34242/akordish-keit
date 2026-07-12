@@ -170,6 +170,49 @@
   min-width: 0;
 }
 
+.scroll-list {
+  max-height: 18rem;
+  overflow-y: auto;
+  padding-inline-end: var(--space-xs);
+}
+
+.scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+}
+
+.scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+
+.card-metrics,
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.card-metrics span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  background: #fff;
+  color: #404040;
+  border-radius: 999px;
+  font-size: var(--font-xs);
+  font-weight: 800;
+}
+
+.card-actions {
+  margin-top: auto;
+}
+
 .split-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

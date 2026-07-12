@@ -82,6 +82,11 @@
     </div>
 
     <!-- New Button -->
+    <button class="filter-btn duplicate-scan-btn" type="button" (click)="scanDuplicateSongs()" [disabled]="duplicateScanLoading">
+      <span class="material-icons">{{ duplicateScanLoading ? 'hourglass_empty' : 'content_paste_search' }}</span>
+      {{ duplicateScanLoading ? 'סורק' : 'סריקת כפילויות' }}
+    </button>
+
     <button class="btn-new" (click)="createNew()">
       <span class="material-icons">add</span>
       שיר חדש
@@ -484,6 +489,84 @@
         <button class="btn-new" (click)="confirmArtistKeepChoices()" [disabled]="bulkActionLoading">
           <span class="material-icons">check</span>
           המשך שמירה
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Duplicate Scan Modal -->
+  <div class="category-modal-backdrop duplicate-scan-backdrop" *ngIf="duplicateScanModalOpen" (click)="closeDuplicateScanModal()">
+    <div class="category-modal duplicate-scan-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>סריקת כפילויות</h2>
+          <p *ngIf="duplicateScanResult">{{ duplicateScanResult.scannedCount }} אקורדים נסרקו · {{ duplicateScanResult.groupCount }} קבוצות חשודות</p>
+        </div>
+        <button class="btn-action" (click)="closeDuplicateScanModal()" [disabled]="bulkActionLoading" title="סגירה">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="duplicate-empty-state" *ngIf="!hasDuplicateScanGroups">
+        <span class="material-icons">check_circle</span>
+        <strong>לא נמצאו כפילויות חשודות</strong>
+      </div>
+
+      <div class="duplicate-groups" *ngIf="hasDuplicateScanGroups">
+        <section class="duplicate-group" *ngFor="let group of getVisibleDuplicateGroups()">
+          <header class="duplicate-group-header">
+            <div>
+              <strong>קבוצה {{ group.groupId }}</strong>
+              <span>{{ group.summary }}</span>
+            </div>
+            <span class="duplicate-score">{{ group.highestScore }}%</span>
+          </header>
+
+          <div class="duplicate-candidates">
+            <article
+              class="duplicate-candidate"
+              *ngFor="let candidate of group.songs"
+              [class.kept]="getDuplicateDecision(candidate.id) === 'keep'"
+              [class.deleted]="getDuplicateDecision(candidate.id) === 'delete'">
+              <div class="duplicate-image">
+                <img *ngIf="candidate.imageUrl" [src]="candidate.imageUrl" [alt]="candidate.title">
+                <span *ngIf="!candidate.imageUrl" class="material-icons">music_note</span>
+              </div>
+
+              <div class="duplicate-info">
+                <strong>{{ candidate.title }}</strong>
+                <span>{{ candidate.artistNames || '-' }}</span>
+                <small>
+                  {{ candidate.isApproved ? 'מאושר' : 'ממתין לאישור' }} · {{ candidate.viewCount || 0 }} צפיות · {{ formatDate(candidate.createdAt) }}
+                </small>
+                <div class="duplicate-reasons">
+                  <span *ngFor="let reason of candidate.reasons">{{ reason }}</span>
+                </div>
+              </div>
+
+              <div class="duplicate-actions">
+                <button class="filter-btn" type="button" (click)="keepDuplicateCandidate(candidate)" [disabled]="bulkActionLoading || getDuplicateDecision(candidate.id) === 'delete'">
+                  <span class="material-icons">check</span>
+                  השאר
+                </button>
+                <button class="filter-btn" type="button" (click)="editSong(candidate.id)" [disabled]="bulkActionLoading || getDuplicateDecision(candidate.id) === 'delete'">
+                  <span class="material-icons">edit</span>
+                  עריכה
+                </button>
+                <button class="filter-btn" type="button" (click)="deleteDuplicateCandidate(candidate)" [disabled]="bulkActionLoading || getDuplicateDecision(candidate.id) === 'delete'">
+                  <span class="material-icons">delete</span>
+                  מחיקה
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-actions">
+        <button class="filter-btn" (click)="closeDuplicateScanModal()" [disabled]="bulkActionLoading">סגירה</button>
+        <button class="btn-new" (click)="scanDuplicateSongs()" [disabled]="duplicateScanLoading || bulkActionLoading">
+          <span class="material-icons">refresh</span>
+          סריקה מחדש
         </button>
       </div>
     </div>

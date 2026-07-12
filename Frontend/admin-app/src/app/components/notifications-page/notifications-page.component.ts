@@ -120,10 +120,18 @@ export class NotificationsPageComponent implements OnInit {
   }
 
   shouldShowTitle(notification: NotificationDto): boolean {
-    return notification.type !== 3
-      && notification.type !== 6
-      && !!notification.title
-      && notification.title.trim() !== notification.message.trim();
+    const title = notification.title?.trim();
+    const message = notification.message?.trim();
+
+    if (!title || title === message) {
+      return false;
+    }
+
+    if (notification.type === 3 || notification.type === 6) {
+      return !message;
+    }
+
+    return true;
   }
 
   getAttachmentIcon(type: string): string {

@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
@@ -176,6 +176,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     private authSubscription?: Subscription;
     private routeSub?: Subscription;
     private queryParamsSub?: Subscription;
+    private hasExplicitSongView = false;
+    private appliedPreferredInstrumentDefault = false;
 
     constructor(
         private route: ActivatedRoute,
@@ -217,8 +219,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         this.queryParamsSub = this.route.queryParams.subscribe(queryParams => {
             const playlistId = queryParams['playlistId'];
             const view = queryParams['view'];
+            this.hasExplicitSongView = this.isSongView(view);
             if (this.isSongView(view) && view !== this.selectedInstrument) {
                 this.selectInstrument(view, false);
+            } else {
+                this.applyPreferredInstrumentDefault();
             }
             if (playlistId) {
                 const numId = +playlistId;
@@ -235,6 +240,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
         // All native listeners run outside Angular zone — no change detection on scroll/click
         this.authSubscription = this.authService.currentUser$.subscribe(user => {
+            this.applyPreferredInstrumentDefault(user);
             if (user && this.songId && this.song?.hasFullContent === false) {
                 this.loadSong(this.songId);
             }
@@ -622,6 +628,9 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     }
 
     selectInstrument(instrument: 'guitar' | 'piano' | 'ukulele' | 'lyrics', updateUrl: boolean = true) {
+        if (updateUrl) {
+            this.hasExplicitSongView = true;
+        }
         this.selectedInstrument = instrument;
         this.showChords = instrument !== 'lyrics';
         this.showKnownChordSummary = true;
@@ -637,6 +646,38 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                 replaceUrl: true
             });
         }
+    }
+
+    private applyPreferredInstrumentDefault(user: User | null = this.authService.currentUserValue): void {
+        if (this.appliedPreferredInstrumentDefault || this.hasExplicitSongView || this.selectedInstrument !== 'guitar') return;
+        if (!user) return;
+
+        const preferredInstrument = this.getSingleSupportedUserInstrument(user);
+        if (!preferredInstrument || preferredInstrument === 'guitar') {
+            this.appliedPreferredInstrumentDefault = true;
+            return;
+        }
+
+        this.appliedPreferredInstrumentDefault = true;
+        this.selectInstrument(preferredInstrument, false);
+    }
+
+    private getSingleSupportedUserInstrument(user: User | null): KnownChordInstrument | null {
+        if (!user) return null;
+
+        const supportedFromId = (id?: number | null): KnownChordInstrument | null => {
+            if (id === 1) return 'guitar';
+            if (id === 3) return 'piano';
+            if (id === 9) return 'ukulele';
+            return null;
+        };
+
+        if (user.instruments?.length) {
+            if (user.instruments.length !== 1) return null;
+            return supportedFromId(user.instruments[0].id);
+        }
+
+        return supportedFromId(user.preferredInstrumentId);
     }
 
     toggleTheme() {

@@ -67,6 +67,13 @@
             [(url)]="article.featuredImageUrl"
             placeholder="תמונת קאבר לכתבה"
           />
+          <input
+            id="article-credit"
+            type="text"
+            class="form-input image-credit-input"
+            [(ngModel)]="article.imageCredit"
+            name="imageCredit"
+            placeholder="קרדיט תמונה - אופציונלי">
         </div>
 
         <div class="form-group">
@@ -122,17 +129,6 @@
       </div>
 
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="article-credit">קרדיטים</label>
-          <input
-            id="article-credit"
-            type="text"
-            class="form-input"
-            [(ngModel)]="article.imageCredit"
-            name="imageCredit"
-            placeholder="צילום / מקור / תודה קצרה">
-        </div>
-
         <div class="form-group">
           <label class="form-label required">סטטוס</label>
           <select class="form-select" [(ngModel)]="article.status" name="status" required>

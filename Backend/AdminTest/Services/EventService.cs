@@ -298,6 +298,13 @@ namespace AkordishKeit.Services
                     eventEntity.Id,
                     eventEntity.Name);
             }
+            else if (wasActive && !eventEntity.IsActive && eventEntity.SubmittedByUserId.HasValue)
+            {
+                await _notificationService.NotifyEventRejectedAsync(
+                    eventEntity.SubmittedByUserId.Value,
+                    eventEntity.Id,
+                    eventEntity.Name);
+            }
 
             await _context.Entry(eventEntity)
                 .Collection(e => e.EventArtists)

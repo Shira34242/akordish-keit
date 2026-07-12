@@ -384,21 +384,25 @@ public class NotificationService : INotificationService
 
     public Task NotifySongSubmittedAsync(int userId, int songId, string songTitle)
     {
-        return CreateAsync(new CreateNotificationDto
-        {
-            UserId = userId,
-            Title = "השיר נשלח לאישור",
-            Message = $"השיר \"{songTitle}\" התקבל במערכת וממתין לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.Song,
-            RelatedEntityType = "Song",
-            RelatedEntityId = songId
-        });
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "השיר נשלח לאישור",
+                Message = $"השיר \"{songTitle}\" התקבל במערכת וממתין לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.Song,
+                RelatedEntityType = "Song",
+                RelatedEntityId = songId
+            },
+            "שיר חדש ממתין לאישור",
+            $"השיר \"{songTitle}\" הוגש על ידי משתמש וממתין לבדיקה.",
+            "/admin/content/songs");
     }
 
     public Task NotifySongApprovedAsync(int userId, int songId, string songTitle)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "השיר אושר",
@@ -411,18 +415,36 @@ public class NotificationService : INotificationService
         });
     }
 
-    public Task NotifyArticleSubmittedAsync(int userId, int articleId, string articleTitle)
+    public Task NotifySongRejectedAsync(int userId, int songId, string songTitle)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
-            Title = "הכתבה נשלחה לאישור",
-            Message = $"הכתבה \"{articleTitle}\" התקבלה במערכת וממתינה לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.Article,
-            RelatedEntityType = "Article",
-            RelatedEntityId = articleId
+            Title = "השיר לא אושר לפרסום",
+            Message = $"השיר \"{songTitle}\" לא אושר לפרסום בשלב זה. לפרטים נוספים ניתן לפנות לצוות האתר.",
+            Type = NotificationType.Rejection,
+            Category = NotificationCategory.Song,
+            RelatedEntityType = "Song",
+            RelatedEntityId = songId
         });
+    }
+
+    public Task NotifyArticleSubmittedAsync(int userId, int articleId, string articleTitle)
+    {
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "הכתבה נשלחה לאישור",
+                Message = $"הכתבה \"{articleTitle}\" התקבלה במערכת וממתינה לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.Article,
+                RelatedEntityType = "Article",
+                RelatedEntityId = articleId
+            },
+            "כתבה חדשה ממתינה לאישור",
+            $"הכתבה \"{articleTitle}\" הוגשה על ידי משתמש וממתינה לבדיקה.",
+            $"/admin/content/articles/edit/{articleId}");
     }
 
     public Task NotifyArticleApprovedAsync(int userId, int articleId, string articleTitle, string? slug, int contentType)
@@ -430,7 +452,7 @@ public class NotificationService : INotificationService
         var routePrefix = contentType == (int)ArticleContentType.Blog ? "/blog" : "/news";
         var actionUrl = string.IsNullOrWhiteSpace(slug) ? null : $"{routePrefix}/{slug}";
 
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "הכתבה פורסמה",
@@ -445,26 +467,45 @@ public class NotificationService : INotificationService
 
     public Task NotifyEventSubmittedAsync(int userId, int eventId, string eventName)
     {
-        return CreateAsync(new CreateNotificationDto
-        {
-            UserId = userId,
-            Title = "האירוע נשלח לאישור",
-            Message = $"האירוע \"{eventName}\" התקבל במערכת וממתין לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.Event,
-            RelatedEntityType = "Event",
-            RelatedEntityId = eventId
-        });
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "האירוע נשלח לאישור",
+                Message = $"האירוע \"{eventName}\" התקבל במערכת וממתין לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.Event,
+                RelatedEntityType = "Event",
+                RelatedEntityId = eventId
+            },
+            "אירוע חדש ממתין לאישור",
+            $"האירוע \"{eventName}\" הוגש על ידי משתמש וממתין לבדיקה.",
+            $"/admin/content/events/edit/{eventId}");
     }
 
     public Task NotifyEventApprovedAsync(int userId, int eventId, string eventName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "האירוע אושר",
             Message = $"האירוע \"{eventName}\" אושר ויופיע באתר.",
             Type = NotificationType.Approval,
+            Category = NotificationCategory.Event,
+            RelatedEntityType = "Event",
+            RelatedEntityId = eventId,
+            ActionUrl = "/events"
+        });
+    }
+
+    public Task NotifyEventRejectedAsync(int userId, int eventId, string eventName)
+    {
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
+        {
+            UserId = userId,
+            Title = "האירוע לא אושר לפרסום",
+            Message = $"האירוע \"{eventName}\" לא אושר לפרסום בשלב זה. לפרטים נוספים ניתן לפנות לצוות האתר.",
+            Type = NotificationType.Rejection,
             Category = NotificationCategory.Event,
             RelatedEntityType = "Event",
             RelatedEntityId = eventId
@@ -473,21 +514,25 @@ public class NotificationService : INotificationService
 
     public Task NotifyTeacherSubmittedAsync(int userId, int teacherId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
-        {
-            UserId = userId,
-            Title = "דף המורה נשלח לאישור",
-            Message = $"דף המורה \"{displayName}\" התקבל במערכת וממתין לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.Teacher,
-            RelatedEntityType = "Teacher",
-            RelatedEntityId = teacherId
-        });
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "דף המורה נשלח לאישור",
+                Message = $"דף המורה \"{displayName}\" התקבל במערכת וממתין לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.Teacher,
+                RelatedEntityType = "Teacher",
+                RelatedEntityId = teacherId
+            },
+            "דף מורה חדש ממתין לאישור",
+            $"דף המורה \"{displayName}\" הוגש על ידי משתמש וממתין לבדיקה.",
+            $"/admin/teachers/edit/{teacherId}");
     }
 
     public Task NotifyTeacherApprovedAsync(int userId, int teacherId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "דף המורה אושר",
@@ -502,21 +547,25 @@ public class NotificationService : INotificationService
 
     public Task NotifyServiceProviderSubmittedAsync(int userId, int providerId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
-        {
-            UserId = userId,
-            Title = "דף בעל המקצוע נשלח לאישור",
-            Message = $"דף בעל המקצוע \"{displayName}\" התקבל במערכת וממתין לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.ServiceProvider,
-            RelatedEntityType = "ServiceProvider",
-            RelatedEntityId = providerId
-        });
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "דף בעל המקצוע נשלח לאישור",
+                Message = $"דף בעל המקצוע \"{displayName}\" התקבל במערכת וממתין לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.ServiceProvider,
+                RelatedEntityType = "ServiceProvider",
+                RelatedEntityId = providerId
+            },
+            "דף בעל מקצוע חדש ממתין לאישור",
+            $"דף בעל המקצוע \"{displayName}\" הוגש על ידי משתמש וממתין לבדיקה.",
+            $"/admin/service-providers/edit/{providerId}");
     }
 
     public Task NotifyServiceProviderApprovedAsync(int userId, int providerId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "דף בעל המקצוע אושר",
@@ -531,21 +580,25 @@ public class NotificationService : INotificationService
 
     public Task NotifyArtistSubmittedAsync(int userId, int artistId, string artistName)
     {
-        return CreateAsync(new CreateNotificationDto
-        {
-            UserId = userId,
-            Title = "דף האמן נשלח לאישור",
-            Message = $"דף האמן \"{artistName}\" התקבל במערכת וממתין לאישור מנהל.",
-            Type = NotificationType.Submission,
-            Category = NotificationCategory.Artist,
-            RelatedEntityType = "Artist",
-            RelatedEntityId = artistId
-        });
+        return CreateContentSubmissionNotificationAsync(
+            new CreateNotificationDto
+            {
+                UserId = userId,
+                Title = "דף האמן נשלח לאישור",
+                Message = $"דף האמן \"{artistName}\" התקבל במערכת וממתין לאישור מנהל.",
+                Type = NotificationType.Submission,
+                Category = NotificationCategory.Artist,
+                RelatedEntityType = "Artist",
+                RelatedEntityId = artistId
+            },
+            "דף אמן חדש ממתין לאישור",
+            $"דף האמן \"{artistName}\" הוגש על ידי משתמש וממתין לבדיקה.",
+            "/admin/artists");
     }
 
     public Task NotifyArtistApprovedAsync(int userId, int artistId, string artistName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "דף האמן אושר",
@@ -558,13 +611,27 @@ public class NotificationService : INotificationService
         });
     }
 
+    public Task NotifyArtistRejectedAsync(int userId, int artistId, string artistName)
+    {
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
+        {
+            UserId = userId,
+            Title = "דף האמן לא אושר",
+            Message = $"דף האמן \"{artistName}\" לא אושר לפרסום בשלב זה. לפרטים נוספים ניתן לפנות לצוות האתר.",
+            Type = NotificationType.Rejection,
+            Category = NotificationCategory.Artist,
+            RelatedEntityType = "Artist",
+            RelatedEntityId = artistId
+        });
+    }
+
     public Task NotifyTeacherRejectedAsync(int userId, int teacherId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "דף המורה לא אושר",
-            Message = $"דף המורה \"{displayName}\" לא עמד בדרישות האתר ולא פורסם. לפרטים פנה לצוות האתר.",
+            Message = $"דף המורה \"{displayName}\" לא אושר לפרסום בשלב זה. לפרטים נוספים ניתן לפנות לצוות האתר.",
             Type = NotificationType.Rejection,
             Category = NotificationCategory.Teacher,
             RelatedEntityType = "Teacher",
@@ -574,16 +641,95 @@ public class NotificationService : INotificationService
 
     public Task NotifyServiceProviderRejectedAsync(int userId, int providerId, string displayName)
     {
-        return CreateAsync(new CreateNotificationDto
+        return CreateAutomaticContentStatusNotificationAsync(new CreateNotificationDto
         {
             UserId = userId,
             Title = "דף בעל המקצוע לא אושר",
-            Message = $"דף בעל המקצוע \"{displayName}\" לא עמד בדרישות האתר ולא פורסם. לפרטים פנה לצוות האתר.",
+            Message = $"דף בעל המקצוע \"{displayName}\" לא אושר לפרסום בשלב זה. לפרטים נוספים ניתן לפנות לצוות האתר.",
             Type = NotificationType.Rejection,
             Category = NotificationCategory.ServiceProvider,
             RelatedEntityType = "ServiceProvider",
             RelatedEntityId = providerId
         });
+    }
+
+    private async Task CreateContentSubmissionNotificationAsync(
+        CreateNotificationDto submitterNotification,
+        string adminTitle,
+        string adminMessage,
+        string adminActionUrl)
+    {
+        if (await IsAdminUserAsync(submitterNotification.UserId))
+        {
+            return;
+        }
+
+        await CreateAsync(submitterNotification);
+
+        await CreateAdminContentSubmissionNotificationsAsync(new CreateNotificationDto
+        {
+            Title = adminTitle,
+            Message = adminMessage,
+            Type = NotificationType.Submission,
+            Category = submitterNotification.Category,
+            RelatedEntityType = submitterNotification.RelatedEntityType,
+            RelatedEntityId = submitterNotification.RelatedEntityId,
+            ActionUrl = adminActionUrl,
+            CreatedByUserId = submitterNotification.UserId
+        });
+    }
+
+    private async Task CreateAdminContentSubmissionNotificationsAsync(CreateNotificationDto dto)
+    {
+        var adminIds = await _context.Users
+            .AsNoTracking()
+            .Where(user => !user.IsDeleted
+                && user.Role == UserRole.Admin
+                && (!dto.CreatedByUserId.HasValue || user.Id != dto.CreatedByUserId.Value))
+            .Select(user => user.Id)
+            .ToListAsync();
+
+        if (adminIds.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var notifications = adminIds.Select(adminId => new Notification
+        {
+            UserId = adminId,
+            Title = dto.Title.Trim(),
+            Message = dto.Message.Trim(),
+            Type = dto.Type,
+            Category = dto.Category,
+            RelatedEntityType = dto.RelatedEntityType,
+            RelatedEntityId = dto.RelatedEntityId,
+            ActionUrl = NormalizeOptional(dto.ActionUrl),
+            CreatedByUserId = dto.CreatedByUserId,
+            CreatedAt = now,
+            IsRead = false,
+            IsDeleted = false
+        }).ToList();
+
+        _context.Notifications.AddRange(notifications);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task CreateAutomaticContentStatusNotificationAsync(CreateNotificationDto dto)
+    {
+        if (await IsAdminUserAsync(dto.UserId))
+        {
+            return;
+        }
+
+        await CreateAsync(dto);
+    }
+
+    private Task<bool> IsAdminUserAsync(int userId)
+    {
+        return _context.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.Id == userId && !user.IsDeleted && user.Role == UserRole.Admin);
     }
 
     private static NotificationDto MapToDto(Notification notification)

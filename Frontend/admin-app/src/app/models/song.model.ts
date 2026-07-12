@@ -123,6 +123,32 @@ export interface DuplicateCheckResponse {
     message: string;
 }
 
+export interface SongDuplicateScanResponse {
+    scannedCount: number;
+    groupCount: number;
+    groups: SongDuplicateGroup[];
+}
+
+export interface SongDuplicateGroup {
+    groupId: number;
+    highestScore: number;
+    summary: string;
+    reasons: string[];
+    songs: SongDuplicateCandidate[];
+}
+
+export interface SongDuplicateCandidate {
+    id: number;
+    title: string;
+    artistNames: string;
+    imageUrl?: string;
+    isApproved: boolean;
+    viewCount: number;
+    createdAt: string;
+    score: number;
+    reasons: string[];
+}
+
 export interface SongBasicDto {
     id: number;
     title: string;

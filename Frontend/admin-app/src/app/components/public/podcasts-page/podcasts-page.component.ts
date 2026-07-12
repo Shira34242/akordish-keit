@@ -38,7 +38,6 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEpisode: PodcastEpisodeDetail | null = null;
   safeEmbedUrl: SafeResourceUrl | null = null;
   seriesDescriptionExpanded = false;
-  recommendationsExpanded = false;
   searchQuery = '';
   searchEpisodes: PodcastEpisode[] = [];
   searchPodcasts: Podcast[] = [];
@@ -215,10 +214,6 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleSeriesDescription(): void {
     this.seriesDescriptionExpanded = !this.seriesDescriptionExpanded;
-  }
-
-  toggleRecommendations(): void {
-    this.recommendationsExpanded = !this.recommendationsExpanded;
   }
 
   onSearchInput(event: Event): void {

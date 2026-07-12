@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { HttpClient, HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -20,41 +20,13 @@ export class MediaService {
   }
 
   uploadMediaWithProgress(file: File): Observable<HttpEvent<{ url: string }>> {
-    return new Observable<HttpEvent<{ url: string }>>(observer => {
-      let progress = 0;
+    const formData = new FormData();
+    formData.append('file', file);
 
-      observer.next({ type: HttpEventType.Sent });
-
-      const progressTimer = window.setInterval(() => {
-        progress = Math.min(progress + 10, 90);
-        observer.next({
-          type: HttpEventType.UploadProgress,
-          loaded: progress,
-          total: 100
-        });
-      }, 250);
-
-      const uploadSub = this.uploadMedia(file).subscribe({
-        next: response => {
-          window.clearInterval(progressTimer);
-          observer.next({
-            type: HttpEventType.UploadProgress,
-            loaded: 100,
-            total: 100
-          });
-          observer.next(new HttpResponse({ status: 200, body: response }));
-          observer.complete();
-        },
-        error: error => {
-          window.clearInterval(progressTimer);
-          observer.error(error);
-        }
-      });
-
-      return () => {
-        window.clearInterval(progressTimer);
-        uploadSub.unsubscribe();
-      };
+    return this.http.post<{ url: string }>(`${this.apiUrl}/upload`, formData, {
+      withCredentials: true,
+      reportProgress: true,
+      observe: 'events'
     });
   }
 

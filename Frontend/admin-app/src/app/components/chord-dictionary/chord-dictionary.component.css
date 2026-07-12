@@ -54,7 +54,7 @@
 
 .hero-content-area {
     position: relative;
-    z-index: 900;
+    z-index: 896;
     margin-top: 8px;
     height: calc(60vh - 76px);
     display: flex;

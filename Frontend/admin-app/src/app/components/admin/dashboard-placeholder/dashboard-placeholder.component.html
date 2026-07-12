@@ -30,6 +30,12 @@
           <span class="card-icon material-symbols-outlined">group_add</span>
         </div>
 
+        <div class="card-metrics">
+          <span>{{ recentActiveUsersCount }} פעילים</span>
+          <span>{{ recentProfileUsersCount }} עם פרופיל מקצועי</span>
+          <span>{{ userCount }} סה"כ משתמשים</span>
+        </div>
+
         <div class="period-switch" aria-label="טווח משתמשים חדשים">
           @for (option of periodOptions; track option.key) {
             <button
@@ -42,17 +48,22 @@
           }
         </div>
 
-        <div class="soft-list">
-          @for (join of filteredRecentJoins; track join.name + join.date) {
+        <div class="soft-list scroll-list">
+          @for (join of displayedRecentUsers; track join.id) {
             <div class="list-row">
               <div class="row-main">
-                <span class="row-title">{{ join.name }}</span>
-                <span class="row-meta">{{ roleLabel(join.type) }} · {{ fmtDate(join.date) }}</span>
+                <span class="row-title">{{ join.username }}</span>
+                <span class="row-meta">{{ roleLabel(join.roleName) }} · {{ fmtDate(join.createdAt) }}</span>
               </div>
             </div>
           } @empty {
             <p class="empty-state">אין הצטרפויות בטווח הזה.</p>
           }
+        </div>
+
+        <div class="card-actions">
+          <a routerLink="/admin/users/clients" class="line-button">כל המשתמשים</a>
+          <a routerLink="/admin/notifications/email" class="line-button">שליחת מייל</a>
         </div>
       </article>
 
@@ -108,6 +119,12 @@
             }
           </div>
         </div>
+
+        <div class="card-actions">
+          <a routerLink="/admin/users/teachers" class="line-button">מורים</a>
+          <a routerLink="/admin/users/service-providers" class="line-button">נותני שירות</a>
+          <a routerLink="/admin/users/artists" class="line-button">אמנים</a>
+        </div>
       </article>
 
       <article class="dash-card dash-card-wide">
@@ -120,14 +137,14 @@
         </div>
 
         <div class="content-pills">
-          <a routerLink="/admin/content/articles" class="content-pill">כתבות {{ draftArticles.length }}</a>
-          <a routerLink="/admin/content/articles" class="content-pill">חדשות {{ draftNews.length }}</a>
-          <a routerLink="/admin/content/podcasts" class="content-pill">פודקאסטים {{ draftPodcastEpisodes.length }}</a>
-          <a routerLink="/admin/content/events" class="content-pill">הופעות {{ draftEvents.length }}</a>
+          <a routerLink="/admin/content/articles" class="content-pill">כתבות {{ draftArticlesCount }}</a>
+          <a routerLink="/admin/content/articles" class="content-pill">חדשות {{ draftNewsCount }}</a>
+          <a routerLink="/admin/content/podcasts" class="content-pill">פודקאסטים {{ draftPodcastEpisodesCount }}</a>
+          <a routerLink="/admin/content/events" class="content-pill">הופעות {{ draftEventsCount }}</a>
           <a routerLink="/admin/content/songs" class="content-pill">אקורדים {{ pendingSongsCount }}</a>
         </div>
 
-        <div class="soft-list split-list">
+        <div class="soft-list split-list scroll-list">
           @for (article of draftArticles; track article.id) {
             <a [routerLink]="['/admin/content/articles/edit', article.id]" class="list-row">
               <span class="row-badge">כתבה</span>
@@ -164,6 +181,21 @@
               </div>
             </a>
           }
+          @for (song of pendingSongs; track song.id) {
+            <a [routerLink]="['/admin/content/songs']" class="list-row">
+              <span class="row-badge">אקורד</span>
+              <div class="row-main">
+                <span class="row-title">{{ song.title }}</span>
+                <span class="row-meta">{{ fmtDate(contentDate(song)) }}</span>
+              </div>
+            </a>
+          }
+        </div>
+
+        <div class="card-actions">
+          <a routerLink="/admin/content/articles/new" class="line-button">כתבה חדשה</a>
+          <a routerLink="/admin/content/events/new" class="line-button">הופעה חדשה</a>
+          <a routerLink="/admin/content/podcasts/episodes/new" class="line-button">פרק חדש</a>
         </div>
       </article>
 
@@ -176,7 +208,7 @@
           <span class="card-icon material-symbols-outlined">flag</span>
         </div>
 
-        <div class="soft-list">
+        <div class="soft-list scroll-list">
           @for (r of pendingReports; track r.id) {
             <a [routerLink]="['/admin/notifications/reports']" [queryParams]="{id: r.id}" class="list-row">
               <span class="row-badge">{{ reportTypeLabel(r.reportType) }}</span>
@@ -190,7 +222,10 @@
           }
         </div>
 
-        <a routerLink="/admin/notifications/reports" class="card-link">כל הדיווחים</a>
+        <div class="card-actions">
+          <a routerLink="/admin/notifications/reports" class="line-button">כל הדיווחים</a>
+          <a routerLink="/admin/notifications/messages" class="line-button">הודעות</a>
+        </div>
       </article>
 
       <article class="dash-card dash-card-wide">
@@ -244,6 +279,12 @@
               <p class="empty-state small">אין עדיין דפים מובילים.</p>
             }
           </div>
+        </div>
+
+        <div class="card-actions">
+          <a routerLink="/admin/analytics" [queryParams]="{tab:'articles'}" class="line-button">כתבות</a>
+          <a routerLink="/admin/analytics" [queryParams]="{tab:'events'}" class="line-button">הופעות</a>
+          <a routerLink="/admin/analytics" [queryParams]="{tab:'ads'}" class="line-button">פרסום</a>
         </div>
       </article>
     </div>
