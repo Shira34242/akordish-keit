@@ -970,7 +970,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
   private scrollToTop(smooth = true): void {
     const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
 
-    if (this.embedded) {
+    if (this.embedded && !this.singlePage) {
       const scrollRegion = this.host.nativeElement.querySelector('.guided-scroll-region');
       scrollRegion?.scrollTo({ top: 0, behavior });
       return;
