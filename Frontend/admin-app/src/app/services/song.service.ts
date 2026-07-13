@@ -294,6 +294,6 @@ export class SongService {
             params = params.set('isApproved', String(isApproved));
         }
 
-        return this.http.get<any>(`${this.apiUrl}/admin/all`, { params });
+        return this.http.get<any>(`${this.apiUrl}/manage/all`, { params });
     }
 }

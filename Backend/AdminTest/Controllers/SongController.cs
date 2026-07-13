@@ -306,10 +306,10 @@ public class SongsController : ControllerBase
     }
 
     // ============================================
-    // GET: api/Songs/admin/all
+    // GET: api/Songs/manage/all
     // Get all songs for admin (including unapproved)
     // ============================================
-    [HttpGet("admin/all")]
+    [HttpGet("manage/all")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<PagedResult<SongDto>>> GetAllSongsForAdmin(
         [FromQuery] int page = 1,
