@@ -57,6 +57,7 @@ builder.Services.AddSwaggerGen(c =>
         return $"{baseName}Of{args}";
     });
 });
+builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 builder.Services.AddHttpClient<IExternalImageStorageService, ExternalImageStorageService>();
