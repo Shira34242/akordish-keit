@@ -367,6 +367,30 @@
   line-height: var(--lh-body);
 }
 
+.categories-error-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.retry-categories-btn {
+  min-height: 28px;
+  padding: 0 var(--space-base);
+  border: none;
+  border-radius: 999px;
+  background: #000000;
+  color: #ffffff;
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.retry-categories-btn:hover {
+  opacity: 0.82;
+}
+
 .form-shell {
   padding: var(--space-md);
 }

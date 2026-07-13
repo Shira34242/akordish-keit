@@ -882,6 +882,22 @@ dbContext.Database.ExecuteSqlRaw(@"
             ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryType] int NOT NULL CONSTRAINT [DF_MusicServiceProviderCategories_QuickCategoryType] DEFAULT 0;
 
         IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'ShowInQuickCategories') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [ShowInQuickCategories] bit NOT NULL CONSTRAINT [DF_MusicServiceProviderCategories_ShowInQuickCategories] DEFAULT 0;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryLabel') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryLabel] nvarchar(120) NULL;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryImageUrl') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryImageUrl] nvarchar(500) NULL;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
+           AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryOrder') IS NULL
+            ALTER TABLE [MusicServiceProviderCategories] ADD [QuickCategoryOrder] int NOT NULL CONSTRAINT [DF_MusicServiceProviderCategories_QuickCategoryOrder] DEFAULT 0;
+
+        IF OBJECT_ID(N'[MusicServiceProviderCategories]', N'U') IS NOT NULL
            AND COL_LENGTH(N'[MusicServiceProviderCategories]', N'QuickCategoryInstrumentId') IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_MusicServiceProviderCategories_QuickCategoryInstrumentId' AND object_id = OBJECT_ID(N'[MusicServiceProviderCategories]'))
             CREATE INDEX [IX_MusicServiceProviderCategories_QuickCategoryInstrumentId] ON [MusicServiceProviderCategories] ([QuickCategoryInstrumentId]);

@@ -99,6 +99,10 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     return this.selectedType === 'service-provider' && !this.selectedServiceProviderCategoryId;
   }
 
+  retryLoadCategories(): void {
+    this.loadServiceProviderCategories();
+  }
+
   trackByCategory(_index: number, category: SystemItem): number {
     return category.id;
   }

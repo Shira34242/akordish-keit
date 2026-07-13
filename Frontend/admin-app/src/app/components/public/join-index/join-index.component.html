@@ -117,7 +117,10 @@
         </div>
 
         <p class="index-category-state" *ngIf="categoriesLoading">טוען קטגוריות...</p>
-        <p class="index-category-state" *ngIf="!categoriesLoading && categoriesError">{{ categoriesError }}</p>
+        <div class="categories-error-row" *ngIf="!categoriesLoading && categoriesError">
+          <p class="index-category-state">{{ categoriesError }}</p>
+          <button type="button" class="retry-categories-btn" (click)="retryLoadCategories()">נסה שוב</button>
+        </div>
       </div>
     </section>
 
