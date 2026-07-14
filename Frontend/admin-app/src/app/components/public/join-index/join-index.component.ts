@@ -182,7 +182,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 
-  private loadServiceProviderCategories(): void {
+  private loadServiceProviderCategories(attempt = 1): void {
     this.categoriesLoading = true;
     this.categoriesError = '';
 
@@ -192,8 +192,12 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
         this.categoriesLoading = false;
       },
       error: () => {
-        this.categoriesError = 'לא הצלחנו לטעון את קטגוריות נותני השירות';
-        this.categoriesLoading = false;
+        if (attempt < 4) {
+          setTimeout(() => this.loadServiceProviderCategories(attempt + 1), attempt * 1500);
+        } else {
+          this.categoriesError = 'לא הצלחנו לטעון את קטגוריות נותני השירות';
+          this.categoriesLoading = false;
+        }
       }
     });
   }
