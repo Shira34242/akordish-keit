@@ -30,6 +30,8 @@ public interface IMusicServiceProviderService
 
     Task<bool> RejectServiceProviderAsync(int id);
 
+    Task<MusicServiceProviderDto> ConvertServiceProviderToTeacherAsync(int id);
+
     Task<bool> UserHasServiceProviderProfileAsync(int userId);
 
     Task LinkToUserAsync(int providerId, int userId);

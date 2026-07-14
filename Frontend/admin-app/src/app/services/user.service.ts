@@ -101,8 +101,8 @@ export class UserService {
     return this.http.put<UserListDto>(`${this.apiUrl}/${id}`, data, { withCredentials: true });
   }
 
-  getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number }> {
-    return this.http.get<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number }>(
+  getMyProfile(): Observable<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number; rankingScore?: number }> {
+    return this.http.get<{ phone?: string; address?: string; birthDate?: string; contentTag?: number; uploadCount?: number; rankingScore?: number }>(
       `${this.apiUrl}/me`, { withCredentials: true }
     );
   }

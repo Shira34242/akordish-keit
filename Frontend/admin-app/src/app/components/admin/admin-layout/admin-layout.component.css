@@ -18,9 +18,26 @@
 }
 
 /* Material Icons Styling */
+.material-icons,
 .material-symbols-outlined {
+    font-family: 'Material Icons';
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
     user-select: none;
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
 }
 
 /* Header */
@@ -559,6 +576,36 @@
 
 /* ─── Global visual corrections across all admin pages ─── */
 
+/* Hebrew text should wrap by words; only long unbroken values may split. */
+:host ::ng-deep .admin-main,
+:host ::ng-deep .admin-main p,
+:host ::ng-deep .admin-main span,
+:host ::ng-deep .admin-main small,
+:host ::ng-deep .admin-main strong,
+:host ::ng-deep .admin-main label,
+:host ::ng-deep .admin-main h1,
+:host ::ng-deep .admin-main h2,
+:host ::ng-deep .admin-main h3,
+:host ::ng-deep .admin-main h4,
+:host ::ng-deep .admin-main td,
+:host ::ng-deep .admin-main th,
+:host ::ng-deep .admin-main button,
+:host ::ng-deep .admin-main a {
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: manual;
+}
+
+:host ::ng-deep .admin-main input,
+:host ::ng-deep .admin-main select,
+:host ::ng-deep .admin-main textarea,
+:host ::ng-deep .admin-main code,
+:host ::ng-deep .admin-main pre,
+:host ::ng-deep .admin-main .article-slug,
+:host ::ng-deep .admin-main .gallery-item-url {
+    overflow-wrap: anywhere;
+}
+
 /* Page headers: remove card boxing on white background */
 :host ::ng-deep .page-header {
     background: transparent !important;
@@ -811,14 +858,156 @@
 
 @media (max-width: 900px) {
     .admin-header {
-        padding: 0 16px;
+        height: auto;
+        min-height: 50px;
+        padding: var(--space-sm) var(--space-base);
     }
+
+    .header-inner {
+        flex-wrap: wrap;
+        align-content: center;
+        gap: var(--space-sm);
+    }
+
+    .header-dashboard,
+    .header-left {
+        order: 1;
+    }
+
+    .header-center {
+        order: 2;
+        flex: 0 0 100%;
+        justify-content: flex-start;
+    }
+
+    .admin-nav {
+        width: 100%;
+        justify-content: flex-start;
+        scrollbar-width: thin;
+    }
+
+    .nav-group.expanded .nav-submenu {
+        max-width: none;
+    }
+
     .admin-main {
         padding: var(--space-base);
+    }
+
+    :host ::ng-deep .filters-section {
+        padding: var(--space-md) !important;
+        border-radius: 18px !important;
+    }
+
+    :host ::ng-deep .filters-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        align-items: stretch;
+        gap: var(--space-xs);
+    }
+
+    :host ::ng-deep .filters-row > .filter-group:first-child,
+    :host ::ng-deep .filters-row > .form-control:first-child,
+    :host ::ng-deep .filters-row > input:first-child {
+        grid-column: 1 / -1;
+    }
+
+    :host ::ng-deep .filter-group {
+        width: 100%;
+        min-width: 0 !important;
+    }
+
+    :host ::ng-deep .filters-section .form-control,
+    :host ::ng-deep .filters-section input,
+    :host ::ng-deep .filters-section select,
+    :host ::ng-deep .filters-section textarea,
+    :host ::ng-deep .filters-section .search-input,
+    :host ::ng-deep .filters-section .filter-select {
+        min-width: 0 !important;
+        min-height: 34px;
+        padding: var(--space-xs) var(--space-md);
+        font-size: var(--font-xs);
+    }
+
+    :host ::ng-deep .filters-section select.form-control {
+        padding-left: var(--space-xl);
+        background-position: left var(--space-sm) center;
+    }
+
+    :host ::ng-deep .filters-section .btn,
+    :host ::ng-deep .filters-section button {
+        min-height: 34px;
+        width: 100%;
+        padding: 0 var(--space-md);
+        font-size: var(--font-xs);
     }
 
     .header-left {
         gap: var(--space-xs);
     }
 
+}
+
+@media (max-width: 560px) {
+    .admin-header {
+        min-height: 46px;
+        padding-inline: var(--space-md);
+    }
+
+    .header-inner {
+        gap: var(--space-xs);
+    }
+
+    .header-center {
+        margin-top: var(--space-xs);
+    }
+
+    .admin-nav {
+        border-radius: 18px;
+        padding: var(--space-xs);
+    }
+
+    .admin-main {
+        padding: var(--space-md);
+    }
+
+    :host ::ng-deep .filters-section {
+        padding: var(--space-sm) !important;
+        border-radius: 16px !important;
+        margin-bottom: var(--space-md);
+    }
+
+    :host ::ng-deep .filters-row {
+        gap: var(--space-xs);
+    }
+
+    .nav-group {
+        gap: 2px;
+    }
+
+    .nav-item {
+        min-height: 30px;
+        padding: 0 var(--space-md);
+    }
+
+    .sub-nav-item {
+        min-height: 28px;
+        padding: 0 var(--space-sm);
+    }
+
+    .btn-dashboard,
+    .site-menu-trigger {
+        min-height: 32px;
+        padding: 0 var(--space-md);
+        font-size: var(--font-xs);
+    }
+
+    .site-menu-trigger {
+        gap: var(--space-xs);
+    }
+
+    .site-menu-panel {
+        left: 0;
+        max-width: calc(100vw - var(--space-lg));
+        border-radius: 18px;
+    }
 }

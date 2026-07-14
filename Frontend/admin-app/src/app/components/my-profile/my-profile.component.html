@@ -95,6 +95,38 @@
         }
       </div>
     </section>
+
+    <section class="referral-card">
+      <div class="referral-card__copy">
+        <span class="referral-card__eyebrow">חבר מביא חבר</span>
+        <h3>הקישור האישי שלך</h3>
+        <p>כל משתמש חדש שיצטרף דרך Google מהקישור שלך ייספר כאן ויכול לעזור בקידום הפרופיל.</p>
+      </div>
+
+      <div class="referral-card__stats">
+        <span>הצטרפו דרכך</span>
+        <strong>{{ referralSummary?.googleJoinedCount || 0 }}</strong>
+      </div>
+
+      <div class="referral-card__link">
+        <input
+          type="text"
+          [value]="referralLoading ? 'טוען קישור...' : (referralSummary?.referralUrl || '')"
+          readonly>
+        <button type="button" (click)="copyReferralLink()" [disabled]="!referralSummary || referralLoading">
+          <span class="material-icons">{{ referralCopied ? 'check' : 'content_copy' }}</span>
+          {{ referralCopied ? 'הועתק' : 'העתקה' }}
+        </button>
+        <button
+          type="button"
+          class="referral-card__share"
+          (click)="shareReferralLink()"
+          [disabled]="!referralSummary || referralLoading">
+          <span class="material-icons">ios_share</span>
+          שיתוף
+        </button>
+      </div>
+    </section>
   </div>
 
   <div class="profile-content">

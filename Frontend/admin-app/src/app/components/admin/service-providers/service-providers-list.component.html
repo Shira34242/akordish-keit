@@ -90,11 +90,17 @@
       <button class="btn bulk-btn" (click)="bulkRejectSelected()">
         <span class="material-icons">block</span> השעיה
       </button>
+      <button class="btn bulk-btn" (click)="bulkConvertSelectedToTeachers()">
+        <span class="material-icons">school</span> הפוך למורה
+      </button>
       <button class="btn bulk-btn" (click)="bulkDuplicateSelected()">
         <span class="material-icons">content_copy</span> שכפול
       </button>
       <button class="btn bulk-btn" (click)="openBumpModal()">
         <span class="material-icons">trending_up</span> הקפצה
+      </button>
+      <button class="btn bulk-btn" (click)="openPromotionModal()" [disabled]="!hasSelection">
+        <span class="material-icons">workspace_premium</span> קידום
       </button>
       <button class="btn bulk-btn btn-danger" (click)="bulkDeleteSelected()">
         <span class="material-icons">delete</span> מחיקה
@@ -244,3 +250,11 @@
   (bumped)="onBumped()">
 </app-bump-modal>
 
+<app-content-promotion-modal
+  *ngIf="promotionModalOpen"
+  [targetType]="PromotionTargetType.ServiceProvider"
+  [ids]="selectedIdsArray"
+  title="קידום בעלי מקצוע"
+  (close)="promotionModalOpen = false"
+  (promoted)="onPromoted()">
+</app-content-promotion-modal>

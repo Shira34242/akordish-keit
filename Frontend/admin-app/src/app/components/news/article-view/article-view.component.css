@@ -140,7 +140,7 @@
   gap: var(--space-xs);
 }
 
-.image-credit {
+.featured-image-credit {
   position: absolute;
   z-index: 3;
   right: var(--space-base);
@@ -393,11 +393,6 @@
   border-radius: 18px;
   object-fit: cover;
   max-height: 450px;
-}
-
-.inline-image-credit {
-  right: var(--space-base);
-  bottom: var(--space-base);
 }
 
 /* Article Content */
@@ -969,6 +964,24 @@
 
 .gallery-item {
   cursor: pointer;
+}
+
+.article-credits {
+  margin: 0;
+  padding: var(--space-base) var(--space-xl);
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.5);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  line-height: var(--lh-small);
+  text-align: right;
+  direction: rtl;
+}
+
+.article-credits span {
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 800;
 }
 
 /* Tagged Artists Section */

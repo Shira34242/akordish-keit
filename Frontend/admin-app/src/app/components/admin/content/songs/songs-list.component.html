@@ -1,28 +1,39 @@
 <div class="songs-container">
   <!-- Actions Bar -->
   <div class="actions-bar">
-    <div class="search-box actions-search">
-      <span class="material-icons search-icon">search</span>
-      <input
-        type="text"
-        placeholder="חיפוש לפי שם שיר או אמן..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-        class="search-input">
+    <div class="actions-group actions-group--search">
+      <div class="search-box actions-search">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          placeholder="חיפוש לפי שם שיר או אמן..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          class="search-input">
+      </div>
+
+      <div class="status-tabs" aria-label="סינון לפי פרסום">
+        <button type="button" [class.active]="approvalFilter === 'all'" (click)="setApprovalFilter('all')">הכל</button>
+        <button type="button" [class.active]="approvalFilter === 'approved'" (click)="setApprovalFilter('approved')">פורסם</button>
+        <button type="button" [class.active]="approvalFilter === 'pending'" (click)="setApprovalFilter('pending')">לא פורסם</button>
+      </div>
     </div>
 
-    <!-- Sort -->
-    <div class="filters">
+    <div class="actions-group actions-group--filters">
       <select [(ngModel)]="selectedArtistId" (change)="onFilterChange()" class="filter-select">
         <option [ngValue]="undefined">כל האמנים</option>
         <option *ngFor="let artist of artists" [ngValue]="artist.id">{{ artist.name }}</option>
       </select>
 
-      <select [(ngModel)]="approvalFilter" (change)="onFilterChange()" class="filter-select">
-        <option value="all">כל הסטטוסים</option>
-        <option value="approved">מאושרים</option>
-        <option value="pending">ממתינים לאישור</option>
-      </select>
+      <div class="uploader-filter">
+        <span class="material-icons" aria-hidden="true">person_search</span>
+        <input
+          type="text"
+          placeholder="מי העלה"
+          [(ngModel)]="uploaderSearch"
+          (input)="onFilterChange()"
+          class="filter-input">
+      </div>
 
       <div class="date-range-control" title="טווח תאריכים">
         <button class="icon-control-button" type="button">
@@ -57,41 +68,17 @@
       <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" type="button" (click)="resetFilters()" title="איפוס סינון">
         <span class="material-icons">restart_alt</span>
       </button>
-
-      <input
-        type="text"
-        placeholder="מי העלה"
-        [(ngModel)]="uploaderSearch"
-        (input)="onFilterChange()"
-        class="filter-input"
-        hidden>
-
-      <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="date-input" title="מתאריך העלאה">
-      <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" class="date-input" title="עד תאריך העלאה">
-      <select
-        [(ngModel)]="sortBy"
-        (change)="onSortChange()"
-        class="filter-select">
-        <option value="date">תאריך העלאה</option>
-        <option value="views">צפיות</option>
-        <option value="date_asc">תאריך העלאה ישן קודם</option>
-        <option value="artist">אמן</option>
-        <option value="uploader">מי העלה</option>
-        <option value="name">שם השיר (א-ב)</option>
-      </select>
     </div>
 
-    <!-- New Button -->
-    <button class="filter-btn duplicate-scan-btn" type="button" (click)="scanDuplicateSongs()" [disabled]="duplicateScanLoading">
-      <span class="material-icons">{{ duplicateScanLoading ? 'hourglass_empty' : 'content_paste_search' }}</span>
-      {{ duplicateScanLoading ? 'סורק' : 'סריקת כפילויות' }}
-    </button>
+    <div class="actions-group actions-group--tools">
+      <button class="filter-btn duplicate-scan-btn" type="button" (click)="scanDuplicateSongs()" [disabled]="duplicateScanLoading">
+        <span class="material-icons">{{ duplicateScanLoading ? 'hourglass_empty' : 'content_paste_search' }}</span>
+        <span>{{ duplicateScanLoading ? 'סורק' : 'כפילויות' }}</span>
+      </button>
 
-    <button class="btn-new" (click)="createNew()">
-      <span class="material-icons">add</span>
-      שיר חדש
-    </button>
-    <div class="actions-view" *ngIf="!loading">
+    </div>
+
+    <div class="actions-group actions-view" *ngIf="!loading">
       <span class="results-info">{{ totalItems }} שירים</span>
       <div class="view-controls">
         <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
@@ -138,6 +125,9 @@
       </button>
       <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
         <span class="material-icons">trending_up</span> הקפצה
+      </button>
+      <button class="filter-btn bulk-btn" (click)="openPromotionModal()" [disabled]="bulkActionLoading || !hasSelection">
+        <span class="material-icons">workspace_premium</span> קידום
       </button>
     </div>
   </div>
@@ -580,3 +570,12 @@
   (close)="bumpModalOpen = false"
   (bumped)="onBumped()">
 </app-bump-modal>
+
+<app-content-promotion-modal
+  *ngIf="promotionModalOpen"
+  [ids]="selectedSongIdsArray"
+  [targetType]="PromotionTargetType.Song"
+  title="קידום שירים"
+  (close)="promotionModalOpen = false"
+  (promoted)="onPromoted()">
+</app-content-promotion-modal>

@@ -22,17 +22,20 @@ public class ArticleService : IArticleService
     private readonly INotificationService _notificationService;
     private readonly ISystemSettingsService _systemSettings;
     private readonly IYouTubeService _youTubeService;
+    private readonly IDisplayRankingService _rankingService;
 
     public ArticleService(
         AkordishKeitDbContext context,
         INotificationService notificationService,
         ISystemSettingsService systemSettings,
-        IYouTubeService youTubeService)
+        IYouTubeService youTubeService,
+        IDisplayRankingService rankingService)
     {
         _context = context;
         _notificationService = notificationService;
         _systemSettings = systemSettings;
         _youTubeService = youTubeService;
+        _rankingService = rankingService;
     }
 
     private async Task<string?> StoreYouTubeThumbnailIfNeededAsync(string? imageUrl)
@@ -222,7 +225,7 @@ public class ArticleService : IArticleService
         query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName,
             tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo);
 
-        query = ApplySorting(query, sortBy);
+        query = _rankingService.ApplyArticleOrdering(query, sortBy, ContentPromotionPlacement.Index);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -316,7 +319,16 @@ public class ArticleService : IArticleService
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
             .AsSplitQuery()
-            .OrderBy(a => a.DisplayOrder)
+            .OrderByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
+                    && (p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General))
+                .Select(p => (int?)p.Priority)
+                .Max() ?? -1)
+            .ThenBy(a => a.DisplayOrder)
             .ThenByDescending(a => a.PublishDate)
             .Take(limit)
             .ToListAsync();
@@ -336,7 +348,16 @@ public class ArticleService : IArticleService
 
         var featured = await newsQuery
             .Where(a => a.IsFeatured)
-            .OrderBy(a => a.DisplayOrder)
+            .OrderByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
+                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
+                .Select(p => (int?)p.Priority)
+                .Max() ?? -1)
+            .ThenBy(a => a.DisplayOrder)
             .ThenByDescending(a => a.PublishDate)
             .Take(Math.Clamp(featuredLimit, 1, 10))
             .Select(a => new ArticleBannerDto
@@ -356,7 +377,16 @@ public class ArticleService : IArticleService
         var featuredIds = featured.Select(a => a.Id).ToList();
         var regular = await newsQuery
             .Where(a => !featuredIds.Contains(a.Id))
-            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .OrderByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
+                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
+                .Select(p => (int?)p.Priority)
+                .Max() ?? -1)
+            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
             .Take(Math.Clamp(regularLimit, 1, 20))
             .Select(a => new ArticleBannerDto
             {
@@ -382,7 +412,16 @@ public class ArticleService : IArticleService
     public async Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12)
     {
         return await GetPublishedBannerQuery(ArticleCategorySection.Content)
-            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .OrderByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
+                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
+                .Select(p => (int?)p.Priority)
+                .Max() ?? -1)
+            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
             .Take(Math.Clamp(limit, 1, 20))
             .Select(a => new ArticleBannerDto
             {
@@ -561,6 +600,7 @@ public class ArticleService : IArticleService
             VideoEmbedUrl = dto.VideoEmbedUrl,
             AudioEmbedUrl = dto.AudioEmbedUrl,
             ImageCredit = dto.ImageCredit,
+            FeaturedImageCredit = dto.FeaturedImageCredit,
             ShortDescription = dto.ShortDescription,
             IsFeatured = dto.IsFeatured,
             DisplayOrder = dto.DisplayOrder,
@@ -652,6 +692,7 @@ public class ArticleService : IArticleService
         article.VideoEmbedUrl = dto.VideoEmbedUrl;
         article.AudioEmbedUrl = dto.AudioEmbedUrl;
         article.ImageCredit = dto.ImageCredit;
+        article.FeaturedImageCredit = dto.FeaturedImageCredit;
         article.ShortDescription = dto.ShortDescription;
         article.IsFeatured = dto.IsFeatured;
         article.DisplayOrder = dto.DisplayOrder;
@@ -1410,6 +1451,7 @@ public class ArticleService : IArticleService
             VideoEmbedUrl = original.VideoEmbedUrl,
             AudioEmbedUrl = original.AudioEmbedUrl,
             ImageCredit = original.ImageCredit,
+            FeaturedImageCredit = original.FeaturedImageCredit,
             ShortDescription = original.ShortDescription,
             IsFeatured = false,
             DisplayOrder = 0,
@@ -1721,6 +1763,7 @@ public class ArticleService : IArticleService
             VideoEmbedUrl = article.VideoEmbedUrl,
             AudioEmbedUrl = article.AudioEmbedUrl,
             ImageCredit = article.ImageCredit,
+            FeaturedImageCredit = article.FeaturedImageCredit,
             ShortDescription = article.ShortDescription,
             IsFeatured = article.IsFeatured,
             DisplayOrder = article.DisplayOrder,

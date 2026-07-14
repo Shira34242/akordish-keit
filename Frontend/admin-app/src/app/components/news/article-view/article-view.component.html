@@ -7,7 +7,7 @@
     <div class="hero-bg" [style.backgroundImage]="heroBg(article.featuredImageUrl)"></div>
     <div class="hero-collapse-overlay"></div>
     <div class="hero-overlay"></div>
-    <span class="image-credit hero-image-credit" *ngIf="article.featuredImageUrl && article.imageCredit?.trim()">{{ article.imageCredit }}</span>
+    <span class="featured-image-credit hero-image-credit" *ngIf="article.featuredImageUrl && article.featuredImageCredit?.trim()">{{ article.featuredImageCredit }}</span>
     <div class="hero-content">
       <span class="category-badge">{{ getCategoryName() }}</span>
       <h1 class="article-title">{{ article.title }}</h1>
@@ -56,7 +56,7 @@
         <div class="featured-image-section" *ngIf="!safeVideoUrl && article.featuredImageUrl">
           <div class="featured-image-frame">
             <img [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="featured-image-inline" decoding="async">
-            <span class="image-credit inline-image-credit" *ngIf="article.imageCredit?.trim()">{{ article.imageCredit }}</span>
+            <span class="featured-image-credit inline-image-credit" *ngIf="article.featuredImageCredit?.trim()">{{ article.featuredImageCredit }}</span>
           </div>
         </div>
 
@@ -101,6 +101,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Credits -->
+        <p class="article-credits" *ngIf="article.imageCredit">
+          <span>קרדיטים:</span>
+          {{ article.imageCredit }}
+        </p>
 
         <!-- Lightbox -->
         <div class="lightbox-overlay" *ngIf="lightboxIndex !== null" (click)="closeLightbox()">

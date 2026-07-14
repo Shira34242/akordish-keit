@@ -6,6 +6,7 @@
   <div class="article-hero" #articleHero [style.backgroundImage]="heroBg(article.featuredImageUrl)">
     <div class="hero-collapse-overlay"></div>
     <div class="hero-overlay"></div>
+    <span class="featured-image-credit hero-image-credit" *ngIf="article.featuredImageUrl && article.featuredImageCredit?.trim()">{{ article.featuredImageCredit }}</span>
     <div class="hero-content">
       <span class="category-badge">{{ getCategoryName() }}</span>
       <h1 class="article-title">{{ article.title }}</h1>
@@ -52,7 +53,10 @@
 
         <!-- Featured Image Section (when no video) -->
         <div class="featured-image-section" *ngIf="!safeVideoUrl && article.featuredImageUrl">
-          <img [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="featured-image-inline" decoding="async">
+          <div class="featured-image-frame">
+            <img [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="featured-image-inline" decoding="async">
+            <span class="featured-image-credit inline-image-credit" *ngIf="article.featuredImageCredit?.trim()">{{ article.featuredImageCredit }}</span>
+          </div>
         </div>
 
         <!-- Audio Section -->

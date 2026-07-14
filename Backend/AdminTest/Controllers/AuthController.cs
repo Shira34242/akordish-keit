@@ -27,6 +27,7 @@ namespace AkordishKeit.Controllers
         private readonly ICsrfTokenService _csrfTokenService;
         private readonly IAzureBlobService _blobService;
         private readonly IEmailService _emailService;
+        private readonly IReferralService _referralService;
         private readonly ILogger<AuthController> _logger;
 
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -40,6 +41,7 @@ namespace AkordishKeit.Controllers
             ICsrfTokenService csrfTokenService,
             IAzureBlobService blobService,
             IEmailService emailService,
+            IReferralService referralService,
             ILogger<AuthController> logger)
         {
             _context = context;
@@ -48,6 +50,7 @@ namespace AkordishKeit.Controllers
             _csrfTokenService = csrfTokenService;
             _blobService = blobService;
             _emailService = emailService;
+            _referralService = referralService;
             _logger = logger;
         }
 
@@ -183,6 +186,12 @@ namespace AkordishKeit.Controllers
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
+                await _referralService.TryRecordGoogleReferralAsync(
+                    request.ReferralCode,
+                    user.Id,
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Request.Headers.UserAgent.ToString());
             }
             else
             {
@@ -356,6 +365,7 @@ namespace AkordishKeit.Controllers
             bool isReset = IsTagReset(user);
             int effectiveTag = isReset ? 0 : (int)user.ContentTag;
             int effectiveCount = isReset ? 0 : user.UploadCount;
+            int effectiveRankingScore = isReset ? 0 : user.RankingScore;
 
             return new UserDto
             {
@@ -377,6 +387,7 @@ namespace AkordishKeit.Controllers
                 HasProfessionalProfile = hasProfessionalProfile,
                 ContentTag = effectiveTag,
                 UploadCount = effectiveCount,
+                RankingScore = effectiveRankingScore,
                 ChordBookExportCount = user.ChordBookExportCount,
                 CreatedAt = user.CreatedAt,
                 LastProfileReminderAt = user.LastProfileReminderAt,

@@ -11,6 +11,7 @@ public class MyProfileDto
     public string? ProfileImageUrl { get; set; }
     public int ContentTag { get; set; }
     public int UploadCount { get; set; }
+    public int RankingScore { get; set; }
 }
 
 public class UpdateMyProfileDto
@@ -97,6 +98,9 @@ public class UserListDto
     public string? PreferredInstrumentName { get; set; }
     public int ContentTag { get; set; }
     public int UploadCount { get; set; }
+    public int RankingScore { get; set; }
+    public int ReferralJoinedCount { get; set; }
+    public int GoogleReferralJoinedCount { get; set; }
 }
 
 public class AdminUserDetailDto : UserListDto
@@ -120,7 +124,17 @@ public class AdminUserDetailDto : UserListDto
     public List<AdminUserInstrumentDto> Instruments { get; set; } = new();
     public List<AdminUserPageDto> Pages { get; set; } = new();
     public List<AdminUserAgencyDto> Agencies { get; set; } = new();
+    public List<AdminUserReferralDto> Referrals { get; set; } = new();
     public AdminUserContentSummaryDto ContentSummary { get; set; } = new();
+}
+
+public class AdminUserReferralDto
+{
+    public int UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Source { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }
 
 public class AdminUserInstrumentDto

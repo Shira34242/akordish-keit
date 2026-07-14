@@ -12,11 +12,16 @@ public class MusicServiceProviderService : IMusicServiceProviderService
     private const int MaxManagedPagesPerUser = 5;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IDisplayRankingService _rankingService;
 
-    public MusicServiceProviderService(AkordishKeitDbContext context, INotificationService notificationService)
+    public MusicServiceProviderService(
+        AkordishKeitDbContext context,
+        INotificationService notificationService,
+        IDisplayRankingService rankingService)
     {
         _context = context;
         _notificationService = notificationService;
+        _rankingService = rankingService;
     }
 
     public async Task<PagedResult<MusicServiceProviderListDto>> GetServiceProvidersAsync(
@@ -114,7 +119,24 @@ public class MusicServiceProviderService : IMusicServiceProviderService
 
         if (isFeatured.HasValue)
         {
-            query = query.Where(sp => sp.IsFeatured == isFeatured.Value);
+            if (isFeatured.Value)
+            {
+                var now = DateTime.UtcNow;
+                query = query.Where(sp => sp.IsFeatured || _context.ContentPromotions.Any(p =>
+                    p.TargetType == ContentPromotionTargetType.ServiceProvider
+                    && p.TargetId == sp.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
+                    && (p.Placement == ContentPromotionPlacement.Home
+                        || p.Placement == ContentPromotionPlacement.Featured
+                        || p.Placement == ContentPromotionPlacement.General
+                        || p.ShowOnHome)));
+            }
+            else
+            {
+                query = query.Where(sp => !sp.IsFeatured);
+            }
         }
 
         if (isTeacher.HasValue)
@@ -124,7 +146,7 @@ public class MusicServiceProviderService : IMusicServiceProviderService
 
         // Order by: Featured > Tier (Subscribed) > CreatedAt
         // קדימות לפי האיפיון: מומלצים ראשון, מנויים משלמים לפני חינמיים, ואז לפי תאריך
-        query = ApplyServiceProviderSorting(query, sortBy);
+        query = _rankingService.ApplyServiceProviderOrdering(query, sortBy, ContentPromotionPlacement.Index);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);
@@ -419,6 +441,64 @@ public class MusicServiceProviderService : IMusicServiceProviderService
         }
 
         return true;
+    }
+
+    public async Task<MusicServiceProviderDto> ConvertServiceProviderToTeacherAsync(int id)
+    {
+        var serviceProvider = await _context.ServiceProviders
+            .Include(sp => sp.CustomerTestimonials)
+            .Include(sp => sp.TeacherProfile)
+                .ThenInclude(t => t!.Testimonials)
+            .FirstOrDefaultAsync(sp => sp.Id == id && !sp.IsDeleted);
+
+        if (serviceProvider == null)
+        {
+            throw new InvalidOperationException("Service provider was not found");
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        serviceProvider.IsTeacher = true;
+        serviceProvider.UpdatedAt = DateTime.UtcNow;
+
+        if (serviceProvider.TeacherProfile == null)
+        {
+            var teacher = new Teacher
+            {
+                Id = serviceProvider.Id,
+                Availability = serviceProvider.WorkingHours
+            };
+
+            foreach (var testimonial in serviceProvider.CustomerTestimonials.OrderBy(t => t.Order))
+            {
+                teacher.Testimonials.Add(new TeacherTestimonial
+                {
+                    StudentName = testimonial.ClientName,
+                    Text = testimonial.Text,
+                    Order = testimonial.Order
+                });
+            }
+
+            _context.Teachers.Add(teacher);
+        }
+        else if (!serviceProvider.TeacherProfile.Testimonials.Any() && serviceProvider.CustomerTestimonials.Any())
+        {
+            foreach (var testimonial in serviceProvider.CustomerTestimonials.OrderBy(t => t.Order))
+            {
+                serviceProvider.TeacherProfile.Testimonials.Add(new TeacherTestimonial
+                {
+                    TeacherId = serviceProvider.Id,
+                    StudentName = testimonial.ClientName,
+                    Text = testimonial.Text,
+                    Order = testimonial.Order
+                });
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return (await GetServiceProviderByIdAsync(id))!;
     }
 
     public async Task<bool> UserHasServiceProviderProfileAsync(int userId)

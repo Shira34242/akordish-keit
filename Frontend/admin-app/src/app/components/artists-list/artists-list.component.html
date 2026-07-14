@@ -13,13 +13,15 @@
 
       <div class="search-row">
         <div class="filter-btn-wrap filter-btn-category"
-             [class.filter-active]="sortBy !== 'name'"
+             [class.filter-active]="sortBy !== 'smart'"
              (click)="toggleSortDropdown(); $event.stopPropagation()">
           <span class="filter-btn-label">{{ getSortLabel() }}</span>
           <svg class="filter-btn-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="m6 9 6 6 6-6"/>
           </svg>
           <div class="filter-dropdown" *ngIf="showSortDropdown" (click)="$event.stopPropagation()">
+            <button class="filter-option" [class.active]="sortBy === 'smart'"
+                    (click)="setSortBy('smart'); showSortDropdown = false">מומלץ</button>
             <button class="filter-option" [class.active]="sortBy === 'name'"
                     (click)="setSortBy('name'); showSortDropdown = false">{{ 'artists.sort_az' | translate }}</button>
             <button class="filter-option" [class.active]="sortBy === 'songcount'"
@@ -42,7 +44,7 @@
     </div>
   </section>
 
-  <div class="banners-area" *ngIf="!searchTerm && sortBy === 'name'">
+  <div class="banners-area" *ngIf="!searchTerm && sortBy === 'smart'">
 
     <section class="loop-section" *ngIf="!loadingFeatured && featuredArtists.length > 0">
       <div class="section-header">

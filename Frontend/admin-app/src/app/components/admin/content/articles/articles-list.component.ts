@@ -19,12 +19,14 @@ import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-p
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
+import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
 import { getArticleLink } from '../../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent, BumpModalComponent],
+  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent, BumpModalComponent, ContentPromotionModalComponent],
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
@@ -49,6 +51,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   publishingArticleIds = new Set<number>();
   selectedArticleIds = new Set<number>();
   bumpModalOpen = false;
+  promotionModalOpen = false;
+  readonly PromotionTargetType = ContentPromotionTargetType;
   categoryModalOpen = false;
   categoryModalArticle: Article | null = null;
   categoryModalMode: UpdateArticleCategoriesDto['mode'] = 'add';
@@ -913,8 +917,18 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.bumpModalOpen = true;
   }
 
+  openPromotionModal(): void {
+    this.promotionModalOpen = true;
+  }
+
   onBumped(): void {
     this.bumpModalOpen = false;
+    this.clearSelection();
+    this.loadArticles();
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
     this.clearSelection();
     this.loadArticles();
   }

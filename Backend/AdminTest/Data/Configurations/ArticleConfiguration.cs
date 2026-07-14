@@ -66,6 +66,9 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(e => e.ImageCredit)
                .HasMaxLength(2000);
 
+        builder.Property(e => e.FeaturedImageCredit)
+               .HasMaxLength(500);
+
         builder.Property(e => e.ShortDescription)
                .HasMaxLength(1000);
 

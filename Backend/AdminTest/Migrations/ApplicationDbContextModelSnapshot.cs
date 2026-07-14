@@ -609,6 +609,10 @@ namespace AkordishKeit.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("FeaturedImageCredit")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("ImageCredit")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -1601,6 +1605,76 @@ namespace AkordishKeit.Migrations
                         .HasDatabaseName("IX_ContentReports_ContentType_ContentId");
 
                     b.ToTable("ContentReports", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.ContentPromotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Placement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(100);
+
+                    b.Property<bool>("ShowOnHome")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "Placement", "StartsAt", "EndsAt")
+                        .HasDatabaseName("IX_ContentPromotions_Active_Placement");
+
+                    b.HasIndex("TargetType", "TargetId", "Placement")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ContentPromotions_Target_Placement");
+
+                    b.ToTable("ContentPromotions", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.ContentSubmission", b =>
@@ -4212,6 +4286,11 @@ namespace AkordishKeit.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<int>("RankingScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int?>("PreferredInstrumentId")
                         .HasColumnType("int");
 
@@ -4262,11 +4341,103 @@ namespace AkordishKeit.Migrations
                     b.HasIndex("PreferredInstrumentId")
                         .HasDatabaseName("IX_Users_PreferredInstrumentId");
 
+                    b.HasIndex("RankingScore")
+                        .HasDatabaseName("IX_Users_RankingScore");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserReferralCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserReferralCodes_Code");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserReferralCodes_UserId");
+
+                    b.ToTable("UserReferralCodes", (string)null);
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserReferral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ReferralCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("ReferredUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferrerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReferralCode")
+                        .HasDatabaseName("IX_UserReferrals_ReferralCode");
+
+                    b.HasIndex("ReferredUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserReferrals_ReferredUserId");
+
+                    b.HasIndex("ReferrerUserId")
+                        .HasDatabaseName("IX_UserReferrals_ReferrerUserId");
+
+                    b.ToTable("UserReferrals", (string)null);
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.UserInstrument", b =>
@@ -5239,6 +5410,36 @@ namespace AkordishKeit.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("PreferredInstrument");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserReferralCode", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AkordishKeit.Models.Entities.UserReferral", b =>
+                {
+                    b.HasOne("AkordishKeit.Models.Entities.User", "ReferredUser")
+                        .WithMany()
+                        .HasForeignKey("ReferredUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AkordishKeit.Models.Entities.User", "ReferrerUser")
+                        .WithMany()
+                        .HasForeignKey("ReferrerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReferredUser");
+
+                    b.Navigation("ReferrerUser");
                 });
 
             modelBuilder.Entity("AkordishKeit.Models.Entities.UserInstrument", b =>

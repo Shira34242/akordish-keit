@@ -286,6 +286,7 @@ namespace AkordishKeit.Services
                 ShortDescription = article.ShortDescription,
                 FeaturedImageUrl = article.FeaturedImageUrl,
                 ImageCredit = article.ImageCredit,
+                FeaturedImageCredit = article.FeaturedImageCredit,
                 VideoEmbedUrl = article.VideoEmbedUrl,
                 AudioEmbedUrl = article.AudioEmbedUrl,
                 CategoryIds = article.ArticleCategories?.Select(ac => ac.CategoryId).ToList() ?? new List<int>(),

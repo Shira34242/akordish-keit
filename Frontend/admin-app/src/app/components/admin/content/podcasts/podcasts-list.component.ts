@@ -7,11 +7,13 @@ import { Podcast, PodcastEpisode, CreatePodcastEpisodeDto } from '../../../../mo
 import { PagedResult } from '../../../../models/pagination.model';
 import { PodcastService } from '../../../../services/podcast.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
+import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
 
 @Component({
   selector: 'app-podcasts-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ContentPromotionModalComponent],
   templateUrl: './podcasts-list.component.html',
   styleUrls: ['./podcasts-list.component.css']
 })
@@ -31,6 +33,10 @@ export class PodcastsListComponent implements OnInit {
   selectedEpisodeIds = new Set<number>();
   selectedPodcastIds = new Set<number>();
   selectedSeriesPodcast: Podcast | null = null;
+  promotionModalOpen = false;
+  promotionTargetType = ContentPromotionTargetType.PodcastEpisode;
+  promotionTargetIds: number[] = [];
+  promotionTitle = 'קידום פרקי פודקאסט';
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
@@ -196,6 +202,38 @@ export class PodcastsListComponent implements OnInit {
   clearSelection(): void {
     this.selectedEpisodeIds.clear();
     this.selectedPodcastIds.clear();
+  }
+
+  openPodcastPromotionModal(): void {
+    this.promotionTargetIds = Array.from(this.selectedPodcastIds);
+    if (this.promotionTargetIds.length === 0) {
+      return;
+    }
+
+    this.promotionTargetType = ContentPromotionTargetType.Podcast;
+    this.promotionTitle = 'קידום סדרות פודקאסט';
+    this.promotionModalOpen = true;
+  }
+
+  openEpisodePromotionModal(): void {
+    this.promotionTargetIds = Array.from(this.selectedEpisodeIds);
+    if (this.promotionTargetIds.length === 0) {
+      return;
+    }
+
+    this.promotionTargetType = ContentPromotionTargetType.PodcastEpisode;
+    this.promotionTitle = 'קידום פרקי פודקאסט';
+    this.promotionModalOpen = true;
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
+    this.clearSelection();
+    this.loadPodcasts();
+    this.loadEpisodes();
+    if (this.selectedSeriesPodcast) {
+      this.loadSelectedSeriesEpisodes();
+    }
   }
 
   onPageChange(page: number): void {

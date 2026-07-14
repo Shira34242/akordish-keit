@@ -65,6 +65,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                .IsRequired()
                .HasDefaultValue(0);
 
+        builder.Property(e => e.RankingScore)
+               .IsRequired()
+               .HasDefaultValue(0);
+
         builder.Property(e => e.IsActive)
                .IsRequired()
                .HasDefaultValue(true);
@@ -107,6 +111,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(e => e.CityId)
                .HasDatabaseName("IX_Users_CityId");
+
+        builder.HasIndex(e => e.RankingScore)
+               .HasDatabaseName("IX_Users_RankingScore");
 
         // Relationships
 

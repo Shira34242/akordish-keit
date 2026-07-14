@@ -32,12 +32,35 @@
 .actions-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-xs);
+  justify-content: flex-start;
+  gap: var(--space-sm);
   margin-bottom: var(--space-base);
-  padding: var(--space-sm) var(--space-xl) var(--space-base);
+  padding: var(--space-sm);
   background: #ffffff;
   overflow: visible;
+  flex-wrap: wrap;
+  border-radius: 24px;
+}
+
+.actions-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.actions-group--search {
+  flex: 1 1 420px;
+}
+
+.actions-group--filters {
+  flex: 2 1 420px;
+  flex-wrap: wrap;
+}
+
+.actions-group--tools,
+.actions-view {
+  flex: 0 0 auto;
 }
 
 .search-box {
@@ -46,21 +69,21 @@
 }
 
 .actions-search {
-  flex: 0 0 34px;
-  width: 34px;
+  flex: 1 1 260px;
+  min-width: 14rem;
   height: 34px;
   border-radius: 999px;
   background: #F2F2F2;
   display: flex;
   align-items: center;
   overflow: hidden;
-  transition: flex-basis 0.18s ease, width 0.18s ease, background 0.15s ease;
+  transition: background 0.15s ease, outline-color 0.15s ease;
 }
 
-.actions-search:hover,
 .actions-search:focus-within {
-  flex-basis: 260px;
-  width: 260px;
+  background: #ffffff;
+  outline: 3px solid #ddff53;
+  outline-offset: 0;
 }
 
 .search-icon {
@@ -75,8 +98,8 @@
 }
 
 .search-input {
-  width: 226px;
-  flex: 0 0 226px;
+  width: 100%;
+  flex: 1 1 auto;
   min-height: 34px;
   padding: 0 0 0 var(--space-base);
   border: none;
@@ -91,19 +114,34 @@
 
 .search-input:focus { outline: none; }
 
-.filters {
+.status-tabs {
   display: flex;
-  gap: var(--space-xs);
   align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
-  flex-wrap: nowrap;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: 999px;
+  background: #F2F2F2;
+  flex: 0 0 auto;
 }
 
-.filters > input.filter-input,
-.filters > input.date-input,
-.filters > select.filter-select:not(:first-child) {
-  display: none;
+.status-tabs button {
+  min-height: 26px;
+  padding: 0 var(--space-md);
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.status-tabs button:hover,
+.status-tabs button.active {
+  background: #ddff53;
+  font-weight: 800;
 }
 
 .filter-input,
@@ -129,9 +167,46 @@
   cursor: text;
 }
 
-.filter-select { max-width: 9rem; }
+.filter-select {
+  max-width: 11rem;
+  background: #F2F2F2;
+}
 
 .filter-select:focus { outline: none; }
+
+.uploader-filter {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  min-width: 11rem;
+  border-radius: 999px;
+  background: #F2F2F2;
+  overflow: hidden;
+}
+
+.uploader-filter .material-icons {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #000000;
+  flex: 0 0 auto;
+}
+
+.uploader-filter .filter-input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  cursor: text;
+}
+
+.uploader-filter:focus-within {
+  background: #ffffff;
+  outline: 3px solid #ddff53;
+  outline-offset: 0;
+}
 
 .icon-select-control,
 .date-range-control {
@@ -1046,9 +1121,53 @@
 }
 
 @media (max-width: 768px) {
-  .actions-bar { flex-direction: column; align-items: stretch; }
-  .search-box, .filters, .btn-new { width: 100%; }
-  .btn-new { justify-content: center; }
+  .actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-sm);
+  }
+
+  .actions-group,
+  .actions-group--search,
+  .actions-group--filters,
+  .actions-group--tools,
+  .actions-view {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .actions-group--search,
+  .actions-group--tools,
+  .actions-view {
+    flex-wrap: wrap;
+  }
+
+  .actions-search,
+  .status-tabs,
+  .filter-select,
+  .uploader-filter,
+  .duplicate-scan-btn,
+  .view-controls {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+  }
+
+  .status-tabs button,
+  .view-btn,
+  .duplicate-scan-btn {
+    flex: 1 1 auto;
+  }
+
+  .duplicate-scan-btn {
+    justify-content: center;
+  }
+
+  .results-info {
+    width: 100%;
+    text-align: center;
+  }
+
   .bulk-actions-bar,
   .bulk-buttons,
   .bulk-summary { align-items: stretch; flex-direction: column; }

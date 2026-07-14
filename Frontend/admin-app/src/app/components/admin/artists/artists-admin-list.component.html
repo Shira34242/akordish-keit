@@ -94,8 +94,11 @@
       <button class="btn bulk-btn" (click)="bulkDuplicateSelected()">
         <span class="material-icons">content_copy</span> שכפול
       </button>
-      <button class="btn bulk-btn" *ngIf="false" (click)="openBumpModal()">
+      <button class="btn bulk-btn" (click)="openBumpModal()">
         <span class="material-icons">trending_up</span> הקפצה
+      </button>
+      <button class="btn bulk-btn" (click)="openPromotionModal()" [disabled]="!hasSelection">
+        <span class="material-icons">workspace_premium</span> קידום
       </button>
       <button class="btn bulk-btn btn-danger" (click)="bulkDeleteSelected()">
         <span class="material-icons">delete</span> מחיקה
@@ -246,3 +249,12 @@
   (close)="bumpModalOpen = false"
   (bumped)="onBumped()">
 </app-bump-modal>
+
+<app-content-promotion-modal
+  *ngIf="promotionModalOpen"
+  [targetType]="PromotionTargetType.Artist"
+  [ids]="selectedIdsArray"
+  title="קידום אמנים"
+  (close)="promotionModalOpen = false"
+  (promoted)="onPromoted()">
+</app-content-promotion-modal>

@@ -12,6 +12,9 @@
       <button class="filter-btn bulk-btn" type="button" (click)="bulkSetPodcastStatus(false)" [disabled]="bulkActionLoading">
         <span class="material-icons">drafts</span> טיוטה
       </button>
+      <button class="filter-btn bulk-btn" type="button" (click)="openPodcastPromotionModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">workspace_premium</span> קידום
+      </button>
       <button class="filter-btn bulk-btn btn-danger" type="button" (click)="bulkDeletePodcasts()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
       </button>
@@ -74,6 +77,9 @@
       </button>
       <button class="filter-btn bulk-btn" type="button" (click)="bulkDuplicateEpisodes()" [disabled]="bulkActionLoading">
         <span class="material-icons">content_copy</span> שכפול
+      </button>
+      <button class="filter-btn bulk-btn" type="button" (click)="openEpisodePromotionModal()" [disabled]="bulkActionLoading">
+        <span class="material-icons">workspace_premium</span> קידום
       </button>
     </div>
   </div>
@@ -177,3 +183,12 @@
     </div>
   </section>
 </div>
+
+<app-content-promotion-modal
+  *ngIf="promotionModalOpen"
+  [ids]="promotionTargetIds"
+  [targetType]="promotionTargetType"
+  [title]="promotionTitle"
+  (close)="promotionModalOpen = false"
+  (promoted)="onPromoted()">
+</app-content-promotion-modal>

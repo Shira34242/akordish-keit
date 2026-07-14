@@ -97,6 +97,10 @@ export class MusicServiceProviderService {
     return this.http.post(`${this.apiUrl}/${id}/reject`, {});
   }
 
+  convertToTeacher(id: number): Observable<MusicServiceProviderDto> {
+    return this.http.post<MusicServiceProviderDto>(`${this.apiUrl}/${id}/convert-to-teacher`, {});
+  }
+
   checkUserHasProfile(userId: number): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/check-user/${userId}`);
   }

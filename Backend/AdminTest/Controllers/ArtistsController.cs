@@ -19,6 +19,7 @@ public class ArtistsController : ControllerBase
     private readonly ISongService _songService;
     private readonly IArticleService _articleService;
     private readonly IExternalImageStorageService _externalImageStorage;
+    private readonly IDisplayRankingService _rankingService;
     private readonly ILogger<ArtistsController> _logger;
 
     public ArtistsController(
@@ -27,6 +28,7 @@ public class ArtistsController : ControllerBase
         ISongService songService,
         IArticleService articleService,
         IExternalImageStorageService externalImageStorage,
+        IDisplayRankingService rankingService,
         ILogger<ArtistsController> logger)
     {
         _context = context;
@@ -34,6 +36,7 @@ public class ArtistsController : ControllerBase
         _songService = songService;
         _articleService = articleService;
         _externalImageStorage = externalImageStorage;
+        _rankingService = rankingService;
         _logger = logger;
     }
 
@@ -95,26 +98,21 @@ public class ArtistsController : ControllerBase
 
             return Ok(episodes);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת פרקי פודקאסט: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת פרקי פודקאסט");
         }
     }
 
     // ========================================
-    // רשימות אומנים
-    // ========================================
 
-    /// <summary>
-    /// קבלת כל האומנים עם פילטרים ו-Pagination
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<PagedResult<ArtistListDto>>> GetArtists(
         [FromQuery] bool? isPremium = null,
         [FromQuery] ArtistStatus? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] string sortBy = "name",
+        [FromQuery] string sortBy = "smart",
         [FromQuery] string? search = null,
         [FromQuery] bool includeDrafts = false)
     {
@@ -135,31 +133,7 @@ public class ArtistsController : ControllerBase
 
             var totalCount = await query.CountAsync();
 
-            // קדימות לפי Tier (Subscribed לפני Free), ואז לפי המיון שנבחר
-            query = sortBy.ToLower() switch
-            {
-                "songcount" => query
-                    .OrderByDescending(a => a.Tier)              // מנויים משלמים קודם
-                    .ThenByDescending(a => a.SongArtists.Count), // ואז לפי מספר שירים
-                "created_desc" => query
-                    .OrderByDescending(a => a.CreatedAt)
-                    .ThenBy(a => a.Name),
-                "created" => query
-                    .OrderByDescending(a => a.Tier)              // מנויים משלמים קודם
-                    .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt), // ואז לפי תאריך
-                "created_asc" => query
-                    .OrderBy(a => a.CreatedAt)
-                    .ThenBy(a => a.Name),
-                "name_asc" => query
-                    .OrderBy(a => a.Name)
-                    .ThenByDescending(a => a.CreatedAt),
-                "name_desc" => query
-                    .OrderByDescending(a => a.Name)
-                    .ThenByDescending(a => a.CreatedAt),
-                _ => query
-                    .OrderByDescending(a => a.Tier)              // מנויים משלמים קודם
-                    .ThenBy(a => a.Name)                         // ואז לפי שם
-            };
+            query = _rankingService.ApplyArtistOrdering(query, sortBy, ContentPromotionPlacement.Index);
 
             var artists = await query
                 .Skip((page - 1) * pageSize)
@@ -189,24 +163,37 @@ public class ArtistsController : ControllerBase
                 PageSize = pageSize
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת אומנים: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת אומנים");
         }
     }
 
-    /// <summary>
-    /// אומנים מומלצים (Premium + Boost)
-    /// </summary>
     [HttpGet("featured")]
     public async Task<ActionResult<List<ArtistListDto>>> GetFeaturedArtists([FromQuery] int count = 10)
     {
         try
         {
+            var now = DateTime.UtcNow;
             var artists = await _context.Artists
                 .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active)
-                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue)
-                .OrderByDescending(a => a.IsFeatured)
+                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue || _context.ContentPromotions.Any(p =>
+                    p.TargetType == ContentPromotionTargetType.Artist
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
+                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome)))
+                .OrderByDescending(a => _context.ContentPromotions
+                    .Where(p => p.TargetType == ContentPromotionTargetType.Artist
+                        && p.TargetId == a.Id
+                        && p.IsActive
+                        && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
+                        && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
+                    .Select(p => (int?)p.Priority)
+                    .Max() ?? -1)
+                .ThenByDescending(a => a.IsFeatured)
                 .ThenByDescending(a => a.IsPremium)
                 .ThenByDescending(a => a.LastBoostDate)
                 .ThenBy(a => a.DisplayOrder)
@@ -231,15 +218,12 @@ public class ArtistsController : ControllerBase
 
             return Ok(artists);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת אומנים מומלצים: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת אומנים מומלצים");
         }
     }
 
-    /// <summary>
-    /// Top Artists - תאימות לאחור
-    /// </summary>
     [HttpGet("top")]
     public async Task<ActionResult<List<ArtistWithCountDto>>> GetTopArtists([FromQuery] int count = 10)
     {
@@ -268,12 +252,7 @@ public class ArtistsController : ControllerBase
     }
 
     // ========================================
-    // פרטי אומן
-    // ========================================
 
-    /// <summary>
-    /// קבלת פרטי אומן מלאים
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<ArtistDetailDto>> GetArtistById(int id)
     {
@@ -436,15 +415,12 @@ public class ArtistsController : ControllerBase
 
             return Ok(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת פרטי אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת פרטי אומן");
         }
     }
 
-    /// <summary>
-    /// קבלת שירים של אומן
-    /// </summary>
     [HttpGet("{id}/songs")]
     public async Task<ActionResult<PagedResult<ArtistSongItemDto>>> GetArtistSongs(
         int id,
@@ -480,7 +456,6 @@ public class ArtistsController : ControllerBase
                     Title = s.Title,
                     ImageUrl = s.ImageUrl,
                     ViewCount = s.ViewCount,
-                    // הוסף שדות נוספים לפי הצורך
                 })
                 .ToListAsync();
 
@@ -492,15 +467,12 @@ public class ArtistsController : ControllerBase
                 PageSize = pageSize
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת שירים: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת שירים");
         }
     }
 
-    /// <summary>
-    /// קבלת כתבות של אומן
-    /// </summary>
     [HttpGet("{id}/articles")]
     public async Task<ActionResult<PagedResult<ArticleDto>>> GetArtistArticles(
         int id,
@@ -560,9 +532,9 @@ public class ArtistsController : ControllerBase
                 PageSize = pageSize
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת כתבות: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת כתבות");
         }
     }
 
@@ -586,9 +558,6 @@ public class ArtistsController : ControllerBase
         return $@"%/artist/{artistId}/%";
     }
 
-    /// <summary>
-    /// קבלת הופעות קרובות של אומן
-    /// </summary>
     // GET: api/Artists/5/uploaded-songs
     [HttpGet("{id}/uploaded-songs")]
     public async Task<ActionResult<List<ArtistSongItemDto>>> GetArtistUploadedSongs(int id, [FromQuery] int limit = 12)
@@ -664,19 +633,14 @@ public class ArtistsController : ControllerBase
 
             return Ok(events);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בטעינת הופעות: {ex.Message}");
+            return StatusCode(500, "שגיאה בטעינת הופעות");
         }
     }
 
     // ========================================
-    // עדכון פרטי אומן
-    // ========================================
 
-    /// <summary>
-    /// עדכון פרטי אומן (Admin או האומן עצמו)
-    /// </summary>
     [HttpPut("{id}")]
     [Authorize]
     public async Task<IActionResult> UpdateArtist(int id, [FromBody] UpdateArtistDto dto)
@@ -700,7 +664,6 @@ public class ArtistsController : ControllerBase
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
-            // עדכון שדות בסיסיים
             if (!string.IsNullOrWhiteSpace(dto.Name))
                 artist.Name = dto.Name.Trim();
 
@@ -717,13 +680,12 @@ public class ArtistsController : ControllerBase
                 dto.BannerImageUrl,
                 "uploads/artists",
                 $"artist-banner-{id}");
-            artist.BannerGifUrl = dto.BannerGifUrl;  // Admin יכול לעדכן לכולם
+            artist.BannerGifUrl = dto.BannerGifUrl;
             artist.BannerMediaType = NormalizeBannerMediaType(dto.BannerMediaType);
             if (dto.BannerBlur.HasValue)
                 artist.BannerBlur = Math.Clamp(dto.BannerBlur.Value, 0, 20);
             artist.WebsiteUrl = dto.WebsiteUrl;
 
-            // עדכון באנר הופעה (legacy)
             artist.PerformanceImageUrl = await _externalImageStorage.StoreExternalImageIfNeededAsync(
                 dto.PerformanceImageUrl,
                 "uploads/artists",
@@ -732,13 +694,11 @@ public class ArtistsController : ControllerBase
             if (dto.PerformanceIsActive.HasValue)
                 artist.PerformanceIsActive = dto.PerformanceIsActive.Value;
 
-            // עדכון אירוע מקושר לבאנר
             if (dto.PerformanceIsActive == true)
                 await SyncPerformanceEventAsync(artist, dto.PerformanceEvent);
             else if (dto.PerformanceIsActive == false)
                 await SyncPerformanceEventAsync(artist, null);
 
-            // רק Admin יכול לעדכן סטטוס ו-Premium
             if (isAdmin)
             {
                 if (dto.Status.HasValue)
@@ -751,7 +711,6 @@ public class ArtistsController : ControllerBase
                     artist.IsFeatured = dto.IsFeatured.Value;
             }
 
-            // עדכון רשתות חברתיות (מחיקת הקיימים והוספה מחדש)
             if (dto.SocialLinks != null)
             {
                 var existingLinks = await _context.ArtistSocialLinks
@@ -770,7 +729,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // עדכון גלריה (Admin יכול לעדכן לכולם)
             if (dto.GalleryImages != null)
             {
                 var existingImages = await _context.ArtistGalleryImages
@@ -795,7 +753,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // עדכון וידאו (Admin יכול לעדכן לכולם)
             if (dto.Videos != null)
             {
                 var existingVideos = await _context.ArtistVideos
@@ -832,19 +789,14 @@ public class ArtistsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בעדכון אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה בעדכון אומן");
         }
     }
 
     // ========================================
-    // ניהול גלריה
-    // ========================================
 
-    /// <summary>
-    /// הוספת תמונה לגלריה (משלם בלבד)
-    /// </summary>
     [HttpPost("{id}/gallery")]
     [Authorize]
     public async Task<ActionResult<ArtistGalleryImageDto>> AddGalleryImage(int id, [FromBody] AddGalleryImageDto dto)
@@ -884,15 +836,12 @@ public class ArtistsController : ControllerBase
                 DisplayOrder = image.DisplayOrder
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בהוספת תמונה: {ex.Message}");
+            return StatusCode(500, "שגיאה בהוספת תמונה");
         }
     }
 
-    /// <summary>
-    /// מחיקת תמונה מהגלריה
-    /// </summary>
     [HttpDelete("{artistId}/gallery/{imageId}")]
     [Authorize]
     public async Task<IActionResult> DeleteGalleryImage(int artistId, int imageId)
@@ -910,19 +859,14 @@ public class ArtistsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה במחיקת תמונה: {ex.Message}");
+            return StatusCode(500, "שגיאה במחיקת תמונה");
         }
     }
 
     // ========================================
-    // ניהול וידאו
-    // ========================================
 
-    /// <summary>
-    /// הוספת וידאו (משלם בלבד)
-    /// </summary>
     [HttpPost("{id}/videos")]
     [Authorize]
     public async Task<ActionResult<ArtistVideoDto>> AddVideo(int id, [FromBody] AddVideoDto dto)
@@ -956,15 +900,12 @@ public class ArtistsController : ControllerBase
                 DisplayOrder = video.DisplayOrder
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בהוספת וידאו: {ex.Message}");
+            return StatusCode(500, "שגיאה בהוספת וידאו");
         }
     }
 
-    /// <summary>
-    /// מחיקת וידאו
-    /// </summary>
     [HttpDelete("{artistId}/videos/{videoId}")]
     [Authorize]
     public async Task<IActionResult> DeleteVideo(int artistId, int videoId)
@@ -982,19 +923,14 @@ public class ArtistsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה במחיקת וידאו: {ex.Message}");
+            return StatusCode(500, "שגיאה במחיקת וידאו");
         }
     }
 
     // ========================================
-    // קידום ושדרוג
-    // ========================================
 
-    /// <summary>
-    /// Boost - קידום חד פעמי (10₪)
-    /// </summary>
     [HttpPost("{id}/boost")]
     [Authorize]
     public async Task<ActionResult<BoostArtistResponse>> BoostArtist(int id)
@@ -1005,7 +941,6 @@ public class ArtistsController : ControllerBase
             if (artist == null)
                 return NotFound("אומן לא נמצא");
 
-            // TODO: טיפול בתשלום
 
             artist.LastBoostDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -1014,18 +949,15 @@ public class ArtistsController : ControllerBase
             {
                 Success = true,
                 Message = "האומן קודם בהצלחה!",
-                BoostEndDate = DateTime.UtcNow.AddMonths(1) // לדוגמה
+                BoostEndDate = DateTime.UtcNow.AddMonths(1)
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בקידום אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה בקידום אומן");
         }
     }
 
-    /// <summary>
-    /// שדרוג לחשבון משלם
-    /// </summary>
     [HttpPost("{id}/upgrade")]
     [Authorize]
     public async Task<ActionResult<UpgradeToPremiumResponse>> UpgradeToPremium(int id)
@@ -1039,46 +971,37 @@ public class ArtistsController : ControllerBase
             if (artist.IsPremium)
                 return BadRequest("אומן כבר משלם");
 
-            // TODO: טיפול בתשלום והפניה לעמוד תשלום
 
             return Ok(new UpgradeToPremiumResponse
             {
                 Success = true,
                 Message = "נא להמתין להפניה לעמוד התשלום",
-                PaymentUrl = "/payment/premium-artist" // לדוגמה
+                PaymentUrl = "/payment/premium-artist"
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, $"שגיאה בשדרוג חשבון: {ex.Message}");
+            return StatusCode(500, "שגיאה בשדרוג חשבון");
         }
     }
 
     // ========================================
-    // יצירת פרופיל אומן - לציבור
-    // ========================================
 
-    /// <summary>
-    /// יצירת פרופיל אומן חדש (משתמש מחובר עם מנוי פעיל)
-    /// </summary>
     [HttpPost("create-profile")]
     [Authorize]
     public async Task<ActionResult<ArtistDetailDto>> CreateArtistProfile([FromBody] UpdateArtistDto dto)
     {
         try
         {
-            // קבלת המשתמש המחובר
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized("משתמש לא מזוהה");
 
-            // וולידציה
             var isDraft = dto.Status == ArtistStatus.Draft;
             if (string.IsNullOrWhiteSpace(dto.Name))
                 return BadRequest("שם האומן הוא שדה חובה");
             var artistName = dto.Name.Trim();
 
-            // בדיקה אם המשתמש כבר יצר אומן בשם זה
             var existingArtist = await _context.Artists
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.Name == artistName && !a.IsDeleted);
 
@@ -1089,24 +1012,20 @@ public class ArtistsController : ControllerBase
             if (managedPagesCount >= MaxManagedPagesPerUser)
                 return BadRequest($"אפשר לנהל עד {MaxManagedPagesPerUser} דפים בלבד");
 
-            // בדיקת מנוי פעיל (אופציונלי - לקביעת Premium)
             var activeSubscription = await _context.Subscriptions
                 .Where(s => s.UserId == userId)
                 .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial)
                 .OrderByDescending(s => s.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            // קביעת האם זה הפרופיל הראשי (הראשון למשתמש)
             bool isPrimaryProfile = managedPagesCount == 0;
 
-            // קביעת Premium לפי המנוי (אם קיים)
             bool isPremium = activeSubscription?.Plan == SubscriptionPlan.Premium;
 
             var richMediaError = ValidateArtistRichMedia(dto, isDraft);
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
 
-            // יצירת אומן חדש
             var artist = new Artist
             {
                 UserId = userId,
@@ -1126,7 +1045,6 @@ public class ArtistsController : ControllerBase
                 IsDeleted = false
             };
 
-            // קישור למנוי אם קיים
             if (activeSubscription != null)
             {
                 artist.SubscriptionId = activeSubscription.Id;
@@ -1161,7 +1079,6 @@ public class ArtistsController : ControllerBase
                 !isDraft && artist.PerformanceIsActive ? dto.PerformanceEvent : null);
             await _context.SaveChangesAsync();
 
-            // הוספת קישורים לרשתות חברתיות
             if (dto.SocialLinks != null && dto.SocialLinks.Any())
             {
                 foreach (var link in dto.SocialLinks)
@@ -1175,7 +1092,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // הוספת גלריה - רק אם Premium
             if (isPremium && dto.GalleryImages != null && dto.GalleryImages.Any())
             {
                 foreach (var img in dto.GalleryImages)
@@ -1190,7 +1106,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // הוספת וידאו - רק אם Premium
             if (isPremium && dto.Videos != null && dto.Videos.Any())
             {
                 foreach (var video in dto.Videos)
@@ -1218,7 +1133,6 @@ public class ArtistsController : ControllerBase
             _logger.LogInformation("Artist profile created: ArtistId={ArtistId} Name={Name} UserId={UserId} Status={Status} IsPremium={IsPremium}",
                 artist.Id, artist.Name, userId, artist.Status, artist.IsPremium);
 
-            // החזרת פרטי האומן המלאים
             var result = await _context.Artists
                 .Where(a => a.Id == artist.Id)
                 .Select(a => new ArtistDetailDto
@@ -1299,7 +1213,7 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating artist profile");
-            return StatusCode(500, $"שגיאה ביצירת פרופיל אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה ביצירת פרופיל אומן");
         }
     }
 
@@ -1307,21 +1221,16 @@ public class ArtistsController : ControllerBase
     // Admin
     // ========================================
 
-    /// <summary>
-    /// יצירת אומן חדש (Admin בלבד)
-    /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArtistDetailDto>> CreateArtist([FromBody] UpdateArtistDto dto)
     {
         try
         {
-            // וולידציה
             var isDraft = dto.Status == ArtistStatus.Draft;
             if (!isDraft && string.IsNullOrWhiteSpace(dto.Name))
                 return BadRequest("שם האומן הוא שדה חובה");
 
-            // בדיקה אם אומן בשם זה כבר קיים
             var artistName = dto.Name?.Trim() ?? string.Empty;
             var existingArtist = string.IsNullOrWhiteSpace(artistName)
                 ? null
@@ -1331,7 +1240,6 @@ public class ArtistsController : ControllerBase
             if (existingArtist != null)
                 return BadRequest("אומן בשם זה כבר קיים במערכת");
 
-            // יצירת אומן חדש
             var richMediaError = ValidateArtistRichMedia(dto, isDraft);
             if (richMediaError != null)
                 return BadRequest(new { message = richMediaError });
@@ -1378,13 +1286,11 @@ public class ArtistsController : ControllerBase
             _context.Artists.Add(artist);
             await _context.SaveChangesAsync();
 
-            // סנכרון אירוע מקושר (אחרי שמרנו את האמן כדי לקבל ID)
             await SyncPerformanceEventAsync(
                 artist,
                 artist.PerformanceIsActive ? dto.PerformanceEvent : null);
             await _context.SaveChangesAsync();
 
-            // הוספת קישורים לרשתות חברתיות
             if (dto.SocialLinks != null && dto.SocialLinks.Any())
             {
                 foreach (var link in dto.SocialLinks)
@@ -1398,7 +1304,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // הוספת תמונות לגלריה (Admin יכול להוסיף לכולם)
             if (dto.GalleryImages != null && dto.GalleryImages.Any())
             {
                 foreach (var img in dto.GalleryImages)
@@ -1418,7 +1323,6 @@ public class ArtistsController : ControllerBase
                 }
             }
 
-            // הוספת וידאו (Admin יכול להוסיף לכולם)
             if (dto.Videos != null && dto.Videos.Any())
             {
                 foreach (var video in dto.Videos)
@@ -1439,7 +1343,6 @@ public class ArtistsController : ControllerBase
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // החזרת פרטי האומן המלאים
             var result = await _context.Artists
                 .Where(a => a.Id == artist.Id)
                 .Select(a => new ArtistDetailDto
@@ -1507,8 +1410,8 @@ public class ArtistsController : ControllerBase
                         Url = sl.Url
                     }).ToList(),
                     SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
-                    ArticleCount = 0, // TODO: כשיהיה מודל כתבות
-                    UpcomingEventCount = 0, // TODO: כשיהיה מודל אירועים
+                    ArticleCount = 0,
+                    UpcomingEventCount = 0,
                     CreatedAt = a.CreatedAt,
                     BumpedAt = a.BumpedAt,
                     BumpCount = a.BumpCount
@@ -1522,13 +1425,10 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating artist (admin): Name={Name}", dto.Name);
-            return StatusCode(500, $"שגיאה ביצירת אומן: {ex.GetBaseException().Message}");
+            return StatusCode(500, "שגיאה ביצירת אומן");
         }
     }
 
-    /// <summary>
-    /// מחיקת אומן (Admin בלבד)
-    /// </summary>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteArtist(int id)
@@ -1549,13 +1449,10 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting artist: ArtistId={Id}", id);
-            return StatusCode(500, $"שגיאה במחיקת אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה במחיקת אומן");
         }
     }
 
-    /// <summary>
-    /// שכפול אומן (Admin בלבד)
-    /// </summary>
     [HttpPost("{id}/duplicate")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ArtistDetailDto>> DuplicateArtist(int id)
@@ -1753,12 +1650,10 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error duplicating artist: ArtistId={Id}", id);
-            return StatusCode(500, $"שגיאה בשכפול אומן: {ex.Message}");
+            return StatusCode(500, "שגיאה בשכפול אומן");
         }
     }
 
-    // ========================================
-    // Helpers - באנר ואירוע מקושר
     // ========================================
 
     private static string? NormalizeBannerMediaType(string? type)
@@ -1904,16 +1799,10 @@ public class ArtistsController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// יצירה/עדכון/ניתוק של אירוע מקושר לבאנר אמן.
-    /// כשהאירוע נוצר/מעודכן, מבטיחים שהוא מתויג כ-EventArtist של האמן
-    /// כדי שיופיע גם בדף ההופעות הראשי וגם בדף האמן עצמו.
-    /// </summary>
     private async Task SyncPerformanceEventAsync(Artist artist, PerformanceEventInputDto? input)
     {
         if (input == null)
         {
-            // ניתוק האירוע (ללא מחיקה — האירוע עצמו נשמר במערכת)
             artist.PerformanceEventId = null;
             artist.PerformanceIsActive = false;
             artist.PerformanceImageUrl = null;
@@ -1958,7 +1847,7 @@ public class ArtistsController : ControllerBase
                 EventArtists = new List<EventArtist>()
             };
             _context.Events.Add(eventEntity);
-            await _context.SaveChangesAsync(); // לקבל Id
+            await _context.SaveChangesAsync();
         }
         else
         {
@@ -1974,7 +1863,6 @@ public class ArtistsController : ControllerBase
             eventEntity.UpdatedAt = DateTime.UtcNow;
         }
 
-        // לוודא תיוג של האמן באירוע
         var alreadyTagged = await _context.EventArtists
             .AnyAsync(ea => ea.EventId == eventEntity.Id && ea.ArtistId == artist.Id);
         if (!alreadyTagged && artist.Id > 0)
@@ -1993,9 +1881,6 @@ public class ArtistsController : ControllerBase
         artist.PerformanceTicketUrl = ticketUrl;
     }
 
-    /// <summary>
-    /// שינוי סטטוס אומן (Admin בלבד)
-    /// </summary>
     [HttpPut("{id}/status")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateArtistStatus(int id, [FromBody] ArtistStatus status)
@@ -2026,7 +1911,7 @@ public class ArtistsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating artist status: ArtistId={Id} Status={Status}", id, status);
-            return StatusCode(500, $"שגיאה בעדכון סטטוס: {ex.Message}");
+            return StatusCode(500, "שגיאה בעדכון סטטוס");
         }
     }
 

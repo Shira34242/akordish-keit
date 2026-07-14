@@ -31,6 +31,7 @@ import { Article, ArticleContentType, ArticleStatus } from '../../models/article
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ProfileReminderService } from '../../services/profile-reminder.service';
+import { ReferralService, ReferralSummary } from '../../services/referral.service';
 import { getArticleLink } from '../../utils/article-route.utils';
 import { artistPath } from '../../utils/slug';
 
@@ -150,6 +151,9 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   editPageId: number | null = null;
 
   subscription: SubscriptionDto | null = null;
+  referralSummary: ReferralSummary | null = null;
+  referralLoading = false;
+  referralCopied = false;
   pageLoadError = false;
   togglingPageId: number | null = null;
   songsPage = 1;
@@ -207,6 +211,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
+    private referralService: ReferralService,
     private ngZone: NgZone,
     public langService: LanguageService
   ) {}
@@ -237,6 +242,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadMyPageInfo();
     this.loadMyAllPages();
     this.loadSubscription();
+    this.loadReferralSummary();
   }
 
   ngAfterViewInit(): void {
@@ -245,6 +251,48 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       this.progressAnimated = true;
       this.ngZone.runOutsideAngular(() => this.startLevelCanvas());
     }, 120);
+  }
+
+  private loadReferralSummary(): void {
+    this.referralLoading = true;
+    this.referralService.getSummary()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: summary => {
+          this.referralSummary = summary;
+          this.referralLoading = false;
+        },
+        error: () => {
+          this.referralLoading = false;
+        }
+      });
+  }
+
+  copyReferralLink(): void {
+    const link = this.referralSummary?.referralUrl;
+    if (!link) {
+      return;
+    }
+
+    navigator.clipboard?.writeText(link).then(() => {
+      this.referralCopied = true;
+      setTimeout(() => this.referralCopied = false, 1600);
+    });
+  }
+
+  shareReferralLink(): void {
+    const link = this.referralSummary?.referralUrl;
+    if (!link) {
+      return;
+    }
+
+    const text = `הצטרפו לאקורדישקייט דרך הקישור שלי: ${link}`;
+    if (navigator.share) {
+      navigator.share({ title: 'אקורדישקייט', text, url: link }).catch(() => {});
+      return;
+    }
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
   private initHeroHeight(): void {
@@ -369,7 +417,8 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
             address: data.address,
             birthDate: data.birthDate,
             contentTag: data.contentTag ?? this.user.contentTag,
-            uploadCount: data.uploadCount ?? this.user.uploadCount
+            uploadCount: data.uploadCount ?? this.user.uploadCount,
+            rankingScore: data.rankingScore ?? this.user.rankingScore
           };
           this.authService.updateCurrentUser(this.user);
         }

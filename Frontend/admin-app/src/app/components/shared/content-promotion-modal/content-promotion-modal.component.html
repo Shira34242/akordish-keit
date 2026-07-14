@@ -1,0 +1,52 @@
+<div class="promotion-backdrop" *ngIf="ids.length > 0" (click)="close.emit()">
+  <div class="promotion-modal" (click)="$event.stopPropagation()">
+    <div class="promotion-header">
+      <div>
+        <h2>{{ title }}</h2>
+        <p>נבחרו {{ ids.length }} {{ itemLabel }}</p>
+      </div>
+      <button class="icon-btn" type="button" (click)="close.emit()" aria-label="סגור">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="promotion-body">
+      <label class="field">
+        <span>איפה לקדם</span>
+        <select [(ngModel)]="placement">
+          <option *ngFor="let option of placementOptions" [ngValue]="option.value">{{ option.label }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>משך הקידום</span>
+        <select [(ngModel)]="durationDays">
+          <option *ngFor="let option of durationOptions" [ngValue]="option.value">{{ option.label }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>עדיפות</span>
+        <input type="number" min="0" max="10000" step="10" [(ngModel)]="priority">
+      </label>
+
+      <label class="check-row">
+        <input type="checkbox" [(ngModel)]="showOnHome">
+        <span>להכניס גם לשיקולי דף הבית</span>
+      </label>
+
+      <label class="field">
+        <span>הערה פנימית</span>
+        <textarea rows="3" [(ngModel)]="note"></textarea>
+      </label>
+    </div>
+
+    <div class="promotion-actions">
+      <button type="button" class="secondary-btn" (click)="close.emit()" [disabled]="loading">ביטול</button>
+      <button type="button" class="primary-btn" (click)="save()" [disabled]="loading">
+        <span class="material-icons">{{ loading ? 'hourglass_empty' : 'workspace_premium' }}</span>
+        שמור קידום
+      </button>
+    </div>
+  </div>
+</div>

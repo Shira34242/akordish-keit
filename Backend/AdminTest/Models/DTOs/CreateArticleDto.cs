@@ -42,6 +42,9 @@ public class CreateArticleDto
     [StringLength(2000)]
     public string? ImageCredit { get; set; }
 
+    [StringLength(500)]
+    public string? FeaturedImageCredit { get; set; }
+
     [StringLength(1000)]
     public string? ShortDescription { get; set; }
 

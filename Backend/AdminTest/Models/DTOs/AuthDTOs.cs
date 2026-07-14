@@ -12,6 +12,7 @@ namespace AkordishKeit.Models.DTOs
         public string IdToken { get; set; } = string.Empty;
         public bool TermsApproved { get; set; }
         public bool MarketingConsent { get; set; }
+        public string? ReferralCode { get; set; }
     }
 
     public class RegisterRequest
@@ -201,6 +202,9 @@ namespace AkordishKeit.Models.DTOs
 
         [System.Text.Json.Serialization.JsonPropertyName("uploadCount")]
         public int UploadCount { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("rankingScore")]
+        public int RankingScore { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("chordBookExportCount")]
         public int ChordBookExportCount { get; set; }

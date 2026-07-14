@@ -13,6 +13,8 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
+import { ContentPromotionModalComponent } from '../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../services/content-promotion.service';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 import { TeacherFormComponent } from './teacher-form.component';
 import { environment } from '../../../../environments/environment';
@@ -20,7 +22,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-teachers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, TeacherFormComponent],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, ContentPromotionModalComponent, TeacherFormComponent],
   templateUrl: './teachers-list.component.html',
   styleUrls: ['./teachers-list.component.css']
 })
@@ -80,6 +82,8 @@ export class TeachersListComponent implements OnInit, OnDestroy, AfterViewInit {
   selectionMode = false;
   selectedIds = new Set<number>();
   bumpModalOpen = false;
+  promotionModalOpen = false;
+  readonly PromotionTargetType = ContentPromotionTargetType;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
 
@@ -438,8 +442,18 @@ export class TeachersListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.bumpModalOpen = true;
   }
 
+  openPromotionModal(): void {
+    this.promotionModalOpen = true;
+  }
+
   onBumped(): void {
     this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadTeachers();
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
     this.selectedIds.clear();
     this.loadTeachers();
   }

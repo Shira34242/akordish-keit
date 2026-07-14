@@ -13,6 +13,8 @@ import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
+import { ContentPromotionModalComponent } from '../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../services/content-promotion.service';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 import { ServiceProviderFormComponent } from './service-provider-form.component';
 import { environment } from '../../../../environments/environment';
@@ -20,7 +22,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, ServiceProviderFormComponent],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, ContentPromotionModalComponent, ServiceProviderFormComponent],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
@@ -81,6 +83,8 @@ export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterVi
   selectionMode = false;
   selectedIds = new Set<number>();
   bumpModalOpen = false;
+  promotionModalOpen = false;
+  readonly PromotionTargetType = ContentPromotionTargetType;
   agencies: AgencyListDto[] = [];
   selectedAgencyId: number | null = null;
 
@@ -431,8 +435,18 @@ export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterVi
     this.bumpModalOpen = true;
   }
 
+  openPromotionModal(): void {
+    this.promotionModalOpen = true;
+  }
+
   onBumped(): void {
     this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadProviders();
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
     this.selectedIds.clear();
     this.loadProviders();
   }
@@ -481,6 +495,34 @@ export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterVi
       error: (err) => {
         console.error('שגיאה בהשעיה מרובה:', err);
         alert('שגיאה בהשעיית בעלי המקצוע');
+      }
+    });
+  }
+
+  async bulkConvertSelectedToTeachers(): Promise<void> {
+    const selectedProviders = this.providers.filter(provider => this.selectedIds.has(provider.id));
+    const alreadyTeachers = selectedProviders.filter(provider => provider.isTeacher).length;
+    const targetIds = selectedProviders
+      .filter(provider => !provider.isTeacher)
+      .map(provider => provider.id);
+
+    if (targetIds.length === 0) {
+      alert('הפרופילים שסומנו כבר מוגדרים כמורים');
+      return;
+    }
+
+    const skippedText = alreadyTeachers > 0 ? ` (${alreadyTeachers} כבר מורים ולא ישתנו)` : '';
+    if (!await this.siteAlerts.confirm(`להפוך ${targetIds.length} פרופילים למורים? התוכן הקיים יישמר.${skippedText}`)) return;
+
+    forkJoin(targetIds.map(id => this.providerService.convertToTeacher(id))).subscribe({
+      next: () => {
+        alert('הפרופילים הועברו לאינדקס המורים בהצלחה');
+        this.selectedIds.clear();
+        this.loadProviders();
+      },
+      error: (err) => {
+        console.error('שגיאה בהמרת נותני שירות למורים:', err);
+        alert('שגיאה בהמרת הפרופילים למורים');
       }
     });
   }

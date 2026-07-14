@@ -39,6 +39,7 @@ export interface Article {
     videoEmbedUrl?: string;
     audioEmbedUrl?: string;
     imageCredit?: string;
+    featuredImageCredit?: string;
     shortDescription?: string;
     isFeatured: boolean;
     displayOrder: number;
@@ -82,6 +83,7 @@ export interface CreateArticleDto {
     videoEmbedUrl?: string;
     audioEmbedUrl?: string;
     imageCredit?: string;
+    featuredImageCredit?: string;
     shortDescription?: string;
     isFeatured: boolean;
     displayOrder: number;

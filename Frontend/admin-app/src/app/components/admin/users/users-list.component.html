@@ -134,6 +134,9 @@
         <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">
           {{ user.isActive ? 'פעיל' : 'לא פעיל' }}
         </span>
+        <span class="badge badge-secondary" *ngIf="user.googleReferralJoinedCount > 0">
+          {{ user.googleReferralJoinedCount }} חברים
+        </span>
       </div>
       <div class="grid-card-actions">
         <button class="btn-action" (click)="editUser(user); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
@@ -157,6 +160,7 @@
           <th>טלפון</th>
           <th>תפקיד</th>
           <th>תג תרומה</th>
+          <th>חברים</th>
           <th>סטטוס</th>
           <th>תאריך יצירה</th>
           <th>פעולות</th>
@@ -186,6 +190,14 @@
               {{ getContentTagLabel(user.contentTag) }}
             </span>
             <span *ngIf="user.contentTag === UserContentTag.None" class="no-tag">—</span>
+          </td>
+          <td>
+            <span
+              class="badge referral-badge"
+              [class.referral-badge--active]="user.googleReferralJoinedCount > 0"
+              [title]="user.referralJoinedCount + ' הצטרפות בסך הכל'">
+              {{ user.googleReferralJoinedCount || 0 }}
+            </span>
           </td>
           <td>
             <span class="badge" [class.badge-success]="user.isActive" [class.badge-danger]="!user.isActive">
@@ -283,6 +295,10 @@
           <span>{{ detail.agencies.length }}</span>
           <small>שיוכי סוכנות</small>
         </div>
+        <div class="metric">
+          <span>{{ detail.googleReferralJoinedCount || 0 }}</span>
+          <small>חברים שהצטרפו</small>
+        </div>
       </div>
 
       <div class="detail-grid">
@@ -309,6 +325,7 @@
             <div><dt>אושר בתאריך</dt><dd>{{ detail.marketingConsentAt ? (detail.marketingConsentAt | date: 'dd/MM/yyyy') : 'אין' }}</dd></div>
             <div><dt>ייצוא ספר אקורדים</dt><dd>{{ detail.chordBookExportCount }}</dd></div>
             <div><dt>תזכורות פרופיל</dt><dd>{{ detail.profileReminderDismissCount }}</dd></div>
+            <div><dt>הצטרפו דרכו</dt><dd>{{ detail.googleReferralJoinedCount || 0 }} Google</dd></div>
           </dl>
 
           <div class="chip-list" *ngIf="detail.instruments.length > 0">
@@ -318,6 +335,23 @@
           </div>
         </section>
       </div>
+
+      <section class="detail-section">
+        <div class="section-line">
+          <h3>חבר מביא חבר</h3>
+          <span>{{ detail.googleReferralJoinedCount || 0 }}</span>
+        </div>
+        <div class="mini-cards" *ngIf="(detail.referrals || []).length > 0; else noReferrals">
+          <div class="mini-card" *ngFor="let referral of detail.referrals || []">
+            <strong>{{ referral.username }}</strong>
+            <span>{{ referral.email }}</span>
+            <small>{{ referral.source === 'google' ? 'Google' : referral.source }} · {{ referral.createdAt | date: 'dd/MM/yyyy' }}</small>
+          </div>
+        </div>
+        <ng-template #noReferrals>
+          <p class="muted-line">אין עדיין מצטרפים דרך המשתמש הזה.</p>
+        </ng-template>
+      </section>
 
       <section class="detail-section">
         <div class="section-line">

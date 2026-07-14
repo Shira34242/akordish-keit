@@ -4,6 +4,21 @@
   width: 100%;
 }
 
+:host .material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 .articles-container {
   background: #ffffff;
   border-radius: 24px;
@@ -667,7 +682,9 @@
   display: block;
   max-height: calc(var(--font-base) * 1.2 * 3);
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
   white-space: normal;
 }
 
@@ -846,10 +863,21 @@
   font-weight: 800;
   color: #000000;
   font-size: var(--font-sm);
+  line-height: var(--lh-heading);
   margin: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-sm);
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.article-title .featured-badge,
+.article-title .premium-badge,
+.article-title .bump-indicator {
+  flex: 0 0 auto;
 }
 
 .article-meta {

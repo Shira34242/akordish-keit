@@ -1,0 +1,148 @@
+:host {
+  direction: rtl;
+}
+
+.promotion-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.promotion-modal {
+  width: min(100%, 520px);
+  max-height: min(92dvh, 720px);
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: var(--space-xl);
+}
+
+.promotion-header,
+.promotion-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+}
+
+.promotion-header h2 {
+  margin: 0;
+  color: #000000;
+  font-size: var(--font-xl);
+  font-weight: 800;
+  line-height: var(--lh-heading);
+}
+
+.promotion-header p {
+  margin: var(--space-xs) 0 0;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: var(--font-sm);
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #F2F2F2;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: #ddff53;
+}
+
+.promotion-body {
+  display: grid;
+  gap: var(--space-base);
+  margin: var(--space-xl) 0;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-sm);
+  color: #000000;
+  font-size: var(--font-sm);
+}
+
+.field span {
+  font-weight: 800;
+}
+
+.field select,
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 14px;
+  background: #F2F2F2;
+  color: #000000;
+  font: inherit;
+  padding: var(--space-md) var(--space-base);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-base);
+  border-radius: 14px;
+  background: #F2F2F2;
+  color: #000000;
+  font-size: var(--font-sm);
+}
+
+.promotion-actions {
+  justify-content: flex-start;
+}
+
+.primary-btn,
+.secondary-btn {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 var(--space-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-weight: 800;
+}
+
+.primary-btn {
+  background: #000000;
+  color: #ddff53;
+}
+
+.secondary-btn {
+  background: #F2F2F2;
+  color: #000000;
+}
+
+.primary-btn:disabled,
+.secondary-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .promotion-backdrop {
+    align-items: flex-end;
+    padding: var(--space-md);
+  }
+
+  .promotion-modal {
+    border-radius: 20px;
+    padding: var(--space-lg);
+  }
+}

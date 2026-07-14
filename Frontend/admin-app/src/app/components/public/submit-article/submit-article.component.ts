@@ -62,6 +62,7 @@ export class SubmitArticleComponent implements OnInit {
     videoEmbedUrl: '',
     audioEmbedUrl: '',
     imageCredit: '',
+    featuredImageCredit: '',
     shortDescription: '',
     isFeatured: false,
     displayOrder: 0,

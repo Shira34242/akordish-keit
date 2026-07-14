@@ -41,6 +41,9 @@ export interface UserListDto {
   preferredInstrumentName?: string | null;
   contentTag: UserContentTag;
   uploadCount: number;
+  rankingScore: number;
+  referralJoinedCount: number;
+  googleReferralJoinedCount: number;
 }
 
 export interface AdminUserDetailDto extends UserListDto {
@@ -63,7 +66,16 @@ export interface AdminUserDetailDto extends UserListDto {
   instruments: AdminUserInstrumentDto[];
   pages: AdminUserPageDto[];
   agencies: AdminUserAgencyDto[];
+  referrals: AdminUserReferralDto[];
   contentSummary: AdminUserContentSummaryDto;
+}
+
+export interface AdminUserReferralDto {
+  userId: number;
+  username: string;
+  email: string;
+  source: string;
+  createdAt: string;
 }
 
 export interface AdminUserInstrumentDto {

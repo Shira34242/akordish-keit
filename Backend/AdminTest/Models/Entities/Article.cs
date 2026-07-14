@@ -19,6 +19,7 @@ public class Article
     public string? VideoEmbedUrl { get; set; }
     public string? AudioEmbedUrl { get; set; }
     public string? ImageCredit { get; set; }
+    public string? FeaturedImageCredit { get; set; }
     public string? ShortDescription { get; set; }
     public bool IsFeatured { get; set; }
     public int DisplayOrder { get; set; }

@@ -67,6 +67,7 @@ public class UserService : IUserService
 
         // Map to DTOs
         var dtos = pagedEntities.Items.Select(MapToListDto).ToList();
+        await AttachReferralCountsAsync(dtos);
 
         return new PagedResult<UserListDto>
         {
@@ -265,7 +266,8 @@ public class UserService : IUserService
             BirthDate = user.BirthDate,
             ProfileImageUrl = user.ProfileImageUrl,
             ContentTag = (int)user.ContentTag,
-            UploadCount = user.UploadCount
+            UploadCount = user.UploadCount,
+            RankingScore = user.RankingScore
         };
     }
 
@@ -375,6 +377,20 @@ public class UserService : IUserService
         var ratingsCount = await _context.SongRatings.CountAsync(r => r.UserId == userId);
         var knownChordsCount = await _context.UserKnownChords.CountAsync(kc => kc.UserId == userId);
         var notificationsCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsDeleted);
+        var referrals = await _context.UserReferrals
+            .AsNoTracking()
+            .Where(r => r.ReferrerUserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(20)
+            .Select(r => new AdminUserReferralDto
+            {
+                UserId = r.ReferredUserId,
+                Username = r.ReferredUser.Username,
+                Email = r.ReferredUser.Email,
+                Source = r.Source,
+                CreatedAt = r.CreatedAt
+            })
+            .ToListAsync();
 
         return new AdminUserDetailDto
         {
@@ -395,6 +411,9 @@ public class UserService : IUserService
             PreferredInstrumentName = user.PreferredInstrument?.Name,
             ContentTag = (int)user.ContentTag,
             UploadCount = user.UploadCount,
+            RankingScore = user.RankingScore,
+            ReferralJoinedCount = await _context.UserReferrals.CountAsync(r => r.ReferrerUserId == user.Id),
+            GoogleReferralJoinedCount = await _context.UserReferrals.CountAsync(r => r.ReferrerUserId == user.Id && r.Source == "google"),
             GoogleId = user.GoogleId,
             Address = user.Address,
             BirthDate = user.BirthDate,
@@ -428,6 +447,7 @@ public class UserService : IUserService
                 .ThenBy(p => p.DisplayName)
                 .ToList(),
             Agencies = agencies,
+            Referrals = referrals,
             ContentSummary = new AdminUserContentSummaryDto
             {
                 Songs = songsCount,
@@ -466,7 +486,8 @@ public class UserService : IUserService
             BirthDate = user.BirthDate,
             ProfileImageUrl = user.ProfileImageUrl,
             ContentTag = (int)user.ContentTag,
-            UploadCount = user.UploadCount
+            UploadCount = user.UploadCount,
+            RankingScore = user.RankingScore
         };
     }
 
@@ -779,8 +800,41 @@ public class UserService : IUserService
             PreferredInstrumentId = entity.PreferredInstrumentId,
             PreferredInstrumentName = entity.PreferredInstrument?.Name,
             ContentTag = (int)entity.ContentTag,
-            UploadCount = entity.UploadCount
+            UploadCount = entity.UploadCount,
+            RankingScore = entity.RankingScore
         };
+    }
+
+    private async Task AttachReferralCountsAsync(List<UserListDto> users)
+    {
+        if (users.Count == 0)
+        {
+            return;
+        }
+
+        var userIds = users.Select(u => u.Id).ToList();
+        var counts = await _context.UserReferrals
+            .Where(r => userIds.Contains(r.ReferrerUserId))
+            .GroupBy(r => r.ReferrerUserId)
+            .Select(group => new
+            {
+                UserId = group.Key,
+                Total = group.Count(),
+                Google = group.Count(r => r.Source == "google")
+            })
+            .ToListAsync();
+
+        var countsByUserId = counts.ToDictionary(c => c.UserId);
+        foreach (var user in users)
+        {
+            if (!countsByUserId.TryGetValue(user.Id, out var count))
+            {
+                continue;
+            }
+
+            user.ReferralJoinedCount = count.Total;
+            user.GoogleReferralJoinedCount = count.Google;
+        }
     }
 
     private static IQueryable<User> ApplyUserSorting(IQueryable<User> query, string? sortBy)

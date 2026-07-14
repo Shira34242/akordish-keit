@@ -179,6 +179,8 @@ select.form-control {
 .tag-contributor { background: #000000; color: #ddff53; }
 .tag-leading     { background: #ddff53; color: #000000; font-weight: 700; }
 .no-tag          { color: #ccc; }
+.referral-badge  { background: #F2F2F2; color: #404040; }
+.referral-badge--active { background: #ddff53; color: #000000; }
 
 /* Action Buttons */
 .actions-cell { white-space: nowrap; }

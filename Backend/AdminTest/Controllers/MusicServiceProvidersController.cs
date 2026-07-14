@@ -442,6 +442,23 @@ public class MusicServiceProvidersController : ControllerBase
         return Ok(new { message = "׳‘׳¢׳ ׳”׳׳§׳¦׳•׳¢ ׳ ׳“׳—׳”" });
     }
 
+    // POST: api/MusicServiceProviders/5/convert-to-teacher
+    [HttpPost("{id}/convert-to-teacher")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<MusicServiceProviderDto>> ConvertToTeacher(int id)
+    {
+        try
+        {
+            var result = await _service.ConvertServiceProviderToTeacherAsync(id);
+            _logger.LogInformation("Service provider converted to teacher: ProviderId={ProviderId}", id);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     // GET: api/MusicServiceProviders/check-user/5
     [HttpGet("check-user/{userId}")]
     public async Task<ActionResult<bool>> CheckUserHasProfile(int userId)

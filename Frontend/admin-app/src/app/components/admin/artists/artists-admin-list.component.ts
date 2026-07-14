@@ -15,13 +15,15 @@ import { ImgFallbackDirective } from '../../../directives/img-fallback.directive
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
+import { ContentPromotionModalComponent } from '../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../services/content-promotion.service';
 import { environment } from '../../../../environments/environment';
 import { artistRoute } from '../../../utils/slug';
 
 @Component({
   selector: 'app-artists-admin-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArtistEditModalComponent, ImgFallbackDirective, BumpModalComponent],
+  imports: [CommonModule, FormsModule, ArtistEditModalComponent, ImgFallbackDirective, BumpModalComponent, ContentPromotionModalComponent],
   templateUrl: './artists-admin-list.component.html',
   styleUrls: ['./artists-admin-list.component.css']
 })
@@ -90,6 +92,8 @@ export class ArtistsAdminListComponent implements OnInit, OnDestroy, AfterViewIn
   selectionMode = false;
   selectedIds = new Set<number>();
   bumpModalOpen = false;
+  promotionModalOpen = false;
+  readonly PromotionTargetType = ContentPromotionTargetType;
   agencies: AgencyListDto[] = [];
   users: UserListDto[] = [];
   selectedAgencyId: number | null = null;
@@ -454,8 +458,18 @@ export class ArtistsAdminListComponent implements OnInit, OnDestroy, AfterViewIn
     this.bumpModalOpen = true;
   }
 
+  openPromotionModal(): void {
+    this.promotionModalOpen = true;
+  }
+
   onBumped(): void {
     this.bumpModalOpen = false;
+    this.selectedIds.clear();
+    this.loadArtists();
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
     this.selectedIds.clear();
     this.loadArtists();
   }

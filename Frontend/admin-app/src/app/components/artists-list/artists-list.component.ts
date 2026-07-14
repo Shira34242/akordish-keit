@@ -39,7 +39,7 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Filters
   filterPremium: boolean | undefined = undefined;
-  sortBy: string = 'name';
+  sortBy: string = 'smart';
   searchTerm: string = '';
   showSortDropdown = false;
 
@@ -226,11 +226,13 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getSortLabel(): string {
     const keys: Record<string, string> = {
+      'smart': 'מומלץ',
       'name': 'artists.sort_az',
       'songcount': 'artists.sort_popular',
       'created': 'artists.sort_new'
     };
-    return this.langService.translate(keys[this.sortBy] || 'artists.sort_az');
+    const label = keys[this.sortBy] || 'מומלץ';
+    return label.includes('.') ? this.langService.translate(label) : label;
   }
 
   navigateToArtist(artist: ArtistListDto): void {

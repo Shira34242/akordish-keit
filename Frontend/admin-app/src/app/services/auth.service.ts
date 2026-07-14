@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
@@ -29,6 +29,7 @@ export interface User {
     birthDate?: string | null;
     contentTag?: number;   // 0=None, 1=מתחיל, 2=תורם, 3=תורם מוביל
     uploadCount?: number;
+    rankingScore?: number;
     chordBookExportCount?: number;
     createdAt?: string;
     lastProfileReminderAt?: string | null;
@@ -67,6 +68,7 @@ export interface AuthResponse {
 })
 export class AuthService {
     private apiUrl = `${environment.apiBaseUrl}/api/auth`; // Backend API URL
+    private readonly referralStorageKey = 'akordish-referral-code';
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -121,10 +123,18 @@ export class AuthService {
     }
 
     googleLogin(idToken: string, termsApproved = false, marketingConsent = false): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, { idToken, termsApproved, marketingConsent }, {
-            withCredentials: true // 🔐 מאפשר שליחת וקבלת cookies
+        return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, {
+            idToken,
+            termsApproved,
+            marketingConsent,
+            referralCode: this.getStoredReferralCode()
+        }, {
+            withCredentials: true
         }).pipe(
-            tap(response => this.saveAuthResponse(response))
+            tap(response => {
+                this.saveAuthResponse(response);
+                this.clearStoredReferralCode();
+            })
         );
     }
 
@@ -229,6 +239,39 @@ export class AuthService {
         localStorage.removeItem('csrf-token');
         localStorage.removeItem('currentUser');
         this.currentUserSubject.next(null);
+    }
+
+    captureReferralCodeFromUrl(): void {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        if (this.currentUserSubject.value) {
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('ref') || params.get('invite');
+        const normalized = this.normalizeReferralCode(code);
+        if (normalized) {
+            localStorage.setItem(this.referralStorageKey, normalized);
+        }
+    }
+
+    private getStoredReferralCode(): string | null {
+        return this.normalizeReferralCode(localStorage.getItem(this.referralStorageKey));
+    }
+
+    private clearStoredReferralCode(): void {
+        localStorage.removeItem(this.referralStorageKey);
+    }
+
+    private normalizeReferralCode(code: string | null): string | null {
+        if (!code) {
+            return null;
+        }
+
+        const normalized = code.trim().replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        return normalized ? normalized.slice(0, 32) : null;
     }
 
     logout() {

@@ -123,6 +123,13 @@ public class AkordishKeitDbContext : DbContext
     // Bump Schedules
     public DbSet<BumpSchedule> BumpSchedules { get; set; }
 
+    // Manual content/profile promotions
+    public DbSet<ContentPromotion> ContentPromotions { get; set; }
+
+    // Referral tracking
+    public DbSet<UserReferralCode> UserReferralCodes { get; set; }
+    public DbSet<UserReferral> UserReferrals { get; set; }
+
     // System Settings — Feature Flags
     public DbSet<SystemSetting> SystemSettings { get; set; }
 
@@ -228,6 +235,9 @@ public class AkordishKeitDbContext : DbContext
 
         // Bump Schedule Configuration
         modelBuilder.ApplyConfiguration(new BumpScheduleConfiguration());
+        modelBuilder.ApplyConfiguration(new ContentPromotionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserReferralCodeConfiguration());
+        modelBuilder.ApplyConfiguration(new UserReferralConfiguration());
 
         // News Page Sections Configuration
         modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());

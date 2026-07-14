@@ -252,8 +252,8 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (err: any) => {
-        console.error('׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳¢׳׳•׳“ ׳׳©׳×׳׳©׳™׳:', err);
-        this.error = '׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳ ׳×׳•׳ ׳™ ׳”׳׳©׳×׳׳©׳™׳';
+        console.error('שגיאה בטעינת עמוד משתמשים:', err);
+        this.error = 'שגיאה בטעינת נתוני המשתמשים';
         this.loading = false;
       }
     });

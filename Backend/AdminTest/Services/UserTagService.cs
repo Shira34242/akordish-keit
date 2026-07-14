@@ -15,6 +15,12 @@ public class UserTagService : IUserTagService
     // ספי תגים
     private const int ContributorThreshold      = 5;
     private const int LeadingContributorThreshold = 20;
+    private const int TagScoreWeight = 100_000;
+    private const int UploadScoreWeight = 100;
+    private const int ReferralScoreWeight = 25;
+    private const int ScoreInputCap = 1_000;
+
+    private sealed record ContributionStats(int Count, DateTime? LatestAt);
 
     public UserTagService(AkordishKeitDbContext context)
     {
@@ -27,33 +33,33 @@ public class UserTagService : IUserTagService
         if (user == null) return;
 
         // ספירת שירים שהמשתמש העלה ואושרו
-        var songCount = await _context.Songs
-            .CountAsync(s => s.UploadedByUserId == userId && s.IsApproved && !s.IsDeleted);
+        var songStats = await _context.Songs
+            .Where(s => s.UploadedByUserId == userId && s.IsApproved && !s.IsDeleted)
+            .GroupBy(_ => 1)
+            .Select(group => new ContributionStats(group.Count(), group.Max(s => (DateTime?)s.CreatedAt)))
+            .FirstOrDefaultAsync() ?? new ContributionStats(0, null);
 
         // ספירת כתבות שהמשתמש הגיש ואושרו (Published)
-        var articleCount = await _context.Articles
-            .CountAsync(a => a.SubmittedByUserId == userId && a.Status == (int)ArticleStatus.Published && !a.IsDeleted);
+        var articleStats = await _context.Articles
+            .Where(a => a.SubmittedByUserId == userId && a.Status == (int)ArticleStatus.Published && !a.IsDeleted)
+            .GroupBy(_ => 1)
+            .Select(group => new ContributionStats(group.Count(), group.Max(a => (DateTime?)a.CreatedAt)))
+            .FirstOrDefaultAsync() ?? new ContributionStats(0, null);
 
         // ספירת אירועים שהמשתמש הגיש ואושרו (IsActive)
-        var eventCount = await _context.Events
-            .CountAsync(e => e.SubmittedByUserId == userId && e.IsActive && !e.IsDeleted);
+        var eventStats = await _context.Events
+            .Where(e => e.SubmittedByUserId == userId && e.IsActive && !e.IsDeleted)
+            .GroupBy(_ => 1)
+            .Select(group => new ContributionStats(group.Count(), group.Max(e => (DateTime?)e.CreatedAt)))
+            .FirstOrDefaultAsync() ?? new ContributionStats(0, null);
 
-        var totalCount = songCount + articleCount + eventCount;
+        var referralCount = await _context.UserReferrals
+            .CountAsync(r => r.ReferrerUserId == userId);
+
+        var totalCount = songStats.Count + articleStats.Count + eventStats.Count;
 
         // תאריך ההעלאה האחרונה
-        var latestSong = await _context.Songs
-            .Where(s => s.UploadedByUserId == userId && s.IsApproved && !s.IsDeleted)
-            .MaxAsync(s => (DateTime?)s.CreatedAt);
-
-        var latestArticle = await _context.Articles
-            .Where(a => a.SubmittedByUserId == userId && a.Status == (int)ArticleStatus.Published && !a.IsDeleted)
-            .MaxAsync(a => (DateTime?)a.CreatedAt);
-
-        var latestEvent = await _context.Events
-            .Where(e => e.SubmittedByUserId == userId && e.IsActive && !e.IsDeleted)
-            .MaxAsync(e => (DateTime?)e.CreatedAt);
-
-        DateTime? latestUpload = new[] { latestSong, latestArticle, latestEvent }.Max();
+        DateTime? latestUpload = new[] { songStats.LatestAt, articleStats.LatestAt, eventStats.LatestAt }.Max();
 
         // בדיקת איפוס: אם לא הועלה תוכן מעל 4 חודשים
         bool isReset = latestUpload == null
@@ -64,6 +70,7 @@ public class UserTagService : IUserTagService
         user.UploadCount    = effectiveCount;
         user.LastUploadDate = latestUpload;
         user.ContentTag     = CalculateTag(effectiveCount);
+        user.RankingScore   = CalculateRankingScore(user.ContentTag, effectiveCount, referralCount);
 
         await _context.SaveChangesAsync();
     }
@@ -107,6 +114,15 @@ public class UserTagService : IUserTagService
         < LeadingContributorThreshold             => UserContentTag.Contributor,
         _                                         => UserContentTag.LeadingContributor
     };
+
+    private static int CalculateRankingScore(UserContentTag tag, int uploadCount, int referralCount)
+    {
+        var cappedUploads = Math.Clamp(uploadCount, 0, ScoreInputCap);
+        var cappedReferrals = Math.Clamp(referralCount, 0, ScoreInputCap);
+        return ((int)tag * TagScoreWeight) +
+            (cappedUploads * UploadScoreWeight) +
+            (cappedReferrals * ReferralScoreWeight);
+    }
 
     private static string GetTagHebrew(UserContentTag tag) => tag switch
     {

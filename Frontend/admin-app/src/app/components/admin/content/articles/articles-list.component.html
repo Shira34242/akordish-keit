@@ -1,5 +1,5 @@
 <div class="articles-container">
-  <header class="articles-page-head" *ngIf="isArticleListTab">
+    <header class="articles-page-head" *ngIf="isArticleListTab">
     <nav class="category-nav" aria-label="סינון לפי קטגוריה">
       <button class="category-pill" [class.active]="selectedCategory === undefined" (click)="onCategoryFilter(undefined)">
         הכל
@@ -13,7 +13,6 @@
       </button>
     </nav>
   </header>
-
   <!-- Tabs -->
   <div class="tabs-container">
     <div class="tabs">
@@ -104,7 +103,11 @@
   <div class="actions-bar" *ngIf="isArticleListTab">
     <div class="search-box actions-search">
       <span class="material-icons search-icon">search</span>
-      <input type="text" placeholder="חיפוש לפי כותרת, תקציר או slug..." [(ngModel)]="searchTerm" (input)="onSearch()"
+      <input
+        type="text"
+        placeholder="חיפוש לפי כותרת, תקציר או slug..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
         class="search-input">
     </div>
 
@@ -123,8 +126,8 @@
       </select>
 
       <div class="date-range-control" title="טווח תאריכים">
-        <button class="icon-control-button" type="button">
-          <span class="material-icons">date_range</span>
+        <button class="icon-control-button" type="button" aria-label="טווח תאריכים">
+          <span class="material-icons" aria-hidden="true">date_range</span>
         </button>
         <div class="date-range-popover">
           <label>
@@ -138,40 +141,40 @@
         </div>
       </div>
 
-      <label class="icon-select-control" title="מיון">
-        <span class="material-icons">sort</span>
-      <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-select sort-select">
-        <option value="date">תאריך העלאה</option>
-        <option value="date_asc">תאריך העלאה ישן קודם</option>
-        <option value="publish">תאריך פרסום</option>
-        <option value="artist">אמן</option>
-        <option value="views">צפיות</option>
-        <option value="title">כותרת</option>
-      </select>
+      <label class="icon-select-control" title="מיון" aria-label="מיון">
+        <span class="material-icons" aria-hidden="true">sort</span>
+        <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-select sort-select">
+          <option value="date">תאריך העלאה</option>
+          <option value="date_asc">תאריך העלאה ישן קודם</option>
+          <option value="publish">תאריך פרסום</option>
+          <option value="artist">אמן</option>
+          <option value="views">צפיות</option>
+          <option value="title">כותרת</option>
+        </select>
       </label>
 
       <button class="filter-btn" [class.active]="showFeaturedOnly" (click)="toggleFeaturedFilter()">
-        <span class="material-icons">star</span> מומלצים בלבד
+        <span class="material-icons" aria-hidden="true">star</span>
+        מומלצים בלבד
       </button>
 
-      <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" (click)="resetFilters()" title="איפוס סינון">
-        <span class="material-icons">restart_alt</span>
+      <button class="filter-btn btn-reset" *ngIf="hasActiveFilters" (click)="resetFilters()" title="איפוס סינון" aria-label="איפוס סינון">
+        <span class="material-icons" aria-hidden="true">restart_alt</span>
       </button>
     </div>
 
     <div class="actions-view">
       <span class="results-info">{{ totalItems }} פריטים</span>
       <div class="view-controls">
-        <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
-          <span class="material-icons">grid_view</span>
+        <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד" aria-label="תצוגת גריד">
+          <span class="material-icons" aria-hidden="true">grid_view</span>
         </button>
-        <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
-          <span class="material-icons">view_list</span>
+        <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה" aria-label="תצוגת רשימה">
+          <span class="material-icons" aria-hidden="true">view_list</span>
         </button>
       </div>
     </div>
   </div>
-
   <!-- Bulk Actions -->
   <div class="bulk-actions-bar" *ngIf="!loading && isArticleListTab && hasSelection">
     <div class="bulk-summary">
@@ -204,6 +207,9 @@
       </button>
       <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
         <span class="material-icons">trending_up</span> הקפצה
+      </button>
+      <button class="filter-btn bulk-btn" (click)="openPromotionModal()" [disabled]="bulkActionLoading || !hasSelection">
+        <span class="material-icons">workspace_premium</span> קידום
       </button>
     </div>
   </div>
@@ -335,7 +341,7 @@
                 {{ article.subtitle }}
               </div>
               <div class="article-meta">
-                <span *ngIf="article.authorName">{{ article.authorName }} • </span>
+                <span *ngIf="article.authorName">{{ article.authorName }} · </span>
                 <span class="article-slug">{{ article.slug }}</span>
               </div>
             </div>
@@ -601,3 +607,12 @@
   (close)="bumpModalOpen = false"
   (bumped)="onBumped()">
 </app-bump-modal>
+
+<app-content-promotion-modal
+  *ngIf="promotionModalOpen"
+  [targetType]="PromotionTargetType.Article"
+  [ids]="selectedArticleIdsArray"
+  title="קידום כתבות"
+  (close)="promotionModalOpen = false"
+  (promoted)="onPromoted()">
+</app-content-promotion-modal>

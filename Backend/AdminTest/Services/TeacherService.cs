@@ -12,11 +12,16 @@ public class TeacherService : ITeacherService
     private const int MaxManagedPagesPerUser = 5;
     private readonly AkordishKeitDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IDisplayRankingService _rankingService;
 
-    public TeacherService(AkordishKeitDbContext context, INotificationService notificationService)
+    public TeacherService(
+        AkordishKeitDbContext context,
+        INotificationService notificationService,
+        IDisplayRankingService rankingService)
     {
         _context = context;
         _notificationService = notificationService;
+        _rankingService = rankingService;
     }
 
     public async Task<PagedResult<TeacherListDto>> GetTeachersAsync(
@@ -81,12 +86,29 @@ public class TeacherService : ITeacherService
 
         if (isFeatured.HasValue)
         {
-            query = query.Where(t => t.ServiceProvider.IsFeatured == isFeatured.Value);
+            if (isFeatured.Value)
+            {
+                var now = DateTime.UtcNow;
+                query = query.Where(t => t.ServiceProvider.IsFeatured || _context.ContentPromotions.Any(p =>
+                    p.TargetType == ContentPromotionTargetType.Teacher
+                    && p.TargetId == t.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
+                    && (p.Placement == ContentPromotionPlacement.Home
+                        || p.Placement == ContentPromotionPlacement.Featured
+                        || p.Placement == ContentPromotionPlacement.General
+                        || p.ShowOnHome)));
+            }
+            else
+            {
+                query = query.Where(t => !t.ServiceProvider.IsFeatured);
+            }
         }
 
         // Order by: Featured > Tier (Subscribed) > CreatedAt
         // קדימות לפי האיפיון: מומלצים ראשון, מנויים משלמים לפני חינמיים, ואז לפי תאריך
-        query = ApplyTeacherSorting(query, sortBy);
+        query = _rankingService.ApplyTeacherOrdering(query, sortBy, ContentPromotionPlacement.Index);
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);

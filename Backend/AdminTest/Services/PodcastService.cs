@@ -4,6 +4,7 @@ using AkordishKeit.Data;
 using AkordishKeit.Extensions;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
+using AkordishKeit.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Services
@@ -13,15 +14,18 @@ namespace AkordishKeit.Services
         private readonly AkordishKeitDbContext _context;
         private readonly IYouTubeService _youTubeService;
         private readonly IExternalImageStorageService _externalImageStorage;
+        private readonly IDisplayRankingService _rankingService;
 
         public PodcastService(
             AkordishKeitDbContext context,
             IYouTubeService youTubeService,
-            IExternalImageStorageService externalImageStorage)
+            IExternalImageStorageService externalImageStorage,
+            IDisplayRankingService rankingService)
         {
             _context = context;
             _youTubeService = youTubeService;
             _externalImageStorage = externalImageStorage;
+            _rankingService = rankingService;
         }
 
         public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
@@ -52,13 +56,7 @@ namespace AkordishKeit.Services
                 query = query.Where(p => p.CreatedAt < exclusiveDateTo);
             }
 
-            query = sortBy switch
-            {
-                "date" => query.OrderByDescending(p => p.CreatedAt),
-                "date_asc" => query.OrderBy(p => p.CreatedAt),
-                "name" => query.OrderBy(p => p.Name),
-                _ => query.OrderBy(p => p.DisplayOrder).ThenBy(p => p.Name)
-            };
+            query = _rankingService.ApplyPodcastOrdering(query, sortBy, ContentPromotionPlacement.Index);
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastDto>
@@ -72,10 +70,10 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<PodcastDto>> GetPublicPodcastsAsync()
         {
-            return await _context.Podcasts
-                .Where(p => !p.IsDeleted && p.IsActive)
-                .OrderBy(p => p.DisplayOrder)
-                .ThenBy(p => p.Name)
+            return await _rankingService.ApplyPodcastOrdering(
+                    _context.Podcasts.Where(p => !p.IsDeleted && p.IsActive),
+                    null,
+                    ContentPromotionPlacement.Index)
                 .Select(p => new PodcastDto
                 {
                     Id = p.Id,
@@ -145,7 +143,16 @@ namespace AkordishKeit.Services
                         .Where(e => !e.IsDeleted && e.IsActive)
                         .Sum(e => e.ViewCount)
                 })
-                .OrderByDescending(p => p.MonthlyViews)
+                .OrderByDescending(p => _context.ContentPromotions
+                    .Where(cp => cp.TargetType == ContentPromotionTargetType.Podcast
+                        && cp.TargetId == p.Podcast.Id
+                        && cp.IsActive
+                        && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
+                        && (cp.Placement == ContentPromotionPlacement.Home || cp.Placement == ContentPromotionPlacement.General || cp.ShowOnHome))
+                    .Select(cp => (int?)cp.Priority)
+                    .Max() ?? -1)
+                .ThenByDescending(p => p.MonthlyViews)
                 .ThenByDescending(p => p.TotalViews)
                 .ThenBy(p => p.Podcast.DisplayOrder)
                 .ThenBy(p => p.Podcast.Name)
@@ -177,7 +184,16 @@ namespace AkordishKeit.Services
                         && v.ViewedAt >= weekAgo
                         && v.ViewedAt <= now)
                 })
-                .OrderByDescending(e => e.WeeklyViews)
+                .OrderByDescending(e => _context.ContentPromotions
+                    .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
+                        && cp.TargetId == e.Episode.Id
+                        && cp.IsActive
+                        && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
+                        && (cp.Placement == ContentPromotionPlacement.Home || cp.Placement == ContentPromotionPlacement.General || cp.ShowOnHome))
+                    .Select(cp => (int?)cp.Priority)
+                    .Max() ?? -1)
+                .ThenByDescending(e => e.WeeklyViews)
                 .ThenByDescending(e => e.Episode.ViewCount)
                 .ThenByDescending(e => e.Episode.PublishedAt)
                 .ThenByDescending(e => e.Episode.Id)
@@ -332,14 +348,7 @@ namespace AkordishKeit.Services
                 query = query.Where(e => e.PublishedAt < exclusiveDateTo);
             }
 
-            query = sortBy switch
-            {
-                "title" => query.OrderBy(e => e.Title),
-                "podcast" => query.OrderBy(e => e.Podcast.Name).ThenByDescending(e => e.PublishedAt),
-                "views" => query.OrderByDescending(e => e.ViewCount),
-                "date_asc" => query.OrderBy(e => e.PublishedAt),
-                _ => query.OrderByDescending(e => e.PublishedAt).ThenBy(e => e.DisplayOrder)
-            };
+            query = _rankingService.ApplyPodcastEpisodeOrdering(query, sortBy, ContentPromotionPlacement.Index);
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastEpisodeDto>
@@ -371,7 +380,7 @@ namespace AkordishKeit.Services
                     e.Podcast.Name.Contains(search));
             }
 
-            query = query.OrderByDescending(e => e.PublishedAt).ThenByDescending(e => e.Id);
+            query = _rankingService.ApplyPodcastEpisodeOrdering(query, null, ContentPromotionPlacement.Index);
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastEpisodeDto>

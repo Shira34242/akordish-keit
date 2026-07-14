@@ -16,6 +16,7 @@ public class SongService : ISongService
     private readonly INotificationService _notificationService;
     private readonly IChordIndexService _chordIndexService;
     private readonly IMemoryCache _cache;
+    private readonly IDisplayRankingService _rankingService;
     private const int DuplicateScanThreshold = 70;
 
     private sealed record DuplicateScanSong(
@@ -47,13 +48,15 @@ public class SongService : ISongService
         IYouTubeService youTubeService,
         INotificationService notificationService,
         IChordIndexService chordIndexService,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IDisplayRankingService rankingService)
     {
         _context = context;
         _youTubeService = youTubeService;
         _notificationService = notificationService;
         _chordIndexService = chordIndexService;
         _cache = cache;
+        _rankingService = rankingService;
     }
 
     private async Task<string?> StoreYouTubeThumbnailIfNeededAsync(string? imageUrl)
@@ -790,19 +793,7 @@ public class SongService : ISongService
                 );
             }
 
-            // Sorting
-            query = sortBy switch
-            {
-                "views" or "popularity" => query.OrderByDescending(s => s.ViewCount),
-                "name" => query.OrderBy(s => s.Title),
-                "artist" => query.OrderBy(s => s.SongArtists
-                    .OrderBy(sa => sa.Order)
-                    .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName)
-                    .FirstOrDefault()).ThenBy(s => s.Title),
-                "uploader" => query.OrderBy(s => s.UploaderUser != null ? s.UploaderUser.Username : string.Empty).ThenBy(s => s.Title),
-                "date_asc" => query.OrderBy(s => s.CreatedAt),
-                _ => query.OrderByDescending(s => s.BumpedAt ?? s.CreatedAt)
-            };
+            query = _rankingService.ApplySongOrdering(query, sortBy, ContentPromotionPlacement.Index);
 
             var totalCount = await query.CountAsync();
 

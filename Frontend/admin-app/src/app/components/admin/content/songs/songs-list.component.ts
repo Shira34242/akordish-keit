@@ -12,11 +12,13 @@ import { UserService } from '../../../../services/user.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
+import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
+import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
 
 @Component({
   selector: 'app-songs-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, BumpModalComponent],
+  imports: [CommonModule, FormsModule, BumpModalComponent, ContentPromotionModalComponent],
   templateUrl: './songs-list.component.html',
   styleUrls: ['./songs-list.component.css']
 })
@@ -44,6 +46,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   bulkActionLoading = false;
   selectedSongIds = new Set<number>();
   bumpModalOpen = false;
+  promotionModalOpen = false;
+  readonly PromotionTargetType = ContentPromotionTargetType;
   artistModalOpen = false;
   artistModalSong: SongDto | null = null;
   artistModalMode: UpdateSongArtistsDto['mode'] = 'add';
@@ -245,6 +249,12 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadSongs();
   }
 
+  setApprovalFilter(filter: 'all' | 'approved' | 'pending'): void {
+    if (this.approvalFilter === filter) return;
+    this.approvalFilter = filter;
+    this.onFilterChange();
+  }
+
   private _persistState(): void {
     sessionStorage.setItem(SongsListComponent.STATE_KEY, JSON.stringify({
       searchTerm: this.searchTerm,
@@ -399,6 +409,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     return !!(
       this.searchTerm ||
       this.selectedArtistId ||
+      this.uploaderSearch ||
       this.dateFrom ||
       this.dateTo ||
       this.approvalFilter !== 'all' ||
@@ -922,8 +933,18 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.bumpModalOpen = true;
   }
 
+  openPromotionModal(): void {
+    this.promotionModalOpen = true;
+  }
+
   onBumped(): void {
     this.bumpModalOpen = false;
+    this.clearSelection();
+    this.loadSongs();
+  }
+
+  onPromoted(): void {
+    this.promotionModalOpen = false;
     this.clearSelection();
     this.loadSongs();
   }

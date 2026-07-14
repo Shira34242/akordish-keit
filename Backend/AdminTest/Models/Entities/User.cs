@@ -84,6 +84,9 @@ public class User
     /// <summary>כמות תכנים שנספרו בתקופה הנוכחית (שירים + כתבות)</summary>
     public int UploadCount { get; set; } = 0;
 
+    /// <summary>Stored ranking score used for fast public smart sorting.</summary>
+    public int RankingScore { get; set; } = 0;
+
     /// <summary>תאריך ההעלאה האחרונה — לחישוב איפוס כל 4 חודשים</summary>
     public DateTime? LastUploadDate { get; set; }
 
