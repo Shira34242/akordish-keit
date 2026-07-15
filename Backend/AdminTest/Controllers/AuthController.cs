@@ -110,13 +110,35 @@ namespace AkordishKeit.Controllers
                 return Unauthorized(new { message = "אימות Google נכשל. אנא סגור ופתח מחדש ונסה שוב." });
             }
 
+            googleUser.Email = googleUser.Email?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(googleUser.Sub) || string.IsNullOrWhiteSpace(googleUser.Email))
+            {
+                _logger.LogWarning("Google login failed - missing identity fields IP={IP}",
+                    HttpContext.Connection.RemoteIpAddress);
+                return Unauthorized(new { message = "אימות Google נכשל. נא לסגור ולפתוח מחדש ולנסות שוב." });
+            }
+
             // 2. Check if user exists (including professional profiles for onboarding check)
-            var user = await _context.Users
+            var usersQuery = _context.Users
                 .Include(u => u.ServiceProviderProfiles)
                 .Include(u => u.ManagedArtist)
                 .Include(u => u.Instruments)
-                    .ThenInclude(ui => ui.Instrument)
-                .FirstOrDefaultAsync(u => u.GoogleId == googleUser.Sub || u.Email == googleUser.Email);
+                    .ThenInclude(ui => ui.Instrument);
+
+            var user = await usersQuery.FirstOrDefaultAsync(u => u.GoogleId == googleUser.Sub);
+            if (user == null)
+            {
+                user = await usersQuery.FirstOrDefaultAsync(u => u.Email == googleUser.Email);
+
+                if (user != null
+                    && !string.IsNullOrEmpty(user.GoogleId)
+                    && user.GoogleId != googleUser.Sub)
+                {
+                    _logger.LogWarning("Google login blocked - email is linked to another Google account: UserId={UserId} Email={Email} IP={IP}",
+                        user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
+                    return BadRequest(new { message = "כתובת המייל כבר מחוברת לחשבון Google אחר. נסה להתחבר עם אותו חשבון או פנה לתמיכה." });
+                }
+            }
 
             bool isNewGoogleUser = user == null;
             if (isNewGoogleUser && !request.TermsApproved)
