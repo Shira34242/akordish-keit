@@ -20,6 +20,8 @@ namespace AkordishKeit.Controllers
     public class AuthController : ControllerBase
     {
         private const string DEFAULT_PROFILE_IMAGE_URL = "/default-avatar.svg";
+        private const int MaxEmailLength = 150;
+        private const int MaxProfileImageUrlLength = 500;
 
         private readonly AkordishKeitDbContext _context;
         private readonly HttpClient _httpClient;
@@ -118,6 +120,13 @@ namespace AkordishKeit.Controllers
                 return Unauthorized(new { message = "אימות Google נכשל. נא לסגור ולפתוח מחדש ולנסות שוב." });
             }
 
+            if (googleUser.Email.Length > MaxEmailLength)
+            {
+                _logger.LogWarning("Google login failed - email too long Length={Length} IP={IP}",
+                    googleUser.Email.Length, HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "כתובת המייל שהתקבלה מ-Google ארוכה מדי. נסה חשבון Google אחר או פנה לתמיכה." });
+            }
+
             // 2. Check if user exists (including professional profiles for onboarding check)
             var usersQuery = _context.Users
                 .Include(u => u.ServiceProviderProfiles)
@@ -169,6 +178,7 @@ namespace AkordishKeit.Controllers
             {
                 profileImageUrl = await UploadGoogleProfileImageAsync(googleUser.Picture) ?? googleUser.Picture;
             }
+            profileImageUrl = NormalizeProfileImageUrl(profileImageUrl);
 
             if (user == null)
             {
@@ -207,7 +217,19 @@ namespace AkordishKeit.Controllers
                 };
 
                 _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Google login failed while creating user Email={Email} GoogleId={GoogleId} ProfileImageUrlLength={ProfileImageUrlLength} IP={IP}",
+                        googleUser.Email,
+                        googleUser.Sub,
+                        profileImageUrl?.Length ?? 0,
+                        HttpContext.Connection.RemoteIpAddress);
+                    return BadRequest(new { message = "לא הצלחנו לשמור את ההתחברות דרך Google. נסה שוב או פנה לתמיכה." });
+                }
 
                 await _referralService.TryRecordGoogleReferralAsync(
                     request.ReferralCode,
@@ -240,7 +262,20 @@ namespace AkordishKeit.Controllers
                 }
                 user.LastLoginAt = DateTime.UtcNow;
                 user.VisitCount++;
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Google login failed while updating user UserId={UserId} Email={Email} GoogleId={GoogleId} ProfileImageUrlLength={ProfileImageUrlLength} IP={IP}",
+                        user.Id,
+                        user.Email,
+                        googleUser.Sub,
+                        user.ProfileImageUrl?.Length ?? 0,
+                        HttpContext.Connection.RemoteIpAddress);
+                    return BadRequest(new { message = "לא הצלחנו לשמור את ההתחברות דרך Google. נסה שוב או פנה לתמיכה." });
+                }
             }
 
             if (isNewGoogleUser)
@@ -951,6 +986,19 @@ namespace AkordishKeit.Controllers
             {
                 return null;
             }
+        }
+
+        private static string NormalizeProfileImageUrl(string? profileImageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(profileImageUrl))
+            {
+                return DEFAULT_PROFILE_IMAGE_URL;
+            }
+
+            var trimmedProfileImageUrl = profileImageUrl.Trim();
+            return trimmedProfileImageUrl.Length <= MaxProfileImageUrlLength
+                ? trimmedProfileImageUrl
+                : DEFAULT_PROFILE_IMAGE_URL;
         }
 
         // Helper class for Google response

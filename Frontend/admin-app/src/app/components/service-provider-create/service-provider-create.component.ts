@@ -13,6 +13,7 @@ import { SystemTablesService, SystemItem } from '../../services/system-tables.se
 import { CitiesService, City } from '../../services/cities.service';
 import { RequiredFieldFeedbackService } from '../../services/required-field-feedback.service';
 import { MediaService } from '../../services/admin/media.service';
+import { ReferralService, ReferralSummary } from '../../services/referral.service';
 import { ProfileImageCropperComponent } from '../shared/profile-image-cropper/profile-image-cropper.component';
 import {
   CreateMusicServiceProviderDto,
@@ -68,6 +69,9 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
   saving = false;
   submitted = false;
   error = '';
+  referralSummary: ReferralSummary | null = null;
+  referralLoading = false;
+  referralCopied = false;
 
   // Form fields
   displayName: string = '';
@@ -129,6 +133,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
   private bannerImageUploadSub?: Subscription;
   private branchImageUploadSub?: Subscription;
   private galleryUploadSubs: Subscription[] = [];
+  private referralSummarySub?: Subscription;
   socialPlatformOptions: PlatformLinkOption[] = [];
 
   private buildSocialPlatformOptions(): PlatformLinkOption[] {
@@ -153,7 +158,8 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     public router: Router,
     private host: ElementRef<HTMLElement>,
     private requiredFieldFeedback: RequiredFieldFeedbackService,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private referralService: ReferralService
   ) {}
 
   ngOnInit() {
@@ -163,7 +169,9 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     this.loadCategories();
     this.loadCities();
     this.prefillUserData();
-    setTimeout(() => this.scrollToTop(false));
+    if (!this.singlePage) {
+      setTimeout(() => this.scrollToTop(false));
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -178,6 +186,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     this.cancelBannerImageUpload();
     this.cancelBranchImageUpload();
     this.cancelGalleryUpload();
+    this.referralSummarySub?.unsubscribe();
   }
 
   nextStep(): void {
@@ -790,6 +799,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
 
         // ׳³ֲ³ײ²ֲ׳³ֲ³ײ²ֲ¢׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ²ֲ¨ ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ¨׳³ֲ³ײ³ג€” ׳³ֲ³׳’ג‚¬ג€׳³ֲ³׳’ג‚¬ֻ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ (׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֻ 2 ׳³ֲ³׳’ג‚¬ֻ׳³ֲ³ײ³ג€”׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ׳³ֲ³׳’ג€ֲ¢׳³ֲ³ײ²ֲ ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³׳’ג‚¬ֲ׳³ֲ³ײ²ֲ¨׳³ֲ³ײ²ֲ©׳³ֲ³ײ²ֲ׳³ֲ³׳’ג‚¬ֲ)
         this.submitted = true;
+        this.loadReferralSummary();
         this.scrollToTop();
       },
       error: (err) => {
@@ -804,6 +814,43 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
         localStorage.removeItem('pendingProfessionalType');
       }
     });
+  }
+
+  private loadReferralSummary(): void {
+    this.referralLoading = true;
+    this.referralSummarySub?.unsubscribe();
+    this.referralSummarySub = this.referralService.getSummary().subscribe({
+      next: summary => {
+        this.referralSummary = summary;
+        this.referralLoading = false;
+      },
+      error: () => {
+        this.referralLoading = false;
+      }
+    });
+  }
+
+  copyReferralLink(): void {
+    const link = this.referralSummary?.referralUrl;
+    if (!link) return;
+
+    navigator.clipboard?.writeText(link).then(() => {
+      this.referralCopied = true;
+      setTimeout(() => this.referralCopied = false, 1600);
+    });
+  }
+
+  shareReferralLink(): void {
+    const link = this.referralSummary?.referralUrl;
+    if (!link) return;
+
+    const text = `הצטרפו לאקורדישקייט דרך הקישור שלי: ${link}`;
+    if (navigator.share) {
+      navigator.share({ title: 'אקורדישקייט', text, url: link }).catch(() => {});
+      return;
+    }
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
   private getSaveErrorMessage(err: any): string {

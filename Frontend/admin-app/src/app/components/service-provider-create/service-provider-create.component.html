@@ -25,6 +25,27 @@
         <div class="success-state" *ngIf="submitted">
           <h2>הפרופיל נשלח לבדיקה</h2>
           <p>הדף נשמר ועבר למנהל לאישור.</p>
+          <section class="success-referral-card">
+            <div class="success-referral-copy">
+              <span>חבר מביא חבר</span>
+              <h3>הקישור האישי שלך להפצת האתר</h3>
+              <p>ככל שיותר משתמשים יגיעו דרכך, כך הפרופיל שלך יוכל לקבל יותר קידום וחשיפה באתר.</p>
+            </div>
+            <div class="success-referral-link">
+              <input
+                type="text"
+                [value]="referralLoading ? 'טוען קישור...' : (referralSummary?.referralUrl || '')"
+                readonly>
+              <button type="button" (click)="copyReferralLink()" [disabled]="!referralSummary || referralLoading">
+                <span class="material-icons">{{ referralCopied ? 'check' : 'content_copy' }}</span>
+                {{ referralCopied ? 'הועתק' : 'העתקה' }}
+              </button>
+              <button type="button" (click)="shareReferralLink()" [disabled]="!referralSummary || referralLoading">
+                <span class="material-icons">ios_share</span>
+                שיתוף
+              </button>
+            </div>
+          </section>
           <div class="success-actions">
             <button type="button" class="secondary-action" (click)="finishFlow()">סיום</button>
           </div>
@@ -33,6 +54,7 @@
         <form *ngIf="!submitted" (ngSubmit)="onSubmit()" id="serviceProviderCreateForm" class="quick-form">
           <section class="flow-step" *ngIf="currentStep === 1 || singlePage">
             <p class="step-intro">מלא את פרטי הדף הציבורי שלך שיוצג באתר</p>
+            <p class="profile-completeness-note">דף עשיר ומלא מקבל יותר חשיפה וקידום באתר באופן אוטומטי.</p>
 
             <button type="button" class="profile-upload" [class.has-image]="profileImageUrl" (click)="profileImageInput.click()" aria-label="העלאת תמונת פרופיל">
               <img *ngIf="profileImageUrl" [src]="profileImageUrl" alt="תמונת פרופיל" />
