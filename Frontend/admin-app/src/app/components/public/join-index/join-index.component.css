@@ -25,11 +25,11 @@
   position: relative;
   overflow: hidden;
   min-height: 340px;
-  padding: var(--space-3xl) var(--space-xl);
+  padding: var(--space-base) var(--space-xl) var(--space-3xl);
   border-radius: 28px;
   background: #ddff53;
   display: grid;
-  place-items: center;
+  place-items: start center;
   box-sizing: border-box;
 }
 
@@ -62,7 +62,7 @@
 }
 
 .join-video-card {
-  width: min(100%, 360px);
+  width: min(100%, 280px);
   aspect-ratio: 9 / 16;
   border-radius: 24px;
   background: #000000;
@@ -166,11 +166,11 @@
   gap: var(--space-base);
   padding: var(--space-lg);
   border-radius: 24px;
-  background: #ffffff;
+  background: #F2F2F2;
 }
 
 .join-step.done {
-  background: #ffffff;
+  background: #F2F2F2;
   color: #000000;
 }
 
@@ -666,7 +666,7 @@
 
   .join-hero {
     min-height: 0;
-    padding: var(--space-2xl) var(--space-base);
+    padding: var(--space-base) var(--space-base) var(--space-2xl);
     border-radius: 22px;
   }
 
@@ -732,7 +732,7 @@
   }
 
   .join-hero {
-    padding: var(--space-xl) var(--space-base);
+    padding: var(--space-sm) var(--space-base) var(--space-xl);
     border-radius: 18px;
   }
 
@@ -741,7 +741,7 @@
   }
 
   .join-video-card {
-    width: min(100%, 280px);
+    width: min(100%, 210px);
     border-radius: 18px;
   }
 
