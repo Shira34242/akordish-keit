@@ -272,7 +272,10 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
         this.filteredCategories = this.availableCategories;
         this.applyInitialCategoryIfAvailable();
       },
-      error: (error) => console.error('Error loading categories:', error)
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        this.applyInitialCategoryIfAvailable();
+      }
     });
   }
 
@@ -336,7 +339,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
       return this.allowUncategorized ? this.langService.translate('service_create.general_service') : this.langService.translate('common.select_category');
     }
     const category = this.availableCategories.find(cat => cat.id === this.selectedCategoryId);
-    return category ? category.name : this.langService.translate('common.select_category');
+    return category ? category.name : 'תחום השירות שנבחר';
   }
 
   onCategorySearchChange() {
@@ -947,6 +950,7 @@ export class ServiceProviderCreateComponent implements OnInit, OnChanges, OnDest
     }
 
     if (!this.availableCategories.length) {
+      this.selectedCategoryId = this.initialCategoryId;
       return;
     }
 

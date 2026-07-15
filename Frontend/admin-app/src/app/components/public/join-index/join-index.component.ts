@@ -16,6 +16,27 @@ import { LegalPageContent, PAGES } from '../legal-page/legal-page.component';
 type JoinIndexType = 'teacher' | 'service-provider';
 type JoinIndexLegalKey = 'terms' | 'privacy';
 
+const FALLBACK_SERVICE_PROVIDER_CATEGORIES: SystemItem[] = [
+  { id: 2, name: 'אולפנים', isActive: true },
+  { id: 15, name: 'בתי ספר למוזיקה', isActive: true },
+  { id: 14, name: 'הגברה', isActive: true },
+  { id: 9, name: 'הפקות וידאו', isActive: true },
+  { id: 5, name: 'זמרים', isActive: true },
+  { id: 1, name: 'חנויות מוזיקה', isActive: true },
+  { id: 16, name: 'יחסי ציבור', isActive: true },
+  { id: 19, name: 'מיקס', isActive: true },
+  { id: 11, name: 'מלחינים', isActive: true },
+  { id: 7, name: 'מעבדים', isActive: true },
+  { id: 17, name: 'מקהלות', isActive: true },
+  { id: 18, name: 'נגנים - כלי הקשה', isActive: true },
+  { id: 13, name: 'נגנים - כלי מיתר', isActive: true },
+  { id: 10, name: 'נגנים - כלי נשיפה', isActive: true },
+  { id: 6, name: 'קלידנים', isActive: true },
+  { id: 20, name: 'קריינות', isActive: true },
+  { id: 8, name: 'תזמורות', isActive: true },
+  { id: 12, name: 'תקליטנים DJ', isActive: true }
+];
+
 @Component({
   selector: 'app-join-index',
   standalone: true,
@@ -48,6 +69,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
   agencySlug: string | null = null;
   private userSub?: Subscription;
   private googleAuthSub?: Subscription;
+  private readonly categoriesCacheKey = 'akordish-join-index-service-categories';
 
   constructor(
     private authService: AuthService,
@@ -189,17 +211,43 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     this.systemTablesService.getItems('music-service-provider-categories', 1, 100).subscribe({
       next: (result) => {
         this.serviceProviderCategories = (result.items ?? []).filter(item => this.isServiceProviderCategory(item));
+        this.cacheServiceProviderCategories(this.serviceProviderCategories);
         this.categoriesLoading = false;
       },
       error: () => {
         if (attempt < 4) {
           setTimeout(() => this.loadServiceProviderCategories(attempt + 1), attempt * 1500);
         } else {
-          this.categoriesError = 'לא הצלחנו לטעון את קטגוריות נותני השירות';
+          this.serviceProviderCategories = this.getCachedServiceProviderCategories() ?? FALLBACK_SERVICE_PROVIDER_CATEGORIES;
+          this.categoriesError = '';
           this.categoriesLoading = false;
         }
       }
     });
+  }
+
+  private cacheServiceProviderCategories(categories: SystemItem[]): void {
+    if (typeof localStorage === 'undefined' || !categories.length) return;
+
+    try {
+      localStorage.setItem(this.categoriesCacheKey, JSON.stringify(categories));
+    } catch {
+      // The cache is only a fallback for unstable public networks.
+    }
+  }
+
+  private getCachedServiceProviderCategories(): SystemItem[] | null {
+    if (typeof localStorage === 'undefined') return null;
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(this.categoriesCacheKey) || '[]');
+      if (!Array.isArray(cached)) return null;
+
+      const categories = cached.filter(item => this.isServiceProviderCategory(item));
+      return categories.length ? categories : null;
+    } catch {
+      return null;
+    }
   }
 
   private loadAgencyContext(): void {

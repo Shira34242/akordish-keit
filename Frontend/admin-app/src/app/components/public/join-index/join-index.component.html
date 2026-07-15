@@ -1,22 +1,50 @@
 <main class="join-index-page">
   <section class="join-panel">
-    <div class="hero-copy">
-      <div class="agency-join-brand" *ngIf="agency as currentAgency">
-        <div
-          class="agency-join-banner"
-          *ngIf="currentAgency.bannerImageUrl"
-          [style.backgroundImage]="'url(' + currentAgency.bannerImageUrl + ')'">
+    <section class="join-hero">
+      <div class="hero-copy">
+        <div class="join-kicker">
+          <span class="material-icons">auto_awesome</span>
+          <span>{{ agency ? 'הצטרפות דרך הסוכנות' : 'אינדקס עולם המוזיקה' }}</span>
         </div>
-        <div class="agency-join-identity">
-          <img *ngIf="currentAgency.logoUrl" [src]="currentAgency.logoUrl" [alt]="currentAgency.name" />
-          <span>{{ currentAgency.name }}</span>
+
+        <div class="join-video-card" aria-label="סרטון הצטרפות לאינדקס">
+          <iframe
+            src="https://www.youtube.com/embed/ptR8XnXWQAA"
+            title="הצטרפות לאינדקס אקורדישקייט"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <div class="agency-join-brand" *ngIf="agency as currentAgency">
+          <div
+            class="agency-join-banner"
+            *ngIf="currentAgency.bannerImageUrl"
+            [style.backgroundImage]="'url(' + currentAgency.bannerImageUrl + ')'">
+          </div>
+          <div class="agency-join-identity">
+            <img *ngIf="currentAgency.logoUrl" [src]="currentAgency.logoUrl" [alt]="currentAgency.name" />
+            <span>{{ currentAgency.name }}</span>
+          </div>
+        </div>
+
+        <p class="index-category-state" *ngIf="agencyLoading">טוען את פרטי הסוכנות...</p>
+        <p class="inline-error" *ngIf="agencyError">{{ agencyError }}</p>
+        <h1 class="dia-text-reveal">{{ agency ? 'נכנסים לאינדקס דרך ' + agency.name : 'נותנים שירות בעולם המוזיקה?' }}</h1>
+        <p>
+          {{ agency
+            ? 'לקראת ההשקה של אקורדישקייט אנחנו פותחים הרשמה מוקדמת לאינדקס נותני השירות של עולם המוזיקה היהודית, עם שיוך ברור לסוכנות וחשיפה מיוחדת עם עליית האתר.'
+            : 'לקראת ההשקה של אתר אקורדישקייט אנחנו פותחים הרשמה מוקדמת לאינדקס נותני השירות של עולם המוזיקה היהודית. זו ההזדמנות שלכם להופיע במקום שבו מוזיקאים וחובבי מוזיקה יחפשו בעלי מקצוע - בחינם.' }}
+        </p>
+
+        <div class="hero-proof-row" aria-label="יתרונות ההצטרפות">
+          <span>הרשמה מוקדמת לזמן מוגבל</span>
+          <span>חשיפה מיוחדת בהשקה</span>
+          <span>דף מקצועי בחינם</span>
         </div>
       </div>
-      <p class="index-category-state" *ngIf="agencyLoading">טוען את פרטי הסוכנות...</p>
-      <p class="inline-error" *ngIf="agencyError">{{ agencyError }}</p>
-      <h1>הצטרפות לאינדקס עולם המוזיקה</h1>
-      <p>מלאו עכשיו את פרטי הדף שלכם, וכשהאתר יעלה לאוויר נעדכן במייל ותוכלו לנהל את הדף בעצמכם.</p>
-    </div>
+    </section>
 
     <section class="join-step auth-step" [class.done]="user">
       <div class="step-head">

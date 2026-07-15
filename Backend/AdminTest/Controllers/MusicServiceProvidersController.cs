@@ -177,9 +177,6 @@ public class MusicServiceProvidersController : ControllerBase
             if (string.IsNullOrWhiteSpace(dto.DisplayName))
                 return BadRequest("׳©׳ ׳”׳×׳¦׳•׳’׳” ׳”׳•׳ ׳©׳“׳” ׳—׳•׳‘׳”");
 
-            if (dto.Categories == null || !dto.Categories.Any())
-                return BadRequest("חובה לבחור לפחות קטגוריה אחת");
-
             var managedPagesCount = await CountManagedPagesAsync(userId);
             if (managedPagesCount >= MaxManagedPagesPerUser)
                 return BadRequest($"׳׳₪׳©׳¨ ׳׳ ׳”׳ ׳¢׳“ {MaxManagedPagesPerUser} ׳“׳₪׳™׳ ׳‘׳׳‘׳“");
