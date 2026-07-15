@@ -12,7 +12,6 @@ import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
 import { SystemSettingsService } from './services/system-settings.service';
-import { CloudflareImageOptimizerService } from './services/cloudflare-image-optimizer.service';
 
 @Component({
   selector: 'app-root',
@@ -108,13 +107,11 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private seoRouteService: SeoRouteService,
     private adBlockDetectionService: AdBlockDetectionService,
-    private settingsService: SystemSettingsService,
-    private cloudflareImageOptimizer: CloudflareImageOptimizerService
+    private settingsService: SystemSettingsService
   ) { }
 
   ngOnInit() {
     this.authService.captureReferralCodeFromUrl();
-    this.cloudflareImageOptimizer.start();
     this.checkAccessGate();
   }
 
