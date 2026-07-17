@@ -430,30 +430,45 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadMySongs() {
     this.songService.getMySongs(this.songsPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.mySongs = result.items.map((song: any) => this.toProfileSongCard(song));
+        this.mySongs = result.items
+          .filter((song: SongBasicDto) => this.isPublishedSong(song))
+          .map((song: SongBasicDto) => this.toProfileSongCard(song));
         this.hasMoreSongs = result.hasNextPage;
       },
-      error: () => { this.mySongs = []; }
+      error: () => {
+        this.mySongs = [];
+        this.hasMoreSongs = false;
+      }
     });
   }
 
   private loadMyArticles() {
     this.articleService.getMyArticles(this.articlesPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.myArticles = result.items.map((article: any) => this.toProfileArticleCard(article));
+        this.myArticles = result.items
+          .filter((article: ArticleDto) => this.isPublishedArticle(article))
+          .map((article: ArticleDto) => this.toProfileArticleCard(article));
         this.hasMoreArticles = result.hasNextPage;
       },
-      error: () => { this.myArticles = []; }
+      error: () => {
+        this.myArticles = [];
+        this.hasMoreArticles = false;
+      }
     });
   }
 
   private loadMyEvents() {
     this.eventService.getMyEvents(this.eventsPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.myEvents = result.items.map((event: any) => this.toEventCardData(event));
+        this.myEvents = result.items
+          .filter((event: EventDto) => this.isPublishedEvent(event))
+          .map((event: EventDto) => this.toEventCardData(event));
         this.hasMoreEvents = result.hasNextPage;
       },
-      error: () => { this.myEvents = []; }
+      error: () => {
+        this.myEvents = [];
+        this.hasMoreEvents = false;
+      }
     });
   }
 
@@ -483,6 +498,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     };
   }
 
+  private isPublishedSong(song: SongBasicDto): boolean {
+    return song.isApproved === true;
+  }
+
   private toProfileArticleCard(article: ArticleDto): ProfileArticleCard {
     return {
       id: article.id,
@@ -494,6 +513,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       contentType: article.contentType,
       status: (article as ArticleDto & { status?: number }).status
     };
+  }
+
+  private isPublishedArticle(article: ArticleDto): boolean {
+    return article.status === ArticleStatus.Published;
   }
 
   private toEventCardData(event: EventDto): EventCardData {
@@ -509,6 +532,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       isPast: new Date(event.eventDate).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0),
       isApproved: event.isActive
     };
+  }
+
+  private isPublishedEvent(event: EventDto): boolean {
+    return event.isActive === true;
   }
 
   private getEventStatusLabel(eventDate: string): string {
@@ -1127,7 +1154,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.songsPage++;
     this.songService.getMySongs(this.songsPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.mySongs = [...this.mySongs, ...result.items.map((s: any) => this.toProfileSongCard(s))];
+        const publishedSongs = result.items
+          .filter((song: SongBasicDto) => this.isPublishedSong(song))
+          .map((song: SongBasicDto) => this.toProfileSongCard(song));
+        this.mySongs = [...this.mySongs, ...publishedSongs];
         this.hasMoreSongs = result.hasNextPage;
         this.isLoadingMoreSongs = false;
       },
@@ -1141,7 +1171,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.articlesPage++;
     this.articleService.getMyArticles(this.articlesPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.myArticles = [...this.myArticles, ...result.items.map((a: any) => this.toProfileArticleCard(a))];
+        const publishedArticles = result.items
+          .filter((article: ArticleDto) => this.isPublishedArticle(article))
+          .map((article: ArticleDto) => this.toProfileArticleCard(article));
+        this.myArticles = [...this.myArticles, ...publishedArticles];
         this.hasMoreArticles = result.hasNextPage;
         this.isLoadingMoreArticles = false;
       },
@@ -1155,7 +1188,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.eventsPage++;
     this.eventService.getMyEvents(this.eventsPage).pipe(takeUntil(this.destroy$)).subscribe({
       next: (result: PagedResult<any>) => {
-        this.myEvents = [...this.myEvents, ...result.items.map((e: any) => this.toEventCardData(e))];
+        const publishedEvents = result.items
+          .filter((event: EventDto) => this.isPublishedEvent(event))
+          .map((event: EventDto) => this.toEventCardData(event));
+        this.myEvents = [...this.myEvents, ...publishedEvents];
         this.hasMoreEvents = result.hasNextPage;
         this.isLoadingMoreEvents = false;
       },

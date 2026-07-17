@@ -24,6 +24,8 @@ import { AnalyticsService } from '../../services/analytics.service';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { getArticleLink } from '../../utils/article-route.utils';
 
+const DEFAULT_ARTIST_BANNER_IMAGE_URL = 'https://akordishkaytmedia.blob.core.windows.net/media/uploads/2026/07/20260717_113645_c80e237a-9266-45bc-a005-e224fcee2076_ChatGPT_Image_Jul_17%2C_2026%2C_02_34_34_PM.png';
+
 @Component({
   selector: 'app-artist-detail',
   standalone: true,
@@ -729,6 +731,10 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly GALLERY_MIN_ITEMS = 5;
 
   get heroBannerSrc(): string {
+    return this.uploadedHeroBannerSrc || DEFAULT_ARTIST_BANNER_IMAGE_URL;
+  }
+
+  private get uploadedHeroBannerSrc(): string {
     if (!this.artist) return '';
     const type = this.artist.bannerMediaType;
     if (type === 'gif' || type === 'video') return this.artist.bannerGifUrl || '';
@@ -740,8 +746,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get heroBannerIsVideo(): boolean {
     if (!this.artist) return false;
+    const url = this.uploadedHeroBannerSrc;
+    if (!url) return false;
     if (this.artist.bannerMediaType === 'video') return true;
-    const url = this.heroBannerSrc;
     return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url);
   }
 
