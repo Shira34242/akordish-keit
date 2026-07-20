@@ -8,7 +8,7 @@
           type="text"
           placeholder="חיפוש לפי שם שיר או אמן..."
           [(ngModel)]="searchTerm"
-          (input)="onSearch()"
+          (input)="onTextFilterInput()"
           class="search-input">
       </div>
 
@@ -31,7 +31,7 @@
           type="text"
           placeholder="מי העלה"
           [(ngModel)]="uploaderSearch"
-          (input)="onFilterChange()"
+          (input)="onTextFilterInput()"
           class="filter-input">
       </div>
 
@@ -147,7 +147,7 @@
 
   <!-- Grid View -->
   <div class="data-grid" *ngIf="!loading && songs.length > 0 && viewMode === 'grid'">
-    <div class="grid-card" *ngFor="let song of songs" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved" (click)="viewSong(song)">
+    <div class="grid-card" *ngFor="let song of songs; trackBy: trackBySongId" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved" (click)="viewSong(song)">
       <label class="grid-card-select" title="בחירת שיר" (click)="$event.stopPropagation()">
         <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)">
       </label>
@@ -196,7 +196,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let song of songs" class="song-row" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved">
+        <tr *ngFor="let song of songs; trackBy: trackBySongId" class="song-row" [class.selected]="isSelected(song.id)" [class.pending-song]="!song.isApproved">
           <!-- Selection -->
           <td class="selection-cell">
             <input type="checkbox" [checked]="isSelected(song.id)" (change)="toggleSongSelection(song.id, $event)" title="בחירת שיר">

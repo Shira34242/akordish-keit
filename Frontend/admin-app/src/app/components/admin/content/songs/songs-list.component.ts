@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild, AfterViewI
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, Subscription, Observable } from 'rxjs';
+import { debounceTime, forkJoin, Subscription, Observable, Subject } from 'rxjs';
 import { SongService, UpdateSongArtistsDto } from '../../../../services/song.service';
 import { ArtistBasicDto, SongDto, SongDuplicateCandidate, SongDuplicateGroup, SongDuplicateScanResponse } from '../../../../models/song.model';
 import { ModalService } from '../../../../services/modal.service';
@@ -25,6 +25,8 @@ import { ContentPromotionTargetType } from '../../../../services/content-promoti
 export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private static readonly STATE_KEY = 'admin-songs-filters';
   private songUpdatedSub?: Subscription;
+  private textFilterSub?: Subscription;
+  private songsLoadSub?: Subscription;
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
   private readonly router = inject(Router);
@@ -35,6 +37,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private scrollObserver?: IntersectionObserver;
   private _pendingScrollY = 0;
   private _pendingPage = 0;
+  private readonly textFilterChanges$ = new Subject<void>();
 
   @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
@@ -89,6 +92,10 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   sortBy: string = 'date'; // date, views, name
 
   ngOnInit(): void {
+    this.textFilterSub = this.textFilterChanges$
+      .pipe(debounceTime(350))
+      .subscribe(() => this.applyFilterChange());
+
     this.loadArtists();
     const hadState = this._restoreState();
     if (hadState) {
@@ -109,6 +116,9 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     this.isDestroyed = true;
     this.songUpdatedSub?.unsubscribe();
+    this.textFilterSub?.unsubscribe();
+    this.songsLoadSub?.unsubscribe();
+    this.textFilterChanges$.complete();
     this.destroyScrollObserver();
   }
 
@@ -148,6 +158,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   loadSongs(): void {
+    this.songsLoadSub?.unsubscribe();
     this.loading = true;
     this.loadError = '';
     this.currentPage = 1;
@@ -158,7 +169,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     const page = Number(this.currentPage);
     const pageSize = Number(this.pageSize);
 
-    this.songService.getSongsForAdmin(
+    this.songsLoadSub = this.songService.getSongsForAdmin(
       search,
       page,
       pageSize,
@@ -232,6 +243,14 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSearch(): void {
+    this.textFilterChanges$.next();
+  }
+
+  onTextFilterInput(): void {
+    this.textFilterChanges$.next();
+  }
+
+  private applyFilterChange(): void {
     this.currentPage = 1;
     this._persistState();
     this.loadSongs();
@@ -244,9 +263,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onFilterChange(): void {
-    this.currentPage = 1;
-    this._persistState();
-    this.loadSongs();
+    this.applyFilterChange();
   }
 
   setApprovalFilter(filter: 'all' | 'approved' | 'pending'): void {
@@ -462,6 +479,10 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   clearSelection(): void {
     this.selectedSongIds.clear();
+  }
+
+  trackBySongId(_index: number, song: SongDto): number {
+    return song.id;
   }
 
   openArtistModal(song?: SongDto): void {
