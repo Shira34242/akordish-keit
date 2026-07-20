@@ -1253,7 +1253,7 @@
   gap: var(--space-md);
 }
 
-.related-content-ad:not(.media-item--ready) {
+.related-content-ad.media-item--loaded:not(.media-item--ready) {
   display: none;
 }
 

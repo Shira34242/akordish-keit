@@ -109,6 +109,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   campaigns: AdCampaign[] = [];
   currentAd: AdCampaign | null = null;
   loading = false;
+  hasLoaded = false;
   currentIndex = 0;
   hasTrackedView = false;
   maxWidth: string | null = null;
@@ -126,6 +127,9 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   @HostBinding('class.media-item') readonly hostClass = true;
   @HostBinding('class.media-item--ready') get isReady(): boolean {
     return !!this.currentAd;
+  }
+  @HostBinding('class.media-item--loaded') get isLoaded(): boolean {
+    return this.hasLoaded;
   }
 
   ngOnInit() {
@@ -166,6 +170,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     if (!this.spotTechnicalId) return;
 
     this.loading = true;
+    this.hasLoaded = false;
 
     const technicalId = fallbackAttempted && this.fallbackSpotTechnicalId
       ? this.fallbackSpotTechnicalId
@@ -203,19 +208,26 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
             this.currentIndex = 0;
             this.currentAd = this.campaigns[0];
             this.hasTrackedView = false;
+            this.hasLoaded = true;
             this.setupRotation();
             return;
           }
 
           if (!fallbackAttempted && this.fallbackSpotTechnicalId && this.fallbackSpotTechnicalId !== this.spotTechnicalId) {
             this.loadAds(true);
+            return;
           }
+
+          this.hasLoaded = true;
         },
         error: () => {
           this.loading = false;
           if (!fallbackAttempted && this.fallbackSpotTechnicalId && this.fallbackSpotTechnicalId !== this.spotTechnicalId) {
             this.loadAds(true);
+            return;
           }
+
+          this.hasLoaded = true;
         }
       });
   }
