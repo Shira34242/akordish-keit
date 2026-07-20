@@ -1253,6 +1253,21 @@
   gap: var(--space-md);
 }
 
+.related-content-ad:not(.media-item--ready) {
+  display: none;
+}
+
+:host ::ng-deep .related-content-ad .media-wrapper {
+  max-width: none !important;
+  aspect-ratio: 4 / 2.7 !important;
+  border-radius: 24px;
+  background: #F2F2F2;
+}
+
+:host ::ng-deep .related-content-ad .media-asset {
+  object-fit: cover;
+}
+
 .related-sentinel {
   height: 1px;
   margin-top: var(--space-base);
@@ -1422,6 +1437,11 @@
 
   .related-content-grid {
     grid-template-columns: 1fr;
+  }
+
+  :host ::ng-deep .related-content-ad .media-wrapper {
+    aspect-ratio: 4 / 3 !important;
+    border-radius: 16px;
   }
 
   /* --- Feedback circles — ללא zoom כדי שאנימציית הגדלה תעבוד --- */

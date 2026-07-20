@@ -201,6 +201,8 @@
         <p class="feedback-error" *ngIf="feedbackErrorMessage">{{ feedbackErrorMessage }}</p>
       </div>
 
+      <app-media-item spotTechnicalId="article_after_feedback_before_more_content"></app-media-item>
+
       <!-- More content banner -->
       <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
         <div class="related-content-header">
@@ -209,10 +211,17 @@
         </div>
 
         <div class="related-content-grid">
-          <app-news-banner
-            *ngFor="let relatedArticle of visibleRelatedArticles"
-            [article]="relatedArticle">
-          </app-news-banner>
+          <app-media-item class="related-content-ad" spotTechnicalId="article_related_grid_slot_1"></app-media-item>
+
+          <ng-container *ngFor="let relatedArticle of visibleRelatedArticles; let i = index">
+            <app-media-item
+              *ngIf="i === 3"
+              class="related-content-ad"
+              spotTechnicalId="article_related_grid_slot_5">
+            </app-media-item>
+
+            <app-news-banner [article]="relatedArticle"></app-news-banner>
+          </ng-container>
         </div>
 
         <div #relatedSentinel *ngIf="hasMoreRelatedArticles" class="related-sentinel"></div>
