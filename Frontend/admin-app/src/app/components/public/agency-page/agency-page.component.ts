@@ -50,6 +50,8 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   error: string | null = null;
 
   contactOpen = false;
+  contactPanelPlacement: 'up' | 'down' = 'up';
+  contactPanelMaxHeight = 'min(430px, calc(100vh - 160px))';
   imageLightboxUrl: string | null = null;
   imageLightboxCaption: string | null = null;
   videoLightboxUrl: string | null = null;
@@ -58,6 +60,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   private fullHeroHeight = 0;
   private rafPending = false;
   private scrollListener: (() => void) | null = null;
+  private contactTriggerEl: HTMLElement | null = null;
 
   readonly GALLERY_MIN_ITEMS = 5;
 
@@ -254,11 +257,29 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
     this.router.navigate(['/podcasts'], { queryParams: { series: podcast.slug } });
   }
 
-  toggleContact(): void {
+  toggleContact(event?: MouseEvent): void {
     this.contactOpen = !this.contactOpen;
+    if (this.contactOpen) {
+      this.contactTriggerEl = event?.currentTarget as HTMLElement | null;
+      this.updateContactPanelPlacement(this.contactTriggerEl);
+    }
     if (this.contactOpen && this.agency) {
       this.analytics.trackButtonClick('contact', this.agency.id, this.agency.name);
     }
+  }
+
+  private updateContactPanelPlacement(trigger: HTMLElement | null): void {
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const edgeGap = 10;
+    const desiredHeight = 430;
+    const spaceAbove = rect.top - edgeGap;
+    const spaceBelow = viewportHeight - rect.bottom - edgeGap;
+    const openDown = spaceAbove < desiredHeight && spaceBelow > spaceAbove;
+    const available = Math.max(160, (openDown ? spaceBelow : spaceAbove) - edgeGap);
+    this.contactPanelPlacement = openDown ? 'down' : 'up';
+    this.contactPanelMaxHeight = `${Math.min(desiredHeight, Math.floor(available))}px`;
   }
 
   trackContact(type: string): void {
@@ -437,6 +458,7 @@ export class AgencyPageComponent implements OnInit, OnDestroy {
   onResize(): void {
     this.initHeroHeight();
     this.g3dHandleResize();
+    if (this.contactOpen) this.updateContactPanelPlacement(this.contactTriggerEl);
   }
 
   private onScroll(): void {

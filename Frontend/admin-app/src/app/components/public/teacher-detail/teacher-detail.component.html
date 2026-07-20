@@ -63,13 +63,15 @@
 
       <div class="hero-actions">
         <div class="contact-action-wrap">
-          <button class="btn-cta-primary" (click)="toggleContact()"
+          <button class="btn-cta-primary" (click)="toggleContact($event)"
             [style.background]="(agencyBadge?.brandPrimaryColor) || '#ddff53'"
             [style.color]="(agencyBadge?.brandTextColor) || '#000000'">
             {{ 'teacher.contact' | translate }}
           </button>
 
-          <div class="contact-panel" [class.open]="contactOpen">
+          <div class="contact-panel" [class.open]="contactOpen"
+            [class.open-down]="contactPanelPlacement === 'down'"
+            [style.--contact-panel-max-height]="contactPanelMaxHeight">
             <img *ngIf="showAgencyContact && agencyBadge?.logoUrl" [src]="agencyBadge!.logoUrl | cfImage:'profile'" alt="" class="contact-panel-logo" loading="lazy" decoding="async" />
             <p *ngIf="showAgencyContact" class="contact-panel-invite">צור קשר עם {{ agencyBadge?.agencyName }}</p>
             <div *ngIf="showAgencyContact" class="contact-group-label">דרך הסוכנות</div>

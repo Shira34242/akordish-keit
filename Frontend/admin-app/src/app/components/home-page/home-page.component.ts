@@ -229,6 +229,21 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.quickAddAssistantService.requestOpen('index');
   }
 
+  scrollCarousel(target: HTMLElement | Array<HTMLElement | undefined>, direction: 'left' | 'right'): void {
+    const targets = Array.isArray(target) ? target : [target];
+    const sign = direction === 'left' ? -1 : 1;
+
+    targets.filter(Boolean).forEach(element => {
+      const distance = Math.max(element!.clientWidth * 0.72, 180);
+      element!.scrollBy({ left: sign * distance, behavior: 'smooth' });
+    });
+  }
+
+  scrollCarouselBySelector(selector: string, direction: 'left' | 'right'): void {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+    this.scrollCarousel(elements, direction);
+  }
+
   ngOnInit() {
     this.initSearchPlaceholderRotation();
     this.loadContent();

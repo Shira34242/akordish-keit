@@ -129,6 +129,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.known_chords_info': 'המידע מחושב לפי האקורדים שסימנת שאתה יודע לנגן. לפי זה מוצג כמה אקורדים חסרים לך כדי לנגן את השיר.',
 
     // Chords page
+    'chords.add_chords_title': 'הוספת אקורדים',
+    'chords.add_chords_subtitle': 'שליחת שיר דרך ההוספה החכמה',
     'chords.title': 'אקורדים',
     'chords.subtitle': 'מאגר האקורדים הגדול והראשון מסוגו במוזיקה היהודית',
     'chords.search_placeholder': 'חפש שיר, אמן או מילים...',
@@ -154,8 +156,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'chords.section_recent': 'נוספו לאחרונה',
     'chords.section_popular': 'פופולאריים עכשיו',
     'chords.section_most_viewed': 'הנצפים ביותר',
-    'chords.section_dont_miss': 'לא תרצו לפספס',
-    'chords.section_recently_viewed': 'צפית לאחרונה',
     'chords.section_all': 'כל האקורדים',
 
     // Profile page
@@ -1502,6 +1502,8 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'song.known_chords_info': 'This info is calculated based on the chords you marked as known. It shows how many chords you are missing to play the song.',
 
     // Chords page
+    'chords.add_chords_title': 'Add Chords',
+    'chords.add_chords_subtitle': 'Submit a song through smart add',
     'chords.title': 'Chords',
     'chords.subtitle': 'The largest and first chord library in Jewish music',
     'chords.search_placeholder': 'Search for a song, artist or lyrics...',
@@ -1527,8 +1529,6 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'chords.section_recent': 'Recently Added',
     'chords.section_popular': 'Trending Now',
     'chords.section_most_viewed': 'Most Viewed',
-    'chords.section_dont_miss': "Don't Miss",
-    'chords.section_recently_viewed': 'Recently Viewed',
     'chords.section_all': 'All Chords',
 
     // Profile page

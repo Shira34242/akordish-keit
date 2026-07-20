@@ -494,6 +494,77 @@
   margin: 0;
 }
 
+.section-title-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: #000000;
+  text-decoration: none;
+  width: fit-content;
+  max-width: 100%;
+  transition: opacity 0.2s;
+}
+
+.section-title-link::after {
+  content: '\203A';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-lg);
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.5);
+  transform: translateY(1px);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.section-title-link:hover {
+  opacity: 0.82;
+}
+
+.section-title-link:hover::after {
+  color: #000000;
+  transform: translate(-2px, 1px);
+}
+
+.section-scroll-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+.section-scroll-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(242, 242, 242, 0.86);
+  color: rgba(0, 0, 0, 0.58);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.section-scroll-btn .material-icons {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.section-scroll-btn:hover {
+  background: #ddff53;
+  color: #000000;
+  transform: translateY(-1px);
+}
+
+.section-scroll-btn:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
 /* ============================================
    SECTION LINK — קישור "לכל ה..." מינימליסטי בצד שמאל
 ============================================ */

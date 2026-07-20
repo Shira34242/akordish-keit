@@ -409,13 +409,27 @@
         <app-media-item spotTechnicalId="professionals-pre-catalog"></app-media-item>
       </div>
 
-      <!-- Catalog — כל בעלי המוזיקה (מורים + בעלי מקצוע) -->
+      <!-- Catalog — עוד נותני שירות (מורים + בעלי מקצוע) -->
       <div class="catalog-section" *ngIf="!isFiltered && (additionalProfessionals.length > 0 || additionalTeachers.length > 0)">
         <div class="section-header">
-          <span class="section-tag section-tag--secondary">כל בעלי המוזיקה</span>
-          <span class="total-badge">{{ additionalProfessionals.length + additionalTeachers.length }}</span>
+          <span class="section-tag section-tag--secondary">עוד נותני שירות</span>
         </div>
         <div class="professionals-grid">
+          <button type="button"
+                  class="prof-card join-index-card"
+                  aria-label="הצטרפות לאינדקס עולם המוזיקה"
+                  (click)="openBecomeProfessionalForm()">
+            <div class="prof-card-img join-index-card-visual">
+              <span class="material-icons" aria-hidden="true">add</span>
+            </div>
+            <div class="prof-card-body">
+              <p class="prof-card-role">רוצים להופיע כאן?</p>
+              <h3 class="prof-card-name">צרו דף שירות משלכם</h3>
+              <div class="prof-card-meta join-index-card-text">
+                הצטרפו דרך ההוספה החכמה לאינדקס עולם המוזיקה
+              </div>
+            </div>
+          </button>
           <a class="prof-card prof-card--provider" *ngFor="let p of additionalProfessionals; trackBy: trackByProfessionalId" [routerLink]="['/professional', p.id]">
             <div class="prof-card-img">
               <app-profile-avatar [name]="p.displayName" [imageUrl]="p.profileImageUrl | cfImage:'profile'" [srcset]="p.profileImageUrl | cfSrcset:[180,240,360,480]:82" sizes="(max-width: 480px) 9.5rem, 11.5rem" [identity]="'provider-' + p.id" shape="rounded" size="fill"></app-profile-avatar>

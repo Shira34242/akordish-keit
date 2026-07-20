@@ -964,7 +964,12 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.isTyping = true;
     this.typingMessageId = null;
 
-    if (this.entryPoint === 'contact') {
+    if (this.entryPoint === 'song') {
+      await this.typeMessage(this.langService.translate('fab.song_selected'), 'question');
+      this.modeOriginStep = 'root';
+      this.currentMode = 'song';
+      this.scrollToActiveFlowStart(true);
+    } else if (this.entryPoint === 'contact') {
       this.currentMode = 'contact';
       this.modeOriginStep = 'root';
       this.autoFillContactFromCurrentUser();
@@ -1202,16 +1207,11 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         };
       }
       case 'index': {
-        const visibleQuickCategories = this.professionalCategories
-          .filter(category => category['showInQuickCategories'])
-          .filter(category => category['isActive'] !== false)
-          .sort((a, b) => (a['quickCategoryOrder'] ?? 0) - (b['quickCategoryOrder'] ?? 0));
-
-        const professionalOptions: AssistantOption[] = visibleQuickCategories
-          .filter(category => this.isServiceProviderQuickCategory(category))
+        const professionalOptions: AssistantOption[] = this.professionalCategories
+          .filter(category => this.isServiceProviderCategory(category))
           .map(category => ({
             id: `index-service-provider-category-${category.id}`,
-            label: category['quickCategoryLabel'] || category.name,
+            label: category.name,
             action: `index-service-provider-category:${category.id}`
           }));
 
@@ -1277,14 +1277,15 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     }
   }
 
-  private isServiceProviderQuickCategory(category: SystemItem): boolean {
+  private isServiceProviderCategory(category: SystemItem): boolean {
     const label = `${category.name || ''} ${category['quickCategoryLabel'] || ''}`.toLowerCase();
     const looksLikeTeacherCategory =
       label.includes('מורה') ||
       label.includes('מורים') ||
       label.includes('teacher');
 
-    return Number(category['quickCategoryType'] ?? 0) !== 1
+    return category['isActive'] !== false
+      && Number(category['quickCategoryType'] ?? 0) !== 1
       && !category['quickCategoryInstrumentId']
       && !looksLikeTeacherCategory;
   }

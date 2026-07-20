@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { SongService } from '../../services/song.service';
 import { AuthService } from '../../services/auth.service';
 import { KnownChordInstrument, KnownChordSort, UserKnownChordService } from '../../services/user-known-chord.service';
+import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
@@ -46,8 +47,6 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     recentSongs: any[] = [];
     popularSongs: any[] = [];
     mostViewedSongs: any[] = [];
-    dontMissSongs: any[] = [];
-    recentlyViewedSongs: any[] = [];
 
     // Filters
     search: string = '';
@@ -87,7 +86,6 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     private searchSubject = new Subject<string>();
     private searchSubscription?: Subscription;
-    private recentlyViewedKey = 'chords-recently-viewed';
 
     // switchMap stream for main song loading — cancels previous in-flight request
     private songLoadParams = new Subject<{
@@ -113,6 +111,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         private songService: SongService,
         private authService: AuthService,
         private knownChordService: UserKnownChordService,
+        private quickAddAssistantService: QuickAddAssistantService,
         private systemTablesService: SystemTablesService,
         private articleService: ArticleService,
         private router: Router
@@ -180,11 +179,14 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     }
 
+    openSmartAddChords(): void {
+        this.quickAddAssistantService.requestOpen('song');
+    }
+
     ngOnInit(): void {
         this.loadSongs();
         this.loadFilterData();
         this.loadQuickTags();
-        this.loadRecentlyViewed();
         // loadCategorySections() is deferred — runs after loadSongs() returns for the first time
         const loadNews = () => this.loadNewsArticles();
         if ('requestIdleCallback' in window) {
@@ -268,25 +270,6 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.mostViewedSongs = all.slice(8);
             }, error: () => {} });
 
-        this.songService.getSongs(undefined, 1, 8, undefined, undefined, undefined, 'name')
-            .subscribe({ next: (res) => this.dontMissSongs = res.songs || [], error: () => {} });
-    }
-
-    private loadRecentlyViewed(): void {
-        try {
-            this.recentlyViewedSongs = JSON.parse(localStorage.getItem(this.recentlyViewedKey) || '[]');
-        } catch {
-            this.recentlyViewedSongs = [];
-        }
-    }
-
-    saveToRecent(song: any): void {
-        try {
-            let recent: any[] = JSON.parse(localStorage.getItem(this.recentlyViewedKey) || '[]');
-            recent = recent.filter((s: any) => s.id !== song.id);
-            recent.unshift(song);
-            localStorage.setItem(this.recentlyViewedKey, JSON.stringify(recent.slice(0, 12)));
-        } catch {}
     }
 
     // ─────────────────────────────────────────────
@@ -315,6 +298,21 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     scrollStrip(el: HTMLElement, forward: boolean): void {
         el.scrollBy({ left: forward ? -300 : 300, behavior: 'smooth' });
+    }
+
+    scrollCarousel(target: HTMLElement | Array<HTMLElement | undefined>, direction: 'left' | 'right'): void {
+        const targets = Array.isArray(target) ? target : [target];
+        const sign = direction === 'left' ? -1 : 1;
+
+        targets.filter(Boolean).forEach(element => {
+            const distance = Math.max(element!.clientWidth * 0.72, 180);
+            element!.scrollBy({ left: sign * distance, behavior: 'smooth' });
+        });
+    }
+
+    scrollCarouselBySelector(selector: string, direction: 'left' | 'right'): void {
+        const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+        this.scrollCarousel(elements, direction);
     }
 
     // ─────────────────────────────────────────────
@@ -646,8 +644,11 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     }
 
-    get newsRow1(): Article[] { return this.newsArticles.slice(0, 10); }
-    get newsRow2(): Article[] { return this.newsArticles.slice(10); }
+    get newsArticlesFirstRow(): Article[] { return this.newsArticles.slice(0, Math.ceil(this.newsArticles.length / 2)); }
+    get newsArticlesSecondRow(): Article[] { return this.newsArticles.slice(Math.ceil(this.newsArticles.length / 2)); }
+    get useScrollingNewsBanner(): boolean { return this.newsArticles.length >= 2; }
+    get newsRow1(): Article[] { return this.newsArticlesFirstRow; }
+    get newsRow2(): Article[] { return this.newsArticlesSecondRow; }
 
     private loadNewsArticles(): void {
         this.newsSubscription = this.articleService.getArticles(

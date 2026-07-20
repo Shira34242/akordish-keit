@@ -51,6 +51,7 @@ public class DisplayRankingService : IDisplayRankingService
         var now = DateTime.UtcNow;
         return sortBy?.Trim().ToLowerInvariant() switch
         {
+            "date" => query.OrderByDescending(s => s.CreatedAt),
             "views" or "popularity" => query.OrderByDescending(s => s.ViewCount),
             "name" => query.OrderBy(s => s.Title),
             "artist" => query.OrderBy(s => s.SongArtists

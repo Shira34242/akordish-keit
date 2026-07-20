@@ -611,6 +611,35 @@
   opacity: 0.85;
 }
 
+.join-index-card {
+  background: #ddff53;
+  border: none;
+  font-family: 'Open Sans', sans-serif;
+  text-align: right;
+}
+
+.join-index-card-visual {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.join-index-card-visual .material-icons {
+  font-size: 3rem;
+  color: #000000;
+}
+
+.join-index-card-visual::after {
+  content: none;
+}
+
+.join-index-card-text {
+  align-items: flex-start;
+  color: #000000;
+  line-height: var(--lh-small);
+}
+
 .prof-card-img {
   position: relative;
   width: 100%;

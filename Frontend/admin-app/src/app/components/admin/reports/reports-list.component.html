@@ -98,6 +98,7 @@
           <div class="row-meta">
             <span>{{ reportTypeLabels[report.reportType] || report.reportType }}</span>
             <span>{{ contentTypeLabels[report.contentType] || report.contentType }}</span>
+            <span class="reporter-meta">מדווח: {{ report.reporterUsername || 'אורח' }}</span>
             <span>{{ getReportAgeLabel(report) }}</span>
           </div>
         </article>
@@ -120,7 +121,7 @@
         <div class="detail-tags">
           <span>{{ reportTypeLabels[report.reportType] || report.reportType }}</span>
           <span>{{ contentTypeLabels[report.contentType] || report.contentType }}</span>
-          <span>{{ report.reporterUsername || 'אורח' }}</span>
+          <span class="reporter-tag">מדווח: {{ report.reporterUsername || 'אורח' }}</span>
         </div>
 
         <p class="description">{{ report.description }}</p>

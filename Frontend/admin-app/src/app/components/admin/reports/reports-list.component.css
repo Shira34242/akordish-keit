@@ -227,6 +227,12 @@
   color: rgba(0,0,0,0.52);
 }
 
+.reporter-meta,
+.reporter-tag {
+  font-weight: 800;
+  color: #000000;
+}
+
 .details-panel {
   position: sticky;
   top: var(--space-base);

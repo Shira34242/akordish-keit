@@ -28,12 +28,14 @@
         </p>
         <div class="hero-contact-actions" *ngIf="hasContact">
           <div class="contact-action-wrap">
-            <button class="btn-cta-primary" type="button" (click)="toggleContact()"
+            <button class="btn-cta-primary" type="button" (click)="toggleContact($event)"
               [style.background]="agency?.brandPrimaryColor || '#ddff53'"
               [style.color]="agency?.brandTextColor || '#000000'">
               יצירת קשר
             </button>
-            <div class="contact-panel" *ngIf="contactOpen">
+            <div class="contact-panel" *ngIf="contactOpen"
+              [class.open-down]="contactPanelPlacement === 'down'"
+              [style.--contact-panel-max-height]="contactPanelMaxHeight">
               <div class="contact-panel-header">יצירת קשר עם {{ agency?.name }}</div>
               <a *ngFor="let item of getContactItems()"
                 class="contact-item"
@@ -85,12 +87,14 @@
     <section class="contact-box-section" *ngIf="false">
       <div class="contact-actions">
         <div class="contact-action-wrap">
-          <button class="btn-cta-primary" type="button" (click)="toggleContact()"
+          <button class="btn-cta-primary" type="button" (click)="toggleContact($event)"
             [style.background]="agency?.brandPrimaryColor || '#ddff53'"
             [style.color]="agency?.brandTextColor || '#000000'">
             יצירת קשר
           </button>
-          <div class="contact-panel" *ngIf="contactOpen">
+          <div class="contact-panel" *ngIf="contactOpen"
+            [class.open-down]="contactPanelPlacement === 'down'"
+            [style.--contact-panel-max-height]="contactPanelMaxHeight">
             <div class="contact-panel-header">יצירת קשר עם {{ agency?.name }}</div>
             <a *ngFor="let item of getContactItems()"
               class="contact-item"

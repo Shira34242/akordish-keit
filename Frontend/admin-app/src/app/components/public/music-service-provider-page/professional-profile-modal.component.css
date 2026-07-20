@@ -192,21 +192,33 @@
   position: absolute;
   left: 0;
   bottom: calc(100% + var(--space-sm));
-  width: min(300px, 72vw);
+  width: min(320px, calc(100vw - var(--space-xl)));
   max-height: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
   background: #ffffff;
   border-radius: 18px;
+  padding: 0 var(--space-md);
   z-index: 6;
-  transition: max-height 0.24s ease, opacity 0.18s ease;
+  direction: rtl;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: max-height 0.24s ease, opacity 0.18s ease, padding 0.24s ease;
 }
 
 .contact-panel.open {
-  max-height: 280px;
+  max-height: var(--contact-panel-max-height, min(430px, calc(100vh - 160px)));
   opacity: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
   pointer-events: auto;
+}
+
+.contact-panel.open-down {
+  top: calc(100% + var(--space-sm));
+  bottom: auto;
 }
 
 .contact-item {
@@ -214,10 +226,17 @@
   align-items: center;
   gap: var(--space-sm);
   min-height: 40px;
-  padding: 0 var(--space-base);
+  padding: 0 var(--space-md);
+  border-radius: 12px;
   color: #000000;
   text-decoration: none;
   font-size: var(--font-sm);
+  line-height: var(--lh-small);
+}
+
+.contact-item span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .contact-item-static {
@@ -1118,10 +1137,11 @@
 }
 
 .contact-group-label {
-  padding: var(--space-xs) var(--space-base);
+  padding: var(--space-xs) var(--space-xs) 0;
   font-size: var(--font-xs);
   font-weight: 800;
   color: rgba(0,0,0,0.55);
+  line-height: var(--lh-small);
 }
 
 .contact-panel-logo {
@@ -1130,7 +1150,7 @@
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0;
   border: 2px solid #F2F2F2;
 }
 
@@ -1139,10 +1159,11 @@
   font-weight: 800;
   font-size: var(--font-sm);
   color: #000000;
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0;
   padding-bottom: var(--space-sm);
   border-bottom: 1px solid #F2F2F2;
   text-align: right;
+  line-height: var(--lh-small);
 }
 
 .songs-section,

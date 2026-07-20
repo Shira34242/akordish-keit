@@ -64,6 +64,8 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // Contact panel
   contactOpen = false;
+  contactPanelPlacement: 'up' | 'down' = 'up';
+  contactPanelMaxHeight = 'min(430px, calc(100vh - 160px))';
   canScrollTestimonialsPrev = false;
   canScrollTestimonialsNext = false;
   activeTestimonialIndex = 0;
@@ -71,6 +73,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   // ========== Hero ==========
   private fullHeroHeight = 0;
   private rafPending = false;
+  private contactTriggerEl: HTMLElement | null = null;
 
   // ========== 3D Gallery ==========
   private g3dItems: { el: HTMLElement }[] = [];
@@ -213,6 +216,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   onResize(): void {
     this.initHeroHeight();
     this.updateTestimonialsNav();
+    if (this.contactOpen) this.updateContactPanelPlacement(this.contactTriggerEl);
   }
 
   scrollTestimonials(direction: 'prev' | 'next'): void {
@@ -539,14 +543,32 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     ];
   }
 
-  toggleContact(): void {
+  toggleContact(event?: MouseEvent): void {
     this.contactOpen = !this.contactOpen;
+    if (this.contactOpen) {
+      this.contactTriggerEl = event?.currentTarget as HTMLElement | null;
+      this.updateContactPanelPlacement(this.contactTriggerEl);
+    }
     if (this.contactOpen && this.teacher) {
       this.analytics.trackButtonClick('contact', this.teacher.id, this.teacher.displayName);
       if (this.agencyBadge) {
         this.analytics.trackInteraction('agency_contact_panel', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.teacher.displayName}`);
       }
     }
+  }
+
+  private updateContactPanelPlacement(trigger: HTMLElement | null): void {
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const edgeGap = 10;
+    const desiredHeight = 430;
+    const spaceAbove = rect.top - edgeGap;
+    const spaceBelow = viewportHeight - rect.bottom - edgeGap;
+    const openDown = spaceAbove < desiredHeight && spaceBelow > spaceAbove;
+    const available = Math.max(160, (openDown ? spaceBelow : spaceAbove) - edgeGap);
+    this.contactPanelPlacement = openDown ? 'down' : 'up';
+    this.contactPanelMaxHeight = `${Math.min(desiredHeight, Math.floor(available))}px`;
   }
 
   get showDirectContact(): boolean {

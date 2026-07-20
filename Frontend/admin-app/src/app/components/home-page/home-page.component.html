@@ -201,8 +201,7 @@
 
     <section class="home-section music-news-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.news_title' | translate }}</h2>
-        <a routerLink="/music-news" class="section-link">{{ 'home.news_link' | translate }}</a>
+        <a routerLink="/music-news" class="section-title section-title-link">{{ 'home.news_title' | translate }}</a>
       </div>
 
       <div *ngIf="!useScrollingNewsBanner" class="news-grid">
@@ -285,26 +284,49 @@
 
     <section class="home-section" *ngIf="chordsSectionStarted && recentSongs.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.recent_chords' | translate }}</h2>
+        <a routerLink="/chords" class="section-title section-title-link">{{ 'home.recent_chords' | translate }}</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.recent-songs-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.recent-songs-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
-      <div class="songs-grid">
+      <div class="songs-grid recent-songs-row">
         <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
     <section class="home-section" *ngIf="chordsSectionStarted && popularSongs.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.popular_chords' | translate }}</h2>
+        <a routerLink="/chords" class="section-title section-title-link">{{ 'home.popular_chords' | translate }}</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.popular-songs-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.popular-songs-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
-      <div class="songs-grid">
+      <div class="songs-grid popular-songs-row">
         <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
     <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.popular_artists' | translate }}</h2>
-        <a routerLink="/artists" class="section-link">{{ 'home.artists_link' | translate }}</a>
+        <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.artists-loop-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.artists-loop-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
       <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
         <div class="artists-loop-track">
@@ -347,7 +369,15 @@
 
     <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && (featuredTeachers.length > 0 || featuredProviders.length > 0)">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.featured_title' | translate }}</h2>
+        <a routerLink="/professionals" class="section-title section-title-link">{{ 'home.featured_title' | translate }}</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.index-showcase-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.index-showcase-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
       <div class="index-showcase-stack">
         <div class="index-showcase-row">
@@ -373,8 +403,15 @@
 
     <section class="home-section" *ngIf="eventsSectionStarted && upcomingEvents.length > 0">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.upcoming_events' | translate }}</h2>
-        <a routerLink="/events" class="section-link">{{ 'home.events_link' | translate }}</a>
+        <a routerLink="/events" class="section-title section-title-link">{{ 'home.upcoming_events' | translate }}</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.events-loop-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.events-loop-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
       <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="right" [autoScrollCopies]="2">
         <div class="events-loop-track">
@@ -411,7 +448,7 @@
 
     <section class="home-section podcasts-home-section" *ngIf="podcastsSectionStarted && homePodcasts.length > 0">
       <div class="section-header">
-        <h2 class="section-title">פודקאסטים מובילים</h2>
+        <a routerLink="/podcasts" class="section-title section-title-link">פודקאסטים מובילים</a>
       </div>
       <div class="podcasts-home-panel">
         <div class="podcasts-home-track">
@@ -445,7 +482,15 @@
 
     <section class="home-section popular-episodes-section" *ngIf="podcastsSectionStarted && popularPodcastEpisodes.length > 0">
       <div class="section-header">
-        <h2 class="section-title">פרקים מובילים</h2>
+        <a routerLink="/podcasts" class="section-title section-title-link">פרקים מובילים</a>
+        <div class="section-scroll-controls">
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
       </div>
 
       <div class="podcast-episodes-row">
@@ -467,8 +512,7 @@
 
     <section class="home-section content-articles-section" *ngIf="blogSectionStarted && blogArticlesLoaded">
       <div class="section-header">
-        <h2 class="section-title">{{ 'home.content_title' | translate }}</h2>
-        <a routerLink="/articles" class="section-link">{{ 'home.content_link' | translate }}</a>
+        <a routerLink="/articles" class="section-title section-title-link">{{ 'home.content_title' | translate }}</a>
       </div>
 
       <div *ngIf="!useScrollingBlogBanner" class="news-grid content-articles-grid">
@@ -526,8 +570,7 @@
       #viralSection
       *ngIf="viralSectionStarted && viralArticles.length > 0">
       <div class="section-header">
-        <h2 class="section-title">ויראלי</h2>
-        <a routerLink="/music-news" class="section-link">לכל חדשות המוזיקה</a>
+        <a routerLink="/music-news" class="section-title section-title-link">ויראלי</a>
       </div>
 
       <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="stream-grid">

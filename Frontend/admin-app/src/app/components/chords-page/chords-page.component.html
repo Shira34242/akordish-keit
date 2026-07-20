@@ -226,7 +226,7 @@
                     <p>{{ 'chords.loading' | translate }}</p>
                 </div>
                 <div class="songs-grid" *ngIf="!isLoading && songs.length > 0">
-                    <div class="grid-card" *ngFor="let song of songs; trackBy: trackBySong" (click)="saveToRecent(song)">
+                    <div class="grid-card" *ngFor="let song of songs; trackBy: trackBySong">
                         <app-song-card [song]="song"></app-song-card>
                     </div>
                 </div>
@@ -254,7 +254,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #recentStrip>
-                        <div class="strip-card" *ngFor="let song of recentSongs; trackBy: trackBySong" (click)="saveToRecent(song)">
+                        <div class="strip-card" *ngFor="let song of recentSongs; trackBy: trackBySong">
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
@@ -273,7 +273,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #popularStrip>
-                        <div class="strip-card" *ngFor="let song of popularSongs; trackBy: trackBySong" (click)="saveToRecent(song)">
+                        <div class="strip-card" *ngFor="let song of popularSongs; trackBy: trackBySong">
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
@@ -292,49 +292,11 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div class="songs-strip" #mostViewedStrip>
-                        <div class="strip-card" *ngFor="let song of mostViewedSongs; trackBy: trackBySong" (click)="saveToRecent(song)">
+                        <div class="strip-card" *ngFor="let song of mostViewedSongs; trackBy: trackBySong">
                             <app-song-card [song]="song"></app-song-card>
                         </div>
                     </div>
                     <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(mostViewedStrip, true)" [attr.aria-label]="'chords.next' | translate">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="section" *ngIf="dontMissSongs.length > 0">
-                <div class="section-header">
-                    <span class="section-tag section-tag--accent">{{ 'chords.section_dont_miss' | translate }}</span>
-                </div>
-                <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(dontMissStrip, false)" [attr.aria-label]="'chords.prev' | translate">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                    <div class="songs-strip" #dontMissStrip>
-                        <div class="strip-card" *ngFor="let song of dontMissSongs; trackBy: trackBySong" (click)="saveToRecent(song)">
-                            <app-song-card [song]="song"></app-song-card>
-                        </div>
-                    </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(dontMissStrip, true)" [attr.aria-label]="'chords.next' | translate">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="section" *ngIf="recentlyViewedSongs.length > 0">
-                <div class="section-header">
-                    <span class="section-tag section-tag--secondary">{{ 'chords.section_recently_viewed' | translate }}</span>
-                </div>
-                <div class="strip-wrapper">
-                    <button class="strip-arrow strip-arrow--prev" (click)="scrollStrip(recentlyViewedStrip, false)" [attr.aria-label]="'chords.prev' | translate">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                    <div class="songs-strip" #recentlyViewedStrip>
-                        <div class="strip-card" *ngFor="let song of recentlyViewedSongs; trackBy: trackBySong" (click)="saveToRecent(song)">
-                            <app-song-card [song]="song"></app-song-card>
-                        </div>
-                    </div>
-                    <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(recentlyViewedStrip, true)" [attr.aria-label]="'chords.next' | translate">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
@@ -347,14 +309,25 @@
             <div class="catalog-section">
                 <div class="section-header">
                     <span class="section-tag section-tag--secondary">{{ 'chords.section_all' | translate }}</span>
-                    <span class="total-badge" *ngIf="totalCount > 0">{{ totalCount }}</span>
                 </div>
                 <div class="loading-spinner" *ngIf="isLoading && songs.length === 0">
                     <div class="spinner"></div>
                     <p>{{ 'chords.loading' | translate }}</p>
                 </div>
                 <div class="songs-grid" *ngIf="songs.length > 0">
-                    <div class="grid-card" *ngFor="let song of songs; trackBy: trackBySong" (click)="saveToRecent(song)">
+                    <button type="button"
+                            class="grid-card add-chords-card"
+                            (click)="openSmartAddChords()">
+                        <span class="add-chords-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14"/>
+                                <path d="M5 12h14"/>
+                            </svg>
+                        </span>
+                        <span class="add-chords-title">{{ 'chords.add_chords_title' | translate }}</span>
+                        <span class="add-chords-subtitle">{{ 'chords.add_chords_subtitle' | translate }}</span>
+                    </button>
+                    <div class="grid-card" *ngFor="let song of songs; trackBy: trackBySong">
                         <app-song-card [song]="song"></app-song-card>
                     </div>
                 </div>
@@ -372,6 +345,68 @@
     <!-- Music News — full-width, outside chords-content, only in unfiltered view -->
     <div class="news-section" *ngIf="!isFiltered && newsArticles.length > 0">
         <div class="news-section-inner">
+            <div class="chords-home-news-copy">
+                <div class="section-header">
+                    <a routerLink="/music-news" class="section-title section-title-link">{{ 'home.news_title' | translate }}</a>
+                    <div class="section-scroll-controls" *ngIf="useScrollingNewsBanner">
+                        <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.music-news-row', 'right')" aria-label="גלילה ימינה">
+                            <span class="material-icons" aria-hidden="true">chevron_right</span>
+                        </button>
+                        <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.music-news-row', 'left')" aria-label="גלילה שמאלה">
+                            <span class="material-icons" aria-hidden="true">chevron_left</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div *ngIf="!useScrollingNewsBanner" class="news-grid">
+                    <app-news-banner
+                        *ngFor="let article of newsArticles; trackBy: trackByNewsArticle"
+                        class="news-banner-card"
+                        [article]="article"
+                        [imagePreset]="900"
+                        [imageWidths]="[360, 600, 900]"
+                        imageSizes="calc(100vw - 16px)"
+                        [showDescription]="false">
+                    </app-news-banner>
+                </div>
+
+                <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
+                    <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
+                        <div class="news-banner-track">
+                            <ng-container *ngFor="let copy of [0, 1]">
+                                <app-news-banner
+                                    *ngFor="let article of newsArticlesFirstRow; trackBy: trackByNewsArticle"
+                                    class="news-banner-card"
+                                    [article]="article"
+                                    [imagePreset]="600"
+                                    [imageWidths]="[320, 480, 600, 720]"
+                                    imageSizes="(max-width: 480px) 14.3rem, (max-width: 768px) 16.9rem, 24.7rem"
+                                    imageLoading="lazy"
+                                    imageFetchPriority="auto"
+                                    [showDescription]="false">
+                                </app-news-banner>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
+                        <div class="news-banner-track">
+                            <ng-container *ngFor="let copy of [0, 1]">
+                                <app-news-banner
+                                    *ngFor="let article of newsArticlesSecondRow; trackBy: trackByNewsArticle"
+                                    class="news-banner-card"
+                                    [article]="article"
+                                    [imagePreset]="360"
+                                    [imageWidths]="[240, 320, 360, 480]"
+                                    imageSizes="(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem"
+                                    imageLoading="lazy"
+                                    imageFetchPriority="auto"
+                                    [showDescription]="false">
+                                </app-news-banner>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="section-header">
                 <span class="section-tag section-tag--accent">חדשות מוזיקה</span>
                 <a routerLink="/music-news" class="news-section-link">כל החדשות</a>
