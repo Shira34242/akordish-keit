@@ -27,6 +27,9 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private songUpdatedSub?: Subscription;
   private textFilterSub?: Subscription;
   private songsLoadSub?: Subscription;
+  private songsLoadMoreSub?: Subscription;
+  private songsSavedStateLoadSub?: Subscription;
+  private songsReloadSub?: Subscription;
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly songService = inject(SongService);
   private readonly router = inject(Router);
@@ -37,7 +40,10 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private scrollObserver?: IntersectionObserver;
   private _pendingScrollY = 0;
   private _pendingPage = 0;
-  private readonly textFilterChanges$ = new Subject<void>();
+  private activeListRequestId = 0;
+  private textFilterPending = false;
+  private readonly textFilterChanges$ = new Subject<string>();
+  private static readonly MAX_RESTORED_PAGES = 3;
 
   @ViewChild('scrollSentinel') scrollSentinelRef?: ElementRef<HTMLElement>;
 
@@ -93,7 +99,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.textFilterSub = this.textFilterChanges$
-      .pipe(debounceTime(350))
+      .pipe(debounceTime(500))
       .subscribe(() => this.applyFilterChange());
 
     this.loadArtists();
@@ -117,9 +123,47 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isDestroyed = true;
     this.songUpdatedSub?.unsubscribe();
     this.textFilterSub?.unsubscribe();
-    this.songsLoadSub?.unsubscribe();
+    this.cancelSongListRequests();
     this.textFilterChanges$.complete();
     this.destroyScrollObserver();
+  }
+
+  private cancelSongListRequests(): void {
+    this.songsLoadSub?.unsubscribe();
+    this.songsLoadMoreSub?.unsubscribe();
+    this.songsSavedStateLoadSub?.unsubscribe();
+    this.songsReloadSub?.unsubscribe();
+  }
+
+  private beginFreshListRequest(): number {
+    this.cancelSongListRequests();
+    this.activeListRequestId++;
+    return this.activeListRequestId;
+  }
+
+  private invalidatePendingListResults(): void {
+    this.cancelSongListRequests();
+    this.activeListRequestId++;
+    this.loading = false;
+    this.loadingMore = false;
+  }
+
+  private isCurrentListRequest(requestId: number): boolean {
+    return requestId === this.activeListRequestId && !this.isDestroyed;
+  }
+
+  private getFilterKey(): string {
+    return JSON.stringify({
+      searchTerm: this.searchTerm.trim(),
+      selectedArtistId: this.selectedArtistId ?? null,
+      selectedGenreId: this.selectedGenreId ?? null,
+      selectedKeyId: this.selectedKeyId ?? null,
+      uploaderSearch: this.uploaderSearch.trim(),
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+      approvalFilter: this.approvalFilter,
+      sortBy: this.sortBy
+    });
   }
 
   private destroyScrollObserver(): void {
@@ -158,7 +202,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   loadSongs(): void {
-    this.songsLoadSub?.unsubscribe();
+    const requestId = this.beginFreshListRequest();
+    this.textFilterPending = false;
     this.loading = true;
     this.loadError = '';
     this.currentPage = 1;
@@ -184,6 +229,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
     ).subscribe({
       next: (result: any) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         this.songs = result.songs || result.items || result.data || [];
         this.totalItems = result.totalCount || result.total || 0;
         this.totalCount = this.totalItems;
@@ -193,6 +239,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         console.error('Error loading songs:', error);
         this.songs = [];
         this.totalItems = 0;
@@ -205,12 +252,15 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadMoreSongs(): void {
-    if (this.loading || this.loadingMore || this.allLoaded) return;
+    if (this.textFilterPending || this.loading || this.loadingMore || this.allLoaded) return;
 
     this.loadingMore = true;
     this.currentPage++;
+    const requestId = this.activeListRequestId;
+    const filterKey = this.getFilterKey();
 
-    this.songService.getSongsForAdmin(
+    this.songsLoadMoreSub?.unsubscribe();
+    this.songsLoadMoreSub = this.songService.getSongsForAdmin(
       this.searchTerm || undefined,
       this.currentPage,
       this.pageSize,
@@ -225,6 +275,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
     ).subscribe({
       next: (result: any) => {
+        if (!this.isCurrentListRequest(requestId) || filterKey !== this.getFilterKey()) return;
         const items = result.songs || result.items || result.data || [];
         this.songs = [...this.songs, ...items];
         this.totalItems = result.totalCount || result.total || 0;
@@ -235,6 +286,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => this.reattachScrollObserver(), 0);
       },
       error: (error) => {
+        if (!this.isCurrentListRequest(requestId) || filterKey !== this.getFilterKey()) return;
         console.error('Error loading more songs:', error);
         this.loadingMore = false;
         this.currentPage--;
@@ -243,14 +295,17 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSearch(): void {
-    this.textFilterChanges$.next();
+    this.onTextFilterInput();
   }
 
   onTextFilterInput(): void {
-    this.textFilterChanges$.next();
+    this.textFilterPending = true;
+    this.invalidatePendingListResults();
+    this.textFilterChanges$.next(this.getFilterKey());
   }
 
   private applyFilterChange(): void {
+    this.textFilterPending = false;
     this.currentPage = 1;
     this._persistState();
     this.loadSongs();
@@ -305,7 +360,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private _loadFromSavedState(): void {
-    const pagesToLoad = this._pendingPage || 1;
+    const requestId = this.beginFreshListRequest();
+    const pagesToLoad = Math.min(this._pendingPage || 1, SongsListComponent.MAX_RESTORED_PAGES);
     const targetScrollY = this._pendingScrollY;
     this._pendingScrollY = 0;
     this._pendingPage = 0;
@@ -327,8 +383,9 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       ));
     }
 
-    forkJoin(requests).subscribe({
+    this.songsSavedStateLoadSub = forkJoin(requests).subscribe({
       next: (results: any[]) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         const allSongs: SongDto[] = [];
         for (const r of results) {
           allSongs.push(...(r.songs || r.items || r.data || []));
@@ -349,6 +406,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         }, 150);
       },
       error: (error) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         console.error('Error loading songs from saved state:', error);
         this.songs = [];
         this.totalItems = 0;
@@ -359,8 +417,9 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private _reloadPreservingState(): void {
+    const requestId = this.beginFreshListRequest();
     const savedScrollY = window.scrollY;
-    const pagesToLoad = this.currentPage || 1;
+    const pagesToLoad = Math.min(this.currentPage || 1, SongsListComponent.MAX_RESTORED_PAGES);
     this.loading = true;
     this.loadError = '';
 
@@ -376,8 +435,9 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       ));
     }
 
-    forkJoin(requests).subscribe({
+    this.songsReloadSub = forkJoin(requests).subscribe({
       next: (results: any[]) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         const allSongs: SongDto[] = [];
         for (const r of results) {
           allSongs.push(...(r.songs || r.items || r.data || []));
@@ -396,6 +456,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         }, 100);
       },
       error: (error) => {
+        if (!this.isCurrentListRequest(requestId)) return;
         console.error('Error reloading songs:', error);
         this.loading = false;
         this.loadSongs();
@@ -432,6 +493,10 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.approvalFilter !== 'all' ||
       this.sortBy !== 'date'
     );
+  }
+
+  get isSearchBusy(): boolean {
+    return this.textFilterPending || this.loading;
   }
 
   resetFilters(): void {

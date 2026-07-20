@@ -78,6 +78,11 @@
 
     </div>
 
+    <div class="search-status" *ngIf="isSearchBusy" role="status" aria-live="polite">
+      <span class="spinner search-status-spinner" aria-hidden="true"></span>
+      <span>מחפש...</span>
+    </div>
+
     <div class="actions-group actions-view" *ngIf="!loading">
       <span class="results-info">{{ totalItems }} שירים</span>
       <div class="view-controls">

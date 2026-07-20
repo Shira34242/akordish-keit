@@ -350,6 +350,28 @@
   font-weight: 300;
 }
 
+.search-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 34px;
+  padding: 0 var(--space-base);
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.search-status-spinner {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  margin: 0;
+}
+
 .view-controls {
   display: flex;
   align-items: center;
@@ -1147,6 +1169,7 @@
   .filter-select,
   .uploader-filter,
   .duplicate-scan-btn,
+  .search-status,
   .view-controls {
     flex: 1 1 100%;
     width: 100%;
@@ -1160,6 +1183,10 @@
   }
 
   .duplicate-scan-btn {
+    justify-content: center;
+  }
+
+  .search-status {
     justify-content: center;
   }
 
