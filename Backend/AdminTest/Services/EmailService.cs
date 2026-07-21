@@ -395,6 +395,10 @@ public class EmailService : IEmailService
                 query.Where(u => u.IsActive && u.MarketingConsent),
             EmailRecipientGroup.AllArtists =>
                 query.Where(u => _context.Artists.Any(a => a.UserId == u.Id)),
+            EmailRecipientGroup.NoProfessionalProfile =>
+                query.Where(u =>
+                    !_context.Artists.Any(a => a.UserId == u.Id && !a.IsDeleted) &&
+                    !_context.ServiceProviders.Any(sp => sp.UserId == u.Id && !sp.IsDeleted)),
             _ => query
         };
     }

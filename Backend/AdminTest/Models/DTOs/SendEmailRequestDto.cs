@@ -20,7 +20,8 @@ public enum EmailRecipientGroup
     AllArtists           = 4,
     AllServiceProviders  = 5,
     InterestedInSite     = 6,
-    CustomGroup          = 7
+    CustomGroup          = 7,
+    NoProfessionalProfile = 8
 }
 
 public class EmailSendResultDto

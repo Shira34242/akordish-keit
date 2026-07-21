@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "app-insights-logs": {
+      "command": "node",
+      "args": ["Tools/mcp-app-insights-logs/dist/server.js"],
+      "env": {
+        "AZURE_TENANT_ID": "${AZURE_TENANT_ID}",
+        "AZURE_CLIENT_ID": "${AZURE_CLIENT_ID}",
+        "AZURE_CLIENT_SECRET": "${AZURE_CLIENT_SECRET}",
+        "APPINSIGHTS_RESOURCE_ID": "${APPINSIGHTS_RESOURCE_ID}"
+      }
+    }
+  }
+}
