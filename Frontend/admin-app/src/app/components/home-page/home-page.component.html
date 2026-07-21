@@ -190,7 +190,7 @@
 
     </div>
 
-    <div class="hero-scroll-indicator">
+    <div class="hero-scroll-indicator" #heroScrollIndicator>
       <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><clipPath id="clip0_151_1786"><path d="m0 0h24v24h-24z"/></clipPath><g clip-path="url(#clip0_151_1786)" stroke="#222" stroke-width="1.5"><path d="m5 10c0-3.86599 3.13401-7 7-7 3.866 0 7 3.13401 7 7v4c0 3.866-3.134 7-7 7-3.86599 0-7-3.134-7-7z"/><path d="m10 14 2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
     </div>
 
@@ -285,16 +285,16 @@
     <section class="home-section" *ngIf="chordsSectionStarted && recentSongs.length > 0">
       <div class="section-header">
         <a routerLink="/chords" class="section-title section-title-link">{{ 'home.recent_chords' | translate }}</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.recent-songs-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.recent-songs-row', 'right') || canScrollBySelector('.recent-songs-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.recent-songs-row', 'right')" (click)="scrollCarouselBySelector('.recent-songs-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.recent-songs-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.recent-songs-row', 'left')" (click)="scrollCarouselBySelector('.recent-songs-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
-      <div class="songs-grid recent-songs-row">
+      <div class="songs-grid recent-songs-row" (scroll)="refreshCarouselControls('.recent-songs-row')">
         <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
@@ -302,16 +302,16 @@
     <section class="home-section" *ngIf="chordsSectionStarted && popularSongs.length > 0">
       <div class="section-header">
         <a routerLink="/chords" class="section-title section-title-link">{{ 'home.popular_chords' | translate }}</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.popular-songs-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.popular-songs-row', 'right') || canScrollBySelector('.popular-songs-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.popular-songs-row', 'right')" (click)="scrollCarouselBySelector('.popular-songs-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.popular-songs-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.popular-songs-row', 'left')" (click)="scrollCarouselBySelector('.popular-songs-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
-      <div class="songs-grid popular-songs-row">
+      <div class="songs-grid popular-songs-row" (scroll)="refreshCarouselControls('.popular-songs-row')">
         <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
@@ -319,16 +319,16 @@
     <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
         <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.artists-loop-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.artists-loop-row', 'right') || canScrollBySelector('.artists-loop-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.artists-loop-row', 'right')" (click)="scrollCarouselBySelector('.artists-loop-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.artists-loop-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.artists-loop-row', 'left')" (click)="scrollCarouselBySelector('.artists-loop-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
-      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3">
+      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" (scroll)="refreshCarouselControls('.artists-loop-row')">
         <div class="artists-loop-track">
           <ng-container *ngFor="let copy of [0, 1, 2]">
             <app-artist-circle
@@ -370,17 +370,17 @@
     <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && (featuredTeachers.length > 0 || featuredProviders.length > 0)">
       <div class="section-header">
         <a routerLink="/professionals" class="section-title section-title-link">{{ 'home.featured_title' | translate }}</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.index-showcase-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.index-showcase-row', 'right') || canScrollBySelector('.index-showcase-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.index-showcase-row', 'right')" (click)="scrollCarouselBySelector('.index-showcase-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.index-showcase-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.index-showcase-row', 'left')" (click)="scrollCarouselBySelector('.index-showcase-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
       <div class="index-showcase-stack">
-        <div class="index-showcase-row">
+        <div class="index-showcase-row" (scroll)="refreshCarouselControls('.index-showcase-row')">
           <div class="index-showcase-track">
             <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
               <div class="person-avatar">
@@ -404,16 +404,16 @@
     <section class="home-section" *ngIf="eventsSectionStarted && upcomingEvents.length > 0">
       <div class="section-header">
         <a routerLink="/events" class="section-title section-title-link">{{ 'home.upcoming_events' | translate }}</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.events-loop-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.events-loop-row', 'right') || canScrollBySelector('.events-loop-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-loop-row', 'right')" (click)="scrollCarouselBySelector('.events-loop-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.events-loop-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-loop-row', 'left')" (click)="scrollCarouselBySelector('.events-loop-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
-      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="right" [autoScrollCopies]="2">
+      <div class="events-loop-row" appAutoScroll [autoScrollSpeed]="30" autoScrollDirection="right" [autoScrollCopies]="2" (scroll)="refreshCarouselControls('.events-loop-row')">
         <div class="events-loop-track">
           <ng-container *ngFor="let copy of [0, 1]">
             <app-event-card
@@ -483,17 +483,17 @@
     <section class="home-section popular-episodes-section" *ngIf="podcastsSectionStarted && popularPodcastEpisodes.length > 0">
       <div class="section-header">
         <a routerLink="/podcasts" class="section-title section-title-link">פרקים מובילים</a>
-        <div class="section-scroll-controls">
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'right')" aria-label="גלילה ימינה">
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.podcast-episodes-row', 'right') || canScrollBySelector('.podcast-episodes-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.podcast-episodes-row', 'right')" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
           </button>
-          <button type="button" class="section-scroll-btn" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'left')" aria-label="גלילה שמאלה">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.podcast-episodes-row', 'left')" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'left')" aria-label="גלילה שמאלה">
             <span class="material-icons" aria-hidden="true">chevron_left</span>
           </button>
         </div>
       </div>
 
-      <div class="podcast-episodes-row">
+      <div class="podcast-episodes-row" (scroll)="refreshCarouselControls('.podcast-episodes-row')">
         <div class="podcast-episodes-track">
           <app-podcast-episode-banner
             *ngFor="let episode of popularPodcastEpisodes; trackBy: trackById"

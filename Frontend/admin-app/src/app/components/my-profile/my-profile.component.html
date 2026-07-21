@@ -65,6 +65,7 @@
         <strong>{{ 'profile.level_progress_title' | translate }}</strong>
         <span>{{ 'profile.level_progress_description' | translate }}</span>
       </div>
+      <p class="level-progress-status">{{ getLevelProgressText() }}</p>
       <div #levelLoader class="level-loader" [class.level-loader--animate]="progressAnimated">
         <span class="level-live-points" aria-live="polite">
           <span>{{ 'profile.points' | translate }}</span>
@@ -94,37 +95,42 @@
           </div>
         }
       </div>
-    </section>
 
-    <section class="referral-card">
-      <div class="referral-card__copy">
-        <span class="referral-card__eyebrow">חבר מביא חבר</span>
-        <h3>הקישור האישי שלך</h3>
-        <p>כל משתמש חדש שיצטרף דרך Google מהקישור שלך ייספר כאן ויכול לעזור בקידום הפרופיל.</p>
+      <div class="contribution-benefits">
+        <span>ככל שיש לך יותר נקודות, נפתחות עבורך אפשרויות חדשות באתר.</span>
+        <span>אם יש לך דף ציבורי, נקודות גבוהות יכולות לעזור לו לקבל יותר חשיפה.</span>
       </div>
 
-      <div class="referral-card__stats">
-        <span>הצטרפו דרכך</span>
-        <strong>{{ referralSummary?.googleJoinedCount || 0 }}</strong>
-      </div>
+      <div class="contribution-referral">
+        <div class="referral-card__copy">
+          <span class="referral-card__eyebrow">חבר מביא חבר</span>
+          <h3>הקישור האישי שלך</h3>
+          <p>אפשר לשלוח את הקישור לחברים. מי שיצטרף דרכו ייספר כאן ויעזור לחזק את מדד התרומה שלך.</p>
+        </div>
 
-      <div class="referral-card__link">
-        <input
-          type="text"
-          [value]="referralLoading ? 'טוען קישור...' : (referralSummary?.referralUrl || '')"
-          readonly>
-        <button type="button" (click)="copyReferralLink()" [disabled]="!referralSummary || referralLoading">
-          <span class="material-icons">{{ referralCopied ? 'check' : 'content_copy' }}</span>
-          {{ referralCopied ? 'הועתק' : 'העתקה' }}
-        </button>
-        <button
-          type="button"
-          class="referral-card__share"
-          (click)="shareReferralLink()"
-          [disabled]="!referralSummary || referralLoading">
-          <span class="material-icons">ios_share</span>
-          שיתוף
-        </button>
+        <div class="referral-card__stats">
+          <span>הצטרפו דרכך</span>
+          <strong>{{ referralSummary?.googleJoinedCount || 0 }}</strong>
+        </div>
+
+        <div class="referral-card__link">
+          <input
+            type="text"
+            [value]="referralLoading ? 'טוען קישור...' : (referralSummary?.referralUrl || '')"
+            readonly>
+          <button type="button" (click)="copyReferralLink()" [disabled]="!referralSummary || referralLoading">
+            <span class="material-icons">{{ referralCopied ? 'check' : 'content_copy' }}</span>
+            {{ referralCopied ? 'הועתק' : 'העתקה' }}
+          </button>
+          <button
+            type="button"
+            class="referral-card__share"
+            (click)="shareReferralLink()"
+            [disabled]="!referralSummary || referralLoading">
+            <span class="material-icons">ios_share</span>
+            שיתוף
+          </button>
+        </div>
       </div>
     </section>
   </div>

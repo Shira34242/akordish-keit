@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, DestroyRef, NgZone, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, AfterViewChecked, OnDestroy, ViewChild, ElementRef, DestroyRef, NgZone, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -71,10 +71,11 @@ interface ViralRow {
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.css']
 })
-export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
+export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
 
   @ViewChild('heroBg') heroBg?: ElementRef<HTMLDivElement>;
   @ViewChild('heroCanvas') heroCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('heroScrollIndicator') heroScrollIndicator?: ElementRef<HTMLDivElement>;
   @ViewChild('viralSection') viralSection?: ElementRef<HTMLElement>;
   @ViewChild('viralSentinel') viralSentinel?: ElementRef<HTMLDivElement>;
 
@@ -166,6 +167,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchPlaceholderTimer?: number;
   private searchPlaceholderCharIndex = 0;
   private isDeletingSearchPlaceholder = false;
+  private carouselState: Record<string, { left: boolean; right: boolean }> = {};
+  private carouselStateRefreshPending = false;
+  private readonly carouselSelectors = [
+    '.recent-songs-row',
+    '.popular-songs-row',
+    '.artists-loop-row',
+    '.index-showcase-row',
+    '.events-loop-row',
+    '.podcast-episodes-row'
+  ];
 
   constructor(
     private router: Router,
@@ -242,6 +253,75 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   scrollCarouselBySelector(selector: string, direction: 'left' | 'right'): void {
     const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
     this.scrollCarousel(elements, direction);
+    requestAnimationFrame(() => this.refreshCarouselControls(selector));
+  }
+
+  canScrollBySelector(selector: string, direction: 'left' | 'right'): boolean {
+    return this.carouselState[selector]?.[direction] ?? false;
+  }
+
+  refreshCarouselControls(selector?: string): void {
+    if (selector) {
+      this.updateCarouselState(selector);
+      return;
+    }
+    this.updateAllCarouselStates();
+  }
+
+  ngAfterViewChecked(): void {
+    this.scheduleCarouselStateRefresh();
+  }
+
+  private scheduleCarouselStateRefresh(): void {
+    if (this.carouselStateRefreshPending) return;
+    this.carouselStateRefreshPending = true;
+    requestAnimationFrame(() => {
+      this.carouselStateRefreshPending = false;
+      this.updateAllCarouselStates();
+    });
+  }
+
+  private updateAllCarouselStates(): void {
+    this.carouselSelectors.forEach(selector => this.updateCarouselState(selector));
+  }
+
+  private updateCarouselState(selector: string): void {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+    const next = {
+      left: elements.some(element => this.canScrollElement(element, 'left')),
+      right: elements.some(element => this.canScrollElement(element, 'right'))
+    };
+    const current = this.carouselState[selector];
+    if (current?.left === next.left && current?.right === next.right) return;
+
+    this.ngZone.run(() => {
+      this.carouselState = {
+        ...this.carouselState,
+        [selector]: next
+      };
+    });
+  }
+
+  private canScrollElement(element: HTMLElement, direction: 'left' | 'right'): boolean {
+    const maxScroll = element.scrollWidth - element.clientWidth;
+    if (maxScroll <= 2) return false;
+
+    if (element.classList.contains('artists-loop-row') || element.classList.contains('events-loop-row')) {
+      return true;
+    }
+
+    const isRtl = getComputedStyle(element).direction === 'rtl';
+    const scrollLeft = element.scrollLeft;
+
+    if (!isRtl) {
+      return direction === 'left'
+        ? scrollLeft > 2
+        : scrollLeft < maxScroll - 2;
+    }
+
+    return direction === 'left'
+      ? Math.abs(scrollLeft) < maxScroll - 2
+      : scrollLeft < -2;
   }
 
   ngOnInit() {
@@ -393,7 +473,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const progress = Math.min(1, scrollY / 160);
-    if (this.heroOverlayEl) this.heroOverlayEl.style.opacity = String(Math.max(0, 1 - progress));
+    const opacity = String(Math.max(0, 1 - progress));
+    if (this.heroOverlayEl) this.heroOverlayEl.style.opacity = opacity;
+    if (this.heroScrollIndicator?.nativeElement) this.heroScrollIndicator.nativeElement.style.opacity = opacity;
 
     const collapseRange = this.fullHeroHeight - minHeight;
     const collapseProgress = collapseRange > 0

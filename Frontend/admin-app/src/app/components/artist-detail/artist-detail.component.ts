@@ -364,11 +364,11 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const progress = Math.min(1, window.scrollY / 160);
     const opacity = String(Math.max(0, 1 - progress));
     const infoSide = bg.querySelector('.hero-info-side') as HTMLElement | null;
-    const socialSide = bg.querySelector('.hero-social') as HTMLElement | null;
     const overlay = bg.querySelector('.hero-overlay-right') as HTMLElement | null;
+    const scrollIndicator = bg.querySelector('.hero-scroll-indicator') as HTMLElement | null;
     if (infoSide) infoSide.style.opacity = opacity;
-    if (socialSide) socialSide.style.opacity = opacity;
     if (overlay) overlay.style.opacity = opacity;
+    if (scrollIndicator) scrollIndicator.style.opacity = opacity;
 
     const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
     if (collapseOverlay) {

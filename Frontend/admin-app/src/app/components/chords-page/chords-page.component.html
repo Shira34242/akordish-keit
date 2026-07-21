@@ -234,10 +234,8 @@
                     <p>{{ 'chords.no_results' | translate }}</p>
                     <button class="btn-secondary" *ngIf="!knownChordsMode" (click)="clearFilters()">{{ 'chords.clear_filters' | translate }}</button>
                 </div>
-                <div class="pagination" *ngIf="totalPages > 1">
-                    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">{{ 'chords.prev' | translate }}</button>
-                    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-                    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">{{ 'chords.next' | translate }}</button>
+                <div class="load-more-indicator" *ngIf="isLoadingMore">
+                    <div class="spinner"></div>
                 </div>
             </div>
         </ng-container>
@@ -307,7 +305,7 @@
         <!-- Catalog — all chords (unfiltered) -->
         <ng-container *ngIf="!isFiltered">
             <div class="catalog-section">
-                <div class="section-header">
+                <div class="section-header" *ngIf="!selectedArtistId">
                     <span class="section-tag section-tag--secondary">{{ 'chords.section_all' | translate }}</span>
                 </div>
                 <div class="loading-spinner" *ngIf="isLoading && songs.length === 0">

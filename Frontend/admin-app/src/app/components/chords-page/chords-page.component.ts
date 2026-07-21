@@ -340,11 +340,34 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     loadMore(): void {
-        if (this.knownChordsMode || this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
+        if (this.isLoading || this.isLoadingMore || !this.hasMoreSongs) return;
         if (this.currentPage >= this.totalPages) return;
         this.isLoadingMore = true;
         this.currentPage++;
         const epochAtStart = this.filterEpoch;
+
+        if (this.knownChordsMode) {
+            const maxMissing = this.knownSortBy === 'exact' ? 0 : -1;
+            const sortBy = this.knownSortBy === 'exact' ? 'closest' : this.knownSortBy;
+            this.knownChordService.getMatchingSongs(
+                this.knownInstrument,
+                sortBy,
+                this.currentPage,
+                this.pageSize,
+                maxMissing
+            ).subscribe({
+                next: (res) => {
+                    this.songs = [...this.songs, ...(res.songs || [])];
+                    this.totalCount = res.totalCount;
+                    this.totalPages = res.totalPages;
+                    this.hasMoreSongs = this.currentPage < this.totalPages;
+                    this.isLoadingMore = false;
+                },
+                error: () => { this.isLoadingMore = false; }
+            });
+            return;
+        }
+
         this.songService.getSongs(
             this.search || undefined,
             this.currentPage,
@@ -548,14 +571,6 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.hasMoreSongs = true;
         this.songs = [];
         this.loadSongs();
-    }
-
-    goToPage(page: number): void {
-        if (page >= 1 && page <= this.totalPages) {
-            this.currentPage = page;
-            this.loadSongs();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
     }
 
     @HostListener('document:click', ['$event'])

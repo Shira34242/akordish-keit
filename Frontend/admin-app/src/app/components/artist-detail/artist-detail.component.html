@@ -93,16 +93,6 @@
       </div>
     </div>
 
-    <div class="hero-social" *ngIf="artist.socialLinks && artist.socialLinks.length > 0">
-      <a *ngFor="let link of artist.socialLinks"
-         [href]="link.url"
-         target="_blank"
-         class="social-icon-btn"
-         [title]="getSocialPlatformName(link.platform)"
-         [innerHTML]="getSocialIconSvg(link.platform)">
-      </a>
-    </div>
-
     <!-- Scroll Down Icon -->
     <div class="hero-scroll-indicator">
       <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><clipPath id="clip0_151_1786"><path d="m0 0h24v24h-24z"/></clipPath><g clip-path="url(#clip0_151_1786)" stroke="#222" stroke-width="1.5"><path d="m5 10c0-3.86599 3.13401-7 7-7 3.866 0 7 3.13401 7 7v4c0 3.866-3.134 7-7 7-3.86599 0-7-3.134-7-7z"/><path d="m10 14 2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
@@ -141,6 +131,23 @@
           <polyline points="6,9 12,15 18,9"/>
         </svg>
       </button>
+    </div>
+
+    <!-- רשתות חברתיות -->
+    <div class="social-dock-banner" *ngIf="artist.socialLinks && artist.socialLinks.length > 0">
+      <h2 class="social-dock-title">רשתות חברתיות וערוצי מוזיקה</h2>
+      <div class="social-dock" role="list" aria-label="רשתות חברתיות">
+        <a *ngFor="let link of artist.socialLinks"
+           role="listitem"
+           [href]="link.url"
+           target="_blank"
+           rel="noopener"
+           class="social-dock-item"
+           [attr.aria-label]="getSocialPlatformName(link.platform)">
+          <span class="social-dock-tooltip">{{ getSocialPlatformName(link.platform) }}</span>
+          <span class="social-dock-icon" [innerHTML]="getSocialIconSvg(link.platform)"></span>
+        </a>
+      </div>
     </div>
 
     <!-- להיטים גדולים -->

@@ -51,7 +51,12 @@ public class DisplayRankingService : IDisplayRankingService
         var now = DateTime.UtcNow;
         return sortBy?.Trim().ToLowerInvariant() switch
         {
-            "date" => query.OrderByDescending(s => s.CreatedAt),
+            "date" => query
+                .OrderByDescending(s => _context.ContentSubmissions
+                    .Where(cs => cs.SongId == s.Id && !cs.IsDeleted && cs.Status == SubmissionStatus.Approved)
+                    .Select(cs => (DateTime?)(cs.ReviewedAt ?? cs.SubmittedAt))
+                    .Max() ?? s.CreatedAt)
+                .ThenByDescending(s => s.CreatedAt),
             "views" or "popularity" => query.OrderByDescending(s => s.ViewCount),
             "name" => query.OrderBy(s => s.Title),
             "artist" => query.OrderBy(s => s.SongArtists
@@ -59,7 +64,12 @@ public class DisplayRankingService : IDisplayRankingService
                 .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName)
                 .FirstOrDefault()).ThenBy(s => s.Title),
             "uploader" => query.OrderBy(s => s.UploaderUser != null ? s.UploaderUser.Username : string.Empty).ThenBy(s => s.Title),
-            "date_asc" => query.OrderBy(s => s.CreatedAt),
+            "date_asc" => query
+                .OrderBy(s => _context.ContentSubmissions
+                    .Where(cs => cs.SongId == s.Id && !cs.IsDeleted && cs.Status == SubmissionStatus.Approved)
+                    .Select(cs => (DateTime?)(cs.ReviewedAt ?? cs.SubmittedAt))
+                    .Max() ?? s.CreatedAt)
+                .ThenBy(s => s.CreatedAt),
             _ => query
                 .OrderByDescending(s => _context.ContentPromotions
                     .Where(p => p.TargetType == ContentPromotionTargetType.Song

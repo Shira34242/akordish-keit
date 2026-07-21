@@ -817,41 +817,6 @@
 /* ═══════════════════════════════════════════════════════════════
    PAGINATION
 ═══════════════════════════════════════════════════════════════ */
-.pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-base);
-    margin-top: var(--space-lg);
-    padding-bottom: var(--space-md);
-}
-
-.page-btn {
-    height: 34px;
-    padding: 0 var(--space-lg);
-    border: none;
-    border-radius: 999px;
-    background: #F2F2F2;
-    font-family: 'Open Sans', sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 800;
-    font-variation-settings: "wdth" 100;
-    font-size: var(--font-sm);
-    color: #000;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.page-btn:hover:not(:disabled) { background: #ddff53; }
-.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.page-info {
-    font-size: var(--font-sm);
-    font-weight: 300;
-    color: rgba(0, 0, 0, 0.4);
-}
-
-
 /* ═══════════════════════════════════════════════════════════════
    INFINITE SCROLL
 ═══════════════════════════════════════════════════════════════ */
@@ -865,13 +830,6 @@
     justify-content: center;
     padding: var(--space-lg) 0;
 }
-
-.catalog-load-more {
-    display: flex;
-    justify-content: center;
-    margin-top: var(--space-lg);
-}
-
 
 /* ═══════════════════════════════════════════════════════════════
    NEWS SECTION — full-width scrollable rows at bottom of page

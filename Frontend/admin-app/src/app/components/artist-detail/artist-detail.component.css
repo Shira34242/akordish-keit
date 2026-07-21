@@ -340,6 +340,129 @@
 
 .social-icon-btn svg { width: 18px; height: 18px; }
 
+.social-dock-banner {
+  position: relative;
+  background: #F2F2F2;
+  border-radius: 24px;
+  padding: var(--space-lg);
+  height: 150px;
+  box-sizing: border-box;
+  overflow-x: visible;
+  overflow-y: visible;
+}
+
+.social-dock-title {
+  position: absolute;
+  top: var(--space-lg);
+  left: var(--space-lg);
+  right: var(--space-lg);
+  margin: 0;
+  color: rgba(0, 0, 0, 0.45);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  text-align: center;
+}
+
+.social-dock {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-lg);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-sm);
+  max-width: 100%;
+  min-height: 62px;
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  overflow: visible;
+}
+
+.social-dock-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #F2F2F2;
+  color: #404040;
+  text-decoration: none;
+  outline: none;
+  transform-origin: bottom center;
+  transition: width 0.18s ease, height 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.social-dock-item:hover,
+.social-dock-item:focus-visible {
+  width: 58px;
+  height: 58px;
+  background: #ddff53;
+  color: #000000;
+  transform: translateY(-4px);
+  z-index: 3;
+}
+
+.social-dock:has(.social-dock-item:hover) .social-dock-item:hover + .social-dock-item,
+.social-dock:has(.social-dock-item:focus-visible) .social-dock-item:focus-visible + .social-dock-item {
+  width: 50px;
+  height: 50px;
+}
+
+.social-dock-item:has(+ .social-dock-item:hover),
+.social-dock-item:has(+ .social-dock-item:focus-visible) {
+  width: 50px;
+  height: 50px;
+}
+
+.social-dock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.social-dock-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.social-dock-tooltip {
+  position: absolute;
+  bottom: calc(100% + var(--space-base));
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  white-space: nowrap;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.social-dock-item:hover .social-dock-tooltip,
+.social-dock-item:focus-visible .social-dock-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ========================================
    Page Content
 ======================================== */
@@ -1189,6 +1312,37 @@
     left: var(--space-md);
     bottom: var(--space-md);
     max-width: none;
+  }
+
+  .social-dock-banner {
+    padding: var(--space-base);
+    height: 138px;
+  }
+
+  .social-dock-title {
+    top: var(--space-base);
+    left: var(--space-base);
+    right: var(--space-base);
+  }
+
+  .social-dock {
+    bottom: var(--space-base);
+    min-height: 56px;
+    max-width: calc(100% - (var(--space-base) * 2));
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+  }
+
+  .social-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .social-dock-item:hover,
+  .social-dock-item:focus-visible {
+    width: 52px;
+    height: 52px;
+    transform: translateY(-3px);
   }
 
   .hero-short-bio {
