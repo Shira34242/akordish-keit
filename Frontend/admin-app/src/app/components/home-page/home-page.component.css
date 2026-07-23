@@ -854,7 +854,7 @@
   overflow-y: hidden;
   padding-top: var(--space-sm);
   padding-bottom: var(--space-md);
-  direction: rtl;
+  direction: ltr;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -867,7 +867,7 @@
 
 .artists-loop-track {
   display: flex;
-  direction: rtl;
+  direction: ltr;
   gap: var(--space-base);
   width: max-content;
 }
@@ -1278,10 +1278,10 @@
 }
 
 /* ============================================
-   EVENTS LOOP (הופעות קרובות — לולאה)
+   EVENTS SCROLL (הופעות)
    עיצוב הכרטיסים נמצא ב-EventCardComponent
 ============================================ */
-.events-loop-row {
+.events-scroll-row {
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 4px;
@@ -1292,33 +1292,33 @@
   overscroll-behavior-x: contain;
 }
 
-.events-loop-row::-webkit-scrollbar {
+.events-scroll-row::-webkit-scrollbar {
   display: none;
 }
 
-.events-loop-track {
+.events-scroll-track {
   display: flex;
   direction: rtl;
   gap: var(--space-md);
   width: max-content;
 }
 
-.events-loop-track app-event-card {
+.events-scroll-track app-event-card {
   direction: rtl;
   flex: 0 0 11rem;
   width: 11rem;
 }
 
 /* גודל אחיד לכרטיסי הופעות — אותו אספקט לכולם */
-.events-loop-track app-event-card ::ng-deep .event-card {
+.events-scroll-track app-event-card ::ng-deep .event-card {
   width: 100%;
 }
 
-.events-loop-track app-event-card ::ng-deep .event-card--past {
+.events-scroll-track app-event-card ::ng-deep .event-card--past {
   opacity: 1;
 }
 
-.events-loop-track app-event-card ::ng-deep .event-card__poster {
+.events-scroll-track app-event-card ::ng-deep .event-card__poster {
   aspect-ratio: 3 / 4;
 }
 
@@ -1595,7 +1595,7 @@
     flex: 0 0 240px;
   }
 
-  .events-loop-track app-event-card {
+  .events-scroll-track app-event-card {
     flex: 0 0 9rem;
     width: 9rem;
   }

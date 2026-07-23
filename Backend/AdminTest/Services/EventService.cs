@@ -131,35 +131,17 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 15)
         {
-            var today = DateTime.UtcNow.Date;
-
-            var upcomingEvents = await _context.Events
+            var events = await _context.Events
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .Where(e => !e.IsDeleted && e.IsActive && e.EventDate >= today)
-                .OrderBy(e => e.EventDate)
-                .ThenBy(e => e.DisplayOrder)
+                .Where(e => !e.IsDeleted && e.IsActive)
+                // דף הבית מציג את ההופעות לפי מועד הפרסום, מהחדשה לישנה.
+                .OrderByDescending(e => e.CreatedAt)
+                .ThenByDescending(e => e.Id)
                 .Take(limit)
                 .ToListAsync();
 
-            var allEvents = new List<Event>(upcomingEvents);
-
-            if (allEvents.Count < limit)
-            {
-                var remaining = limit - allEvents.Count;
-                var pastEvents = await _context.Events
-                    .Include(e => e.EventArtists)
-                        .ThenInclude(ea => ea.Artist)
-                    .Where(e => !e.IsDeleted && e.IsActive && e.EventDate < today)
-                    .OrderByDescending(e => e.EventDate)
-                    .ThenBy(e => e.DisplayOrder)
-                    .Take(remaining)
-                    .ToListAsync();
-
-                allEvents.AddRange(pastEvents);
-            }
-
-            return allEvents.Select(e => new UpcomingEventDto
+            return events.Select(e => new UpcomingEventDto
             {
                 Id = e.Id,
                 Name = e.Name,

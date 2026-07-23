@@ -6,6 +6,9 @@
       <span class="legal-page__eyebrow">מידע רשמי</span>
       <h1>{{ page.title }}</h1>
       <p>{{ page.description }}</p>
+      <nav class="legal-page__related" *ngIf="page.relatedLinks?.length" aria-label="מסמכים קשורים">
+        <a *ngFor="let link of page.relatedLinks" [routerLink]="link.path">{{ link.label }}</a>
+      </nav>
       <button *ngIf="isContactPage" type="button" class="legal-page__primary" (click)="openContactForm()">
         פתיחת טופס צור קשר
       </button>

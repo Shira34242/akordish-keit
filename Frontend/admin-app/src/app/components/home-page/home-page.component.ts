@@ -174,7 +174,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     '.popular-songs-row',
     '.artists-loop-row',
     '.index-showcase-row',
-    '.events-loop-row',
+    '.events-scroll-row',
     '.podcast-episodes-row'
   ];
 
@@ -306,7 +306,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     const maxScroll = element.scrollWidth - element.clientWidth;
     if (maxScroll <= 2) return false;
 
-    if (element.classList.contains('artists-loop-row') || element.classList.contains('events-loop-row')) {
+    if (element.classList.contains('artists-loop-row')) {
       return true;
     }
 
@@ -661,7 +661,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   private loadUpcomingEvents(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.eventService.getUpcomingEvents(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.eventService.getUpcomingEvents(13).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({
