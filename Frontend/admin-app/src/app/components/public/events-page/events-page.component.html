@@ -62,7 +62,6 @@
   <nav class="event-filter-bar" aria-label="סינון הופעות לפי זמן">
     <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'all'" (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>
     <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'upcoming'" (click)="setFilter('upcoming')">{{ 'events.filter_upcoming' | translate }}</button>
-    <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'past'" (click)="setFilter('past')">{{ 'events.filter_past' | translate }}</button>
   </nav>
 
 </div>

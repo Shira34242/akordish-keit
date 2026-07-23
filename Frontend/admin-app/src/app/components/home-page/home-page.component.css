@@ -854,6 +854,7 @@
   overflow-y: hidden;
   padding-top: var(--space-sm);
   padding-bottom: var(--space-md);
+  /* מנגנון הגלילה משתמש בקואורדינטות LTR, אך הכרטיסים עצמם נשארים RTL. */
   direction: ltr;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -870,6 +871,10 @@
   direction: ltr;
   gap: var(--space-base);
   width: max-content;
+}
+
+.artists-loop-track app-artist-circle {
+  direction: rtl;
 }
 
 /* ============================================

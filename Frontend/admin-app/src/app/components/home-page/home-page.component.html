@@ -319,14 +319,6 @@
     <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
         <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
-        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.artists-loop-row', 'right') || canScrollBySelector('.artists-loop-row', 'left')">
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.artists-loop-row', 'right')" (click)="scrollCarouselBySelector('.artists-loop-row', 'right')" aria-label="גלילה ימינה">
-            <span class="material-icons" aria-hidden="true">chevron_right</span>
-          </button>
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.artists-loop-row', 'left')" (click)="scrollCarouselBySelector('.artists-loop-row', 'left')" aria-label="גלילה שמאלה">
-            <span class="material-icons" aria-hidden="true">chevron_left</span>
-          </button>
-        </div>
       </div>
       <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" (scroll)="refreshCarouselControls('.artists-loop-row')">
         <div class="artists-loop-track">

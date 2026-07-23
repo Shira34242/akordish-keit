@@ -9,7 +9,7 @@ import { EventModalComponent } from '../../shared/event-modal/event-modal.compon
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 
-type FilterMode = 'upcoming' | 'all' | 'past';
+type FilterMode = 'upcoming' | 'all';
 
 interface CarouselRenderItem {
   event: EventCardData;
@@ -90,9 +90,6 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   private getModeEvents(): EventCardData[] {
     if (this.filterMode === 'upcoming') {
       return this.allEvents.filter(e => !e.isPast);
-    }
-    if (this.filterMode === 'past') {
-      return this.allEvents.filter(e => e.isPast);
     }
     return [...this.allEvents];
   }

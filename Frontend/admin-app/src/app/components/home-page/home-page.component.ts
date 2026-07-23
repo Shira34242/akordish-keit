@@ -172,7 +172,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private readonly carouselSelectors = [
     '.recent-songs-row',
     '.popular-songs-row',
-    '.artists-loop-row',
     '.index-showcase-row',
     '.events-scroll-row',
     '.podcast-episodes-row'
@@ -305,10 +304,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private canScrollElement(element: HTMLElement, direction: 'left' | 'right'): boolean {
     const maxScroll = element.scrollWidth - element.clientWidth;
     if (maxScroll <= 2) return false;
-
-    if (element.classList.contains('artists-loop-row')) {
-      return true;
-    }
 
     const isRtl = getComputedStyle(element).direction === 'rtl';
     const scrollLeft = element.scrollLeft;
