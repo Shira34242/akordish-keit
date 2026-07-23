@@ -836,6 +836,44 @@
   flex: 0 0 280px;
 }
 
+.home-more-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  box-sizing: border-box;
+  background: #F2F2F2;
+  border-radius: 24px;
+  color: #000000;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-base);
+  font-weight: 800;
+  line-height: var(--lh-heading);
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.home-more-card:hover {
+  background: #ddff53;
+  transform: translateY(-1px);
+}
+
+.home-more-card:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.home-more-card .material-icons {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.home-more-card--song {
+  flex: 0 0 280px;
+  aspect-ratio: 12 / 5;
+}
+
 /* יותר מקום לטקסט בקוביות אקורדים — כרטיס רחב יותר ביחס לגובה */
 .songs-grid app-song-card ::ng-deep .song-card {
   aspect-ratio: 12 / 5;
@@ -1011,6 +1049,12 @@
 
 .index-showcase-track .provider-showcase-card {
   direction: rtl;
+}
+
+.home-more-card--showcase {
+  flex: 0 0 11.5rem;
+  min-height: 15.75rem;
+  padding: var(--space-base);
 }
 
 /* ============================================
@@ -1314,6 +1358,12 @@
   width: 11rem;
 }
 
+.home-more-card--event {
+  flex: 0 0 11rem;
+  aspect-ratio: 3 / 4;
+  padding: var(--space-base);
+}
+
 /* גודל אחיד לכרטיסי הופעות — אותו אספקט לכולם */
 .events-scroll-track app-event-card ::ng-deep .event-card {
   width: 100%;
@@ -1354,6 +1404,11 @@
 
 .podcast-episodes-track > .podcast-episode-card {
   flex: 0 0 19rem;
+}
+
+.home-more-card--episode {
+  flex: 0 0 19rem;
+  aspect-ratio: 1.35 / 1;
 }
 
 .podcast-episode-card {
@@ -1424,6 +1479,11 @@
   border-radius: 24px;
   overflow: hidden;
   background: #F2F2F2;
+}
+
+.home-more-card--podcast {
+  width: 100%;
+  aspect-ratio: 1 / 1;
 }
 
 .home-series-image-card__image {
@@ -1591,8 +1651,17 @@
     flex: 0 0 13rem;
   }
 
+  .home-more-card--episode {
+    flex-basis: 13rem;
+  }
+
   .provider-showcase-card {
     width: 10rem;
+    min-height: 14rem;
+  }
+
+  .home-more-card--showcase {
+    flex-basis: 10rem;
     min-height: 14rem;
   }
 
@@ -1600,9 +1669,17 @@
     flex: 0 0 240px;
   }
 
+  .home-more-card--song {
+    flex-basis: 240px;
+  }
+
   .events-scroll-track app-event-card {
     flex: 0 0 9rem;
     width: 9rem;
+  }
+
+  .home-more-card--event {
+    flex-basis: 9rem;
   }
 
   .home-series-image-card {
@@ -1658,6 +1735,10 @@
     flex: 0 0 11rem;
   }
 
+  .home-more-card--episode {
+    flex-basis: 11rem;
+  }
+
   .viral-section {
     min-height: 14rem;
   }
@@ -1681,6 +1762,12 @@
     width: 9.5rem;
     min-height: 13rem;
     padding: var(--space-sm);
+    border-radius: 18px;
+  }
+
+  .home-more-card--showcase {
+    flex-basis: 9.5rem;
+    min-height: 13rem;
     border-radius: 18px;
   }
 

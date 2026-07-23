@@ -296,6 +296,10 @@
       </div>
       <div class="songs-grid recent-songs-row" (scroll)="refreshCarouselControls('.recent-songs-row')">
         <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
+        <a routerLink="/chords" class="home-more-card home-more-card--song" aria-label="לכל האקורדים">
+          <span>לכל האקורדים</span>
+          <span class="material-icons" aria-hidden="true">arrow_back</span>
+        </a>
       </div>
     </section>
 
@@ -313,6 +317,10 @@
       </div>
       <div class="songs-grid popular-songs-row" (scroll)="refreshCarouselControls('.popular-songs-row')">
         <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
+        <a routerLink="/chords" class="home-more-card home-more-card--song" aria-label="לכל האקורדים">
+          <span>לכל האקורדים</span>
+          <span class="material-icons" aria-hidden="true">arrow_back</span>
+        </a>
       </div>
     </section>
 
@@ -388,6 +396,10 @@
               <p class="person-name">{{ pro.displayName }}</p>
               <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
             </a>
+            <a routerLink="/professionals" class="home-more-card home-more-card--showcase" aria-label="לכל בעלי המקצוע והמורים">
+              <span>לכל בעלי המקצוע והמורים</span>
+              <span class="material-icons" aria-hidden="true">arrow_back</span>
+            </a>
           </div>
         </div>
       </div>
@@ -415,6 +427,10 @@
             imageSizes="(max-width: 768px) 9rem, 11rem"
             (cardClick)="openEventModal($event)">
           </app-event-card>
+          <a routerLink="/events" class="home-more-card home-more-card--event" aria-label="לכל ההופעות">
+            <span>לכל ההופעות</span>
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+          </a>
         </div>
       </div>
     </section>
@@ -466,6 +482,10 @@
               </ng-template>
             </span>
           </a>
+          <a routerLink="/podcasts" class="home-more-card home-more-card--podcast" aria-label="לכל הפודקאסטים">
+            <span>לכל הפודקאסטים</span>
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+          </a>
         </div>
       </div>
     </section>
@@ -491,6 +511,10 @@
             [episode]="episode"
             [showDescription]="true">
           </app-podcast-episode-banner>
+          <a routerLink="/podcasts" class="home-more-card home-more-card--episode" aria-label="לכל הפודקאסטים">
+            <span>לכל הפודקאסטים</span>
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+          </a>
         </div>
       </div>
     </section>
