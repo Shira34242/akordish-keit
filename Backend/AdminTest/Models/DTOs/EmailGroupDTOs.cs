@@ -38,3 +38,15 @@ public class RegisterSiteInterestDto
     public string Email { get; set; } = string.Empty;
     public string? Source { get; set; }
 }
+
+public class EmailRecipientDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string? Name { get; set; }
+}
+
+public class EmailPreviewRequestDto
+{
+    public string Subject { get; set; } = string.Empty;
+    public string HtmlBody { get; set; } = string.Empty;
+}

@@ -1,10 +1,12 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import {
   EmailCampaignService,
   EmailRecipientGroup,
+  EmailRecipient,
   EmailSendResult,
   EmailGroupDto,
   EmailGroupMemberDto,
@@ -36,8 +38,15 @@ export class EmailCampaignComponent implements OnInit {
   recipientCount = 0;
   loadingCount = false;
 
+  recipients: EmailRecipient[] = [];
+  loadingRecipients = false;
+  showRecipientsDialog = false;
+  recipientSearchQuery = '';
+  excludedEmails = new Set<string>();
+
   showPreview = false;
-  previewHtml = '';
+  previewSafeHtml: SafeHtml | null = null;
+  loadingPreview = false;
 
   showLinkDialog = false;
   linkUrl = '';
@@ -94,6 +103,7 @@ export class EmailCampaignComponent implements OnInit {
   constructor(
     private emailService: EmailCampaignService,
     private userService: UserService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit() {
@@ -128,14 +138,63 @@ export class EmailCampaignComponent implements OnInit {
       this.selectedEmailGroupId = null;
     }
     this.loadCount();
+    this.resetRecipientsSelection();
   }
 
   onCustomGroupChange() {
     this.loadCount();
+    this.resetRecipientsSelection();
   }
 
   get availableEmailGroupsForSend() {
     return this.emailGroups.length > 0 ? this.emailGroups : [];
+  }
+
+  // ── Recipients list & manual exclusion ───────────────────────────
+
+  private resetRecipientsSelection() {
+    this.recipients = [];
+    this.excludedEmails.clear();
+    this.recipientSearchQuery = '';
+  }
+
+  openRecipientsDialog() {
+    this.showRecipientsDialog = true;
+    if (this.recipients.length === 0) this.loadRecipients();
+  }
+
+  loadRecipients() {
+    this.loadingRecipients = true;
+    const groupId = this.recipientGroup === EmailRecipientGroup.CustomGroup
+      ? this.selectedEmailGroupId ?? undefined
+      : undefined;
+
+    this.emailService.getRecipients(this.recipientGroup, groupId).subscribe({
+      next: (list) => { this.recipients = list; this.loadingRecipients = false; },
+      error: ()     => { this.loadingRecipients = false; },
+    });
+  }
+
+  get filteredRecipients(): EmailRecipient[] {
+    const q = this.recipientSearchQuery.trim().toLowerCase();
+    if (!q) return this.recipients;
+    return this.recipients.filter(r =>
+      r.email.toLowerCase().includes(q) || (r.name ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  isExcluded(email: string): boolean {
+    return this.excludedEmails.has(email.toLowerCase());
+  }
+
+  toggleExcluded(email: string) {
+    const key = email.toLowerCase();
+    if (this.excludedEmails.has(key)) this.excludedEmails.delete(key);
+    else this.excludedEmails.add(key);
+  }
+
+  get effectiveRecipientCount(): number {
+    return Math.max(0, this.recipientCount - this.excludedEmails.size);
   }
 
   // ── Editor formatting ─────────────────────────────────────────────
@@ -230,12 +289,21 @@ export class EmailCampaignComponent implements OnInit {
   // ── Preview & send ────────────────────────────────────────────────
 
   togglePreview() {
-    this.previewHtml = this.editorBody.nativeElement.innerHTML;
     this.showPreview = !this.showPreview;
+    if (this.showPreview) this.loadPreview();
+  }
+
+  private loadPreview() {
+    this.loadingPreview = true;
+    this.previewSafeHtml = null;
+    const htmlBody = this.editorBody.nativeElement.innerHTML;
+    this.emailService.previewEmail(this.subject || '(ללא נושא)', htmlBody).subscribe({
+      next: (res) => { this.previewSafeHtml = this.sanitizer.bypassSecurityTrustHtml(res.html); this.loadingPreview = false; },
+      error: ()    => { this.loadingPreview = false; },
+    });
   }
 
   openConfirmDialog() {
-    this.previewHtml = this.editorBody.nativeElement.innerHTML;
     this.showConfirmDialog = true;
   }
 
@@ -250,6 +318,7 @@ export class EmailCampaignComponent implements OnInit {
                           ? (this.selectedEmailGroupId ?? undefined)
                           : undefined,
         fromName:       this.fromName,
+        excludedEmails: this.excludedEmails.size > 0 ? Array.from(this.excludedEmails) : undefined,
       })
       .subscribe({
         next: (result) => {
@@ -275,6 +344,8 @@ export class EmailCampaignComponent implements OnInit {
     this.editorBody.nativeElement.innerHTML = '';
     this.sendResult = null;
     this.showPreview = false;
+    this.previewSafeHtml = null;
+    this.resetRecipientsSelection();
   }
 
   get selectedGroupLabel(): string {

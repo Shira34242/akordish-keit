@@ -88,10 +88,17 @@
               <span class="count-loading">טוען...</span>
             } @else {
               <span class="material-symbols-outlined">people</span>
-              <strong>{{ recipientCount | number }}</strong>
+              <strong>{{ effectiveRecipientCount | number }}</strong>
               <span>נמענים</span>
+              @if (excludedEmails.size > 0) {
+                <span class="excluded-hint">({{ excludedEmails.size }} הוסרו)</span>
+              }
             }
           </div>
+          <button class="btn-manage-recipients" (click)="openRecipientsDialog()">
+            <span class="material-symbols-outlined">manage_search</span>
+            הצג רשימת נמענים / הסרה ידנית
+          </button>
         </div>
 
         <div class="sidebar-section tips">
@@ -202,7 +209,7 @@
             [disabled]="!canSend"
           >
             <span class="material-symbols-outlined">send</span>
-            שלח ל-{{ recipientCount | number }} נמענים
+            שלח ל-{{ effectiveRecipientCount | number }} נמענים
           </button>
         </div>
 
@@ -212,9 +219,15 @@
             <div class="preview-header">
               <span class="material-symbols-outlined">preview</span>
               <span>תצוגה מקדימה</span>
-              <small>כך ייראה המייל (ללא עטיפת העיצוב)</small>
+              <small>כך בדיוק ייראה המייל אצל הלקוחות</small>
             </div>
-            <div class="preview-body" [innerHTML]="previewHtml" dir="rtl"></div>
+            <div class="preview-body">
+              @if (loadingPreview) {
+                <div class="preview-loading">טוען תצוגה מקדימה...</div>
+              } @else if (previewSafeHtml) {
+                <iframe class="preview-iframe" [srcdoc]="previewSafeHtml" title="תצוגה מקדימה של המייל"></iframe>
+              }
+            </div>
           </div>
         }
       </div>
@@ -401,8 +414,14 @@
           </div>
           <div class="confirm-row">
             <span class="confirm-label">נמענים:</span>
-            <span class="confirm-value count-highlight">{{ recipientCount | number }} אנשים</span>
+            <span class="confirm-value count-highlight">{{ effectiveRecipientCount | number }} אנשים</span>
           </div>
+          @if (excludedEmails.size > 0) {
+            <div class="confirm-row">
+              <span class="confirm-label">הוסרו ידנית:</span>
+              <span class="confirm-value">{{ excludedEmails.size }} נמענים</span>
+            </div>
+          }
         </div>
         <p class="confirm-warning">
           <span class="material-symbols-outlined">warning</span>
@@ -420,6 +439,61 @@
             שלח עכשיו
           }
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Recipients List / Manual Removal Dialog -->
+@if (showRecipientsDialog) {
+  <div class="dialog-overlay" (click)="showRecipientsDialog = false">
+    <div class="dialog dialog--group" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">people</span>
+        <h3>נמעני "{{ selectedGroupLabel }}"</h3>
+      </div>
+      <div class="dialog-body">
+        @if (loadingRecipients) {
+          <div class="loading-state">טוען רשימת נמענים...</div>
+        } @else {
+          <input
+            class="field-input"
+            type="text"
+            [(ngModel)]="recipientSearchQuery"
+            placeholder="חיפוש לפי שם או כתובת מייל..."
+          />
+
+          <div class="recipients-list">
+            @for (r of filteredRecipients; track r.email) {
+              <div class="recipient-row" [class.excluded]="isExcluded(r.email)">
+                <div class="recipient-info">
+                  @if (r.name) { <span class="recipient-name">{{ r.name }}</span> }
+                  <span class="recipient-email">{{ r.email }}</span>
+                </div>
+                <button
+                  class="btn-icon"
+                  [class.btn-icon--danger]="!isExcluded(r.email)"
+                  [title]="isExcluded(r.email) ? 'שחזור נמען לשליחה' : 'הסרה מהשליחה הזו'"
+                  (click)="toggleExcluded(r.email)"
+                >
+                  <span class="material-symbols-outlined">{{ isExcluded(r.email) ? 'undo' : 'person_remove' }}</span>
+                </button>
+              </div>
+            } @empty {
+              <div class="member-empty">לא נמצאו נמענים תואמים</div>
+            }
+          </div>
+
+          <div class="member-count-hint">
+            {{ recipients.length | number }} נמענים סה"כ
+            @if (excludedEmails.size > 0) {
+              · {{ excludedEmails.size }} הוסרו לשליחה הנוכחית
+            }
+          </div>
+        }
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-confirm" (click)="showRecipientsDialog = false">סגור</button>
       </div>
     </div>
   </div>

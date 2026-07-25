@@ -42,6 +42,22 @@ public class EmailController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("recipients")]
+    public async Task<ActionResult<List<EmailRecipientDto>>> GetRecipients(
+        [FromQuery] EmailRecipientGroup group = EmailRecipientGroup.AllUsers,
+        [FromQuery] int? emailGroupId = null)
+    {
+        var recipients = await _emailService.GetRecipientsPreviewAsync(group, emailGroupId);
+        return Ok(recipients);
+    }
+
+    [HttpPost("preview")]
+    public ActionResult<object> PreviewEmail([FromBody] EmailPreviewRequestDto request)
+    {
+        var html = _emailService.BuildPreviewHtml(request.Subject, request.HtmlBody);
+        return Ok(new { html });
+    }
+
     // ── Email Groups ──────────────────────────────────────────────────────────
 
     [HttpGet("groups")]

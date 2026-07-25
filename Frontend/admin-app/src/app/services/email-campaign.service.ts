@@ -23,6 +23,12 @@ export interface SendEmailRequest {
   emailGroupId?: number;
   fromName?: string;
   fromEmail?: string;
+  excludedEmails?: string[];
+}
+
+export interface EmailRecipient {
+  email: string;
+  name?: string;
 }
 
 export interface EmailSendResult {
@@ -71,6 +77,16 @@ export class EmailCampaignService {
     let params = new HttpParams().set('group', group.toString());
     if (emailGroupId != null) params = params.set('emailGroupId', emailGroupId.toString());
     return this.http.get<number>(`${this.apiUrl}/recipient-count`, { params, withCredentials: true });
+  }
+
+  getRecipients(group: EmailRecipientGroup, emailGroupId?: number): Observable<EmailRecipient[]> {
+    let params = new HttpParams().set('group', group.toString());
+    if (emailGroupId != null) params = params.set('emailGroupId', emailGroupId.toString());
+    return this.http.get<EmailRecipient[]>(`${this.apiUrl}/recipients`, { params, withCredentials: true });
+  }
+
+  previewEmail(subject: string, htmlBody: string): Observable<{ html: string }> {
+    return this.http.post<{ html: string }>(`${this.apiUrl}/preview`, { subject, htmlBody }, { withCredentials: true });
   }
 
   sendCampaign(request: SendEmailRequest): Observable<EmailSendResult> {

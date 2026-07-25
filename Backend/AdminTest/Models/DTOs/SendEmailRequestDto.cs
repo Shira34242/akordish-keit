@@ -9,6 +9,7 @@ public class SendEmailRequestDto
     public int? EmailGroupId { get; set; }
     public string? FromName { get; set; }
     public string? FromEmail { get; set; }
+    public List<string>? ExcludedEmails { get; set; }
 }
 
 public enum EmailRecipientGroup

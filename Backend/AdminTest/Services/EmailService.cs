@@ -38,6 +38,13 @@ public class EmailService : IEmailService
             return new EmailSendResultDto { Success = false, Message = "Brevo API key לא מוגדר — יש להגדיר אותו ב-appsettings.json" };
 
         var recipients = await GetRecipientsAsync(request.RecipientGroup, request.EmailGroupId);
+
+        if (request.ExcludedEmails is { Count: > 0 })
+        {
+            var excluded = new HashSet<string>(request.ExcludedEmails.Select(e => e.ToLowerInvariant()));
+            recipients = recipients.Where(r => !excluded.Contains(r.Email.ToLowerInvariant())).ToList();
+        }
+
         if (recipients.Count == 0)
             return new EmailSendResultDto { Success = false, Message = "לא נמצאו נמענים עם כתובת מייל" };
 
@@ -115,6 +122,17 @@ public class EmailService : IEmailService
         query = ApplyGroupFilter(query, group);
         return await query.CountAsync();
     }
+
+    public async Task<List<EmailRecipientDto>> GetRecipientsPreviewAsync(EmailRecipientGroup group, int? emailGroupId = null)
+    {
+        var recipients = await GetRecipientsAsync(group, emailGroupId);
+        return recipients
+            .Select(r => new EmailRecipientDto { Email = r.Email, Name = r.Name })
+            .OrderBy(r => r.Name ?? r.Email)
+            .ToList();
+    }
+
+    public string BuildPreviewHtml(string subject, string htmlBody) => WrapInEmailTemplate(htmlBody, subject);
 
     // ── Email Groups ───────────────────────────────────────────────────────────
 
@@ -529,25 +547,24 @@ public class EmailService : IEmailService
           <title>{subject}</title>
         </head>
         <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 32px 16px;">
-          <div style="max-width: 600px; margin: 0 auto;">
-
-            <!-- Logo bar -->
-            <div style="background-color: #000000; border-radius: 20px 20px 0 0; padding: 28px 32px; text-align: center;">
-              <div style="font-size: 26px; font-weight: 900; color: #ddff53; letter-spacing: 2px; margin-bottom: 4px;">אקורדישקייט</div>
-              <div style="font-size: 13px; color: rgba(255,255,255,0.55); letter-spacing: 1px;">AKORDISHKEIT</div>
-            </div>
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden;">
 
             <!-- Yellow accent bar -->
             <div style="background-color: #ddff53; height: 6px;"></div>
 
+            <!-- Brand -->
+            <div style="padding: 24px 32px 12px; text-align: center;">
+              <div style="font-size: 22px; font-weight: 900; color: #000000; letter-spacing: 1px;">אקורדישקייט</div>
+            </div>
+
             <!-- Content -->
-            <div style="background: #ffffff; padding: 40px 40px 32px; color: #000000; font-size: 15px; line-height: 1.75;">
+            <div style="padding: 12px 40px 32px; color: #000000; font-size: 15px; line-height: 1.75;">
               {content}
             </div>
 
             <!-- Footer -->
-            <div style="background-color: #000000; border-radius: 0 0 20px 20px; padding: 18px 32px; text-align: center;">
-              <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">
+            <div style="background-color: #F2F2F2; padding: 18px 32px; text-align: center;">
+              <p style="color: #404040; margin: 0; font-size: 12px;">
                 © אקורדישקייט — כל הזכויות שמורות
               </p>
             </div>

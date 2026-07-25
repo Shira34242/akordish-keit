@@ -6,6 +6,8 @@ public interface IEmailService
 {
     Task<EmailSendResultDto> SendCampaignAsync(SendEmailRequestDto request);
     Task<int> GetRecipientCountAsync(EmailRecipientGroup group, int? emailGroupId = null);
+    Task<List<EmailRecipientDto>> GetRecipientsPreviewAsync(EmailRecipientGroup group, int? emailGroupId = null);
+    string BuildPreviewHtml(string subject, string htmlBody);
     Task<bool> SendPasswordResetEmailAsync(string toEmail, string toName, string code);
 
     // Email Groups
