@@ -107,6 +107,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   newsArticles: ArticleBanner[] = [];
   featuredNewsArticles: ArticleBanner[] = [];
   regularNewsArticles: ArticleBanner[] = [];
+  mobileNewsRows: ArticleBanner[][] = [];
+  mobileBlogRows: ArticleBanner[][] = [];
+  mobileArtistRows: any[][] = [];
   blogArticles: ArticleBanner[] = [];
   blogArticlesLoaded = false;
   viralArticles: ArticleBanner[] = [];
@@ -237,6 +240,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   handleJoinIndexClick(): void {
     this.quickAddAssistantService.requestOpen('index');
+  }
+
+  navigatePromoOnMobile(route: string, event: Event): void {
+    if (!this.isMobile) return;
+
+    event.preventDefault();
+    this.router.navigate([route]);
   }
 
   scrollCarousel(target: HTMLElement | Array<HTMLElement | undefined>, direction: 'left' | 'right'): void {
@@ -448,6 +458,15 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.lastHeroVisibleHeight = -1;
     this.lastViewportWidth = window.innerWidth;
     this.lastViewportHeight = window.innerHeight;
+
+    if (window.innerWidth <= 768) {
+      this.fullHeroHeight = Math.round(bg.clientWidth * 3 / 4);
+      bg.style.setProperty('--hero-full-height', this.fullHeroHeight + 'px');
+      bg.style.height = this.fullHeroHeight + 'px';
+      this.resizeHeroCanvas();
+      return;
+    }
+
     this.fullHeroHeight = Math.max(0, this.lastViewportHeight - 16); /* top: 8px + bottom: 8px */
     bg.style.setProperty('--hero-full-height', this.fullHeroHeight + 'px');
     bg.style.height = this.fullHeroHeight + 'px';
@@ -458,6 +477,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
+    if (window.innerWidth <= 768) return;
     const minHeight = 56; /* header 56px — hero מתכווץ לגובה שורת הכותרת */
     const scrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
     const newHeight = Math.max(minHeight, this.fullHeroHeight - scrollY);
@@ -641,15 +661,19 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   private loadTopArtists(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.artistService.getFeaturedArtists(9).pipe(
-      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(9)),
-      catchError(() => this.artistService.getTopArtists(9)),
+    const artistLimit = this.isMobile ? 12 : 9;
+    this.artistService.getFeaturedArtists(artistLimit).pipe(
+      switchMap((artists: any[]) => artists.length > 0 ? of(artists) : this.artistService.getTopArtists(artistLimit)),
+      catchError(() => this.artistService.getTopArtists(artistLimit)),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({
-      next: (artists: any[]) => { this.topArtists = artists; },
+      next: (artists: any[]) => {
+        this.topArtists = artists;
+        this.mobileArtistRows = this.buildMobileArtistRows(artists);
+      },
       error: (err) => console.error('loadContent: top artists', err)
     });
   }
@@ -840,6 +864,23 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     return this.regularNewsArticles;
   }
 
+  private buildMobileNewsRows(articles: ArticleBanner[]): ArticleBanner[][] {
+    const visibleArticles = articles.slice(0, 9);
+    const rows: ArticleBanner[][] = [];
+    for (let index = 0; index < visibleArticles.length; index += 3) {
+      rows.push(visibleArticles.slice(index, index + 3));
+    }
+    return rows;
+  }
+
+  private buildMobileArtistRows(artists: any[]): any[][] {
+    if (artists.length === 0) return [];
+
+    return Array.from({ length: 2 }, (_, rowIndex) =>
+      Array.from({ length: 4 }, (_, artistIndex) => artists[(rowIndex * 4 + artistIndex) % artists.length])
+    );
+  }
+
   get useScrollingNewsBanner(): boolean {
     return this.newsArticles.length >= 2;
   }
@@ -978,6 +1019,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
             ...this.featuredNewsArticles,
             ...this.regularNewsArticles
           ]);
+          this.mobileNewsRows = this.buildMobileNewsRows(this.newsArticles);
         },
         error: (err) => {
           console.error('loadContent: home news banners', err);
@@ -995,6 +1037,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
       })).subscribe({
         next: (blogArticles) => {
           this.blogArticles = this.uniqueArticles(blogArticles || []);
+          this.mobileBlogRows = this.buildMobileNewsRows(this.blogArticles);
         },
         error: (err) => console.error('loadContent: home blog articles', err)
       });

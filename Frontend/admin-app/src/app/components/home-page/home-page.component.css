@@ -1570,12 +1570,64 @@
 /* Mobile ≤768px */
 @media (max-width: 768px) {
   .hero-bg {
-    --hero-radius: 20px;
+    --hero-radius: 0;
+    position: absolute;
+    top: -50px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    will-change: auto;
+  }
+
+  .hero-content-area {
+    height: calc(75vw - 50px);
+    margin-top: 0;
+    min-height: 0;
   }
 
   .hero-title {
-    font-size: 4.5rem;
+    font-size: 4rem;
     letter-spacing: -1px;
+  }
+
+  .search-container {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .search-input-wrapper {
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  .search-icon-button {
+    width: 26px;
+    height: 26px;
+    margin-left: 0;
+  }
+
+  .search-icon-mat {
+    font-size: 18px;
+  }
+
+  .search-rich-placeholder {
+    left: calc(26px + var(--space-md));
+  }
+
+  .search-placeholder-static {
+    display: none;
+  }
+
+  .search-input {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .hero-scroll-indicator,
+  .top-scroll-mask,
+  .corner-mask-tl,
+  .corner-mask-tr {
+    display: none;
   }
 
   .hero-quick-links {
@@ -1587,8 +1639,16 @@
     gap: var(--space-sm);
   }
 
+  .section-scroll-controls {
+    display: none;
+  }
+
   .section-title {
-    font-size: var(--font-lg);
+    font-size: var(--font-base);
+  }
+
+  .section-title-link::after {
+    font-size: var(--font-base);
   }
 
   .section-link {
@@ -1603,33 +1663,93 @@
     padding: 0 8px;
   }
 
+  .music-news-section .music-news-stack,
+  .content-articles-section .content-blog-stack,
+  .home-section > .artists-loop-row {
+    width: calc(100% + 16px);
+    margin-inline: -8px;
+  }
+
   .home-section {
     margin-bottom: var(--space-sm);
   }
 
   .promo-box {
-    border-radius: 20px;
-    padding: var(--space-sm) var(--space-sm);
+    width: calc(100% + 16px);
+    min-height: 0;
+    margin: var(--space-sm) -8px;
+    border-radius: 0;
+    padding: var(--space-base) var(--space-lg);
     justify-content: flex-start;
-    margin: var(--space-sm) 0;
   }
 
   .promo-content {
     text-align: right;
+    gap: var(--space-xs);
   }
 
   .promo-title {
-    font-size: var(--font-4xl);
+    font-size: var(--font-2xl);
+    margin-bottom: 0;
+    line-height: var(--lh-heading);
+  }
+
+  .promo-box--mobile-link {
+    cursor: pointer;
+  }
+
+  .promo-box--mobile-link:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: -2px;
+  }
+
+  .promo-title-arrow {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    margin-inline-start: var(--space-sm);
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    background: #F2F2F2;
+    color: #000000;
+    font-size: 18px;
+  }
+
+  .promo-subtitle {
+    font-size: var(--font-sm);
+    line-height: var(--lh-small);
+    margin-bottom: var(--space-sm);
+    max-width: 20rem;
   }
 
   .promo-actions {
+    width: auto;
+    align-self: flex-end;
+    margin-top: var(--space-xs);
     justify-content: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .promo-btn {
+    height: 26px;
+    padding: 0 var(--space-md);
+    font-size: var(--font-xs);
+  }
+
+  .promo-btn-secondary {
+    min-width: 0;
+    margin-inline-start: 0;
+    font-size: var(--font-xs);
+  }
+
+  .promo-btn-icon {
+    font-size: 16px;
   }
 
   .promo-arrow-link {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    display: none;
   }
 
   .news-grid {
@@ -1672,8 +1792,65 @@
     min-height: 14rem;
   }
 
+  .index-showcase-row {
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .index-showcase-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: var(--space-sm);
+  }
+
+  .index-showcase-track .provider-showcase-card {
+    width: 100%;
+    min-height: 0;
+  }
+
+  .index-showcase-track .provider-showcase-card:nth-child(n + 7),
+  .index-showcase-track .home-more-card--showcase {
+    display: none;
+  }
+
   .songs-grid app-song-card {
     flex: 0 0 240px;
+  }
+
+  .songs-grid--mobile-list {
+    flex-direction: column;
+    gap: var(--space-sm);
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .songs-grid--mobile-list app-song-card {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .artists-loop-row--mobile {
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+
+  .artists-loop-row--mobile .artists-loop-track {
+    gap: var(--space-sm);
+  }
+
+  .artists-loop-row--mobile .artists-loop-track app-artist-circle ::ng-deep .artist-circle {
+    width: 152px;
+  }
+
+  .artists-loop-row--mobile .artists-loop-track app-artist-circle ::ng-deep .image-wrapper {
+    width: 140px;
+    height: 140px;
+    margin-bottom: var(--space-xs);
+  }
+
+  .artists-loop-row--mobile .artists-loop-track app-artist-circle ::ng-deep .artist-name {
+    display: none;
   }
 
   .home-more-card--song {
@@ -1692,14 +1869,63 @@
   .home-series-image-card {
     width: 100%;
   }
+
+  .events-scroll-row,
+  .podcast-episodes-row,
+  .podcasts-home-panel {
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .events-scroll-track,
+  .podcast-episodes-track,
+  .podcasts-home-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: var(--space-sm);
+  }
+
+  .home-section .events-scroll-track > app-event-card,
+  .popular-episodes-section .podcast-episodes-track > .podcast-episode-card,
+  .podcasts-home-section .podcasts-home-track > .home-series-image-card {
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .events-scroll-track > app-event-card:nth-child(n + 7),
+  .podcast-episodes-track > .podcast-episode-card:nth-child(n + 7),
+  .podcasts-home-track > .home-series-image-card:nth-child(n + 7),
+  .events-scroll-track .home-more-card--event,
+  .podcast-episodes-track .home-more-card--episode,
+  .podcasts-home-track .home-more-card--podcast {
+    display: none;
+  }
+
+  .popular-episodes-section .podcast-episodes-track {
+    grid-template-columns: 1fr;
+  }
+
+  .popular-episodes-section .podcast-episodes-track > .podcast-episode-card:nth-child(n + 4) {
+    display: none;
+  }
 }
 
 /* Small mobile ≤480px */
 @media (max-width: 480px) {
+  .hero-bg {
+    top: -46px;
+  }
+
+  .hero-content-area {
+    height: calc(75vw - 46px);
+  }
+
   .hero-title {
-    font-size: 3.5rem;
+    font-size: 3rem;
     letter-spacing: -1px;
-    margin-bottom: var(--space-xl);
+    margin-bottom: var(--space-lg);
   }
 
   .hero-subtitle {
@@ -1710,12 +1936,8 @@
     font-size: var(--font-sm);
   }
 
-  .promo-box {
-    border-radius: 16px;
-  }
-
   .promo-title {
-    font-size: var(--font-3xl);
+    font-size: var(--font-2xl);
   }
 
   .news-banner-stack {
@@ -1886,5 +2108,59 @@
   .home-more-card--podcast {
     flex-basis: 9rem;
     border-radius: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .music-news-mobile-row .news-banner-track > .news-banner-card {
+    flex-basis: 15rem;
+  }
+
+  .music-news-mobile-row.news-banner-row--top .news-banner-track > .news-banner-card {
+    flex-basis: 18.5rem;
+  }
+
+  .music-news-mobile-row .news-banner-card ::ng-deep .banner-title {
+    line-height: var(--lh-heading);
+    -webkit-line-clamp: 4;
+  }
+
+  .music-news-mobile-row.news-banner-row--top .news-banner-card ::ng-deep .banner-title,
+  .music-news-mobile-row.news-banner-row--bottom .news-banner-card ::ng-deep .banner-title {
+    font-size: var(--font-sm);
+  }
+
+  .music-news-mobile-row .news-banner-card ::ng-deep .banner-arrow-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .music-news-mobile-row .news-banner-card ::ng-deep .banner-arrow-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .viral-section .stream-cell ::ng-deep .banner-title {
+    font-size: var(--font-sm);
+    line-height: var(--lh-heading);
+  }
+
+  .viral-section .stream-cell ::ng-deep .banner-subtitle {
+    font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .music-news-mobile-row .news-banner-track > .news-banner-card {
+    flex-basis: 13rem;
+  }
+
+  .music-news-mobile-row.news-banner-row--top .news-banner-track > .news-banner-card {
+    flex-basis: 16rem;
+  }
+
+  .music-news-mobile-row .news-banner-card ::ng-deep .banner-arrow-btn {
+    width: 30px;
+    height: 30px;
   }
 }

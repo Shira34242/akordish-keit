@@ -71,6 +71,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   notificationsCenterLoading = false;
   notificationsCenterError = '';
   isScrolled = false;
+  isMobileHeaderHidden = false;
   fabOnYellow = false;
   adminEditTarget: { label: string; url: string } | null = null;
   unreadNotificationCount = 0;
@@ -115,6 +116,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   @HostListener('window:scroll')
   onWindowScroll(): void {
     const current = window.scrollY;
+    const scrollDelta = current - this.lastScrollY;
     let newScrolled = this.isScrolled;
     if (current > this.lastScrollY && current > 80) {
       newScrolled = true;
@@ -122,6 +124,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       newScrolled = false;
     }
     this.lastScrollY = current;
+
+    if (window.innerWidth <= 768 && Math.abs(scrollDelta) >= 2) {
+      this.isMobileHeaderHidden = scrollDelta > 0 && current > 0;
+    } else if (window.innerWidth > 768) {
+      this.isMobileHeaderHidden = false;
+    }
 
     const needsStateChange = newScrolled !== this.isScrolled
       || this.showUserMenu

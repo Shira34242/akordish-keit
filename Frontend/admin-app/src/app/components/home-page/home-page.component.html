@@ -216,7 +216,7 @@
         </app-news-banner>
       </div>
 
-      <div *ngIf="useScrollingNewsBanner" class="news-banner-stack music-news-stack">
+      <div *ngIf="useScrollingNewsBanner && !isMobile" class="news-banner-stack music-news-stack">
         <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
@@ -252,6 +252,34 @@
           </div>
         </div>
       </div>
+
+      <div *ngIf="useScrollingNewsBanner && isMobile" class="news-banner-stack music-news-stack music-news-stack--mobile">
+        <div
+          *ngFor="let row of mobileNewsRows; let rowIndex = index"
+          class="news-banner-row music-news-row music-news-mobile-row"
+          [class.news-banner-row--top]="rowIndex === 0"
+          [class.news-banner-row--bottom]="rowIndex > 0"
+          appAutoScroll
+          [autoScrollSpeed]="32"
+          [autoScrollDirection]="rowIndex % 2 === 0 ? 'right' : 'left'"
+          [autoScrollCopies]="2">
+          <div class="news-banner-track">
+            <ng-container *ngFor="let copy of [0, 1]">
+              <app-news-banner
+                *ngFor="let article of row; trackBy: trackById"
+                class="news-banner-card"
+                [article]="article"
+                [imagePreset]="600"
+                [imageWidths]="[320, 480, 600, 720]"
+                imageSizes="(max-width: 480px) 12rem, (max-width: 768px) 14rem"
+                imageLoading="lazy"
+                imageFetchPriority="auto"
+                [showDescription]="false">
+              </app-news-banner>
+            </ng-container>
+          </div>
+        </div>
+      </div>
     </section>
 
     <ng-container *ngIf="restContentStarted">
@@ -261,11 +289,16 @@
       <app-media-item spotTechnicalId="home-top-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-chords" class="promo-box" *ngIf="promoChordsStarted">
+    <div id="promo-chords" class="promo-box" [class.promo-box--mobile-link]="isMobile" *ngIf="promoChordsStarted"
+         [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
+         (click)="navigatePromoOnMobile('/chords', $event)" (keydown.enter)="navigatePromoOnMobile('/chords', $event)">
       <div class="promo-content">
-        <h2 class="promo-title">{{ 'home.promo_chords_title' | translate }}</h2>
+        <h2 class="promo-title">
+          {{ 'home.promo_chords_title' | translate }}
+          <span class="promo-title-arrow material-icons" aria-hidden="true">arrow_back</span>
+        </h2>
         <p class="promo-subtitle">{{ 'home.promo_chords_sub' | translate }}</p>
-        <div class="promo-actions">
+        <div class="promo-actions" (click)="$event.stopPropagation()">
           <a routerLink="/chords" class="promo-arrow-link" [attr.aria-label]="'home.promo_chords_link' | translate">
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -294,12 +327,15 @@
           </button>
         </div>
       </div>
-      <div class="songs-grid recent-songs-row" (scroll)="refreshCarouselControls('.recent-songs-row')">
+      <div *ngIf="!isMobile" class="songs-grid recent-songs-row" (scroll)="refreshCarouselControls('.recent-songs-row')">
         <app-song-card *ngFor="let song of recentSongs; trackBy: trackById" [song]="song"></app-song-card>
         <a routerLink="/chords" class="home-more-card home-more-card--song" aria-label="לכל האקורדים">
           <span>לכל האקורדים</span>
           <span class="material-icons" aria-hidden="true">arrow_back</span>
         </a>
+      </div>
+      <div *ngIf="isMobile" class="songs-grid songs-grid--mobile-list recent-songs-row">
+        <app-song-card *ngFor="let song of recentSongs.slice(0, 4); trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
@@ -315,12 +351,15 @@
           </button>
         </div>
       </div>
-      <div class="songs-grid popular-songs-row" (scroll)="refreshCarouselControls('.popular-songs-row')">
+      <div *ngIf="!isMobile" class="songs-grid popular-songs-row" (scroll)="refreshCarouselControls('.popular-songs-row')">
         <app-song-card *ngFor="let song of popularSongs; trackBy: trackById" [song]="song"></app-song-card>
         <a routerLink="/chords" class="home-more-card home-more-card--song" aria-label="לכל האקורדים">
           <span>לכל האקורדים</span>
           <span class="material-icons" aria-hidden="true">arrow_back</span>
         </a>
+      </div>
+      <div *ngIf="isMobile" class="songs-grid songs-grid--mobile-list popular-songs-row">
+        <app-song-card *ngFor="let song of popularSongs.slice(0, 4); trackBy: trackById" [song]="song"></app-song-card>
       </div>
     </section>
 
@@ -328,7 +367,7 @@
       <div class="section-header">
         <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
       </div>
-      <div class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" (scroll)="refreshCarouselControls('.artists-loop-row')">
+      <div *ngIf="!isMobile" class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" (scroll)="refreshCarouselControls('.artists-loop-row')">
         <div class="artists-loop-track">
           <ng-container *ngFor="let copy of [0, 1, 2]">
             <app-artist-circle
@@ -339,6 +378,25 @@
           </ng-container>
         </div>
       </div>
+      <ng-container *ngIf="isMobile">
+        <div
+          *ngFor="let row of mobileArtistRows; let rowIndex = index"
+          class="artists-loop-row artists-loop-row--mobile"
+          appAutoScroll
+          [autoScrollSpeed]="28"
+          [autoScrollDirection]="rowIndex === 1 ? 'right' : 'left'"
+          [autoScrollCopies]="3">
+          <div class="artists-loop-track">
+            <ng-container *ngFor="let copy of [0, 1, 2]">
+              <app-artist-circle
+                *ngFor="let artist of row; trackBy: trackById"
+                [artist]="artist"
+                [showSongCount]="false">
+              </app-artist-circle>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
     </section>
 
     <div class="content-slot" *ngIf="midAdStarted">
@@ -346,11 +404,16 @@
       <app-media-item spotTechnicalId="home-mid-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-index" class="promo-box promo-box--providers" *ngIf="promoIndexStarted">
+    <div id="promo-index" class="promo-box promo-box--providers" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
+         [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
+         (click)="navigatePromoOnMobile('/professionals', $event)" (keydown.enter)="navigatePromoOnMobile('/professionals', $event)">
       <div class="promo-content">
-        <h2 class="promo-title">{{ 'home.promo_index_title' | translate }}</h2>
+        <h2 class="promo-title">
+          {{ 'home.promo_index_title' | translate }}
+          <span class="promo-title-arrow material-icons" aria-hidden="true">arrow_back</span>
+        </h2>
         <p class="promo-subtitle">{{ 'home.promo_index_sub' | translate }}</p>
-        <div class="promo-actions">
+        <div class="promo-actions" (click)="$event.stopPropagation()">
           <a routerLink="/professionals" class="promo-arrow-link" [attr.aria-label]="'home.promo_index_link' | translate">
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -435,9 +498,14 @@
       </div>
     </section>
 
-    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" *ngIf="promoPodcastsStarted">
+    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" [class.promo-box--mobile-link]="isMobile" *ngIf="promoPodcastsStarted"
+         [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
+         (click)="navigatePromoOnMobile('/podcasts', $event)" (keydown.enter)="navigatePromoOnMobile('/podcasts', $event)">
       <div class="promo-content">
-        <h2 class="promo-title">פודקאסטים</h2>
+        <h2 class="promo-title">
+          פודקאסטים
+          <span class="promo-title-arrow material-icons" aria-hidden="true">arrow_back</span>
+        </h2>
         <p class="promo-subtitle">השיחות, הראיונות והפרקים החמים בעולם המוזיקה היהודית</p>
         <div class="promo-actions">
           <a routerLink="/podcasts" class="promo-arrow-link" aria-label="לכל הפודקאסטים">
@@ -541,7 +609,7 @@
         </app-news-banner>
       </div>
 
-      <div *ngIf="useScrollingBlogBanner" class="news-banner-stack content-blog-stack">
+      <div *ngIf="useScrollingBlogBanner && !isMobile" class="news-banner-stack content-blog-stack">
         <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
@@ -567,6 +635,34 @@
                 [imagePreset]="360"
                 [imageWidths]="[240, 320, 360, 480]"
                 imageSizes="(max-width: 480px) 11rem, (max-width: 768px) 13rem, 19rem"
+                [showDescription]="false">
+              </app-news-banner>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="useScrollingBlogBanner && isMobile" class="news-banner-stack content-blog-stack music-news-stack music-news-stack--mobile">
+        <div
+          *ngFor="let row of mobileBlogRows; let rowIndex = index"
+          class="news-banner-row music-news-row music-news-mobile-row"
+          [class.news-banner-row--top]="rowIndex === 0"
+          [class.news-banner-row--bottom]="rowIndex > 0"
+          appAutoScroll
+          [autoScrollSpeed]="32"
+          [autoScrollDirection]="rowIndex % 2 === 0 ? 'right' : 'left'"
+          [autoScrollCopies]="2">
+          <div class="news-banner-track">
+            <ng-container *ngFor="let copy of [0, 1]">
+              <app-news-banner
+                *ngFor="let article of row; trackBy: trackById"
+                class="news-banner-card"
+                [article]="article"
+                [imagePreset]="600"
+                [imageWidths]="[320, 480, 600, 720]"
+                imageSizes="(max-width: 480px) 12rem, (max-width: 768px) 14rem"
+                imageLoading="lazy"
+                imageFetchPriority="auto"
                 [showDescription]="false">
               </app-news-banner>
             </ng-container>

@@ -1548,6 +1548,13 @@
     .main-header {
         height: 50px;
         top: 8px;
+        transition: transform 0.26s ease, opacity 0.2s ease;
+    }
+
+    .main-header.main-header--mobile-hidden {
+        transform: translateY(calc(-100% - 8px));
+        opacity: 0;
+        pointer-events: none;
     }
 
     .header-inner {
@@ -1994,5 +2001,75 @@ html[dir="ltr"] .footer-newsletter-input {
 
     .footer-acum {
         flex-wrap: wrap;
+    }
+}
+
+/* Footer — compact mobile layout */
+@media (max-width: 768px) {
+    .main-footer {
+        padding: var(--space-base) var(--space-base) var(--space-sm);
+    }
+
+    .footer-body {
+        gap: var(--space-base);
+        margin-bottom: var(--space-base);
+    }
+
+    .footer-nav {
+        align-items: flex-start;
+        gap: var(--space-base);
+    }
+
+    .footer-col {
+        flex: 0 1 auto;
+        width: fit-content;
+        gap: var(--space-sm);
+    }
+
+    .footer-col li,
+    .footer-col li a,
+    .footer-col li > a,
+    .footer-tag {
+        width: fit-content;
+    }
+
+    .footer-newsletter {
+        min-width: 0;
+        gap: var(--space-sm);
+    }
+
+    .footer-newsletter-form {
+        margin-top: 0;
+    }
+
+    .footer-legal {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: var(--space-xs) var(--space-sm);
+        padding-top: var(--space-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .main-footer {
+        padding: var(--space-md) var(--space-md) var(--space-xs);
+    }
+
+    .footer-nav {
+        gap: var(--space-sm);
+    }
+
+    .footer-col,
+    .footer-col--tools {
+        gap: var(--space-xs) var(--space-md);
+    }
+
+    .footer-newsletter-form {
+        flex-direction: row;
+    }
+
+    .footer-newsletter-input,
+    .footer-newsletter-btn {
+        width: auto;
     }
 }
