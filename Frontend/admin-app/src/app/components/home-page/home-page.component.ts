@@ -697,11 +697,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
       if (completedLoads === 2) afterLoad?.();
     };
     const onSeriesDone = this.trackPendingLoad();
-    this.podcastService.getHomePodcastCards(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.podcastService.getHomePodcastCards(10).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onSeriesDone();
       completeLoad();
     })).subscribe({
-      next: podcasts => { this.homePodcasts = podcasts.slice(0, 8); },
+      next: podcasts => { this.homePodcasts = podcasts.slice(0, 10); },
       error: err => console.error('loadContent: podcast series', err)
     });
 

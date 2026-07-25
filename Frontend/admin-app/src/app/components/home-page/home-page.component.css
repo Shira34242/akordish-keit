@@ -1456,23 +1456,30 @@
    PODCASTS HOME
 ============================================ */
 .podcasts-home-panel {
-  overflow: visible;
-  padding-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--space-xs);
   direction: rtl;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.podcasts-home-panel::-webkit-scrollbar {
+  display: none;
 }
 
 .podcasts-home-track {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  display: flex;
   direction: rtl;
   gap: var(--space-base);
   align-items: stretch;
-  width: 100%;
+  width: max-content;
 }
 
 .home-series-image-card {
-  width: 100%;
-  min-width: 0;
+  flex: 0 0 11rem;
   direction: rtl;
   color: #000000;
   text-decoration: none;
@@ -1482,7 +1489,7 @@
 }
 
 .home-more-card--podcast {
-  width: 100%;
+  flex: 0 0 11rem;
   aspect-ratio: 1 / 1;
 }
 
@@ -1844,13 +1851,8 @@
     border-radius: 8px;
   }
 
-  .podcasts-home-track {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-md);
-  }
-
   .home-series-image-card {
-    width: 100%;
+    flex-basis: 9rem;
   }
 
   .podcast-episode-card ::ng-deep .episode-banner {
@@ -1880,12 +1882,9 @@
     border-radius: 8px;
   }
 
-  .home-series-image-card {
-    width: 100%;
+  .home-series-image-card,
+  .home-more-card--podcast {
+    flex-basis: 9rem;
     border-radius: 18px;
-  }
-
-  .podcasts-home-track {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

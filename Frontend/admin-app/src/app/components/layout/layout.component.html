@@ -3,9 +3,21 @@
     <div class="header-inner">
 
         <div class="header-right">
-            <button class="mobile-menu-btn" (click)="toggleMobileMenu($event)">
+            <button class="mobile-menu-btn" [class.mobile-action-hidden]="showUserMenu || showNotificationsPopup" (click)="toggleHeaderMenu($event)">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
+            <nav class="mobile-site-menu" *ngIf="showMobileMenu" (click)="$event.stopPropagation()" aria-label="ניווט באתר">
+                <a class="mobile-site-menu-item" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.home' | translate }}</a>
+                <a class="mobile-site-menu-item" routerLink="/chords" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.chords' | translate }}</a>
+                <a class="mobile-site-menu-item" routerLink="/music-news" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.news' | translate }}</a>
+                <a class="mobile-site-menu-item mobile-site-menu-item--index" routerLink="/professionals" (click)="closeMobileMenu()">
+                    <span class="material-icons index-search-icon">search</span>
+                    <span>{{ 'nav.index_full' | translate }}</span>
+                </a>
+                <a class="mobile-site-menu-item" routerLink="/blog" routerLinkActive="active" (click)="closeMobileMenu()">כתבות</a>
+                <a class="mobile-site-menu-item" routerLink="/events" routerLinkActive="active" (click)="closeMobileMenu()">הופעות</a>
+                <a class="mobile-site-menu-item" routerLink="/podcasts" routerLinkActive="active" (click)="closeMobileMenu()">פודקאסטים</a>
+            </nav>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
                 <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
                     <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
@@ -54,13 +66,13 @@
             </button>
         </div>
 
-        <div class="header-mobile-actions" *ngIf="!showMobileMenu">
-            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
-                <span class="material-icons">notifications</span>
-                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
+        <div class="header-mobile-actions">
+            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" [class.mobile-action-hidden]="showUserMenu || showMobileMenu" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
+                <span class="material-icons">{{ showNotificationsPopup ? 'close' : 'notifications' }}</span>
+                <span class="notification-badge" *ngIf="unreadNotificationCount > 0 && !showNotificationsPopup">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
-                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
+                <div class="user-profile-wrapper" [class.mobile-action-hidden]="showNotificationsPopup || showMobileMenu" [class.user-profile-wrapper--open]="showUserMenu" (click)="toggleUserMenu($event)">
                     <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
                     <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
                     <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
@@ -94,78 +106,8 @@
                 </div>
             </ng-container>
             <ng-template #loginBtnMobile>
-                <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
+                <button class="btn-login" [class.mobile-action-hidden]="showMobileMenu" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
             </ng-template>
-            <button class="btn-lang-toggle" (click)="langService.toggle()" *ngIf="false">
-                <span [class.lang-active]="currentLang === 'he'">עב</span>
-                <span class="lang-sep">|</span>
-                <span [class.lang-active]="currentLang === 'en'">EN</span>
-            </button>
-        </div>
-
-        <div class="mobile-nav-scroll" *ngIf="showMobileMenu">
-            <div class="nav-pills">
-                <ul class="main-nav mobile-main-nav">
-                    <li><a class="nav-link" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active">{{ 'nav.home' | translate }}</a></li>
-                    <li><a class="nav-link" routerLink="/chords" routerLinkActive="active">{{ 'nav.chords' | translate }}</a></li>
-                    <li class="site-nav-group" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
-                        <a class="nav-link nav-parent" routerLink="/music-news">
-                            <span class="material-icons nav-expand-icon" aria-hidden="true">chevron_right</span>
-                            <span>{{ 'nav.news' | translate }}</span>
-                        </a>
-                        <div class="site-nav-submenu" aria-label="בחירת אזור חדשות המוזיקה">
-                            <a routerLink="/blog" routerLinkActive="active-sub" class="site-sub-nav-item">כתבות</a>
-                            <a routerLink="/events" routerLinkActive="active-sub" class="site-sub-nav-item">הופעות</a>
-                            <a routerLink="/podcasts" routerLinkActive="active-sub" class="site-sub-nav-item">פודקאסטים</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <a class="btn-music-index" routerLink="/professionals">
-                <span class="material-icons index-search-icon">search</span>
-                <span class="btn-music-index-text">{{ 'nav.index_short' | translate }}</span>
-            </a>
-            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
-                <span class="material-icons">notifications</span>
-                <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
-            </button>
-            <ng-container *ngIf="loggedIn && user">
-                <div class="user-profile-wrapper" (click)="toggleUserMenu($event)">
-                    <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
-                    <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
-                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
-                        <a class="user-menu-header" routerLink="/my-profile" (click)="closeUserMenu(); $event.stopPropagation()">
-                            <app-profile-avatar class="user-menu-avatar" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
-                            <div class="user-menu-profile-content">
-                                <span class="user-menu-profile-label">{{ 'user.profile' | translate }}</span>
-                                <div class="user-menu-info">
-                                    <div class="user-menu-name">{{ user.username }}</div>
-                                    <div class="user-menu-email">{{ user.email }}</div>
-                                </div>
-                            </div>
-                        </a>
-                        <div class="user-menu-divider"></div>
-                        <ul class="user-menu-list">
-                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
-                                <span class="material-icons menu-icon">admin_panel_settings</span>
-                                <span>{{ 'user.admin' | translate }}</span>
-                            </li>
-                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
-                                <span class="material-icons menu-icon">bookmark</span>
-                                <span>{{ 'user.playlists' | translate }}</span>
-                            </li>
-                            <div class="user-menu-divider"></div>
-                            <li class="user-menu-item logout" (click)="signOut()">
-                                <span class="material-icons menu-icon">logout</span>
-                                <span>{{ 'user.logout' | translate }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </ng-container>
-            <ng-container *ngIf="!loggedIn || !user">
-                <button class="btn-login" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
-            </ng-container>
             <button class="btn-lang-toggle" (click)="langService.toggle()" *ngIf="false">
                 <span [class.lang-active]="currentLang === 'he'">עב</span>
                 <span class="lang-sep">|</span>
@@ -201,6 +143,14 @@
 
     </div>
 </header>
+
+<div
+    class="mobile-menu-backdrop"
+    [class.is-visible]="showUserMenu || showMobileMenu || showNotificationsPopup"
+    [class.mobile-menu-backdrop--left]="mobileBackdropOrigin === 'left'"
+    [class.mobile-menu-backdrop--right]="mobileBackdropOrigin === 'right'"
+    [attr.aria-hidden]="!(showUserMenu || showMobileMenu || showNotificationsPopup)">
+</div>
 
 <section class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
     <div class="notifications-popup-state notifications-popup-bubble" *ngIf="notificationsPreviewLoading">{{ 'notif.loading' | translate }}</div>

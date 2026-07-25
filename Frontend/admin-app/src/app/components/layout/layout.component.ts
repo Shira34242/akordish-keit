@@ -62,6 +62,7 @@ export class LayoutComponent implements OnInit, AfterViewInit {
   isQuickAddClosing = false;
   quickAddEntryPoint: QuickAddEntryPoint = 'root';
   showNotificationsPopup = false;
+  mobileBackdropOrigin: 'left' | 'right' = 'right';
   showNotificationsCenterModal = false;
   notificationsPreview: NotificationDto[] = [];
   notificationsPreviewLoading = false;
@@ -413,7 +414,9 @@ export class LayoutComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    this.mobileBackdropOrigin = 'left';
     this.showUserMenu = false;
+    this.showMobileMenu = false;
     this.showNotificationsCenterModal = false;
     this.showNotificationsPopup = !this.showNotificationsPopup;
 
@@ -627,11 +630,13 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   toggleUserMenu(event: Event): void {
     event.stopPropagation();
+    this.mobileBackdropOrigin = 'left';
     const next = !this.showUserMenu;
     this.showUserMenu = next;
     if (next) {
       this.showNotificationsPopup = false;
       this.showNotificationsCenterModal = false;
+      this.showMobileMenu = false;
     }
   }
 
@@ -640,9 +645,29 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.showMobileMenu = false;
   }
 
+  toggleHeaderMenu(event: Event): void {
+    event.stopPropagation();
+
+    if (this.showUserMenu || this.showMobileMenu || this.showNotificationsPopup) {
+      this.showUserMenu = false;
+      this.showMobileMenu = false;
+      this.showNotificationsPopup = false;
+      return;
+    }
+
+    this.toggleMobileMenu(event);
+  }
+
   toggleMobileMenu(event: Event): void {
     event.stopPropagation();
-    this.showMobileMenu = !this.showMobileMenu;
+    this.mobileBackdropOrigin = 'right';
+    const next = !this.showMobileMenu;
+    this.showMobileMenu = next;
+    if (next) {
+      this.showUserMenu = false;
+      this.showNotificationsPopup = false;
+      this.showNotificationsCenterModal = false;
+    }
   }
 
   closeMobileMenu(): void {

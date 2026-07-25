@@ -1021,6 +1021,10 @@
     display: none;
 }
 
+.mobile-menu-backdrop {
+    display: none;
+}
+
 /* ============================================
    MOBILE NAV SCROLL (שורה נגללת כשפתוח)
 ============================================ */
@@ -1030,6 +1034,33 @@
 
 /* header-desktop-only — מוסתר במובייל */
 @media (max-width: 768px) {
+    .mobile-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: calc(var(--z-base-header) - 1);
+        display: block;
+        --menu-backdrop-origin: calc(100% - 2rem) 2rem;
+        background: rgba(221, 255, 83, 0.8);
+        clip-path: circle(0 at var(--menu-backdrop-origin));
+        opacity: 0;
+        pointer-events: none;
+        transition: clip-path 0.18s ease-out, opacity 0.18s ease-out;
+    }
+
+    .mobile-menu-backdrop--left {
+        --menu-backdrop-origin: 2rem 2rem;
+    }
+
+    .mobile-menu-backdrop--right {
+        --menu-backdrop-origin: calc(100% - 2rem) 2rem;
+    }
+
+    .mobile-menu-backdrop.is-visible {
+        clip-path: circle(150% at var(--menu-backdrop-origin));
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .header-desktop-only {
         display: none !important;
     }
@@ -1038,6 +1069,85 @@
         display: flex;
         align-items: center;
         gap: var(--space-md);
+    }
+
+    .mobile-action-hidden {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .notifications-popup-actions .popup-icon-button {
+        display: none;
+    }
+
+    /* The profile menu is aligned to the physical left edge on mobile. */
+    .header-mobile-actions {
+        position: relative;
+    }
+
+    .header-mobile-actions .user-menu {
+        right: auto !important;
+        left: 0 !important;
+        align-items: flex-end;
+    }
+
+    .header-mobile-actions .user-menu-list {
+        align-items: flex-end;
+    }
+
+    .mobile-site-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: var(--z-dropdown-menu);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: var(--space-xs);
+        width: calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+        padding: var(--space-xs) 0;
+        border-radius: 24px;
+        background: transparent;
+        box-sizing: border-box;
+        direction: rtl;
+        animation: slideDown 0.2s ease-out;
+    }
+
+    .mobile-site-menu-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 var(--space-base);
+        border-radius: 50px;
+        background: #ffffff;
+        color: #000000;
+        font-family: 'Open Sans', sans-serif;
+        font-size: var(--font-sm);
+        font-weight: 700;
+        line-height: var(--lh-small);
+        text-align: right;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .mobile-site-menu-item:hover,
+    .mobile-site-menu-item:focus-visible,
+    .mobile-site-menu-item.active {
+        background: #F2F2F2;
+        outline: none;
+    }
+
+    .mobile-site-menu-item--index {
+        gap: var(--space-sm);
+        background: #ddff53;
+    }
+
+    .mobile-site-menu-item--index:hover,
+    .mobile-site-menu-item--index:focus-visible {
+        background: #ddff53;
     }
 
     .mobile-nav-scroll {
@@ -1488,10 +1598,19 @@
 
     .notifications-popup {
         top: 72px;
-        right: var(--space-base);
+        right: auto;
         left: var(--space-base);
-        width: auto;
+        width: min(340px, calc(100vw - 2rem));
         max-height: min(76vh, 620px);
+    }
+
+    .notifications-popup-state,
+    .notifications-popup-empty {
+        align-self: flex-end;
+    }
+
+    .notifications-popup-actions {
+        justify-content: flex-end;
     }
 
     .notifications-center-overlay {
@@ -1627,6 +1746,13 @@ html[dir="ltr"] .footer-newsletter-input {
     html[dir="ltr"] .mobile-main-nav {
         direction: ltr;
     }
+
+    html[dir="ltr"] .mobile-site-menu {
+        right: auto;
+        left: 0;
+        direction: ltr;
+    }
+
 }
 
 @media (max-width: 480px) {
@@ -1721,7 +1847,7 @@ html[dir="ltr"] .footer-newsletter-input {
 
     .notifications-popup {
         top: 68px;
-        right: var(--space-md);
+        right: auto;
         left: var(--space-md);
     }
 
