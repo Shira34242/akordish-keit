@@ -57,7 +57,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   set heroEl(el: ElementRef<HTMLElement> | undefined) {
     this._heroEl = el;
     if (el) {
-      this.fullHeroHeight = window.innerHeight - 16;
+      this.fullHeroHeight = this.getHeroHeight();
       el.nativeElement.style.height = this.fullHeroHeight + 'px';
       this.shrinkHero();
     }
@@ -135,13 +135,22 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:resize')
   onResize(): void {
-    this.fullHeroHeight = window.innerHeight - 16;
+    this.fullHeroHeight = this.getHeroHeight();
     this.shrinkHero();
   }
 
   shrinkHero(): void {
     const hero = this._heroEl?.nativeElement;
     if (!hero || this.fullHeroHeight === 0) return;
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      hero.style.height = this.fullHeroHeight + 'px';
+      const content = hero.querySelector('.hero-content') as HTMLElement | null;
+      if (content) content.style.opacity = '1';
+      const collapseOverlay = hero.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+      if (collapseOverlay) collapseOverlay.style.opacity = '0';
+      return;
+    }
 
     const minHeight = 56; /* גובה ה-navbar — hero מתכווץ לשורת הכותרת */
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
@@ -159,6 +168,12 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
         : 0;
       collapseOverlay.style.opacity = String(collapseProgress);
     }
+  }
+
+  private getHeroHeight(): number {
+    return window.matchMedia('(max-width: 768px)').matches
+      ? (window.innerWidth - 8) * (4 / 3)
+      : window.innerHeight - 16;
   }
 
   ngOnInit(): void {

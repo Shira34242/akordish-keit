@@ -1,7 +1,7 @@
-<div class="artist-circle" [routerLink]="artistLink">
+<a class="artist-circle" [routerLink]="artistLink" [attr.aria-label]="artist.name">
     <div class="image-wrapper">
         <img [src]="(artist.imageUrl | cfImage:160:80) || 'assets/default-artist.png'" [attr.srcset]="artist.imageUrl | cfSrcset:[120, 160, 240, 320]:80" sizes="152px" [alt]="artist.name" class="artist-image" width="152" height="152" loading="lazy" decoding="async" [imgFallbackOriginal]="artist.imageUrl" imgFallback="assets/default-artist.png">
     </div>
     <h3 class="artist-name">{{ artist.name }}</h3>
     <p class="song-count" *ngIf="showSongCount">{{ artist.songCount || 0 }} שירים באתר</p>
-</div>
+</a>

@@ -1,12 +1,14 @@
 <!-- Global Header / Navbar -->
+<a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
 <header class="main-header" [class.main-header--mobile-hidden]="isMobileHeaderHidden">
     <div class="header-inner">
 
         <div class="header-right">
-            <button class="mobile-menu-btn" [class.mobile-action-hidden]="showUserMenu || showNotificationsPopup" (click)="toggleHeaderMenu($event)">
+            <button type="button" class="mobile-menu-btn" [class.mobile-action-hidden]="showUserMenu || showNotificationsPopup" (click)="toggleHeaderMenu($event)"
+                [attr.aria-label]="showMobileMenu ? 'סגירת תפריט' : 'פתיחת תפריט'" [attr.aria-expanded]="showMobileMenu" aria-controls="mobile-site-menu">
                 <span class="material-icons">{{ showMobileMenu ? 'close' : 'menu' }}</span>
             </button>
-            <nav class="mobile-site-menu" *ngIf="showMobileMenu" (click)="$event.stopPropagation()" aria-label="ניווט באתר">
+            <nav id="mobile-site-menu" class="mobile-site-menu" *ngIf="showMobileMenu" (click)="$event.stopPropagation()" aria-label="ניווט באתר">
                 <a class="mobile-site-menu-item" routerLink="/" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.home' | translate }}</a>
                 <a class="mobile-site-menu-item" routerLink="/chords" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.chords' | translate }}</a>
                 <a class="mobile-site-menu-item" routerLink="/music-news" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'nav.news' | translate }}</a>
@@ -19,10 +21,13 @@
                 <a class="mobile-site-menu-item" routerLink="/podcasts" routerLinkActive="active" (click)="closeMobileMenu()">פודקאסטים</a>
             </nav>
             <ng-container *ngIf="loggedIn && user; else loginBtn">
-                <div class="user-profile-wrapper header-desktop-only" (click)="toggleUserMenu($event)">
-                    <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
-                    <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
-                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                <div class="user-profile-wrapper header-desktop-only">
+                    <button type="button" class="user-profile-trigger" (click)="toggleUserMenu($event)"
+                        [attr.aria-label]="'תפריט משתמש עבור ' + user.username" [attr.aria-expanded]="showUserMenu" aria-controls="user-menu-desktop">
+                        <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
+                        <span class="material-icons chevron-icon" aria-hidden="true">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
+                    </button>
+                    <div id="user-menu-desktop" class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <a class="user-menu-header" routerLink="/my-profile" (click)="closeUserMenu(); $event.stopPropagation()">
                             <app-profile-avatar class="user-menu-avatar" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
                             <div class="user-menu-profile-content">
@@ -35,24 +40,25 @@
                         </a>
                         <div class="user-menu-divider"></div>
                         <ul class="user-menu-list">
-                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
+                            <li *ngIf="user.role === 'Admin' || user.role === 4"><button type="button" class="user-menu-item" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>{{ 'user.admin' | translate }}</span>
-                            </li>
-                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
+                            </button></li>
+                            <li><a class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>{{ 'user.playlists' | translate }}</span>
-                            </li>
+                            </a></li>
                             <div class="user-menu-divider"></div>
-                            <li class="user-menu-item logout" (click)="signOut()">
+                            <li><button type="button" class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
                                 <span>{{ 'user.logout' | translate }}</span>
-                            </li>
+                            </button></li>
                         </ul>
                     </div>
                 </div>
             </ng-container>
-            <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
+            <button class="btn-bell header-desktop-only" [class.btn-bell-active]="showNotificationsPopup" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn"
+                [attr.aria-label]="showNotificationsPopup ? 'סגירת התראות' : 'פתיחת התראות'" [attr.aria-expanded]="showNotificationsPopup" aria-controls="notifications-popup">
                 <span class="material-icons">notifications</span>
                 <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
@@ -67,15 +73,19 @@
         </div>
 
         <div class="header-mobile-actions">
-            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" [class.mobile-action-hidden]="showUserMenu || showMobileMenu" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn">
+            <button class="btn-bell" [class.btn-bell-active]="showNotificationsPopup" [class.mobile-action-hidden]="showUserMenu || showMobileMenu" type="button" (click)="toggleNotificationsPopup($event)" *ngIf="loggedIn"
+                [attr.aria-label]="showNotificationsPopup ? 'סגירת התראות' : 'פתיחת התראות'" [attr.aria-expanded]="showNotificationsPopup" aria-controls="notifications-popup">
                 <span class="material-icons">{{ showNotificationsPopup ? 'close' : 'notifications' }}</span>
                 <span class="notification-badge" *ngIf="unreadNotificationCount > 0 && !showNotificationsPopup">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-container *ngIf="loggedIn && user; else loginBtnMobile">
-                <div class="user-profile-wrapper" [class.mobile-action-hidden]="showNotificationsPopup || showMobileMenu" [class.user-profile-wrapper--open]="showUserMenu" (click)="toggleUserMenu($event)">
-                    <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
-                    <span class="material-icons chevron-icon">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
-                    <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+                <div class="user-profile-wrapper" [class.mobile-action-hidden]="showNotificationsPopup || showMobileMenu" [class.user-profile-wrapper--open]="showUserMenu">
+                    <button type="button" class="user-profile-trigger" (click)="toggleUserMenu($event)"
+                        [attr.aria-label]="'תפריט משתמש עבור ' + user.username" [attr.aria-expanded]="showUserMenu" aria-controls="user-menu-mobile">
+                        <app-profile-avatar class="user-avatar-img" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
+                        <span class="material-icons chevron-icon" aria-hidden="true">{{ showUserMenu ? 'expand_less' : 'expand_more' }}</span>
+                    </button>
+                    <div id="user-menu-mobile" class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
                         <a class="user-menu-header" routerLink="/my-profile" (click)="closeUserMenu(); $event.stopPropagation()">
                             <app-profile-avatar class="user-menu-avatar" [name]="user.username" [imageUrl]="user.profileImageUrl" [identity]="user.id" size="fill"></app-profile-avatar>
                             <div class="user-menu-profile-content">
@@ -88,19 +98,19 @@
                         </a>
                         <div class="user-menu-divider"></div>
                         <ul class="user-menu-list">
-                            <li class="user-menu-item" *ngIf="user.role === 'Admin' || user.role === 4" (click)="goToAdmin()">
+                            <li *ngIf="user.role === 'Admin' || user.role === 4"><button type="button" class="user-menu-item" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>{{ 'user.admin' | translate }}</span>
-                            </li>
-                            <li class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
+                            </button></li>
+                            <li><a class="user-menu-item" routerLink="/my-playlists" (click)="closeUserMenu()">
                                 <span class="material-icons menu-icon">bookmark</span>
                                 <span>{{ 'user.playlists' | translate }}</span>
-                            </li>
+                            </a></li>
                             <div class="user-menu-divider"></div>
-                            <li class="user-menu-item logout" (click)="signOut()">
+                            <li><button type="button" class="user-menu-item logout" (click)="signOut()">
                                 <span class="material-icons menu-icon">logout</span>
                                 <span>{{ 'user.logout' | translate }}</span>
-                            </li>
+                            </button></li>
                         </ul>
                     </div>
                 </div>
@@ -152,7 +162,7 @@
     [attr.aria-hidden]="!(showUserMenu || showMobileMenu || showNotificationsPopup)">
 </div>
 
-<section class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
+<section id="notifications-popup" class="notifications-popup" *ngIf="showNotificationsPopup" (click)="$event.stopPropagation()">
     <div class="notifications-popup-state notifications-popup-bubble" *ngIf="notificationsPreviewLoading">{{ 'notif.loading' | translate }}</div>
     <div class="notifications-popup-state notifications-popup-bubble" *ngIf="!notificationsPreviewLoading && notificationsPreviewError">{{ notificationsPreviewError }}</div>
 
@@ -255,7 +265,7 @@
   <button class="session-expired-dismiss" (click)="sessionExpiredToast = false">✕</button>
 </div>
 
-<main class="main-content" [class.main-content--podcast-viewer]="isPodcastViewerPage">
+<main id="main-content" class="main-content" tabindex="-1" [class.main-content--podcast-viewer]="isPodcastViewerPage">
     <router-outlet></router-outlet>
 </main>
 
@@ -273,7 +283,7 @@
     </app-quick-add-assistant-modal>
     }
 
-    <button class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)">
+    <button type="button" class="fab-add-song" [class.fab-active]="showQuickAddAssistant" [class.fab-hidden]="isScrolled && !showQuickAddAssistant" [class.fab-on-yellow]="fabOnYellow && !showQuickAddAssistant" (click)="toggleFabMenu($event)" aria-label="הוספת תוכן">
         <span class="material-icons fab-add-icon" [class.rotated]="showQuickAddAssistant">add</span>
     </button>
 </div>
@@ -344,7 +354,7 @@
             <p class="footer-newsletter-label">{{ 'footer.newsletter_title' | translate }}</p>
             <p class="footer-newsletter-sub">{{ 'footer.newsletter_sub' | translate }}</p>
             <div class="footer-newsletter-form">
-                <input type="email" [placeholder]="'footer.newsletter_placeholder' | translate" class="footer-newsletter-input" />
+                <input type="email" [placeholder]="'footer.newsletter_placeholder' | translate" class="footer-newsletter-input" aria-label="כתובת אימייל להרשמה לניוזלטר" />
                 <button class="footer-newsletter-btn" type="button">{{ 'footer.newsletter_btn' | translate }}</button>
             </div>
         </div>

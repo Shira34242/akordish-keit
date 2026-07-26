@@ -9,6 +9,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
   @Input() autoScrollDirection: 'left' | 'right' = 'left';
   @Input() autoScrollPauseMs = 1500;
   @Input() autoScrollCopies = 2;
+  @Input() autoScrollPaused = false;
 
   private rafId: number | null = null;
   private lastTime = 0;
@@ -96,7 +97,7 @@ export class AutoScrollDirective implements AfterViewInit, OnDestroy {
 
         if (this.cycleWidth <= 0) return;
 
-        if (now < this.pausedUntil) return;
+        if (this.autoScrollPaused || now < this.pausedUntil) return;
 
         const sign = this.autoScrollDirection === 'left' ? 1 : -1;
         let next = host.scrollLeft + sign * this.autoScrollSpeed * dt;

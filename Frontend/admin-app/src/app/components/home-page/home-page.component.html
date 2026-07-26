@@ -32,7 +32,7 @@
           </button>
           <div class="search-rich-placeholder" *ngIf="!searchQuery && !isSearchInputFocused" aria-hidden="true">
             <span class="search-placeholder-line">
-              <span class="search-placeholder-static">חיפוש חכם באתר</span>
+              <span class="search-placeholder-static">חיפוש באתר</span>
               <strong class="search-placeholder-highlight">
                 {{ displayedSearchPlaceholder }}
               </strong>
@@ -46,14 +46,15 @@
             (keydown.enter)="submitHomeSearch()"
             (focus)="onSearchFocus()"
             (blur)="onSearchBlur()"
-            class="search-input">
+            class="search-input"
+            aria-label="חיפוש באתר">
         </div>
 
         <div class="search-results-dropdown" *ngIf="showSearchResults && searchResults">
 
           <div *ngIf="searchResults.songs.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_songs' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.songs; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.songs; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-song.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -64,7 +65,7 @@
 
           <div *ngIf="searchResults.artists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_artists' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.artists; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.artists; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:82) || 'assets/default-artist.png'" [alt]="item.title || 'אמן באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-artist.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -74,7 +75,7 @@
 
           <div *ngIf="searchResults.articles.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_articles' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.articles; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'כתבה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -85,7 +86,7 @@
 
           <div *ngIf="searchResults.teachers.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_teachers' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.teachers; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'teacher-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -96,7 +97,7 @@
 
           <div *ngIf="searchResults.professionals.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_professionals' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.professionals; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'professional-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -107,7 +108,7 @@
 
           <div *ngIf="searchResults.playlists.length > 0" class="search-group">
             <span class="search-group-label">{{ 'home.search_playlists' | translate }}</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.playlists; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.playlists; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-playlist.png'" [alt]="item.title || 'רשימת השמעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-playlist.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -118,7 +119,7 @@
 
           <div *ngIf="searchResults.podcasts && searchResults.podcasts.length > 0" class="search-group">
             <span class="search-group-label">פודקאסטים</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.podcasts; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.podcasts; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'פודקאסט באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -129,7 +130,7 @@
 
           <div *ngIf="searchResults.podcastEpisodes && searchResults.podcastEpisodes.length > 0" class="search-group">
             <span class="search-group-label">פרקי פודקאסט</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.podcastEpisodes; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.podcastEpisodes; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'פרק פודקאסט באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -140,7 +141,7 @@
 
           <div *ngIf="searchResults.events && searchResults.events.length > 0" class="search-group">
             <span class="search-group-label">הופעות</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.events; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.events; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || '/assets/default-article.png'" [alt]="item.title || 'הופעה באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="/assets/default-article.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -151,7 +152,7 @@
 
           <div *ngIf="searchResults.agencies && searchResults.agencies.length > 0" class="search-group">
             <span class="search-group-label">סוכנויות</span>
-            <div class="search-result-item" *ngFor="let item of searchResults.agencies; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of searchResults.agencies; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <app-profile-avatar class="result-thumb result-thumb--round" [name]="item.title" [imageUrl]="item.imageUrl | cfImage:120:82" [identity]="'agency-' + item.id" size="fill"></app-profile-avatar>
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -165,7 +166,7 @@
               {{ 'home.search_by_lyrics' | translate }}
               <span class="search-lyrics-badge">{{ 'home.search_deep_label' | translate }}</span>
             </span>
-            <div class="search-result-item" *ngFor="let item of lyricsMatches; trackBy: trackById" (pointerdown)="selectSearchResult($event, item)">
+            <div class="search-result-item" *ngFor="let item of lyricsMatches; trackBy: trackById" role="button" tabindex="0" (pointerdown)="selectSearchResult($event, item)" (keydown.enter)="selectSearchResult($event, item)" (keydown.space)="selectSearchResult($event, item)">
               <img [src]="(item.imageUrl | cfImage:120:80) || 'assets/default-song.png'" [alt]="item.title || 'שיר באקורדישקייט'" class="result-thumb" loading="lazy" decoding="async" [imgFallbackOriginal]="item.imageUrl" imgFallback="assets/default-song.png">
               <div class="result-info">
                 <span class="result-title">{{ item.title }}</span>
@@ -202,6 +203,11 @@
     <section class="home-section music-news-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
         <a routerLink="/music-news" class="section-title section-title-link">{{ 'home.news_title' | translate }}</a>
+        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+          [attr.aria-pressed]="isHomeAutoScrollPaused">
+          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+        </button>
       </div>
 
       <div *ngIf="!useScrollingNewsBanner" class="news-grid">
@@ -217,7 +223,7 @@
       </div>
 
       <div *ngIf="useScrollingNewsBanner && !isMobile" class="news-banner-stack music-news-stack">
-        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
+        <div class="news-banner-row news-banner-row--top music-news-row" *ngIf="newsArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2" [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
@@ -234,7 +240,7 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
+        <div class="news-banner-row news-banner-row--bottom music-news-row" *ngIf="newsArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2" [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
@@ -262,7 +268,8 @@
           appAutoScroll
           [autoScrollSpeed]="32"
           [autoScrollDirection]="rowIndex % 2 === 0 ? 'right' : 'left'"
-          [autoScrollCopies]="2">
+          [autoScrollCopies]="2"
+          [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
@@ -366,8 +373,13 @@
     <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
         <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
+        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+          [attr.aria-pressed]="isHomeAutoScrollPaused">
+          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+        </button>
       </div>
-      <div *ngIf="!isMobile" class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" (scroll)="refreshCarouselControls('.artists-loop-row')">
+      <div *ngIf="!isMobile" class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" [autoScrollPaused]="isHomeAutoScrollPaused" (scroll)="refreshCarouselControls('.artists-loop-row')">
         <div class="artists-loop-track">
           <ng-container *ngFor="let copy of [0, 1, 2]">
             <app-artist-circle
@@ -385,7 +397,8 @@
           appAutoScroll
           [autoScrollSpeed]="28"
           [autoScrollDirection]="rowIndex === 1 ? 'right' : 'left'"
-          [autoScrollCopies]="3">
+          [autoScrollCopies]="3"
+          [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="artists-loop-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
               <app-artist-circle
@@ -483,7 +496,7 @@
       <div class="events-scroll-row" (scroll)="refreshCarouselControls('.events-scroll-row')">
         <div class="events-scroll-track">
           <app-event-card
-            *ngFor="let event of upcomingEvents; trackBy: trackById"
+            *ngFor="let event of (isMobile ? upcomingEvents.slice(0, 6) : upcomingEvents); trackBy: trackById"
             [event]="event"
             [showInfo]="false"
             [imageWidth]="220"
@@ -528,7 +541,7 @@
         <div class="podcasts-home-track">
           <a
             class="home-series-image-card"
-            *ngFor="let podcast of homePodcasts; trackBy: trackById"
+            *ngFor="let podcast of (isMobile ? homePodcasts.slice(0, 6) : homePodcasts); trackBy: trackById"
             routerLink="/podcasts"
             [queryParams]="{ series: podcast.slug }"
             [attr.aria-label]="podcast.name">
@@ -595,6 +608,11 @@
     <section class="home-section content-articles-section" *ngIf="blogSectionStarted && blogArticlesLoaded">
       <div class="section-header">
         <a routerLink="/articles" class="section-title section-title-link">{{ 'home.content_title' | translate }}</a>
+        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+          [attr.aria-pressed]="isHomeAutoScrollPaused">
+          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+        </button>
       </div>
 
       <div *ngIf="!useScrollingBlogBanner" class="news-grid content-articles-grid">
@@ -610,7 +628,7 @@
       </div>
 
       <div *ngIf="useScrollingBlogBanner && !isMobile" class="news-banner-stack content-blog-stack">
-        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2">
+        <div class="news-banner-row news-banner-row--top" *ngIf="blogArticlesFirstRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="left" [autoScrollCopies]="2" [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
@@ -625,7 +643,7 @@
             </ng-container>
           </div>
         </div>
-        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2">
+        <div class="news-banner-row news-banner-row--bottom" *ngIf="blogArticlesSecondRow.length > 0" appAutoScroll [autoScrollSpeed]="40" autoScrollDirection="right" [autoScrollCopies]="2" [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner
@@ -651,7 +669,8 @@
           appAutoScroll
           [autoScrollSpeed]="32"
           [autoScrollDirection]="rowIndex % 2 === 0 ? 'right' : 'left'"
-          [autoScrollCopies]="2">
+          [autoScrollCopies]="2"
+          [autoScrollPaused]="isHomeAutoScrollPaused">
           <div class="news-banner-track">
             <ng-container *ngFor="let copy of [0, 1]">
               <app-news-banner

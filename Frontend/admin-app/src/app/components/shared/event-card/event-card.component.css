@@ -7,6 +7,16 @@
   direction: rtl;
   user-select: none;
   display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  text-align: inherit;
+  font: inherit;
+}
+
+.event-card:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
 }
 
 .event-card:hover {

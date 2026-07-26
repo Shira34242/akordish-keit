@@ -1,8 +1,8 @@
-<div
+<button
+  type="button"
   class="event-card"
   [class.event-card--past]="isPast"
   (click)="cardClick.emit(event)"
-  role="button"
   [attr.aria-label]="event.name">
 
   <!-- פוסטר -->
@@ -37,4 +37,4 @@
     </p>
   </div>
 
-</div>
+</button>

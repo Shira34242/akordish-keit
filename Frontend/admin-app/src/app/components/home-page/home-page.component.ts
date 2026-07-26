@@ -95,6 +95,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   lyricsMatches: SearchItem[] = [];
   isSearchingDeep = false;
   showSearchResults = false;
+  isHomeAutoScrollPaused = false;
   private searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
@@ -765,10 +766,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.router.navigate(['/articles'], query ? { queryParams: { search: query } } : undefined);
   }
 
-  selectSearchResult(event: PointerEvent, item: SearchItem): void {
-    if (event.button !== 0) return;
+  selectSearchResult(event: Event, item: SearchItem): void {
+    if (event instanceof MouseEvent && event.button !== 0) return;
     event.preventDefault();
     this.navigateToResult(item);
+  }
+
+  toggleHomeAutoScroll(): void {
+    this.isHomeAutoScrollPaused = !this.isHomeAutoScrollPaused;
   }
 
   navigateToResult(item: SearchItem): void {
