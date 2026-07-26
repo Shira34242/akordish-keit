@@ -105,8 +105,7 @@
   line-height: var(--lh-small);
 }
 
-.soft-reminder-form input,
-.soft-reminder-form select {
+.soft-reminder-form input {
   width: min(18rem, 100%);
   height: 40px;
   border: 1px solid rgba(0, 0, 0, 0.18);
@@ -120,8 +119,7 @@
   outline: none;
 }
 
-.soft-reminder-form input:focus,
-.soft-reminder-form select:focus {
+.soft-reminder-form input:focus {
   outline: 2px solid rgba(0, 0, 0, 0.24);
   background: rgba(255, 255, 255, 0.18);
 }
@@ -130,6 +128,80 @@
   color: #404040;
   opacity: 0.65;
   text-align: center;
+}
+
+.birthday-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-base);
+}
+
+.month-select {
+  position: relative;
+  width: min(18rem, 100%);
+}
+
+.month-select-trigger,
+.month-select-options button {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: #000000;
+  cursor: pointer;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  padding: 0 var(--space-sm);
+}
+
+.month-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0 var(--space-base);
+}
+
+.month-select-trigger .material-icons {
+  font-size: 20px;
+}
+
+.month-select-options {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  right: 0;
+  z-index: 6;
+  width: 100%;
+  max-height: 14rem;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.month-select-options button {
+  border-radius: 999px;
+}
+
+.month-select-trigger:hover,
+.month-select-trigger:focus-visible,
+.month-select-options button:hover,
+.month-select-options button:focus-visible {
+  background: rgba(255, 255, 255, 0.35);
+  outline: 2px solid rgba(0, 0, 0, 0.24);
+  outline-offset: 1px;
+}
+
+.month-select-options button.is-selected {
+  border-color: #000000;
+  background: #000000;
+  color: #ddff53;
+  font-weight: 800;
 }
 
 .city-field {
@@ -165,12 +237,6 @@
 
 .city-dropdown button:hover {
   background: #F2F2F2;
-}
-
-.birthday-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-base);
 }
 
 .soft-reminder-error {

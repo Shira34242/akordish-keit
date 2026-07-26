@@ -30,28 +30,22 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   cities: City[] = [];
   citiesLoading = true;
   showCityDropdown = false;
+  showMonthDropdown = false;
 
   birthMonth: number | null = null;
   birthYear: number | null = null;
+  minBirthYear = 0;
+  maxBirthYear = 0;
 
   private readonly langService = inject(LanguageService);
-
-  get months(): { value: number; label: string }[] {
-    return Array.from({ length: 12 }, (_, i) => ({
-      value: i + 1,
-      label: this.langService.translate(`common.month_${i + 1}`)
-    }));
-  }
-  years: number[] = [];
 
   constructor(
     private authService: AuthService,
     private citiesService: CitiesService
   ) {
     const currentYear = new Date().getFullYear();
-    for (let y = currentYear - 5; y >= currentYear - 100; y--) {
-      this.years.push(y);
-    }
+    this.minBirthYear = currentYear - 100;
+    this.maxBirthYear = currentYear - 5;
   }
 
   ngOnInit(): void {
@@ -59,6 +53,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
       this.phone = this.user.phone ?? '';
       this.cityId = this.user.cityId ?? null;
       this.address = this.user.address ?? '';
+      this.setBirthDateFromUser(this.user.birthDate);
     }
 
     this.citiesService.getCities().subscribe({
@@ -78,6 +73,34 @@ export class ProfileSoftReminderModalComponent implements OnInit {
 
   get title(): string {
     return this.langService.translate('profile_reminder.unified_title');
+  }
+
+  get months(): { value: number; label: string }[] {
+    return Array.from({ length: 12 }, (_, i) => ({
+      value: i + 1,
+      label: this.langService.translate(`common.month_${i + 1}`)
+    }));
+  }
+
+  get selectedMonthLabel(): string {
+    return this.months.find(month => month.value === this.birthMonth)?.label ?? 'בחירת חודש';
+  }
+
+  toggleMonthDropdown(): void {
+    this.showMonthDropdown = !this.showMonthDropdown;
+  }
+
+  selectBirthMonth(month: number): void {
+    this.birthMonth = month;
+    this.showMonthDropdown = false;
+  }
+
+  private setBirthDateFromUser(value?: string | null): void {
+    const match = /^(\d{4})-(\d{2})/.exec(value ?? '');
+    if (!match) return;
+
+    this.birthYear = Number(match[1]);
+    this.birthMonth = Number(match[2]);
   }
 
   get filteredCities(): City[] {
@@ -112,11 +135,22 @@ export class ProfileSoftReminderModalComponent implements OnInit {
     if (!target.closest('.city-field')) {
       this.showCityDropdown = false;
     }
+    if (!target.closest('.month-select')) {
+      this.showMonthDropdown = false;
+    }
   }
 
   get canSave(): boolean {
     if (this.loading) return false;
-    return !!(this.phone.trim() && this.cityId && this.address.trim() && this.birthMonth && this.birthYear);
+    return !!(
+      this.phone.trim()
+      && this.cityId
+      && this.address.trim()
+      && this.birthMonth
+      && this.birthYear
+      && this.birthYear >= this.minBirthYear
+      && this.birthYear <= this.maxBirthYear
+    );
   }
 
   onSave(): void {

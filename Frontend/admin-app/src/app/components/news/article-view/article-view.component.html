@@ -65,15 +65,6 @@
           <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
             <div class="audio-player-card">
               <audio class="audio-player" [src]="getAudioStreamUrl(article.audioEmbedUrl)" controls preload="metadata"></audio>
-              <a
-                class="audio-download-btn"
-                [href]="getAudioDownloadUrl(article.audioEmbedUrl, article.title)"
-                [attr.download]="getAudioFileName(article.audioEmbedUrl, article.title)"
-                aria-label="הורדת השיר"
-                title="הורדת השיר">
-                <span class="material-icons">download</span>
-                הורדת השיר
-              </a>
             </div>
           </ng-container>
           <ng-template #audioEmbed>

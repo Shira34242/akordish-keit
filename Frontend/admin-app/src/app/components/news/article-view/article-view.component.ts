@@ -452,23 +452,6 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     return `${environment.apiBaseUrl}/api/Media/audio?url=${encodeURIComponent(url)}`;
   }
 
-  getAudioDownloadUrl(url: string | undefined, title: string | undefined): string {
-    if (!url) return '';
-    const fileName = this.getAudioFileName(url, title);
-    return `${environment.apiBaseUrl}/api/Media/download?url=${encodeURIComponent(url)}&fileName=${encodeURIComponent(fileName)}`;
-  }
-
-  getAudioFileName(url: string | undefined, title: string | undefined): string {
-    const extension = this.getAudioExtension(url);
-    return `${(title || 'akordishkeit-audio').trim()}${extension}`;
-  }
-
-  private getAudioExtension(url: string | undefined): string {
-    if (!url) return '.mp3';
-    const match = url.match(/\.(mp3|wav|m4a|aac|ogg)(?:\?.*)?$/i);
-    return match ? `.${match[1].toLowerCase()}` : '.mp3';
-  }
-
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('he-IL', {
       year: 'numeric',

@@ -44,18 +44,43 @@
       <div class="birthday-row">
         <label>
           <span>חודש לידה</span>
-          <select name="birthMonth" [(ngModel)]="birthMonth">
-            <option [ngValue]="null">בחירת חודש</option>
-            <option *ngFor="let month of months" [ngValue]="month.value">{{ month.label }}</option>
-          </select>
+          <div class="month-select">
+            <button
+              type="button"
+              class="month-select-trigger"
+              [attr.aria-expanded]="showMonthDropdown"
+              aria-haspopup="listbox"
+              (click)="toggleMonthDropdown()">
+              {{ selectedMonthLabel }}
+              <span class="material-icons" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="month-select-options" *ngIf="showMonthDropdown" role="listbox" aria-label="בחירת חודש לידה">
+              <button
+                *ngFor="let month of months"
+                type="button"
+                role="option"
+                [attr.aria-selected]="birthMonth === month.value"
+                [class.is-selected]="birthMonth === month.value"
+                (click)="selectBirthMonth(month.value)">
+                {{ month.label }}
+              </button>
+            </div>
+          </div>
         </label>
 
         <label>
           <span>שנת לידה</span>
-          <select name="birthYear" [(ngModel)]="birthYear">
-            <option [ngValue]="null">בחירת שנה</option>
-            <option *ngFor="let year of years" [ngValue]="year">{{ year }}</option>
-          </select>
+          <input
+            type="number"
+            name="birthYear"
+            [(ngModel)]="birthYear"
+            [min]="minBirthYear"
+            [max]="maxBirthYear"
+            step="1"
+            inputmode="numeric"
+            autocomplete="bday-year"
+            placeholder="בחירת שנה"
+            aria-label="שנת לידה">
         </label>
       </div>
 

@@ -737,53 +737,6 @@
   border-radius: 999px;
 }
 
-.audio-download-btn {
-  flex: 0 0 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #000000;
-  text-decoration: none;
-  font-size: 0;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.audio-download-btn:hover {
-  background: #ddff53;
-  color: #000000;
-  transform: scale(1.06);
-}
-
-.audio-download-btn .material-icons {
-  font-size: 20px;
-  line-height: 1;
-  width: 20px;
-  height: 20px;
-  display: block;
-  text-align: center;
-}
-
-.audio-download-btn:hover .material-icons {
-  animation: audio-download-slide-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-@keyframes audio-download-slide-in {
-  0% {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
 /* Gallery Section */
 .gallery-section {
   padding: 0 var(--space-xl) var(--space-xl);
