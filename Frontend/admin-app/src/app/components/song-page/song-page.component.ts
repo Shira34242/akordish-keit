@@ -56,6 +56,8 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     @ViewChild('newsSentinel') newsSentinel?: ElementRef<HTMLDivElement>;
     @ViewChild('mainColumn') mainColumn?: ElementRef<HTMLDivElement>;
     @ViewChild('ratingSection') ratingSection?: ElementRef<HTMLDivElement>;
+    @ViewChild('youtubeModalCard') youtubeModalCard?: ElementRef<HTMLDivElement>;
+    @ViewChild('youtubeModalClose') youtubeModalClose?: ElementRef<HTMLButtonElement>;
     private headerLayoutDone = false;
     private fullHeaderHeight = 0;
     private rafPending = false;
@@ -112,6 +114,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     // YouTube Modal State
     showYoutubeModal: boolean = false;
     youtubeEmbedUrl: SafeResourceUrl | null = null;
+    private youtubeTrigger: HTMLElement | null = null;
 
     // Bookmark State
     isSongSaved: boolean = false;
@@ -248,6 +251,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
         this.ngZone.runOutsideAngular(() => {
             document.addEventListener('click', this.nativeDocumentClick);
+            document.addEventListener('keydown', this.nativeDocumentKeydown);
             window.addEventListener('scroll', this.nativeWindowScroll, { passive: true });
         });
 
@@ -259,6 +263,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     ngOnDestroy() {
         document.removeEventListener('click', this.nativeDocumentClick);
+        document.removeEventListener('keydown', this.nativeDocumentKeydown);
         window.removeEventListener('scroll', this.nativeWindowScroll);
         document.removeEventListener('copy', this.preventCopy);
         document.removeEventListener('contextmenu', this.preventContextMenu);
@@ -302,6 +307,29 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         if (this.isMobileDevice() && !isChord && this.hoveredChord) {
             this.ngZone.run(() => { this.hoveredChord = null; });
         }
+    };
+
+    private nativeDocumentKeydown = (event: KeyboardEvent) => {
+        const target = event.target as HTMLElement;
+        const isChord = target.classList.contains('chord-inline') ||
+                        target.classList.contains('chord-block');
+        if (!isChord || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+        event.preventDefault();
+        const chord = target.innerText.trim();
+        const pos = this.tooltipPositionFromRect(target.getBoundingClientRect());
+        this.ngZone.run(() => {
+            if (this.isMobileDevice()) {
+                this.hoveredChord = this.hoveredChord === chord ? null : chord;
+                this.tooltipPosition = { x: pos.x, y: pos.y };
+                this.tooltipAbove = pos.above;
+            } else {
+                this.hoveredChord = null;
+                this.pinnedChord = chord;
+                this.pinnedPosition = { x: pos.x, y: pos.y };
+                this.pinnedAbove = pos.above;
+            }
+        });
     };
 
     loadSong(id: number, currentSlug?: string) {
@@ -514,7 +542,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             this.ngZone.run(() => { this.isToolbarSticky = shouldBeSticky; });
         }
 
-        if (!this.rafPending) {
+        if (window.innerWidth > 600 && !this.rafPending) {
             this.rafPending = true;
             requestAnimationFrame(() => {
                 this.shrinkHeader();
@@ -577,6 +605,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         const h = Math.round(contentRect.bottom - boxTop + window.scrollY);
         this.fullHeaderHeight = h;
         bg.style.height = h + 'px';
+
+        // במובייל הכותרת גוללת כחלק טבעי מהדף, בלי כיווץ או שכבת צבע.
+        if (window.innerWidth <= 600) {
+            content.style.opacity = '1';
+            const collapseOverlay = bg.querySelector('.hero-collapse-overlay') as HTMLElement | null;
+            if (collapseOverlay) collapseOverlay.style.opacity = '0';
+            return;
+        }
+
         this.shrinkHeader();
     }
 
@@ -863,7 +900,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                             ? transposeChord(chord, this.transposeStep, { preferFlat: this.activePreferFlat })
                             : chord;
                         if (this.isEasyMode) result = simplifyChord(result);
-                        return `<span class="chord-inline">${this.escapeHtmlValue(result)}</span>`;
+                        return `<span class="chord-inline" role="button" tabindex="0">${this.escapeHtmlValue(result)}</span>`;
                     });
                 } else {
                     processed = processed.replace(/\[(.*?)\]/g, '');
@@ -893,7 +930,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                             ? transposeChord(t, this.transposeStep, { preferFlat: this.activePreferFlat })
                             : t;
                         if (this.isEasyMode) chord = simplifyChord(chord);
-                        return `<span class="chord-block">${this.escapeHtmlValue(chord)}</span>`;
+                        return `<span class="chord-block" role="button" tabindex="0">${this.escapeHtmlValue(chord)}</span>`;
                     }).join('');
                 }
 
@@ -904,7 +941,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                             ? transposeChord(t, this.transposeStep, { preferFlat: this.activePreferFlat })
                             : t;
                         if (this.isEasyMode) chord = simplifyChord(chord);
-                        return `<span class="chord-block">${this.escapeHtmlValue(chord)}</span>`;
+                        return `<span class="chord-block" role="button" tabindex="0">${this.escapeHtmlValue(chord)}</span>`;
                     }).join('');
                 }
                 return this.escapeHtmlValue(token);
@@ -914,7 +951,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
                 ? transposeChord(token, this.transposeStep, { preferFlat: this.activePreferFlat })
                 : token;
             if (this.isEasyMode) chord = simplifyChord(chord);
-            return `<span class="chord-block">${this.escapeHtmlValue(chord)}</span>`;
+            return `<span class="chord-block" role="button" tabindex="0">${this.escapeHtmlValue(chord)}</span>`;
         }).join('');
     }
 
@@ -1438,13 +1475,15 @@ private getKeyIndex(keyName: string): number {
         this.isReportModalOpen = false;
     }
 
-    openYoutubeVideo(): void {
+    openYoutubeVideo(event?: MouseEvent): void {
         if (!this.song?.youtubeUrl) return;
+        this.youtubeTrigger = event?.currentTarget as HTMLElement | null;
         const videoId = this.extractYoutubeVideoId(this.song.youtubeUrl);
         if (videoId) {
             const url = `https://www.youtube.com/embed/${videoId}?rel=0`;
             this.youtubeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
             this.showYoutubeModal = true;
+            setTimeout(() => this.youtubeModalClose?.nativeElement.focus());
         } else {
             // URL לא מוכר — פתח ביוטיוב ישירות
             window.open(this.song.youtubeUrl, '_blank');
@@ -1454,6 +1493,33 @@ private getKeyIndex(keyName: string): number {
     closeYoutubeVideo(): void {
         this.showYoutubeModal = false;
         this.youtubeEmbedUrl = null;
+        const trigger = this.youtubeTrigger;
+        this.youtubeTrigger = null;
+        setTimeout(() => trigger?.focus());
+    }
+
+    handleYoutubeModalKeydown(event: KeyboardEvent): void {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.closeYoutubeVideo();
+            return;
+        }
+        if (event.key !== 'Tab') return;
+
+        const focusable = this.youtubeModalCard?.nativeElement.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], iframe'
+        );
+        if (!focusable?.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
     }
 
     private extractYoutubeVideoId(url: string): string | null {

@@ -1,4 +1,4 @@
-<div class="song-page-container" *ngIf="song; else loadingOrError">
+<div class="song-page-container" *ngIf="song; else loadingOrError" [attr.inert]="showYoutubeModal ? '' : null">
 
     <!-- מסכה לבנה - מסתירה תוכן שגולל מעל השול הלבן -->
     <div class="top-scroll-mask"></div>
@@ -25,18 +25,18 @@
             <!-- Image Section -->
             <div class="header-image-section">
                 <div class="song-cover-wrapper">
-                    <div class="song-cover-link" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo()" style="cursor:pointer;display:block;width:100%;height:100%;">
+                    <button type="button" class="song-cover-link" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo($event)" aria-label="נגן וידאו ביוטיוב">
                         <img [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 400px) 90px, (max-width: 600px) 110px, (max-width: 900px) 180px, 260px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
                             (error)="handleImageError($event)">
-                    </div>
+                    </button>
                     <img *ngIf="!song.youtubeUrl" [src]="(song.imageUrl | cfImage:'content') || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[360,600,900,1200]:85" sizes="(max-width: 400px) 90px, (max-width: 600px) 110px, (max-width: 900px) 180px, 260px" [alt]="song.title + ' - עטיפת שיר'" class="song-cover"
                         (error)="handleImageError($event)">
-                    <button class="youtube-play-btn" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo()">
+                    <button class="youtube-play-btn" *ngIf="song.youtubeUrl" (click)="openYoutubeVideo($event)" aria-label="נגן וידאו ביוטיוב">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="18" height="18">
                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                         </svg>
                     </button>
-                    <a [href]="song.spotifyUrl" target="_blank" class="spotify-play-btn" *ngIf="song.spotifyUrl">
+                    <a [href]="song.spotifyUrl" target="_blank" class="spotify-play-btn" *ngIf="song.spotifyUrl" aria-label="פתח את השיר בספוטיפיי">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
                         </svg>
@@ -50,7 +50,7 @@
                 <h1 class="main-title">{{ song.title }}</h1>
                 <div class="artist-names">
                     <ng-container *ngFor="let artist of song.artists; let last = last">
-                        <span class="artist-name-link" (click)="navigateToArtist(artist)">{{ artist.name }}</span><span *ngIf="!last" class="artist-separator">,&nbsp;</span>
+                        <button type="button" class="artist-name-link" (click)="navigateToArtist(artist)">{{ artist.name }}</button><span *ngIf="!last" class="artist-separator">,&nbsp;</span>
                     </ng-container>
                 </div>
 
@@ -308,45 +308,34 @@
     <!-- Mobile Floating Bottom Toolbar (≤768px only) -->
     <div class="mobile-bottom-toolbar">
 
-        <!-- COLLAPSED: small auto-width pill centered at bottom -->
+        <!-- COLLAPSED: primary actions, each in its own button -->
         <div class="mob-collapsed" *ngIf="!isMobileToolbarExpanded">
-            <div class="mob-autoscroll-area">
-                <!-- גלילה כבויה: כפתור פליי -->
-                <button *ngIf="!isAutoScroll"
-                        class="toolbar-btn"
-                        [disabled]="!hasFullSongContent"
-                        (click)="toggleAutoScroll()"
-                        [attr.title]="'song.auto_scroll' | translate">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                        fill="currentColor" stroke="none">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                </button>
-                <!-- גלילה פעילה: פקדי מהירות -->
-                <ng-container *ngIf="isAutoScroll">
-                    <button class="toolbar-btn toolbar-btn-sm" [disabled]="!hasFullSongContent" (click)="changeScrollSpeed(-1)">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path>
-                        </svg>
-                    </button>
-                    <span class="mob-speed-val">{{ scrollSpeed }}</span>
-                    <button class="toolbar-btn toolbar-btn-sm" [disabled]="!hasFullSongContent" (click)="changeScrollSpeed(1)">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path><path d="M12 5v14"></path>
-                        </svg>
-                    </button>
-                    <button class="toolbar-btn toolbar-btn-sm btn-stop" [disabled]="!hasFullSongContent" (click)="toggleAutoScroll()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="6" y="4" width="4" height="16"></rect>
-                            <rect x="14" y="4" width="4" height="16"></rect>
-                        </svg>
-                    </button>
-                </ng-container>
-            </div>
-            <span class="mob-sep-v"></span>
+            <button class="toolbar-btn mob-outer-btn mob-auto-btn"
+                    [class.active]="isAutoScroll"
+                    [disabled]="!hasFullSongContent"
+                    (click)="toggleAutoScroll()"
+                    [attr.title]="'song.auto_scroll' | translate">
+                <svg *ngIf="!isAutoScroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg *ngIf="isAutoScroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+            </button>
+            <button class="toolbar-btn btn-text mob-outer-btn mob-outer-easy-btn"
+                    [class.active]="isEasyMode"
+                    [class.mob-easy-icon]="isEasyMode"
+                    [disabled]="!hasFullSongContent"
+                    *ngIf="song.easyKeyId"
+                    (click)="toggleEasyMode()">
+                <svg *ngIf="isEasyMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+                <span *ngIf="!isEasyMode">{{ 'song.easy_version' | translate }}</span>
+            </button>
             <button class="toolbar-btn mob-expand-btn" (click)="toggleMobileToolbar()" aria-label="הרחב תפריט">
                 <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -399,10 +388,25 @@
                         </svg>
                     </button>
                 </div>
+                <button class="toolbar-btn btn-text btn-easy mob-easy-btn mob-easy-panel"
+                        [class.active]="isEasyMode"
+                        [class.mob-easy-icon]="isEasyMode"
+                        [disabled]="!hasFullSongContent"
+                        *ngIf="song.easyKeyId"
+                        (click)="toggleEasyMode()">
+                    <svg *ngIf="isEasyMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                    <span *ngIf="!isEasyMode">{{ 'song.easy_version' | translate }}</span>
+                </button>
             </div>
 
-            <!-- בועה תחתונה: כל הפקדים בשורה אחת -->
-            <div class="mob-bubble mob-controls-bubble">
+            <!-- בועה תחתונה: מתרחבת רק כשנוספים בקרי פעולה -->
+            <div class="mob-controls-scroll">
+            <div class="mob-bubble mob-controls-bubble"
+                 [class.mob-controls-overflow]="isAutoScroll || transposeStep !== 0">
 
                 <!-- טרנספוז -->
                 <div class="transpose-group mob-transpose">
@@ -421,7 +425,7 @@
                         </svg>
                     </button>
                     <button class="toolbar-btn toolbar-btn-reset" [disabled]="!hasFullSongContent" (click)="resetTranspose()"
-                        *ngIf="transposeStep !== 0 || isEasyMode">
+                        *ngIf="transposeStep !== 0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -431,15 +435,6 @@
                 </div>
 
                 <span class="mob-sep-v"></span>
-
-                <!-- גרסה קלה — טקסט בלבד -->
-                <button class="toolbar-btn btn-text btn-easy mob-easy-btn"
-                        [disabled]="!hasFullSongContent"
-                        *ngIf="song.easyKeyId && !isEasyMode"
-                        (click)="toggleEasyMode()">
-                    {{ 'song.easy_version' | translate }}
-                </button>
-                <span class="mob-sep-v" *ngIf="song.easyKeyId && !isEasyMode"></span>
 
                 <!-- גודל פונט -->
                 <button class="toolbar-btn btn-text" [disabled]="!hasFullSongContent" (click)="changeFontSize(-1)">A-</button>
@@ -518,6 +513,7 @@
                 </button>
 
             </div><!-- end mob-controls-bubble -->
+            </div><!-- end mob-controls-scroll -->
 
         </div><!-- end mob-expanded -->
 
@@ -782,24 +778,26 @@
                 </a>
             </div>
 
-            <a routerLink="/chords/dictionary" class="sidebar-card tool-card">
-                <span class="tool-card-label">{{ 'footer.chord_dict' | translate }}</span>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6"/>
-                </svg>
-            </a>
-            <a routerLink="/tuner" class="sidebar-card tool-card">
-                <span class="tool-card-label">{{ 'footer.tuner' | translate }}</span>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6"/>
-                </svg>
-            </a>
-            <button (click)="handleRandomSongClick()" class="sidebar-card tool-card">
-                <span class="tool-card-label">{{ 'footer.random_song' | translate }}</span>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6"/>
-                </svg>
-            </button>
+            <div class="sidebar-tools-row">
+                <a routerLink="/chords/dictionary" class="sidebar-card tool-card">
+                    <span class="tool-card-label">{{ 'footer.chord_dict' | translate }}</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                </a>
+                <a routerLink="/tuner" class="sidebar-card tool-card">
+                    <span class="tool-card-label">{{ 'footer.tuner' | translate }}</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                </a>
+                <button (click)="handleRandomSongClick()" class="sidebar-card tool-card">
+                    <span class="tool-card-label">{{ 'footer.random_song' | translate }}</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                </button>
+            </div>
 
             <!-- שירים נוספים של האמן -->
             <div class="sidebar-card artist-card" *ngIf="isLoadingArtistSongs || artistSongs.length > 0">
@@ -810,7 +808,10 @@
                 <ul class="song-list" *ngIf="!isLoadingArtistSongs">
                     <li *ngFor="let artistSong of artistSongs"
                         [class.current]="artistSong.id === songId"
-                        (click)="navigateToSong(artistSong.id)">
+                        [attr.role]="artistSong.id === songId ? null : 'link'"
+                        [attr.tabindex]="artistSong.id === songId ? null : 0"
+                        (click)="navigateToSong(artistSong.id)"
+                        (keydown.enter)="navigateToSong(artistSong.id)">
                         {{ artistSong.title }}
                     </li>
                 </ul>
@@ -824,7 +825,10 @@
                 <ul class="song-list" *ngIf="!isLoadingSimilarSongs">
                     <li *ngFor="let similarSong of similarSongs"
                         [class.current]="similarSong.id === songId"
-                        (click)="navigateToSong(similarSong.id)">
+                        [attr.role]="similarSong.id === songId ? null : 'link'"
+                        [attr.tabindex]="similarSong.id === songId ? null : 0"
+                        (click)="navigateToSong(similarSong.id)"
+                        (keydown.enter)="navigateToSong(similarSong.id)">
                         {{ similarSong.title }}
                     </li>
                     <li *ngIf="similarSongs.length === 0" class="no-songs">
@@ -842,7 +846,10 @@
                 <ul class="song-list" *ngIf="!isLoadingPopularSongs">
                     <li *ngFor="let popSong of popularSongs; let i = index"
                         [class.current]="popSong.id === songId"
-                        (click)="navigateToSong(popSong.id)">
+                        [attr.role]="popSong.id === songId ? null : 'link'"
+                        [attr.tabindex]="popSong.id === songId ? null : 0"
+                        (click)="navigateToSong(popSong.id)"
+                        (keydown.enter)="navigateToSong(popSong.id)">
                         <span class="rank">{{ i + 1 }}</span>
                         {{ popSong.title }}
                     </li>
@@ -937,15 +944,15 @@
 
 <!-- YouTube Video Modal -->
 <div class="youtube-modal-backdrop" *ngIf="showYoutubeModal" (click)="closeYoutubeVideo()">
-    <div class="youtube-modal-card" (click)="$event.stopPropagation()">
-        <button class="youtube-modal-close" (click)="closeYoutubeVideo()">
+    <div #youtubeModalCard class="youtube-modal-card" role="dialog" aria-modal="true" aria-label="נגן וידאו של השיר" (click)="$event.stopPropagation()" (keydown)="handleYoutubeModalKeydown($event)">
+        <button #youtubeModalClose class="youtube-modal-close" (click)="closeYoutubeVideo()" aria-label="סגור חלון וידאו">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 6 6 18M6 6l12 12"/>
             </svg>
         </button>
         <div class="youtube-embed-wrapper">
-            <iframe [src]="youtubeEmbedUrl" frameborder="0" allowfullscreen
+            <iframe [src]="youtubeEmbedUrl" title="נגן וידאו של השיר" frameborder="0" allowfullscreen
                 allow="autoplay; encrypted-media; picture-in-picture">
             </iframe>
         </div>

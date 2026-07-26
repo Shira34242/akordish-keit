@@ -96,6 +96,26 @@
     display: block;
     width: 100%;
     height: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.song-cover-link:focus-visible,
+.artist-name-link:focus-visible,
+.song-list li[role="link"]:focus-visible,
+::ng-deep .chord-inline:focus-visible,
+::ng-deep .chord-block:focus-visible,
+.youtube-play-btn:focus-visible,
+.spotify-play-btn:focus-visible,
+.youtube-modal-close:focus-visible {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+}
+
+.song-cover-link:focus-visible {
+    outline-offset: -3px;
 }
 
 .song-cover {
@@ -212,6 +232,10 @@
     font-weight: 300;
     cursor: pointer;
     display: inline;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
 }
 
 .artist-name-link:hover {
@@ -882,7 +906,7 @@
     font-family: 'Open Sans', sans-serif;
     font-size: var(--font-xs);
     font-weight: 800;
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.6);
     text-align: right;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -957,13 +981,13 @@
 .loading-small {
     text-align: center;
     padding: var(--space-lg);
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.6);
     font-size: var(--font-sm);
 }
 
 .no-songs {
     text-align: center;
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.6);
     padding: var(--space-md);
 }
 
@@ -1079,6 +1103,10 @@
     font-weight: 800;
     font-size: var(--font-xs);
     color: #000000;
+}
+
+.sidebar-tools-row {
+    display: contents;
 }
 
 @keyframes spin {
@@ -1282,15 +1310,67 @@
 
 /* Extra small screens (phones) */
 @media (max-width: 600px) {
+    .top-scroll-mask {
+        display: none;
+    }
+
+    .song-page-container {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     .song-header {
-        left: 4px;
+        position: absolute;
+        top: 8px;
         right: 4px;
+        left: 4px;
         border-radius: 18px;
+        will-change: auto;
+    }
+
+    .lyrics-column {
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .lyrics-content {
+        width: max-content;
+        min-width: 100%;
+        white-space: pre;
+    }
+
+    .sidebar-tools-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+        gap: var(--space-xs);
+    }
+
+    .sidebar-tools-row .tool-card {
+        width: 100%;
+        min-width: 0;
+        min-height: 34px;
+        padding: var(--space-xs);
+        justify-content: center;
+        gap: var(--space-xs);
+        text-align: center;
+    }
+
+    .sidebar-tools-row .tool-card-label {
+        font-size: var(--font-xs);
+        line-height: var(--lh-small);
+        overflow-wrap: anywhere;
+    }
+
+    .sidebar-tools-row .tool-card svg {
+        flex: 0 0 auto;
     }
 
     /* header — תמונה מעל פרטים, הכל ממורכז */
     .header-content {
-        padding: calc(1vh + var(--space-sm)) 0 0;
+        padding: calc(1vh + var(--space-lg)) 0 var(--space-lg);
         text-align: center;
         align-items: center;
     }
@@ -1309,8 +1389,8 @@
     }
 
     .header-image-section {
-        width: 110px;
-        flex: 0 0 110px;
+        width: 220px;
+        flex: 0 0 220px;
     }
 
     .header-info-section {
@@ -1323,7 +1403,7 @@
     }
 
     .main-title {
-        font-size: var(--font-xl);
+        font-size: var(--font-2xl);
         white-space: normal;
         overflow: visible;
         text-overflow: unset;
@@ -1466,12 +1546,12 @@
 
 @media (max-width: 400px) {
     .header-image-section {
-        width: 90px;
-        flex: 0 0 90px;
+        width: 180px;
+        flex: 0 0 180px;
     }
 
     .main-title {
-        font-size: var(--font-lg);
+        font-size: var(--font-2xl);
     }
 
     .artist-name-link,
@@ -1482,12 +1562,12 @@
 
 @media (max-width: 360px) {
     .header-image-section {
-        width: 72px;
-        flex: 0 0 72px;
+        width: 144px;
+        flex: 0 0 144px;
     }
 
     .main-title {
-        font-size: var(--font-base);
+        font-size: var(--font-xl);
     }
 
     .artist-name-link,
@@ -1944,7 +2024,7 @@
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: var(--font-sm);
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.6);
     margin: 0;
 }
 
@@ -1952,7 +2032,7 @@
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: var(--font-xs);
-    color: rgba(0, 0, 0, 0.3);
+    color: rgba(0, 0, 0, 0.6);
     text-align: center;
     margin: 0;
     padding-top: var(--space-md);
@@ -1986,7 +2066,7 @@
 /* Responsive: כוכבים קטנים יותר בנייד */
 @media (max-width: 600px) {
     .song-rating-section {
-        margin-top: 32px;
+        margin-top: 0;
         padding: 24px 16px;
         border-radius: 16px;
     }
@@ -2312,22 +2392,45 @@
         pointer-events: none; /* pass-through on empty space */
     }
 
-    /* ---- COLLAPSED: small auto-width centered pill ---- */
+    /* ---- COLLAPSED: separate primary action buttons ---- */
     .mob-collapsed {
         pointer-events: auto;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #ddff53;
-        border-radius: 100px;
-        padding: 7px 14px;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
+        background: transparent;
+        padding: 0;
     }
 
-    .mob-autoscroll-area {
-        display: flex;
-        align-items: center;
-        gap: 3px;
+    .mob-collapsed .mob-outer-btn,
+    .mob-collapsed .mob-expand-btn {
+        width: auto !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        background: #ddff53;
+        box-shadow: none;
+    }
+
+    .mob-collapsed .mob-outer-btn {
+        padding: 0 var(--space-lg) !important;
+        font-size: var(--font-xs);
+    }
+
+    .mobile-bottom-toolbar .mob-collapsed .mob-outer-easy-btn {
+        background: #ddff53 !important;
+        color: #000000 !important;
+        opacity: 1;
+    }
+
+    .mob-collapsed .mob-auto-btn {
+        width: 40px !important;
+        padding: 0 !important;
+    }
+
+    .mob-collapsed .mob-auto-btn svg {
+        width: 18px;
+        height: 18px;
     }
 
     /* ---- EXPANDED: 2 stacked bubbles, full width ---- */
@@ -2344,7 +2447,7 @@
         background: #ddff53;
         border-radius: 100px;
         padding: 6px 10px;
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.17);
+        box-shadow: none;
         display: flex;
         align-items: center;
     }
@@ -2352,22 +2455,54 @@
     /* Instrument bubble: ללא רקע — הכלים צפים לבד */
     .mob-instr-bubble {
         justify-content: center;
+        gap: var(--space-sm);
         background: transparent;
         box-shadow: none;
         padding: 4px 0;
     }
 
     .mob-instr-bubble .mob-instrument-group {
-        background: rgba(255, 255, 255, 0.88) !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13);
+        background: #ffffff !important;
+        box-shadow: none;
+        min-height: 34px;
+        padding: 3px !important;
     }
 
-    /* Controls bubble: spaced row */
+    .mob-instr-bubble .mob-instrument-group .toolbar-btn {
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+    }
+
+    /* Controls bubble: fits the screen until extra controls are shown */
+    .mob-controls-scroll {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
     .mob-controls-bubble {
         justify-content: space-between;
         gap: 3px;
         flex-wrap: nowrap;
         padding: 6px 12px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .mob-controls-bubble.mob-controls-overflow {
+        justify-content: flex-start;
+        gap: var(--space-md);
+        width: max-content;
+        min-width: 100%;
+        max-width: none;
+    }
+
+    .mob-controls-bubble > * {
+        flex-shrink: 0;
     }
 
     /* Vertical separator */
@@ -2412,6 +2547,31 @@
         height: 26px !important;
         flex-shrink: 0;
     }
+
+    .mob-easy-panel {
+        background: #ffffff !important;
+        box-shadow: none;
+        height: 34px !important;
+        padding: 0 var(--space-base) !important;
+    }
+
+    .mobile-bottom-toolbar .mob-easy-icon {
+        width: 34px !important;
+        min-width: 34px !important;
+        padding: 0 !important;
+    }
+
+    .mobile-bottom-toolbar .mob-easy-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .mobile-bottom-toolbar .mob-instr-bubble .mob-easy-panel.active,
+    .mobile-bottom-toolbar .mob-collapsed .mob-outer-easy-btn.active {
+        background: #ddff53 !important;
+        color: #000000 !important;
+    }
+
 
     /* Speed display (collapsed + expanded) */
     .mob-speed-val {
@@ -2481,7 +2641,8 @@
     }
 
     .mob-expand-btn {
-        background: rgba(0, 0, 0, 0.1) !important;
+        background: #ddff53 !important;
+        box-shadow: none;
         flex-shrink: 0;
     }
 }

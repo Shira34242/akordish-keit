@@ -97,9 +97,12 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   feedbackCircleSize(type: 'yes' | 'no'): number {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
-    const size = 72 + Math.round((pct / 100) * 40); /* 72px–112px */
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const baseSize = isMobile ? 56 : 72;
+    const sizeRange = isMobile ? 32 : 40;
+    const size = baseSize + Math.round((pct / 100) * sizeRange);
     if (type === 'no') {
-      return 72 + Math.round((pct / 100) * 40);
+      return baseSize + Math.round((pct / 100) * sizeRange);
     }
     return size;
   }
